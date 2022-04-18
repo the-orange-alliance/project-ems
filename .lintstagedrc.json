@@ -1,0 +1,7 @@
+{
+  "src/*.@(js?(x)|ts?(x))": [
+    "eslint --color --max-warnings 1 src/",
+    "prettier --write",
+    "git add"
+  ]
+}

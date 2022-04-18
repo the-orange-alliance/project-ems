@@ -7,7 +7,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "preprepare": "husky install",
-    "prepare": "eslint --color --max-warnings 1 src/ && prettier --write ."
+    "prepare": "lint-staged"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",
@@ -29,6 +29,7 @@
     "eslint-plugin-react": "^7.29.4",
     "husky": "^7.0.4",
     "less": "^4.1.2",
+    "lint-staged": "^12.3.8",
     "prettier": "^2.6.2",
     "typescript": "^4.6",
     "vite": "^2.9.5",
