@@ -5,24 +5,33 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preprepare": "husky install",
+    "prepare": "eslint --color --max-warnings 1 src/ && prettier --write ."
   },
   "dependencies": {
-    "antd": "^4.19.3",
+    "@emotion/react": "^11.9.0",
+    "@emotion/styled": "^11.8.1",
+    "@mui/material": "^5.6.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
-    "@types/react": "^17.0.43",
-    "@types/react-dom": "^17.0.14",
-    "@vitejs/plugin-react": "^1.2.0",
+    "@types/react": "^18.0.5",
+    "@types/react-dom": "^18.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.19.0",
+    "@typescript-eslint/parser": "^5.19.0",
+    "@vitejs/plugin-react": "^1.3.1",
     "editorconfig": "^0.15.3",
-    "eslint": "^8.12.0",
+    "eslint": "^8.13.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react": "^7.29.4",
+    "husky": "^7.0.4",
     "less": "^4.1.2",
-    "prettier": "^2.6.1",
+    "prettier": "^2.6.2",
     "typescript": "^4.6",
-    "vite": "^2.8.6"
+    "vite": "^2.9.5",
+    "vite-plugin-eslint": "^1.4.0"
   }
 }
