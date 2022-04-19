@@ -20,6 +20,7 @@
     "react/display-name": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
+    "prefer-destructuring": "error",
     "react/react-in-jsx-scope": "off"
   },
   "plugins": ["prettier"],
