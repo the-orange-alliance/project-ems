@@ -1,5 +1,7 @@
-import { FC, ReactNode, useState } from 'react';
+import { FC, ReactNode, useState, forwardRef } from 'react';
+import { NavLink, NavLinkProps } from 'react-router-dom';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
 import CssBaseline from '@mui/material/CssBaseline';
 import Container from '@mui/material/Container';
@@ -14,6 +16,16 @@ import ListItemLink from '../list-item-link/list-item-link';
 import { AppRoute } from '../../AppRoutes';
 
 const drawerWidth = 240;
+
+const NavButtonLink = forwardRef<any, NavLinkProps>((props, ref) => {
+  return (
+    <NavLink
+      ref={ref}
+      className={({ isActive }) => (isActive ? `active center` : 'center')}
+      {...props}
+    />
+  );
+});
 
 interface Props {
   routes: AppRoute[];
@@ -38,19 +50,48 @@ const AppLayout: FC<Props> = ({ routes, children }: Props) => {
         position='fixed'
         sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
-        <Toolbar>
-          <IconButton
-            color='inherit'
-            aria-label='open drawer'
-            onClick={toggleDrawer}
-            edge='start'
-            sx={{ mr: 2 }}
+        <Toolbar sx={{ padding: { md: 0 } }}>
+          <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
+            <IconButton
+              color='inherit'
+              aria-label='open drawer'
+              onClick={toggleDrawer}
+              edge='start'
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant='h6' noWrap component='div' className='center'>
+              Event Management System
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              display: { xs: 'none', md: 'flex' },
+              flexGrow: 1,
+              height: '64px'
+            }}
           >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant='h6' noWrap component='div'>
-            Event Management System
-          </Typography>
+            {routes.map((route) => (
+              <Button
+                key={route.name}
+                sx={{
+                  color: 'white',
+                  display: 'block',
+                  '&.active': {
+                    backgroundColor: (theme) => theme.palette.primary.dark
+                  }
+                }}
+                fullWidth
+                component={NavButtonLink}
+                to={route.path}
+                className='center'
+              >
+                {route.name}
+              </Button>
+            ))}
+          </Box>
         </Toolbar>
       </AppBar>
       <Drawer
@@ -60,7 +101,8 @@ const AppLayout: FC<Props> = ({ routes, children }: Props) => {
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box'
-          }
+          },
+          display: { xs: 'flex', md: 'none' }
         }}
         anchor='left'
         open={open}

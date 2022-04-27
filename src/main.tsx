@@ -4,7 +4,7 @@ import { RecoilRoot, useRecoilValue } from 'recoil';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material';
 import App from './App';
-import { ftcTheme } from './AppTheme';
+import { fgcTheme } from './AppTheme';
 import { darkModeAtom } from './stores/recoil';
 import './index.less';
 
@@ -15,7 +15,7 @@ const root = createRoot(container);
 function Main() {
   const darkMode = useRecoilValue(darkModeAtom);
   return (
-    <ThemeProvider theme={useMemo(() => ftcTheme(darkMode), [darkMode])}>
+    <ThemeProvider theme={useMemo(() => fgcTheme(darkMode), [darkMode])}>
       <App />
     </ThemeProvider>
   );
