@@ -9,6 +9,9 @@ export const ftcTheme = (darkMode: boolean) =>
       },
       secondary: {
         main: '#f50057'
+      },
+      background: {
+        default: '#f0f0f0'
       }
     }
   });
@@ -22,6 +25,9 @@ export const frcTheme = (darkMode: boolean) =>
       },
       secondary: {
         main: '#f50057'
+      },
+      background: {
+        default: '#f0f0f0'
       }
     }
   });
@@ -35,6 +41,9 @@ export const fgcTheme = (darkMode: boolean) =>
       },
       secondary: {
         main: '#f50057'
+      },
+      background: {
+        default: '#f0f0f0'
       }
     }
   });

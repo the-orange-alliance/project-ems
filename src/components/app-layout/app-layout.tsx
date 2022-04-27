@@ -48,9 +48,9 @@ const AppLayout: FC<Props> = ({ routes, children }: Props) => {
       <CssBaseline />
       <AppBar
         position='fixed'
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, height: '48px' }}
       >
-        <Toolbar sx={{ padding: { md: 0 } }}>
+        <Toolbar sx={{ padding: { md: 0, minHeight: '48px !important' } }}>
           <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
             <IconButton
               color='inherit'
@@ -70,7 +70,7 @@ const AppLayout: FC<Props> = ({ routes, children }: Props) => {
             sx={{
               display: { xs: 'none', md: 'flex' },
               flexGrow: 1,
-              height: '64px'
+              height: '48px'
             }}
           >
             {routes.map((route) => (
