@@ -1,5 +1,5 @@
-import { FC, ReactNode, useState, forwardRef } from 'react';
-import { NavLink, NavLinkProps } from 'react-router-dom';
+import { FC, ReactNode, useState } from 'react';
+import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
@@ -12,20 +12,11 @@ import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import ListItemLink from '../list-item-link/list-item-link';
 import { AppRoute } from '../../AppRoutes';
 
 const drawerWidth = 240;
-
-const NavButtonLink = forwardRef<any, NavLinkProps>((props, ref) => {
-  return (
-    <NavLink
-      ref={ref}
-      className={({ isActive }) => (isActive ? `active center` : 'center')}
-      {...props}
-    />
-  );
-});
 
 interface Props {
   routes: AppRoute[];
@@ -48,50 +39,33 @@ const AppLayout: FC<Props> = ({ routes, children }: Props) => {
       <CssBaseline />
       <AppBar
         position='fixed'
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, height: '48px' }}
+        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
-        <Toolbar sx={{ padding: { md: 0, minHeight: '48px !important' } }}>
-          <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
-            <IconButton
-              color='inherit'
-              aria-label='open drawer'
-              onClick={toggleDrawer}
-              edge='start'
-              sx={{ mr: 2 }}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography variant='h6' noWrap component='div' className='center'>
-              Event Management System
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              display: { xs: 'none', md: 'flex' },
-              flexGrow: 1,
-              height: '48px'
-            }}
+        <Toolbar>
+          <IconButton
+            color='inherit'
+            aria-label='open drawer'
+            onClick={toggleDrawer}
+            edge='start'
+            sx={{ mr: 2 }}
           >
-            {routes.map((route) => (
-              <Button
-                key={route.name}
-                sx={{
-                  color: 'white',
-                  display: 'block',
-                  '&.active': {
-                    backgroundColor: (theme) => theme.palette.primary.dark
-                  }
-                }}
-                fullWidth
-                component={NavButtonLink}
-                to={route.path}
-                className='center'
-              >
-                {route.name}
-              </Button>
-            ))}
-          </Box>
+            <MenuIcon />
+          </IconButton>
+          <Typography variant='h6' noWrap style={{ flexGrow: 1 }}>
+            Event Management System
+          </Typography>
+          <Button color='inherit'>Docs</Button>
+          <IconButton
+            size='large'
+            edge='start'
+            color='inherit'
+            aria-label='open drawer'
+            sx={{ ml: 1, mr: 1 }}
+          >
+            <Badge badgeContent={2} color='error'>
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
         </Toolbar>
       </AppBar>
       <Drawer
@@ -101,8 +75,7 @@ const AppLayout: FC<Props> = ({ routes, children }: Props) => {
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box'
-          },
-          display: { xs: 'flex', md: 'none' }
+          }
         }}
         anchor='left'
         open={open}
