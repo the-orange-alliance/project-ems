@@ -1,5 +1,7 @@
 import { FC, ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
+import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -10,7 +12,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 
 import NotificationsIcon from '@mui/icons-material/Notifications';
-
+import emsAvatar from '../assets/favicon.ico';
 interface Props {
   children?: ReactNode;
 }
@@ -21,6 +23,18 @@ const DefaultLayout: FC<Props> = ({ children }: Props) => {
       <CssBaseline />
       <AppBar position='fixed'>
         <Toolbar>
+          <IconButton
+            component={Link}
+            to='/'
+            size='small'
+            sx={{ mr: 1, marginLeft: '-14px' }}
+          >
+            <Avatar
+              alt='Event Management System Logo'
+              src={emsAvatar}
+              sx={{ padding: '4px' }}
+            />
+          </IconButton>
           <Typography variant='h6' noWrap style={{ flexGrow: 1 }}>
             Event Management System | Home
           </Typography>
