@@ -13,8 +13,8 @@ import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import ListItemLink from '../list-item-link/list-item-link';
-import { AppRoute } from '../../AppRoutes';
+import ListItemLink from '../components/list-item-link/list-item-link';
+import { AppRoute } from '../AppRoutes';
 
 const drawerWidth = 240;
 
@@ -23,7 +23,7 @@ interface Props {
   children?: ReactNode;
 }
 
-const AppLayout: FC<Props> = ({ routes, children }: Props) => {
+const DrawerLayout: FC<Props> = ({ routes, children }: Props) => {
   const [open, setOpen] = useState(false);
 
   const closeDrawer = () => {
@@ -96,11 +96,11 @@ const AppLayout: FC<Props> = ({ routes, children }: Props) => {
         <Divider />
         {/* TODO - Import affiliate icons here */}
       </Drawer>
-      <Container maxWidth='xl' sx={{ marginTop: (theme) => theme.spacing(10) }}>
+      <Container maxWidth='xl' sx={{ marginTop: (theme) => theme.spacing(12) }}>
         {children}
       </Container>
     </Box>
   );
 };
 
-export default AppLayout;
+export default DrawerLayout;
