@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import HomeApp from './apps/Home';
 import EventManagerApp from './apps/EventManager';
+import SettingsApp from './apps/Settings';
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
@@ -28,6 +29,12 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: <EventManagerApp />,
     icon: <EventIcon />
+  },
+  {
+    name: 'Settings',
+    path: '/settings',
+    group: 0,
+    element: <SettingsApp />
   }
 ];
 

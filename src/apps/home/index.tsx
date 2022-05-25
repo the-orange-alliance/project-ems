@@ -6,6 +6,7 @@ import AppCard, { AppCardProps } from '../../components/AppCard/AppCard';
 import toaLogo from '../../assets/images/toa-logo.png';
 import twitchLogo from '../../assets/images/twitch-logo.png';
 import audienceDisplayLogo from '../../assets/images/audience-display-logo.png';
+import settingsLogo from '../../assets/images/settings-logo.png';
 
 const GridAppCard = (props: AppCardProps) => (
   <Grid item xs={5} md={3}>
@@ -34,7 +35,7 @@ const HomeApp: FC = () => {
         <GridAppCard title='Admin App' />
         <GridAppCard title='Advancement Manager' />
         <GridAppCard title='Report App' />
-        <GridAppCard title='Settings' />
+        <GridAppCard title='Settings' imgSrc={settingsLogo} to='/settings' />
       </Grid>
     </DefaultLayout>
   );

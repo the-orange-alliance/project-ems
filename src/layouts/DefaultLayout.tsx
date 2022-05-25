@@ -1,5 +1,6 @@
 import { FC, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { Breakpoint } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
@@ -14,10 +15,11 @@ import Typography from '@mui/material/Typography';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import emsAvatar from '../assets/favicon.ico';
 interface Props {
+  containerWidth?: Breakpoint | false;
   children?: ReactNode;
 }
 
-const DefaultLayout: FC<Props> = ({ children }: Props) => {
+const DefaultLayout: FC<Props> = ({ containerWidth, children }: Props) => {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -52,7 +54,10 @@ const DefaultLayout: FC<Props> = ({ children }: Props) => {
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Container maxWidth='xl' sx={{ marginTop: (theme) => theme.spacing(12) }}>
+      <Container
+        maxWidth={containerWidth || 'xl'}
+        sx={{ marginTop: (theme) => theme.spacing(12) }}
+      >
         {children}
       </Container>
     </Box>
