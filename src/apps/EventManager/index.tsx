@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import DrawerLayout from '../../layouts/drawer-layout';
+import DrawerLayout from '../../layouts/DrawerLayout';
 import AppRoutes from '../../AppRoutes';
 
 const EventApp: FC = () => {

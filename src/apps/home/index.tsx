@@ -1,9 +1,7 @@
 import { FC } from 'react';
 import Grid from '@mui/material/Grid';
-import DefaultLayout from '../../layouts/default-layout';
-import AppCard, {
-  AppCardProps
-} from '../../components/list-item-link/app-card';
+import DefaultLayout from '../../layouts/DefaultLayout';
+import AppCard, { AppCardProps } from '../../components/AppCard/AppCard';
 
 import toaLogo from '../../assets/images/toa-logo.png';
 import twitchLogo from '../../assets/images/twitch-logo.png';

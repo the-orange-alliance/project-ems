@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import HomeApp from './apps/home';
-import EventManagerApp from './apps/event-manager';
+import HomeApp from './apps/Home';
+import EventManagerApp from './apps/EventManager';
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';

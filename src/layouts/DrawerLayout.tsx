@@ -13,7 +13,7 @@ import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import ListItemLink from '../components/list-item-link/list-item-link';
+import ListItemLink from '../components/ListItemLink/ListItemLink';
 import { AppRoute } from '../AppRoutes';
 
 const drawerWidth = 240;

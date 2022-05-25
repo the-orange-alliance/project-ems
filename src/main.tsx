@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material';
 import App from './App';
 import { fgcTheme } from './AppTheme';
-import { darkModeAtom } from './stores/recoil';
+import { darkModeAtom } from './stores/Recoil';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Error while trying to find document root.');
