@@ -1,4 +1,5 @@
 import { FC, ReactNode, useState } from 'react';
+import { Breakpoint } from '@mui/material';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -20,10 +21,15 @@ const drawerWidth = 240;
 
 interface Props {
   routes: AppRoute[];
+  containerWidth?: Breakpoint | false;
   children?: ReactNode;
 }
 
-const DrawerLayout: FC<Props> = ({ routes, children }: Props) => {
+const DrawerLayout: FC<Props> = ({
+  routes,
+  containerWidth,
+  children
+}: Props) => {
   const [open, setOpen] = useState(false);
 
   const closeDrawer = () => {
@@ -96,7 +102,10 @@ const DrawerLayout: FC<Props> = ({ routes, children }: Props) => {
         <Divider />
         {/* TODO - Import affiliate icons here */}
       </Drawer>
-      <Container maxWidth='xl' sx={{ marginTop: (theme) => theme.spacing(12) }}>
+      <Container
+        maxWidth={containerWidth || 'xl'}
+        sx={{ marginTop: (theme) => theme.spacing(12) }}
+      >
         {children}
       </Container>
     </Box>
