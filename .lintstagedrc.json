@@ -1,0 +1,10 @@
+{
+  "back-end/**/*.@(js?(x)|ts?(x))": [
+    "prettier --write",
+    "eslint --color --max-warnings 1 src/"
+  ],
+  "front-end/**/*.@(js?(x)|ts?(x))": [
+    "prettier --write",
+    "eslint --color --max-warnings 1 src/"
+  ]
+}
