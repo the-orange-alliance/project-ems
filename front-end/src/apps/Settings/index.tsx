@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import { FormControlLabel, FormGroup, Switch } from '@mui/material';
 import { useRecoilState } from 'recoil';
-import { darkModeAtom } from '../../stores/recoil';
+import { darkModeAtom } from '../../stores/Recoil';
 
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
