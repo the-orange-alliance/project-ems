@@ -6,11 +6,6 @@
         "postinstall": "husky install"
     },
     "dependencies": {
-        "husky": "^8.0.1",
-        "lerna": "^5.1.8"
-    },
-    "workspaces": [
-        "front-end/**",
-        "back-end/**"
-    ]
+        "husky": "^8.0.1"
+    }
 }

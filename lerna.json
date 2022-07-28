@@ -1,9 +1,0 @@
-{
-    "useWorkspaces": true,
-    "packages": [
-        "front-end/*",
-        "back-end/*"
-    ],
-    "useNx": false,
-    "version": "0.0.0"
-}
