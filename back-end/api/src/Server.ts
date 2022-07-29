@@ -3,8 +3,7 @@ import { createServer } from 'http';
 import cors from 'cors';
 import { urlencoded } from 'body-parser';
 import passport from 'passport';
-import { Strategy as LocalStrategy } from 'passport-local';
-import { Strategy as JWTStrategy, ExtractJwt } from 'passport-jwt';
+import { jwtStrategy, localStrategy, requireAuth } from '@toa/lib-ems';
 import jwt from 'jsonwebtoken';
 
 const app: Application = express();
@@ -15,39 +14,14 @@ app.use(json());
 app.use(urlencoded({ extended: false }));
 app.use(passport.initialize());
 
-passport.use(
-  new LocalStrategy((username, password, done) => {
-    if (password === 'admin') {
-      console.log('admin user detected');
-      return done(null, { id: 0, username });
-    } else {
-      return done(null, false);
-    }
-  })
-);
+passport.use(jwtStrategy('changeit'));
+passport.use(localStrategy());
 
-passport.use(
-  new JWTStrategy(
-    {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: 'changeit'
-    },
-    (jwtPayload, cb) => {
-      console.log('payload', jwtPayload);
-      return cb(null, { id: 0, username: 'admin' });
-    }
-  )
-);
+app.get('/', requireAuth, (req, res) => {
+  res.send(req.headers);
+});
 
-app.get(
-  '/',
-  passport.authenticate('jwt', { session: false }),
-  (req, res, next) => {
-    res.send(req.headers);
-  }
-);
-
-app.post('/login', (req, res, next) => {
+app.post('/login', (req, res) => {
   passport.authenticate('local', { session: false }, (err, user, info) => {
     if (err || !user) {
       return res.status(400).json({

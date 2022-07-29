@@ -1,0 +1,13 @@
+# Typical ignores in JS projects
+node_modules/
+build/
+.vscode/
+public/
+
+# Files that shouldn't be formatted
+*.md
+*.json
+.editorconfig
+.gitattributes
+.gitignore
+.prettierignore
