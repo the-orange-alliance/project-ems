@@ -4,7 +4,8 @@ import cors from 'cors';
 import { urlencoded } from 'body-parser';
 import passport from 'passport';
 import { jwtStrategy, localStrategy, requireAuth } from '@toa/lib-ems';
-import jwt from 'jsonwebtoken';
+import authController from './controllers/Authentication';
+import errorHandler from './middleware/ErrorHandler';
 
 const app: Application = express();
 const server = createServer(app);
@@ -17,32 +18,13 @@ app.use(passport.initialize());
 passport.use(jwtStrategy('changeit'));
 passport.use(localStrategy());
 
+app.use('/auth', authController);
+
 app.get('/', requireAuth, (req, res) => {
   res.send(req.headers);
 });
 
-app.post('/login', (req, res) => {
-  passport.authenticate('local', { session: false }, (err, user, info) => {
-    if (err || !user) {
-      return res.status(400).json({
-        message: 'Invalid credentials',
-        user: user
-      });
-    }
-    req.login(user, { session: false }, (err) => {
-      if (err) {
-        res.send(err);
-      }
-      const token = jwt.sign(user, 'changeit');
-      return res.json({ user, token });
-    });
-  })(req, res);
-});
-
-app.post('/logout', (req, res) => {
-  req.logout({}, () => console.log('successfully logged out'));
-  res.send('logged out');
-});
+app.use(errorHandler);
 
 passport.serializeUser((user, cb) => {
   console.log('serialize user', user);

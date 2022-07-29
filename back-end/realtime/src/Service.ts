@@ -16,6 +16,8 @@ const io = new Server(server);
 app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
 app.use(json());
 app.use(urlencoded({ extended: false }));
+
+// Session middleware
 app.use(passport.initialize());
 
 passport.use(
