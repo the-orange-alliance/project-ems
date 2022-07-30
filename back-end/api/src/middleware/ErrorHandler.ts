@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import logger from '../util/Logger';
-import { ApiError, isApiError } from '../types';
+import { isApiError } from '../types';
 
 const handle = (
   error: unknown,

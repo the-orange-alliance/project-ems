@@ -13,67 +13,10 @@ const server = createServer(app);
 const io = new Server(server);
 
 // Config middleware
-app.use(cors({ credentials: true, origin: "http://localhost:5173" }));
+app.use(cors({ credentials: true }));
 app.use(json());
 app.use(urlencoded({ extended: false }));
-
-// Session middleware
 app.use(passport.initialize());
-
-passport.use(
-  new LocalStrategy((username, password, done) => {
-    if (password === "admin") {
-      console.log("admin user detected");
-      return done(null, { id: 0, username });
-    } else {
-      return done(null, false);
-    }
-  })
-);
-
-passport.use(
-  new JWTStrategy(
-    {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: "changeit",
-    },
-    (jwtPayload, cb) => {
-      console.log("payload", jwtPayload);
-      return cb(null, { id: 0, username: "admin" });
-    }
-  )
-);
-
-app.get(
-  "/",
-  passport.authenticate("jwt", { session: false }),
-  (req, res, next) => {
-    res.send(req.headers);
-  }
-);
-
-app.post("/login", (req, res, next) => {
-  passport.authenticate("local", { session: false }, (err, user, info) => {
-    if (err || !user) {
-      return res.status(400).json({
-        message: "Invalid credentials",
-        user: user,
-      });
-    }
-    req.login(user, { session: false }, (err) => {
-      if (err) {
-        res.send(err);
-      }
-      const token = jwt.sign(user, "changeit");
-      return res.json({ user, token });
-    });
-  })(req, res);
-});
-
-app.post("/logout", (req, res) => {
-  req.logout({}, () => console.log("successfully logged out"));
-  res.send("logged out");
-});
 
 passport.serializeUser((user, cb) => {
   console.log("serialize user", user);

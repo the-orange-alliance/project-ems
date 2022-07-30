@@ -10,7 +10,7 @@ import errorHandler from './middleware/ErrorHandler';
 const app: Application = express();
 const server = createServer(app);
 
-app.use(cors({ credentials: true, origin: 'http://localhost:5173' }));
+app.use(cors({ credentials: true }));
 app.use(json());
 app.use(urlencoded({ extended: false }));
 app.use(passport.initialize());
