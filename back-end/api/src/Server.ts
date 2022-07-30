@@ -3,9 +3,12 @@ import { createServer } from 'http';
 import cors from 'cors';
 import { urlencoded } from 'body-parser';
 import passport from 'passport';
+import dotenv from 'dotenv';
 import { jwtStrategy, localStrategy, requireAuth } from '@toa/lib-ems';
 import authController from './controllers/Authentication';
 import errorHandler from './middleware/ErrorHandler';
+
+dotenv.config();
 
 const app: Application = express();
 const server = createServer(app);
