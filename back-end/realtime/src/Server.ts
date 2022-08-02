@@ -4,10 +4,13 @@ import { Server } from "socket.io";
 import cors from "cors";
 import { urlencoded } from "body-parser";
 import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import { Strategy as JWTStrategy, ExtractJwt } from "passport-jwt";
 import jwt from "jsonwebtoken";
+import { environment as env } from "@toa/lib-ems";
 
+// Setup our environment
+env.loadAndSetDefaults();
+
+// Bind socket.io to express to our http server
 const app: Application = express();
 const server = createServer(app);
 const io = new Server(server);
@@ -32,7 +35,7 @@ io.use((socket, next) => {
   if (socket.handshake.query && socket.handshake.query.token) {
     jwt.verify(
       socket.handshake.query.token.toString(),
-      "changeit",
+      env.get().jwtSecret,
       (err, decoded) => {
         if (err) {
           return next(new Error("Authentication Error"));
