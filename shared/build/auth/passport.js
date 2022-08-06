@@ -24,3 +24,4 @@ const localStrategy = () => new passport_local_1.Strategy((username, password, d
 });
 exports.localStrategy = localStrategy;
 exports.requireAuth = passport_1.default.authenticate('jwt', { session: false });
+//# sourceMappingURL=passport.js.map

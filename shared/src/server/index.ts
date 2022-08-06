@@ -1,3 +1,1 @@
-import environment from './Environment';
-
-export { environment };
+export { default as environment } from './Environment';

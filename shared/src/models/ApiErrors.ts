@@ -1,3 +1,13 @@
+import { isNonNullObject, isNumber, isString } from './types';
+
+export class ApiErrorResponse extends Error {
+  constructor(public response: Response, api: string = response.url) {
+    super(`Invalid API response for ${api}`);
+    this.name = 'Error from API response';
+    Error.captureStackTrace(this, ApiErrorResponse);
+  }
+}
+
 export interface ApiError {
   code: number;
   message: string;
@@ -13,16 +23,6 @@ export interface SQLError {
   line: string;
   routine: string;
 }
-
-export const isNonNullObject = (obj: unknown): obj is Record<string, unknown> =>
-  typeof obj === 'object' && obj !== null;
-
-export const isString = (str: unknown): boolean => typeof str === 'string';
-
-export const isNumber = (num: unknown): boolean =>
-  typeof num === 'number' && !isNaN(num);
-
-export const isBoolean = (bool: unknown): boolean => typeof bool === 'boolean';
 
 export const isApiError = (err: unknown): err is ApiError =>
   isNonNullObject(err) && isNumber(err.code) && isString(err.message);

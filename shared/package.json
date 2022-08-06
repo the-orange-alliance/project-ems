@@ -2,13 +2,21 @@
   "name": "@toa/lib-ems",
   "version": "1.0.0",
   "description": "Library for EMS.",
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
+  "main": "./build/index.ts",
+  "types": "./build/index.d.ts",
   "scripts": {
     "build": "tsc"
   },
   "author": "Kyle Flynn",
   "license": "ISC",
+  "exports": {
+    ".": "./build/index.js",
+    "./auth": "./build/auth/index.js",
+    "./models": "./build/models/index.js",
+    "./providers": "./build/providers/index.js",
+    "./server": "./build/server/index.js",
+    "./config": "./build/config/index.js"
+  },
   "devDependencies": {
     "@types/jsonwebtoken": "^8.5.8",
     "@types/passport": "^1.0.9",

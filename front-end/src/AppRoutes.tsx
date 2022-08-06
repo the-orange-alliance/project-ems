@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import HomeApp from './apps/home';
+import HomeApp from './apps/Home';
 import EventManagerApp from './apps/EventManager';
 import SettingsApp from './apps/Settings';
 

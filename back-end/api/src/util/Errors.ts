@@ -1,4 +1,4 @@
-import { ApiError } from '../types';
+import { ApiError } from '@toa/lib-ems';
 
 export const InvalidQueryError: ApiError = {
   code: 400,
