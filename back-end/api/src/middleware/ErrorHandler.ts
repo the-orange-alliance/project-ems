@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import logger from '../util/Logger';
-import { isApiError } from '@toa/lib-ems';
+import { isApiError } from '@toa-lib/models';
 
 const handle = (
   error: unknown,

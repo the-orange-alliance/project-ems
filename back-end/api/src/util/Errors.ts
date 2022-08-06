@@ -1,4 +1,4 @@
-import { ApiError } from '@toa/lib-ems';
+import { ApiError } from '@toa-lib/models';
 
 export const InvalidQueryError: ApiError = {
   code: 400,

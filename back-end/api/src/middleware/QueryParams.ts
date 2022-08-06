@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { isString } from '@toa/lib-ems';
+import { isString } from '@toa-lib/models';
 import { InvalidQueryError } from '../util/Errors';
 
 export const requireParams =

@@ -8,7 +8,7 @@ import {
   localStrategy,
   requireAuth,
   environment as env
-} from '@toa/lib-ems';
+} from '@toa-lib/server';
 import authController from './controllers/Authentication';
 import errorHandler from './middleware/ErrorHandler';
 import logger from './util/Logger';

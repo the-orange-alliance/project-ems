@@ -1,6 +1,9 @@
-import { DEFAULT_API_PORT } from '../config';
-import { DEFAULT_API_HOST } from '../config';
-import { ApiErrorResponse, TypeGuard } from '../models';
+import {
+  DEFAULT_API_PORT,
+  DEFAULT_API_HOST,
+  ApiErrorResponse,
+  TypeGuard
+} from '@toa-lib/models';
 
 export const options = {
   host: DEFAULT_API_HOST,
