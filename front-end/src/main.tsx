@@ -6,7 +6,7 @@ import { ThemeProvider } from '@mui/material';
 import App from './App';
 import { fgcTheme } from './AppTheme';
 import { darkModeAtom } from './stores/Recoil';
-import { APIOptions } from '@toa/lib-ems';
+import { APIOptions } from '@toa-lib/client';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Error while trying to find document root.');
