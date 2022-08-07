@@ -6,8 +6,12 @@ import { login } from './api/ApiProvider';
 
 function App() {
   const loginUser = async () => {
-    const test = await login('admin', 'admin');
-    console.log(test);
+    try {
+      const test = await login('admin', 'admin');
+      console.log(test);
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   useEffect(() => {

@@ -10,38 +10,26 @@ export const options = {
   port: DEFAULT_API_PORT
 };
 
-export async function fetcher<T>(
+export const clientFetcher = async <T>(
   url: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  body?: unknown,
   guard?: TypeGuard<T>
-): Promise<T> {
+): Promise<T> => {
   const request = await fetch(`${options.host}:${options.port}/${url}`, {
-    credentials: 'include'
-  });
-
-  const data = await request.json();
-
-  if (guard && !guard(data)) {
-    throw new ApiErrorResponse(data);
-  }
-
-  return data;
-}
-
-export const post = async <T>(url: string, data: T): Promise<Response> =>
-  fetch(`${options.host}:${options.port}/${url}`, {
-    method: 'POST',
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  });
-
-export const del = async (url: string): Promise<Response> =>
-  fetch(`${options.host}:${options.port}/${url}`, {
-    method: 'DELETE',
-    credentials: 'include',
+    method,
+    body: JSON.stringify(body),
     headers: {
       'Content-Type': 'application/json'
     }
   });
+
+  const data = await request.json();
+
+  if (!guard || !guard(data)) {
+    throw new ApiErrorResponse(request);
+  }
+
+  return data;
+};

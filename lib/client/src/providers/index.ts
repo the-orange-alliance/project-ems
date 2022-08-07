@@ -1,1 +1,1 @@
-export { options as APIOptions, fetcher, post, del } from './APIProvider';
+export { options as APIOptions, clientFetcher } from './APIProvider';
