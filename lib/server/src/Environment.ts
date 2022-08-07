@@ -51,6 +51,10 @@ class Environment {
   public get(): EnvironmentConfig {
     return this.env;
   }
+
+  public isProd(): boolean {
+    return this.env.nodeEnv === 'production';
+  }
 }
 
 export default Environment.getInstance();

@@ -6,7 +6,7 @@ import { login } from './api/ApiProvider';
 
 function App() {
   const loginUser = async () => {
-    const test = await login('admin', 'password');
+    const test = await login('admin', 'admin');
     console.log(test);
   };
 
