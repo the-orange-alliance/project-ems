@@ -1,9 +1,13 @@
 import { isNonNullObject, isNumber, isString } from './types';
 
 export class ApiErrorResponse extends Error {
-  constructor(public response: Response, api: string = response.url) {
-    super(`Invalid API response for ${api}`);
-    this.name = 'Error from API response';
+  constructor(
+    public response: Response,
+    err: ApiError,
+    url: string = response.url
+  ) {
+    super(`Invalid API response from ${url}`);
+    this.name = `Error from API response: ${err.message} (${err.code})`;
     Error.captureStackTrace(this, ApiErrorResponse);
   }
 }
