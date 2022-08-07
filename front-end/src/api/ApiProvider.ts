@@ -1,5 +1,6 @@
 import { clientFetcher } from '@toa-lib/client';
-import { isUser, User } from '@toa-lib/models';
+import { ApiErrorResponse, isUser, User } from '@toa-lib/models';
+import useSWR, { SWRResponse } from 'swr';
 
 export const login = async (
   username: string,
@@ -13,4 +14,14 @@ export const login = async (
       password
     },
     isUser
+  );
+
+export const useLoginAttempt = (
+  username: string,
+  password: string
+): SWRResponse<User, ApiErrorResponse> =>
+  useSWR<User>(
+    'auth/login',
+    (url) => clientFetcher(url, 'POST', { username, password }, isUser),
+    { revalidateOnFocus: false }
   );

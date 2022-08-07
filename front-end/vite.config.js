@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     include: ['@toa-lib/client', '@toa-lib/models']
+    // force: true /* Use this option when @toa-lib needs to be rebuilt for some weird reason. */
   },
   build: {
     commonjsOptions: {
