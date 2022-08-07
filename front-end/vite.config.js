@@ -5,11 +5,11 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['@toa/lib-ems']
+    include: ['@toa-lib/client', '@toa-lib/models']
   },
   build: {
     commonjsOptions: {
-      include: ['@toa/lib-ems', /node_modules/]
+      include: ['@toa-lib/client', '@toa-lib/models', /node_modules/]
     }
   }
 });

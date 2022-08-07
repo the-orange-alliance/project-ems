@@ -5,8 +5,13 @@ import { useEffect } from 'react';
 import { login } from './api/ApiProvider';
 
 function App() {
+  const loginUser = async () => {
+    const test = await login('admin', 'password');
+    console.log(test);
+  };
+
   useEffect(() => {
-    void login('admin', 'password');
+    void loginUser();
   });
 
   return (

@@ -1,11 +1,14 @@
+import { environment as env } from '@toa-lib/server';
+import { isUserLogin } from '@toa-lib/models';
 import { Response, Request, Router, NextFunction } from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import { requireParams } from '../middleware/QueryParams';
 import {
   AuthenticationError,
   AuthenticationInvalidError
 } from '../util/Errors';
+import { requireParams } from '../middleware/QueryParams';
+import { validateBody } from '../middleware/BodyValidator';
 
 const router = Router();
 
@@ -24,18 +27,21 @@ router.get(
 /** POST method that will attempt to login the user based on their credentials. */
 router.post(
   '/login',
-  requireParams(['username', 'password']),
+  validateBody(isUserLogin),
   async (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate('local', { session: false }, (err, user, info) => {
-      if (err || !user) next(AuthenticationInvalidError);
-      req.login(user, { session: false }, (err) => {
-        if (err) {
-          res.send(err);
-        }
-        const token = jwt.sign(user, 'changeit');
-        return res.json({ user, token });
-      });
-    })(req, res);
+      if (err || !user) {
+        next(AuthenticationInvalidError);
+      } else {
+        req.login(user, { session: false }, (err) => {
+          if (err) {
+            res.send(err);
+          }
+          const token = jwt.sign(user, env.get().jwtSecret);
+          return res.json({ user, token });
+        });
+      }
+    })(req, res, next);
   }
 );
 

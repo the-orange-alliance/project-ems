@@ -21,7 +21,7 @@ const app: Application = express();
 const server = createServer(app);
 
 // Setup and config express middleware
-app.use(cors({ credentials: true }));
+app.use(cors({ credentials: true, origin: 'http://localhost:5173' }));
 app.use(json());
 app.use(urlencoded({ extended: false }));
 app.use(passport.initialize());

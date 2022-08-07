@@ -6,8 +6,16 @@ export interface User {
   permissions: string;
 }
 
+export interface UserLogin {
+  username: string;
+  password: string;
+}
+
 export const isUser = (obj: unknown): obj is User =>
   isNonNullObject(obj) &&
   isNumber(obj.id) &&
   isString(obj.username) &&
   isString(obj.permissions);
+
+export const isUserLogin = (obj: unknown): obj is UserLogin =>
+  isNonNullObject(obj) && isString(obj.username) && isString(obj.password);

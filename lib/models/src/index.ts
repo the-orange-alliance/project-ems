@@ -1,6 +1,6 @@
 export { DEFAULT_API_HOST, DEFAULT_API_PORT } from './DefaultConfig';
 
-export { User, isUser } from './User';
+export { User, UserLogin, isUser, isUserLogin } from './User';
 export {
   ApiErrorResponse,
   ApiError,
