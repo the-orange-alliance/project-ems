@@ -16,7 +16,7 @@ const GridAppCard = (props: AppCardProps) => (
 );
 
 const HomeApp: FC = () => {
-  const { data, error } = useLoginAttempt('admin', 'admin');
+  const { data, error } = useLoginAttempt('localhost', 'admin');
 
   return (
     <DefaultLayout>

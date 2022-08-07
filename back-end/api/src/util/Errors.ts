@@ -25,6 +25,11 @@ export const AuthenticationError: ApiError = {
   message: 'Internal server error while trying to authenticate.'
 };
 
+export const AuthenticationNotLocalError: ApiError = {
+  code: 401,
+  message: 'Your connection is not local for this authentication request.'
+};
+
 export const AuthenticationInvalidError: ApiError = {
   code: 401,
   message:

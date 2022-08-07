@@ -1,4 +1,10 @@
-export { DEFAULT_API_HOST, DEFAULT_API_PORT } from './DefaultConfig';
+export {
+  DEFAULT_API_HOST,
+  DEFAULT_API_PORT,
+  DEFAULT_ADMIN_PASSWORD,
+  DEFAULT_ADMIN_USER,
+  DEFAULT_ADMIN_USERNAME
+} from './DefaultConfig';
 
 export { User, UserLogin, isUser, isUserLogin } from './User';
 export {

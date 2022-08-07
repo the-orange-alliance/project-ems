@@ -1,14 +1,21 @@
 import { environment as env } from '@toa-lib/server';
-import { isUserLogin } from '@toa-lib/models';
+import {
+  isUserLogin,
+  User,
+  DEFAULT_ADMIN_USERNAME,
+  isUser
+} from '@toa-lib/models';
 import { Response, Request, Router, NextFunction } from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import {
   AuthenticationError,
-  AuthenticationInvalidError
+  AuthenticationInvalidError,
+  AuthenticationNotLocalError
 } from '../util/Errors';
 import { requireParams } from '../middleware/QueryParams';
 import { validateBody } from '../middleware/BodyValidator';
+import isLocal from '../util/Network';
 
 const router = Router();
 
@@ -28,20 +35,32 @@ router.get(
 router.post(
   '/login',
   validateBody(isUserLogin),
-  async (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate('local', { session: false }, (err, user, info) => {
-      if (err || !user) {
-        next(AuthenticationInvalidError);
-      } else {
-        req.login(user, { session: false }, (err) => {
-          if (err) {
-            res.send(err);
+  (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate(
+      'local',
+      { session: false },
+      (err, user: User, info) => {
+        if (err || !user) {
+          next(AuthenticationInvalidError);
+        } else {
+          // Do one final check - if they're using the admin user, validate they're local.
+          if (
+            user.username === DEFAULT_ADMIN_USERNAME &&
+            isLocal(req.socket.remoteAddress || '')
+          ) {
+            req.login(user, { session: false }, (err) => {
+              if (err) {
+                res.send(err);
+              }
+              user.token = jwt.sign(user, env.get().jwtSecret);
+              return res.json(user);
+            });
+          } else {
+            next(AuthenticationNotLocalError);
           }
-          const token = jwt.sign(user, env.get().jwtSecret);
-          return res.json({ user, token });
-        });
+        }
       }
-    })(req, res, next);
+    )(req, res, next);
   }
 );
 

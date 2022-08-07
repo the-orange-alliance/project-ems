@@ -1,6 +1,11 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as JWTStrategy, ExtractJwt } from 'passport-jwt';
+import {
+  DEFAULT_ADMIN_PASSWORD,
+  DEFAULT_ADMIN_USER,
+  DEFAULT_ADMIN_USERNAME
+} from '@toa-lib/models/build/DefaultConfig';
 
 /**
  * Library file for using different passport strategies within EMS.
@@ -18,8 +23,11 @@ export const jwtStrategy = (secretOrKey: string | Buffer | undefined) =>
 
 export const localStrategy = () =>
   new LocalStrategy((username, password, done) => {
-    if (password === 'admin') {
-      return done(null, { id: 0, username });
+    if (
+      username === DEFAULT_ADMIN_USERNAME &&
+      password === DEFAULT_ADMIN_PASSWORD
+    ) {
+      return done(null, DEFAULT_ADMIN_USER);
     } else {
       return done(null, false);
     }
