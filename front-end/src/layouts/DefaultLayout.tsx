@@ -1,5 +1,6 @@
 import { FC, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useRecoilValue } from 'recoil';
 import { Breakpoint } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
@@ -11,6 +12,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import { userAtom } from '../stores/Recoil';
 
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import emsAvatar from '../assets/favicon.ico';
@@ -20,6 +22,7 @@ interface Props {
 }
 
 const DefaultLayout: FC<Props> = ({ containerWidth, children }: Props) => {
+  const user = useRecoilValue(userAtom);
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -40,18 +43,26 @@ const DefaultLayout: FC<Props> = ({ containerWidth, children }: Props) => {
           <Typography variant='h6' noWrap style={{ flexGrow: 1 }}>
             Event Management System | Home
           </Typography>
-          <Button color='inherit'>Docs</Button>
-          <IconButton
-            size='large'
-            edge='start'
-            color='inherit'
-            aria-label='open drawer'
-            sx={{ ml: 1, mr: 1 }}
-          >
-            <Badge badgeContent={2} color='error'>
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
+          {user ? (
+            <>
+              <Button color='inherit'>Docs</Button>
+              <IconButton
+                size='large'
+                edge='start'
+                color='inherit'
+                aria-label='open drawer'
+                sx={{ ml: 1, mr: 1 }}
+              >
+                <Badge badgeContent={2} color='error'>
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+            </>
+          ) : (
+            <>
+              <Button color='inherit'>Login</Button>
+            </>
+          )}
         </Toolbar>
       </AppBar>
       <Container
