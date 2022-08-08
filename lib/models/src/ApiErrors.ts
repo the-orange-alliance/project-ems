@@ -7,7 +7,7 @@ export class ApiErrorResponse extends Error {
     url: string = response.url
   ) {
     super(`Invalid API response from ${url}`);
-    this.name = `Error from API response: ${err.message} (${err.code})`;
+    this.name = `(${err.code}) Error: ${err.message}`;
     Error.captureStackTrace(this, ApiErrorResponse);
   }
 }
