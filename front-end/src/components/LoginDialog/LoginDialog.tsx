@@ -7,15 +7,20 @@ import {
   DialogTitle,
   TextField
 } from '@mui/material';
-import { ChangeEvent, FC, useEffect, useState } from 'react';
+import { ChangeEvent, FC, useEffect, useCallback, useState } from 'react';
+import { useSetRecoilState } from 'recoil';
+import { login } from 'src/api/ApiProvider';
+import { userAtom } from 'src/stores/Recoil';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSubmit: (username: string, password: string) => void;
+  onSubmit: (err: unknown | null) => void;
 }
 
 const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
+  const setUser = useSetRecoilState(userAtom);
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -28,7 +33,15 @@ const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
     setUsername(event.target.value);
   const updatePass = (event: ChangeEvent<HTMLInputElement>) =>
     setPassword(event.target.value);
-  const submit = () => onSubmit(username, password);
+  const submit = useCallback(async () => {
+    try {
+      const user = await login(username, password);
+      setUser(user);
+      onSubmit(null);
+    } catch (e) {
+      onSubmit(e);
+    }
+  }, []);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth='xs'>
