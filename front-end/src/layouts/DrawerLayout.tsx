@@ -14,8 +14,8 @@ import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import ListItemLink from '../components/ListItemLink/ListItemLink';
-import { AppRoute } from '../AppRoutes';
+import ListItemLink from 'src/components/ListItemLink/ListItemLink';
+import { AppRoute } from 'src/AppRoutes';
 
 const drawerWidth = 240;
 

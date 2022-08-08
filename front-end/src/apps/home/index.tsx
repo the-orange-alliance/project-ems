@@ -1,12 +1,12 @@
 import { FC } from 'react';
 import Grid from '@mui/material/Grid';
-import DefaultLayout from '../../layouts/DefaultLayout';
-import AppCard, { AppCardProps } from '../../components/AppCard/AppCard';
+import DefaultLayout from 'src/layouts/DefaultLayout';
+import AppCard, { AppCardProps } from 'src/components/AppCard/AppCard';
 
-import toaLogo from '../../assets/images/toa-logo.png';
-import twitchLogo from '../../assets/images/twitch-logo.png';
-import audienceDisplayLogo from '../../assets/images/audience-display-logo.png';
-import settingsLogo from '../../assets/images/settings-logo.png';
+import toaLogo from 'src/assets/images/toa-logo.png';
+import twitchLogo from 'src/assets/images/twitch-logo.png';
+import audienceDisplayLogo from 'src/assets/images/audience-display-logo.png';
+import settingsLogo from 'src/assets/images/settings-logo.png';
 
 const GridAppCard = (props: AppCardProps) => (
   <Grid item xs={5} md={3}>

@@ -3,8 +3,8 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import DrawerLayout from '../../layouts/DrawerLayout';
-import AppRoutes from '../../AppRoutes';
+import DrawerLayout from 'src/layouts/DrawerLayout';
+import AppRoutes from 'src/AppRoutes';
 
 const EventApp: FC = () => {
   return (

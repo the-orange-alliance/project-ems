@@ -5,7 +5,7 @@ import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import Typography from '@mui/material/Typography';
 
-import firstLogo from '../../assets/images/first-logo.png';
+import firstLogo from 'src/assets/images/first-logo.png';
 
 export interface AppCardProps {
   title: string;

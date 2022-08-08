@@ -12,11 +12,11 @@ import CssBaseline from '@mui/material/CssBaseline';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import LoginButton from '../features/components/LoginButton/LoginButton';
-import { userAtom } from '../stores/Recoil';
+import LoginButton from 'src/features/components/LoginButton/LoginButton';
+import { userAtom } from 'src/stores/Recoil';
 
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import emsAvatar from '../assets/favicon.ico';
+import emsAvatar from 'src/assets/favicon.ico';
 interface Props {
   containerWidth?: Breakpoint | false;
   children?: ReactNode;

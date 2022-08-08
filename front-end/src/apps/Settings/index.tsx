@@ -3,10 +3,10 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import DefaultLayout from '../../layouts/DefaultLayout';
+import DefaultLayout from 'src/layouts/DefaultLayout';
 import { FormControlLabel, FormGroup, Switch } from '@mui/material';
 import { useRecoilState } from 'recoil';
-import { darkModeAtom } from '../../stores/Recoil';
+import { darkModeAtom } from 'src/stores/Recoil';
 
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
