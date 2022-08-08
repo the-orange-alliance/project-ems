@@ -64,9 +64,9 @@ router.post(
   }
 );
 
-router.post('/logout', async (req: Request, res: Response) => {
+router.get('/logout', async (req: Request, res: Response) => {
   req.logout({}, () => {
-    res.send('logged out');
+    res.send({ message: 'successfully logged out' });
   });
 });
 

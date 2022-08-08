@@ -17,6 +17,7 @@ import { userAtom } from 'src/stores/Recoil';
 
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import emsAvatar from 'src/assets/favicon.ico';
+import LogoutButton from 'src/features/components/LogoutButton/LogoutButton';
 interface Props {
   containerWidth?: Breakpoint | false;
   children?: ReactNode;
@@ -47,6 +48,7 @@ const DefaultLayout: FC<Props> = ({ containerWidth, children }: Props) => {
           {user ? (
             <>
               <Button color='inherit'>Docs</Button>
+              <LogoutButton />
               <IconButton
                 size='large'
                 edge='start'

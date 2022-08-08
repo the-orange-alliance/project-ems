@@ -42,7 +42,7 @@ export const clientFetcher = async <T>(
     }
   }
 
-  if (!guard || !guard(data)) {
+  if (guard && !guard(data)) {
     throw new ApiErrorResponse(request, {
       code: 0,
       message: 'TypeGuard assertion failed.'

@@ -16,6 +16,9 @@ export const login = async (
     isUser
   );
 
+export const logout = async (): Promise<void> =>
+  clientFetcher('auth/logout', 'GET');
+
 export const useLoginAttempt = (
   username: string,
   password: string
