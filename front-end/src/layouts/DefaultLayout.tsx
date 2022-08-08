@@ -12,6 +12,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import LoginButton from '../features/components/LoginButton/LoginButton';
 import { userAtom } from '../stores/Recoil';
 
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -60,7 +61,7 @@ const DefaultLayout: FC<Props> = ({ containerWidth, children }: Props) => {
             </>
           ) : (
             <>
-              <Button color='inherit'>Login</Button>
+              <LoginButton />
             </>
           )}
         </Toolbar>
