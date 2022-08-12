@@ -1,11 +1,18 @@
 import { clientFetcher } from '@toa-lib/client';
-import { ApiErrorResponse, isUser, User } from '@toa-lib/models';
+import {
+  ApiErrorResponse,
+  User,
+  isUser,
+  isUserLoginResponse,
+  isUserArray,
+  UserLoginResponse
+} from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
 export const login = async (
   username: string,
   password: string
-): Promise<User> =>
+): Promise<UserLoginResponse> =>
   clientFetcher(
     'auth/login',
     'POST',
@@ -13,7 +20,7 @@ export const login = async (
       username,
       password
     },
-    isUser
+    isUserLoginResponse
   );
 
 export const logout = async (): Promise<void> =>
@@ -26,5 +33,12 @@ export const useLoginAttempt = (
   useSWR<User>(
     'auth/login',
     (url) => clientFetcher(url, 'POST', { username, password }, isUser),
+    { revalidateOnFocus: false }
+  );
+
+export const useUsers = (): SWRResponse<User[], ApiErrorResponse> =>
+  useSWR<User[]>(
+    'auth/users',
+    (url) => clientFetcher(url, 'GET', undefined, isUserArray),
     { revalidateOnFocus: false }
   );

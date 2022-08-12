@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import logger from '../util/Logger';
 import { isApiError } from '@toa-lib/models';
+import { RouteNotFound } from '../util/Errors';
 
-const handle = (
+const handleErrors = (
   error: unknown,
   req: Request,
   res: Response,
@@ -17,4 +18,9 @@ const handle = (
   }
 };
 
-export default handle;
+const handleCatchAll = (req: Request, res: Response, next: NextFunction) => {
+  logger.warn(`Route not found (${req.originalUrl})`);
+  res.status(404).send(JSON.stringify(RouteNotFound));
+};
+
+export { handleErrors, handleCatchAll };

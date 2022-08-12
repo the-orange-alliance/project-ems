@@ -10,6 +10,5 @@ export const DEFAULT_ADMIN_PASSWORD = 'admin';
 export const DEFAULT_ADMIN_USER: User = {
   id: 0,
   username: 'localhost',
-  permissions: '*',
-  token: ''
+  permissions: '*'
 };

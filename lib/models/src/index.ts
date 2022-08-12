@@ -6,7 +6,16 @@ export {
   DEFAULT_ADMIN_USERNAME
 } from './DefaultConfig';
 
-export { User, UserLogin, isUser, isUserLogin } from './User';
+export {
+  User,
+  UserLogin,
+  UserLoginResponse,
+  isUser,
+  isUserLoginResponse,
+  isUserArray,
+  isUserLogin
+} from './User';
+
 export {
   ApiErrorResponse,
   ApiError,

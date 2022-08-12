@@ -35,3 +35,8 @@ export const AuthenticationInvalidError: ApiError = {
   message:
     'Invalid credentials. Please use a valid username/password combination.'
 };
+
+export const RouteNotFound: ApiError = {
+  code: 404,
+  message: 'Route not found.'
+};

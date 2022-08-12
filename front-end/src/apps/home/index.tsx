@@ -3,7 +3,6 @@ import Grid from '@mui/material/Grid';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import AppCard, { AppCardProps } from 'src/components/AppCard/AppCard';
 
-import toaLogo from 'src/assets/images/toa-logo.png';
 import twitchLogo from 'src/assets/images/twitch-logo.png';
 import audienceDisplayLogo from 'src/assets/images/audience-display-logo.png';
 import settingsLogo from 'src/assets/images/settings-logo.png';
@@ -22,15 +21,11 @@ const HomeApp: FC = () => {
         <GridAppCard title='Match Manager' />
         <GridAppCard title='Audience Display' imgSrc={audienceDisplayLogo} />
         <GridAppCard title='Scoring App' />
+        <GridAppCard title='Account Manager' to='/accounts' />
         <GridAppCard
-          title='Live Broadcast'
+          title='Streaming App'
           href='https://twitch.tv/theorangealliance2'
           imgSrc={twitchLogo}
-        />
-        <GridAppCard
-          title='TOA Link'
-          href='https://theorangealliance.org'
-          imgSrc={toaLogo}
         />
         <GridAppCard title='Admin App' />
         <GridAppCard title='Advancement Manager' />

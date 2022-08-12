@@ -10,7 +10,7 @@ import {
   environment as env
 } from '@toa-lib/server';
 import authController from './controllers/Authentication';
-import errorHandler from './middleware/ErrorHandler';
+import { handleCatchAll, handleErrors } from './middleware/ErrorHandler';
 import logger from './util/Logger';
 import Database from './db/Database';
 
@@ -48,7 +48,8 @@ app.get('/', requireAuth, (req, res) => {
 });
 
 // Define error middleware
-app.use(errorHandler);
+app.use(handleErrors);
+app.use(handleCatchAll);
 
 // Passport serizliation
 passport.serializeUser((user, cb) => {

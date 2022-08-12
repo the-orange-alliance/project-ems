@@ -9,3 +9,6 @@ export const isNumber = (num: unknown): boolean =>
   typeof num === 'number' && !isNaN(num);
 
 export const isBoolean = (bool: unknown): boolean => typeof bool === 'boolean';
+
+export const isArray = (arr: unknown): arr is any[] =>
+  typeof arr !== 'undefined' && arr instanceof Array && Array.isArray(arr);

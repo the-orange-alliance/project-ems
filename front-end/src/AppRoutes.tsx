@@ -5,6 +5,7 @@ import SettingsApp from './apps/Settings';
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
+import AccountManager from './apps/AccountManager';
 
 export interface AppRoute {
   name: string;
@@ -29,6 +30,13 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: <EventManagerApp />,
     icon: <EventIcon />
+  },
+  {
+    name: 'Account Manager',
+    path: '/accounts',
+    group: 0,
+    element: <AccountManager />,
+    hidden: false
   },
   {
     name: 'Settings',

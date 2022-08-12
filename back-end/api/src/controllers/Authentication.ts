@@ -2,8 +2,9 @@ import { environment as env } from '@toa-lib/server';
 import {
   isUserLogin,
   User,
+  UserLoginResponse,
   DEFAULT_ADMIN_USERNAME,
-  isUser
+  DEFAULT_ADMIN_USER
 } from '@toa-lib/models';
 import { Response, Request, Router, NextFunction } from 'express';
 import passport from 'passport';
@@ -52,8 +53,9 @@ router.post(
               if (err) {
                 res.send(err);
               }
-              user.token = jwt.sign(user, env.get().jwtSecret);
-              return res.json(user);
+              const userLogin: UserLoginResponse = { ...user, token: '' };
+              userLogin.token = jwt.sign(user, env.get().jwtSecret);
+              return res.json(userLogin);
             });
           } else {
             next(AuthenticationNotLocalError);
@@ -68,6 +70,10 @@ router.get('/logout', async (req: Request, res: Response) => {
   req.logout({}, () => {
     res.send({ message: 'successfully logged out' });
   });
+});
+
+router.get('/users', async (req: Request, res: Response) => {
+  res.send([DEFAULT_ADMIN_USER]);
 });
 
 export default router;
