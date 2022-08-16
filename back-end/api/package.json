@@ -35,6 +35,7 @@
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
+    "promised-sqlite3": "^1.2.0",
     "socket.io": "^4.5.1",
     "sqlite3": "^5.0.11",
     "winston": "^3.8.1"

@@ -17,6 +17,7 @@ import {
 import { requireParams } from '../middleware/QueryParams';
 import { validateBody } from '../middleware/BodyValidator';
 import isLocal from '../util/Network';
+import { setupUsers } from '../db/Database';
 
 const router = Router();
 
@@ -42,7 +43,7 @@ router.post(
       { session: false },
       (err, user: User, info) => {
         if (err || !user) {
-          next(AuthenticationInvalidError);
+          return next(AuthenticationInvalidError);
         } else {
           // Do one final check - if they're using the admin user, validate they're local.
           if (
@@ -58,7 +59,7 @@ router.post(
               return res.json(userLogin);
             });
           } else {
-            next(AuthenticationNotLocalError);
+            return next(AuthenticationNotLocalError);
           }
         }
       }
@@ -75,5 +76,17 @@ router.get('/logout', async (req: Request, res: Response) => {
 router.get('/users', async (req: Request, res: Response) => {
   res.send([DEFAULT_ADMIN_USER]);
 });
+
+router.get(
+  '/setup',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const users = await setupUsers();
+      res.send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
 
 export default router;

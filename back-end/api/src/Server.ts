@@ -12,14 +12,14 @@ import {
 import authController from './controllers/Authentication';
 import { handleCatchAll, handleErrors } from './middleware/ErrorHandler';
 import logger from './util/Logger';
-import Database from './db/Database';
+import { initDataBase } from './db/Database';
 
 // Setup our environment
 env.loadAndSetDefaults();
 
 // App setup - if any of these fail the server should exit.
 try {
-  Database.init();
+  initDataBase();
 } catch (e) {
   logger.error(e);
   process.exit(1);
