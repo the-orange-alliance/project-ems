@@ -1,14 +1,17 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
-  ApiErrorResponse,
+  ApiResponseError,
   User,
   isUser,
   isUserLoginResponse,
   isUserArray,
-  UserLoginResponse
+  UserLoginResponse,
+  Event,
+  isEvent
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
+/** Simple requests for POST, PUT, DELETE */
 export const login = async (
   username: string,
   password: string
@@ -26,19 +29,33 @@ export const login = async (
 export const logout = async (): Promise<void> =>
   clientFetcher('auth/logout', 'GET');
 
+export const setupEventBase = async (): Promise<void> =>
+  clientFetcher('event/setup', 'GET');
+
+export const setupDefaultAccounts = async (): Promise<void> =>
+  clientFetcher('auth/setup', 'GET');
+
+/** React hooks to use GET requests for data. */
 export const useLoginAttempt = (
   username: string,
   password: string
-): SWRResponse<User, ApiErrorResponse> =>
+): SWRResponse<User, ApiResponseError> =>
   useSWR<User>(
     'auth/login',
     (url) => clientFetcher(url, 'POST', { username, password }, isUser),
     { revalidateOnFocus: false }
   );
 
-export const useUsers = (): SWRResponse<User[], ApiErrorResponse> =>
+export const useUsers = (): SWRResponse<User[], ApiResponseError> =>
   useSWR<User[]>(
     'auth/users',
     (url) => clientFetcher(url, 'GET', undefined, isUserArray),
+    { revalidateOnFocus: false }
+  );
+
+export const useEvent = (): SWRResponse<Event, ApiResponseError> =>
+  useSWR<Event>(
+    'event',
+    (url) => clientFetcher(url, 'GET', undefined, isEvent),
     { revalidateOnFocus: false }
   );

@@ -10,16 +10,17 @@ import {
   environment as env
 } from '@toa-lib/server';
 import authController from './controllers/Authentication';
+import eventController from './controllers/Event';
 import { handleCatchAll, handleErrors } from './middleware/ErrorHandler';
 import logger from './util/Logger';
-import { initDataBase } from './db/Database';
+import { initDatabase } from './db/Database';
 
 // Setup our environment
 env.loadAndSetDefaults();
 
 // App setup - if any of these fail the server should exit.
 try {
-  initDataBase();
+  initDatabase();
 } catch (e) {
   logger.error(e);
   process.exit(1);
@@ -41,6 +42,7 @@ passport.use(localStrategy());
 
 // Define our route controllers
 app.use('/auth', authController);
+app.use('/event', eventController);
 
 // Define root/testing paths
 app.get('/', requireAuth, (req, res) => {

@@ -1,7 +1,7 @@
 import {
   DEFAULT_API_PORT,
   DEFAULT_API_HOST,
-  ApiErrorResponse,
+  ApiResponseError,
   TypeGuard,
   isApiError
 } from '@toa-lib/models';
@@ -30,12 +30,12 @@ export const clientFetcher = async <T>(
 
   if (!request.ok) {
     if (isApiError(data)) {
-      throw new ApiErrorResponse(request, {
+      throw new ApiResponseError(request, {
         code: data.code,
         message: data.message
       });
     } else {
-      throw new ApiErrorResponse(request, {
+      throw new ApiResponseError(request, {
         code: request.status,
         message: request.statusText
       });
@@ -43,7 +43,7 @@ export const clientFetcher = async <T>(
   }
 
   if (guard && !guard(data)) {
-    throw new ApiErrorResponse(request, {
+    throw new ApiResponseError(request, {
       code: 0,
       message: 'TypeGuard assertion failed.'
     });

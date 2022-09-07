@@ -16,8 +16,11 @@ export {
   isUserLogin
 } from './User';
 
+export { Event, isEvent } from './Event';
+
 export {
-  ApiErrorResponse,
+  ApiResponseError,
+  ApiDatabaseError,
   ApiError,
   SQLError,
   isApiError,

@@ -4,7 +4,8 @@ import {
   User,
   UserLoginResponse,
   DEFAULT_ADMIN_USERNAME,
-  DEFAULT_ADMIN_USER
+  DEFAULT_ADMIN_USER,
+  isUserArray
 } from '@toa-lib/models';
 import { Response, Request, Router, NextFunction } from 'express';
 import passport from 'passport';
@@ -17,7 +18,7 @@ import {
 import { requireParams } from '../middleware/QueryParams';
 import { validateBody } from '../middleware/BodyValidator';
 import isLocal from '../util/Network';
-import { setupUsers } from '../db/Database';
+import { selectAll, setupUsers } from '../db/Database';
 
 const router = Router();
 
@@ -52,7 +53,7 @@ router.post(
           ) {
             req.login(user, { session: false }, (err) => {
               if (err) {
-                res.send(err);
+                return next(err);
               }
               const userLogin: UserLoginResponse = { ...user, token: '' };
               userLogin.token = jwt.sign(user, env.get().jwtSecret);
@@ -73,16 +74,24 @@ router.get('/logout', async (req: Request, res: Response) => {
   });
 });
 
-router.get('/users', async (req: Request, res: Response) => {
-  res.send([DEFAULT_ADMIN_USER]);
-});
+router.get(
+  '/users',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await selectAll('users');
+      res.send(data);
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
 
 router.get(
   '/setup',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const users = await setupUsers();
-      res.send({});
+      await setupUsers();
+      res.status(200).send({});
     } catch (e) {
       return next(e);
     }

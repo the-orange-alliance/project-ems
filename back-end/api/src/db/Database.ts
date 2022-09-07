@@ -1,12 +1,12 @@
 import { PromisedDatabase } from 'promised-sqlite3';
 import { getAppData, environment as env } from '@toa-lib/server';
-import { User } from '@toa-lib/models';
+import { ApiDatabaseError } from '@toa-lib/models';
 import { mkdir, readFile } from 'node:fs/promises';
 import { sep, join } from 'path';
 
 const db = new PromisedDatabase();
 
-export async function initDataBase() {
+export async function initDatabase() {
   // Make sure our appdata path is created
   try {
     await mkdir(getAppData('ems'), { recursive: true });
@@ -17,26 +17,41 @@ export async function initDataBase() {
   }
 }
 
-export async function setupUsers(): Promise<User[]> {
+export async function setupUsers(): Promise<void> {
   try {
     const createQuery = await getQueryFromFile('create_users.sql');
-    await db.run(createQuery);
-
-    const insertQuery = await getQueryFromFile('insert_users.sql');
-    await db.run(insertQuery);
-
-    const users = await selectAll<User>('users');
-    return users;
+    await db.exec(createQuery);
+    return;
   } catch (e) {
     throw e;
   }
 }
 
-export async function selectAll<T>(table: string): Promise<T[]> {
+export async function insertUsers(): Promise<void> {
+  try {
+    const insertQuery = await getQueryFromFile('insert_users.sql');
+    await db.exec(insertQuery);
+    return;
+  } catch (e) {
+    throw e;
+  }
+}
+
+export async function createEventBase(): Promise<void> {
+  try {
+    const createQuery = await getQueryFromFile('create_event.sql');
+    await db.exec(createQuery);
+    return;
+  } catch (e) {
+    throw e;
+  }
+}
+
+export async function selectAll(table: string): Promise<any[]> {
   try {
     return await db.all(`SELECT * FROM ${table};`);
   } catch (e) {
-    throw e;
+    throw new ApiDatabaseError(table, e);
   }
 }
 
@@ -47,7 +62,7 @@ export async function selectAll<T>(table: string): Promise<T[]> {
  */
 async function getQueryFromFile(filePath: string): Promise<string> {
   try {
-    const fullPath = join(__dirname, '../sql/' + filePath);
+    const fullPath = join(__dirname, '../../sql/' + filePath);
     const data = await readFile(fullPath);
     return data
       .toString()

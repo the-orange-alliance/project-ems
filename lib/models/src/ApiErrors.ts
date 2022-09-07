@@ -1,6 +1,6 @@
 import { isNonNullObject, isNumber, isString } from './types';
 
-export class ApiErrorResponse extends Error {
+export class ApiResponseError extends Error {
   constructor(
     public response: Response,
     err: ApiError,
@@ -8,7 +8,20 @@ export class ApiErrorResponse extends Error {
   ) {
     super(err.message);
     this.name = `Invalid API Response from ${url} with code ${err.code}.`;
-    Error.captureStackTrace(this, ApiErrorResponse);
+    Error.captureStackTrace(this, ApiResponseError);
+  }
+}
+
+export class ApiDatabaseError extends Error {
+  constructor(table: string, err: unknown) {
+    super();
+    if (err instanceof Error) {
+      this.message = err.message;
+      this.name = `Error while executing query (${err.name}) in table ${table}.`;
+    } else {
+      this.name = `Error while executing query in table ${table}.`;
+    }
+    Error.captureStackTrace(this, ApiDatabaseError);
   }
 }
 
