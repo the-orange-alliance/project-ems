@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS "users" (
 CREATE TABLE IF NOT EXISTS "user_tokens" (
   "token"              VARCHAR(255) PRIMARY KEY NOT NULL,
   "expires"            DATE NOT NULL,
-  "user_id"            INTEGER NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES "users"(user_id)
+  "userId"            INTEGER NOT NULL,
+  FOREIGN KEY (userId) REFERENCES "users"(userId)
 );

@@ -2,10 +2,11 @@ import { ReactNode } from 'react';
 import HomeApp from './apps/Home';
 import EventManagerApp from './apps/EventManager';
 import SettingsApp from './apps/Settings';
+import AccountManager from './apps/AccountManager';
+import AdminApp from './apps/Admin/AdminApp';
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
-import AccountManager from './apps/AccountManager';
 
 export interface AppRoute {
   name: string;
@@ -37,6 +38,13 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: <AccountManager />,
     hidden: false
+  },
+  {
+    name: 'Admin App',
+    path: '/admin',
+    group: 0,
+    element: <AdminApp />,
+    hidden: true
   },
   {
     name: 'Settings',

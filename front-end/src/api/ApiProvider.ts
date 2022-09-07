@@ -35,6 +35,9 @@ export const setupEventBase = async (): Promise<void> =>
 export const setupDefaultAccounts = async (): Promise<void> =>
   clientFetcher('auth/setup', 'GET');
 
+export const purgeAll = async (): Promise<void> =>
+  clientFetcher('admin/purge', 'DELETE');
+
 /** React hooks to use GET requests for data. */
 export const useLoginAttempt = (
   username: string,

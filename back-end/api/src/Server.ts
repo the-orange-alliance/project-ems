@@ -9,6 +9,7 @@ import {
   requireAuth,
   environment as env
 } from '@toa-lib/server';
+import adminController from './controllers/Admin';
 import authController from './controllers/Authentication';
 import eventController from './controllers/Event';
 import { handleCatchAll, handleErrors } from './middleware/ErrorHandler';
@@ -41,6 +42,7 @@ passport.use(jwtStrategy(env.get().jwtSecret));
 passport.use(localStrategy());
 
 // Define our route controllers
+app.use('/admin', adminController);
 app.use('/auth', authController);
 app.use('/event', eventController);
 

@@ -27,7 +27,7 @@ const HomeApp: FC = () => {
           href='https://twitch.tv/theorangealliance2'
           imgSrc={twitchLogo}
         />
-        <GridAppCard title='Admin App' />
+        <GridAppCard title='Admin App' to='/admin' />
         <GridAppCard title='Advancement Manager' />
         <GridAppCard title='Report App' />
         <GridAppCard title='Settings' imgSrc={settingsLogo} to='/settings' />

@@ -47,6 +47,16 @@ export async function createEventBase(): Promise<void> {
   }
 }
 
+export async function purgeAll(): Promise<void> {
+  try {
+    const purgeQuery = await getQueryFromFile('purge.sql');
+    await db.exec(purgeQuery);
+    return;
+  } catch (e) {
+    throw e;
+  }
+}
+
 export async function selectAll(table: string): Promise<any[]> {
   try {
     return await db.all(`SELECT * FROM ${table};`);

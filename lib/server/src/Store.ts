@@ -2,7 +2,10 @@ import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import getAppData from './Appdata';
 
-export async function setAll(file: string, data: any): Promise<void> {
+export async function setAll(
+  file: string,
+  data: Record<string, unknown>
+): Promise<void> {
   try {
     const filePath = join(getAppData('ems'), file);
     await writeFile(filePath, JSON.stringify(data));
@@ -16,7 +19,7 @@ export async function getAll(file: string): Promise<Record<string, unknown>> {
   try {
     const filePath = join(getAppData('ems'), file);
     const data = await readFile(filePath);
-    return data.toJSON();
+    return JSON.parse(data.toString());
   } catch (e) {
     throw e;
   }
