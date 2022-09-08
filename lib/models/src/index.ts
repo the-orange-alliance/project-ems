@@ -28,6 +28,13 @@ export {
 } from './ApiErrors';
 
 export {
+  ApiStoragePatch,
+  ApiStoragePost,
+  isAppStoragePatch,
+  isAppStoragePost
+} from './ApiStorage';
+
+export {
   TypeGuard,
   isBoolean,
   isNonNullObject,

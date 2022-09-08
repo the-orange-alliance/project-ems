@@ -3,9 +3,7 @@ import {
   isUserLogin,
   User,
   UserLoginResponse,
-  DEFAULT_ADMIN_USERNAME,
-  DEFAULT_ADMIN_USER,
-  isUserArray
+  DEFAULT_ADMIN_USERNAME
 } from '@toa-lib/models';
 import { Response, Request, Router, NextFunction } from 'express';
 import passport from 'passport';

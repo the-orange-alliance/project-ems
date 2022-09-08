@@ -38,6 +38,18 @@ export const setupDefaultAccounts = async (): Promise<void> =>
 export const purgeAll = async (): Promise<void> =>
   clientFetcher('admin/purge', 'DELETE');
 
+/** Requests to manipulate data */
+export const setApiStorageKey = async (
+  file: string,
+  key: string,
+  data: unknown
+): Promise<void> => clientFetcher('storage', 'PATCH', { file, key, data });
+
+export const setApiStorage = async (
+  file: string,
+  data: unknown
+): Promise<void> => clientFetcher('storage', 'POST', { file, data });
+
 /** React hooks to use GET requests for data. */
 export const useLoginAttempt = (
   username: string,
@@ -62,3 +74,10 @@ export const useEvent = (): SWRResponse<Event, ApiResponseError> =>
     (url) => clientFetcher(url, 'GET', undefined, isEvent),
     { revalidateOnFocus: false }
   );
+
+export const useApiStorage = <T>(
+  file: string
+): SWRResponse<T, ApiResponseError> =>
+  useSWR<T>(`storage/${file}`, (url) => clientFetcher(url, 'GET'), {
+    revalidateOnFocus: false
+  });

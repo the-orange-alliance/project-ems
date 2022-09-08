@@ -13,7 +13,7 @@ export const options = {
 
 export const clientFetcher = async <T>(
   url: string,
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
   body?: unknown,
   guard?: TypeGuard<T>
 ): Promise<T> => {
