@@ -50,6 +50,9 @@ export const setApiStorage = async (
   data: unknown
 ): Promise<void> => clientFetcher('storage', 'POST', { file, data });
 
+export const postEvent = async (event: Event): Promise<void> =>
+  clientFetcher('event', 'POST', event);
+
 /** React hooks to use GET requests for data. */
 export const useLoginAttempt = (
   username: string,
@@ -69,10 +72,8 @@ export const useUsers = (): SWRResponse<User[], ApiResponseError> =>
   );
 
 export const useEvent = (): SWRResponse<Event, ApiResponseError> =>
-  useSWR<Event>(
-    'event',
-    (url) => clientFetcher(url, 'GET', undefined, isEvent),
-    { revalidateOnFocus: false }
+  useSWR<Event>('event', (url) =>
+    clientFetcher(url, 'GET', undefined, isEvent)
   );
 
 export const useApiStorage = <T>(

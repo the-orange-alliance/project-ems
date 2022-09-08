@@ -10,13 +10,31 @@ export interface Event {
   venue: string;
   eventTypeKey: string;
   city: string;
-  state_prov: string;
-  start_date: string;
-  end_date: string;
+  stateProv: string;
+  startDate: string;
+  endDate: string;
   country: string;
   website: string;
-  field_count: number;
+  fieldCount: number;
 }
+
+export const defaultEvent: Event = {
+  eventKey: '',
+  seasonKey: '',
+  regionKey: '',
+  eventType: '',
+  eventName: '',
+  divisionName: '',
+  venue: '',
+  eventTypeKey: '',
+  city: '',
+  stateProv: '',
+  startDate: '',
+  endDate: '',
+  country: '',
+  website: '',
+  fieldCount: 2
+};
 
 export const isEvent = (obj: unknown): obj is Event =>
   isNonNullObject(obj) &&

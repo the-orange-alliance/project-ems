@@ -1,5 +1,7 @@
+import { isEvent } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
-import { createEventBase, selectAll } from '../db/Database';
+import { createEventBase, insertValue, selectAll } from '../db/Database';
+import { validateBody } from '../middleware/BodyValidator';
 import { DataNotFoundError } from '../util/Errors';
 
 const router = Router();
@@ -15,6 +17,19 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     return next(e);
   }
 });
+
+router.post(
+  '/',
+  validateBody(isEvent),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await insertValue('event', [req.body]);
+      res.status(200).send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
 
 router.get(
   '/setup',

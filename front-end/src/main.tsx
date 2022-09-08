@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { RecoilRoot, useRecoilValue } from 'recoil';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import App from './App';
 import { fgcTheme } from './AppTheme';
 import { darkModeAtom } from './stores/Recoil';
@@ -28,9 +30,11 @@ function Main() {
 root.render(
   <StrictMode>
     <BrowserRouter>
-      <RecoilRoot>
-        <Main />
-      </RecoilRoot>
+      <LocalizationProvider dateAdapter={AdapterMoment}>
+        <RecoilRoot>
+          <Main />
+        </RecoilRoot>
+      </LocalizationProvider>
     </BrowserRouter>
   </StrictMode>
 );

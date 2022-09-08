@@ -65,6 +65,32 @@ export async function selectAll(table: string): Promise<any[]> {
   }
 }
 
+export async function selectAllWhere(
+  table: string,
+  where: string
+): Promise<any[]> {
+  try {
+    return await db.all(`SELECT * FROM ${table} WHERE ${where};`);
+  } catch (e) {
+    throw new ApiDatabaseError(table, e);
+  }
+}
+
+export async function insertValue<T>(
+  table: string,
+  values: Record<keyof NonNullable<T>, unknown>[]
+) {
+  try {
+    const columns = getColumns(values);
+    const query = `INSERT INTO ${table} (${Array.from(
+      columns
+    ).toString()}) VALUES ${getValuesString(columns, values)}`;
+    return await db.all(query);
+  } catch (e) {
+    throw new ApiDatabaseError(table, e);
+  }
+}
+
 /**
  * Internal async function to get a query from the sql/ directory in the api folder.
  * @param filePath - String that is the file's name or path if sub-folders exist.

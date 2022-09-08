@@ -16,7 +16,7 @@ export {
   isUserLogin
 } from './User';
 
-export { Event, isEvent } from './Event';
+export { Event, isEvent, defaultEvent } from './Event';
 
 export {
   ApiResponseError,
