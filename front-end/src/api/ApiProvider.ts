@@ -7,7 +7,9 @@ import {
   isUserArray,
   UserLoginResponse,
   Event,
-  isEvent
+  isEvent,
+  Team,
+  isTeamArray
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -58,6 +60,12 @@ export const patchEvent = async (
   event: Event
 ): Promise<void> => clientFetcher(`event/${eventKey}`, 'PATCH', event);
 
+export const postTeams = async (teams: Team): Promise<void> =>
+  clientFetcher('teams', 'POST', teams);
+
+export const patchTeam = async (teamKey: string, team: Team): Promise<void> =>
+  clientFetcher(`teams/${teamKey}`, 'PATCH', team);
+
 /** React hooks to use GET requests for data. */
 export const useLoginAttempt = (
   username: string,
@@ -87,5 +95,10 @@ export const useApiStorage = <T>(
   file: string
 ): SWRResponse<T, ApiResponseError> =>
   useSWR<T>(`storage/${file}`, (url) => clientFetcher(url, 'GET'), {
+    revalidateOnFocus: false
+  });
+
+export const useTeams = (): SWRResponse<Team[], ApiResponseError> =>
+  useSWR('teams', (url) => clientFetcher(url, 'GET'), {
     revalidateOnFocus: false
   });

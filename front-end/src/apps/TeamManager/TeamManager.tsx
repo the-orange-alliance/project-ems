@@ -1,5 +1,6 @@
-import { ChangeEvent, FC, useState } from 'react';
+import { ChangeEvent, FC, useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
@@ -7,9 +8,17 @@ import DefaultLayout from 'src/layouts/DefaultLayout';
 import UploadButton from 'src/components/UploadButton/UploadButton';
 import TeamsTable from 'src/features/components/TeamsTable/TeamsTable';
 import { Team } from '@toa-lib/models';
+import { useTeams } from 'src/api/ApiProvider';
+
+import AddIcon from '@mui/icons-material/Add';
 
 const TeamManager: FC = () => {
   const [teams, setTeams] = useState<Team[]>([]);
+  const { data } = useTeams();
+
+  useEffect(() => {
+    if (data) setTeams(data);
+  }, [data]);
 
   const handleUpload = async (
     e: ChangeEvent<HTMLInputElement>
@@ -57,11 +66,26 @@ const TeamManager: FC = () => {
           }}
         >
           <Typography variant='h4'>Team Manager</Typography>
-          <UploadButton title='Upload Teams' onUpload={handleUpload} />
         </Box>
         <Divider />
         <Box sx={{ padding: (theme) => theme.spacing(2) }}>
-          <TeamsTable teams={teams} />
+          <Box
+            sx={{
+              marginBottom: (theme) => theme.spacing(2),
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: (theme) => theme.spacing(2)
+            }}
+          >
+            <Button
+              variant='contained'
+              sx={{ padding: '4px', minWidth: '24px' }}
+            >
+              <AddIcon />
+            </Button>
+            <UploadButton title='Upload Teams' onUpload={handleUpload} />
+          </Box>
+          {teams.length > 0 && <TeamsTable teams={teams} />}
         </Box>
       </Paper>
     </DefaultLayout>

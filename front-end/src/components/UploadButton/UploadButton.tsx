@@ -1,5 +1,5 @@
 import { ChangeEvent, FC } from 'react';
-import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 
 import UploadIcon from '@mui/icons-material/Upload';
@@ -12,10 +12,14 @@ interface Props {
 const UploadButton: FC<Props> = ({ title, onUpload }) => {
   return (
     <Tooltip title={title}>
-      <IconButton component='label'>
+      <Button
+        variant='contained'
+        component='label'
+        sx={{ padding: '4px', minWidth: '24px' }}
+      >
         <input hidden accept='.csv' type='file' onChange={onUpload} />
         <UploadIcon />
-      </IconButton>
+      </Button>
     </Tooltip>
   );
 };
