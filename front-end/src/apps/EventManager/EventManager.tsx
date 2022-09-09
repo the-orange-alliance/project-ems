@@ -10,7 +10,12 @@ import TextField from '@mui/material/TextField';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import DrawerLayout from 'src/layouts/DrawerLayout';
 import AppRoutes from 'src/AppRoutes';
-import { postEvent, setupEventBase, useEvent } from 'src/api/ApiProvider';
+import {
+  patchEvent,
+  postEvent,
+  setupEventBase,
+  useEvent
+} from 'src/api/ApiProvider';
 import { Event, defaultEvent } from '@toa-lib/models';
 
 const EventApp: FC = () => {
@@ -18,7 +23,7 @@ const EventApp: FC = () => {
   const [startDate, setStartDate] = useState<Moment | null>(moment());
   const [endDate, setEndDate] = useState<Moment | null>(moment());
 
-  const { data, error } = useEvent();
+  const { data, error, mutate } = useEvent();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setEvent({ ...event, [e.target.name]: e.target.value });
@@ -32,8 +37,12 @@ const EventApp: FC = () => {
       setEvent(data);
       setStartDate(moment(event.startDate));
       setEndDate(moment(event.endDate));
+    } else if (error) {
+      setEvent(defaultEvent);
+      setStartDate(moment());
+      setEndDate(moment());
     }
-  }, [data]);
+  }, [data, error]);
 
   const setup = async (): Promise<void> => {
     try {
@@ -47,6 +56,7 @@ const EventApp: FC = () => {
       event.fieldCount = parseInt(`${event.fieldCount}`);
       await setupEventBase();
       await postEvent(event);
+      await mutate();
       // TODO - Insert a SnackBar via a SnackBar manager via recoil probably
     } catch (e) {
       console.log(e);
@@ -54,7 +64,12 @@ const EventApp: FC = () => {
   };
 
   const modify = async (): Promise<void> => {
-    console.log(event);
+    try {
+      await patchEvent(event.eventKey, event);
+      await mutate();
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   return (

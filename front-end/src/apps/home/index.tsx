@@ -19,6 +19,7 @@ const HomeApp: FC = () => {
       <Grid container spacing={4} columns={15}>
         <GridAppCard title='Event Manager' to='/event-manager' />
         <GridAppCard title='Match Manager' />
+        <GridAppCard title='Team Manager' to='/team-manager' />
         <GridAppCard title='Audience Display' imgSrc={audienceDisplayLogo} />
         <GridAppCard title='Scoring App' />
         <GridAppCard title='Account Manager' to='/accounts' />
@@ -28,7 +29,6 @@ const HomeApp: FC = () => {
           imgSrc={twitchLogo}
         />
         <GridAppCard title='Admin App' to='/admin' />
-        <GridAppCard title='Advancement Manager' />
         <GridAppCard title='Report App' />
         <GridAppCard title='Settings' imgSrc={settingsLogo} to='/settings' />
       </Grid>

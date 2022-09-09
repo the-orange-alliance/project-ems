@@ -17,6 +17,7 @@ export {
 } from './User';
 
 export { Event, isEvent, defaultEvent } from './Event';
+export { Team, isTeam, isTeamArray, defaultTeam } from './Team';
 
 export {
   ApiResponseError,

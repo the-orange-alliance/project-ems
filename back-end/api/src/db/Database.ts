@@ -91,6 +91,20 @@ export async function insertValue<T>(
   }
 }
 
+export async function updateWhere<T>(
+  table: string,
+  value: Record<keyof NonNullable<T>, unknown>,
+  where: string
+) {
+  try {
+    const update = getUpdateString(value);
+    const query = `UPDATE ${table} SET ${update} WHERE ${where};`;
+    return await db.all(query);
+  } catch (e) {
+    throw new ApiDatabaseError(table, e);
+  }
+}
+
 /**
  * Internal async function to get a query from the sql/ directory in the api folder.
  * @param filePath - String that is the file's name or path if sub-folders exist.
@@ -108,6 +122,12 @@ async function getQueryFromFile(filePath: string): Promise<string> {
   } catch (e) {
     throw e;
   }
+}
+
+function getUpdateString(value: Record<string, unknown>): string {
+  return Object.keys(value)
+    .map((key: string) => `"${key}" = "${value[key]}"`)
+    .toString();
 }
 
 function getValuesString(

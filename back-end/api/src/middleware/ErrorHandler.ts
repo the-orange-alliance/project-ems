@@ -10,13 +10,17 @@ const handleErrors = (
   next: NextFunction
 ) => {
   if (error instanceof ApiDatabaseError) {
-    logger.error(`[500] ${error.message} (${req.originalUrl})`);
+    logger.error(`[500] ${error.message} (${req.method} - ${req.originalUrl})`);
     res.status(500).send(toApiError(error));
   } else if (isApiError(error)) {
-    logger.error(`[${error.code}] ${error.message} (${req.originalUrl})`);
+    logger.error(
+      `[${error.code}] ${error.message} (${req.method} - ${req.originalUrl})`
+    );
     res.status(error.code).send(JSON.stringify(error));
   } else {
-    logger.error(`${JSON.stringify(error)} (${req.originalUrl})`);
+    logger.error(
+      `${JSON.stringify(error)} (${req.method} - ${req.originalUrl})`
+    );
     res.status(500).send(JSON.stringify(error));
   }
 };

@@ -2,7 +2,7 @@ import { StrictMode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RecoilRoot, useRecoilValue } from 'recoil';
 import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import App from './App';
