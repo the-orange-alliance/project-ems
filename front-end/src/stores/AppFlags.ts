@@ -26,7 +26,7 @@ export function useFlags(): [
     value: boolean
   ): Promise<void> => {
     setAppFlags({ ...appFlags, [flag]: value });
-    setFlag(flag, value);
+    await setFlag(flag, value);
   };
 
   const purge = async (): Promise<void> => {
