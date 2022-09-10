@@ -9,12 +9,22 @@ import TableBody from '@mui/material/TableBody';
 import Tooltip from '@mui/material/Tooltip';
 import TableActions from './TableActions';
 import { Team } from '@toa-lib/models';
+import { useSetRecoilState } from 'recoil';
+import {
+  selectedTeamAtom,
+  teamDialogOpen,
+  teamRemoveDialogOpen
+} from 'src/stores/Recoil';
 
 interface Props {
   teams: Team[];
 }
 
 const TeamsTable: FC<Props> = ({ teams }) => {
+  const setSelectedTeam = useSetRecoilState(selectedTeamAtom);
+  const setDialogOpen = useSetRecoilState(teamDialogOpen);
+  const setRemoveDialogOpen = useSetRecoilState(teamRemoveDialogOpen);
+
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
       <TableContainer>
@@ -34,24 +44,34 @@ const TeamsTable: FC<Props> = ({ teams }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {teams.map((team) => (
-              <TableRow key={team.eventParticipantKey} hover>
-                <TableCell>{team.teamKey}</TableCell>
-                <TableCell>{team.eventParticipantKey}</TableCell>
-                <TableCell>{team.teamNameShort}</TableCell>
-                <TableCell>{team.teamNameLong}</TableCell>
-                <TableCell>{team.robotName}</TableCell>
-                <TableCell>
-                  {[team.city, team.stateProv, team.country]
-                    .filter((str) => str.length > 0)
-                    .toString()}
-                </TableCell>
-                <TableCell>{team.countryCode}</TableCell>
-                <TableCell align='center'>
-                  <TableActions />
-                </TableCell>
-              </TableRow>
-            ))}
+            {teams.map((team) => {
+              const onEdit = (): void => {
+                setSelectedTeam(team);
+                setDialogOpen(true);
+              };
+              const onDelete = (): void => {
+                setSelectedTeam(team);
+                setRemoveDialogOpen(true);
+              };
+              return (
+                <TableRow key={team.eventParticipantKey} hover>
+                  <TableCell>{team.teamKey}</TableCell>
+                  <TableCell>{team.eventParticipantKey}</TableCell>
+                  <TableCell>{team.teamNameShort}</TableCell>
+                  <TableCell>{team.teamNameLong}</TableCell>
+                  <TableCell>{team.robotName}</TableCell>
+                  <TableCell>
+                    {[team.city, team.stateProv, team.country]
+                      .filter((str) => str.length > 0)
+                      .toString()}
+                  </TableCell>
+                  <TableCell>{team.countryCode}</TableCell>
+                  <TableCell align='center'>
+                    <TableActions onDelete={onDelete} onEdit={onEdit} />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>

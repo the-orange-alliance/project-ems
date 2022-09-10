@@ -60,7 +60,7 @@ export const patchEvent = async (
   event: Event
 ): Promise<void> => clientFetcher(`event/${eventKey}`, 'PATCH', event);
 
-export const postTeams = async (teams: Team): Promise<void> =>
+export const postTeams = async (teams: Team[]): Promise<void> =>
   clientFetcher('teams', 'POST', teams);
 
 export const patchTeam = async (teamKey: string, team: Team): Promise<void> =>

@@ -1,6 +1,11 @@
 import { isTeam, isTeamArray } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
-import { insertValue, selectAll, updateWhere } from '../db/Database';
+import {
+  insertValue,
+  selectAll,
+  selectAllWhere,
+  updateWhere
+} from '../db/Database';
 import { validateBody } from '../middleware/BodyValidator';
 import { DataNotFoundError } from '../util/Errors';
 
@@ -8,15 +13,30 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const [data] = await selectAll('team');
-    if (!data) {
-      return next(DataNotFoundError);
-    }
+    const data = await selectAll('team');
     res.send(data);
   } catch (e) {
     return next(e);
   }
 });
+
+router.get(
+  '/:teamKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await selectAllWhere(
+        'team',
+        `teamKey = ${req.params.teamKey}`
+      );
+      if (!data) {
+        return next(DataNotFoundError);
+      }
+      res.send(data);
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
 
 router.post(
   '/',
@@ -32,11 +52,11 @@ router.post(
 );
 
 router.patch(
-  '/:eventKey',
+  '/:teamKey',
   validateBody(isTeam),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await updateWhere('team', req.body, `teamKey = "${req.params.eventKey}"`);
+      await updateWhere('team', req.body, `teamKey = "${req.params.teamKey}"`);
       res.status(200).send({});
     } catch (e) {
       return next(e);

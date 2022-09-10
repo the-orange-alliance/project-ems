@@ -7,11 +7,13 @@ import {
 
 export interface AppFlags {
   createdEvent: boolean;
+  createdTeams: boolean;
   createdAccounts: boolean;
 }
 
 const defaultFlags: AppFlags = {
   createdEvent: false,
+  createdTeams: false,
   createdAccounts: false
 };
 
@@ -33,5 +35,10 @@ export async function setFlag(
   value: boolean
 ): Promise<void> {
   await setApiStorageKey('flags.json', flag, value);
+  return;
+}
+
+export async function purgeFlags(): Promise<void> {
+  await setApiStorage('flags.json', {});
   return;
 }

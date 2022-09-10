@@ -15,7 +15,7 @@ const UploadButton: FC<Props> = ({ title, onUpload }) => {
       <Button
         variant='contained'
         component='label'
-        sx={{ padding: '4px', minWidth: '24px' }}
+        sx={{ padding: '6px', minWidth: '24px' }}
       >
         <input hidden accept='.csv' type='file' onChange={onUpload} />
         <UploadIcon />

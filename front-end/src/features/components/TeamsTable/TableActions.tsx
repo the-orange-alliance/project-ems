@@ -5,13 +5,18 @@ import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const TableActions: FC = () => {
+interface Props {
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+const TableActions: FC<Props> = ({ onEdit, onDelete }) => {
   return (
     <ButtonGroup>
-      <IconButton size='small'>
+      <IconButton size='small' onClick={onDelete}>
         <DeleteIcon />
       </IconButton>
-      <IconButton size='small'>
+      <IconButton size='small' onClick={onEdit}>
         <EditIcon />
       </IconButton>
     </ButtonGroup>

@@ -1,7 +1,7 @@
-import { isArray, isNonNullObject, isString } from './types';
+import { isArray, isNonNullObject, isNumber, isString } from './types';
 
 export interface Team {
-  teamKey: string;
+  teamKey: number;
   eventParticipantKey: string;
   hasCard: boolean;
   teamNameShort: string;
@@ -11,12 +11,12 @@ export interface Team {
   stateProv: string;
   country: string;
   countryCode: string;
-  rookieYear: string;
+  rookieYear: number;
   cardStatus: number;
 }
 
 export const defaultTeam: Team = {
-  teamKey: '',
+  teamKey: 0,
   eventParticipantKey: '',
   hasCard: false,
   teamNameShort: '',
@@ -26,13 +26,13 @@ export const defaultTeam: Team = {
   stateProv: '',
   country: '',
   countryCode: '',
-  rookieYear: '',
+  rookieYear: 2022,
   cardStatus: 0
 };
 
 export const isTeam = (obj: unknown): obj is Team =>
   isNonNullObject(obj) &&
-  isString(obj.teamKey) &&
+  isNumber(obj.teamKey) &&
   isString(obj.eventParticipantKey);
 
 export const isTeamArray = (obj: unknown): obj is Team[] =>

@@ -12,6 +12,7 @@ import {
 import adminController from './controllers/Admin';
 import authController from './controllers/Authentication';
 import eventController from './controllers/Event';
+import teamController from './controllers/Team';
 import storageController from './controllers/Storage';
 import { handleCatchAll, handleErrors } from './middleware/ErrorHandler';
 import logger from './util/Logger';
@@ -46,6 +47,7 @@ passport.use(localStrategy());
 app.use('/admin', adminController);
 app.use('/auth', authController);
 app.use('/event', eventController);
+app.use('/teams', teamController);
 app.use('/storage', storageController);
 
 // Define root/testing paths

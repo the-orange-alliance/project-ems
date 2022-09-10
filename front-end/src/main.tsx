@@ -1,4 +1,4 @@
-import { StrictMode, useMemo } from 'react';
+import { StrictMode, useMemo, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RecoilRoot, useRecoilValue } from 'recoil';
 import { BrowserRouter } from 'react-router-dom';
@@ -29,12 +29,14 @@ function Main() {
 
 root.render(
   <StrictMode>
-    <BrowserRouter>
-      <LocalizationProvider dateAdapter={AdapterMoment}>
-        <RecoilRoot>
-          <Main />
-        </RecoilRoot>
-      </LocalizationProvider>
-    </BrowserRouter>
+    <RecoilRoot>
+      <BrowserRouter>
+        <LocalizationProvider dateAdapter={AdapterMoment}>
+          <Suspense>
+            <Main />
+          </Suspense>
+        </LocalizationProvider>
+      </BrowserRouter>
+    </RecoilRoot>
   </StrictMode>
 );

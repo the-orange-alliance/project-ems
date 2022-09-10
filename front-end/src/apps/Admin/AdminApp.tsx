@@ -2,11 +2,13 @@ import { Box, Button, Divider, Paper, Typography } from '@mui/material';
 import { FC } from 'react';
 import { purgeAll } from 'src/api/ApiProvider';
 import DefaultLayout from 'src/layouts/DefaultLayout';
+import { purgeFlags } from 'src/stores/AppFlags';
 
 const AdminApp: FC = () => {
   const handlePurge = async (): Promise<void> => {
     try {
       await purgeAll();
+      await purgeFlags();
     } catch (e) {
       console.log(e);
     }

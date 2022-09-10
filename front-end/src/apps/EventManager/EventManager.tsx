@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useEffect, useState } from 'react';
+import { ChangeEvent, FC, useState, useEffect } from 'react';
 import moment, { Moment } from 'moment';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -10,53 +10,61 @@ import TextField from '@mui/material/TextField';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import DrawerLayout from 'src/layouts/DrawerLayout';
 import AppRoutes from 'src/AppRoutes';
-import {
-  patchEvent,
-  postEvent,
-  setupEventBase,
-  useEvent
-} from 'src/api/ApiProvider';
-import { Event, defaultEvent } from '@toa-lib/models';
+import { patchEvent, postEvent, setupEventBase } from 'src/api/ApiProvider';
+import { useRecoilState } from 'recoil';
+import { eventAtom } from 'src/stores/Recoil';
+import { setFlag, useFlags } from 'src/stores/AppFlags';
 
 const EventApp: FC = () => {
-  const [event, setEvent] = useState<Event>(defaultEvent);
   const [startDate, setStartDate] = useState<Moment | null>(moment());
   const [endDate, setEndDate] = useState<Moment | null>(moment());
 
-  const { data, error, mutate } = useEvent();
+  const [flags] = useFlags();
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    setEvent({ ...event, [e.target.name]: e.target.value });
-  };
-
-  const handleStartChange = (newValue: Moment | null) => setStartDate(newValue);
-  const handleEndChange = (newValue: Moment | null) => setEndDate(newValue);
+  const [event, setEvent] = useRecoilState(eventAtom);
 
   useEffect(() => {
-    if (data) {
-      setEvent(data);
-      setStartDate(moment(event.startDate));
-      setEndDate(moment(event.endDate));
-    } else if (error) {
-      setEvent(defaultEvent);
-      setStartDate(moment());
-      setEndDate(moment());
+    if (!flags.createdEvent) {
+      setEvent({
+        ...event,
+        seasonKey: '22',
+        regionKey: 'FGC',
+        eventKey: '22-FGC-CMP',
+        startDate: startDate ? startDate.toISOString() : moment().toISOString(),
+        endDate: endDate ? endDate.toISOString() : moment().toISOString()
+      });
     }
-  }, [data, error]);
+  }, []);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    if (e.target.type === 'number') {
+      setEvent({ ...event, [e.target.name]: parseInt(e.target.value) });
+    } else {
+      setEvent({ ...event, [e.target.name]: e.target.value });
+    }
+  };
+
+  const handleStartChange = (newValue: Moment | null) => {
+    setStartDate(newValue);
+    setEvent({
+      ...event,
+      startDate: newValue ? newValue.toISOString() : moment().toISOString()
+    });
+  };
+
+  const handleEndChange = (newValue: Moment | null) => {
+    setEndDate(newValue);
+    setEvent({
+      ...event,
+      startDate: newValue ? newValue.toISOString() : moment().toISOString()
+    });
+  };
 
   const setup = async (): Promise<void> => {
     try {
-      event.seasonKey = '22';
-      event.regionKey = 'FGC';
-      event.eventKey = '22-FGC-CMP';
-      event.startDate = startDate
-        ? startDate.toISOString()
-        : moment().toISOString();
-      event.endDate = endDate ? endDate.toISOString() : moment().toISOString();
-      event.fieldCount = parseInt(`${event.fieldCount}`);
       await setupEventBase();
       await postEvent(event);
-      await mutate();
+      await setFlag('createdEvent', true);
       // TODO - Insert a SnackBar via a SnackBar manager via recoil probably
     } catch (e) {
       console.log(e);
@@ -66,7 +74,6 @@ const EventApp: FC = () => {
   const modify = async (): Promise<void> => {
     try {
       await patchEvent(event.eventKey, event);
-      await mutate();
     } catch (e) {
       console.log(e);
     }
@@ -173,20 +180,16 @@ const EventApp: FC = () => {
             paddingBottom: (theme) => theme.spacing(2)
           }}
         >
-          {(!data || error) && (
+          {!flags.createdEvent && (
             <Grid item xs={12} sx={{ marginTop: (theme) => theme.spacing(2) }}>
               <Button variant='contained' onClick={setup}>
                 Create Event Database
               </Button>
             </Grid>
           )}
-          {data && !error && (
+          {flags.createdEvent && (
             <Grid item xs={12} sx={{ marginTop: (theme) => theme.spacing(2) }}>
-              <Button
-                variant='contained'
-                disabled={event === data}
-                onClick={modify}
-              >
+              <Button variant='contained' onClick={modify}>
                 Modify Event
               </Button>
             </Grid>
