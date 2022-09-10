@@ -13,11 +13,11 @@ interface Props {
 const TableActions: FC<Props> = ({ onEdit, onDelete }) => {
   return (
     <ButtonGroup>
-      <IconButton size='small' onClick={onDelete}>
-        <DeleteIcon />
-      </IconButton>
       <IconButton size='small' onClick={onEdit}>
         <EditIcon />
+      </IconButton>
+      <IconButton size='small' onClick={onDelete}>
+        <DeleteIcon />
       </IconButton>
     </ButtonGroup>
   );

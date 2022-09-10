@@ -8,8 +8,7 @@ import {
   UserLoginResponse,
   Event,
   isEvent,
-  Team,
-  isTeamArray
+  Team
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 

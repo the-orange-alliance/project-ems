@@ -6,12 +6,24 @@ import {
   DialogContentText,
   DialogTitle
 } from '@mui/material';
-import { useRecoilState } from 'recoil';
-import { selectedTeamAtom, teamRemoveDialogOpen } from 'src/stores/Recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
+import {
+  selectedTeamAtom,
+  teamRemoveDialogOpen,
+  teamsAtom
+} from 'src/stores/Recoil';
 
 const TeamDialog: FC = () => {
+  const setTeams = useSetRecoilState(teamsAtom);
   const [team, setTeam] = useRecoilState(selectedTeamAtom);
   const [open, setOpen] = useRecoilState(teamRemoveDialogOpen);
+
+  const handleRemove = async (): Promise<void> => {
+    if (team) {
+      setTeams((prev) => prev.filter((t) => t.teamKey !== team.teamKey));
+    }
+    setOpen(false);
+  };
 
   const handleClose = (): void => {
     setTeam(null);
@@ -34,7 +46,7 @@ const TeamDialog: FC = () => {
         registration?
       </DialogContentText>
       <DialogActions>
-        <Button>Yes</Button>
+        <Button onClick={handleRemove}>Yes</Button>
         <Button onClick={handleClose}>No</Button>
       </DialogActions>
     </Dialog>
