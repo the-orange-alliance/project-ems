@@ -14,6 +14,7 @@ import { useFlags } from 'src/stores/AppFlags';
 import DefaultHeader from 'src/partials/DefaultHeader/DefaultHeader';
 
 import AddIcon from '@mui/icons-material/Add';
+import { getTeamsFromFile } from './util/Converter';
 
 const TeamManager: FC = () => {
   const setTeamDialogOpen = useSetRecoilState(teamDialogOpen);
@@ -33,26 +34,7 @@ const TeamManager: FC = () => {
     reader.onload = async (file: ProgressEvent<FileReader>): Promise<void> => {
       if (!file.target || !file.target.result) return;
 
-      const importedTeams: Team[] = file.target.result
-        .toString()
-        .split('\n')
-        .map((team) => {
-          const t = team.split(',');
-          return {
-            teamKey: parseInt(t[0]),
-            eventParticipantKey: t[1],
-            teamNameLong: t[2],
-            teamNameShort: '',
-            robotName: '',
-            city: t[5],
-            stateProv: '',
-            country: t[6],
-            countryCode: t[7],
-            cardStatus: 0,
-            hasCard: false,
-            rookieYear: 2022
-          };
-        });
+      const importedTeams = getTeamsFromFile(file.target.result.toString());
       setTeams(importedTeams);
     };
     reader.readAsText(e.target.files[0]);
