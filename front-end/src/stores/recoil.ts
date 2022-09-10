@@ -8,6 +8,8 @@ import {
   User
 } from '@toa-lib/models';
 import { atom, selector } from 'recoil';
+import { setApiStorage } from 'src/api/ApiProvider';
+import { AppFlags, defaultFlags } from './AppFlags';
 
 export const darkModeAtom = atom<boolean>({
   key: 'darkModeAtom',
@@ -24,7 +26,24 @@ export const selectedTeamAtom = atom<Team | null>({
   default: null
 });
 
-/* RECOIL SECTION - UI Dialogs/Options */
+/* FLAGS SECTION - Application flags */
+export const appFlagsAtom = atom<AppFlags>({
+  key: 'appFlagsAtom',
+  default: selector<AppFlags>({
+    key: 'appFlagsAtomSelector',
+    get: async (): Promise<AppFlags> => {
+      try {
+        return await clientFetcher('storage/flags.json', 'GET');
+      } catch (e) {
+        // If the above fails, try creating the file and returning default flags.
+        setApiStorage('flags.json', defaultFlags);
+        return defaultFlags;
+      }
+    }
+  })
+});
+
+/* UI SECTION - UI Dialogs/Options */
 export const teamDialogOpen = atom<boolean>({
   key: 'teamDialogOpenAtom',
   default: false

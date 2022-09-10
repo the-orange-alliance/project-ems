@@ -13,13 +13,13 @@ import AppRoutes from 'src/AppRoutes';
 import { patchEvent, postEvent, setupEventBase } from 'src/api/ApiProvider';
 import { useRecoilState } from 'recoil';
 import { eventAtom } from 'src/stores/Recoil';
-import { setFlag, useFlags } from 'src/stores/AppFlags';
+import { useFlags } from 'src/stores/AppFlags';
 
 const EventApp: FC = () => {
   const [startDate, setStartDate] = useState<Moment | null>(moment());
   const [endDate, setEndDate] = useState<Moment | null>(moment());
 
-  const [flags] = useFlags();
+  const [flags, setFlag] = useFlags();
 
   const [event, setEvent] = useRecoilState(eventAtom);
 

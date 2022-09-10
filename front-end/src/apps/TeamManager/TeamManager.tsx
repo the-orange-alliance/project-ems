@@ -13,7 +13,7 @@ import TeamRemovalDialog from 'src/components/TeamRemovalDialog/TeamRemovalDialo
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { teamDialogOpen, teamsAtom } from 'src/stores/Recoil';
 import { postTeams } from 'src/api/ApiProvider';
-import { setFlag, useFlags } from 'src/stores/AppFlags';
+import { useFlags } from 'src/stores/AppFlags';
 
 import AddIcon from '@mui/icons-material/Add';
 
@@ -21,7 +21,7 @@ const TeamManager: FC = () => {
   const setTeamDialogOpen = useSetRecoilState(teamDialogOpen);
   const [teams, setTeams] = useRecoilState(teamsAtom);
 
-  const [flags] = useFlags();
+  const [flags, setFlag] = useFlags();
 
   const handleCreate = (): void => setTeamDialogOpen(true);
 

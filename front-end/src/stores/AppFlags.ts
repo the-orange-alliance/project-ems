@@ -1,9 +1,6 @@
-import { useEffect } from 'react';
-import {
-  setApiStorage,
-  setApiStorageKey,
-  useApiStorage
-} from 'src/api/ApiProvider';
+import { useRecoilState } from 'recoil';
+import { setApiStorage, setApiStorageKey } from 'src/api/ApiProvider';
+import { appFlagsAtom } from './Recoil';
 
 export interface AppFlags {
   createdEvent: boolean;
@@ -11,34 +8,41 @@ export interface AppFlags {
   createdAccounts: boolean;
 }
 
-const defaultFlags: AppFlags = {
+export const defaultFlags: AppFlags = {
   createdEvent: false,
   createdTeams: false,
   createdAccounts: false
 };
 
-export function useFlags(): [AppFlags] {
-  const { data, error } = useApiStorage<AppFlags>('flags.json');
+export function useFlags(): [
+  AppFlags,
+  (flag: keyof AppFlags, value: boolean) => Promise<void>,
+  () => Promise<void>
+] {
+  const [appFlags, setAppFlags] = useRecoilState(appFlagsAtom);
 
-  useEffect(() => {
-    if (error) initFlags();
-  }, [error]);
+  const setterOrUpdater = async (
+    flag: keyof AppFlags,
+    value: boolean
+  ): Promise<void> => {
+    setAppFlags({ ...appFlags, [flag]: value });
+    setFlag(flag, value);
+  };
 
-  const initFlags = async (): Promise<void> =>
-    setApiStorage('flags.json', defaultFlags);
+  const purge = async (): Promise<void> => {
+    setAppFlags(defaultFlags);
+    await purgeFlags();
+  };
 
-  return data ? [data] : [defaultFlags];
+  return [appFlags, setterOrUpdater, purge];
 }
 
-export async function setFlag(
-  flag: keyof AppFlags,
-  value: boolean
-): Promise<void> {
+async function setFlag(flag: keyof AppFlags, value: boolean): Promise<void> {
   await setApiStorageKey('flags.json', flag, value);
   return;
 }
 
-export async function purgeFlags(): Promise<void> {
+async function purgeFlags(): Promise<void> {
   await setApiStorage('flags.json', {});
   return;
 }
