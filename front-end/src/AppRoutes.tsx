@@ -5,6 +5,7 @@ import SettingsApp from './apps/Settings';
 import AccountManager from './apps/AccountManager';
 import AdminApp from './apps/Admin/AdminApp';
 import TeamManager from './apps/TeamManager';
+import MatchManager from './apps/MatchManager';
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
@@ -38,6 +39,13 @@ const AppRoutes: AppRoute[] = [
     path: '/team-manager',
     group: 0,
     element: <TeamManager />,
+    hidden: true
+  },
+  {
+    name: 'Match Manager',
+    path: '/match-manager',
+    group: 0,
+    element: <MatchManager />,
     hidden: true
   },
   {

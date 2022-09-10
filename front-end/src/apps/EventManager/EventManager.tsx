@@ -14,6 +14,7 @@ import { patchEvent, postEvent, setupEventBase } from 'src/api/ApiProvider';
 import { useRecoilState } from 'recoil';
 import { eventAtom } from 'src/stores/Recoil';
 import { useFlags } from 'src/stores/AppFlags';
+import DefaultHeader from 'src/partials/DefaultHeader/DefaultHeader';
 
 const EventApp: FC = () => {
   const [startDate, setStartDate] = useState<Moment | null>(moment());
@@ -81,16 +82,8 @@ const EventApp: FC = () => {
 
   return (
     <DrawerLayout containerWidth='md' routes={AppRoutes}>
-      <Paper>
-        <Box sx={{ padding: (theme) => theme.spacing(2) }}>
-          <Typography variant='h4'>Event Manager</Typography>
-        </Box>
-        <Divider />
-        <Grid
-          container
-          spacing={3}
-          sx={{ padding: (theme) => theme.spacing(2) }}
-        >
+      <DefaultHeader title='Event Manager'>
+        <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={8}>
             <TextField
               name='eventName'
@@ -195,7 +188,7 @@ const EventApp: FC = () => {
             </Grid>
           )}
         </Grid>
-      </Paper>
+      </DefaultHeader>
     </DrawerLayout>
   );
 };

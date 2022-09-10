@@ -18,17 +18,17 @@ const HomeApp: FC = () => {
     <DefaultLayout>
       <Grid container spacing={4} columns={15}>
         <GridAppCard title='Event Manager' to='/event-manager' />
-        <GridAppCard title='Match Manager' />
         <GridAppCard title='Team Manager' to='/team-manager' />
-        <GridAppCard title='Audience Display' imgSrc={audienceDisplayLogo} />
-        <GridAppCard title='Scoring App' />
+        <GridAppCard title='Match Manager' to='/match-manager' />
         <GridAppCard title='Account Manager' to='/accounts' />
+        <GridAppCard title='Scoring App' />
+        <GridAppCard title='Admin App' to='/admin' />
         <GridAppCard
           title='Streaming App'
           href='https://twitch.tv/theorangealliance2'
           imgSrc={twitchLogo}
         />
-        <GridAppCard title='Admin App' to='/admin' />
+        <GridAppCard title='Audience Display' imgSrc={audienceDisplayLogo} />
         <GridAppCard title='Report App' />
         <GridAppCard title='Settings' imgSrc={settingsLogo} to='/settings' />
       </Grid>
