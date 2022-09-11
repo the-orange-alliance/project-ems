@@ -1,17 +1,16 @@
 import { ChangeEvent, FC } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import DefaultLayout from 'src/layouts/DefaultLayout';
+import Typography from '@mui/material/Typography';
+import PaperLayout from 'src/layouts/PaperLayout';
 import UploadButton from 'src/components/UploadButton/UploadButton';
 import TeamsTable from 'src/features/components/TeamsTable/TeamsTable';
-import { Team } from '@toa-lib/models';
 import TeamDialog from 'src/components/TeamDialog/TeamDialog';
 import TeamRemovalDialog from 'src/components/TeamRemovalDialog/TeamRemovalDialog';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { teamDialogOpen, teamsAtom } from 'src/stores/Recoil';
 import { postTeams } from 'src/api/ApiProvider';
 import { useFlags } from 'src/stores/AppFlags';
-import DefaultHeader from 'src/partials/DefaultHeader/DefaultHeader';
 
 import AddIcon from '@mui/icons-material/Add';
 import { getTeamsFromFile } from './util/Converter';
@@ -55,37 +54,38 @@ const TeamManager: FC = () => {
   };
 
   return (
-    <DefaultLayout containerWidth='lg'>
+    <PaperLayout
+      containerWidth='lg'
+      header={<Typography variant='h4'>Team Manager</Typography>}
+    >
       <TeamDialog />
       <TeamRemovalDialog />
-      <DefaultHeader title='Team Manager'>
-        <Box
-          sx={{
-            marginBottom: (theme) => theme.spacing(2),
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: (theme) => theme.spacing(2)
-          }}
-        >
-          <Button variant='contained' onClick={handleSave}>
-            Save Changes
+      <Box
+        sx={{
+          marginBottom: (theme) => theme.spacing(2),
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: (theme) => theme.spacing(2)
+        }}
+      >
+        <Button variant='contained' onClick={handleSave}>
+          Save Changes
+        </Button>
+        {!flags.createdTeams && (
+          <Button
+            variant='contained'
+            sx={{ padding: '6px', minWidth: '24px' }}
+            onClick={handleCreate}
+          >
+            <AddIcon />
           </Button>
-          {!flags.createdTeams && (
-            <Button
-              variant='contained'
-              sx={{ padding: '6px', minWidth: '24px' }}
-              onClick={handleCreate}
-            >
-              <AddIcon />
-            </Button>
-          )}
-          {!flags.createdTeams && (
-            <UploadButton title='Upload Teams' onUpload={handleUpload} />
-          )}
-        </Box>
-        <TeamsTable teams={teams} />
-      </DefaultHeader>
-    </DefaultLayout>
+        )}
+        {!flags.createdTeams && (
+          <UploadButton title='Upload Teams' onUpload={handleUpload} />
+        )}
+      </Box>
+      <TeamsTable teams={teams} />
+    </PaperLayout>
   );
 };
 

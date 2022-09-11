@@ -15,12 +15,10 @@ export const darkModeAtom = atom<boolean>({
   key: 'darkModeAtom',
   default: false
 });
-
 export const userAtom = atom<User | null>({
   key: 'userAtom',
   default: null
 });
-
 export const selectedTeamAtom = atom<Team | null>({
   key: 'selectedTeamAtom',
   default: null

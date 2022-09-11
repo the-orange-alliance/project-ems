@@ -1,12 +1,32 @@
-import { FC } from 'react';
-import DefaultLayout from 'src/layouts/DefaultLayout';
-import DefaultHeader from 'src/partials/DefaultHeader/DefaultHeader';
+import { FC, useState } from 'react';
+import Typography from '@mui/material/Typography';
+import TwoColumnHeader from 'src/components/Headers/TwoColumnHeader';
+import PaperLayout from 'src/layouts/PaperLayout';
+import TournamentDropdown from 'src/components/Dropdowns/TournamentDropdown';
+import { TEST_LEVEL } from '@toa-lib/models';
 
 const MatchManager: FC = () => {
+  const [selectedType, setSelectedType] = useState(TEST_LEVEL);
+
+  const handleTournamentChange = (value: number) => setSelectedType(value);
+
   return (
-    <DefaultLayout containerWidth='xl'>
-      <DefaultHeader title='Match Manager'>Testing content</DefaultHeader>
-    </DefaultLayout>
+    <PaperLayout
+      header={
+        <TwoColumnHeader
+          left={<Typography variant='h4'>Match Manager</Typography>}
+          right={
+            <TournamentDropdown
+              value={selectedType}
+              onChange={handleTournamentChange}
+            />
+          }
+        />
+      }
+      containerWidth='xl'
+    >
+      Content here?
+    </PaperLayout>
   );
 };
 
