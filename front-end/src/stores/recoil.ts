@@ -5,6 +5,7 @@ import {
   isEvent,
   isTeamArray,
   Team,
+  TEST_LEVEL,
   User
 } from '@toa-lib/models';
 import { atom, selector } from 'recoil';
@@ -22,6 +23,10 @@ export const userAtom = atom<User | null>({
 export const selectedTeamAtom = atom<Team | null>({
   key: 'selectedTeamAtom',
   default: null
+});
+export const selectedTournamentLevel = atom<number>({
+  key: 'selectedTournamentLevelAtom',
+  default: TEST_LEVEL
 });
 
 /* FLAGS SECTION - Application flags */

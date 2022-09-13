@@ -8,12 +8,11 @@ import {
   QUALIFICATION_LEVEL,
   RANKING_LEVEL,
   ROUND_ROBIN_LEVEL,
-  TEST_LEVEL,
-  TournamentType
+  TEST_LEVEL
 } from '@toa-lib/models';
 
 interface Props {
-  value: TournamentType;
+  value: number;
   onChange: (value: number) => void;
 }
 

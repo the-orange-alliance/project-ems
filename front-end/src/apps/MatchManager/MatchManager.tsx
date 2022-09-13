@@ -1,12 +1,15 @@
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import Typography from '@mui/material/Typography';
 import TwoColumnHeader from 'src/components/Headers/TwoColumnHeader';
 import PaperLayout from 'src/layouts/PaperLayout';
 import TournamentDropdown from 'src/components/Dropdowns/TournamentDropdown';
-import { TEST_LEVEL } from '@toa-lib/models';
+import { useRecoilState } from 'recoil';
+import { selectedTournamentLevel } from 'src/stores/Recoil';
 
 const MatchManager: FC = () => {
-  const [selectedType, setSelectedType] = useState(TEST_LEVEL);
+  const [selectedType, setSelectedType] = useRecoilState(
+    selectedTournamentLevel
+  );
 
   const handleTournamentChange = (value: number) => setSelectedType(value);
 

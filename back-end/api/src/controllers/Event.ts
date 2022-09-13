@@ -2,6 +2,7 @@ import { isEvent } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import {
   createEventBase,
+  createEventGameSpecifics,
   insertValue,
   selectAll,
   updateWhere
@@ -58,6 +59,8 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       await createEventBase();
+      // TODO - one-time
+      await createEventGameSpecifics();
       res.status(200).send({});
     } catch (e) {
       return next(e);

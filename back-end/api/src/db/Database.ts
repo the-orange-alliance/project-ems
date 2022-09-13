@@ -47,6 +47,16 @@ export async function createEventBase(): Promise<void> {
   }
 }
 
+export async function createEventGameSpecifics(): Promise<void> {
+  try {
+    const createQuery = await getQueryFromFile('details/fgc_2022.sql');
+    await db.exec(createQuery);
+    return;
+  } catch (e) {
+    throw e;
+  }
+}
+
 export async function purgeAll(): Promise<void> {
   try {
     const purgeQuery = await getQueryFromFile('purge.sql');
