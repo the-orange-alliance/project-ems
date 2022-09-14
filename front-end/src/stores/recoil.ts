@@ -14,9 +14,16 @@ import {
   TEST_LEVEL,
   TournamentType,
   User,
-  EventSchedule
+  EventSchedule,
+  defaultDay
 } from '@toa-lib/models';
-import { atom, atomFamily, selector, selectorFamily } from 'recoil';
+import {
+  atom,
+  atomFamily,
+  DefaultValue,
+  selector,
+  selectorFamily
+} from 'recoil';
 import { setApiStorage } from 'src/api/ApiProvider';
 import { AppFlags, defaultFlags } from './AppFlags';
 
@@ -160,7 +167,10 @@ export const tournamentScheduleDaySelector = selectorFamily<Day, number>({
   set:
     (id: number) =>
     ({ get, set }, newValue) => {
-      const days = get(tournamentScheduleSelector).days;
-      set(tournamentScheduleSelector);
+      const newDay = newValue instanceof DefaultValue ? defaultDay : newValue;
+      set(tournamentScheduleSelector, (prev) => ({
+        ...prev,
+        days: [...prev.days.slice(0, id), newDay, ...prev.days.slice(id + 1)]
+      }));
     }
 });
