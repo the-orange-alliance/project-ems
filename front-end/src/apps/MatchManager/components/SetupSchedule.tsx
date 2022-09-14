@@ -3,6 +3,7 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import {
   eventKeySelector,
@@ -10,7 +11,11 @@ import {
   teamsInCurrentSchedule,
   tournamentScheduleSelector
 } from 'src/stores/Recoil';
-import { generateScheduleItems, calculateTotalMatches } from '@toa-lib/models';
+import {
+  calculateTotalMatches,
+  useScheduleValidator,
+  generateScheduleWithPremiereField
+} from '@toa-lib/models';
 import Days from './Days';
 
 /**
@@ -23,6 +28,8 @@ const SetupSchedule: FC = () => {
   const scheduledTeams = useRecoilValue(teamsInCurrentSchedule);
 
   const [schedule, setSchedule] = useRecoilState(tournamentScheduleSelector);
+
+  const { valid, validationMessage } = useScheduleValidator(schedule);
 
   useEffect(() => {
     setSchedule((prev) => ({
@@ -72,7 +79,7 @@ const SetupSchedule: FC = () => {
 
   const generateSchedule = useRecoilCallback(({ snapshot }) => async () => {
     const eventKey = await snapshot.getPromise(eventKeySelector);
-    console.log(generateScheduleItems(schedule, eventKey));
+    console.log(generateScheduleWithPremiereField(schedule, eventKey));
   });
 
   return (
@@ -127,9 +134,11 @@ const SetupSchedule: FC = () => {
         variant='contained'
         onClick={generateSchedule}
         sx={{ marginTop: (theme) => theme.spacing(2) }}
+        disabled={!valid}
       >
         Generate Schedule
       </Button>
+      <Typography>{validationMessage}</Typography>
     </>
   );
 };

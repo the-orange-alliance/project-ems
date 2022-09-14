@@ -148,10 +148,11 @@ export function generateScheduleItems(
       );
       item.isMatch = true;
       item.tournamentId = schedule.tournamentId;
+      console.log(item);
       scheduleItems.push(item);
+      console.log({ item, scheduleItems });
       dayMatches++;
       totalMatches++;
-
       if (breakIndex !== -1) {
         const breakItem: ScheduleItem = defaultScheduleItem;
         breakItem.key =
@@ -171,29 +172,28 @@ export function generateScheduleItems(
       }
     }
   }
-
-  if (schedule.hasPremiereField) {
-    return generateScheduleWithPremiereField(scheduleItems, schedule);
-  }
-
+  console.log('FINAL WORK', scheduleItems);
   return scheduleItems;
 }
 
-function generateScheduleWithPremiereField(
-  items: ScheduleItem[],
-  schedule: EventSchedule
+export function generateScheduleWithPremiereField(
+  oldSchedule: EventSchedule,
+  eventKey: string
 ): ScheduleItem[] {
-  let index: number = 0;
-  let normalIndex: number = 0;
-  let premiereIndex: number = 0;
-  let prevItem: ScheduleItem = items[0];
-  let breakPadding: number = 0;
-  let breakIndex: number = 0;
+  const items = generateScheduleItems(oldSchedule, eventKey);
+  console.log(items);
+  const schedule = JSON.parse(JSON.stringify(oldSchedule));
+  let index = 0;
+  let normalIndex = 0;
+  let premiereIndex = 0;
+  let [prevItem] = items;
+  let breakPadding = 0;
+  let breakIndex = 0;
 
-  let needsBufferMatch: boolean = false;
-  let bufferCount: number = 0;
-  let dayPremiereTime: number = 0;
-  let dayNormalTime: number = 0;
+  let needsBufferMatch = false;
+  let bufferCount = 0;
+  let dayPremiereTime = 0;
+  let dayNormalTime = 0;
   for (const item of items) {
     if (prevItem.day !== item.day) {
       schedule.days[prevItem.day].endTime = prevItem.startTime.add(
@@ -231,7 +231,7 @@ function generateScheduleWithPremiereField(
         if (!needsBufferMatch) {
           if (index % 7 < 4) {
             item.duration = 10;
-            item.startTime = schedule.days[item.day].startTime.add(
+            item.startTime = moment(schedule.days[item.day].startTime).add(
               10 * normalIndex + breakPadding,
               'minutes'
             );
@@ -239,7 +239,7 @@ function generateScheduleWithPremiereField(
             // console.log("CREATING NORMAL MATCH", index, item.duration, dayPremiereTime, dayNormalTime);
           } else {
             item.duration = 7;
-            item.startTime = schedule.days[item.day].startTime.add(
+            item.startTime = moment(schedule.days[item.day].startTime).add(
               7 * premiereIndex + breakPadding,
               'minutes'
             );
@@ -262,7 +262,7 @@ function generateScheduleWithPremiereField(
         } else {
           // console.log("BUFFER MATCH");
           item.duration = 10;
-          item.startTime = schedule.days[item.day].startTime.add(
+          item.startTime = moment(schedule.days[item.day].startTime).add(
             10 * normalIndex + breakPadding,
             'minutes'
           );
@@ -309,8 +309,17 @@ export function useScheduleValidator(
     (schedule.teamsParticipating * schedule.matchesPerTeam) /
       (schedule.teamsPerAlliance * 2)
   );
+
+  if (schedule.days.length <= 0)
+    return {
+      maxTotalMatches,
+      remainingMatches: 0,
+      valid: false,
+      validationMessage: 'More than 1 day of competition must be scheduled.'
+    };
+
   const remainingMatches =
-    maxTotalMatches +
+    maxTotalMatches -
     schedule.days
       .map((d) => d.scheduledMatches)
       .reduce((prev, curr) => prev + curr);
@@ -345,10 +354,7 @@ export function useScheduleValidator(
   } else {
     validationMessage = '';
   }
-  if (
-    typeof schedule.teams === 'undefined' ||
-    schedule.teams.length < schedule.teamsPerAlliance
-  ) {
+  if (schedule.teamsParticipating <= 0) {
     validationMessage = 'There are not enough teams for this schedule.';
     participantsSelected = false;
   }

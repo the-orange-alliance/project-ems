@@ -55,6 +55,7 @@ export {
   defaultEventSchedule,
   defaultScheduleItem,
   generateScheduleItems,
+  generateScheduleWithPremiereField,
   isScheduleItem,
   useScheduleValidator,
   calculateTotalMatches

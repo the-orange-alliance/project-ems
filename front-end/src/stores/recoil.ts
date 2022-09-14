@@ -166,7 +166,7 @@ export const tournamentScheduleDaySelector = selectorFamily<Day, number>({
       get(tournamentScheduleSelector).days[id],
   set:
     (id: number) =>
-    ({ get, set }, newValue) => {
+    ({ set }, newValue) => {
       const newDay = newValue instanceof DefaultValue ? defaultDay : newValue;
       set(tournamentScheduleSelector, (prev) => ({
         ...prev,
