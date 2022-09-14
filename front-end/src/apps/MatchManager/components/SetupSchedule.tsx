@@ -24,19 +24,20 @@ const SetupSchedule: FC = () => {
 
   const [schedule, setSchedule] = useRecoilState(tournamentScheduleSelector);
 
-  /*
-  {
-    ...defaultEventSchedule,
-    matchConcurrency: 5,
-    type: tournamentType,
-    teamsParticipating: scheduledTeams.length,
-    totalMatches: calculateTotalMatches(
-      scheduledTeams.length,
-      defaultEventSchedule.matchesPerTeam,
-      defaultEventSchedule.teamsPerAlliance
-    )
-  }
-  */
+  useEffect(() => {
+    setSchedule((prev) => ({
+      ...prev,
+      matchConcurrency: 5,
+      hasPremiereField: true,
+      type: tournamentType,
+      teamsParticipating: scheduledTeams.length,
+      totalMatches: calculateTotalMatches(
+        scheduledTeams.length,
+        prev.matchesPerTeam,
+        prev.teamsPerAlliance
+      )
+    }));
+  }, []);
 
   useEffect(() => {
     setSchedule((prev) => ({
@@ -50,21 +51,23 @@ const SetupSchedule: FC = () => {
   }, [tournamentType]);
 
   useEffect(() => {
-    schedule.totalMatches = calculateTotalMatches(
-      schedule.teamsParticipating,
-      schedule.matchesPerTeam,
-      schedule.teamsPerAlliance
-    );
-  }, [
-    schedule.teamsParticipating,
-    schedule.matchesPerTeam,
-    schedule.teamsPerAlliance
-  ]);
+    setSchedule((prev) => ({
+      ...prev,
+      totalMatches: calculateTotalMatches(
+        prev.teamsParticipating,
+        prev.matchesPerTeam,
+        prev.teamsPerAlliance
+      )
+    }));
+  }, [schedule.teamsPerAlliance, schedule.matchesPerTeam]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(event.target.value);
     const { name } = event.target;
-    setSchedule((prev) => ({ ...prev, [name]: value }));
+    setSchedule((prev) => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const generateSchedule = useRecoilCallback(({ snapshot }) => async () => {
@@ -119,7 +122,7 @@ const SetupSchedule: FC = () => {
         </Grid>
       </Grid>
       <Divider sx={{ marginBottom: (theme) => theme.spacing(2) }} />
-      <Days schedule={schedule} />
+      <Days />
       <Button
         variant='contained'
         onClick={generateSchedule}

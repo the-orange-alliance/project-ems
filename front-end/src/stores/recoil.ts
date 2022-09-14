@@ -1,9 +1,9 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
+  Day,
   defaultEvent,
   defaultEventSchedule,
   Event,
-  EventSchedule,
   isEvent,
   isTeamArray,
   PRACTICE_LEVEL,
@@ -13,9 +13,10 @@ import {
   Team,
   TEST_LEVEL,
   TournamentType,
-  User
+  User,
+  EventSchedule
 } from '@toa-lib/models';
-import { atom, atomFamily, selector } from 'recoil';
+import { atom, atomFamily, selector, selectorFamily } from 'recoil';
 import { setApiStorage } from 'src/api/ApiProvider';
 import { AppFlags, defaultFlags } from './AppFlags';
 
@@ -148,4 +149,12 @@ export const tournamentScheduleSelector = selector<EventSchedule>({
     get(tournamentScheduleAtomFamily(get(selectedTournamentType))),
   set: ({ get, set }, newValue) =>
     set(tournamentScheduleAtomFamily(get(selectedTournamentType)), newValue)
+});
+
+export const tournamentScheduleDaySelector = selectorFamily<Day, number>({
+  key: 'tournamentScheduleDaySelector',
+  get:
+    (id: number) =>
+    ({ get }) =>
+      get(tournamentScheduleSelector).days[id]
 });
