@@ -49,13 +49,15 @@ export {
   EventSchedule,
   ScheduleItem,
   TournamentType,
+  TournamentTypes,
   defaultBreak,
   defaultDay,
   defaultEventSchedule,
   defaultScheduleItem,
   generateScheduleItems,
   isScheduleItem,
-  useScheduleValidator
+  useScheduleValidator,
+  calculateTotalMatches
 } from './Schedule';
 
 export {

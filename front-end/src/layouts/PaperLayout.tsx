@@ -25,12 +25,14 @@ interface Props {
   header?: ReactNode | string;
   containerWidth?: Breakpoint | false;
   children?: ReactNode;
+  padding?: boolean;
 }
 
 const PaperLayout: FC<Props> = ({
   header,
   containerWidth,
-  children
+  children,
+  padding
 }: Props) => {
   const user = useRecoilValue(userAtom);
   return (
@@ -87,7 +89,9 @@ const PaperLayout: FC<Props> = ({
               <Divider />
             </>
           )}
-          <Box sx={{ padding: (theme) => theme.spacing(2) }}>{children}</Box>
+          <Box sx={{ padding: padding ? (theme) => theme.spacing(2) : 0 }}>
+            {children}
+          </Box>
         </Paper>
       </Container>
     </Box>

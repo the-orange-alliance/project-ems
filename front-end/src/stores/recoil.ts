@@ -1,14 +1,21 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
   defaultEvent,
+  defaultEventSchedule,
   Event,
+  EventSchedule,
   isEvent,
   isTeamArray,
+  PRACTICE_LEVEL,
+  QUALIFICATION_LEVEL,
+  RANKING_LEVEL,
+  ROUND_ROBIN_LEVEL,
   Team,
   TEST_LEVEL,
+  TournamentType,
   User
 } from '@toa-lib/models';
-import { atom, selector } from 'recoil';
+import { atom, atomFamily, selector } from 'recoil';
 import { setApiStorage } from 'src/api/ApiProvider';
 import { AppFlags, defaultFlags } from './AppFlags';
 
@@ -27,6 +34,26 @@ export const selectedTeamAtom = atom<Team | null>({
 export const selectedTournamentLevel = atom<number>({
   key: 'selectedTournamentLevelAtom',
   default: TEST_LEVEL
+});
+export const selectedTournamentType = selector<TournamentType>({
+  key: 'selectedTournamentTypeAtom',
+  get: ({ get }) => {
+    const level = get(selectedTournamentLevel);
+    switch (level) {
+      case TEST_LEVEL:
+        return 'Test';
+      case PRACTICE_LEVEL:
+        return 'Practice';
+      case QUALIFICATION_LEVEL:
+        return 'Qualification';
+      case ROUND_ROBIN_LEVEL:
+        return 'Round Robin';
+      case RANKING_LEVEL:
+        return 'Ranking';
+      default:
+        return 'Eliminations';
+    }
+  }
 });
 
 /* FLAGS SECTION - Application flags */
@@ -92,4 +119,33 @@ export const teamsAtom = atom<Team[]>({
       }
     }
   })
+});
+
+export const teamsInScheduleAtomFamily = atomFamily<Team[], TournamentType>({
+  key: 'teamsInScheduleAtomFamily',
+  default: []
+});
+
+export const teamsInCurrentSchedule = selector<Team[]>({
+  key: 'teamsInCurrentScheduleSelector',
+  get: ({ get }) => get(teamsInScheduleAtomFamily(get(selectedTournamentType))),
+  set: ({ get, set }, newValue) =>
+    set(teamsInScheduleAtomFamily(get(selectedTournamentType)), newValue)
+});
+
+/* SCHEDULE SECTION - State management for schedule-related items */
+export const tournamentScheduleAtomFamily = atomFamily<
+  EventSchedule,
+  TournamentType
+>({
+  key: 'tournamentScheduleAtomFamily',
+  default: defaultEventSchedule
+});
+
+export const tournamentScheduleSelector = selector<EventSchedule>({
+  key: 'tournamentScheduleSelector',
+  get: ({ get }) =>
+    get(tournamentScheduleAtomFamily(get(selectedTournamentType))),
+  set: ({ get, set }, newValue) =>
+    set(tournamentScheduleAtomFamily(get(selectedTournamentType)), newValue)
 });

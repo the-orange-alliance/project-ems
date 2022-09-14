@@ -57,6 +57,7 @@ const TeamManager: FC = () => {
     <PaperLayout
       containerWidth='lg'
       header={<Typography variant='h4'>Team Manager</Typography>}
+      padding
     >
       <TeamDialog />
       <TeamRemovalDialog />

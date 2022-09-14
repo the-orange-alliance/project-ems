@@ -80,6 +80,7 @@ const EventApp: FC = () => {
     <PaperLayout
       containerWidth='md'
       header={<Typography variant='h4'>Event Manager</Typography>}
+      padding
     >
       <Grid
         container

@@ -5,6 +5,7 @@ import PaperLayout from 'src/layouts/PaperLayout';
 import TournamentDropdown from 'src/components/Dropdowns/TournamentDropdown';
 import { useRecoilState } from 'recoil';
 import { selectedTournamentLevel } from 'src/stores/Recoil';
+import MatchManagerTabs from './components/AppTabs';
 
 const MatchManager: FC = () => {
   const [selectedType, setSelectedType] = useRecoilState(
@@ -28,7 +29,7 @@ const MatchManager: FC = () => {
       }
       containerWidth='xl'
     >
-      Content here?
+      <MatchManagerTabs />
     </PaperLayout>
   );
 };
