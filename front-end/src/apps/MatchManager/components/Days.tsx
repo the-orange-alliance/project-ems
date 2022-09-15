@@ -1,6 +1,8 @@
 import { FC } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+import Grid from '@mui/material/Grid';
 import { useRecoilState } from 'recoil';
 import { tournamentScheduleSelector } from 'src/stores/Recoil';
 import { defaultDay } from '@toa-lib/models';
@@ -27,21 +29,36 @@ const Days: FC = () => {
         return (
           <Box key={`day-${d.id}`}>
             <Day id={d.id} />
+            <Divider
+              sx={{
+                marginTop: (theme) => theme.spacing(1),
+                marginBottom: (theme) => theme.spacing(1)
+              }}
+            />
           </Box>
         );
       })}
-      <Box sx={{ display: 'flex', gap: '8px' }}>
-        <Button variant='contained' onClick={addDay}>
-          Add Day
-        </Button>
-        <Button
-          variant='contained'
-          disabled={schedule.days.length <= 0}
-          onClick={removeDay}
-        >
-          Remove Day
-        </Button>
-      </Box>
+      <Grid
+        container
+        spacing={3}
+        sx={{ paddingTop: (theme) => theme.spacing(1) }}
+      >
+        <Grid item xs={6} md={3} lg={2}>
+          <Button variant='contained' onClick={addDay} fullWidth>
+            Add Day
+          </Button>
+        </Grid>
+        <Grid item xs={6} md={3} lg={2}>
+          <Button
+            variant='contained'
+            disabled={schedule.days.length <= 0}
+            onClick={removeDay}
+            fullWidth
+          >
+            Remove Day
+          </Button>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

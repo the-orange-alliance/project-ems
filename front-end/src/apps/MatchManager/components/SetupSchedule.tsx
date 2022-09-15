@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useEffect } from 'react';
+import { ChangeEvent, FC, useEffect, useState } from 'react';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
@@ -14,9 +14,11 @@ import {
 import {
   calculateTotalMatches,
   useScheduleValidator,
-  generateScheduleWithPremiereField
+  generateScheduleWithPremiereField,
+  ScheduleItem
 } from '@toa-lib/models';
 import Days from './Days';
+import ScheduleItemTable from './ScheduleItemTable';
 
 /**
  * TODO - This entire schedule file is for FIRST GLOBAL purposes only. Needs to be modified
@@ -30,6 +32,8 @@ const SetupSchedule: FC = () => {
   const [schedule, setSchedule] = useRecoilState(tournamentScheduleSelector);
 
   const { valid, validationMessage } = useScheduleValidator(schedule);
+
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
 
   useEffect(() => {
     setSchedule((prev) => ({
@@ -79,7 +83,7 @@ const SetupSchedule: FC = () => {
 
   const generateSchedule = useRecoilCallback(({ snapshot }) => async () => {
     const eventKey = await snapshot.getPromise(eventKeySelector);
-    console.log(generateScheduleWithPremiereField(schedule, eventKey));
+    setScheduleItems(generateScheduleWithPremiereField(schedule, eventKey));
   });
 
   return (
@@ -139,6 +143,8 @@ const SetupSchedule: FC = () => {
         Generate Schedule
       </Button>
       <Typography>{validationMessage}</Typography>
+      <Divider sx={{ marginBottom: (theme) => theme.spacing(2) }} />
+      {scheduleItems.length > 0 && <ScheduleItemTable items={scheduleItems} />}
     </>
   );
 };

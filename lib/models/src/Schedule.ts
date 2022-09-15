@@ -19,6 +19,9 @@ export const TournamentTypes: TournamentType[] = [
   'Test'
 ];
 
+export const DATE_FORMAT_MIN = 'dddd, MMMM Do YYYY, h:mm a';
+export const DATE_FORMAT_MIN_SHORT = 'ddd, MMMM Do YYYY, h:mm a';
+
 export interface DayBreak {
   id: number; // Break number in the day
   name: string; // Name of the break
@@ -32,7 +35,7 @@ export const defaultBreak: DayBreak = {
   id: 0,
   name: 'Break',
   startTime: moment(),
-  endTime: moment().add(30, 'minutes'),
+  endTime: moment(),
   duration: 30,
   afterMatch: 1
 };
@@ -124,7 +127,7 @@ export function generateScheduleItems(
     let breakPadding = 0;
     let dayMatches = 0;
     for (let i = 0; i < day.scheduledMatches; i++) {
-      const item: ScheduleItem = defaultScheduleItem;
+      const item: ScheduleItem = Object.assign({}, defaultScheduleItem);
       const breakIndex = matchBreaks.indexOf(dayMatches + 1);
 
       let matchIndex = dayMatches;
@@ -148,9 +151,7 @@ export function generateScheduleItems(
       );
       item.isMatch = true;
       item.tournamentId = schedule.tournamentId;
-      console.log(item);
       scheduleItems.push(item);
-      console.log({ item, scheduleItems });
       dayMatches++;
       totalMatches++;
       if (breakIndex !== -1) {
@@ -172,7 +173,6 @@ export function generateScheduleItems(
       }
     }
   }
-  console.log('FINAL WORK', scheduleItems);
   return scheduleItems;
 }
 
@@ -181,7 +181,6 @@ export function generateScheduleWithPremiereField(
   eventKey: string
 ): ScheduleItem[] {
   const items = generateScheduleItems(oldSchedule, eventKey);
-  console.log(items);
   const schedule = JSON.parse(JSON.stringify(oldSchedule));
   let index = 0;
   let normalIndex = 0;

@@ -54,6 +54,8 @@ export {
   defaultDay,
   defaultEventSchedule,
   defaultScheduleItem,
+  DATE_FORMAT_MIN,
+  DATE_FORMAT_MIN_SHORT,
   generateScheduleItems,
   generateScheduleWithPremiereField,
   isScheduleItem,

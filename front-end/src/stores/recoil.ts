@@ -15,7 +15,8 @@ import {
   TournamentType,
   User,
   EventSchedule,
-  defaultDay
+  defaultDay,
+  ScheduleItem
 } from '@toa-lib/models';
 import {
   atom,
@@ -173,4 +174,12 @@ export const tournamentScheduleDaySelector = selectorFamily<Day, number>({
         days: [...prev.days.slice(0, id), newDay, ...prev.days.slice(id + 1)]
       }));
     }
+});
+
+export const tournamentScheduleItemAtomFamily = atomFamily<
+  ScheduleItem[],
+  TournamentType
+>({
+  key: 'tournamentScheduleItemAtomFamily',
+  default: []
 });
