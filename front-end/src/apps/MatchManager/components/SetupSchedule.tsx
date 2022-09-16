@@ -38,7 +38,7 @@ const SetupSchedule: FC = () => {
   useEffect(() => {
     setSchedule((prev) => ({
       ...prev,
-      matchConcurrency: 5,
+      matchConcurrency: 3,
       hasPremiereField: true,
       type: tournamentType,
       teamsParticipating: scheduledTeams.length,

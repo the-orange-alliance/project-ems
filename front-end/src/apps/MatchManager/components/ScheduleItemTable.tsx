@@ -7,6 +7,7 @@ import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
 import { DATE_FORMAT_MIN, ScheduleItem } from '@toa-lib/models';
+import moment from 'moment';
 
 interface Props {
   items: ScheduleItem[];
@@ -30,7 +31,9 @@ const ScheduleItemTable: FC<Props> = ({ items }) => {
               <TableRow key={item.key} hover>
                 <TableCell>{item.day}</TableCell>
                 <TableCell>{item.name}</TableCell>
-                <TableCell>{item.startTime.format(DATE_FORMAT_MIN)}</TableCell>
+                <TableCell>
+                  {moment(item.startTime).format(DATE_FORMAT_MIN)}
+                </TableCell>
                 <TableCell>{item.duration}</TableCell>
               </TableRow>
             ))}

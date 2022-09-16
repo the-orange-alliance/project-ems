@@ -1,4 +1,4 @@
-import { FC, ChangeEvent, useState } from 'react';
+import { FC, ChangeEvent, useState, useEffect } from 'react';
 import moment, { Moment } from 'moment';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
@@ -24,6 +24,10 @@ const Day: FC<Props> = ({ id }) => {
   const [startDate, setStartDate] = useState<Moment | null>(moment());
   const [endDate, setEndDate] = useState<Moment | null>(moment());
 
+  useEffect(() => {
+    handleEndChange(moment(day.endTime));
+  }, [day.breaks]);
+
   const changeMatches = (event: ChangeEvent<HTMLInputElement>) => {
     setDay((prev) => ({
       ...prev,
@@ -33,14 +37,17 @@ const Day: FC<Props> = ({ id }) => {
   };
 
   const handleStartChange = (newValue: Moment | null) => {
+    const newTime = (newValue ? newValue : moment()).toISOString();
     setStartDate(newValue);
-    setDay((prev) => ({ ...prev, startTime: newValue ? newValue : moment() }));
+    setDay((prev) => ({ ...prev, startTime: newTime }));
     updateEndTime();
   };
 
   const handleEndChange = (newValue: Moment | null) => {
+    const newTime = (newValue ? newValue : moment()).toISOString();
     setEndDate(newValue);
-    setDay((prev) => ({ ...prev, endTime: newValue ? newValue : moment() }));
+    setDay((prev) => ({ ...prev, endTime: newTime }));
+    updateEndTime();
   };
 
   const addBreak = () => {
@@ -66,13 +73,14 @@ const Day: FC<Props> = ({ id }) => {
             .map((dayBreak) => dayBreak.duration)
             .reduce((prev, curr) => prev + curr)
         : 0;
-    console.log(matchesDuration);
+    const newEndTime = moment(day.startTime).add(
+      matchesDuration + breaksDuration,
+      'minutes'
+    );
+    setEndDate(newEndTime);
     setDay((prev) => ({
       ...prev,
-      endTime: moment(day.startTime).add(
-        matchesDuration + breaksDuration,
-        'minutes'
-      )
+      endTime: newEndTime.toISOString()
     }));
   };
 
@@ -131,9 +139,8 @@ const Day: FC<Props> = ({ id }) => {
         return (
           <DayBreak
             key={`day-${day.id}-break-${dayBreak.id}`}
-            day={day}
-            dayBreak={dayBreak}
-            setDay={setDay}
+            dayId={day.id}
+            dayBreakId={dayBreak.id}
           />
         );
       })}

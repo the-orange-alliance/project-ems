@@ -3,38 +3,66 @@ import { DateTimePicker } from '@mui/x-date-pickers';
 import { DATE_FORMAT_MIN_SHORT, Day, DayBreak } from '@toa-lib/models';
 import moment, { Moment } from 'moment';
 import { ChangeEvent, FC, useState } from 'react';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import {
+  tournamentScheduleDaySelector,
+  tournamentScheduleSelector
+} from 'src/stores/Recoil';
 
 interface Props {
-  day: Day;
-  dayBreak: DayBreak;
-  setDay: (newDay: Day) => void;
+  dayId: number;
+  dayBreakId: number;
 }
 
-const Break: FC<Props> = ({ day, dayBreak, setDay }) => {
+const Break: FC<Props> = ({ dayId, dayBreakId }) => {
+  const schedule = useRecoilValue(tournamentScheduleSelector);
+  const [day, setDay] = useRecoilState(tournamentScheduleDaySelector(dayId));
+  const dayBreak = day.breaks[dayBreakId];
+
   const [startDate, setStartDate] = useState<Moment | null>(moment());
   const [endDate, setEndDate] = useState<Moment | null>(moment());
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    const newBreak = { ...dayBreak, [name]: value };
+    const { name, value, type } = event.target;
+    const newBreak = {
+      ...dayBreak,
+      [name]: type === 'number' ? parseInt(value) : value
+    };
+    const newStartTime = moment(day.startTime).add(
+      Math.ceil(newBreak.afterMatch / schedule.matchConcurrency) *
+        schedule.cycleTime,
+      'minutes'
+    );
+    setStartDate(newStartTime);
+    setEndDate(moment(newStartTime).add(newBreak.duration, 'minutes'));
+    const newBreaks = [
+      ...day.breaks.slice(0, newBreak.id),
+      newBreak,
+      ...day.breaks.slice(newBreak.id + 1)
+    ];
+    const breaksDuration =
+      day.breaks.length > 0
+        ? day.breaks
+            .map((dayBreak) => dayBreak.duration)
+            .reduce((prev, curr) => prev + curr)
+        : 0;
     setDay({
       ...day,
-      breaks: [
-        ...day.breaks.slice(0, newBreak.id),
-        newBreak,
-        ...day.breaks.slice(newBreak.id + 1)
-      ]
+      breaks: newBreaks,
+      endTime: moment(day.endTime).add(breaksDuration, 'minutes').toISOString()
     });
   };
 
   const handleStartChange = (newValue: Moment | null) => {
+    const newTime = (newValue ? newValue : moment()).toISOString();
     setStartDate(newValue);
-    setDay({ ...day, startTime: newValue ? newValue : moment() });
+    setDay({ ...day, startTime: newTime });
   };
 
   const handleEndChange = (newValue: Moment | null) => {
+    const newTime = (newValue ? newValue : moment()).toISOString();
     setEndDate(newValue);
-    setDay({ ...day, endTime: newValue ? newValue : moment() });
+    setDay({ ...day, endTime: newTime });
   };
 
   return (
@@ -83,6 +111,7 @@ const Break: FC<Props> = ({ day, dayBreak, setDay }) => {
           value={startDate}
           onChange={handleStartChange}
           disableMaskedInput
+          disabled
           renderInput={(params) => <TextField {...params} fullWidth />}
         />
       </Grid>

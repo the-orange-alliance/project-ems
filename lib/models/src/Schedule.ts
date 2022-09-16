@@ -2,6 +2,9 @@ import moment, { Moment } from 'moment';
 import { Team } from './Team';
 import { isBoolean, isNonNullObject, isNumber, isString } from './types';
 
+const FGC_PREMIERE_CYCLE_TIME = 10;
+const FGC_SIDE_FIELDS_CYCLE_TIME = 7;
+
 export type TournamentType =
   | 'Test'
   | 'Practice'
@@ -25,8 +28,8 @@ export const DATE_FORMAT_MIN_SHORT = 'ddd, MMMM Do YYYY, h:mm a';
 export interface DayBreak {
   id: number; // Break number in the day
   name: string; // Name of the break
-  startTime: Moment; // Start time of the break as a Moment
-  endTime: Moment; // End time of the break as a Moment
+  startTime: string; // Start time of the break as a Moment ISO string
+  endTime: string; // End time of the break as a Moment ISO string
   duration: number; // Duration of the break in minutes as a number
   afterMatch: number; // Number after match in the day, not the entire schedule.
 }
@@ -34,24 +37,24 @@ export interface DayBreak {
 export const defaultBreak: DayBreak = {
   id: 0,
   name: 'Break',
-  startTime: moment(),
-  endTime: moment(),
+  startTime: moment().toISOString(),
+  endTime: moment().toISOString(),
   duration: 30,
   afterMatch: 1
 };
 
 export interface Day {
   id: number; // Number of day in the schedule starting from 0
-  startTime: Moment; // Start time of the day from match 0
-  endTime: Moment; // End time of the day after the last match
+  startTime: string; // Start time of the day from match 0 as a Moment ISO string
+  endTime: string; // End time of the day after the last match  as a Moment ISO string
   scheduledMatches: number; // Number of matches to play in this day
   breaks: DayBreak[]; // Amount of breaks in this day
 }
 
 export const defaultDay: Day = {
   id: 0,
-  startTime: moment(),
-  endTime: moment(),
+  startTime: moment().toISOString(),
+  endTime: moment().toISOString(),
   scheduledMatches: 0,
   breaks: []
 };
@@ -60,7 +63,7 @@ export interface ScheduleItem {
   key: string;
   name: string;
   day: number;
-  startTime: Moment;
+  startTime: string;
   duration: number;
   isMatch: boolean;
   tournamentId: number;
@@ -70,7 +73,7 @@ export const defaultScheduleItem: ScheduleItem = {
   key: '',
   name: '',
   day: 0,
-  startTime: moment(),
+  startTime: moment().toISOString(),
   duration: 0,
   isMatch: false,
   tournamentId: -1
@@ -144,11 +147,14 @@ export function generateScheduleItems(
       item.day = day.id;
       item.name = schedule.type + ' Match ' + (totalMatches + 1);
       item.duration = schedule.cycleTime;
-      item.startTime = moment(day.startTime).add(
-        Math.ceil(matchIndex / schedule.matchConcurrency) * schedule.cycleTime +
-          breakPadding,
-        'minutes'
-      );
+      item.startTime = moment(day.startTime)
+        .add(
+          Math.ceil(matchIndex / schedule.matchConcurrency) *
+            schedule.cycleTime +
+            breakPadding,
+          'minutes'
+        )
+        .toISOString();
       item.isMatch = true;
       item.tournamentId = schedule.tournamentId;
       scheduleItems.push(item);
@@ -195,10 +201,9 @@ export function generateScheduleWithPremiereField(
   let dayNormalTime = 0;
   for (const item of items) {
     if (prevItem.day !== item.day) {
-      schedule.days[prevItem.day].endTime = prevItem.startTime.add(
-        prevItem.duration,
-        'minutes'
-      );
+      schedule.days[prevItem.day].endTime = moment(prevItem.startTime)
+        .add(prevItem.duration, 'minutes')
+        .toISOString();
       premiereIndex = 0;
       normalIndex = 0;
       index = 0;
@@ -215,11 +220,10 @@ export function generateScheduleWithPremiereField(
         item.day + 1 === schedule.days.length &&
         schedule.type === 'Qualification'
       ) {
-        item.duration = 7;
-        item.startTime = schedule.days[item.day].startTime.add(
-          7 * premiereIndex + breakPadding,
-          'minutes'
-        );
+        item.duration = FGC_SIDE_FIELDS_CYCLE_TIME;
+        item.startTime = schedule.days[item.day].startTime
+          .add(7 * premiereIndex + breakPadding, 'minutes')
+          .toISOString();
         index++;
         if (index % 3 === 0) {
           index = 0;
@@ -229,20 +233,18 @@ export function generateScheduleWithPremiereField(
       } else {
         if (!needsBufferMatch) {
           if (index % 7 < 4) {
-            item.duration = 10;
-            item.startTime = moment(schedule.days[item.day].startTime).add(
-              10 * normalIndex + breakPadding,
-              'minutes'
-            );
+            item.duration = FGC_PREMIERE_CYCLE_TIME;
+            item.startTime = moment(schedule.days[item.day].startTime)
+              .add(10 * normalIndex + breakPadding, 'minutes')
+              .toISOString();
             dayNormalTime += item.duration / 2;
             // console.log("CREATING NORMAL MATCH", index, item.duration, dayPremiereTime, dayNormalTime);
           } else {
-            item.duration = 7;
-            item.startTime = moment(schedule.days[item.day].startTime).add(
-              7 * premiereIndex + breakPadding,
-              'minutes'
-            );
-            dayPremiereTime += 7;
+            item.duration = FGC_SIDE_FIELDS_CYCLE_TIME;
+            item.startTime = moment(schedule.days[item.day].startTime)
+              .add(item.duration * premiereIndex + breakPadding, 'minutes')
+              .toISOString();
+            dayPremiereTime += item.duration;
             premiereIndex++;
             // console.log("CREATING PREMIERE MATCH", index, item.duration, dayPremiereTime, dayNormalTime);
           }
@@ -254,17 +256,17 @@ export function generateScheduleWithPremiereField(
             index = 0;
             normalIndex++;
             bufferCount = 0;
-            needsBufferMatch = dayPremiereTime - dayNormalTime === 10;
+            needsBufferMatch =
+              dayPremiereTime - dayNormalTime === FGC_PREMIERE_CYCLE_TIME;
           } else {
             index++;
           }
         } else {
           // console.log("BUFFER MATCH");
-          item.duration = 10;
-          item.startTime = moment(schedule.days[item.day].startTime).add(
-            10 * normalIndex + breakPadding,
-            'minutes'
-          );
+          item.duration = FGC_PREMIERE_CYCLE_TIME;
+          item.startTime = moment(schedule.days[item.day].startTime)
+            .add(item.duration * normalIndex + breakPadding, 'minutes')
+            .toISOString();
           dayPremiereTime = 0;
           dayNormalTime = 0;
           bufferCount++;
@@ -276,17 +278,19 @@ export function generateScheduleWithPremiereField(
       }
     } else {
       const thisBreak = schedule.days[item.day].breaks[breakIndex];
-      schedule.days[item.day].breaks[breakIndex].startTime =
-        prevItem.startTime.add(prevItem.duration, 'minutes');
-      schedule.days[item.day].breaks[breakIndex].endTime =
-        thisBreak.startTime.add(thisBreak.duration, 'minutes');
+      schedule.days[item.day].breaks[breakIndex].startTime = moment(
+        prevItem.startTime
+      ).add(prevItem.duration, 'minutes');
+      schedule.days[item.day].breaks[breakIndex].endTime = moment(
+        thisBreak.startTime
+      ).add(thisBreak.duration, 'minutes');
       breakPadding += item.duration;
       breakIndex++;
     }
     prevItem = item;
   }
   if (items.length > 0) {
-    schedule.days[prevItem.day].endTime = prevItem.startTime.add(
+    schedule.days[prevItem.day].endTime = moment(prevItem.startTime).add(
       prevItem.duration,
       'minutes'
     );
@@ -329,7 +333,7 @@ export function useScheduleValidator(
   let previousDayStart = moment(schedule.days[0].startTime).subtract(1, 'days');
   let validationMessage = '';
   for (const day of schedule.days) {
-    if (!day.startTime.isAfter(previousDayStart, 'day')) {
+    if (!moment(day.startTime).isAfter(previousDayStart, 'day')) {
       daysAreAfterEachOther = false;
     }
     if (day.scheduledMatches <= 0) {
