@@ -1,4 +1,4 @@
-import moment, { Moment } from 'moment';
+import moment from 'moment';
 import { Team } from './Team';
 import { isBoolean, isNonNullObject, isNumber, isString } from './types';
 

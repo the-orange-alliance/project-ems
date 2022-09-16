@@ -33,8 +33,8 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
         schedule.cycleTime,
       'minutes'
     );
-    setStartDate(newStartTime);
-    setEndDate(moment(newStartTime).add(newBreak.duration, 'minutes'));
+    handleStartChange(newStartTime);
+    handleEndChange(moment(newStartTime).add(newBreak.duration));
     const newBreaks = [
       ...day.breaks.slice(0, newBreak.id),
       newBreak,

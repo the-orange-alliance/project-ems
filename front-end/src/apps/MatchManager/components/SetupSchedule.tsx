@@ -83,6 +83,7 @@ const SetupSchedule: FC = () => {
 
   const generateSchedule = useRecoilCallback(({ snapshot }) => async () => {
     const eventKey = await snapshot.getPromise(eventKeySelector);
+    console.log(schedule);
     setScheduleItems(generateScheduleWithPremiereField(schedule, eventKey));
   });
 
