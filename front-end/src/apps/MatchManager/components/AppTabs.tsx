@@ -7,6 +7,7 @@ import { useRecoilValue } from 'recoil';
 import { selectedTournamentLevel } from 'src/stores/Recoil';
 import SetupTeams from './SetupTeams';
 import SetupSchedule from './SetupSchedule';
+import SetupMatches from './SetupMatches';
 
 const AppTabs: FC = () => {
   const tournament = useRecoilValue(selectedTournamentLevel);
@@ -36,7 +37,7 @@ const AppTabs: FC = () => {
         <SetupSchedule />
       </TabPanel>
       <TabPanel value={value} index={2}>
-        Content three
+        <SetupMatches />
       </TabPanel>
     </Box>
   );
