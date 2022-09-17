@@ -56,10 +56,10 @@ CREATE TABLE IF NOT EXISTS "ranking" (
 );
 
 CREATE TABLE IF NOT EXISTS "schedule" (
-    "scheduleItemKey" VARCHAR(40) PRIMARY KEY NOT NULL,
-    "scheduleItemType" VARCHAR(15) NOT NULL,
-    "scheduleItemName" VARCHAR(100) NOT NULL,
-    "scheduleDay" INT NOT NULL,
+    "key" VARCHAR(40) PRIMARY KEY NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "type" VARCHAR(15) NOT NULL,
+    "day" INT NOT NULL,
     "startTime" VARCHAR(255) NOT NULL,
     "duration" INT NOT NULL,
     "isMatch" INT NOT NULL,

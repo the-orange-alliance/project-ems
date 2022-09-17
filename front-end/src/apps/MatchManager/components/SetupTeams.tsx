@@ -6,14 +6,14 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   selectedTournamentType,
   teamsAtom,
-  teamsInScheduleAtomFamily
+  teamsInScheduleSelectorFamily
 } from 'src/stores/Recoil';
 
 const SetupTeams: FC = () => {
   const tournamentType = useRecoilValue(selectedTournamentType);
   const eventTeams = useRecoilValue(teamsAtom);
   const setScheduledTeams = useSetRecoilState(
-    teamsInScheduleAtomFamily(tournamentType)
+    teamsInScheduleSelectorFamily(tournamentType)
   );
 
   const toggleAll = () =>

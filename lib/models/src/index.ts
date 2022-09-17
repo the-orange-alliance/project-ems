@@ -59,6 +59,7 @@ export {
   generateScheduleItems,
   generateScheduleWithPremiereField,
   isScheduleItem,
+  isScheduleItemArray,
   useScheduleValidator,
   calculateTotalMatches
 } from './Schedule';

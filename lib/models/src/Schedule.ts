@@ -1,6 +1,6 @@
 import moment from 'moment';
 import { Team } from './Team';
-import { isBoolean, isNonNullObject, isNumber, isString } from './types';
+import { isArray, isNonNullObject, isNumber, isString } from './types';
 
 const FGC_PREMIERE_CYCLE_TIME = 10;
 const FGC_SIDE_FIELDS_CYCLE_TIME = 7;
@@ -62,6 +62,7 @@ export const defaultDay: Day = {
 export interface ScheduleItem {
   key: string;
   name: string;
+  type: TournamentType;
   day: number;
   startTime: string;
   duration: number;
@@ -72,6 +73,7 @@ export interface ScheduleItem {
 export const defaultScheduleItem: ScheduleItem = {
   key: '',
   name: '',
+  type: 'Test',
   day: 0,
   startTime: moment().toISOString(),
   duration: 0,
@@ -86,14 +88,16 @@ export const isScheduleItem = (obj: unknown): obj is ScheduleItem =>
   isNumber(obj.day) &&
   isString(obj.startTime) &&
   isNumber(obj.duration) &&
-  isBoolean(obj.isMatch) &&
   isNumber(obj.tournamentId);
+
+export const isScheduleItemArray = (obj: unknown): obj is ScheduleItem[] =>
+  isArray(obj) && obj.every((o) => isScheduleItem(o));
 
 export interface EventSchedule {
   type: TournamentType;
   days: Day[];
   matchConcurrency: number;
-  teams?: Team[];
+  teams: Team[];
   teamsParticipating: number;
   teamsPerAlliance: number;
   matchesPerTeam: number;
@@ -109,7 +113,7 @@ export const defaultEventSchedule: EventSchedule = {
   matchConcurrency: 1,
   teams: [],
   teamsParticipating: 0,
-  teamsPerAlliance: 2,
+  teamsPerAlliance: 3,
   matchesPerTeam: 5,
   totalMatches: 0,
   cycleTime: 5,
@@ -132,7 +136,7 @@ export function generateScheduleItems(
     for (let i = 0; i < day.scheduledMatches; i++) {
       const item: ScheduleItem = Object.assign({}, defaultScheduleItem);
       const breakIndex = matchBreaks.indexOf(dayMatches + 1);
-
+      item.type = schedule.type;
       let matchIndex = dayMatches;
       if (schedule.matchConcurrency > 1) {
         matchIndex = dayMatches - schedule.matchConcurrency + 1;

@@ -8,7 +8,8 @@ import {
   UserLoginResponse,
   Event,
   isEvent,
-  Team
+  Team,
+  ScheduleItem
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -64,6 +65,14 @@ export const postTeams = async (teams: Team[]): Promise<void> =>
 
 export const patchTeam = async (teamKey: string, team: Team): Promise<void> =>
   clientFetcher(`teams/${teamKey}`, 'PATCH', team);
+
+export const postSchedule = async (items: ScheduleItem[]): Promise<void> =>
+  clientFetcher('schedule', 'POST', items);
+
+export const patchSchedule = async (
+  scheduleKey: string,
+  item: ScheduleItem
+): Promise<void> => clientFetcher(`schedule/${scheduleKey}`, 'PATCH', item);
 
 /** React hooks to use GET requests for data. */
 export const useLoginAttempt = (

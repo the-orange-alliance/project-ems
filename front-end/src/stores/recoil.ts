@@ -16,7 +16,8 @@ import {
   User,
   EventSchedule,
   defaultDay,
-  ScheduleItem
+  ScheduleItem,
+  isScheduleItemArray
 } from '@toa-lib/models';
 import {
   atom,
@@ -130,16 +131,30 @@ export const teamsAtom = atom<Team[]>({
   })
 });
 
-export const teamsInScheduleAtomFamily = atomFamily<Team[], TournamentType>({
+export const teamsInScheduleSelectorFamily = selectorFamily<
+  Team[],
+  TournamentType
+>({
   key: 'teamsInScheduleAtomFamily',
-  default: []
+  get:
+    (type: TournamentType) =>
+    ({ get }) =>
+      get(tournamentScheduleAtomFamily(type)).teams,
+  set:
+    (type: TournamentType) =>
+    ({ set }, newValue) =>
+      set(tournamentScheduleAtomFamily(type), (prev) => ({
+        ...prev,
+        teams: newValue instanceof DefaultValue ? [] : newValue
+      }))
 });
 
 export const teamsInCurrentSchedule = selector<Team[]>({
   key: 'teamsInCurrentScheduleSelector',
-  get: ({ get }) => get(teamsInScheduleAtomFamily(get(selectedTournamentType))),
+  get: ({ get }) =>
+    get(teamsInScheduleSelectorFamily(get(selectedTournamentType))),
   set: ({ get, set }, newValue) =>
-    set(teamsInScheduleAtomFamily(get(selectedTournamentType)), newValue)
+    set(teamsInScheduleSelectorFamily(get(selectedTournamentType)), newValue)
 });
 
 /* SCHEDULE SECTION - State management for schedule-related items */
@@ -148,7 +163,19 @@ export const tournamentScheduleAtomFamily = atomFamily<
   TournamentType
 >({
   key: 'tournamentScheduleAtomFamily',
-  default: defaultEventSchedule
+  default: selectorFamily<EventSchedule, TournamentType>({
+    key: 'tournamentScheduleAtomFamilySelectorFamily',
+    get: (type: TournamentType) => async () => {
+      try {
+        return (await clientFetcher(
+          `storage/${type}.json`,
+          'GET'
+        )) as EventSchedule;
+      } catch (e) {
+        return defaultEventSchedule;
+      }
+    }
+  })
 });
 
 export const tournamentScheduleSelector = selector<EventSchedule>({
@@ -181,5 +208,20 @@ export const tournamentScheduleItemAtomFamily = atomFamily<
   TournamentType
 >({
   key: 'tournamentScheduleItemAtomFamily',
-  default: []
+  default: selectorFamily<ScheduleItem[], TournamentType>({
+    key: 'tournamentScheduleItemAtomFamilySelectorFamily',
+    get: (type: TournamentType) => async () => {
+      try {
+        return await clientFetcher(
+          `schedule/${type}`,
+          'GET',
+          undefined,
+          isScheduleItemArray
+        );
+      } catch (e) {
+        // TODO - better error-handling
+        return [];
+      }
+    }
+  })
 });
