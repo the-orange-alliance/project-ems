@@ -1,12 +1,9 @@
 import {
-  FINALS_LEVEL,
   Match,
   MatchMakerParams,
   MatchParticipant,
-  PRACTICE_LEVEL,
-  QUALIFICATION_LEVEL,
-  TEST_LEVEL,
-  TournamentType
+  getTournamentLevelFromType,
+  getMatchKeyPartialFromType
 } from '@toa-lib/models';
 import { execFile } from 'child_process';
 
@@ -95,32 +92,4 @@ function parseMatchMaker(output: string, params: MatchMakerParams): Match[] {
     });
   }
   return matches;
-}
-
-function getMatchKeyPartialFromType(type: TournamentType) {
-  switch (type) {
-    case 'Practice':
-      return 'P';
-    case 'Qualification':
-      return 'Q';
-    case 'Ranking':
-      return 'E';
-    default:
-      return 'P';
-  }
-}
-
-function getTournamentLevelFromType(type: TournamentType) {
-  switch (type) {
-    case 'Test':
-      return TEST_LEVEL;
-    case 'Practice':
-      return PRACTICE_LEVEL;
-    case 'Qualification':
-      return QUALIFICATION_LEVEL;
-    case 'Ranking':
-      return FINALS_LEVEL;
-    default:
-      return PRACTICE_LEVEL;
-  }
 }

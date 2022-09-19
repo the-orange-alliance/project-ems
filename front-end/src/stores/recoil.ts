@@ -17,7 +17,12 @@ import {
   EventSchedule,
   defaultDay,
   ScheduleItem,
-  isScheduleItemArray
+  isScheduleItemArray,
+  Match,
+  isMatchArray,
+  getMatchKeyPartialFromType,
+  isMatchParticipantArray,
+  reconcileMatchParticipants
 } from '@toa-lib/models';
 import {
   atom,
@@ -223,5 +228,42 @@ export const tournamentScheduleItemAtomFamily = atomFamily<
         return [];
       }
     }
+  })
+});
+
+/* MATCHES SECTION - state management involving matches for tournaments */
+export const matchesByTournamentTypeAtomFamily = atomFamily<
+  Match[],
+  TournamentType
+>({
+  key: 'matchesByTournamentTypeAtomFamily',
+  default: selectorFamily<Match[], TournamentType>({
+    key: 'matchesByTournamentTypeAtomFamilySelectorFamily',
+    get:
+      (type: TournamentType) =>
+      async ({ get }) => {
+        try {
+          const matches = await clientFetcher(
+            `match?type=${type}`,
+            'GET',
+            undefined,
+            isMatchArray
+          );
+          const eventKey = get(eventKeySelector);
+          const matchKeyPartial = `${eventKey}-${getMatchKeyPartialFromType(
+            type
+          )}`;
+          const participants = await clientFetcher(
+            `match/participants?matchKeyPartial=${matchKeyPartial}`,
+            'GET',
+            undefined,
+            isMatchParticipantArray
+          );
+          return reconcileMatchParticipants(matches, participants);
+        } catch (e) {
+          // TODO - Better error-handling
+          return [];
+        }
+      }
   })
 });

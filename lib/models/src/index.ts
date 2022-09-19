@@ -85,5 +85,13 @@ export {
   MatchDetailBase,
   MatchParticipant,
   isMatch,
-  isMatchParticipant
+  isMatchArray,
+  isMatchParticipant,
+  isMatchParticipantArray,
+  assignMatchFieldsForFGC,
+  assignMatchTimes,
+  getMatchKeyPartialFromType,
+  getTournamentLevelFromType,
+  getMatchKeyPartialFromKey,
+  reconcileMatchParticipants
 } from './Match';

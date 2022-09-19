@@ -1,4 +1,4 @@
-import { TournamentType } from './Schedule';
+import { EventSchedule, ScheduleItem, TournamentType } from './Schedule';
 import { isArray, isNonNullObject, isNumber, isString } from './types';
 
 // Tournament Levels
@@ -70,6 +70,9 @@ export const isMatch = (obj: unknown): obj is Match =>
   isString(obj.matchDetailKey) &&
   isString(obj.matchName);
 
+export const isMatchArray = (obj: unknown): obj is Match[] =>
+  isArray(obj) && obj.every((o) => isMatch(o));
+
 export interface MatchParticipant {
   matchParticipantKey: string;
   matchKey: string;
@@ -88,7 +91,160 @@ export const isMatchParticipant = (obj: unknown): obj is MatchParticipant =>
   isNumber(obj.teamKey) &&
   isNumber(obj.station);
 
+export const isMatchParticipantArray = (
+  obj: unknown
+): obj is MatchParticipant[] =>
+  isArray(obj) && obj.every((o) => isMatchParticipant(o));
+
 export interface MatchDetailBase {
   matchDetailKey: string;
   matchKey: string;
+}
+
+export function assignMatchTimes(
+  matches: Match[],
+  items: ScheduleItem[]
+): Match[] {
+  let matchNumber = 0;
+  const newMatches: Match[] = [];
+  for (const item of items) {
+    if (item.isMatch) {
+      newMatches.push({ ...matches[matchNumber], startTime: item.startTime });
+    }
+  }
+  return newMatches;
+}
+
+export function assignMatchFieldsForFGC(
+  matches: Match[],
+  items: ScheduleItem[],
+  schedule: EventSchedule
+): Match[] {
+  let matchNumber = 0;
+  let fieldIndex = 0;
+  let index = 0;
+  const newMatches: Match[] = [];
+  for (const item of items) {
+    // This is assuming scheduleItems and matchList have the same lengths...
+    if (item.isMatch) {
+      const newMatch: Match = Object.assign({}, matches[matchNumber]);
+      newMatch.startTime = item.startTime;
+      // TODO - Only a FIRST Global thing.
+      if (
+        item.day + 1 === schedule.days.length &&
+        schedule.type === 'Qualification'
+      ) {
+        // This is the last day. Only use fields 3, 4, and 5.
+        newMatch.fieldNumber = index + 3;
+        index++;
+        if (index % 3 === 0) {
+          index = 0;
+        }
+      } else {
+        // TODO - ONLY A FIRST GLOBAL THING.
+        if (item.duration === 7) {
+          newMatch.fieldNumber = 5; // Premiere field.
+        } else {
+          if (fieldIndex >= 4) {
+            fieldIndex = 1;
+          } else {
+            fieldIndex++;
+          }
+          if (fieldIndex === 1) {
+            newMatch.fieldNumber = 1; // Normal field.
+          }
+          if (fieldIndex === 2) {
+            newMatch.fieldNumber = 4; // Normal field.
+          }
+          if (fieldIndex === 3) {
+            newMatch.fieldNumber = 2; // Normal field.
+          }
+          if (fieldIndex === 4) {
+            newMatch.fieldNumber = 3; // Normal field.
+          }
+        }
+      }
+      matchNumber++;
+      newMatches.push(newMatch);
+    } else if (item.isMatch) {
+      const newMatch: Match = Object.assign({}, matches[matchNumber]);
+
+      if (fieldIndex >= 4) {
+        fieldIndex = 1;
+      } else {
+        fieldIndex++;
+      }
+
+      newMatch.startTime = item.startTime;
+
+      if (fieldIndex === 1) {
+        newMatch.fieldNumber = 1; // Normal field.
+      }
+      if (fieldIndex === 2) {
+        newMatch.fieldNumber = 4; // Normal field.
+      }
+      if (fieldIndex === 3) {
+        newMatch.fieldNumber = 2; // Normal field.
+      }
+      if (fieldIndex === 4) {
+        newMatch.fieldNumber = 3; // Normal field.
+      }
+      newMatches.push(newMatch);
+      matchNumber++;
+    }
+  }
+  return newMatches;
+}
+
+export function getMatchKeyPartialFromType(type: TournamentType) {
+  switch (type) {
+    case 'Practice':
+      return 'P';
+    case 'Qualification':
+      return 'Q';
+    case 'Ranking':
+      return 'E';
+    default:
+      return 'P';
+  }
+}
+
+export function getTournamentLevelFromType(type: TournamentType) {
+  switch (type) {
+    case 'Test':
+      return TEST_LEVEL;
+    case 'Practice':
+      return PRACTICE_LEVEL;
+    case 'Qualification':
+      return QUALIFICATION_LEVEL;
+    case 'Ranking':
+      return FINALS_LEVEL;
+    default:
+      return PRACTICE_LEVEL;
+  }
+}
+
+export function getMatchKeyPartialFromKey(matchKey: string) {
+  return matchKey.substring(0, matchKey.length - 3);
+}
+
+export function reconcileMatchParticipants(
+  matches: Match[],
+  participants: MatchParticipant[]
+): Match[] {
+  const map: Map<string, MatchParticipant[]> = new Map();
+  for (const participant of participants) {
+    if (!map.get(participant.matchKey)) {
+      map.set(participant.matchKey, []);
+    }
+    map.get(participant.matchKey)?.push(participant);
+  }
+
+  const newMatches: Match[] = [];
+
+  for (const match of matches) {
+    const newMatch = { ...match, participants: map.get(match.matchKey) };
+    newMatches.push(newMatch);
+  }
+  return newMatches;
 }

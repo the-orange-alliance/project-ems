@@ -1,4 +1,13 @@
-import { isMatchMakerRequest, MatchMakerParams } from '@toa-lib/models';
+import {
+  isMatchArray,
+  isMatchMakerRequest,
+  MatchMakerParams,
+  Match,
+  MatchParticipant,
+  MatchDetailBase,
+  getTournamentLevelFromType,
+  TournamentType
+} from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import {
   insertValue,
@@ -21,12 +30,45 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await selectAll('match');
-    res.send(data);
+    if (req.query.tournamentLevel) {
+      const data = await selectAllWhere(
+        'match',
+        `tournamentLevel = ${req.query.tournamentLevel}`
+      );
+      res.send(data);
+    } else if (req.query.type) {
+      const data = await selectAllWhere(
+        'match',
+        `tournamentLevel = ${getTournamentLevelFromType(
+          req.query.type as TournamentType
+        )}`
+      );
+      res.send(data);
+    } else {
+      const data = await selectAll('match');
+      res.send(data);
+    }
   } catch (e) {
     return next(e);
   }
 });
+
+router.get(
+  '/participants',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (req.query.matchKeyPartial) {
+        const data = await selectAllWhere(
+          'match_participant',
+          `matchKey LIKE "${req.query.matchKeyPartial}%"`
+        );
+        res.send(data);
+      }
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
 
 router.get(
   '/:matchKey',
@@ -46,18 +88,31 @@ router.get(
   }
 );
 
-// router.post(
-//   '/',
-//   validateBody(isTeamArray),
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await insertValue('match', req.body);
-//       res.status(200).send({});
-//     } catch (e) {
-//       return next(e);
-//     }
-//   }
-// );
+router.post(
+  '/',
+  validateBody(isMatchArray),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const pureMatches: Match[] = req.body.map((m: Match) => ({
+        ...m
+      }));
+      for (const match of pureMatches) delete match.participants;
+      const participants = req.body
+        .map((match: Match) => match.participants || [])
+        .flat();
+      const details: MatchDetailBase[] = req.body.map((match: Match) => ({
+        matchKey: match.matchKey,
+        matchDetailKey: match.matchDetailKey
+      }));
+      await insertValue('match', pureMatches);
+      await insertValue('match_participant', participants);
+      await insertValue('match_detail', details);
+      res.status(200).send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
 
 // router.patch(
 //   '/:matchKey',
