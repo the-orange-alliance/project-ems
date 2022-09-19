@@ -1,12 +1,16 @@
 import { FC, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
 import MatchMakerQuality from './MatchMakerQuality';
 import { createMatchSchedule } from 'src/api/ApiProvider';
 import { useRecoilCallback } from 'recoil';
 import { eventAtom, tournamentScheduleSelector } from 'src/stores/Recoil';
+import MatchTable from 'src/features/components/MatchTable/MatchTable';
+import { Match } from '@toa-lib/models';
 
 const SetupMatches: FC = () => {
+  const [matches, setMatches] = useState<Match[]>([]);
   const [quality, setQuality] = useState('best');
 
   const updateQuality = (quality: string) => setQuality(quality);
@@ -23,7 +27,7 @@ const SetupMatches: FC = () => {
       teams
     } = await snapshot.getPromise(tournamentScheduleSelector);
     const teamKeys = teams.map((t) => t.teamKey);
-    await createMatchSchedule({
+    const matches = await createMatchSchedule({
       eventKey,
       quality,
       fields,
@@ -33,6 +37,7 @@ const SetupMatches: FC = () => {
       type,
       teamKeys
     });
+    setMatches(matches);
   });
 
   return (
@@ -45,6 +50,8 @@ const SetupMatches: FC = () => {
       >
         Create Match Schedule
       </Button>
+      <Divider />
+      {matches.length > 0 && <MatchTable matches={matches} />}
     </Box>
   );
 };

@@ -60,10 +60,12 @@ export interface Match {
   active: number;
   result: number;
   uploaded: number;
+  participants?: MatchParticipant[];
+  details?: MatchDetailBase;
 }
 
 export const isMatch = (obj: unknown): obj is Match =>
-  isNonNullObject(obj.matchKey) &&
+  isNonNullObject(obj) &&
   isString(obj.matchKey) &&
   isString(obj.matchDetailKey) &&
   isString(obj.matchName);
@@ -79,6 +81,12 @@ export interface MatchParticipant {
   noShow: number;
   allianceKey: string;
 }
+
+export const isMatchParticipant = (obj: unknown): obj is MatchParticipant =>
+  isNonNullObject(obj) &&
+  isString(obj.matchKey) &&
+  isNumber(obj.teamKey) &&
+  isNumber(obj.station);
 
 export interface MatchDetailBase {
   matchDetailKey: string;

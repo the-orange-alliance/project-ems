@@ -12,7 +12,7 @@ const handleErrors = (
   if (error instanceof ApiDatabaseError) {
     logger.error(`[500] ${error.message} (${req.method} - ${req.originalUrl})`);
     res.status(500).send(toApiError(error));
-  } else if (isApiError(error)) {
+  } else if (isApiError(error) && error.code <= 500) {
     logger.error(
       `[${error.code}] ${error.message} (${req.method} - ${req.originalUrl})`
     );

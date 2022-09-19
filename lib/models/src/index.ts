@@ -80,5 +80,10 @@ export {
   SEMIFINALS_level,
   TEST_LEVEL,
   MatchMakerParams,
-  isMatchMakerRequest
+  isMatchMakerRequest,
+  Match,
+  MatchDetailBase,
+  MatchParticipant,
+  isMatch,
+  isMatchParticipant
 } from './Match';

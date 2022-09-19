@@ -9,9 +9,13 @@ import {
 import { validateBody } from '../middleware/BodyValidator';
 import { DataNotFoundError } from '../util/Errors';
 import { join } from 'path';
-import { execFile } from 'child_process';
 import { writeFile } from 'fs/promises';
-import { getAppData } from '@toa-lib/server';
+import {
+  executeMatchMaker,
+  getAppData,
+  getArgFromQualityStr
+} from '@toa-lib/server';
+import logger from '../util/Logger';
 
 const router = Router();
 
@@ -82,22 +86,35 @@ router.post(
       // First we have to make the teamlist for matchmaker
       const config: MatchMakerParams = req.body;
       const teamsPath = join(getAppData('ems'), `${config.type}-teams.txt`);
-      const contents = req.body.teamKeys.toString().replace(',', '\n');
+      const contents = config.teamKeys.toString().replace(/,/g, '\n');
       await writeFile(teamsPath, contents);
+      logger.info(`wrote teams file at ${teamsPath}`);
       const matchMakerArgs = [
         '-l',
         teamsPath,
         '-t',
-        config.teamsParticipating,
+        config.teamsParticipating.toString(),
         '-r',
-        config.matchesPerTeam,
+        config.matchesPerTeam.toString(),
         '-a',
-        config.teamsPerAlliance,
+        config.teamsPerAlliance.toString(),
         getArgFromQualityStr(config.quality),
         '-s',
-        'o'
+        '-o'
       ];
-    } catch (e) {}
+      logger.info(
+        `executing matchmaker (${matchMakerPath}) with arguments ${matchMakerArgs.toString()}`
+      );
+      const matches = await executeMatchMaker(
+        matchMakerPath,
+        matchMakerArgs,
+        config
+      );
+      logger.info('mathmaker complete - sending results');
+      res.send(matches);
+    } catch (e) {
+      return next(e);
+    }
   }
 );
 
