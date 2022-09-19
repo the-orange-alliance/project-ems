@@ -78,5 +78,7 @@ export {
   RESULT_TIE,
   ROUND_ROBIN_LEVEL,
   SEMIFINALS_level,
-  TEST_LEVEL
+  TEST_LEVEL,
+  MatchMakerParams,
+  isMatchMakerRequest
 } from './Match';

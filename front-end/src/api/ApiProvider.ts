@@ -9,7 +9,8 @@ import {
   Event,
   isEvent,
   Team,
-  ScheduleItem
+  ScheduleItem,
+  MatchMakerParams
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -73,6 +74,11 @@ export const patchSchedule = async (
   scheduleKey: string,
   item: ScheduleItem
 ): Promise<void> => clientFetcher(`schedule/${scheduleKey}`, 'PATCH', item);
+
+// TODO - isMatchArray
+export const createMatchSchedule = async (
+  params: MatchMakerParams
+): Promise<void> => clientFetcher('match/create', 'POST', params);
 
 /** React hooks to use GET requests for data. */
 export const useLoginAttempt = (
