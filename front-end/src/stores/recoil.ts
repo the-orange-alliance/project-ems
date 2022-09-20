@@ -12,6 +12,7 @@ import {
   ROUND_ROBIN_LEVEL,
   Team,
   TEST_LEVEL,
+  MatchState,
   TournamentType,
   User,
   EventSchedule,
@@ -232,6 +233,11 @@ export const tournamentScheduleItemAtomFamily = atomFamily<
 });
 
 /* MATCHES SECTION - state management involving matches for tournaments */
+export const matchStateAtom = atom<MatchState>({
+  key: 'matchStateAtom',
+  default: MatchState.MATCH_NOT_SELECTED
+});
+
 export const matchesByTournamentTypeAtomFamily = atomFamily<
   Match[],
   TournamentType

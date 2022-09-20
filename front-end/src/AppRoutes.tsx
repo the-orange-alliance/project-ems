@@ -6,6 +6,7 @@ import AccountManager from './apps/AccountManager';
 import AdminApp from './apps/Admin/AdminApp';
 import TeamManager from './apps/TeamManager';
 import MatchManager from './apps/MatchManager';
+import ScoringApp from './apps/Scoring';
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
@@ -54,6 +55,12 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: <AccountManager />,
     hidden: false
+  },
+  {
+    name: 'Scoring App',
+    path: '/scoring',
+    group: 0,
+    element: <ScoringApp />
   },
   {
     name: 'Admin App',

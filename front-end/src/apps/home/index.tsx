@@ -13,6 +13,7 @@ const GridAppCard = (props: AppCardProps) => (
   </Grid>
 );
 
+// TODO - Just incorporate from AppRoutes to eliminate having to modify 2+ places.
 const HomeApp: FC = () => {
   return (
     <DefaultLayout>
@@ -21,7 +22,7 @@ const HomeApp: FC = () => {
         <GridAppCard title='Team Manager' to='/team-manager' />
         <GridAppCard title='Match Manager' to='/match-manager' />
         <GridAppCard title='Account Manager' to='/accounts' />
-        <GridAppCard title='Scoring App' />
+        <GridAppCard title='Scoring App' to='/scoring' />
         <GridAppCard title='Admin App' to='/admin' />
         <GridAppCard
           title='Streaming App'

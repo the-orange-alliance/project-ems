@@ -79,6 +79,7 @@ export {
   ROUND_ROBIN_LEVEL,
   SEMIFINALS_level,
   TEST_LEVEL,
+  MatchState,
   MatchMakerParams,
   isMatchMakerRequest,
   Match,

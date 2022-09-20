@@ -19,6 +19,20 @@ export const RESULT_RED_WIN = 1;
 export const RESULT_BLUE_WIN = 2;
 export const RESULT_GAME_SPECIFIC = 3;
 
+export enum MatchState {
+  MATCH_NOT_SELECTED,
+  PRESTART_READY,
+  PRESTART_COMPLETE,
+  FIELD_READY,
+  MATCH_READY,
+  MATCH_IN_PROGRESS,
+  MATCH_ABORTED,
+  MATCH_COMPLETE,
+  RESULTS_READY,
+  RESULTS_COMMITTED,
+  RESULTS_POSTED
+}
+
 export interface MatchMakerParams {
   teamsParticipating: number;
   teamsPerAlliance: number;
