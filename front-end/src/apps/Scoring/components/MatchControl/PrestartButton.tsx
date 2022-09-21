@@ -1,13 +1,20 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import Button from '@mui/material/Button';
-import { useRecoilState } from 'recoil';
-import { matchStateAtom } from 'src/stores/Recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { matchStateAtom, selectedMatchKeyAtom } from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
 import { useButtonState } from '../../util/ButtonState';
 
 const PrestartButton: FC = () => {
   const { prestartEnabled } = useButtonState();
   const [state, setState] = useRecoilState(matchStateAtom);
+  const selectedMatchKey = useRecoilValue(selectedMatchKeyAtom);
+
+  useEffect(() => {
+    if (selectedMatchKey && state === MatchState.MATCH_NOT_SELECTED) {
+      setState(MatchState.PRESTART_READY);
+    }
+  }, [selectedMatchKey, state]);
 
   const prestart = async () => {
     setState(MatchState.PRESTART_COMPLETE);

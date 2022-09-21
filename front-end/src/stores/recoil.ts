@@ -23,7 +23,8 @@ import {
   isMatchArray,
   getMatchKeyPartialFromType,
   isMatchParticipantArray,
-  reconcileMatchParticipants
+  reconcileMatchParticipants,
+  MatchParticipant
 } from '@toa-lib/models';
 import {
   atom,
@@ -272,4 +273,30 @@ export const matchesByTournamentTypeAtomFamily = atomFamily<
         }
       }
   })
+});
+
+export const selectedMatchKeyAtom = atom<string | null>({
+  key: 'selectedMatchKeyAtom',
+  default: null
+});
+
+export const selectedMatchSelector = selector<Match | null | undefined>({
+  key: 'selectedMatchSelector',
+  get: ({ get }): Match | null | undefined =>
+    get(matchesByTournamentTypeAtomFamily(get(selectedTournamentType))).find(
+      (m) => m.matchKey === get(selectedMatchKeyAtom)
+    )
+});
+
+export const matchParticipantSelector = selectorFamily<
+  MatchParticipant[],
+  'red' | 'blue'
+>({
+  key: 'matchParticipantSelector',
+  get:
+    (alliance) =>
+    ({ get }) =>
+      get(selectedMatchSelector)?.participants?.filter((p) =>
+        alliance === 'red' ? p.station < 20 : p.station >= 20
+      ) || []
 });
