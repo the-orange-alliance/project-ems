@@ -3,20 +3,23 @@ import { Routes, Route } from 'react-router-dom';
 import routes from './AppRoutes';
 import './App.less';
 import useLocalStorage from './stores/LocalStorage';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { userAtom } from './stores/Recoil';
+import { UserLoginResponse } from '@toa-lib/models';
+import { setupSocket } from './api/SocketProvider';
 
 function App() {
-  const setUser = useSetRecoilState(userAtom);
+  const [user, setUser] = useRecoilState(userAtom);
 
   // Check for cached login
-  const [value] = useLocalStorage('ems:user', null);
+  const [value] = useLocalStorage<UserLoginResponse>('ems:user', null);
 
   useEffect(() => {
-    if (value) {
+    if (value && !user) {
       setUser(value);
+      setupSocket(value.token);
     }
-  }, [value]);
+  }, [user, value]);
 
   return (
     <Routes>

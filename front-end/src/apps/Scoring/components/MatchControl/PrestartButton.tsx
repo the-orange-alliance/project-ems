@@ -4,6 +4,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { matchStateAtom, selectedMatchKeyAtom } from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
 import { useButtonState } from '../../util/ButtonState';
+import { sendPrestart } from 'src/api/SocketProvider';
 
 const PrestartButton: FC = () => {
   const { prestartEnabled } = useButtonState();
@@ -17,7 +18,10 @@ const PrestartButton: FC = () => {
   }, [selectedMatchKey, state]);
 
   const prestart = async () => {
-    setState(MatchState.PRESTART_COMPLETE);
+    if (selectedMatchKey) {
+      sendPrestart(selectedMatchKey);
+      setState(MatchState.PRESTART_COMPLETE);
+    }
   };
 
   const cancelPrestart = async () => {

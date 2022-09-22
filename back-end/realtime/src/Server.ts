@@ -3,9 +3,10 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import { urlencoded } from "body-parser";
-import passport from "passport";
 import jwt from "jsonwebtoken";
-import { environment as env } from "@toa/lib-ems";
+import { environment as env } from "@toa-lib/server";
+import logger from './util/Logger';
+import { assignRooms, initRooms } from "./rooms/Rooms";
 
 // Setup our environment
 env.loadAndSetDefaults();
@@ -19,17 +20,6 @@ const io = new Server(server);
 app.use(cors({ credentials: true }));
 app.use(json());
 app.use(urlencoded({ extended: false }));
-app.use(passport.initialize());
-
-passport.serializeUser((user, cb) => {
-  console.log("serialize user", user);
-  cb(null, (user as any).id);
-});
-
-passport.deserializeUser((id, cb) => {
-  console.log("deserialize user", id);
-  cb(null, { id: 0, user: "admin" });
-});
 
 io.use((socket, next) => {
   if (socket.handshake.query && socket.handshake.query.token) {
@@ -51,16 +41,32 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  console.log("user connected", (socket as any).decoded);
+  const user = (socket as any).decoded;
+  logger.info(`user '${user.username}' connected and verified`)
 
-  socket.on("fcs:update", (update) => {
-    console.log("updating field", update);
-    socket.broadcast.emit("fcs:update", update);
+  socket.on('rooms', (rooms: string[]) => {
+    logger.info(`user ${user.username} joining rooms ${rooms}`)
+    assignRooms(rooms, socket);
   });
 
   socket.on("disconnect", () => {
-    console.log("user disonnected");
+    logger.info(`user ${user.username} disconnected`);
   });
 });
 
-server.listen(3000, () => console.log("server started"));
+server.listen(
+  {
+    host: env.get().serviceHost,
+    port: env.get().servicePort
+  },
+  () => {
+    logger.info(
+      `[${env.get().nodeEnv.charAt(0).toUpperCase()}][${env
+        .get()
+        .serviceName.toUpperCase()}] Server started on ${
+        env.get().serviceHost
+      }:${env.get().servicePort}`
+    )
+    initRooms(io);
+  }
+);
