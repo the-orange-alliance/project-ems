@@ -30,6 +30,7 @@ export default class Match extends Room {
       this.matchKey = matchKey;
       this.broadcast().emit("match:prestart", matchKey);
       this.state = MatchState.PRESTART_COMPLETE;
+      logger.info(`prestarting ${matchKey}`);
     });
     socket.on("match:abort", () => {
       this.matchKey = null;
@@ -38,28 +39,31 @@ export default class Match extends Room {
     });
     socket.on("match:start", () => {
       if (this.timer.inProgress()) return;
-      this.timer.once("match:start", () => {
-        this.broadcast().emit("match:timing:start");
+      this.timer.once("timer:start", () => {
+        this.broadcast().emit("match-start", "start");
         this.state = MatchState.MATCH_IN_PROGRESS;
         logger.info("match in progress");
       });
-      this.timer.once("match:auto", () => {
-        this.broadcast().emit("match:timing:auto");
+      this.timer.once("timer:auto", () => {
+        this.broadcast().emit("match:auto");
+        logger.info("match auto");
       });
-      this.timer.once("match:tele", () => {
-        this.broadcast().emit("match:timing:tele");
+      this.timer.once("timer:tele", () => {
+        this.broadcast().emit("match:tele");
+        logger.info("match tele");
       });
-      this.timer.once("match:endgame", () => {
-        this.broadcast().emit("match:timing:endgame");
+      this.timer.once("timer:endgame", () => {
+        this.broadcast().emit("match:endgame");
+        logger.info("match endgame");
       });
-      this.timer.once("match:end", () => {
-        this.broadcast().emit("match:timing:end");
+      this.timer.once("timer:end", () => {
+        this.broadcast().emit("match:end");
         this.timer.removeListeners();
         this.state = MatchState.MATCH_COMPLETE;
         logger.info("match completed");
       });
-      this.timer.once("match:abort", () => {
-        this.broadcast().emit("match:timing:abort");
+      this.timer.once("timer:abort", () => {
+        this.broadcast().emit("match:abort");
         this.timer.removeListeners();
         this.state = MatchState.PRESTART_READY;
         logger.info("match aborted");

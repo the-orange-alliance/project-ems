@@ -77,6 +77,12 @@ export const selectedTournamentType = selector<TournamentType>({
   }
 });
 
+/* SOCKET SECTION */
+export const socketConnectedAtom = atom<boolean>({
+  key: 'socketConnectedAtom',
+  default: false
+});
+
 /* FLAGS SECTION - Application flags */
 export const appFlagsAtom = atom<AppFlags>({
   key: 'appFlagsAtom',

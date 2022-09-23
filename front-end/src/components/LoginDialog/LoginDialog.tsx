@@ -7,12 +7,11 @@ import {
   DialogTitle,
   TextField
 } from '@mui/material';
-import { createSocket } from '@toa-lib/client';
 import { User } from '@toa-lib/models';
 import { ChangeEvent, FC, useEffect, useCallback, useState } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { login } from 'src/api/ApiProvider';
-import { setupSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/SocketProvider';
 import useLocalStorage from 'src/stores/LocalStorage';
 import { userAtom } from 'src/stores/Recoil';
 
@@ -28,6 +27,8 @@ const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  const [, , setupSocket] = useSocket();
 
   useEffect(() => {
     setUsername('');

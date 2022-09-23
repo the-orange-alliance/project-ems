@@ -18,7 +18,7 @@ const MatchStatus: FC = () => {
 
   const [mode, setMode] = useState('NOT READY');
 
-  const [, connected] = useSocket();
+  const [socket, connected] = useSocket();
 
   const name = selectedMatch ? selectedMatch.matchName : 'No Match Selected';
   const timeDuration = duration(time, 'seconds');
@@ -32,8 +32,6 @@ const MatchStatus: FC = () => {
       : timeDuration.seconds().toString();
 
   useEffect(() => {
-    console.log({ connected });
-
     if (connected) {
       setupMatchListeners(
         onMatchStart,
@@ -44,33 +42,28 @@ const MatchStatus: FC = () => {
         onMatchAbort
       );
     }
-    return () => {
-      console.log('remove shit');
-      removeMatchListeners();
-    };
-  }, [connected]);
+  }, [connected, socket]);
 
   useEffect(() => {
     return () => {
       removeMatchListeners();
     };
-  });
+  }, []);
 
   useEffect(() => {
     setTime(timer.timeLeft);
   }, [timer.timeLeft]);
 
-  const onMatchStart = () => {
-    console.log('I HAVE BEEN CALLED');
+  const onMatchStart = (data: any) => {
+    console.log('MATCH STARTED', data);
     timer.start();
-    setMode('START');
+    setMode('MATCH STARTED');
   };
   const onMatchAuto = () => setMode('AUTONOMOUS');
   const onMatchTele = () => setMode('TELEOPERATED');
   const onMatchEndGame = () => setMode('ENDGAME');
   const onMatchEnd = () => setMode('MATCH END');
   const onMatchAbort = () => {
-    console.log('WHYT AM I NOT HERE');
     timer.abort();
     setMode('MATCH ABORTED');
   };

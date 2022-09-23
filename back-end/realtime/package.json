@@ -5,7 +5,7 @@
   "main": "build/Server.js",
   "scripts": {
     "start": "tsc && node build/Server.js",
-    "start:debug": "tsc && set DEBUG=socket.io*& node build/Server.js"
+    "start:debug": "tsc && set DEBUG=*& node build/Server.js"
   },
   "author": "Kyle Flynn",
   "license": "ISC",

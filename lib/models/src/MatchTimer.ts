@@ -69,7 +69,7 @@ export class MatchTimer extends EventEmitter {
         this._modeTimeLeft = this.matchConfig.teleTime;
       }
       this._timeLeft = getMatchTime(this._matchConfig);
-      this.emit('match:start', this._timeLeft);
+      this.emit('timer:start', this._timeLeft);
       this._timerID = global.setInterval(() => {
         this.tick();
       }, 1000);
@@ -82,7 +82,7 @@ export class MatchTimer extends EventEmitter {
       this._timerID = null;
       this._mode = MatchMode.ENDED;
       this._timeLeft = 0;
-      this.emit('match:end');
+      this.emit('timer:end');
     }
   }
 
@@ -92,7 +92,7 @@ export class MatchTimer extends EventEmitter {
       this._timerID = null;
       this._mode = MatchMode.ABORTED;
       this._timeLeft = 0;
-      this.emit('match:abort');
+      this.emit('timer:abort');
     }
   }
 
@@ -101,12 +101,12 @@ export class MatchTimer extends EventEmitter {
   }
 
   public removeListeners(): void {
-    this.removeAllListeners('match:start');
-    this.removeAllListeners('match:auto');
-    this.removeAllListeners('match:tele');
-    this.removeAllListeners('match:endgame');
-    this.removeAllListeners('match:end');
-    this.removeAllListeners('match:abort');
+    this.removeAllListeners('timer:start');
+    this.removeAllListeners('timer:auto');
+    this.removeAllListeners('timer:tele');
+    this.removeAllListeners('timer:endgame');
+    this.removeAllListeners('timer:end');
+    this.removeAllListeners('timer:abort');
   }
 
   private tick() {
@@ -123,22 +123,22 @@ export class MatchTimer extends EventEmitter {
           if (this.matchConfig.autoTime > 0) {
             this._mode = MatchMode.AUTONOMOUS;
             this._modeTimeLeft = this.matchConfig.autoTime;
-            this.emit('match:auto');
+            this.emit('timer:auto');
           } else {
             this._mode = MatchMode.TELEOPERATED;
             this._modeTimeLeft = this.matchConfig.teleTime;
-            this.emit('match:tele');
+            this.emit('timer:tele');
           }
           break;
         case MatchMode.AUTONOMOUS:
           if (this.matchConfig.transitionTime > 0) {
             this._mode = MatchMode.TRANSITION;
             this._modeTimeLeft = this.matchConfig.transitionTime;
-            this.emit('match:transition');
+            this.emit('timer:transition');
           } else if (this.matchConfig.teleTime > 0) {
             this._mode = MatchMode.TELEOPERATED;
             this._modeTimeLeft = this.matchConfig.teleTime;
-            this.emit('match:tele');
+            this.emit('timer:tele');
           } else {
             this.stop();
           }
@@ -147,7 +147,7 @@ export class MatchTimer extends EventEmitter {
           if (this.matchConfig.teleTime > 0) {
             this._mode = MatchMode.TELEOPERATED;
             this._modeTimeLeft = this.matchConfig.teleTime;
-            this.emit('match:tele');
+            this.emit('timer:tele');
           } else {
             this.stop();
           }
@@ -158,7 +158,7 @@ export class MatchTimer extends EventEmitter {
         this._timeLeft === this.matchConfig.endTime
       ) {
         this._mode = MatchMode.ENDGAME;
-        this.emit('match:endgame');
+        this.emit('timer:endgame');
       }
     }
   }

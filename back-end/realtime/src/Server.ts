@@ -41,19 +41,21 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  // const user = (socket as any).decoded;
-  const user = { username: "localhost" };
+  const user = (socket as any).decoded;
   logger.info(`user '${user.username}' connected and verified`);
 
   socket.on("rooms", (rooms: string[]) => {
     logger.info(`user ${user.username} joining rooms ${rooms}`);
     assignRooms(rooms, socket);
-    socket.emit("test", "data");
   });
 
-  socket.on("disconnect", () => {
-    logger.info(`user ${user.username} disconnected`);
+  socket.on("disconnect", (reason: string) => {
+    logger.info(`user ${user.username} disconnected: ${reason}`);
     leaveRooms(socket);
+  });
+
+  socket.on("error", (err) => {
+    logger.error({ err });
   });
 });
 

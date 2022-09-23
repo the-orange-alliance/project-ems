@@ -6,11 +6,11 @@ import useLocalStorage from './stores/LocalStorage';
 import { useRecoilState } from 'recoil';
 import { userAtom } from './stores/Recoil';
 import { UserLoginResponse } from '@toa-lib/models';
-import { setupSocket, useSocket } from './api/SocketProvider';
+import { useSocket } from './api/SocketProvider';
 
 function App() {
   const [user, setUser] = useRecoilState(userAtom);
-  useSocket();
+  const [, , setupSocket] = useSocket();
 
   // Check for cached login
   const [value] = useLocalStorage<UserLoginResponse>('ems:user', null);
