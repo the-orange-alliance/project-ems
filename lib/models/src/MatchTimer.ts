@@ -70,7 +70,7 @@ export class MatchTimer extends EventEmitter {
       }
       this._timeLeft = getMatchTime(this._matchConfig);
       this.emit('timer:start', this._timeLeft);
-      this._timerID = global.setInterval(() => {
+      this._timerID = setInterval(() => {
         this.tick();
       }, 1000);
     }
@@ -78,7 +78,7 @@ export class MatchTimer extends EventEmitter {
 
   public stop() {
     if (this.inProgress()) {
-      global.clearInterval(this._timerID);
+      clearInterval(this._timerID);
       this._timerID = null;
       this._mode = MatchMode.ENDED;
       this._timeLeft = 0;
@@ -88,7 +88,7 @@ export class MatchTimer extends EventEmitter {
 
   public abort() {
     if (this.inProgress()) {
-      global.clearInterval(this._timerID);
+      clearInterval(this._timerID);
       this._timerID = null;
       this._mode = MatchMode.ABORTED;
       this._timeLeft = 0;
@@ -112,6 +112,7 @@ export class MatchTimer extends EventEmitter {
   private tick() {
     if (this._timeLeft === 0) {
       this.stop();
+      return;
     }
 
     this._modeTimeLeft--;

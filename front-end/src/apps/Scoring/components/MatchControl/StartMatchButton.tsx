@@ -2,7 +2,7 @@ import { FC } from 'react';
 import Button from '@mui/material/Button';
 import { useButtonState } from '../../util/ButtonState';
 import { useRecoilState } from 'recoil';
-import { matchStateAtom } from 'src/stores/Recoil';
+import { matchStateAtom, timer } from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
 import { sendAbortMatch, sendStartMatch } from 'src/api/SocketProvider';
 
@@ -12,6 +12,7 @@ const StartMatchButton: FC = () => {
   const { startMatchEnabled } = useButtonState();
 
   const startMatch = () => {
+    timer.start();
     sendStartMatch();
     setState(MatchState.MATCH_IN_PROGRESS);
   };

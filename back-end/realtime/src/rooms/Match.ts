@@ -40,7 +40,7 @@ export default class Match extends Room {
     socket.on("match:start", () => {
       if (this.timer.inProgress()) return;
       this.timer.once("timer:start", () => {
-        this.broadcast().emit("match-start", "start");
+        this.broadcast().emit("match:start", "start");
         this.state = MatchState.MATCH_IN_PROGRESS;
         logger.info("match in progress");
       });

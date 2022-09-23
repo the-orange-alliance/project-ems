@@ -3,38 +3,33 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { matchTimeAtom, selectedMatchSelector, timer } from 'src/stores/Recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import {
+  matchStateAtom,
+  selectedMatchSelector,
+  timer
+} from 'src/stores/Recoil';
 import {
   removeMatchListeners,
   setupMatchListeners,
   useSocket
 } from 'src/api/SocketProvider';
-import { duration } from 'moment';
+import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
+import { MatchState } from '@toa-lib/models';
 
 const MatchStatus: FC = () => {
   const selectedMatch = useRecoilValue(selectedMatchSelector);
-  const [time, setTime] = useRecoilState(matchTimeAtom);
+  const setState = useSetRecoilState(matchStateAtom);
 
   const [mode, setMode] = useState('NOT READY');
 
   const [socket, connected] = useSocket();
 
   const name = selectedMatch ? selectedMatch.matchName : 'No Match Selected';
-  const timeDuration = duration(time, 'seconds');
-  const displayMinutes =
-    timeDuration.minutes() < 10
-      ? '0' + timeDuration.minutes().toString()
-      : timeDuration.minutes().toString();
-  const displaySeconds =
-    timeDuration.seconds() < 10
-      ? '0' + timeDuration.seconds().toString()
-      : timeDuration.seconds().toString();
 
   useEffect(() => {
     if (connected) {
       setupMatchListeners(
-        onMatchStart,
         onMatchAuto,
         onMatchTele,
         onMatchEndGame,
@@ -50,19 +45,13 @@ const MatchStatus: FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    setTime(timer.timeLeft);
-  }, [timer.timeLeft]);
-
-  const onMatchStart = (data: any) => {
-    console.log('MATCH STARTED', data);
-    timer.start();
-    setMode('MATCH STARTED');
-  };
   const onMatchAuto = () => setMode('AUTONOMOUS');
   const onMatchTele = () => setMode('TELEOPERATED');
   const onMatchEndGame = () => setMode('ENDGAME');
-  const onMatchEnd = () => setMode('MATCH END');
+  const onMatchEnd = () => {
+    setMode('MATCH END');
+    setState(MatchState.MATCH_COMPLETE);
+  };
   const onMatchAbort = () => {
     timer.abort();
     setMode('MATCH ABORTED');
@@ -79,7 +68,7 @@ const MatchStatus: FC = () => {
           {mode}
         </Typography>
         <Typography align='center' variant='h5'>
-          {displayMinutes}:{displaySeconds}
+          <MatchCountdown />
         </Typography>
       </Box>
     </Paper>

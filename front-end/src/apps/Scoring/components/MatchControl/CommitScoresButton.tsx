@@ -1,12 +1,12 @@
 import { FC } from 'react';
 import Button from '@mui/material/Button';
 import { useButtonState } from '../../util/ButtonState';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { matchStateAtom } from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
 
 const CommitScoresButton: FC = () => {
-  const setState = useSetRecoilState(matchStateAtom);
+  const [state, setState] = useRecoilState(matchStateAtom);
 
   const { commitEnabled } = useButtonState();
 
@@ -14,7 +14,17 @@ const CommitScoresButton: FC = () => {
     setState(MatchState.RESULTS_COMMITTED);
   };
 
-  return (
+  return state === MatchState.MATCH_COMPLETE ? (
+    <Button
+      disabled={!commitEnabled}
+      fullWidth
+      variant='contained'
+      onClick={commitScores}
+      className='yellow-bg-imp'
+    >
+      Commit
+    </Button>
+  ) : (
     <Button
       disabled={!commitEnabled}
       fullWidth

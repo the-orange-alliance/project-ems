@@ -14,9 +14,10 @@ import { selectedMatchKeyAtom } from 'src/stores/Recoil';
 interface Props {
   matches: Match[];
   onSelect?: (matchKey: string) => void;
+  disabled?: boolean;
 }
 
-const MatchResultsTable: FC<Props> = ({ matches, onSelect }) => {
+const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
   const selectedMatchKey = useRecoilValue(selectedMatchKeyAtom);
 
   return (
@@ -45,7 +46,9 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect }) => {
                 : false;
 
               const select = () => {
-                onSelect?.(match.matchKey);
+                if (!disabled) {
+                  onSelect?.(match.matchKey);
+                }
               };
 
               return (
@@ -54,6 +57,7 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect }) => {
                   hover
                   selected={isSelected}
                   onClick={select}
+                  className={disabled ? 'mouse-disable' : 'mouse-click'}
                 >
                   <TableCell>{match.matchName}</TableCell>
                   <TableCell>{match.fieldNumber}</TableCell>

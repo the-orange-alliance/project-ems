@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import Button from '@mui/material/Button';
+import { FC, useState } from 'react';
+import LoadingButton from '@mui/lab/LoadingButton';
 import { useButtonState } from '../../util/ButtonState';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { fieldMotorDuration, matchStateAtom } from 'src/stores/Recoil';
@@ -12,21 +12,27 @@ const FieldPrepButton: FC = () => {
 
   const { fieldPrepEnabled } = useButtonState();
 
+  const [loading, setLoading] = useState(false);
+
   const updateField = async () => {
+    setLoading(true);
     await prepareField(motorDuration);
     setState(MatchState.FIELD_READY);
+    setState(MatchState.MATCH_READY);
+    setLoading(false);
   };
 
   return (
-    <Button
+    <LoadingButton
       disabled={!fieldPrepEnabled}
       color='success'
       fullWidth
       variant='contained'
-      onClick={updateField}
+      onClick={loading ? undefined : updateField}
+      loading={loading}
     >
       Field Prep
-    </Button>
+    </LoadingButton>
   );
 };
 

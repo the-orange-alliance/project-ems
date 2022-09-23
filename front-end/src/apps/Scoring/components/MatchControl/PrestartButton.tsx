@@ -11,6 +11,10 @@ const PrestartButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
   const selectedMatchKey = useRecoilValue(selectedMatchKeyAtom);
 
+  const canCancelPrestart =
+    state !== MatchState.PRESTART_READY &&
+    state <= MatchState.MATCH_IN_PROGRESS;
+
   useEffect(() => {
     if (selectedMatchKey && state === MatchState.MATCH_NOT_SELECTED) {
       setState(MatchState.PRESTART_READY);
@@ -28,11 +32,7 @@ const PrestartButton: FC = () => {
     setState(MatchState.PRESTART_READY);
   };
 
-  return state === MatchState.PRESTART_READY ? (
-    <Button fullWidth color='warning' variant='contained' onClick={prestart}>
-      Prestart
-    </Button>
-  ) : (
+  return canCancelPrestart ? (
     <Button
       fullWidth
       color='error'
@@ -41,6 +41,10 @@ const PrestartButton: FC = () => {
       disabled={!prestartEnabled}
     >
       Cancel Prestart
+    </Button>
+  ) : (
+    <Button fullWidth color='warning' variant='contained' onClick={prestart}>
+      Prestart
     </Button>
   );
 };

@@ -4,22 +4,29 @@ import Divider from '@mui/material/Divider';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   matchesByTournamentTypeAtomFamily,
+  matchStateAtom,
   selectedMatchKeyAtom,
   selectedTournamentLevel,
   selectedTournamentType
 } from 'src/stores/Recoil';
 import MatchResultsTable from 'src/features/components/MatchResultsTable/MatchResultsTable';
 import TournamentDropdown from 'src/components/Dropdowns/TournamentDropdown';
+import { MatchState } from '@toa-lib/models';
 
 const MatchSelection: FC = () => {
   const [tournamentLevel, setTournamentLevel] = useRecoilState(
     selectedTournamentLevel
   );
   const tournamentType = useRecoilValue(selectedTournamentType);
+  const state = useRecoilValue(matchStateAtom);
   const matches = useRecoilValue(
     matchesByTournamentTypeAtomFamily(tournamentType)
   );
   const setSelectedMatchKey = useSetRecoilState(selectedMatchKeyAtom);
+
+  const handleSelect = (matchKey: string): void => {
+    setSelectedMatchKey(matchKey);
+  };
 
   useEffect(() => {
     setSelectedMatchKey(null);
@@ -34,7 +41,11 @@ const MatchSelection: FC = () => {
         onChange={changeTournamentLevel}
       />
       <Divider />
-      <MatchResultsTable matches={matches} onSelect={setSelectedMatchKey} />
+      <MatchResultsTable
+        disabled={state >= MatchState.PRESTART_COMPLETE}
+        matches={matches}
+        onSelect={handleSelect}
+      />
     </Paper>
   );
 };

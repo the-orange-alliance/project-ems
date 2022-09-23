@@ -101,7 +101,7 @@ export const useButtonState = (): ControlButtons => {
           audienceDisplayEnabled: false,
           fieldPrepEnabled: false,
           startMatchEnabled: false,
-          commitEnabled: false,
+          commitEnabled: true,
           postResultsEnabled: false
         });
         break;
