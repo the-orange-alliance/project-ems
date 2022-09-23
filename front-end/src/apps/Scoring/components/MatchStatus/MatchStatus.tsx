@@ -32,8 +32,9 @@ const MatchStatus: FC = () => {
       : timeDuration.seconds().toString();
 
   useEffect(() => {
+    console.log({ connected });
+
     if (connected) {
-      console.log('HEREEE');
       setupMatchListeners(
         onMatchStart,
         onMatchAuto,
@@ -44,9 +45,16 @@ const MatchStatus: FC = () => {
       );
     }
     return () => {
+      console.log('remove shit');
       removeMatchListeners();
     };
   }, [connected]);
+
+  useEffect(() => {
+    return () => {
+      removeMatchListeners();
+    };
+  });
 
   useEffect(() => {
     setTime(timer.timeLeft);

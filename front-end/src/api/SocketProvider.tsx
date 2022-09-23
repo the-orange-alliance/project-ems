@@ -38,12 +38,17 @@ export const useSocket = (): [Socket | null, boolean] => {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    if (socket) {
+    socket?.on('connect', () => {
       setConnected(true);
-    } else {
+    });
+    socket?.on('disconnect', () => {
       setConnected(false);
-    }
-  }, [socket]);
+    });
+    return () => {
+      socket?.off('connect');
+      socket?.off('disconnect');
+    };
+  }, []);
 
   return [socket, connected];
 };
@@ -88,7 +93,6 @@ export function setupMatchListeners(
   matchEnd: TimingCallback,
   matchAbort: TimingCallback
 ): void {
-  console.log(socket);
   socket?.on('match:timing:start', matchStart);
   socket?.on('match:timing:auto', autoStart);
   socket?.on('match:timing:tele', teleStart);
