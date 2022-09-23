@@ -24,7 +24,8 @@ import {
   getMatchKeyPartialFromType,
   isMatchParticipantArray,
   reconcileMatchParticipants,
-  MatchParticipant
+  MatchParticipant,
+  MatchTimer
 } from '@toa-lib/models';
 import {
   atom,
@@ -36,6 +37,7 @@ import {
 import { setApiStorage } from 'src/api/ApiProvider';
 import { AppFlags, defaultFlags } from './AppFlags';
 
+/* Basic UI options */
 export const darkModeAtom = atom<boolean>({
   key: 'darkModeAtom',
   default: false
@@ -44,6 +46,8 @@ export const userAtom = atom<User | null>({
   key: 'userAtom',
   default: null
 });
+
+/* Internal state management */
 export const selectedTeamAtom = atom<Team | null>({
   key: 'selectedTeamAtom',
   default: null
@@ -234,6 +238,8 @@ export const tournamentScheduleItemAtomFamily = atomFamily<
 });
 
 /* MATCHES SECTION - state management involving matches for tournaments */
+export const timer: MatchTimer = new MatchTimer();
+
 export const matchStateAtom = atom<MatchState>({
   key: 'matchStateAtom',
   default: MatchState.MATCH_NOT_SELECTED
@@ -299,4 +305,15 @@ export const matchParticipantSelector = selectorFamily<
       get(selectedMatchSelector)?.participants?.filter((p) =>
         alliance === 'red' ? p.station < 20 : p.station >= 20
       ) || []
+});
+
+export const matchTimeAtom = atom({
+  key: 'matchTimeAtom',
+  default: timer.timeLeft
+});
+
+/* FIELD SECTION */
+export const fieldMotorDuration = atom({
+  key: 'fieldMotorDurationAtom',
+  default: 3000 // in ms
 });

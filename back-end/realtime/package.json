@@ -4,7 +4,8 @@
   "description": "Realtime service for EMS.",
   "main": "build/Server.js",
   "scripts": {
-    "start": "tsc && node build/Server.js"
+    "start": "tsc && node build/Server.js",
+    "start:debug": "tsc && set DEBUG=socket.io*& node build/Server.js"
   },
   "author": "Kyle Flynn",
   "license": "ISC",
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "@toa-lib/server": "file:../../lib/server",
+    "@toa-lib/models": "file:../../lib/models",
     "body-parser": "^1.20.0",
     "cors": "^2.8.5",
     "express": "^4.18.1",

@@ -17,6 +17,9 @@ export default defineConfig({
   build: {
     commonjsOptions: {
       include: ['@toa-lib/client', '@toa-lib/models', /node_modules/]
+    },
+    rollupOptions: {
+      external: ['node:events', 'events']
     }
   }
 });

@@ -5,8 +5,8 @@ import cors from "cors";
 import { urlencoded } from "body-parser";
 import jwt from "jsonwebtoken";
 import { environment as env } from "@toa-lib/server";
-import logger from './util/Logger';
-import { assignRooms, initRooms } from "./rooms/Rooms";
+import logger from "./util/Logger";
+import { assignRooms, initRooms, leaveRooms } from "./rooms/Rooms";
 
 // Setup our environment
 env.loadAndSetDefaults();
@@ -41,23 +41,28 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  const user = (socket as any).decoded;
-  logger.info(`user '${user.username}' connected and verified`)
+  // const user = (socket as any).decoded;
+  const user = { username: "localhost" };
+  logger.info(`user '${user.username}' connected and verified`);
 
-  socket.on('rooms', (rooms: string[]) => {
-    logger.info(`user ${user.username} joining rooms ${rooms}`)
+  socket.on("rooms", (rooms: string[]) => {
+    logger.info(`user ${user.username} joining rooms ${rooms}`);
     assignRooms(rooms, socket);
+    socket.emit("test", "data");
   });
 
   socket.on("disconnect", () => {
     logger.info(`user ${user.username} disconnected`);
+    leaveRooms(socket);
   });
 });
+
+initRooms(io);
 
 server.listen(
   {
     host: env.get().serviceHost,
-    port: env.get().servicePort
+    port: env.get().servicePort,
   },
   () => {
     logger.info(
@@ -66,7 +71,6 @@ server.listen(
         .serviceName.toUpperCase()}] Server started on ${
         env.get().serviceHost
       }:${env.get().servicePort}`
-    )
-    initRooms(io);
+    );
   }
 );

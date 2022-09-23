@@ -4,6 +4,7 @@ import { useButtonState } from '../../util/ButtonState';
 import { useRecoilState } from 'recoil';
 import { matchStateAtom } from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
+import { sendAbortMatch, sendStartMatch } from 'src/api/SocketProvider';
 
 const StartMatchButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
@@ -11,10 +12,12 @@ const StartMatchButton: FC = () => {
   const { startMatchEnabled } = useButtonState();
 
   const startMatch = () => {
+    sendStartMatch();
     setState(MatchState.MATCH_IN_PROGRESS);
   };
 
   const abortMatch = () => {
+    sendAbortMatch();
     setState(MatchState.MATCH_ABORTED);
     setState(MatchState.PRESTART_READY);
   };

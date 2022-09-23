@@ -1,12 +1,13 @@
 import { FC } from 'react';
 import Button from '@mui/material/Button';
 import { useButtonState } from '../../util/ButtonState';
+import { setDisplays } from 'src/api/SocketProvider';
 
 const AudienceDisplayButton: FC = () => {
   const { audienceDisplayEnabled } = useButtonState();
 
   const updateDisplays = () => {
-    console.log('hah');
+    setDisplays();
   };
 
   return (

@@ -98,3 +98,19 @@ export {
   getMatchKeyPartialFromKey,
   reconcileMatchParticipants
 } from './Match';
+
+export {
+  FGC_MATCH_CONFIG,
+  FRC_MATCH_CONFIG,
+  MatchConfiguration,
+  MatchMode,
+  MatchTimer,
+  getMatchTime
+} from './MatchTimer';
+
+export {
+  HubFunctions,
+  FieldControlPacket,
+  HubMessage,
+  HubParameters
+} from './FieldControl';
