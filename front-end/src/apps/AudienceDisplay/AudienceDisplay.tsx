@@ -1,4 +1,4 @@
-import { MatchState } from '@toa-lib/models';
+import { Match, MatchState } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
@@ -16,6 +16,7 @@ const AudienceDisplay: FC = () => {
     if (connected) {
       socket?.on('match:prestart', onPrestart);
       socket?.on('match:start', onStart);
+      socket?.on('match:update', onUpdate);
     }
   }, [connected]);
 
@@ -23,6 +24,7 @@ const AudienceDisplay: FC = () => {
     return () => {
       socket?.removeListener('match:prestart', onPrestart);
       socket?.removeListener('match:start', onStart);
+      socket?.removeListener('match:update', onUpdate);
     };
   }, []);
 
@@ -34,6 +36,8 @@ const AudienceDisplay: FC = () => {
     setState(MatchState.MATCH_IN_PROGRESS);
     timer.start();
   };
+
+  const onUpdate = (match: Match) => {};
 
   return (
     <ChromaLayout>

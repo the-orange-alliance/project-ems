@@ -318,6 +318,11 @@ export const matchTimeAtom = atom({
   default: timer.timeLeft
 });
 
+export const matchInProgressAtom = atom<Match | null>({
+  key: 'matchInProgressAtom',
+  default: null
+});
+
 /* FIELD SECTION */
 export const fieldMotorDuration = atom({
   key: 'fieldMotorDurationAtom',

@@ -102,12 +102,12 @@ const MatchPlay: FC = () => {
             <div id='score-container-scores'>
               <div id='score-container-red'>
                 <div className='red-bg center'>
-                  <span>0</span>
+                  <span>{match?.redScore || 0}</span>
                 </div>
               </div>
               <div id='score-container-blue'>
                 <div className='blue-bg center'>
-                  <span>0</span>
+                  <span>{match?.blueScore || 0}</span>
                 </div>
               </div>
             </div>
