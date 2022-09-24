@@ -2,13 +2,22 @@ import { MatchParticipant } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
-import { selectedMatchSelector } from 'src/stores/Recoil';
+import { matchInProgressAtom, selectedMatchKeyAtom } from 'src/stores/Recoil';
 import './MatchPlay.less';
 
 import FGC_LOGO from '../res/Global_Logo.png';
 import NO_CARD from '../res/Penalty_Blank.png';
 import YELLOW_CARD from '../res/Penalty_Yellow_Dot.png';
 import RED_CARD from '../res/Penalty_Red_Dot.png';
+import { useSocket } from 'src/api/SocketProvider';
+import {
+  initAudio,
+  MATCH_ABORT,
+  MATCH_START
+} from 'src/apps/AudienceDisplay/Audio';
+
+const startAudio = initAudio(MATCH_START);
+const abortAudio = initAudio(MATCH_ABORT);
 
 const RedParticipant: FC<{ participant: MatchParticipant }> = ({
   participant
@@ -70,14 +79,37 @@ const CardStatus: FC<{ status: number }> = ({ status }) => {
 };
 
 const MatchPlay: FC = () => {
-  const match = useRecoilValue(selectedMatchSelector);
+  const matchKey = useRecoilValue(selectedMatchKeyAtom);
+  const match = useRecoilValue(matchInProgressAtom(matchKey || ''));
+
+  const [socket, connected] = useSocket();
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
   useEffect(() => {
+    if (connected) {
+      socket?.on('match:start', matchStart);
+      socket?.on('match:abort', matchAbort);
+    }
+  }, [connected]);
+
+  useEffect(() => {
+    socket?.removeListener('match:start', matchStart);
+    socket?.removeListener('match:abort', matchAbort);
+  }, []);
+
+  useEffect(() => {
     console.log(match);
   }, [match]);
+
+  const matchStart = () => {
+    startAudio.play();
+  };
+
+  const matchAbort = () => {
+    abortAudio.play();
+  };
 
   return (
     <div>
@@ -122,7 +154,7 @@ const MatchPlay: FC = () => {
         </div>
         <div id='play-display-base-bottom'>
           <div className='info-col'>
-            <span className='info-field'>MATCH: 30</span>
+            <span className='info-field'>MATCH: {match?.matchName}</span>
           </div>
           <div className='info-col'>
             <span className='info-field'>FIRST Global 2022</span>

@@ -25,7 +25,8 @@ import {
   isMatchParticipantArray,
   reconcileMatchParticipants,
   MatchParticipant,
-  MatchTimer
+  MatchTimer,
+  isMatch
 } from '@toa-lib/models';
 import {
   atom,
@@ -246,9 +247,15 @@ export const tournamentScheduleItemAtomFamily = atomFamily<
 /* MATCHES SECTION - state management involving matches for tournaments */
 export const timer: MatchTimer = new MatchTimer();
 
+// TODO - Work on all state being derived from here.
 export const matchStateAtom = atom<MatchState>({
   key: 'matchStateAtom',
   default: MatchState.MATCH_NOT_SELECTED
+});
+
+export const matchesAtom = atom<Match[]>({
+  key: 'matchesAtom',
+  default: []
 });
 
 export const matchesByTournamentTypeAtomFamily = atomFamily<
@@ -318,9 +325,23 @@ export const matchTimeAtom = atom({
   default: timer.timeLeft
 });
 
-export const matchInProgressAtom = atom<Match | null>({
+export const matchInProgressAtom = atomFamily<Match | null, string>({
   key: 'matchInProgressAtom',
-  default: null
+  default: selectorFamily<Match | null, string>({
+    key: 'matchInProgressAtomSelector',
+    get: (matchKey: string) => async () => {
+      try {
+        return await clientFetcher(
+          `match/all/${matchKey}`,
+          'GET',
+          undefined,
+          isMatch
+        );
+      } catch (e) {
+        return null;
+      }
+    }
+  })
 });
 
 /* FIELD SECTION */

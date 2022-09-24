@@ -71,6 +71,31 @@ router.get(
 );
 
 router.get(
+  '/all/:matchKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const matchKey = req.params.matchKey;
+      const [match] = await selectAllWhere('match', `matchKey = "${matchKey}"`);
+      const participants = await selectAllWhere(
+        'match_participant',
+        `matchKey = "${matchKey}"`
+      );
+      const [details] = await selectAllWhere(
+        'match_detail',
+        `matchKey = "${matchKey}"`
+      );
+
+      match.participants = participants;
+      match.details = details;
+
+      res.send(match);
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.get(
   '/:matchKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
