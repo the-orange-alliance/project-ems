@@ -21,15 +21,20 @@ const HomeApp: FC = () => {
         <GridAppCard title='Event Manager' to='/event-manager' />
         <GridAppCard title='Team Manager' to='/team-manager' />
         <GridAppCard title='Match Manager' to='/match-manager' />
-        <GridAppCard title='Account Manager' to='/accounts' />
         <GridAppCard title='Scoring App' to='/scoring' />
+        <GridAppCard title='Referee App' to='/referee' />
         <GridAppCard title='Admin App' to='/admin' />
+        <GridAppCard title='Account Manager' to='/accounts' />
         <GridAppCard
           title='Streaming App'
           href='https://twitch.tv/theorangealliance2'
           imgSrc={twitchLogo}
         />
-        <GridAppCard title='Audience Display' imgSrc={audienceDisplayLogo} />
+        <GridAppCard
+          title='Audience Display'
+          imgSrc={audienceDisplayLogo}
+          to='/audience'
+        />
         <GridAppCard title='Report App' />
         <GridAppCard title='Settings' imgSrc={settingsLogo} to='/settings' />
       </Grid>
