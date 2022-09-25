@@ -1,3 +1,4 @@
+import { CarbonCaptureDetails } from './details';
 import { EventSchedule, ScheduleItem, TournamentType } from './Schedule';
 import { isArray, isNonNullObject, isNumber, isString } from './types';
 
@@ -75,7 +76,7 @@ export interface Match {
   result: number;
   uploaded: number;
   participants?: MatchParticipant[];
-  details?: MatchDetailBase;
+  details?: MatchDetails;
 }
 
 export const isMatch = (obj: unknown): obj is Match =>
@@ -119,6 +120,8 @@ export const isMatchDetail = (obj: MatchDetailBase): obj is MatchDetailBase =>
   isNonNullObject(obj) &&
   isString(obj.matchDetailKey) &&
   isString(obj.matchKey);
+
+export type MatchDetails = MatchDetailBase | CarbonCaptureDetails;
 
 export function assignMatchTimes(
   matches: Match[],

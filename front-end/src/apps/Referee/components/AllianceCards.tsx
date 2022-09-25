@@ -1,15 +1,34 @@
-import { FC, ReactNode } from 'react';
+import { FC } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
-
-const AllianceCard: FC<{ children: ReactNode }> = ({ children }) => {
-  return <Box sx={{ width: '100%', height: '50vh' }}>{children}</Box>;
-};
+import Button from '@mui/material/Button';
 
 const AllianceCards: FC = () => {
+  const navigate = useNavigate();
+
+  const openRed = () => navigate('/referee/red');
+  const openBlue = () => navigate('/referee/blue');
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-      <AllianceCard>Red Alliance</AllianceCard>
-      <AllianceCard>Blue Alliance</AllianceCard>
+    <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
+      <Button
+        fullWidth
+        variant='contained'
+        className='red-bg-imp'
+        sx={{ height: '30em' }}
+        onClick={openRed}
+      >
+        Red Alliance
+      </Button>
+      <Button
+        fullWidth
+        variant='contained'
+        className='blue-bg-imp'
+        sx={{ height: '30em' }}
+        onClick={openBlue}
+      >
+        Blue Alliance
+      </Button>
     </Box>
   );
 };

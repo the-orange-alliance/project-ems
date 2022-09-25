@@ -86,6 +86,7 @@ export {
   isMatchMakerRequest,
   Match,
   MatchDetailBase,
+  MatchDetails,
   MatchParticipant,
   isMatch,
   isMatchArray,

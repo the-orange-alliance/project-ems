@@ -20,6 +20,7 @@ export interface AppRoute {
   element: ReactNode;
   icon?: ReactNode;
   hidden?: boolean;
+  routes?: AppRoute[];
 }
 
 const AppRoutes: AppRoute[] = [
