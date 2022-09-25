@@ -115,6 +115,11 @@ export interface MatchDetailBase {
   matchKey: string;
 }
 
+export const isMatchDetail = (obj: MatchDetailBase): obj is MatchDetailBase =>
+  isNonNullObject(obj) &&
+  isString(obj.matchDetailKey) &&
+  isString(obj.matchKey);
+
 export function assignMatchTimes(
   matches: Match[],
   items: ScheduleItem[]

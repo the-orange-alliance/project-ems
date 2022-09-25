@@ -114,3 +114,5 @@ export {
   HubMessage,
   HubParameters
 } from './FieldControl';
+
+export * from './details';

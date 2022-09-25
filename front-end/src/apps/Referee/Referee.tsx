@@ -1,8 +1,13 @@
 import { FC } from 'react';
-import PaperLayout from 'src/layouts/PaperLayout';
+import DefaultLayout from 'src/layouts/DefaultLayout';
+import AllianceCards from './components/AllianceCards';
 
 const RefereeApp: FC = () => {
-  return <PaperLayout containerWidth='xl'>layout</PaperLayout>;
+  return (
+    <DefaultLayout containerWidth='xl'>
+      <AllianceCards />
+    </DefaultLayout>
+  );
 };
 
 export default RefereeApp;

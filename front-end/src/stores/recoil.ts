@@ -247,12 +247,12 @@ export const tournamentScheduleItemAtomFamily = atomFamily<
 /* MATCHES SECTION - state management involving matches for tournaments */
 export const timer: MatchTimer = new MatchTimer();
 
-// TODO - Work on all state being derived from here.
 export const matchStateAtom = atom<MatchState>({
   key: 'matchStateAtom',
   default: MatchState.MATCH_NOT_SELECTED
 });
 
+// TODO - Work on all state being derived from here.
 export const matchesAtom = atom<Match[]>({
   key: 'matchesAtom',
   default: []

@@ -4,20 +4,24 @@ import { useRecoilValue } from 'recoil';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
 import { matchInProgressAtom, selectedMatchKeyAtom } from 'src/stores/Recoil';
 import './MatchPlay.less';
+import { useSocket } from 'src/api/SocketProvider';
+import {
+  initAudio,
+  MATCH_ABORT,
+  MATCH_END,
+  MATCH_ENDGAME,
+  MATCH_START
+} from 'src/apps/AudienceDisplay/Audio';
 
 import FGC_LOGO from '../res/Global_Logo.png';
 import NO_CARD from '../res/Penalty_Blank.png';
 import YELLOW_CARD from '../res/Penalty_Yellow_Dot.png';
 import RED_CARD from '../res/Penalty_Red_Dot.png';
-import { useSocket } from 'src/api/SocketProvider';
-import {
-  initAudio,
-  MATCH_ABORT,
-  MATCH_START
-} from 'src/apps/AudienceDisplay/Audio';
 
 const startAudio = initAudio(MATCH_START);
 const abortAudio = initAudio(MATCH_ABORT);
+const endgameAudio = initAudio(MATCH_ENDGAME);
+const endAudio = initAudio(MATCH_END);
 
 const RedParticipant: FC<{ participant: MatchParticipant }> = ({
   participant
@@ -91,12 +95,16 @@ const MatchPlay: FC = () => {
     if (connected) {
       socket?.on('match:start', matchStart);
       socket?.on('match:abort', matchAbort);
+      socket?.on('match:endgame', matchEndGame);
+      socket?.on('match:end', matchEnd);
     }
   }, [connected]);
 
   useEffect(() => {
     socket?.removeListener('match:start', matchStart);
     socket?.removeListener('match:abort', matchAbort);
+    socket?.removeListener('match:endgame', matchEndGame);
+    socket?.removeListener('match:end', matchEnd);
   }, []);
 
   useEffect(() => {
@@ -109,6 +117,14 @@ const MatchPlay: FC = () => {
 
   const matchAbort = () => {
     abortAudio.play();
+  };
+
+  const matchEndGame = () => {
+    endgameAudio.play();
+  };
+
+  const matchEnd = () => {
+    endAudio.play();
   };
 
   return (
