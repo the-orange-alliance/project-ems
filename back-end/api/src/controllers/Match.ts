@@ -63,6 +63,9 @@ router.get(
           `matchKey LIKE "${req.query.matchKeyPartial}%"`
         );
         res.send(data);
+      } else {
+        const data = await selectAll('match_participant');
+        res.send(data);
       }
     } catch (e) {
       return next(e);

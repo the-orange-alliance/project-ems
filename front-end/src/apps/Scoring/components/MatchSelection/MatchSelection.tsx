@@ -3,9 +3,9 @@ import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
-  matchesByTournamentTypeAtomFamily,
+  loadedMatchKey,
+  matchesByTournamentType,
   matchStateAtom,
-  selectedMatchKeyAtom,
   selectedTournamentLevel,
   selectedTournamentType
 } from 'src/stores/Recoil';
@@ -19,10 +19,8 @@ const MatchSelection: FC = () => {
   );
   const tournamentType = useRecoilValue(selectedTournamentType);
   const state = useRecoilValue(matchStateAtom);
-  const matches = useRecoilValue(
-    matchesByTournamentTypeAtomFamily(tournamentType)
-  );
-  const setSelectedMatchKey = useSetRecoilState(selectedMatchKeyAtom);
+  const matches = useRecoilValue(matchesByTournamentType(tournamentType));
+  const setSelectedMatchKey = useSetRecoilState(loadedMatchKey);
 
   const handleSelect = (matchKey: string): void => {
     setSelectedMatchKey(matchKey);

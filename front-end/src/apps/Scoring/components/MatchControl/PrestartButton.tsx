@@ -1,7 +1,7 @@
 import { FC, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { matchStateAtom, selectedMatchKeyAtom } from 'src/stores/Recoil';
+import { loadedMatchKey, matchStateAtom } from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
 import { useButtonState } from '../../util/ButtonState';
 import { sendPrestart } from 'src/api/SocketProvider';
@@ -9,7 +9,7 @@ import { sendPrestart } from 'src/api/SocketProvider';
 const PrestartButton: FC = () => {
   const { prestartEnabled } = useButtonState();
   const [state, setState] = useRecoilState(matchStateAtom);
-  const selectedMatchKey = useRecoilValue(selectedMatchKeyAtom);
+  const selectedMatchKey = useRecoilValue(loadedMatchKey);
 
   const canCancelPrestart =
     state !== MatchState.PRESTART_READY &&

@@ -18,6 +18,7 @@ const StartMatchButton: FC = () => {
   };
 
   const abortMatch = () => {
+    timer.stop();
     sendAbortMatch();
     setState(MatchState.MATCH_ABORTED);
     setState(MatchState.PRESTART_READY);

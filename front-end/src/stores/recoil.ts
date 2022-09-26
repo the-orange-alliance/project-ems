@@ -1,5 +1,6 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
+  Alliance,
   Day,
   defaultEvent,
   defaultEventSchedule,
@@ -21,12 +22,12 @@ import {
   isScheduleItemArray,
   Match,
   isMatchArray,
-  getMatchKeyPartialFromType,
   isMatchParticipantArray,
   reconcileMatchParticipants,
   MatchParticipant,
   MatchTimer,
-  isMatch
+  isMatch,
+  getTournamentLevelFromType
 } from '@toa-lib/models';
 import {
   atom,
@@ -252,71 +253,71 @@ export const matchStateAtom = atom<MatchState>({
   default: MatchState.MATCH_NOT_SELECTED
 });
 
-// TODO - Work on all state being derived from here.
-export const matchesAtom = atom<Match[]>({
-  key: 'matchesAtom',
-  default: []
-});
-
-export const matchesByTournamentTypeAtomFamily = atomFamily<
-  Match[],
-  TournamentType
->({
-  key: 'matchesByTournamentTypeAtomFamily',
-  default: selectorFamily<Match[], TournamentType>({
-    key: 'matchesByTournamentTypeAtomFamilySelectorFamily',
-    get:
-      (type: TournamentType) =>
-      async ({ get }) => {
-        try {
-          const matches = await clientFetcher(
-            `match?type=${type}`,
-            'GET',
-            undefined,
-            isMatchArray
-          );
-          const eventKey = get(eventKeySelector);
-          const matchKeyPartial = `${eventKey}-${getMatchKeyPartialFromType(
-            type
-          )}`;
-          const participants = await clientFetcher(
-            `match/participants?matchKeyPartial=${matchKeyPartial}`,
-            'GET',
-            undefined,
-            isMatchParticipantArray
-          );
-          return reconcileMatchParticipants(matches, participants);
-        } catch (e) {
-          // TODO - Better error-handling
-          return [];
-        }
-      }
-  })
-});
-
-export const selectedMatchKeyAtom = atom<string | null>({
-  key: 'selectedMatchKeyAtom',
+export const loadedMatchKey = atom<string | null>({
+  key: 'loadedMatchKeyAtom',
   default: null
 });
 
-export const selectedMatchSelector = selector<Match | null | undefined>({
-  key: 'selectedMatchSelector',
-  get: ({ get }): Match | null | undefined =>
-    get(matchesByTournamentTypeAtomFamily(get(selectedTournamentType))).find(
-      (m) => m.matchKey === get(selectedMatchKeyAtom)
-    )
+export const matches = atom<Match[]>({
+  key: 'matchesAtom',
+  default: selector<Match[]>({
+    key: 'matchesAtomSelector',
+    get: async () => {
+      try {
+        const matches = await clientFetcher(
+          'match',
+          'GET',
+          undefined,
+          isMatchArray
+        );
+        const participants = await clientFetcher(
+          'match/participants',
+          'GET',
+          undefined,
+          isMatchParticipantArray
+        );
+        return reconcileMatchParticipants(matches, participants);
+      } catch (e) {
+        // TODO - Better error-handling
+        return [];
+      }
+    }
+  })
 });
 
-export const matchParticipantSelector = selectorFamily<
-  MatchParticipant[],
-  'red' | 'blue'
->({
-  key: 'matchParticipantSelector',
+export const matchByMatchKey = selectorFamily<Match | undefined, string>({
+  key: 'matchByMatchKeySelectorFamily',
   get:
-    (alliance) =>
+    (matchKey: string) =>
     ({ get }) =>
-      get(selectedMatchSelector)?.participants?.filter((p) =>
-        alliance === 'red' ? p.station < 20 : p.station >= 20
+      get(matches).find((m) => m.matchKey === matchKey)
+});
+
+export const matchesByTournamentType = selectorFamily<Match[], TournamentType>({
+  key: 'matchesByTournamentTypeSelectorFamily',
+  get:
+    (type: TournamentType) =>
+    ({ get }) =>
+      get(matches).filter(
+        (m) => m.tournamentLevel === getTournamentLevelFromType(type)
+      )
+});
+
+export const loadedMatch = selector<Match | undefined>({
+  key: 'loadedMatchSelector',
+  get: ({ get }) => get(matchByMatchKey(get(loadedMatchKey) || ''))
+});
+
+export const loadedMatchParticipantsByAlliance = selectorFamily<
+  MatchParticipant[],
+  Alliance
+>({
+  key: 'loadedMatchParticipantsSelector',
+  get:
+    (a: Alliance) =>
+    ({ get }) =>
+      get(loadedMatch)?.participants?.filter((p) =>
+        a === 'red' ? p.station < 20 : p.station >= 20
       ) || []
 });
 
@@ -325,6 +326,7 @@ export const matchTimeAtom = atom({
   default: timer.timeLeft
 });
 
+// TODO - think about how this goes into play...
 export const matchInProgressAtom = atomFamily<Match | null, string>({
   key: 'matchInProgressAtom',
   default: selectorFamily<Match | null, string>({

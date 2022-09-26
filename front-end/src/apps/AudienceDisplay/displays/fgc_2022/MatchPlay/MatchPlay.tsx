@@ -2,7 +2,7 @@ import { Match, MatchParticipant } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
-import { matchInProgressAtom, selectedMatchKeyAtom } from 'src/stores/Recoil';
+import { matchInProgressAtom, loadedMatchKey } from 'src/stores/Recoil';
 import './MatchPlay.less';
 import { useSocket } from 'src/api/SocketProvider';
 import {
@@ -83,7 +83,7 @@ const CardStatus: FC<{ status: number }> = ({ status }) => {
 };
 
 const MatchPlay: FC = () => {
-  const matchKey = useRecoilValue(selectedMatchKeyAtom);
+  const matchKey = useRecoilValue(loadedMatchKey);
   const [match, setMatch] = useRecoilState(matchInProgressAtom(matchKey || ''));
   const [socket, connected] = useSocket();
 
@@ -127,7 +127,7 @@ const MatchPlay: FC = () => {
   const matchUpdate = useRecoilCallback(
     ({ snapshot, set }) =>
       async (newMatch: Match) => {
-        const key = await snapshot.getPromise(selectedMatchKeyAtom);
+        const key = await snapshot.getPromise(loadedMatchKey);
         set(matchInProgressAtom(key || ''), newMatch);
       }
   );

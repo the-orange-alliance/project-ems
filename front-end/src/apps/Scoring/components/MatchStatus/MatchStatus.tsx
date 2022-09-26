@@ -5,18 +5,18 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
+  loadedMatch,
   matchInProgressAtom,
-  matchStateAtom,
-  selectedMatchSelector,
-  timer
+  matchStateAtom
 } from 'src/stores/Recoil';
 import { endGameFlash, updateSink, useSocket } from 'src/api/SocketProvider';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
 import { isCarbonCaptureDetails, Match, MatchState } from '@toa-lib/models';
 
 const MatchStatus: FC = () => {
-  const selectedMatch = useRecoilValue(selectedMatchSelector);
+  const selectedMatch = useRecoilValue(loadedMatch);
   const setState = useSetRecoilState(matchStateAtom);
+
   const [match, setMatch] = useRecoilState(
     matchInProgressAtom(selectedMatch?.matchKey || '')
   );
@@ -29,6 +29,7 @@ const MatchStatus: FC = () => {
 
   useEffect(() => {
     if (connected) {
+      socket?.on('match:prestart', onMatchPrestart);
       socket?.on('match:auto', onMatchAuto);
       socket?.on('match:tele', onMatchTele);
       socket?.on('match:endgame', onMatchEndGame);
@@ -40,6 +41,7 @@ const MatchStatus: FC = () => {
 
   useEffect(() => {
     return () => {
+      socket?.removeListener('match:prestart', onMatchPrestart);
       socket?.removeListener('match:auto', onMatchAuto);
       socket?.removeListener('match:tele', onMatchTele);
       socket?.removeListener('match:endgame', onMatchEndGame);
@@ -49,6 +51,7 @@ const MatchStatus: FC = () => {
     };
   }, []);
 
+  const onMatchPrestart = () => setMode('PRESTART COMPLETE');
   const onMatchAuto = () => setMode('AUTONOMOUS');
   const onMatchTele = () => setMode('TELEOPERATED');
   const onMatchEndGame = () => {
@@ -60,7 +63,6 @@ const MatchStatus: FC = () => {
     setState(MatchState.MATCH_COMPLETE);
   };
   const onMatchAbort = () => {
-    timer.abort();
     setMode('MATCH ABORTED');
   };
   const onMatchUpdate = (match: Match) => {

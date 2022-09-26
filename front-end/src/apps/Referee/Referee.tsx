@@ -2,11 +2,11 @@ import { FC, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import DefaultLayout from 'src/layouts/DefaultLayout';
-import { selectedMatchKeyAtom } from 'src/stores/Recoil';
+import { loadedMatchKey } from 'src/stores/Recoil';
 import Scoresheet from './components/games/CarbonCapture/Scoresheet';
 
 const RefereeApp: FC = () => {
-  const [, setMatchKey] = useRecoilState(selectedMatchKeyAtom);
+  const [, setMatchKey] = useRecoilState(loadedMatchKey);
   const [socket, connected] = useSocket();
 
   useEffect(() => {

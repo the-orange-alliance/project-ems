@@ -9,7 +9,7 @@ import TableBody from '@mui/material/TableBody';
 import { DATE_FORMAT_MIN_SHORT, Match } from '@toa-lib/models';
 import moment from 'moment';
 import { useRecoilValue } from 'recoil';
-import { selectedMatchKeyAtom } from 'src/stores/Recoil';
+import { loadedMatchKey } from 'src/stores/Recoil';
 
 interface Props {
   matches: Match[];
@@ -18,7 +18,7 @@ interface Props {
 }
 
 const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
-  const selectedMatchKey = useRecoilValue(selectedMatchKeyAtom);
+  const selectedMatchKey = useRecoilValue(loadedMatchKey);
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>

@@ -4,10 +4,11 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import MatchMakerQuality from './MatchMakerQuality';
 import { createMatchSchedule, postMatchSchedule } from 'src/api/ApiProvider';
-import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilCallback, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   eventAtom,
-  matchesByTournamentTypeAtomFamily,
+  matches,
+  matchesByTournamentType,
   selectedTournamentType,
   tournamentScheduleItemAtomFamily,
   tournamentScheduleSelector
@@ -18,9 +19,8 @@ import { CircularProgress } from '@mui/material';
 
 const SetupMatches: FC = () => {
   const type = useRecoilValue(selectedTournamentType);
-  const [matches, setMatches] = useRecoilState(
-    matchesByTournamentTypeAtomFamily(type)
-  );
+  const typeMatches = useRecoilValue(matchesByTournamentType(type));
+  const setMatches = useSetRecoilState(matches);
 
   const [quality, setQuality] = useState('best');
   const [loading, setLoading] = useState(false);
@@ -47,12 +47,13 @@ const SetupMatches: FC = () => {
       type,
       teamKeys
     });
-    setMatches(assignMatchFieldsForFGC(newMatches, items, schedule));
+    const fgcMatches = assignMatchFieldsForFGC(newMatches, items, schedule);
+    setMatches((prev) => [...prev, ...fgcMatches]);
     setLoading(false);
   });
 
   const postMatches = async () => {
-    await postMatchSchedule(matches);
+    await postMatchSchedule(typeMatches);
   };
 
   return (
@@ -72,8 +73,8 @@ const SetupMatches: FC = () => {
           marginBottom: (theme) => theme.spacing(2)
         }}
       />
-      {matches.length > 0 && <MatchTable matches={matches} />}
-      {matches.length > 0 && (
+      {typeMatches.length > 0 && <MatchTable matches={typeMatches} />}
+      {typeMatches.length > 0 && (
         <Button
           sx={{ marginTop: (theme) => theme.spacing(2) }}
           variant='contained'

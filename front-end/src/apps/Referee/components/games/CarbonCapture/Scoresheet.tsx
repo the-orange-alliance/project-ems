@@ -3,12 +3,12 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import NumberInput from '../../NumberInput';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { matchInProgressAtom, selectedMatchKeyAtom } from 'src/stores/Recoil';
+import { matchInProgressAtom, loadedMatchKey } from 'src/stores/Recoil';
 import { CarbonCaptureDetails, Match } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
 
 const Scoresheet: FC = () => {
-  const matchKey = useRecoilValue(selectedMatchKeyAtom);
+  const matchKey = useRecoilValue(loadedMatchKey);
   const [match, setMatch] = useRecoilState(matchInProgressAtom(matchKey || ''));
   const [socket, connected] = useSocket();
 

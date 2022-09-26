@@ -3,13 +3,13 @@ import { FC, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import ChromaLayout from 'src/layouts/ChromaLayout';
-import { matchStateAtom, selectedMatchKeyAtom, timer } from 'src/stores/Recoil';
+import { loadedMatchKey, matchStateAtom, timer } from 'src/stores/Recoil';
 import './AudienceDisplay.less';
 import MatchPlay from './displays/fgc_2022/MatchPlay/MatchPlay';
 
 const AudienceDisplay: FC = () => {
   const setState = useSetRecoilState(matchStateAtom);
-  const setMatchKey = useSetRecoilState(selectedMatchKeyAtom);
+  const setMatchKey = useSetRecoilState(loadedMatchKey);
   const [socket, connected] = useSocket();
 
   useEffect(() => {

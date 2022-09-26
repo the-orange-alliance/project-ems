@@ -3,10 +3,12 @@ import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import TeamStatusRow from '../Status/TeamStatusRow';
 import { useRecoilValue } from 'recoil';
-import { matchParticipantSelector } from 'src/stores/Recoil';
+import { loadedMatchParticipantsByAlliance } from 'src/stores/Recoil';
 
 const BlueAlliance: FC = () => {
-  const blueAlliance = useRecoilValue(matchParticipantSelector('blue'));
+  const blueAlliance = useRecoilValue(
+    loadedMatchParticipantsByAlliance('blue')
+  );
 
   return (
     <Paper
