@@ -1,6 +1,6 @@
-import { MatchParticipant } from '@toa-lib/models';
+import { Match, MatchParticipant } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
 import { matchInProgressAtom, selectedMatchKeyAtom } from 'src/stores/Recoil';
 import './MatchPlay.less';
@@ -84,8 +84,7 @@ const CardStatus: FC<{ status: number }> = ({ status }) => {
 
 const MatchPlay: FC = () => {
   const matchKey = useRecoilValue(selectedMatchKeyAtom);
-  const match = useRecoilValue(matchInProgressAtom(matchKey || ''));
-
+  const [match, setMatch] = useRecoilState(matchInProgressAtom(matchKey || ''));
   const [socket, connected] = useSocket();
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
@@ -97,6 +96,7 @@ const MatchPlay: FC = () => {
       socket?.on('match:abort', matchAbort);
       socket?.on('match:endgame', matchEndGame);
       socket?.on('match:end', matchEnd);
+      socket?.on('match:update', matchUpdate);
     }
   }, [connected]);
 
@@ -105,11 +105,8 @@ const MatchPlay: FC = () => {
     socket?.removeListener('match:abort', matchAbort);
     socket?.removeListener('match:endgame', matchEndGame);
     socket?.removeListener('match:end', matchEnd);
+    socket?.removeListener('match:update', matchUpdate);
   }, []);
-
-  useEffect(() => {
-    console.log(match);
-  }, [match]);
 
   const matchStart = () => {
     startAudio.play();
@@ -126,6 +123,14 @@ const MatchPlay: FC = () => {
   const matchEnd = () => {
     endAudio.play();
   };
+
+  const matchUpdate = useRecoilCallback(
+    ({ snapshot, set }) =>
+      async (newMatch: Match) => {
+        const key = await snapshot.getPromise(selectedMatchKeyAtom);
+        set(matchInProgressAtom(key || ''), newMatch);
+      }
+  );
 
   return (
     <div>

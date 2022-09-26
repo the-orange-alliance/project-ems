@@ -39,7 +39,7 @@ const server = createServer(app);
 app.use(
   cors({
     credentials: true,
-    origin: ['http://localhost:5173', 'http://localhost:5174']
+    origin: true
   })
 );
 app.use(json());

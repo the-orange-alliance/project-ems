@@ -1,21 +1,15 @@
-import { Match, MatchState } from '@toa-lib/models';
+import { MatchState } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import ChromaLayout from 'src/layouts/ChromaLayout';
-import {
-  matchInProgressAtom,
-  matchStateAtom,
-  selectedMatchKeyAtom,
-  timer
-} from 'src/stores/Recoil';
+import { matchStateAtom, selectedMatchKeyAtom, timer } from 'src/stores/Recoil';
 import './AudienceDisplay.less';
 import MatchPlay from './displays/fgc_2022/MatchPlay/MatchPlay';
 
 const AudienceDisplay: FC = () => {
   const setState = useSetRecoilState(matchStateAtom);
-  const [matchKey, setMatchKey] = useRecoilState(selectedMatchKeyAtom);
-  const [, setMatch] = useRecoilState(matchInProgressAtom(matchKey || ''));
+  const setMatchKey = useSetRecoilState(selectedMatchKeyAtom);
   const [socket, connected] = useSocket();
 
   useEffect(() => {
@@ -23,7 +17,6 @@ const AudienceDisplay: FC = () => {
       socket?.on('match:prestart', onPrestart);
       socket?.on('match:abort', onAbort);
       socket?.on('match:start', onStart);
-      socket?.on('match:update', onUpdate);
     }
   }, [connected]);
 
@@ -32,7 +25,6 @@ const AudienceDisplay: FC = () => {
       socket?.removeListener('match:prestart', onPrestart);
       socket?.removeListener('match:abort', onAbort);
       socket?.removeListener('match:start', onStart);
-      socket?.removeListener('match:update', onUpdate);
     };
   }, []);
 
@@ -48,10 +40,6 @@ const AudienceDisplay: FC = () => {
   const onAbort = () => {
     setState(MatchState.MATCH_ABORTED);
     timer.abort();
-  };
-
-  const onUpdate = (match: Match) => {
-    setMatch(match);
   };
 
   return (

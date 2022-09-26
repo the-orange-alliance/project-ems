@@ -20,7 +20,6 @@ const RefereeApp: FC = () => {
   }, []);
 
   const onPrestart = (matchKey: string) => {
-    console.log('PRESTARTING');
     setMatchKey(matchKey);
   };
 

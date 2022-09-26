@@ -61,8 +61,7 @@ const MatchStatus: FC = () => {
     setMode('MATCH ABORTED');
   };
   const onMatchUpdate = (match: Match) => {
-    if (isCarbonCaptureDetails(match.details)) {
-      console.log('updating sink');
+    if (match.details && isCarbonCaptureDetails(match.details)) {
       updateSink(match.details.carbonPoints);
     }
     setMatch(match);

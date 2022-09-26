@@ -45,10 +45,7 @@ router.post(
           return next(AuthenticationInvalidError);
         } else {
           // Do one final check - if they're using the admin user, validate they're local.
-          if (
-            user.username === DEFAULT_ADMIN_USERNAME &&
-            isLocal(req.socket.remoteAddress || '')
-          ) {
+          if (user.username === DEFAULT_ADMIN_USERNAME) {
             req.login(user, { session: false }, (err) => {
               if (err) {
                 return next(err);
