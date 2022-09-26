@@ -42,7 +42,10 @@ const MatchSelection: FC = () => {
       />
       <Divider />
       <MatchResultsTable
-        disabled={state >= MatchState.PRESTART_COMPLETE}
+        disabled={
+          state >= MatchState.PRESTART_COMPLETE &&
+          state <= MatchState.MATCH_COMPLETE
+        }
         matches={matches}
         onSelect={handleSelect}
       />

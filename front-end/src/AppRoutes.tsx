@@ -9,6 +9,7 @@ import MatchManager from './apps/MatchManager';
 import ScoringApp from './apps/Scoring';
 import RefereeApp from './apps/Referee';
 import AudienceDisplay from './apps/AudienceDisplay';
+import FieldDebugger from './apps/FieldDebugger';
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
@@ -82,6 +83,13 @@ const AppRoutes: AppRoute[] = [
     path: '/admin',
     group: 0,
     element: <AdminApp />,
+    hidden: true
+  },
+  {
+    name: 'Field Debugger',
+    path: '/fcs-debug',
+    group: 0,
+    element: <FieldDebugger />,
     hidden: true
   },
   {
