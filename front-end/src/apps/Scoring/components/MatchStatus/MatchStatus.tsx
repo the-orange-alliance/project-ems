@@ -3,21 +3,21 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   matchInProgressAtom,
   matchStateAtom,
   selectedMatchSelector,
   timer
 } from 'src/stores/Recoil';
-import { updateSink, useSocket } from 'src/api/SocketProvider';
+import { endGameFlash, updateSink, useSocket } from 'src/api/SocketProvider';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
 import { isCarbonCaptureDetails, Match, MatchState } from '@toa-lib/models';
 
 const MatchStatus: FC = () => {
   const selectedMatch = useRecoilValue(selectedMatchSelector);
   const setState = useSetRecoilState(matchStateAtom);
-  const setMatch = useSetRecoilState(
+  const [match, setMatch] = useRecoilState(
     matchInProgressAtom(selectedMatch?.matchKey || '')
   );
 
@@ -51,7 +51,10 @@ const MatchStatus: FC = () => {
 
   const onMatchAuto = () => setMode('AUTONOMOUS');
   const onMatchTele = () => setMode('TELEOPERATED');
-  const onMatchEndGame = () => setMode('ENDGAME');
+  const onMatchEndGame = () => {
+    setMode('ENDGAME');
+    endGameFlash((match?.details as any)?.carbonPoints);
+  };
   const onMatchEnd = () => {
     setMode('MATCH END');
     setState(MatchState.MATCH_COMPLETE);
