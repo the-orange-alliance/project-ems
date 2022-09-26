@@ -1,5 +1,6 @@
 import { createSocket } from '@toa-lib/client';
 import {
+  LED_ALLCLEAR,
   LED_CARBON,
   LED_COUNTDOWN,
   LED_FIELDFAULT,
@@ -64,7 +65,7 @@ export const useSocket = (): [
 export function sendPrestart(matchKey: string): void {
   socket?.emit('match:prestart', matchKey);
   socket?.emit('fcs:update', LED_PRESTART);
-  socket?.emit('fcs:update', setLEDLength(0));
+  // socket?.emit('fcs:update', setLEDLength(120));
 }
 
 export function setDisplays(): void {
@@ -72,9 +73,9 @@ export function setDisplays(): void {
 }
 
 export async function prepareField(duration: number): Promise<void> {
+  socket?.emit('fcs:update', LED_COUNTDOWN);
+  await new Promise((resolve) => setTimeout(resolve, 250));
   return new Promise((resolve) => {
-    socket?.emit('fcs:update', LED_COUNTDOWN);
-
     const countdown = async () => {
       for (let i = 120; i >= 0; i = i - 4) {
         socket?.emit('fcs:update', setLEDLength(i));
@@ -92,6 +93,7 @@ export async function prepareField(duration: number): Promise<void> {
 
 export function sendStartMatch(): void {
   socket?.emit('match:start');
+  socket?.emit('fcs:update', LED_CARBON);
 }
 
 export function sendAbortMatch(): void {
@@ -112,8 +114,14 @@ export async function endGameFlash(carbonPoints: number): Promise<void> {
     socket?.emit('fcs:update', setLEDLength(0));
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  socket?.emit('fcs:update', setLEDLength(carbonPoints));
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  socket?.emit('fcs:update', updateSink(carbonPoints));
+}
+
+export async function commitScores(): Promise<void> {
+  socket?.emit('fcs:update', setLEDLength(120));
   await new Promise((resolve) => setTimeout(resolve, 250));
+  socket?.emit('fcs:update', LED_ALLCLEAR);  
 }
 
 export default socket;

@@ -3,9 +3,10 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilCallback, useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   loadedMatch,
+  loadedMatchKey,
   matchInProgressAtom,
   matchStateAtom
 } from 'src/stores/Recoil';
@@ -54,10 +55,12 @@ const MatchStatus: FC = () => {
   const onMatchPrestart = () => setMode('PRESTART COMPLETE');
   const onMatchAuto = () => setMode('AUTONOMOUS');
   const onMatchTele = () => setMode('TELEOPERATED');
-  const onMatchEndGame = () => {
+  const onMatchEndGame = useRecoilCallback(({ snapshot }) => async () => {
     setMode('ENDGAME');
-    endGameFlash((match?.details as any)?.carbonPoints);
-  };
+    const matchKey = await snapshot.getPromise(loadedMatchKey);
+    const thisMatch = await snapshot.getPromise(matchInProgressAtom(matchKey || ''))
+    endGameFlash((thisMatch?.details as any)?.carbonPoints);
+  });
   const onMatchEnd = () => {
     setMode('MATCH END');
     setState(MatchState.MATCH_COMPLETE);
@@ -65,12 +68,12 @@ const MatchStatus: FC = () => {
   const onMatchAbort = () => {
     setMode('MATCH ABORTED');
   };
-  const onMatchUpdate = (match: Match) => {
+  const onMatchUpdate = useRecoilCallback(({ set }) => async (match: Match) => {
     if (match.details && isCarbonCaptureDetails(match.details)) {
       updateSink(match.details.carbonPoints);
     }
-    setMatch(match);
-  };
+    set(matchInProgressAtom(match.matchKey), match);
+  })
 
   return (
     <Paper sx={{ paddingBottom: (theme) => theme.spacing(2), height: '100%' }}>

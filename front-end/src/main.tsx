@@ -15,7 +15,7 @@ if (!container) throw new Error('Error while trying to find document root.');
 const root = createRoot(container);
 
 // Configure lib-ems
-APIOptions.host = `http://${window.location.hostname}`;
+APIOptions.host = `http://24.128.234.17`;
 APIOptions.port = 8080;
 SocketOptions.host = window.location.hostname;
 SocketOptions.port = 8081;
