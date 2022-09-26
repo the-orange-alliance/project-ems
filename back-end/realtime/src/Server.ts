@@ -4,7 +4,7 @@ import { Server } from "socket.io";
 import cors from "cors";
 import { urlencoded } from "body-parser";
 import jwt from "jsonwebtoken";
-import { environment as env } from "@toa-lib/server";
+import { environment as env, getIPv4 } from "@toa-lib/server";
 import logger from "./util/Logger";
 import { assignRooms, initRooms, leaveRooms } from "./rooms/Rooms";
 
@@ -61,18 +61,21 @@ io.on("connection", (socket) => {
 
 initRooms(io);
 
+// Network variables
+const host = getIPv4();
+
 server.listen(
   {
-    host: env.get().serviceHost,
+    host,
     port: env.get().servicePort,
   },
   () => {
     logger.info(
       `[${env.get().nodeEnv.charAt(0).toUpperCase()}][${env
         .get()
-        .serviceName.toUpperCase()}] Server started on ${
-        env.get().serviceHost
-      }:${env.get().servicePort}`
+        .serviceName.toUpperCase()}] Server started on ${host}:${
+        env.get().servicePort
+      }`
     );
   }
 );

@@ -3,13 +3,14 @@ import { Routes, Route } from 'react-router-dom';
 import routes from './AppRoutes';
 import './App.less';
 import useLocalStorage from './stores/LocalStorage';
-import { useRecoilState } from 'recoil';
-import { userAtom } from './stores/Recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { hostIP, userAtom } from './stores/Recoil';
 import { UserLoginResponse } from '@toa-lib/models';
 import { useSocket } from './api/SocketProvider';
 
 function App() {
   const [user, setUser] = useRecoilState(userAtom);
+  const host = useRecoilValue(hostIP);
   const [, , setupSocket] = useSocket();
 
   // Check for cached login
@@ -20,7 +21,7 @@ function App() {
       setUser(value);
       setupSocket(value.token);
     }
-  }, [user, value]);
+  }, [user, value, host]);
 
   return (
     <Routes>

@@ -7,7 +7,8 @@ import {
   jwtStrategy,
   localStrategy,
   requireAuth,
-  environment as env
+  environment as env,
+  getIPv4
 } from '@toa-lib/server';
 import adminController from './controllers/Admin';
 import authController from './controllers/Authentication';
@@ -79,18 +80,21 @@ passport.deserializeUser((id, cb) => {
   cb(null, { id: 0, user: 'admin' });
 });
 
+// Network variables
+const host = getIPv4();
+
 // Start the server
 server.listen(
   {
-    host: env.get().serviceHost,
+    host,
     port: env.get().servicePort
   },
   () =>
     logger.info(
       `[${env.get().nodeEnv.charAt(0).toUpperCase()}][${env
         .get()
-        .serviceName.toUpperCase()}] Server started on ${
-        env.get().serviceHost
-      }:${env.get().servicePort}`
+        .serviceName.toUpperCase()}] Server started on ${host}:${
+        env.get().servicePort
+      }`
     )
 );

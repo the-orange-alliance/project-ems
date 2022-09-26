@@ -1,0 +1,15 @@
+{
+  "name": "project-ems",
+  "author": {
+    "email": "kyleflynn.dev@gmail.com",
+    "name": "Kyle Flynn",
+    "url": "https://github.com/kyle-flynn"
+  },
+  "scripts": {
+    "install:lib": "cd ./lib/models && npm install && cd ../client && npm install && cd ../server && npm install && cd ../../",
+    "build:lib": "cd ./lib/models && npm run build && npm link && cd ../client && npm run build && npm link && cd ../server && npm run build && npm link && cd ../../",
+    "install:backend": "cd back-end/api && npm install && npm link @toa-lib/models && npm link @toa-lib/server && cd ../realtime && npm install && npm link @toa-lib/models && npm link @toa-lib/server && cd ../../",
+    "install:frontend": "cd front-end && npm install && npm link @toa-lib/models && npm link @toa-lib/client && cd ../",
+    "setup": "npm run install:lib && npm run build:lib && npm run install:backend && npm run install:frontend"
+  }
+}

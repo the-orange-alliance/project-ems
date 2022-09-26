@@ -48,6 +48,10 @@ export const userAtom = atom<User | null>({
   key: 'userAtom',
   default: null
 });
+export const hostIP = atom<string>({
+  key: 'hostIPAtom',
+  default: window.location.hostname
+});
 
 /* Internal state management */
 export const selectedTeamAtom = atom<Team | null>({

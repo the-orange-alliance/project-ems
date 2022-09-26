@@ -17,6 +17,7 @@ export const clientFetcher = async <T>(
   body?: unknown,
   guard?: TypeGuard<T>
 ): Promise<T> => {
+  // NOTE - If options.host doesn't include http://, fetch() will put the host request URL onto it.
   const request = await fetch(`${options.host}:${options.port}/${url}`, {
     credentials: 'include',
     method,
