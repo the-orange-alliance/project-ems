@@ -37,3 +37,38 @@ export const isCarbonCaptureRanking = (
   isNonNullObject(obj) &&
   isNumber(obj.rankingScore) &&
   isNumber(obj.carbonPoints);
+
+export function calculateScore(
+  details: CarbonCaptureDetails
+): [number, number] {
+  const redScore =
+    (1 +
+      getMultiplier(details.redRobotOneStorage) +
+      getMultiplier(details.redRobotTwoStorage) +
+      getMultiplier(details.redRobotThreeStorage)) *
+    details.carbonPoints;
+  const blueScore =
+    (1 +
+      getMultiplier(details.blueRobotOneStorage) +
+      getMultiplier(details.blueRobotTwoStorage) +
+      getMultiplier(details.blueRobotThreeStorage)) *
+    details.carbonPoints;
+  return [redScore, blueScore];
+}
+
+function getMultiplier(robotStatus: number): number {
+  switch (robotStatus) {
+    case 0:
+      return 0;
+    case 1:
+      return 0.25;
+    case 2:
+      return 0.5;
+    case 3:
+      return 0.75;
+    case 4:
+      return 1.0;
+    default:
+      return 0;
+  }
+}

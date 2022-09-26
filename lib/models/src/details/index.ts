@@ -2,5 +2,6 @@ export {
   CarbonCaptureDetails,
   CarbonCaptureRanking,
   isCarbonCaptureDetails,
-  isCarbonCaptureRanking
+  isCarbonCaptureRanking,
+  calculateScore
 } from './CarbonCapture';

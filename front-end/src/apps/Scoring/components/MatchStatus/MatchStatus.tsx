@@ -5,21 +5,21 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
+  matchInProgressAtom,
   matchStateAtom,
   selectedMatchSelector,
   timer
 } from 'src/stores/Recoil';
-import {
-  removeMatchListeners,
-  setupMatchListeners,
-  useSocket
-} from 'src/api/SocketProvider';
+import { updateSink, useSocket } from 'src/api/SocketProvider';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
-import { MatchState } from '@toa-lib/models';
+import { isCarbonCaptureDetails, Match, MatchState } from '@toa-lib/models';
 
 const MatchStatus: FC = () => {
   const selectedMatch = useRecoilValue(selectedMatchSelector);
   const setState = useSetRecoilState(matchStateAtom);
+  const setMatch = useSetRecoilState(
+    matchInProgressAtom(selectedMatch?.matchKey || '')
+  );
 
   const [mode, setMode] = useState('NOT READY');
 
@@ -29,19 +29,23 @@ const MatchStatus: FC = () => {
 
   useEffect(() => {
     if (connected) {
-      setupMatchListeners(
-        onMatchAuto,
-        onMatchTele,
-        onMatchEndGame,
-        onMatchEnd,
-        onMatchAbort
-      );
+      socket?.on('match:auto', onMatchAuto);
+      socket?.on('match:tele', onMatchTele);
+      socket?.on('match:endgame', onMatchEndGame);
+      socket?.on('match:end', onMatchEnd);
+      socket?.on('match:abort', onMatchAbort);
+      socket?.on('match:update', onMatchUpdate);
     }
   }, [connected, socket]);
 
   useEffect(() => {
     return () => {
-      removeMatchListeners();
+      socket?.removeListener('match:auto', onMatchAuto);
+      socket?.removeListener('match:tele', onMatchTele);
+      socket?.removeListener('match:endgame', onMatchEndGame);
+      socket?.removeListener('match:end', onMatchEnd);
+      socket?.removeListener('match:abort', onMatchAbort);
+      socket?.removeListener('match:update', onMatchUpdate);
     };
   }, []);
 
@@ -55,6 +59,13 @@ const MatchStatus: FC = () => {
   const onMatchAbort = () => {
     timer.abort();
     setMode('MATCH ABORTED');
+  };
+  const onMatchUpdate = (match: Match) => {
+    if (isCarbonCaptureDetails(match.details)) {
+      console.log('updating sink');
+      updateSink(match.details.carbonPoints);
+    }
+    setMatch(match);
   };
 
   return (

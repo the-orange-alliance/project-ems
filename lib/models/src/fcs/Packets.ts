@@ -1,4 +1,4 @@
-import { FieldControlPacket } from '@toa-lib/models';
+import { FieldControlPacket } from '../';
 
 const LEFT_MOTOR_CHANNEL = 0;
 const RIGHT_MOTOR_CHANNEL = 1;
@@ -16,6 +16,23 @@ const LED_COLOR_RED = 1805;
 const LED_COLOR_RAINBOW = 1275;
 const LED_COLOR_FIRE = 1215;
 const FULL_STRIP_PWM = 990;
+
+const calcPulseWidth = (ledLength: number): number => {
+  const maxPwm = 990;
+  const minPwm = 10;
+  const totalLedLength = 120;
+
+  return (ledLength * (maxPwm - minPwm)) / totalLedLength + minPwm;
+};
+
+export const setLEDLength = (length: number): FieldControlPacket => {
+  const packet = LED_EMPTY;
+  const pulseWidth = calcPulseWidth(length);
+  packet.messages[0].parameters.pulsewidth = pulseWidth;
+  packet.messages[1].parameters.pulsewidth = pulseWidth;
+  packet.messages[2].parameters.pulsewidth = pulseWidth;
+  return packet;
+};
 
 export const MOTOR_FORWARD: FieldControlPacket = {
   messages: [

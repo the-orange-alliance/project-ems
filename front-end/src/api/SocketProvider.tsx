@@ -1,11 +1,12 @@
+import { createSocket } from '@toa-lib/client';
 import {
-  createSocket,
   LED_CARBON,
   LED_FIELDFAULT,
   LED_PRESTART,
   MOTOR_DISABLE,
-  MOTOR_FORWARD
-} from '@toa-lib/client';
+  MOTOR_FORWARD,
+  setLEDLength
+} from '@toa-lib/models';
 import { Socket } from 'socket.io-client';
 import { useRecoilState } from 'recoil';
 import { socketConnectedAtom } from 'src/stores/Recoil';
@@ -88,28 +89,10 @@ export function sendAbortMatch(): void {
   socket?.emit('fcs:update', LED_FIELDFAULT);
 }
 
-type TimingCallback = () => void;
-
-export function setupMatchListeners(
-  autoStart: TimingCallback,
-  teleStart: TimingCallback,
-  endGameStart: TimingCallback,
-  matchEnd: TimingCallback,
-  matchAbort: TimingCallback
-): void {
-  socket?.on('match:auto', autoStart);
-  socket?.on('match:tele', teleStart);
-  socket?.on('match:endgame', endGameStart);
-  socket?.on('match:end', matchEnd);
-  socket?.on('match:abort', matchAbort);
-}
-
-export function removeMatchListeners(): void {
-  socket?.removeAllListeners('match:auto');
-  socket?.removeAllListeners('match:tele');
-  socket?.removeAllListeners('match:endgame');
-  socket?.removeAllListeners('match:end');
-  socket?.removeAllListeners('match:abort');
+/* TODO - this is game-specific */
+export function updateSink(carbonPoints: number): void {
+  const normalized = Math.min(Math.max(carbonPoints, 0), 120);
+  socket?.emit('fcs:update', setLEDLength(normalized));
 }
 
 export default socket;

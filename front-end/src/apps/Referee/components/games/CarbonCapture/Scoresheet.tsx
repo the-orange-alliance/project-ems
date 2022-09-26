@@ -24,18 +24,28 @@ const Scoresheet: FC = () => {
     };
   }, []);
 
-  const onUpdate = (match: Match) => setMatch(match);
+  useEffect(() => {
+    console.log('NEW MATCH KEY');
+  }, [matchKey]);
+
+  const onUpdate = (newMatch: Match) => {
+    console.log(matchKey, match);
+    setMatch(newMatch);
+  };
 
   const updateScore = (newScore: number) => {
     if (match && match.details) {
-      console.log(newScore);
-      console.log(socket);
       socket?.emit('match:update', {
         ...match,
         details: { ...match.details, carbonPoints: newScore }
       });
     }
   };
+
+  console.log(
+    'carbon points',
+    (match?.details as CarbonCaptureDetails)?.carbonPoints
+  );
 
   return (
     <Paper sx={{ padding: (theme) => theme.spacing(2) }}>

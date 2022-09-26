@@ -1,4 +1,5 @@
 export {
+  setLEDLength,
   LED_ALLCLEAR,
   LED_CARBON,
   LED_COOPERTITION,

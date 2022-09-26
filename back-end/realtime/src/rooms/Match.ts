@@ -1,4 +1,9 @@
 import { Match as MatchObj, MatchState, MatchTimer } from "@toa-lib/models";
+import {
+  calculateScore,
+  CarbonCaptureDetails,
+  isCarbonCaptureDetails,
+} from "@toa-lib/models";
 import { Server, Socket } from "socket.io";
 import logger from "../util/Logger";
 import Room from "./Room";
@@ -72,8 +77,28 @@ export default class Match extends Room {
       logger.info(`match started: ${this.matchKey}`);
     });
     socket.on("match:update", (match: MatchObj) => {
-      this.broadcast().emit("match:update", match);
-      this.match = match;
+      this.match = { ...match };
+      if (!match.details) return;
+      if (!isCarbonCaptureDetails(match.details)) {
+        const details = match.details as CarbonCaptureDetails;
+        this.match.details = {
+          ...details,
+          carbonPoints: details.carbonPoints || 0,
+          redRobotOneStorage: details.redRobotOneStorage || 0,
+          redRobotTwoStorage: details.redRobotTwoStorage || 0,
+          redRobotThreeStorage: details.redRobotThreeStorage || 0,
+          blueRobotOneStorage: details.blueRobotOneStorage || 0,
+          blueRobotTwoStorage: details.blueRobotTwoStorage || 0,
+          blueRobotThreeStorage: details.blueRobotThreeStorage || 0,
+          coopertitionBonusLevel: details.coopertitionBonusLevel || 0,
+        };
+      }
+      const [redScore, blueScore] = calculateScore(
+        this.match.details as CarbonCaptureDetails
+      );
+      this.match.redScore = redScore;
+      this.match.blueScore = blueScore;
+      this.broadcast().emit("match:update", this.match);
     });
   }
 }

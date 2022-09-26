@@ -19,7 +19,10 @@ const RefereeApp: FC = () => {
     };
   }, []);
 
-  const onPrestart = (matchKey: string) => setMatchKey(matchKey);
+  const onPrestart = (matchKey: string) => {
+    console.log('PRESTARTING');
+    setMatchKey(matchKey);
+  };
 
   return (
     <DefaultLayout containerWidth='xl'>
