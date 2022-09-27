@@ -122,10 +122,14 @@ export async function endGameFlash(carbonPoints: number): Promise<void> {
   socket?.emit('fcs:update', updateSink(carbonPoints));
 }
 
-export async function commitScores(): Promise<void> {
+export async function sendCommitScores(): Promise<void> {
   socket?.emit('fcs:update', setLEDLength(120));
   await new Promise((resolve) => setTimeout(resolve, 250));
   socket?.emit('fcs:update', LED_ALLCLEAR);
+}
+
+export async function sendPostResults(): Promise<void> {
+  socket?.emit('match:display', 3);
 }
 
 export default socket;

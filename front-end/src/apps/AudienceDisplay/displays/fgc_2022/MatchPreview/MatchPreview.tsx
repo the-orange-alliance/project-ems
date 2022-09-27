@@ -12,13 +12,13 @@ import { MatchParticipant } from '@toa-lib/models';
 const Participant: FC<{ participant: MatchParticipant }> = ({
   participant
 }) => {
-  console.log(participant);
   return (
     <div className='pre-match-alliance-row pre-match-border'>
       <div className={'pre-match-flag'}>
         <span
           className={
-            'flag-icon flag-border flag-icon-' + participant?.team?.countryCode
+            'flag-icon flag-border flag-icon-' +
+            participant?.team?.countryCode.toLowerCase()
           }
         />
       </div>

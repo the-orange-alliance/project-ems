@@ -15,10 +15,15 @@ const Participant: FC<{ participant: MatchParticipant }> = ({
 }) => {
   return (
     <div className='res-team-row bottom-red'>
-      <div className='res-team-name'>AZU</div>
+      <div className='res-team-name'>{participant?.team?.teamNameLong}</div>
       <div className='res-team-rank'>#5</div>
       <div className='res-team-flag'>
-        <span className={'flag-icon flag-border flag-icon-az'} />
+        <span
+          className={
+            'flag-icon flag-border flag-icon-' +
+            participant?.team?.countryCode.toLowerCase()
+          }
+        />
       </div>
     </div>
   );
@@ -67,8 +72,15 @@ const MatchResults: FC = () => {
                   <div className='res-detail-icon'>
                     <img alt={'empty'} src={''} className='fit-h' />
                   </div>
+                  <div className='res-detail-left right-red'>CARBON POINTS</div>
+                  <div className='res-detail-right'>0</div>
+                </div>
+                <div className='res-detail-row bottom-red'>
+                  <div className='res-detail-icon'>
+                    <img alt={'empty'} src={''} className='fit-h' />
+                  </div>
                   <div className='res-detail-left right-red'>
-                    REUSE PROCESSING
+                    STORAGE LEVEL 1
                   </div>
                   <div className='res-detail-right'>0</div>
                 </div>
@@ -77,7 +89,7 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={''} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>
-                    RECYCLE PROCESSING
+                    STORAGE LEVEL 2
                   </div>
                   <div className='res-detail-right'>0</div>
                 </div>
@@ -86,7 +98,7 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={''} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>
-                    RECOVERY PROCESSING
+                    STORAGE LEVEL 3
                   </div>
                   <div className='res-detail-right'>0</div>
                 </div>
@@ -95,9 +107,9 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={''} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>
-                    REDUCTION PROCESSING
+                    STORAGE LEVEL 4
                   </div>
-                  <div className='res-detail-right'>0</div>
+                  <div className='res-detail-right'>YES</div>
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
@@ -106,13 +118,6 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-red'>
                     COOPERTITION BONUS
                   </div>
-                  <div className='res-detail-right'>YES</div>
-                </div>
-                <div className='res-detail-row bottom-red'>
-                  <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
-                  </div>
-                  <div className='res-detail-left right-red'>PARKING BONUS</div>
                   <div className='res-detail-right'>{match?.redScore}</div>
                 </div>
                 <div className='res-detail-row'>
@@ -153,7 +158,7 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={''} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
-                    REUSE PROCESSING
+                    CARBON POINTS
                   </div>
                   <div className='res-detail-right'>0</div>
                 </div>
@@ -162,7 +167,7 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={''} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
-                    RECYCLE PROCESSING
+                    STORAGE LEVEL 1
                   </div>
                   <div className='res-detail-right'>0</div>
                 </div>
@@ -171,7 +176,7 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={''} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
-                    RECOVERY PROCESSING
+                    STORAGE LEVEL 2
                   </div>
                   <div className='res-detail-right'>0</div>
                 </div>
@@ -180,7 +185,7 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={''} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
-                    REDUCTION PROCESSING
+                    STORAGE LEVEL 3
                   </div>
                   <div className='res-detail-right'>0</div>
                 </div>
@@ -189,7 +194,7 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={''} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
-                    COOPERTITION BONUS
+                    STORAGE LEVEL 4
                   </div>
                   <div className='res-detail-right'>YES</div>
                 </div>
@@ -198,7 +203,7 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={''} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
-                    PARKING BONUS
+                    COOPERTITION BONUS
                   </div>
                   <div className='res-detail-right'>{match?.blueScore}</div>
                 </div>

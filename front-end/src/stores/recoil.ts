@@ -154,6 +154,14 @@ export const teamsAtom = atom<Team[]>({
   })
 });
 
+export const teamByTeamKey = selectorFamily<Team | undefined, number>({
+  key: 'teamByTeamKeySelectorFamily',
+  get:
+    (teamKey: number) =>
+    ({ get }) =>
+      get(teamsAtom).find((t) => t.teamKey === teamKey)
+});
+
 export const teamsInScheduleSelectorFamily = selectorFamily<
   Team[],
   TournamentType

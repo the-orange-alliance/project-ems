@@ -30,10 +30,14 @@ const RedParticipant: FC<{ participant: MatchParticipant }> = ({
     <div className='team'>
       <CardStatus status={participant.cardStatus} />
       <div className='team-name-left'>
-        <span>{participant.teamKey}</span>
+        <span>{participant.team?.country}</span>
       </div>
       <div className='team-flag'>
-        <span className={'flag-icon flag-icon-az'} />
+        <span
+          className={
+            'flag-icon flag-icon-' + participant.team?.countryCode.toLowerCase()
+          }
+        />
       </div>
     </div>
   );
@@ -45,10 +49,15 @@ const BlueParticipant: FC<{ participant: MatchParticipant }> = ({
   return (
     <div className='team'>
       <div className='team-flag'>
-        <span className={'flag-icon flag-icon-au'} />
+        <span
+          className={
+            'flag-icon flag-icon-' +
+            participant?.team?.countryCode.toLocaleLowerCase()
+          }
+        />
       </div>
       <div className='team-name-right'>
-        <span>{participant.teamKey}</span>
+        <span>{participant.team?.country}</span>
       </div>
       <CardStatus status={participant.cardStatus} />
     </div>
