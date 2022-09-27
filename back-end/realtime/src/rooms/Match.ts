@@ -92,6 +92,15 @@ export default class Match extends Room {
           blueRobotThreeStorage: details.blueRobotThreeStorage || 0,
           coopertitionBonusLevel: details.coopertitionBonusLevel || 0,
         };
+        let coopertitionBonusLevel = 0;
+        if (this.match.details.carbonPoints >= 165 * 0.66) {
+          coopertitionBonusLevel = 1;
+        }
+        if (this.match.details.carbonPoints >= 165) {
+          this.match.details.carbonPoints = 165;
+          coopertitionBonusLevel = 2;
+        }
+        this.match.details.coopertitionBonusLevel = coopertitionBonusLevel;
       }
       const [redScore, blueScore] = calculateScore(
         this.match.details as CarbonCaptureDetails

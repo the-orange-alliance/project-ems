@@ -2,6 +2,7 @@ import { createSocket } from '@toa-lib/client';
 import {
   LED_ALLCLEAR,
   LED_CARBON,
+  LED_COOPERTITION,
   LED_COUNTDOWN,
   LED_FIELDFAULT,
   LED_PRESTART,
@@ -105,6 +106,9 @@ export function sendAbortMatch(): void {
 export function updateSink(carbonPoints: number): void {
   const normalized = Math.min(Math.max(carbonPoints, 0), 120);
   socket?.emit('fcs:update', setLEDLength(normalized));
+  if (carbonPoints >= 165 * 0.66) {
+    socket?.emit('fcs:update', LED_COOPERTITION);
+  }
 }
 
 export async function endGameFlash(carbonPoints: number): Promise<void> {
@@ -121,7 +125,7 @@ export async function endGameFlash(carbonPoints: number): Promise<void> {
 export async function commitScores(): Promise<void> {
   socket?.emit('fcs:update', setLEDLength(120));
   await new Promise((resolve) => setTimeout(resolve, 250));
-  socket?.emit('fcs:update', LED_ALLCLEAR);  
+  socket?.emit('fcs:update', LED_ALLCLEAR);
 }
 
 export default socket;
