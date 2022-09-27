@@ -25,7 +25,6 @@ const Scoresheet: FC = () => {
   }, []);
 
   const onUpdate = (newMatch: Match) => {
-    console.log(newMatch);
     setMatch(newMatch);
   };
 

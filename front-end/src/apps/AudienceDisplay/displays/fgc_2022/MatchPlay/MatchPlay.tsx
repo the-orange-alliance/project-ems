@@ -110,11 +110,13 @@ const MatchPlay: FC = () => {
   }, [connected]);
 
   useEffect(() => {
-    socket?.removeListener('match:start', matchStart);
-    socket?.removeListener('match:abort', matchAbort);
-    socket?.removeListener('match:endgame', matchEndGame);
-    socket?.removeListener('match:end', matchEnd);
-    socket?.removeListener('match:update', matchUpdate);
+    return () => {
+      socket?.removeListener('match:start', matchStart);
+      socket?.removeListener('match:abort', matchAbort);
+      socket?.removeListener('match:endgame', matchEndGame);
+      socket?.removeListener('match:end', matchEnd);
+      socket?.removeListener('match:update', matchUpdate);
+    };
   }, []);
 
   const matchStart = () => {
@@ -133,13 +135,9 @@ const MatchPlay: FC = () => {
     endAudio.play();
   };
 
-  const matchUpdate = useRecoilCallback(
-    ({ snapshot, set }) =>
-      async (newMatch: Match) => {
-        const key = await snapshot.getPromise(loadedMatchKey);
-        set(matchInProgressAtom(key || ''), newMatch);
-      }
-  );
+  const matchUpdate = (newMatch: Match) => {
+    setMatch(newMatch);
+  };
 
   return (
     <div>

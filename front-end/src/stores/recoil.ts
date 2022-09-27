@@ -379,14 +379,17 @@ export const matchInProgress = atom<Match | null>({
   })
 });
 
-export const matchInProgressParticipants = selector<
-  MatchParticipant[] | undefined
->({
-  key: 'matchInProgressParticipants',
-  get: async ({ get }) => {
-    return get(matchInProgress)?.participants;
-  }
-});
+// export const matchInProgressParticipants = selector<
+//   MatchParticipant[] | undefined
+// >({
+//   key: 'matchInProgressParticipants',
+//   get: async ({ get }) => {
+//     return get(matchInProgress)?.participants || [];
+//   },
+//   set: ({ set, get }, defaultValue) => {
+
+//   }
+// });
 
 /* FIELD SECTION */
 export const fieldMotorDuration = atom({
