@@ -41,19 +41,22 @@ export const isCarbonCaptureRanking = (
 export function calculateScore(
   details: CarbonCaptureDetails
 ): [number, number] {
+  const coopertition = details.coopertitionBonusLevel * 100;
   const redScore =
     (1 +
       getMultiplier(details.redRobotOneStorage) +
       getMultiplier(details.redRobotTwoStorage) +
       getMultiplier(details.redRobotThreeStorage)) *
-    details.carbonPoints;
+      details.carbonPoints +
+    coopertition;
   const blueScore =
     (1 +
       getMultiplier(details.blueRobotOneStorage) +
       getMultiplier(details.blueRobotTwoStorage) +
       getMultiplier(details.blueRobotThreeStorage)) *
-    details.carbonPoints;
-  return [redScore, blueScore];
+      details.carbonPoints +
+    coopertition;
+  return [Math.ceil(redScore), Math.ceil(blueScore)];
 }
 
 function getMultiplier(robotStatus: number): number {
