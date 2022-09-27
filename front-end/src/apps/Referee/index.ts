@@ -1,3 +1,4 @@
 import RefereeApp from './Referee';
+import ScoreKeeper from './ScoreKeeper';
 
-export default RefereeApp;
+export {RefereeApp, ScoreKeeper};
