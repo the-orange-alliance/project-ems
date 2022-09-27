@@ -1,10 +1,16 @@
 import { MatchState } from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import ChromaLayout from 'src/layouts/ChromaLayout';
-import { loadedMatchKey, matchStateAtom, timer } from 'src/stores/Recoil';
+import {
+  displayID,
+  loadedMatchKey,
+  matchStateAtom,
+  timer
+} from 'src/stores/Recoil';
 import './AudienceDisplay.less';
+import Blank from './displays/fgc_2022/Blank/Blank';
 import MatchPlay from './displays/fgc_2022/MatchPlay/MatchPlay';
 import MatchPreview from './displays/fgc_2022/MatchPreview/MatchPreview';
 import MatchResults from './displays/fgc_2022/MatchResults/MatchResults';
@@ -12,6 +18,7 @@ import MatchResults from './displays/fgc_2022/MatchResults/MatchResults';
 const AudienceDisplay: FC = () => {
   const setState = useSetRecoilState(matchStateAtom);
   const setMatchKey = useSetRecoilState(loadedMatchKey);
+  const [display, setDisplay] = useRecoilState(displayID);
   const [socket, connected] = useSocket();
 
   useEffect(() => {
@@ -19,6 +26,7 @@ const AudienceDisplay: FC = () => {
       socket?.on('match:prestart', onPrestart);
       socket?.on('match:abort', onAbort);
       socket?.on('match:start', onStart);
+      socket?.on('match:display', onDisplay);
     }
   }, [connected]);
 
@@ -27,11 +35,13 @@ const AudienceDisplay: FC = () => {
       socket?.removeListener('match:prestart', onPrestart);
       socket?.removeListener('match:abort', onAbort);
       socket?.removeListener('match:start', onStart);
+      socket?.removeListener('match:display', onDisplay);
     };
   }, []);
 
   const onPrestart = (matchKey: string) => {
     setMatchKey(matchKey);
+    setDisplay(1);
   };
 
   const onStart = () => {
@@ -44,11 +54,13 @@ const AudienceDisplay: FC = () => {
     timer.abort();
   };
 
+  const onDisplay = (id: number) => {
+    setDisplay(id);
+  };
+
   return (
     <ChromaLayout>
-      <div id='aud-base'>
-        <MatchResults />
-      </div>
+      <div id='aud-base'>{getDisplay(display)}</div>
     </ChromaLayout>
   );
 };
@@ -63,5 +75,7 @@ function getDisplay(id: number): ReactNode {
       return <MatchPlay />;
     case 3:
       return <MatchResults />;
+    default:
+      return <Blank />;
   }
 }

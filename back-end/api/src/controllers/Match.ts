@@ -88,6 +88,14 @@ router.get(
         `matchKey = "${matchKey}"`
       );
 
+      for (let i = 0; i < participants.length; i++) {
+        const [team] = await selectAllWhere(
+          'team',
+          `teamKey = "${participants[i].teamKey}"`
+        );
+        participants[i].team = team;
+      }
+
       match.participants = participants;
       match.details = details;
 

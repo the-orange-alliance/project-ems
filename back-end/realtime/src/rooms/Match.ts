@@ -31,13 +31,14 @@ export default class Match extends Room {
     }
 
     if (this.timer.inProgress()) {
-      socket.emit('match:update', this.match);
+      socket.emit("match:update", this.match);
     }
 
     // Event listeners for matches
     socket.on("match:prestart", (matchKey: string) => {
       this.matchKey = matchKey;
       this.broadcast().emit("match:prestart", matchKey);
+      this.broadcast().emit("match:display", 1);
       this.state = MatchState.PRESTART_COMPLETE;
       logger.info(`prestarting ${matchKey}`);
     });
@@ -79,6 +80,9 @@ export default class Match extends Room {
       });
       this.timer.start();
       logger.info(`match started: ${this.matchKey}`);
+    });
+    socket.on("match:display", (id: number) => {
+      this.broadcast().emit("match:display", id);
     });
     socket.on("match:update", (match: MatchObj) => {
       this.match = { ...match };

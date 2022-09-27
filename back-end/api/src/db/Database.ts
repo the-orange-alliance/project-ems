@@ -86,6 +86,35 @@ export async function selectAllWhere(
   }
 }
 
+export async function selectAllJoin(
+  table1: string,
+  table2: string,
+  column: string
+): Promise<any[]> {
+  try {
+    return await db.all(
+      `SELECT * FROM "${table1}" INNER JOIN "${table2}" ON "${table1}".${column} = "${table2}".${column};`
+    );
+  } catch (e) {
+    throw new ApiDatabaseError(`[${table1} ${table2}]`, e);
+  }
+}
+
+export async function selectAllJoinWhere(
+  table1: string,
+  table2: string,
+  column: string,
+  where: string
+): Promise<any[]> {
+  try {
+    return await db.all(
+      `SELECT * FROM "${table1}" INNER JOIN "${table2}" ON "${table1}".${column} = "${table2}".${column} WHERE ${where};`
+    );
+  } catch (e) {
+    throw new ApiDatabaseError(`[${table1} ${table2}]`, e);
+  }
+}
+
 export async function insertValue<T>(
   table: string,
   values: Record<keyof NonNullable<T>, unknown>[]

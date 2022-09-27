@@ -70,7 +70,7 @@ export function sendPrestart(matchKey: string): void {
 }
 
 export function setDisplays(): void {
-  socket?.emit('match:display');
+  socket?.emit('match:display', 2);
 }
 
 export async function prepareField(duration: number): Promise<void> {

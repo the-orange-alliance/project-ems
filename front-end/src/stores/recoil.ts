@@ -355,3 +355,9 @@ export const fieldMotorDuration = atom({
   key: 'fieldMotorDurationAtom',
   default: 3000 // in ms
 });
+
+/* AUDIENCE DISPLAY SECTION */
+export const displayID = atom({
+  key: 'displayIDAtom',
+  default: 0
+});
