@@ -16,6 +16,12 @@ const LED_COLOR_RED = 1805;
 const LED_COLOR_RAINBOW = 1275;
 const LED_COLOR_FIRE = 1215;
 const FULL_STRIP_PWM = 990;
+const LED_COLOR_1_HB_SLOW = 1515;
+const LED_COLOR_1_HB_MED = 1525;
+const LED_COLOR_1_HB_FAST = 1535;
+const LED_COLOR_2_HB_SLOW = 1615;
+const LED_COLOR_2_HB_MED = 1625;
+const LED_COLOR_2_HB_FAST = 1635;
 
 const calcPulseWidth = (ledLength: number): number => {
   const maxPwm = 990;
@@ -439,6 +445,174 @@ export const LED_COOPERTITION: FieldControlPacket = {
       parameters: {
         port: AUDIENCE_BLINKIN_CHANNEL,
         pulsewidth: LED_COLOR_PURPLE
+      }
+    }
+  ]
+};
+export const LED_COLOR1_HB_SLOW: FieldControlPacket = {
+  messages: [
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: RED_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_1_HB_SLOW
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: BLUE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_1_HB_SLOW
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: AUDIENCE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_1_HB_SLOW
+      }
+    }
+  ]
+};
+export const LED_COLOR2_HB_SLOW: FieldControlPacket = {
+  messages: [
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: RED_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_2_HB_SLOW
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: BLUE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_2_HB_SLOW
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: AUDIENCE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_2_HB_SLOW
+      }
+    }
+  ]
+};
+export const LED_COLOR1_HB_MED: FieldControlPacket = {
+  messages: [
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: RED_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_1_HB_MED
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: BLUE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_1_HB_MED
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: AUDIENCE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_1_HB_MED
+      }
+    }
+  ]
+};
+export const LED_COLOR2_HB_MED: FieldControlPacket = {
+  messages: [
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: RED_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_2_HB_MED
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: BLUE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_2_HB_MED
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: AUDIENCE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_2_HB_MED
+      }
+    }
+  ]
+};
+export const LED_COLOR1_HB_FAST: FieldControlPacket = {
+  messages: [
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: RED_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_1_HB_FAST
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: BLUE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_1_HB_FAST
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: AUDIENCE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_1_HB_FAST
+      }
+    }
+  ]
+};
+export const LED_COLOR2_HB_FAST: FieldControlPacket = {
+  messages: [
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: RED_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_2_HB_FAST
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: BLUE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_2_HB_FAST
+      }
+    },
+    {
+      hub: 0,
+      function: 'servo',
+      parameters: {
+        port: AUDIENCE_BLINKIN_CHANNEL,
+        pulsewidth: LED_COLOR_2_HB_FAST
       }
     }
   ]

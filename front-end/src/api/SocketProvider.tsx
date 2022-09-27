@@ -6,6 +6,12 @@ import {
   LED_COUNTDOWN,
   LED_FIELDFAULT,
   LED_PRESTART,
+  LED_COLOR1_HB_SLOW,
+  LED_COLOR2_HB_SLOW,
+  LED_COLOR1_HB_MED,
+  LED_COLOR2_HB_MED,
+  LED_COLOR1_HB_FAST,
+  LED_COLOR2_HB_FAST,
   MOTOR_DISABLE,
   MOTOR_FORWARD,
   setLEDLength
@@ -14,7 +20,9 @@ import { Socket } from 'socket.io-client';
 import { useRecoilState } from 'recoil';
 import { socketConnectedAtom } from 'src/stores/Recoil';
 
+;
 let socket: Socket | null = null;
+let endGameStartSpeed: string | null;
 
 export function destroySocket() {
   socket?.off('connect');
@@ -73,9 +81,13 @@ export function setDisplays(): void {
   socket?.emit('match:display');
 }
 
-export async function prepareField(duration: number): Promise<void> {
+export async function prepareField(
+  duration: number,
+  endgameStartHBSpeed: string
+): Promise<void> {
   socket?.emit('fcs:update', LED_COUNTDOWN);
   await new Promise((resolve) => setTimeout(resolve, 250));
+  endGameStartSpeed = endgameStartHBSpeed;
   return new Promise((resolve) => {
     const countdown = async () => {
       for (let i = 120; i >= 0; i = i - 4) {
@@ -112,13 +124,40 @@ export function updateSink(carbonPoints: number): void {
 }
 
 export async function endGameFlash(carbonPoints: number): Promise<void> {
-  for (let i = 0; i < 3; i++) {
-    socket?.emit('fcs:update', setLEDLength(120));
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    socket?.emit('fcs:update', setLEDLength(0));
-    await new Promise((resolve) => setTimeout(resolve, 250));
+  // for (let i = 0; i < 3; i++) {
+  socket?.emit('fcs:update', setLEDLength(120));
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  switch (endGameStartSpeed) {
+    case 'slow':
+      if (carbonPoints > 60) {
+        socket?.emit('fcs:update', LED_COLOR2_HB_SLOW);
+      } else {
+        socket?.emit('fcs:update', LED_COLOR1_HB_SLOW);
+      }
+      break;
+    case 'medium':
+      if (carbonPoints > 60) {
+        socket?.emit('fcs:update', LED_COLOR2_HB_MED);
+      } else {
+        socket?.emit('fcs:update', LED_COLOR1_HB_MED);
+      }
+      break;
+    case 'fast':
+      if (carbonPoints > 60) {
+        socket?.emit('fcs:update', LED_COLOR2_HB_FAST);
+      } else {
+        socket?.emit('fcs:update', LED_COLOR1_HB_FAST);
+      }
+      break;
+    default:
+      break;
   }
-  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  //   socket?.emit('fcs:update', setLEDLength(0));
+  //   await new Promise((resolve) => setTimeout(resolve, 250));
+  // }
+  // await new Promise((resolve) => setTimeout(resolve, 500));
+
   socket?.emit('fcs:update', updateSink(carbonPoints));
 }
 

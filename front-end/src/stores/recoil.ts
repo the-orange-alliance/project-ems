@@ -355,3 +355,7 @@ export const fieldMotorDuration = atom({
   key: 'fieldMotorDurationAtom',
   default: 3000 // in ms
 });
+export const fieldEndgameStart = atom({
+  key: 'fieldEndgameStartAtom',
+  default: 'slow'
+});
