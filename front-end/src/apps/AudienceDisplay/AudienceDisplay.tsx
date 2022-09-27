@@ -6,6 +6,8 @@ import ChromaLayout from 'src/layouts/ChromaLayout';
 import { loadedMatchKey, matchStateAtom, timer } from 'src/stores/Recoil';
 import './AudienceDisplay.less';
 import MatchPlay from './displays/fgc_2022/MatchPlay/MatchPlay';
+import MatchPreview from './displays/fgc_2022/MatchPreview/MatchPreview';
+import MatchResults from './displays/fgc_2022/MatchResults/MatchResults';
 
 const AudienceDisplay: FC = () => {
   const setState = useSetRecoilState(matchStateAtom);
@@ -45,7 +47,7 @@ const AudienceDisplay: FC = () => {
   return (
     <ChromaLayout>
       <div id='aud-base'>
-        <MatchPlay />
+        <MatchResults />
       </div>
     </ChromaLayout>
   );
