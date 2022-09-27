@@ -10,7 +10,12 @@ import {
   matchInProgressAtom,
   matchStateAtom
 } from 'src/stores/Recoil';
-import { endGameFlash, updateSink, useSocket } from 'src/api/SocketProvider';
+import {
+  commitScoresLED,
+  endGameFlash,
+  updateSink,
+  useSocket
+} from 'src/api/SocketProvider';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
 import { isCarbonCaptureDetails, Match, MatchState } from '@toa-lib/models';
 
@@ -64,16 +69,18 @@ const MatchStatus: FC = () => {
   const onMatchEnd = () => {
     setMode('MATCH END');
     setState(MatchState.MATCH_COMPLETE);
+    //TODO change this to correct LED pattern
+    commitScoresLED();
   };
   const onMatchAbort = () => {
     setMode('MATCH ABORTED');
   };
   const onMatchUpdate = useRecoilCallback(({ set }) => async (match: Match) => {
     if (match.details && isCarbonCaptureDetails(match.details)) {
-      updateSink(match.details.carbonPoints);
+      await updateSink(match.details.carbonPoints);
     }
     set(matchInProgressAtom(match.matchKey), match);
-  })
+  });
 
   return (
     <Paper sx={{ paddingBottom: (theme) => theme.spacing(2), height: '100%' }}>

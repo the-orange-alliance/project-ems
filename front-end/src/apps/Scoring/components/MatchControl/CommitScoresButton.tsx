@@ -4,14 +4,16 @@ import { useButtonState } from '../../util/ButtonState';
 import { useRecoilState } from 'recoil';
 import { matchStateAtom } from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
+import { commitScoresLED } from 'src/api/SocketProvider';
 
 const CommitScoresButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
 
   const { commitEnabled } = useButtonState();
 
-  const commitScores = () => {
+  const commitScores = async () => {
     setState(MatchState.RESULTS_COMMITTED);
+    await commitScoresLED();
   };
 
   return state === MatchState.MATCH_COMPLETE ? (

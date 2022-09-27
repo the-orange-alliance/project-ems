@@ -11,14 +11,27 @@ import { useRecoilState } from 'recoil';
 import {
   darkModeAtom,
   fieldMotorDuration,
-  fieldEndgameStart
+  fieldEndgameStart,
+  fieldEndgameHB,
+  fieldEndgameStartDuration,
+  fieldCountdownStyle,
+  fieldCountdownDuration
 } from 'src/stores/Recoil';
 import MenuItem from '@mui/material/MenuItem';
 
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
   const [motorDuration, setMotorDuration] = useRecoilState(fieldMotorDuration);
+  const [endgameStartDuration, setEndgameStartDuration] = useRecoilState(
+    fieldEndgameStartDuration
+  );
   const [endGameStartHB, setEndgameStart] = useRecoilState(fieldEndgameStart);
+  const [endGameHB, setEndgameHB] = useRecoilState(fieldEndgameHB);
+  const [countdownStyle, setCountdownStyle] =
+    useRecoilState(fieldCountdownStyle);
+  const [countdownDuration, setCountdownDuration] = useRecoilState(
+    fieldCountdownDuration
+  );
 
   const changeDarkMode = (): void => {
     setDarkMode(!darkMode);
@@ -27,8 +40,20 @@ const SettingsApp: FC = () => {
   const changeMotorDuration = (event: ChangeEvent<HTMLInputElement>) => {
     setMotorDuration(parseInt(event.target.value));
   };
+  const changeEndgameStartDuration = (event: ChangeEvent<HTMLInputElement>) => {
+    setEndgameStartDuration(parseInt(event.target.value));
+  };
   const changeEndgameStartHB = (event: SelectChangeEvent) => {
     setEndgameStart(event.target.value);
+  };
+  const changeEndgameHB = (event: SelectChangeEvent) => {
+    setEndgameHB(event.target.value);
+  };
+  const changeCountdownStyle = (event: SelectChangeEvent) => {
+    setCountdownStyle(event.target.value);
+  };
+  const changeCountdownDuration = (event: ChangeEvent<HTMLInputElement>) => {
+    setCountdownDuration(parseInt(event.target.value));
   };
 
   return (
@@ -89,6 +114,29 @@ const SettingsApp: FC = () => {
           >
             <FormControlLabel
               control={
+                <TextField
+                  value={endgameStartDuration}
+                  onChange={changeEndgameStartDuration}
+                />
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Start of End Game Duration
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
                 <Select
                   value={endGameStartHB}
                   label='Speed'
@@ -102,6 +150,84 @@ const SettingsApp: FC = () => {
               label={
                 <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
                   End Game Start Heartbeat
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Select
+                  value={endGameHB}
+                  label='Speed'
+                  onChange={changeEndgameHB}
+                >
+                  <MenuItem value={'slow'}>Slow</MenuItem>
+                  <MenuItem value={'medium'}>Medium</MenuItem>
+                  <MenuItem value={'fast'}>Fast</MenuItem>
+                </Select>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  End Game Heartbeat
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <TextField
+                  value={countdownDuration}
+                  onChange={changeCountdownDuration}
+                />
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Countdown Duration
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Select
+                  value={countdownStyle}
+                  label='Style'
+                  onChange={changeCountdownStyle}
+                >
+                  <MenuItem value={'style1'}>Countdown</MenuItem>
+                  <MenuItem value={'style2'}>Race Light</MenuItem>
+                </Select>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Countdown Style
                 </Typography>
               }
               labelPlacement='start'

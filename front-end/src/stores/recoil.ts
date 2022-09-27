@@ -355,7 +355,23 @@ export const fieldMotorDuration = atom({
   key: 'fieldMotorDurationAtom',
   default: 3000 // in ms
 });
+export const fieldEndgameStartDuration = atom({
+  key: 'StartEndgameDurationAtom',
+  default: 3000 // in ms
+});
 export const fieldEndgameStart = atom({
   key: 'fieldEndgameStartAtom',
   default: 'slow'
+});
+export const fieldEndgameHB = atom({
+  key: 'fieldEndgameHBAtom',
+  default: 'slow'
+});
+export const fieldCountdownStyle = atom({
+  key: 'fieldCountdownStyleAtom',
+  default: 'style1'
+});
+export const fieldCountdownDuration = atom({
+  key: 'fieldCountdownDurationAtom',
+  default: 3000 // in ms
 });

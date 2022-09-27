@@ -3,7 +3,11 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { useButtonState } from '../../util/ButtonState';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
+  fieldCountdownDuration,
+  fieldCountdownStyle,
+  fieldEndgameHB,
   fieldEndgameStart,
+  fieldEndgameStartDuration,
   fieldMotorDuration,
   matchStateAtom
 } from 'src/stores/Recoil';
@@ -13,7 +17,11 @@ import { prepareField } from 'src/api/SocketProvider';
 const FieldPrepButton: FC = () => {
   const setState = useSetRecoilState(matchStateAtom);
   const motorDuration = useRecoilValue(fieldMotorDuration);
-  const speed = useRecoilValue(fieldEndgameStart);
+  const egStartspeed = useRecoilValue(fieldEndgameStart);
+  const egSpeed = useRecoilValue(fieldEndgameHB);
+  const egDuration = useRecoilValue(fieldEndgameStartDuration);
+  const cdStyle = useRecoilValue(fieldCountdownStyle);
+  const cdDuration = useRecoilValue(fieldCountdownDuration);
 
   const { fieldPrepEnabled } = useButtonState();
 
@@ -21,7 +29,14 @@ const FieldPrepButton: FC = () => {
 
   const updateField = async () => {
     setLoading(true);
-    await prepareField(motorDuration, speed);
+    await prepareField(
+      motorDuration,
+      egStartspeed,
+      egSpeed,
+      egDuration,
+      cdStyle,
+      cdDuration
+    );
     setState(MatchState.FIELD_READY);
     setState(MatchState.MATCH_READY);
     setLoading(false);
