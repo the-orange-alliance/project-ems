@@ -1,5 +1,5 @@
 import { MatchState } from '@toa-lib/models';
-import { FC, useEffect } from 'react';
+import { FC, ReactNode, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import ChromaLayout from 'src/layouts/ChromaLayout';
@@ -54,3 +54,14 @@ const AudienceDisplay: FC = () => {
 };
 
 export default AudienceDisplay;
+
+function getDisplay(id: number): ReactNode {
+  switch (id) {
+    case 1:
+      return <MatchPreview />;
+    case 2:
+      return <MatchPlay />;
+    case 3:
+      return <MatchResults />;
+  }
+}

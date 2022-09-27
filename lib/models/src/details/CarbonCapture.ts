@@ -1,4 +1,4 @@
-import { isMatchDetail, MatchDetailBase } from '../Match';
+import { MatchDetailBase } from '../Match';
 import { Ranking } from '../Ranking';
 import { isNonNullObject, isNumber } from '../types';
 

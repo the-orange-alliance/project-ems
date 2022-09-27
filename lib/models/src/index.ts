@@ -8,6 +8,8 @@ export {
   DEFAULT_ADMIN_USERNAME
 } from './DefaultConfig';
 
+export { Displays } from './Audience';
+
 export {
   User,
   UserLogin,

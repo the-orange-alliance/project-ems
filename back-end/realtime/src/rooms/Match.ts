@@ -30,6 +30,10 @@ export default class Match extends Room {
       socket.emit("match:prestart", this.matchKey);
     }
 
+    if (this.timer.inProgress()) {
+      socket.emit('match:update', this.match);
+    }
+
     // Event listeners for matches
     socket.on("match:prestart", (matchKey: string) => {
       this.matchKey = matchKey;
