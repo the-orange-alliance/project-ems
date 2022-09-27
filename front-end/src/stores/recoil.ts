@@ -358,6 +358,36 @@ export const matchInProgressAtom = atomFamily<Match | null, string>({
   })
 });
 
+export const matchInProgress = atom<Match | null>({
+  key: 'matchInProgress',
+  default: selector<Match | null>({
+    key: 'matchInProgressSelector',
+    get: async ({ get }) => {
+      const matchKey = get(loadedMatchKey);
+      try {
+        return await clientFetcher(
+          `match/all/${matchKey}`,
+          'GET',
+          undefined,
+          isMatch
+        );
+      } catch (e) {
+        // TODO - better error-handling
+        return null;
+      }
+    }
+  })
+});
+
+export const matchInProgressParticipants = selector<
+  MatchParticipant[] | undefined
+>({
+  key: 'matchInProgressParticipants',
+  get: async ({ get }) => {
+    return get(matchInProgress)?.participants;
+  }
+});
+
 /* FIELD SECTION */
 export const fieldMotorDuration = atom({
   key: 'fieldMotorDurationAtom',
