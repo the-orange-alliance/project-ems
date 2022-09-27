@@ -20,7 +20,6 @@ import { Socket } from 'socket.io-client';
 import { useRecoilState } from 'recoil';
 import { socketConnectedAtom } from 'src/stores/Recoil';
 
-;
 let socket: Socket | null = null;
 let endGameStartSpeed: string | null;
 
