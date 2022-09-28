@@ -2,10 +2,14 @@ import { FC, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography'
 
-const RefereeSheet: FC = () => {
+const RefereeSheet: FC<{alliance?: string}> = ({alliance}) => {
   return (
-    <Paper sx={{ padding: (theme) => theme.spacing(2) }}>
+    <Paper sx={{ padding: (theme) => theme.spacing(2), 'border-style': 'solid', 'border-width': 'thick', 'border-color': alliance == 'red' ? '#de1f1f' : '#1f85de' }}>
+      <Typography variant='h4' sx={{ textAlign: 'center' }}>
+        {alliance == 'red' ? 'Red' : 'Blue'} Alliance
+      </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
         <Button
           fullWidth

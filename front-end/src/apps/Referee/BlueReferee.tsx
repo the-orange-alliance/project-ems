@@ -6,7 +6,7 @@ import { loadedMatchKey } from 'src/stores/Recoil';
 import RefereeSheet from './components/games/CarbonCapture/RefereeSheet';
 import Box from '@mui/material/Box'
 
-const HeadReferee: FC = () => {
+const BlueReferee: FC = () => {
   const [, setMatchKey] = useRecoilState(loadedMatchKey);
   const [socket, connected] = useSocket();
 
@@ -27,9 +27,6 @@ const HeadReferee: FC = () => {
   return (
     <DefaultLayout containerWidth='xl'>
       <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px', width: '100%' }} >
-        <Box className='red-bg' sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <RefereeSheet alliance='red' />
-        </Box>
         <Box className='blue-bg' sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <RefereeSheet />
         </Box>
@@ -38,4 +35,4 @@ const HeadReferee: FC = () => {
   );
 };
 
-export default HeadReferee;
+export default BlueReferee;
