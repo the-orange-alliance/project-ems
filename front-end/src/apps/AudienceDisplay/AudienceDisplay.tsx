@@ -27,6 +27,7 @@ const AudienceDisplay: FC = () => {
       socket?.on('match:abort', onAbort);
       socket?.on('match:start', onStart);
       socket?.on('match:display', onDisplay);
+      socket?.on('match:commit', onCommit);
     }
   }, [connected]);
 
@@ -36,6 +37,7 @@ const AudienceDisplay: FC = () => {
       socket?.removeListener('match:abort', onAbort);
       socket?.removeListener('match:start', onStart);
       socket?.removeListener('match:display', onDisplay);
+      socket?.removeListener('match:commit', onCommit);
     };
   }, []);
 
@@ -56,6 +58,10 @@ const AudienceDisplay: FC = () => {
 
   const onDisplay = (id: number) => {
     setDisplay(id);
+  };
+
+  const onCommit = (matchKey: string) => {
+    setMatchKey(matchKey);
   };
 
   return (

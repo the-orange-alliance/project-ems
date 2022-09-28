@@ -13,6 +13,19 @@ export interface CarbonCaptureDetails extends MatchDetailBase {
   coopertitionBonusLevel: number;
 }
 
+export const defaultCarbonCaptureDetails: CarbonCaptureDetails = {
+  matchKey: '',
+  matchDetailKey: '',
+  carbonPoints: 0,
+  redRobotOneStorage: 0,
+  redRobotTwoStorage: 0,
+  redRobotThreeStorage: 0,
+  blueRobotOneStorage: 0,
+  blueRobotTwoStorage: 0,
+  blueRobotThreeStorage: 0,
+  coopertitionBonusLevel: 0
+};
+
 export const isCarbonCaptureDetails = (
   obj: unknown
 ): obj is CarbonCaptureDetails =>

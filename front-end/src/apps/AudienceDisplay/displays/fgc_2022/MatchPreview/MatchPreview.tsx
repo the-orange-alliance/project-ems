@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
-import { loadedMatchKey, matchInProgressAtom } from 'src/stores/Recoil';
+import { matchInProgress } from 'src/stores/Recoil';
 import './MatchPreview.css';
 
 import FGC_BG from '../res/global-bg.png';
@@ -31,8 +31,7 @@ const Participant: FC<{ participant: MatchParticipant }> = ({
 };
 
 const MatchPreview: FC = () => {
-  const matchKey = useRecoilValue(loadedMatchKey);
-  const match = useRecoilValue(matchInProgressAtom(matchKey || ''));
+  const match = useRecoilValue(matchInProgress);
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);

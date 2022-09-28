@@ -1,14 +1,13 @@
 import { FC, useEffect } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { matchInProgressAtom, loadedMatchKey } from 'src/stores/Recoil';
+import { useRecoilState } from 'recoil';
+import { matchInProgress } from 'src/stores/Recoil';
 import { CarbonCaptureDetails, Match } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
 import NumberInput from '../../NumberInput';
 
 const ScoreSheetSmall: FC = () => {
-  const matchKey = useRecoilValue(loadedMatchKey);
-  const [match, setMatch] = useRecoilState(matchInProgressAtom(matchKey || ''));
+  const [match, setMatch] = useRecoilState(matchInProgress);
   const [socket, connected] = useSocket();
 
   useEffect(() => {

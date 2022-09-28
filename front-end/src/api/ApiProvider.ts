@@ -12,7 +12,9 @@ import {
   ScheduleItem,
   MatchMakerParams,
   Match,
-  isMatchArray
+  isMatchArray,
+  MatchDetails,
+  MatchParticipant
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -84,6 +86,35 @@ export const createMatchSchedule = async (
 
 export const postMatchSchedule = async (matches: Match[]): Promise<void> =>
   clientFetcher('match', 'POST', matches);
+
+export const patchMatch = async (match: Match): Promise<void> =>
+  clientFetcher(`match/${match.matchKey}`, 'PATCH', match);
+
+export const patchMatchDetails = async (details: MatchDetails): Promise<void> =>
+  clientFetcher(`match/${details.matchKey}/details`, 'PATCH', details);
+
+export const patchMatchParticipants = async (
+  participants: MatchParticipant[]
+): Promise<void> =>
+  clientFetcher(
+    `match/${participants[0].matchKey}/participants`,
+    'PATCH',
+    participants
+  );
+
+export const patchWholeMatch = async (match: Match): Promise<void> => {
+  try {
+    if (!match.details || !match.participants) return;
+    await Promise.all([
+      patchMatch(match),
+      patchMatchDetails(match.details),
+      patchMatchParticipants(match.participants)
+    ]);
+  } catch (e) {
+    // TODO - better error-handling
+    console.log(e);
+  }
+};
 
 /** React hooks to use GET requests for data. */
 export const useLoginAttempt = (

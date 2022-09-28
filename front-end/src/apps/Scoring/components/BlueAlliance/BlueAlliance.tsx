@@ -3,12 +3,11 @@ import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import TeamStatusRow from '../Status/TeamStatusRow';
 import { useRecoilValue } from 'recoil';
-import { loadedMatchParticipantsByAlliance } from 'src/stores/Recoil';
+import { matchInProgress } from 'src/stores/Recoil';
 
 const BlueAlliance: FC = () => {
-  const blueAlliance = useRecoilValue(
-    loadedMatchParticipantsByAlliance('blue')
-  );
+  const match = useRecoilValue(matchInProgress);
+  const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
   return (
     <Paper
@@ -17,12 +16,15 @@ const BlueAlliance: FC = () => {
     >
       <Grid container spacing={3}>
         <Grid item md={8}>
-          {blueAlliance.map((p) => (
-            <TeamStatusRow key={p.matchParticipantKey} participant={p} />
+          {blueAlliance?.map((p) => (
+            <TeamStatusRow
+              key={p.matchParticipantKey}
+              participantKey={p.matchParticipantKey}
+            />
           ))}
         </Grid>
         <Grid item md={4}>
-          88
+          {match?.blueScore}
         </Grid>
       </Grid>
     </Paper>

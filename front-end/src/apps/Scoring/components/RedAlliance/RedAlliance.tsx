@@ -3,10 +3,11 @@ import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import TeamStatusRow from '../Status/TeamStatusRow';
 import { useRecoilValue } from 'recoil';
-import { loadedMatchParticipantsByAlliance } from 'src/stores/Recoil';
+import { matchInProgress } from 'src/stores/Recoil';
 
 const RedAlliance: FC = () => {
-  const redAlliance = useRecoilValue(loadedMatchParticipantsByAlliance('red'));
+  const match = useRecoilValue(matchInProgress);
+  const redAlliance = match?.participants?.filter((p) => p.station < 20);
   return (
     <Paper
       className='red-bg-imp'
@@ -14,12 +15,15 @@ const RedAlliance: FC = () => {
     >
       <Grid container spacing={3}>
         <Grid item md={8}>
-          {redAlliance.map((p) => (
-            <TeamStatusRow key={p.matchParticipantKey} participant={p} />
+          {redAlliance?.map((p) => (
+            <TeamStatusRow
+              key={p.matchParticipantKey}
+              participantKey={p.matchParticipantKey}
+            />
           ))}
         </Grid>
         <Grid item md={4}>
-          88
+          {match?.redScore}
         </Grid>
       </Grid>
     </Paper>

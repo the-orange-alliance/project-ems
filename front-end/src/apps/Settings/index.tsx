@@ -4,14 +4,59 @@ import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import { FormControlLabel, FormGroup, Switch } from '@mui/material';
 import { useRecoilState } from 'recoil';
-import { darkModeAtom, fieldMotorDuration } from 'src/stores/Recoil';
+import {
+  darkModeAtom,
+  fieldMotorDuration,
+  fieldEndgameStart,
+  fieldEndgameHB,
+  fieldEndgameStartDuration,
+  fieldCountdownStyle,
+  fieldCountdownDuration, fieldMatchOverStyle, fieldMatchOverLEDPattern
+} from 'src/stores/Recoil';
+import MenuItem from '@mui/material/MenuItem';
+import {
+  LED_COLOR_AQUA,
+  LED_COLOR_BLACK,
+  LED_COLOR_BLUE,
+  LED_COLOR_BLUE_GREEN,
+  LED_COLOR_BLUE_VIOLET,
+  LED_COLOR_DARK_BLUE, LED_COLOR_DARK_GRAY,
+  LED_COLOR_DARK_GREEN,
+  LED_COLOR_DARK_RED,
+  LED_COLOR_GOLD, LED_COLOR_GRAY,
+  LED_COLOR_GREEN,
+  LED_COLOR_LAWN_GREEN,
+  LED_COLOR_LIME,
+  LED_COLOR_ORANGE,
+  LED_COLOR_PINK,
+  LED_COLOR_RED,
+  LED_COLOR_RED_ORANGE,
+  LED_COLOR_SKY_BLUE, LED_COLOR_VIOLET, LED_COLOR_WHITE,
+  LED_COLOR_YELLOW
+} from "@toa-lib/models";
 
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
   const [motorDuration, setMotorDuration] = useRecoilState(fieldMotorDuration);
+  const [endgameStartDuration, setEndgameStartDuration] = useRecoilState(
+    fieldEndgameStartDuration
+  );
+  const [endGameStartHB, setEndgameStart] = useRecoilState(fieldEndgameStart);
+  const [endGameHB, setEndgameHB] = useRecoilState(fieldEndgameHB);
+  const [countdownStyle, setCountdownStyle] =
+    useRecoilState(fieldCountdownStyle);
+  const [countdownDuration, setCountdownDuration] = useRecoilState(
+    fieldCountdownDuration
+  );
+  const [matchOverStyle, setMatchOverStyle] =
+    useRecoilState(fieldMatchOverStyle);
+  const [matchOverLEDPattern, setMatchOverLEDPattern] = useRecoilState(
+    fieldMatchOverLEDPattern
+  );
 
   const changeDarkMode = (): void => {
     setDarkMode(!darkMode);
@@ -19,6 +64,27 @@ const SettingsApp: FC = () => {
 
   const changeMotorDuration = (event: ChangeEvent<HTMLInputElement>) => {
     setMotorDuration(parseInt(event.target.value));
+  };
+  const changeEndgameStartDuration = (event: ChangeEvent<HTMLInputElement>) => {
+    setEndgameStartDuration(parseInt(event.target.value));
+  };
+  const changeEndgameStartHB = (event: SelectChangeEvent) => {
+    setEndgameStart(event.target.value);
+  };
+  const changeEndgameHB = (event: SelectChangeEvent) => {
+    setEndgameHB(event.target.value);
+  };
+  const changeCountdownStyle = (event: SelectChangeEvent) => {
+    setCountdownStyle(event.target.value);
+  };
+  const changeCountdownDuration = (event: ChangeEvent<HTMLInputElement>) => {
+    setCountdownDuration(parseInt(event.target.value));
+  };
+  const changeMatchOverStyle = (event: SelectChangeEvent) => {
+    setMatchOverStyle(event.target.value);
+  };
+  const changeMatchOverLEDPattern = (event: SelectChangeEvent) => {
+    setMatchOverLEDPattern(parseInt(event.target.value));
   };
 
   return (
@@ -64,6 +130,210 @@ const SettingsApp: FC = () => {
               label={
                 <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
                   Field Preparation Motor Duration
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <TextField
+                  value={endgameStartDuration}
+                  onChange={changeEndgameStartDuration}
+                />
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Start of End Game Duration
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Select
+                  value={endGameStartHB}
+                  label='Speed'
+                  onChange={changeEndgameStartHB}
+                >
+                  <MenuItem value={'slow'}>Slow</MenuItem>
+                  <MenuItem value={'medium'}>Medium</MenuItem>
+                  <MenuItem value={'fast'}>Fast</MenuItem>
+                </Select>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  End Game Start Heartbeat
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Select
+                  value={endGameHB}
+                  label='Speed'
+                  onChange={changeEndgameHB}
+                >
+                  <MenuItem value={'slow'}>Slow</MenuItem>
+                  <MenuItem value={'medium'}>Medium</MenuItem>
+                  <MenuItem value={'fast'}>Fast</MenuItem>
+                </Select>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  End Game Heartbeat
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <TextField
+                  value={countdownDuration}
+                  onChange={changeCountdownDuration}
+                />
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Countdown Duration
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Select
+                  value={countdownStyle}
+                  label='Style'
+                  onChange={changeCountdownStyle}
+                >
+                  <MenuItem value={'style1'}>Countdown</MenuItem>
+                  <MenuItem value={'style2'}>Race Light</MenuItem>
+                </Select>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Countdown Style
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Select
+                  value={matchOverStyle}
+                  label='Style'
+                  onChange={changeMatchOverStyle}
+                >
+                  <MenuItem value={'carbon'}>Carbon</MenuItem>
+                  <MenuItem value={'full'}>Full Tower</MenuItem>
+                </Select>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Match Over Style
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Select
+                  value={matchOverLEDPattern as unknown as string}
+                  label='Style'
+                  onChange={changeMatchOverLEDPattern}
+                >
+                  <MenuItem value={1}>Carbon</MenuItem>
+                  <MenuItem value={LED_COLOR_YELLOW}>Yellow</MenuItem>
+                  <MenuItem value={LED_COLOR_BLACK}>Black</MenuItem>
+                  <MenuItem value={LED_COLOR_PINK}>Pink</MenuItem>
+                  <MenuItem value={LED_COLOR_DARK_RED}>Dark Red</MenuItem>
+                  <MenuItem value={LED_COLOR_RED}>Red</MenuItem>
+                  <MenuItem value={LED_COLOR_RED_ORANGE}>Red Orange</MenuItem>
+                  <MenuItem value={LED_COLOR_ORANGE}>Orange</MenuItem>
+                  <MenuItem value={LED_COLOR_GOLD}>Gold</MenuItem>
+                  <MenuItem value={LED_COLOR_LAWN_GREEN}>Lawn Green</MenuItem>
+                  <MenuItem value={LED_COLOR_LIME}>Lime</MenuItem>
+                  <MenuItem value={LED_COLOR_DARK_GREEN}>Dark Green</MenuItem>
+                  <MenuItem value={LED_COLOR_GREEN}>Green</MenuItem>
+                  <MenuItem value={LED_COLOR_BLUE_GREEN}>Blue Green</MenuItem>
+                  <MenuItem value={LED_COLOR_AQUA}>Aqua</MenuItem>
+                  <MenuItem value={LED_COLOR_SKY_BLUE}>Sky Blue</MenuItem>
+                  <MenuItem value={LED_COLOR_DARK_BLUE}>Dark Blue</MenuItem>
+                  <MenuItem value={LED_COLOR_BLUE}>Blue</MenuItem>
+                  <MenuItem value={LED_COLOR_BLUE_VIOLET}>Blue Violet</MenuItem>
+                  <MenuItem value={LED_COLOR_VIOLET}>Violet</MenuItem>
+                  <MenuItem value={LED_COLOR_WHITE}>White</MenuItem>
+                  <MenuItem value={LED_COLOR_GRAY}>Gray</MenuItem>
+                  <MenuItem value={LED_COLOR_DARK_GRAY}>Dark Gray</MenuItem>
+                </Select>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Match Over Style
                 </Typography>
               }
               labelPlacement='start'
