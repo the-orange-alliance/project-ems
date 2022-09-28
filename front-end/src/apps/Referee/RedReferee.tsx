@@ -4,7 +4,6 @@ import { useSocket } from 'src/api/SocketProvider';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import { loadedMatchKey } from 'src/stores/Recoil';
 import RefereeSheet from './components/games/CarbonCapture/RefereeSheet';
-import Box from '@mui/material/Box'
 
 const RedReferee: FC = () => {
   const [, setMatchKey] = useRecoilState(loadedMatchKey);
@@ -26,11 +25,7 @@ const RedReferee: FC = () => {
 
   return (
     <DefaultLayout containerWidth='xl'>
-      <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px', width: '100%' }} >
-        <Box className='red-bg' sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <RefereeSheet alliance='red' />
-        </Box>
-      </Box>
+      <RefereeSheet alliance='red' />
     </DefaultLayout>
   );
 };

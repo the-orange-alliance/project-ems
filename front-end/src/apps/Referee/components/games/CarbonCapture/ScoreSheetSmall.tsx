@@ -4,9 +4,9 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { matchInProgressAtom, loadedMatchKey } from 'src/stores/Recoil';
 import { CarbonCaptureDetails, Match } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
-import CarbonLevelInput from './CarbonLevelInput';
+import NumberInput from '../../NumberInput';
 
-const ScoreSheet: FC = () => {
+const ScoreSheetSmall: FC = () => {
   const matchKey = useRecoilValue(loadedMatchKey);
   const [match, setMatch] = useRecoilState(matchInProgressAtom(matchKey || ''));
   const [socket, connected] = useSocket();
@@ -42,10 +42,10 @@ const ScoreSheet: FC = () => {
   return (
     <Paper sx={{ padding: (theme) => theme.spacing(2) }}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-        <Typography variant='h3'>
+        <Typography variant='h6'>
           Carbon Level
         </Typography>
-        <CarbonLevelInput
+        <NumberInput
           value={(match?.details as CarbonCaptureDetails)?.carbonPoints || 0}
           onChange={updateScore}
         />
@@ -54,4 +54,4 @@ const ScoreSheet: FC = () => {
   );
 };
 
-export default ScoreSheet;
+export default ScoreSheetSmall;

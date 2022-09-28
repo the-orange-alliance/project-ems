@@ -3,7 +3,7 @@ import { useRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import { loadedMatchKey } from 'src/stores/Recoil';
-import Scoresheet from './components/games/CarbonCapture/Scoresheet';
+import ScoreSheet from './components/games/CarbonCapture/ScoreSheet';
 
 const ScoreKeeper: FC = () => {
   const [, setMatchKey] = useRecoilState(loadedMatchKey);
@@ -25,7 +25,7 @@ const ScoreKeeper: FC = () => {
 
   return (
     <DefaultLayout containerWidth='xl'>
-      <Scoresheet />
+      <ScoreSheet />
     </DefaultLayout>
   );
 };
