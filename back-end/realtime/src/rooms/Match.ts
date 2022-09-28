@@ -128,6 +128,7 @@ export default class Match extends Room {
     });
     socket.on("match:commit", (matchKey: string) => {
       this.broadcast().emit("match:commit", matchKey);
+      this.match = null;
     });
   }
 }

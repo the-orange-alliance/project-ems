@@ -1,11 +1,13 @@
-import { MatchState } from '@toa-lib/models';
+import { clientFetcher } from '@toa-lib/client';
+import { isMatch, MatchState } from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useRecoilCallback, useRecoilState, useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import ChromaLayout from 'src/layouts/ChromaLayout';
 import {
   displayID,
   loadedMatchKey,
+  matchInProgress,
   matchStateAtom,
   timer
 } from 'src/stores/Recoil';
@@ -60,9 +62,24 @@ const AudienceDisplay: FC = () => {
     setDisplay(id);
   };
 
-  const onCommit = (matchKey: string) => {
-    setMatchKey(matchKey);
-  };
+  const onCommit = useRecoilCallback(
+    ({ set, snapshot }) =>
+      async (matchKey: string) => {
+        const storedKey = await snapshot.getPromise(loadedMatchKey);
+        if (matchKey === storedKey) {
+          // Re-fetch the data
+          const newMatch = await clientFetcher(
+            `match/all/${matchKey}`,
+            'GET',
+            undefined,
+            isMatch
+          );
+          set(matchInProgress, newMatch);
+        } else {
+          set(loadedMatchKey, matchKey);
+        }
+      }
+  );
 
   return (
     <ChromaLayout>

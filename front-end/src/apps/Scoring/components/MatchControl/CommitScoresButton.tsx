@@ -12,6 +12,7 @@ const CommitScoresButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
   const { commitEnabled } = useButtonState();
   const [loading, setLoading] = useState(false);
+
   const commitScores = useRecoilCallback(({ snapshot }) => async () => {
     const match = await snapshot.getPromise(matchInProgress);
     if (!match) return;

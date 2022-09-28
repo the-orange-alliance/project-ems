@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
-import { matchInProgressDetails, matchInProgress } from 'src/stores/Recoil';
+import { matchInProgress } from 'src/stores/Recoil';
 import './MatchResults.css';
 
 import FGC_BG from '../res/global-bg.png';
@@ -35,7 +35,7 @@ const Participant: FC<{ participant: MatchParticipant }> = ({
 
 const MatchResults: FC = () => {
   const match = useRecoilValue(matchInProgress);
-  const someDetails = useRecoilValue(matchInProgressDetails);
+  const someDetails = match?.details;
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
