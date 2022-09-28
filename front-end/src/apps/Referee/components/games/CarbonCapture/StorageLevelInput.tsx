@@ -13,7 +13,7 @@ const StorageLevelInput: FC = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '16px', alignItems: 'center' }}>
       <Typography variant='h6'>
         Storage Level
       </Typography>
