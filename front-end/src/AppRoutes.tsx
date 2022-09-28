@@ -7,7 +7,7 @@ import AdminApp from './apps/Admin/AdminApp';
 import TeamManager from './apps/TeamManager';
 import MatchManager from './apps/MatchManager';
 import ScoringApp from './apps/Scoring';
-import RefereeApp from './apps/Referee';
+import { RefereeApp, ScoreKeeper, HeadReferee, RedReferee, BlueReferee } from './apps/Referee';
 import AudienceDisplay from './apps/AudienceDisplay';
 import FieldDebugger from './apps/FieldDebugger';
 
@@ -71,6 +71,30 @@ const AppRoutes: AppRoute[] = [
     path: '/referee',
     group: 0,
     element: <RefereeApp />
+  },
+  {
+    name: 'Score Keeper Page',
+    path: '/referee/scorekeeper',
+    group: 0,
+    element: <ScoreKeeper />
+  },
+  {
+    name: 'Head Referee Page',
+    path: '/referee/head',
+    group: 0,
+    element: <HeadReferee />
+  },
+  {
+    name: 'Red Referee Page',
+    path: '/referee/red',
+    group: 0,
+    element: <RedReferee />
+  },
+  {
+    name: 'Blue Referee Page',
+    path: '/referee/blue',
+    group: 0,
+    element: <BlueReferee />
   },
   {
     name: 'Audience Display',

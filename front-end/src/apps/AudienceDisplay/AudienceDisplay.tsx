@@ -1,11 +1,13 @@
-import { MatchState } from '@toa-lib/models';
+import { clientFetcher } from '@toa-lib/client';
+import { isMatch, MatchState } from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
-import { useRecoilState, useSetRecoilState } from 'recoil';
+import { useRecoilCallback, useRecoilState, useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import ChromaLayout from 'src/layouts/ChromaLayout';
 import {
   displayID,
   loadedMatchKey,
+  matchInProgress,
   matchStateAtom,
   timer
 } from 'src/stores/Recoil';
@@ -27,6 +29,7 @@ const AudienceDisplay: FC = () => {
       socket?.on('match:abort', onAbort);
       socket?.on('match:start', onStart);
       socket?.on('match:display', onDisplay);
+      socket?.on('match:commit', onCommit);
     }
   }, [connected]);
 
@@ -36,6 +39,7 @@ const AudienceDisplay: FC = () => {
       socket?.removeListener('match:abort', onAbort);
       socket?.removeListener('match:start', onStart);
       socket?.removeListener('match:display', onDisplay);
+      socket?.removeListener('match:commit', onCommit);
     };
   }, []);
 
@@ -57,6 +61,25 @@ const AudienceDisplay: FC = () => {
   const onDisplay = (id: number) => {
     setDisplay(id);
   };
+
+  const onCommit = useRecoilCallback(
+    ({ set, snapshot }) =>
+      async (matchKey: string) => {
+        const storedKey = await snapshot.getPromise(loadedMatchKey);
+        if (matchKey === storedKey) {
+          // Re-fetch the data
+          const newMatch = await clientFetcher(
+            `match/all/${matchKey}`,
+            'GET',
+            undefined,
+            isMatch
+          );
+          set(matchInProgress, newMatch);
+        } else {
+          set(loadedMatchKey, matchKey);
+        }
+      }
+  );
 
   return (
     <ChromaLayout>

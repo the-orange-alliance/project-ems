@@ -105,22 +105,30 @@ export default class Match extends Room {
           blueRobotThreeStorage: details.blueRobotThreeStorage || 0,
           coopertitionBonusLevel: details.coopertitionBonusLevel || 0,
         };
-        let coopertitionBonusLevel = 0;
-        if (this.match.details.carbonPoints >= 165 * 0.66) {
-          coopertitionBonusLevel = 1;
-        }
-        if (this.match.details.carbonPoints >= 165) {
-          this.match.details.carbonPoints = 165;
-          coopertitionBonusLevel = 2;
-        }
-        this.match.details.coopertitionBonusLevel = coopertitionBonusLevel;
       }
+
+      // Calculate coopertition
+      let coopertitionBonusLevel = 0;
+      if ((this.match.details as any).carbonPoints >= 165 * 0.66) {
+        coopertitionBonusLevel = 1;
+      }
+      if ((this.match.details as any).carbonPoints >= 165) {
+        (this.match.details as any).carbonPoints = 165;
+        coopertitionBonusLevel = 2;
+      }
+      (this.match.details as any).coopertitionBonusLevel =
+        coopertitionBonusLevel;
+
       const [redScore, blueScore] = calculateScore(
         this.match.details as CarbonCaptureDetails
       );
       this.match.redScore = redScore;
       this.match.blueScore = blueScore;
       this.broadcast().emit("match:update", this.match);
+    });
+    socket.on("match:commit", (matchKey: string) => {
+      this.broadcast().emit("match:commit", matchKey);
+      this.match = null;
     });
   }
 }

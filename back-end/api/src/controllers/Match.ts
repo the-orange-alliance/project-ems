@@ -6,7 +6,9 @@ import {
   MatchParticipant,
   MatchDetailBase,
   getTournamentLevelFromType,
-  TournamentType
+  TournamentType,
+  isMatch,
+  isMatchParticipantArray
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import {
@@ -150,22 +152,62 @@ router.post(
   }
 );
 
-// router.patch(
-//   '/:matchKey',
-//   validateBody(isTeam),
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await updateWhere(
-//         'match',
-//         req.body,
-//         `matchKey = "${req.params.matchKey}"`
-//       );
-//       res.status(200).send({});
-//     } catch (e) {
-//       return next(e);
-//     }
-//   }
-// );
+router.patch(
+  '/:matchKey',
+  validateBody(isMatch),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const match = req.body;
+      if (match.details) delete match.details;
+      if (match.participants) delete match.participants;
+      await updateWhere(
+        'match',
+        req.body,
+        `matchKey = "${req.params.matchKey}"`
+      );
+      res.status(200).send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.patch(
+  '/:matchKey/details',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await updateWhere(
+        'match_detail',
+        req.body,
+        `matchKey = "${req.params.matchKey}"`
+      );
+      res.status(200).send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.patch(
+  '/:matchKey/participants',
+  validateBody(isMatchParticipantArray),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const participants = req.body;
+      for (const participant of participants) {
+        if (participant.team) delete participant.team;
+        await updateWhere(
+          'match_participant',
+          participant,
+          `matchParticipantKey = "${participant.matchParticipantKey}"`
+        );
+      }
+      res.status(200).send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
 
 /** SPECIAL ROUTES */
 router.post(

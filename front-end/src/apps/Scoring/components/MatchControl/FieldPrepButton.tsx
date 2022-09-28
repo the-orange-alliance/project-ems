@@ -7,7 +7,9 @@ import {
   fieldCountdownStyle,
   fieldEndgameHB,
   fieldEndgameStart,
-  fieldEndgameStartDuration, fieldMatchOverLEDPattern, fieldMatchOverStyle,
+  fieldEndgameStartDuration,
+  fieldMatchOverLEDPattern,
+  fieldMatchOverStyle,
   fieldMotorDuration,
   matchStateAtom
 } from 'src/stores/Recoil';

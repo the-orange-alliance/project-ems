@@ -15,18 +15,17 @@ const NumberInput: FC<Props> = ({ value, onChange }) => {
   const decrement = () => onChange(value - 1);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
-      <Button variant='contained' onClick={increment}>
-        +
+    <Box sx={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
+      <Button variant='contained' onClick={decrement}>
+        -
       </Button>
       <TextField
         onChange={handleChange}
         value={value}
         type='number'
-        sx={{ width: '5em' }}
       />
-      <Button variant='contained' onClick={decrement}>
-        -
+      <Button variant='contained' onClick={increment}>
+        +
       </Button>
     </Box>
   );
