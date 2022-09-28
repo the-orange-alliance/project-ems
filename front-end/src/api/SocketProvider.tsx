@@ -1,4 +1,4 @@
-import { createSocket } from '@toa-lib/client';
+import {createSocket} from '@toa-lib/client';
 import {
   LED_ALLCLEAR,
   LED_CARBON,
@@ -6,23 +6,19 @@ import {
   LED_COUNTDOWN,
   LED_FIELDFAULT,
   LED_PRESTART,
-  LED_COLOR1_HB_SLOW,
-  LED_COLOR2_HB_SLOW,
-  LED_COLOR1_HB_MED,
-  LED_COLOR2_HB_MED,
-  LED_COLOR1_HB_FAST,
-  LED_COLOR2_HB_FAST,
+  MatchState,
   MOTOR_DISABLE,
   MOTOR_FORWARD,
-  setLEDLength, setLEDPattern
+  setLEDLength,
+  setLEDPattern
 } from '@toa-lib/models';
-import { Socket } from 'socket.io-client';
-import { useRecoilState } from 'recoil';
-import { socketConnectedAtom } from 'src/stores/Recoil';
+import {Socket} from 'socket.io-client';
+import {useRecoilState} from 'recoil';
+import {socketConnectedAtom} from 'src/stores/Recoil';
 
 let socket: Socket | null = null;
-let endGameStartSpeed: string | null;
-let endGameSpeed: string | null;
+let endGameStartSpeed: number;
+let endGameSpeed: number;
 let endGameDuration: number;
 let matchOverPattern: number;
 let matchOverStlye: string | null;
@@ -90,8 +86,8 @@ export function sendStartMatch(): void {
 
 export async function prepareField(
   duration: number,
-  endgameStartHBSpeed: string,
-  endGameHBSpeed: string,
+  endgameStartHBSpeed: number,
+  endGameHBSpeed: number,
   egDuration: number,
   cdStyle: string,
   cdDuration: number,
@@ -144,16 +140,25 @@ export function sendAbortMatch(): void {
 }
 
 /* TODO - this is game-specific */
-export async function updateSink(carbonPoints: number): Promise<void> {
-  console.log("test");
+export async function updateSink(carbonPoints: number, state: string): Promise<void> {
+  // console.log(state);
   const normalized = calcLedFromCm(carbonPoints);
+  const endgame = (state == "ENDGAME");
   socket?.emit('fcs:update', setLEDLength(normalized));
   await new Promise((resolve) => setTimeout(resolve, 250));
   if (carbonPoints >= COOPERTITION) {
-    socket?.emit('fcs:update', LED_COOPERTITION);
+    if (endgame) {
+      socket?.emit('fcs:update', setLEDPattern(1600 + endGameSpeed));
+    } else {
+      socket?.emit('fcs:update', LED_COOPERTITION);
+    }
     await new Promise((resolve) => setTimeout(resolve, 250));
   } else {
-    socket?.emit('fcs:update', LED_CARBON);
+    if (endgame) {
+      socket?.emit('fcs:update', setLEDPattern(1500 + endGameSpeed));
+    } else {
+      socket?.emit('fcs:update', LED_CARBON);
+    }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
 }
@@ -162,60 +167,70 @@ export async function endGameFlash(carbonPoints: number): Promise<void> {
   const led = calcLedFromCm(carbonPoints);
   socket?.emit('fcs:update', setLEDLength(120));
   await new Promise((resolve) => setTimeout(resolve, 250));
-  switch (endGameStartSpeed) {
-    case 'slow':
-      if (carbonPoints >= COOPERTITION) {
-        socket?.emit('fcs:update', LED_COLOR2_HB_SLOW);
-      } else {
-        socket?.emit('fcs:update', LED_COLOR1_HB_SLOW);
-      }
-      break;
-    case 'medium':
-      if (carbonPoints >= COOPERTITION) {
-        socket?.emit('fcs:update', LED_COLOR2_HB_MED);
-      } else {
-        socket?.emit('fcs:update', LED_COLOR1_HB_MED);
-      }
-      break;
-    case 'fast':
-      if (carbonPoints >= COOPERTITION) {
-        socket?.emit('fcs:update', LED_COLOR2_HB_FAST);
-      } else {
-        socket?.emit('fcs:update', LED_COLOR1_HB_FAST);
-      }
-      break;
-    default:
-      break;
+  if (carbonPoints >= COOPERTITION) {
+    socket?.emit('fcs:update', setLEDPattern(1600 + endGameStartSpeed));
+  } else {
+    socket?.emit('fcs:update', setLEDPattern(1500 + endGameStartSpeed));
   }
+  // switch (endGameStartSpeed) {
+  //   case 'slow':
+  //     if (carbonPoints >= COOPERTITION) {
+  //       socket?.emit('fcs:update', LED_COLOR2_HB_SLOW);
+  //     } else {
+  //       socket?.emit('fcs:update', LED_COLOR1_HB_SLOW);
+  //     }
+  //     break;
+  //   case 'medium':
+  //     if (carbonPoints >= COOPERTITION) {
+  //       socket?.emit('fcs:update', LED_COLOR2_HB_MED);
+  //     } else {
+  //       socket?.emit('fcs:update', LED_COLOR1_HB_MED);
+  //     }
+  //     break;
+  //   case 'fast':
+  //     if (carbonPoints >= COOPERTITION) {
+  //       socket?.emit('fcs:update', LED_COLOR2_HB_FAST);
+  //     } else {
+  //       socket?.emit('fcs:update', LED_COLOR1_HB_FAST);
+  //     }
+  //     break;
+  //   default:
+  //     break;
+  // }
   await new Promise((resolve) => setTimeout(resolve, endGameDuration));
   socket?.emit('fcs:update', setLEDLength(led));
   await new Promise((resolve) => setTimeout(resolve, 250));
-
-  switch (endGameSpeed) {
-    case 'slow':
-      if (carbonPoints >= COOPERTITION) {
-        socket?.emit('fcs:update', LED_COLOR2_HB_SLOW);
-      } else {
-        socket?.emit('fcs:update', LED_COLOR1_HB_SLOW);
-      }
-      break;
-    case 'medium':
-      if (carbonPoints >= COOPERTITION) {
-        socket?.emit('fcs:update', LED_COLOR2_HB_MED);
-      } else {
-        socket?.emit('fcs:update', LED_COLOR1_HB_MED);
-      }
-      break;
-    case 'fast':
-      if (carbonPoints >= COOPERTITION) {
-        socket?.emit('fcs:update', LED_COLOR2_HB_FAST);
-      } else {
-        socket?.emit('fcs:update', LED_COLOR1_HB_FAST);
-      }
-      break;
-    default:
-      break;
+  if (carbonPoints >= COOPERTITION) {
+    socket?.emit('fcs:update', setLEDPattern(1600 + endGameSpeed));
+  } else {
+    socket?.emit('fcs:update', setLEDPattern(1500 + endGameSpeed));
   }
+  // break;
+  // switch (endGameSpeed) {
+  //   case 'slow':
+  //     if (carbonPoints >= COOPERTITION) {
+  //       socket?.emit('fcs:update', LED_COLOR2_HB_SLOW);
+  //     } else {
+  //       socket?.emit('fcs:update', LED_COLOR1_HB_SLOW);
+  //     }
+  //     break;
+  //   case 'medium':
+  //     if (carbonPoints >= COOPERTITION) {
+  //       socket?.emit('fcs:update', LED_COLOR2_HB_MED);
+  //     } else {
+  //       socket?.emit('fcs:update', LED_COLOR1_HB_MED);
+  //     }
+  //     break;
+  //   case 'fast':
+  //     if (carbonPoints >= COOPERTITION) {
+  //       socket?.emit('fcs:update', LED_COLOR2_HB_FAST);
+  //     } else {
+  //       socket?.emit('fcs:update', LED_COLOR1_HB_FAST);
+  //     }
+  //     break;
+  //   default:
+  //     break;
+  // }
 }
 
 export async function sendCommitScores(): Promise<void> {
@@ -229,7 +244,7 @@ export function calcLedFromCm(carbon: number) {
 export async function matchOver(carbonPoints: number): Promise<void> {
   switch (matchOverStlye) {
     case 'carbon':
-      updateSink(carbonPoints);
+      updateSink(carbonPoints,"MATCH_OVER");
       break;
     case 'full':
       socket?.emit('fcs:update', setLEDLength(120));
@@ -238,7 +253,14 @@ export async function matchOver(carbonPoints: number): Promise<void> {
       break;
   }
   await new Promise((resolve) => setTimeout(resolve, 250));
-  socket?.emit('fcs:update', setLEDPattern(matchOverPattern));
+  switch (matchOverPattern) {
+    case 1:
+      updateSink(carbonPoints, "MATCH_OVER");
+      break;
+    default:
+      socket?.emit('fcs:update', setLEDPattern(matchOverPattern));
+      break;
+  }
 }
 export async function sendPostResults(): Promise<void> {
   socket?.emit('match:display', 3);
