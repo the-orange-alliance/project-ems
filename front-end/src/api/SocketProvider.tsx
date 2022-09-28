@@ -14,7 +14,8 @@ import {
   LED_COLOR2_HB_FAST,
   MOTOR_DISABLE,
   MOTOR_FORWARD,
-  setLEDLength, setLEDPattern
+  setLEDLength,
+  setLEDPattern
 } from '@toa-lib/models';
 import { Socket } from 'socket.io-client';
 import { useRecoilState } from 'recoil';
@@ -145,7 +146,7 @@ export function sendAbortMatch(): void {
 
 /* TODO - this is game-specific */
 export async function updateSink(carbonPoints: number): Promise<void> {
-  console.log("test");
+  console.log('test');
   const normalized = calcLedFromCm(carbonPoints);
   socket?.emit('fcs:update', setLEDLength(normalized));
   await new Promise((resolve) => setTimeout(resolve, 250));
@@ -218,14 +219,17 @@ export async function endGameFlash(carbonPoints: number): Promise<void> {
   }
 }
 
-export async function sendCommitScores(): Promise<void> {
+export async function sendCommitScores(matchKey: string): Promise<void> {
+  socket?.emit('match:commit', matchKey);
   socket?.emit('fcs:update', setLEDLength(120));
   await new Promise((resolve) => setTimeout(resolve, 250));
   socket?.emit('fcs:update', LED_ALLCLEAR);
 }
+
 export function calcLedFromCm(carbon: number) {
   return Math.min(Math.floor(Math.max(carbon, 0) / 1.527), 108);
 }
+
 export async function matchOver(carbonPoints: number): Promise<void> {
   switch (matchOverStlye) {
     case 'carbon':

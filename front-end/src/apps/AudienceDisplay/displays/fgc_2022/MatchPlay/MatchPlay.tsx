@@ -2,7 +2,7 @@ import { Match, MatchParticipant } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
-import { matchInProgress } from 'src/stores/Recoil';
+import { matchInProgress, timer } from 'src/stores/Recoil';
 import './MatchPlay.less';
 import { useSocket } from 'src/api/SocketProvider';
 import {
@@ -135,7 +135,9 @@ const MatchPlay: FC = () => {
   };
 
   const matchUpdate = (newMatch: Match) => {
-    setMatch(newMatch);
+    if (timer.inProgress()) {
+      setMatch(newMatch);
+    }
   };
 
   return (
