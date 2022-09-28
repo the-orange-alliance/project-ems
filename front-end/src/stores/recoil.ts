@@ -28,8 +28,7 @@ import {
   MatchTimer,
   isMatch,
   getTournamentLevelFromType,
-  MatchDetails,
-  defaultCarbonCaptureDetails
+  MatchDetails
 } from '@toa-lib/models';
 import {
   atom,
