@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography'
 
 const RefereeSheet: FC<{alliance?: string}> = ({alliance}) => {
   return (
-    <Paper sx={{ padding: (theme) => theme.spacing(2), 'border-style': 'solid', 'border-width': 'thick', 'border-color': alliance == 'red' ? '#de1f1f' : '#1f85de' }}>
+    <Paper sx={{ padding: (theme) => theme.spacing(2), borderStyle: 'solid', borderWidth: 'thick', borderColor: alliance == 'red' ? '#de1f1f' : '#1f85de' }}>
       <Typography variant='h4' sx={{ textAlign: 'center' }}>
         {alliance == 'red' ? 'Red' : 'Blue'} Alliance
       </Typography>
