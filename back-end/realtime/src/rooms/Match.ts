@@ -13,6 +13,7 @@ export default class Match extends Room {
   private match: MatchObj | null;
   private timer: MatchTimer;
   private state: MatchState;
+  private displayID: number;
 
   public constructor(server: Server) {
     super(server, "match");
@@ -21,6 +22,7 @@ export default class Match extends Room {
     this.match = null;
     this.timer = new MatchTimer();
     this.state = MatchState.MATCH_NOT_SELECTED;
+    this.displayID = 0;
   }
 
   public initializeEvents(socket: Socket): void {
@@ -28,16 +30,19 @@ export default class Match extends Room {
     if (this.state >= MatchState.PRESTART_COMPLETE && this.matchKey) {
       // Send prestart information
       socket.emit("match:prestart", this.matchKey);
+      socket.emit("match:display", this.displayID);
     }
 
     if (this.timer.inProgress()) {
-      socket.emit('match:update', this.match);
+      socket.emit("match:update", this.match);
+      socket.emit("match:display", this.displayID);
     }
 
     // Event listeners for matches
     socket.on("match:prestart", (matchKey: string) => {
       this.matchKey = matchKey;
       this.broadcast().emit("match:prestart", matchKey);
+      this.broadcast().emit("match:display", 1);
       this.state = MatchState.PRESTART_COMPLETE;
       logger.info(`prestarting ${matchKey}`);
     });
@@ -79,6 +84,10 @@ export default class Match extends Room {
       });
       this.timer.start();
       logger.info(`match started: ${this.matchKey}`);
+    });
+    socket.on("match:display", (id: number) => {
+      this.displayID = id;
+      this.broadcast().emit("match:display", id);
     });
     socket.on("match:update", (match: MatchObj) => {
       this.match = { ...match };

@@ -1,8 +1,8 @@
 import { Match, MatchParticipant } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
-import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
-import { matchInProgressAtom, loadedMatchKey } from 'src/stores/Recoil';
+import { matchInProgress } from 'src/stores/Recoil';
 import './MatchPlay.less';
 import { useSocket } from 'src/api/SocketProvider';
 import {
@@ -30,10 +30,14 @@ const RedParticipant: FC<{ participant: MatchParticipant }> = ({
     <div className='team'>
       <CardStatus status={participant.cardStatus} />
       <div className='team-name-left'>
-        <span>{participant.teamKey}</span>
+        <span>{participant.team?.country}</span>
       </div>
       <div className='team-flag'>
-        <span className={'flag-icon flag-icon-az'} />
+        <span
+          className={
+            'flag-icon flag-icon-' + participant.team?.countryCode.toLowerCase()
+          }
+        />
       </div>
     </div>
   );
@@ -45,10 +49,15 @@ const BlueParticipant: FC<{ participant: MatchParticipant }> = ({
   return (
     <div className='team'>
       <div className='team-flag'>
-        <span className={'flag-icon flag-icon-au'} />
+        <span
+          className={
+            'flag-icon flag-icon-' +
+            participant?.team?.countryCode.toLocaleLowerCase()
+          }
+        />
       </div>
       <div className='team-name-right'>
-        <span>{participant.teamKey}</span>
+        <span>{participant.team?.country}</span>
       </div>
       <CardStatus status={participant.cardStatus} />
     </div>
@@ -83,8 +92,7 @@ const CardStatus: FC<{ status: number }> = ({ status }) => {
 };
 
 const MatchPlay: FC = () => {
-  const matchKey = useRecoilValue(loadedMatchKey);
-  const [match, setMatch] = useRecoilState(matchInProgressAtom(matchKey || ''));
+  const [match, setMatch] = useRecoilState(matchInProgress);
   const [socket, connected] = useSocket();
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
@@ -101,11 +109,13 @@ const MatchPlay: FC = () => {
   }, [connected]);
 
   useEffect(() => {
-    socket?.removeListener('match:start', matchStart);
-    socket?.removeListener('match:abort', matchAbort);
-    socket?.removeListener('match:endgame', matchEndGame);
-    socket?.removeListener('match:end', matchEnd);
-    socket?.removeListener('match:update', matchUpdate);
+    return () => {
+      socket?.removeListener('match:start', matchStart);
+      socket?.removeListener('match:abort', matchAbort);
+      socket?.removeListener('match:endgame', matchEndGame);
+      socket?.removeListener('match:end', matchEnd);
+      socket?.removeListener('match:update', matchUpdate);
+    };
   }, []);
 
   const matchStart = () => {
@@ -124,13 +134,9 @@ const MatchPlay: FC = () => {
     endAudio.play();
   };
 
-  const matchUpdate = useRecoilCallback(
-    ({ snapshot, set }) =>
-      async (newMatch: Match) => {
-        const key = await snapshot.getPromise(loadedMatchKey);
-        set(matchInProgressAtom(key || ''), newMatch);
-      }
-  );
+  const matchUpdate = (newMatch: Match) => {
+    setMatch(newMatch);
+  };
 
   return (
     <div>

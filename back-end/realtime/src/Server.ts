@@ -21,37 +21,42 @@ app.use(cors({ credentials: true }));
 app.use(json());
 app.use(urlencoded({ extended: false }));
 
-// io.use((socket, next) => {
-//   if (socket.handshake.query && socket.handshake.query.token) {
-//     jwt.verify(
-//       socket.handshake.query.token.toString(),
-//       env.get().jwtSecret,
-//       (err, decoded) => {
-//         if (err) {
-//           return next(new Error("Authentication Error"));
-//         } else {
-//           (socket as any).decoded = decoded;
-//           next();
-//         }
-//       }
-//     );
-//   } else {
-//     next(new Error("Authentication Error: no query token present"));
-//   }
-// });
+io.use((socket, next) => {
+  if (socket.handshake.query && socket.handshake.query.token) {
+    jwt.verify(
+      socket.handshake.query.token.toString(),
+      env.get().jwtSecret,
+      (err, decoded) => {
+        if (err) {
+          return next(new Error("Authentication Error"));
+        } else {
+          (socket as any).decoded = decoded;
+          next();
+        }
+      }
+    );
+  } else {
+    next(new Error("Authentication Error: no query token present"));
+  }
+});
 
 io.on("connection", (socket) => {
-  // const user = (socket as any).decoded;
-  const user = { username: 'localhost' };
-  logger.info(`user '${user.username}' (${socket.handshake.address}) connected and verified`);
+  const user = (socket as any).decoded;
+  logger.info(
+    `user '${user.username}' (${socket.handshake.address}) connected and verified`
+  );
 
   socket.on("rooms", (rooms: string[]) => {
-    logger.info(`user ${user.username} (${socket.handshake.address}) joining rooms ${rooms}`);
+    logger.info(
+      `user ${user.username} (${socket.handshake.address}) joining rooms ${rooms}`
+    );
     assignRooms(rooms, socket);
   });
 
   socket.on("disconnect", (reason: string) => {
-    logger.info(`user ${user.username} (${socket.handshake.address}) disconnected: ${reason}`);
+    logger.info(
+      `user ${user.username} (${socket.handshake.address}) disconnected: ${reason}`
+    );
     leaveRooms(socket);
   });
 

@@ -1,5 +1,6 @@
 import { CarbonCaptureDetails } from './details';
 import { EventSchedule, ScheduleItem, TournamentType } from './Schedule';
+import { Team } from './Team';
 import { isArray, isNonNullObject, isNumber, isString } from './types';
 
 // Tournament Levels
@@ -100,6 +101,7 @@ export interface MatchParticipant {
   surrogate: number;
   noShow: number;
   allianceKey: string;
+  team?: Team;
 }
 
 export const isMatchParticipant = (obj: unknown): obj is MatchParticipant =>

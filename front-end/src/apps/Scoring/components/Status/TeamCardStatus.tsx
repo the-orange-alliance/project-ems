@@ -1,15 +1,18 @@
-import { FC, useState, useCallback } from 'react';
+import { FC, useCallback } from 'react';
 import Button from '@mui/material/Button';
 
-const TeamCardStatus: FC = () => {
-  const [state, setState] = useState(0);
+interface Props {
+  cardStatus: number;
+  onChange: (status: number) => void;
+}
 
+const TeamCardStatus: FC<Props> = ({ cardStatus, onChange }) => {
   const toggle = () => {
-    setState((prev) => (prev >= 2 ? 0 : prev + 1));
+    onChange(cardStatus >= 2 ? 0 : cardStatus + 1);
   };
 
   const renderText = useCallback(() => {
-    switch (state) {
+    switch (cardStatus) {
       case 0:
         return 'NO CARD';
       case 1:
@@ -19,10 +22,10 @@ const TeamCardStatus: FC = () => {
       default:
         return 'NO CARD';
     }
-  }, [state]);
+  }, [cardStatus]);
 
   const getClass = () => {
-    switch (state) {
+    switch (cardStatus) {
       case 0:
         return 'no-card';
       case 1:

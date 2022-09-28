@@ -78,7 +78,7 @@ export function sendPrestart(matchKey: string): void {
 }
 
 export function setDisplays(): void {
-  socket?.emit('match:display');
+  socket?.emit('match:display', 2);
 }
 
 export async function prepareField(
@@ -213,7 +213,7 @@ export async function endGameFlash(carbonPoints: number): Promise<void> {
   }
 }
 
-export async function commitScoresLED(): Promise<void> {
+export async function sendCommitScores(): Promise<void> {
   socket?.emit('fcs:update', setLEDLength(120));
   await new Promise((resolve) => setTimeout(resolve, 250));
   socket?.emit('fcs:update', LED_ALLCLEAR);
@@ -221,6 +221,10 @@ export async function commitScoresLED(): Promise<void> {
 export function calcLedFromCm(carbon: number) {
   return Math.min(Math.floor(Math.max(carbon, 0) / 1.527), 108);
   // return 50;
+}
+
+export async function sendPostResults(): Promise<void> {
+  socket?.emit('match:display', 3);
 }
 
 export default socket;

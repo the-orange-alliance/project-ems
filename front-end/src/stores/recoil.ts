@@ -27,7 +27,9 @@ import {
   MatchParticipant,
   MatchTimer,
   isMatch,
-  getTournamentLevelFromType
+  getTournamentLevelFromType,
+  MatchDetails,
+  defaultCarbonCaptureDetails
 } from '@toa-lib/models';
 import {
   atom,
@@ -152,6 +154,14 @@ export const teamsAtom = atom<Team[]>({
       }
     }
   })
+});
+
+export const teamByTeamKey = selectorFamily<Team | undefined, number>({
+  key: 'teamByTeamKeySelectorFamily',
+  get:
+    (teamKey: number) =>
+    ({ get }) =>
+      get(teamsAtom).find((t) => t.teamKey === teamKey)
 });
 
 export const teamsInScheduleSelectorFamily = selectorFamily<
@@ -330,12 +340,12 @@ export const matchTimeAtom = atom({
   default: timer.timeLeft
 });
 
-// TODO - think about how this goes into play...
-export const matchInProgressAtom = atomFamily<Match | null, string>({
-  key: 'matchInProgressAtom',
-  default: selectorFamily<Match | null, string>({
-    key: 'matchInProgressAtomSelector',
-    get: (matchKey: string) => async () => {
+export const matchInProgress = atom<Match | null>({
+  key: 'matchInProgress',
+  default: selector<Match | null>({
+    key: 'matchInProgressSelector',
+    get: async ({ get }) => {
+      const matchKey = get(loadedMatchKey);
       try {
         return await clientFetcher(
           `match/all/${matchKey}`,
@@ -344,10 +354,70 @@ export const matchInProgressAtom = atomFamily<Match | null, string>({
           isMatch
         );
       } catch (e) {
+        // TODO - better error-handling
         return null;
       }
     }
   })
+});
+
+export const matchInProgressParticipants = selector<
+  MatchParticipant[] | undefined
+>({
+  key: 'matchInProgressParticipants',
+  get: ({ get }) => get(matchInProgress)?.participants || [],
+  set: ({ set, get }, defaultValue) => {
+    const participants =
+      defaultValue instanceof DefaultValue ? [] : defaultValue;
+    const oldMatch: Match | null = get(matchInProgress);
+    const newMatch: Match | null = Object.assign({}, oldMatch);
+    newMatch.participants = participants;
+    if (newMatch) {
+      set(matchInProgress, newMatch);
+    }
+  }
+});
+
+export const matchInProgressParticipantByKey = selectorFamily<
+  MatchParticipant | undefined,
+  string
+>({
+  key: 'matchInProgressParticipantByKeySelectorFamily',
+  set:
+    (participantKey: string) =>
+    ({ set, get }, newValue) => {
+      const oldParticipants = get(matchInProgressParticipants);
+      if (newValue instanceof DefaultValue || !newValue || !oldParticipants)
+        return;
+      const index = oldParticipants?.findIndex(
+        (p) => p.matchParticipantKey === participantKey
+      );
+      if (index < 0) return;
+      set(matchInProgressParticipants, [
+        ...oldParticipants.slice(0, index),
+        newValue,
+        ...oldParticipants.slice(index + 1)
+      ]);
+    },
+  get:
+    (participantKey: string) =>
+    ({ get }) =>
+      get(matchInProgressParticipants)?.find(
+        (p) => p.matchParticipantKey === participantKey
+      )
+});
+
+export const matchInProgressDetails = selector<MatchDetails | null>({
+  key: 'matchInProgressDetails',
+  get: ({ get }) => get(matchInProgress)?.details || null,
+  set: ({ set, get }, defaultValue) => {
+    const details = defaultValue instanceof DefaultValue ? null : defaultValue;
+    const oldMatch = get(matchInProgress);
+    const newMatch = Object.assign({}, oldMatch);
+    if (newMatch && details) {
+      set(matchInProgress, { ...newMatch, details });
+    }
+  }
 });
 
 /* FIELD SECTION */
@@ -374,4 +444,9 @@ export const fieldCountdownStyle = atom({
 export const fieldCountdownDuration = atom({
   key: 'fieldCountdownDurationAtom',
   default: 3000 // in ms
+});
+/* AUDIENCE DISPLAY SECTION */
+export const displayID = atom({
+  key: 'displayIDAtom',
+  default: 0
 });

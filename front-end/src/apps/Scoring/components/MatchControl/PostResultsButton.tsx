@@ -4,6 +4,7 @@ import { useButtonState } from '../../util/ButtonState';
 import { useSetRecoilState } from 'recoil';
 import { matchStateAtom } from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
+import { sendPostResults } from 'src/api/SocketProvider';
 
 const PostResultsButton: FC = () => {
   const setState = useSetRecoilState(matchStateAtom);
@@ -11,7 +12,7 @@ const PostResultsButton: FC = () => {
   const { postResultsEnabled } = useButtonState();
 
   const postResults = () => {
-    // commitScores();
+    sendPostResults();
     setState(MatchState.RESULTS_POSTED);
   };
 

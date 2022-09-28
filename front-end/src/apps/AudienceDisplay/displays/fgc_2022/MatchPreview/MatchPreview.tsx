@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
-import { loadedMatchKey, matchInProgressAtom } from 'src/stores/Recoil';
+import { matchInProgress } from 'src/stores/Recoil';
 import './MatchPreview.css';
 
 import FGC_BG from '../res/global-bg.png';
@@ -15,17 +15,23 @@ const Participant: FC<{ participant: MatchParticipant }> = ({
   return (
     <div className='pre-match-alliance-row pre-match-border'>
       <div className={'pre-match-flag'}>
-        <span className={'flag-icon flag-border flag-icon-az'} />
+        <span
+          className={
+            'flag-icon flag-border flag-icon-' +
+            participant?.team?.countryCode.toLowerCase()
+          }
+        />
       </div>
-      <div className={'pre-match-team'}>(AZU)&nbsp;(Team Afhanistan)</div>
+      <div className={'pre-match-team'}>
+        ({participant?.team?.country})&nbsp;{participant?.team?.teamNameLong}
+      </div>
       <div className='pre-match-rank'>#5</div>
     </div>
   );
 };
 
 const MatchPreview: FC = () => {
-  const matchKey = useRecoilValue(loadedMatchKey);
-  const match = useRecoilValue(matchInProgressAtom(matchKey || ''));
+  const match = useRecoilValue(matchInProgress);
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
