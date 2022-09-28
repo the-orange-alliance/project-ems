@@ -119,7 +119,6 @@ export async function prepareField(
       default:
         break;
     }
-    // countdown();
     socket?.emit('fcs:update', MOTOR_FORWARD);
     setTimeout(() => {
       socket?.emit('fcs:update', MOTOR_DISABLE);
@@ -140,15 +139,14 @@ export function sendAbortMatch(): void {
 
 /* TODO - this is game-specific */
 export async function updateSink(carbonPoints: number): Promise<void> {
-  console.log("REV TEST");
-
   const normalized = calcLedFromCm(carbonPoints);
-  console.log(normalized);
-  // const normalized = Math.min(Math.max(carbonPoints, 0), 120);
   socket?.emit('fcs:update', setLEDLength(normalized));
   await new Promise((resolve) => setTimeout(resolve, 250));
   if (carbonPoints >= COOPERTITION) {
     socket?.emit('fcs:update', LED_COOPERTITION);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  } else {
+    socket?.emit('fcs:update', LED_CARBON);
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
 }

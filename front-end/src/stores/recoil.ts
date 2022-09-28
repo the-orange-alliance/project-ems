@@ -445,6 +445,14 @@ export const fieldCountdownDuration = atom({
   key: 'fieldCountdownDurationAtom',
   default: 3000 // in ms
 });
+export const fieldMatchOverStyle = atom({
+  key: 'fieldMatchOverStyleAtom',
+  default: 'carbon'
+});
+export const fieldMatchOverLEDPattern = atom({
+  key: 'fieldMatchOverLEDPatternAtom',
+  default: 'carbon'
+});
 /* AUDIENCE DISPLAY SECTION */
 export const displayID = atom({
   key: 'displayIDAtom',

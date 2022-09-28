@@ -15,7 +15,7 @@ import {
   fieldEndgameHB,
   fieldEndgameStartDuration,
   fieldCountdownStyle,
-  fieldCountdownDuration
+  fieldCountdownDuration, fieldMatchOverStyle, fieldMatchOverLEDPattern
 } from 'src/stores/Recoil';
 import MenuItem from '@mui/material/MenuItem';
 
@@ -31,6 +31,11 @@ const SettingsApp: FC = () => {
     useRecoilState(fieldCountdownStyle);
   const [countdownDuration, setCountdownDuration] = useRecoilState(
     fieldCountdownDuration
+  );
+  const [matchOverStyle, setMatchOverStyle] =
+    useRecoilState(fieldMatchOverStyle);
+  const [matchOverLEDPattern, setMatchOverLEDPattern] = useRecoilState(
+    fieldMatchOverLEDPattern
   );
 
   const changeDarkMode = (): void => {
@@ -54,6 +59,12 @@ const SettingsApp: FC = () => {
   };
   const changeCountdownDuration = (event: ChangeEvent<HTMLInputElement>) => {
     setCountdownDuration(parseInt(event.target.value));
+  };
+  const changeMatchOverStyle = (event: SelectChangeEvent) => {
+    setMatchOverStyle(event.target.value);
+  };
+  const changeMatchOverLEDPattern = (event: SelectChangeEvent) => {
+    setMatchOverLEDPattern(event.target.value);
   };
 
   return (
@@ -228,6 +239,33 @@ const SettingsApp: FC = () => {
               label={
                 <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
                   Countdown Style
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Select
+                  value={matchOverStyle}
+                  label='Style'
+                  onChange={changeMatchOverStyle}
+                >
+                  <MenuItem value={'style1'}>Countdown</MenuItem>
+                  <MenuItem value={'style2'}>Race Light</MenuItem>
+                </Select>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Match Over Style
                 </Typography>
               }
               labelPlacement='start'
