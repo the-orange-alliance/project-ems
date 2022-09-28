@@ -451,7 +451,7 @@ export const fieldMatchOverStyle = atom({
 });
 export const fieldMatchOverLEDPattern = atom({
   key: 'fieldMatchOverLEDPatternAtom',
-  default: 'carbon'
+  default: 1
 });
 /* AUDIENCE DISPLAY SECTION */
 export const displayID = atom({

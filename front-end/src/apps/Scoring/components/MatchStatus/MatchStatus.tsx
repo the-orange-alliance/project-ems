@@ -10,8 +10,8 @@ import {
   matchStateAtom
 } from 'src/stores/Recoil';
 import {
-  commitScoresLED,
-  endGameFlash, sendCommitScores,
+  endGameFlash,
+  matchOver,
   updateSink,
   useSocket
 } from 'src/api/SocketProvider';
@@ -60,12 +60,12 @@ const MatchStatus: FC = () => {
     const thisMatch = await snapshot.getPromise(matchInProgress);
     endGameFlash((thisMatch?.details as any)?.carbonPoints);
   });
-  const onMatchEnd = () => {
+  const onMatchEnd = useRecoilCallback(({ snapshot }) => async () => {
     setMode('MATCH END');
     setState(MatchState.MATCH_COMPLETE);
-    //TODO change this to correct LED pattern
-    sendCommitScores();
-  };
+    const thisMatch = await snapshot.getPromise(matchInProgress);
+    matchOver((thisMatch?.details as any)?.carbonPointts);
+  });
   const onMatchAbort = () => {
     setMode('MATCH ABORTED');
   };

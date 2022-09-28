@@ -18,6 +18,26 @@ import {
   fieldCountdownDuration, fieldMatchOverStyle, fieldMatchOverLEDPattern
 } from 'src/stores/Recoil';
 import MenuItem from '@mui/material/MenuItem';
+import {
+  LED_COLOR_AQUA,
+  LED_COLOR_BLACK,
+  LED_COLOR_BLUE,
+  LED_COLOR_BLUE_GREEN,
+  LED_COLOR_BLUE_VIOLET,
+  LED_COLOR_DARK_BLUE, LED_COLOR_DARK_GRAY,
+  LED_COLOR_DARK_GREEN,
+  LED_COLOR_DARK_RED,
+  LED_COLOR_GOLD, LED_COLOR_GRAY,
+  LED_COLOR_GREEN,
+  LED_COLOR_LAWN_GREEN,
+  LED_COLOR_LIME,
+  LED_COLOR_ORANGE,
+  LED_COLOR_PINK,
+  LED_COLOR_RED,
+  LED_COLOR_RED_ORANGE,
+  LED_COLOR_SKY_BLUE, LED_COLOR_VIOLET, LED_COLOR_WHITE,
+  LED_COLOR_YELLOW
+} from "@toa-lib/models";
 
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
@@ -64,7 +84,7 @@ const SettingsApp: FC = () => {
     setMatchOverStyle(event.target.value);
   };
   const changeMatchOverLEDPattern = (event: SelectChangeEvent) => {
-    setMatchOverLEDPattern(event.target.value);
+    setMatchOverLEDPattern(parseInt(event.target.value));
   };
 
   return (
@@ -259,8 +279,56 @@ const SettingsApp: FC = () => {
                   label='Style'
                   onChange={changeMatchOverStyle}
                 >
-                  <MenuItem value={'style1'}>Countdown</MenuItem>
-                  <MenuItem value={'style2'}>Race Light</MenuItem>
+                  <MenuItem value={'carbon'}>Carbon</MenuItem>
+                  <MenuItem value={'full'}>Full Tower</MenuItem>
+                </Select>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Match Over Style
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Select
+                  value={matchOverLEDPattern as unknown as string}
+                  label='Style'
+                  onChange={changeMatchOverLEDPattern}
+                >
+                  <MenuItem value={1}>Carbon</MenuItem>
+                  <MenuItem value={LED_COLOR_YELLOW}>Yellow</MenuItem>
+                  <MenuItem value={LED_COLOR_BLACK}>Black</MenuItem>
+                  <MenuItem value={LED_COLOR_PINK}>Pink</MenuItem>
+                  <MenuItem value={LED_COLOR_DARK_RED}>Dark Red</MenuItem>
+                  <MenuItem value={LED_COLOR_RED}>Red</MenuItem>
+                  <MenuItem value={LED_COLOR_RED_ORANGE}>Red Orange</MenuItem>
+                  <MenuItem value={LED_COLOR_ORANGE}>Orange</MenuItem>
+                  <MenuItem value={LED_COLOR_GOLD}>Gold</MenuItem>
+                  <MenuItem value={LED_COLOR_LAWN_GREEN}>Lawn Green</MenuItem>
+                  <MenuItem value={LED_COLOR_LIME}>Lime</MenuItem>
+                  <MenuItem value={LED_COLOR_DARK_GREEN}>Dark Green</MenuItem>
+                  <MenuItem value={LED_COLOR_GREEN}>Green</MenuItem>
+                  <MenuItem value={LED_COLOR_BLUE_GREEN}>Blue Green</MenuItem>
+                  <MenuItem value={LED_COLOR_AQUA}>Aqua</MenuItem>
+                  <MenuItem value={LED_COLOR_SKY_BLUE}>Sky Blue</MenuItem>
+                  <MenuItem value={LED_COLOR_DARK_BLUE}>Dark Blue</MenuItem>
+                  <MenuItem value={LED_COLOR_BLUE}>Blue</MenuItem>
+                  <MenuItem value={LED_COLOR_BLUE_VIOLET}>Blue Violet</MenuItem>
+                  <MenuItem value={LED_COLOR_VIOLET}>Violet</MenuItem>
+                  <MenuItem value={LED_COLOR_WHITE}>White</MenuItem>
+                  <MenuItem value={LED_COLOR_GRAY}>Gray</MenuItem>
+                  <MenuItem value={LED_COLOR_DARK_GRAY}>Dark Gray</MenuItem>
                 </Select>
               }
               label={

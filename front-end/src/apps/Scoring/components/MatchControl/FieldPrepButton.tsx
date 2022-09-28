@@ -7,7 +7,7 @@ import {
   fieldCountdownStyle,
   fieldEndgameHB,
   fieldEndgameStart,
-  fieldEndgameStartDuration,
+  fieldEndgameStartDuration, fieldMatchOverLEDPattern, fieldMatchOverStyle,
   fieldMotorDuration,
   matchStateAtom
 } from 'src/stores/Recoil';
@@ -22,6 +22,8 @@ const FieldPrepButton: FC = () => {
   const egDuration = useRecoilValue(fieldEndgameStartDuration);
   const cdStyle = useRecoilValue(fieldCountdownStyle);
   const cdDuration = useRecoilValue(fieldCountdownDuration);
+  const moStyle = useRecoilValue(fieldMatchOverStyle);
+  const moPattern = useRecoilValue(fieldMatchOverLEDPattern);
 
   const { fieldPrepEnabled } = useButtonState();
 
@@ -35,7 +37,9 @@ const FieldPrepButton: FC = () => {
       egSpeed,
       egDuration,
       cdStyle,
-      cdDuration
+      cdDuration,
+      moStyle,
+      moPattern
     );
     setState(MatchState.FIELD_READY);
     setState(MatchState.MATCH_READY);
