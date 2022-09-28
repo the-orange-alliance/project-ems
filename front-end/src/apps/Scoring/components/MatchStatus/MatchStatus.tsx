@@ -3,11 +3,10 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { useRecoilCallback, useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilCallback, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   loadedMatch,
-  loadedMatchKey,
-  matchInProgressAtom,
+  matchInProgress,
   matchStateAtom
 } from 'src/stores/Recoil';
 import { endGameFlash, updateSink, useSocket } from 'src/api/SocketProvider';
@@ -17,10 +16,6 @@ import { isCarbonCaptureDetails, Match, MatchState } from '@toa-lib/models';
 const MatchStatus: FC = () => {
   const selectedMatch = useRecoilValue(loadedMatch);
   const setState = useSetRecoilState(matchStateAtom);
-
-  const [match, setMatch] = useRecoilState(
-    matchInProgressAtom(selectedMatch?.matchKey || '')
-  );
 
   const [mode, setMode] = useState('NOT READY');
 
@@ -57,8 +52,7 @@ const MatchStatus: FC = () => {
   const onMatchTele = () => setMode('TELEOPERATED');
   const onMatchEndGame = useRecoilCallback(({ snapshot }) => async () => {
     setMode('ENDGAME');
-    const matchKey = await snapshot.getPromise(loadedMatchKey);
-    const thisMatch = await snapshot.getPromise(matchInProgressAtom(matchKey || ''))
+    const thisMatch = await snapshot.getPromise(matchInProgress);
     endGameFlash((thisMatch?.details as any)?.carbonPoints);
   });
   const onMatchEnd = () => {
@@ -72,8 +66,8 @@ const MatchStatus: FC = () => {
     if (match.details && isCarbonCaptureDetails(match.details)) {
       updateSink(match.details.carbonPoints);
     }
-    set(matchInProgressAtom(match.matchKey), match);
-  })
+    set(matchInProgress, match);
+  });
 
   return (
     <Paper sx={{ paddingBottom: (theme) => theme.spacing(2), height: '100%' }}>

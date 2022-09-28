@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
-import { loadedMatchKey, matchInProgressAtom } from 'src/stores/Recoil';
+import { matchInProgressDetails, matchInProgress } from 'src/stores/Recoil';
 import './MatchResults.css';
 
 import FGC_BG from '../res/global-bg.png';
@@ -8,7 +8,11 @@ import RED_WIN from '../res/Red_Win_Top.png';
 import RED_LOSE from '../res/Red_Lose_Top.png';
 import BLUE_WIN from '../res/Blue_Win_Top.png';
 import BLUE_LOSE from '../res/Blue_Lose_Top.png';
-import { MatchParticipant } from '@toa-lib/models';
+import {
+  defaultCarbonCaptureDetails,
+  isCarbonCaptureDetails,
+  MatchParticipant
+} from '@toa-lib/models';
 
 const Participant: FC<{ participant: MatchParticipant }> = ({
   participant
@@ -30,19 +34,32 @@ const Participant: FC<{ participant: MatchParticipant }> = ({
 };
 
 const MatchResults: FC = () => {
-  const matchKey = useRecoilValue(loadedMatchKey);
-  const match = useRecoilValue(matchInProgressAtom(matchKey || ''));
+  const match = useRecoilValue(matchInProgress);
+  const someDetails = useRecoilValue(matchInProgressDetails);
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
-  const details = match?.details || {};
+  const details = isCarbonCaptureDetails(someDetails)
+    ? someDetails
+    : defaultCarbonCaptureDetails;
 
   const redScore = match?.redScore || 0;
   const blueScore = match?.blueScore || 0;
 
   const redTop = redScore > blueScore ? RED_WIN : RED_LOSE;
   const blueTop = blueScore > redScore ? BLUE_WIN : BLUE_LOSE;
+
+  const redStorage = [
+    details.redRobotOneStorage,
+    details.redRobotTwoStorage,
+    details.redRobotTwoStorage
+  ];
+  const blueStorage = [
+    details.blueRobotOneStorage,
+    details.blueRobotTwoStorage,
+    details.blueRobotThreeStorage
+  ];
 
   return (
     <div id='fgc-body' style={{ backgroundImage: `url(${FGC_BG})` }}>
@@ -73,7 +90,7 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={''} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>CARBON POINTS</div>
-                  <div className='res-detail-right'>0</div>
+                  <div className='res-detail-right'>{details.carbonPoints}</div>
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
@@ -82,7 +99,9 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-red'>
                     STORAGE LEVEL 1
                   </div>
-                  <div className='res-detail-right'>0</div>
+                  <div className='res-detail-right'>
+                    {redStorage.filter((s) => s === 1).length}
+                  </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
@@ -91,7 +110,9 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-red'>
                     STORAGE LEVEL 2
                   </div>
-                  <div className='res-detail-right'>0</div>
+                  <div className='res-detail-right'>
+                    {redStorage.filter((s) => s === 2).length}
+                  </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
@@ -100,7 +121,9 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-red'>
                     STORAGE LEVEL 3
                   </div>
-                  <div className='res-detail-right'>0</div>
+                  <div className='res-detail-right'>
+                    {redStorage.filter((s) => s === 3).length}
+                  </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
@@ -109,7 +132,9 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-red'>
                     STORAGE LEVEL 4
                   </div>
-                  <div className='res-detail-right'>YES</div>
+                  <div className='res-detail-right'>
+                    {redStorage.filter((s) => s === 4).length}
+                  </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
@@ -118,7 +143,9 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-red'>
                     COOPERTITION BONUS
                   </div>
-                  <div className='res-detail-right'>{match?.redScore}</div>
+                  <div className='res-detail-right'>
+                    +{details.coopertitionBonusLevel * 100}
+                  </div>
                 </div>
                 <div className='res-detail-row'>
                   <div className='res-detail-icon'>
@@ -160,7 +187,7 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-blue'>
                     CARBON POINTS
                   </div>
-                  <div className='res-detail-right'>0</div>
+                  <div className='res-detail-right'>{details.carbonPoints}</div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
@@ -169,7 +196,9 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-blue'>
                     STORAGE LEVEL 1
                   </div>
-                  <div className='res-detail-right'>0</div>
+                  <div className='res-detail-right'>
+                    {blueStorage.filter((s) => s === 1).length}
+                  </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
@@ -178,7 +207,9 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-blue'>
                     STORAGE LEVEL 2
                   </div>
-                  <div className='res-detail-right'>0</div>
+                  <div className='res-detail-right'>
+                    {blueStorage.filter((s) => s === 2).length}
+                  </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
@@ -187,7 +218,9 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-blue'>
                     STORAGE LEVEL 3
                   </div>
-                  <div className='res-detail-right'>0</div>
+                  <div className='res-detail-right'>
+                    {blueStorage.filter((s) => s === 3).length}
+                  </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
@@ -196,7 +229,9 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-blue'>
                     STORAGE LEVEL 4
                   </div>
-                  <div className='res-detail-right'>YES</div>
+                  <div className='res-detail-right'>
+                    {blueStorage.filter((s) => s === 4).length}
+                  </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
@@ -205,7 +240,9 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-blue'>
                     COOPERTITION BONUS
                   </div>
-                  <div className='res-detail-right'>{match?.blueScore}</div>
+                  <div className='res-detail-right'>
+                    +{details.coopertitionBonusLevel}
+                  </div>
                 </div>
                 <div className='res-detail-row'>
                   <div className='res-detail-icon'>
