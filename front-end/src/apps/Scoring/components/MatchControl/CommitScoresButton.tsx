@@ -21,7 +21,6 @@ const CommitScoresButton: FC = () => {
     const match = await snapshot.getPromise(matchInProgress);
     if (!match || !match.details || !match.participants) return;
     setLoading(true);
-    console.log(match);
     await patchWholeMatch(match);
     set(matchByMatchKey(match.matchKey), match);
     setLoading(false);
