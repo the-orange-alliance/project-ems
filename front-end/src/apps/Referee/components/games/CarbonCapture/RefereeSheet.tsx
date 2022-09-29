@@ -10,8 +10,8 @@ import {
   matchInProgress,
   matchInProgressParticipantByKey
 } from 'src/stores/Recoil';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { MatchParticipant } from '@toa-lib/models';
+import { useRecoilState } from 'recoil';
+import { CarbonCaptureDetails, MatchParticipant } from '@toa-lib/models';
 import NumberInput from '../../NumberInput';
 import { useSocket } from 'src/api/SocketProvider';
 
@@ -19,10 +19,9 @@ const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
   const [participant, setParticipant] = useRecoilState(
     matchInProgressParticipantByKey(participantKey)
   );
-  const match = useRecoilValue(matchInProgress);
+  const [match, setMatch] = useRecoilState(matchInProgress);
   const [updateReady, setUpdateReady] = useState(false);
   const [socket] = useSocket();
-  const [storageLevel, setStorageLevel] = useState(0);
 
   useEffect(() => {
     if (updateReady) {
@@ -36,7 +35,50 @@ const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
     newStorageLevel: number
   ) => {
     if (newStorageLevel !== null) {
-      setStorageLevel(newStorageLevel);
+      const newMatch = Object.assign({}, match);
+      const details = match?.details as CarbonCaptureDetails;
+      // TODO(jan): find a better way to do this
+      switch (participant?.station) {
+        case 11:
+          newMatch.details = {
+            ...details,
+            redRobotOneStorage: newStorageLevel || 0
+          };
+          break;
+        case 12:
+          newMatch.details = {
+            ...details,
+            redRobotTwoStorage: newStorageLevel || 0
+          };
+          break;
+        case 13:
+          newMatch.details = {
+            ...details,
+            redRobotThreeStorage: newStorageLevel || 0
+          };
+          break;
+        case 21:
+          newMatch.details = {
+            ...details,
+            blueRobotOneStorage: newStorageLevel || 0
+          };
+          break;
+        case 22:
+          newMatch.details = {
+            ...details,
+            blueRobotTwoStorage: newStorageLevel || 0
+          };
+          break;
+        case 23:
+          newMatch.details = {
+            ...details,
+            blueRobotThreeStorage: newStorageLevel || 0
+          };
+          break;
+        default:
+      }
+      setMatch(newMatch);
+      setUpdateReady(true);
     }
   };
 
@@ -63,7 +105,25 @@ const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
     } else {
       handleCardChange(2);
     }
-  }
+  };
+
+  const getStorageLevel = () => {
+    const details = match?.details as CarbonCaptureDetails;
+    switch (participant?.station) {
+      case 11:
+        return details.redRobotOneStorage;
+      case 12:
+        return details.redRobotTwoStorage;
+      case 13:
+        return details.redRobotThreeStorage;
+      case 21:
+        return details.blueRobotOneStorage;
+      case 22:
+        return details.blueRobotTwoStorage;
+      case 23:
+        return details.blueRobotThreeStorage;
+    }
+  };
 
   return (
     <Box
@@ -89,7 +149,7 @@ const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
         <ToggleButtonGroup
           fullWidth
           color='primary'
-          value={storageLevel}
+          value={getStorageLevel()}
           onChange={handleStorageLevel}
           exclusive
         >
