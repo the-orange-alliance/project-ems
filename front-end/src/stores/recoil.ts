@@ -455,12 +455,17 @@ export const fieldMatchOverLEDPattern = atom({
 
 export const fieldColor1 = atom({
   key: 'fieldColor1Atom',
-  default: 1
+  default: 1965
 });
 
 export const fieldColor2 = atom({
   key: 'fieldColor2Atom',
-  default: 1
+  default: 1955
+});
+
+export const fieldTotalSetupDuration = atom({
+  key: 'fieldTotalSetupDurationAtom',
+  default: 10000
 });
 /* AUDIENCE DISPLAY SECTION */
 export const displayID = atom({

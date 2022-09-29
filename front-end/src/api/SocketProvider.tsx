@@ -1,4 +1,4 @@
-import {createSocket} from '@toa-lib/client';
+import { createSocket } from '@toa-lib/client';
 import {
   LED_ALLCLEAR,
   LED_CARBON,
@@ -6,23 +6,34 @@ import {
   LED_COUNTDOWN,
   LED_FIELDFAULT,
   LED_PRESTART,
-  MatchState,
   MOTOR_DISABLE,
   MOTOR_FORWARD,
   setLEDLength,
   setLEDPattern
 } from '@toa-lib/models';
-import {Socket} from 'socket.io-client';
-import {useRecoilState} from 'recoil';
-import {socketConnectedAtom} from 'src/stores/Recoil';
+import { Socket } from 'socket.io-client';
+import { useRecoilState } from 'recoil';
+import { socketConnectedAtom } from 'src/stores/Recoil';
 
+let LEDEndgame = false;
+let LEDMatchOver = false;
 let socket: Socket | null = null;
 let endGameStartSpeed: number;
 let endGameSpeed: number;
 let endGameDuration: number;
 let matchOverPattern: number;
 let matchOverStlye: string | null;
+let carbonColor = false;
+let LED_COLOR1: number;
+let LED_COLOR2: number;
+
 const COOPERTITION: number = 165 * 0.66;
+export function setLEDEndgame(state: boolean) {
+  LEDEndgame = state;
+}
+export function setLEDMatchOver(state: boolean) {
+  LEDMatchOver = state;
+}
 export function destroySocket() {
   socket?.off('connect');
   socket?.off('disconnect');
@@ -81,7 +92,7 @@ export function setDisplays(): void {
 
 export function sendStartMatch(): void {
   socket?.emit('match:start');
-  socket?.emit('fcs:update', LED_CARBON);
+  socket?.emit('fcs:update', setLEDPattern(LED_COLOR1));
 }
 
 export async function prepareField(
@@ -92,46 +103,52 @@ export async function prepareField(
   cdStyle: string,
   cdDuration: number,
   moStyle: string,
-  moPattern: number
+  moPattern: number,
+  color1: number,
+  color2: number,
+  tSetupDuration: number
 ): Promise<void> {
-  socket?.emit('fcs:update', LED_COUNTDOWN);
-  await new Promise((resolve) => setTimeout(resolve, 250));
   endGameStartSpeed = endgameStartHBSpeed;
   endGameSpeed = endGameHBSpeed;
   endGameDuration = egDuration;
   matchOverStlye = moStyle;
   matchOverPattern = moPattern;
-  return new Promise((resolve) => {
-    const countdown = async () => {
-      for (let i = 108; i >= 0; i = i - Math.min(108 / (cdDuration / 100))) {
-        socket?.emit('fcs:update', setLEDLength(i));
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-    };
-    const raceLight = async () => {
-      for (let i = 108; i >= 0; i = i - Math.min(108 / 3)) {
-        socket?.emit('fcs:update', setLEDLength(i));
-        await new Promise((resolve) =>
-          setTimeout(resolve, Math.min(cdDuration / 3))
-        );
-      }
-    };
-    switch (cdStyle) {
-      case 'style1':
-        countdown();
-        break;
-      case 'style2':
-        raceLight();
-        break;
-      default:
-        break;
+  LED_COLOR1 = color1;
+  LED_COLOR2 = color2;
+  setLEDEndgame(false);
+  setLEDMatchOver(false);
+  socket?.emit('fcs:update', setLEDPattern(LED_COLOR2));
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const countdown = async () => {
+    for (let i = 108; i >= 0; i = i - Math.min(108 / (cdDuration / 100))) {
+      socket?.emit('fcs:update', setLEDLength(i));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    socket?.emit('fcs:update', MOTOR_FORWARD);
-    setTimeout(() => {
-      socket?.emit('fcs:update', MOTOR_DISABLE);
-      resolve();
-    }, duration);
-  });
+  };
+  const raceLight = async () => {
+    for (let i = 108; i >= 0; i = i - Math.min(108 / 3)) {
+      socket?.emit('fcs:update', setLEDLength(i));
+      await new Promise((resolve) => setTimeout(resolve, cdDuration / 3));
+    }
+  };
+  socket?.emit('fcs:update', MOTOR_FORWARD);
+  setTimeout(() => {
+    socket?.emit('fcs:update', MOTOR_DISABLE);
+  }, duration);
+  await new Promise((resolve) =>
+    setTimeout(resolve, Math.max(tSetupDuration - cdDuration, 0))
+  );
+  switch (cdStyle) {
+    case 'style1':
+      await countdown();
+      break;
+    case 'style2':
+      await raceLight();
+      break;
+    default:
+      break;
+  }
+  return;
 }
 
 export function sendAbortMatch(): void {
@@ -140,31 +157,34 @@ export function sendAbortMatch(): void {
 }
 
 /* TODO - this is game-specific */
-export async function updateSink(carbonPoints: number, state: string): Promise<void> {
-  // console.log(state);
+export async function updateSink(carbonPoints: number): Promise<void> {
   const normalized = calcLedFromCm(carbonPoints);
-  const endgame = (state == "ENDGAME");
   socket?.emit('fcs:update', setLEDLength(normalized));
   await new Promise((resolve) => setTimeout(resolve, 250));
-  if (carbonPoints >= COOPERTITION) {
-    if (endgame) {
+  if (carbonPoints >= COOPERTITION && (!carbonColor || LEDMatchOver)) {
+    carbonColor = true;
+    if (LEDEndgame) {
       socket?.emit('fcs:update', setLEDPattern(1600 + endGameSpeed));
     } else {
-      socket?.emit('fcs:update', LED_COOPERTITION);
+      socket?.emit('fcs:update', setLEDPattern(LED_COLOR2));
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   } else {
-    if (endgame) {
-      socket?.emit('fcs:update', setLEDPattern(1500 + endGameSpeed));
-    } else {
-      socket?.emit('fcs:update', LED_CARBON);
+    if (carbonPoints < COOPERTITION && (carbonColor || LEDMatchOver)) {
+      carbonColor = false;
+      if (LEDEndgame) {
+        socket?.emit('fcs:update', setLEDPattern(1500 + endGameSpeed));
+      } else {
+        socket?.emit('fcs:update', setLEDPattern(LED_COLOR1));
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
     }
-    await new Promise((resolve) => setTimeout(resolve, 250));
   }
 }
 
 export async function endGameFlash(carbonPoints: number): Promise<void> {
   const led = calcLedFromCm(carbonPoints);
+  setLEDEndgame(true);
   socket?.emit('fcs:update', setLEDLength(120));
   await new Promise((resolve) => setTimeout(resolve, 250));
   if (carbonPoints >= COOPERTITION) {
@@ -172,31 +192,6 @@ export async function endGameFlash(carbonPoints: number): Promise<void> {
   } else {
     socket?.emit('fcs:update', setLEDPattern(1500 + endGameStartSpeed));
   }
-  // switch (endGameStartSpeed) {
-  //   case 'slow':
-  //     if (carbonPoints >= COOPERTITION) {
-  //       socket?.emit('fcs:update', LED_COLOR2_HB_SLOW);
-  //     } else {
-  //       socket?.emit('fcs:update', LED_COLOR1_HB_SLOW);
-  //     }
-  //     break;
-  //   case 'medium':
-  //     if (carbonPoints >= COOPERTITION) {
-  //       socket?.emit('fcs:update', LED_COLOR2_HB_MED);
-  //     } else {
-  //       socket?.emit('fcs:update', LED_COLOR1_HB_MED);
-  //     }
-  //     break;
-  //   case 'fast':
-  //     if (carbonPoints >= COOPERTITION) {
-  //       socket?.emit('fcs:update', LED_COLOR2_HB_FAST);
-  //     } else {
-  //       socket?.emit('fcs:update', LED_COLOR1_HB_FAST);
-  //     }
-  //     break;
-  //   default:
-  //     break;
-  // }
   await new Promise((resolve) => setTimeout(resolve, endGameDuration));
   socket?.emit('fcs:update', setLEDLength(led));
   await new Promise((resolve) => setTimeout(resolve, 250));
@@ -205,32 +200,6 @@ export async function endGameFlash(carbonPoints: number): Promise<void> {
   } else {
     socket?.emit('fcs:update', setLEDPattern(1500 + endGameSpeed));
   }
-  // break;
-  // switch (endGameSpeed) {
-  //   case 'slow':
-  //     if (carbonPoints >= COOPERTITION) {
-  //       socket?.emit('fcs:update', LED_COLOR2_HB_SLOW);
-  //     } else {
-  //       socket?.emit('fcs:update', LED_COLOR1_HB_SLOW);
-  //     }
-  //     break;
-  //   case 'medium':
-  //     if (carbonPoints >= COOPERTITION) {
-  //       socket?.emit('fcs:update', LED_COLOR2_HB_MED);
-  //     } else {
-  //       socket?.emit('fcs:update', LED_COLOR1_HB_MED);
-  //     }
-  //     break;
-  //   case 'fast':
-  //     if (carbonPoints >= COOPERTITION) {
-  //       socket?.emit('fcs:update', LED_COLOR2_HB_FAST);
-  //     } else {
-  //       socket?.emit('fcs:update', LED_COLOR1_HB_FAST);
-  //     }
-  //     break;
-  //   default:
-  //     break;
-  // }
 }
 
 export async function sendCommitScores(matchKey: string): Promise<void> {
@@ -241,13 +210,16 @@ export async function sendCommitScores(matchKey: string): Promise<void> {
 }
 
 export function calcLedFromCm(carbon: number) {
-  return Math.min(Math.floor(Math.max(carbon, 0) / 1.527), 108);
+  return Math.min(Math.floor(Math.max(carbon, 0) / 1.52), 108);
 }
 
 export async function matchOver(carbonPoints: number): Promise<void> {
+  const led = calcLedFromCm(carbonPoints);
+  setLEDEndgame(false);
+  setLEDMatchOver(true);
   switch (matchOverStlye) {
     case 'carbon':
-      updateSink(carbonPoints,"MATCH_OVER");
+      // socket?.emit('fcs:update', setLEDLength(led));
       break;
     case 'full':
       socket?.emit('fcs:update', setLEDLength(120));
@@ -256,9 +228,15 @@ export async function matchOver(carbonPoints: number): Promise<void> {
       break;
   }
   await new Promise((resolve) => setTimeout(resolve, 250));
+  console.log(matchOverPattern);
   switch (matchOverPattern) {
     case 1:
-      updateSink(carbonPoints, "MATCH_OVER");
+      if (carbonColor) {
+        socket?.emit('fcs:update', setLEDPattern(LED_COLOR2));
+      } else {
+        socket?.emit('fcs:update', setLEDPattern(LED_COLOR1));
+      }
+      // await updateSink(carbonPoints);
       break;
     default:
       socket?.emit('fcs:update', setLEDPattern(matchOverPattern));

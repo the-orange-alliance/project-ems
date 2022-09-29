@@ -4,6 +4,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { useButtonState } from '../../util/ButtonState';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
+  fieldColor1, fieldColor2,
   fieldCountdownDuration,
   fieldCountdownStyle,
   fieldEndgameHB,
@@ -11,7 +12,7 @@ import {
   fieldEndgameStartDuration,
   fieldMatchOverLEDPattern,
   fieldMatchOverStyle,
-  fieldMotorDuration,
+  fieldMotorDuration, fieldTotalSetupDuration,
   matchStateAtom,
   timer
 } from 'src/stores/Recoil';
@@ -32,6 +33,9 @@ const StartMatchButton: FC = () => {
   const cdDuration = useRecoilValue(fieldCountdownDuration);
   const moStyle = useRecoilValue(fieldMatchOverStyle);
   const moPattern = useRecoilValue(fieldMatchOverLEDPattern);
+  const color1 = useRecoilValue(fieldColor1);
+  const color2 = useRecoilValue(fieldColor2);
+  const totalSetupDuration = useRecoilValue(fieldTotalSetupDuration);
 
   const [loading, setLoading] = useState(false);
   const { startMatchEnabled } = useButtonState();
@@ -62,7 +66,10 @@ const StartMatchButton: FC = () => {
       cdStyle,
       cdDuration,
       moStyle,
-      moPattern
+      moPattern,
+      color1,
+      color2,
+      totalSetupDuration
     );
     setState(MatchState.FIELD_READY);
     setState(MatchState.MATCH_READY);

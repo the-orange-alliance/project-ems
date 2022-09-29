@@ -71,7 +71,7 @@ const MatchStatus: FC = () => {
   };
   const onMatchUpdate = useRecoilCallback(({ set }) => async (match: Match) => {
     if (match.details && isCarbonCaptureDetails(match.details)) {
-      await updateSink(match.details.carbonPoints, mode);
+      await updateSink(match.details.carbonPoints);
     }
     set(matchInProgress, match);
   });
