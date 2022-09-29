@@ -1,17 +1,14 @@
 import { clientFetcher } from '@toa-lib/client';
-import {
-  defaultCarbonCaptureDetails,
-  isMatch,
-  MatchState
-} from '@toa-lib/models';
+import { isMatch, MatchState } from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
 import { useRecoilCallback, useRecoilState, useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
+import PrestartListener from 'src/components/PrestartListener/PrestartListener';
 import ChromaLayout from 'src/layouts/ChromaLayout';
 import {
   displayID,
   loadedMatchKey,
-  matchInProgress,
+  matchByMatchKey,
   matchStateAtom,
   timer
 } from 'src/stores/Recoil';
@@ -28,9 +25,9 @@ const AudienceDisplay: FC = () => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('match:prestart', onPrestart);
       socket?.on('match:abort', onAbort);
       socket?.on('match:start', onStart);
+      socket?.on('match:end', onEnd);
       socket?.on('match:display', onDisplay);
       socket?.on('match:commit', onCommit);
     }
@@ -38,32 +35,13 @@ const AudienceDisplay: FC = () => {
 
   useEffect(() => {
     return () => {
-      socket?.removeListener('match:prestart', onPrestart);
       socket?.removeListener('match:abort', onAbort);
       socket?.removeListener('match:start', onStart);
+      socket?.removeListener('match:end', onEnd);
       socket?.removeListener('match:display', onDisplay);
       socket?.removeListener('match:commit', onCommit);
     };
   }, []);
-
-  const onPrestart = useRecoilCallback(
-    ({ set }) =>
-      async (matchKey: string) => {
-        const match = await clientFetcher(
-          `match/all/${matchKey}`,
-          'GET',
-          undefined,
-          isMatch
-        );
-        // TODO - Create a resetMatch() method that would help here.
-        match.details = defaultCarbonCaptureDetails;
-        match.redScore = 0;
-        match.blueScore = 0;
-        set(loadedMatchKey, matchKey);
-        set(matchInProgress, match);
-        set(displayID, 1);
-      }
-  );
 
   const onStart = () => {
     setState(MatchState.MATCH_IN_PROGRESS);
@@ -75,19 +53,28 @@ const AudienceDisplay: FC = () => {
     timer.abort();
   };
 
+  const onEnd = () => {
+    timer.stop();
+  };
+
   const onDisplay = (id: number) => {
     setDisplay(id);
   };
 
   const onCommit = useRecoilCallback(({ set }) => async (matchKey: string) => {
-    set(
-      matchInProgress,
-      await clientFetcher(`match/all/${matchKey}`, 'GET', undefined, isMatch)
+    set(loadedMatchKey, matchKey);
+    const match = await clientFetcher(
+      `match/all/${matchKey}`,
+      'GET',
+      undefined,
+      isMatch
     );
+    set(matchByMatchKey(matchKey), match);
   });
 
   return (
     <ChromaLayout>
+      <PrestartListener />
       <div id='aud-base'>{getDisplay(display)}</div>
     </ChromaLayout>
   );

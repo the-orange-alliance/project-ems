@@ -146,7 +146,6 @@ export function sendAbortMatch(): void {
 
 /* TODO - this is game-specific */
 export async function updateSink(carbonPoints: number): Promise<void> {
-  console.log('test');
   const normalized = calcLedFromCm(carbonPoints);
   socket?.emit('fcs:update', setLEDLength(normalized));
   await new Promise((resolve) => setTimeout(resolve, 250));

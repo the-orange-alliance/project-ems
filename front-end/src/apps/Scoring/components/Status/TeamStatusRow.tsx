@@ -24,7 +24,6 @@ const TeamStatusRow: FC<Props> = ({ participantKey }) => {
   useEffect(() => {
     if (updateReady) {
       setUpdateReady(false);
-      console.log('updating');
       socket?.emit('match:update', match);
     }
   }, [updateReady]);

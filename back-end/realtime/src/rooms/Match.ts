@@ -94,7 +94,7 @@ export default class Match extends Room {
     });
     socket.on("match:update", (match: MatchObj) => {
       this.match = { ...match };
-      if (!match.details) return;
+      if (!match.details || this.state >= MatchState.RESULTS_COMMITTED) return;
       if (!isCarbonCaptureDetails(match.details)) {
         const details = match.details as CarbonCaptureDetails;
         this.match.details = {
@@ -132,6 +132,7 @@ export default class Match extends Room {
     socket.on("match:commit", (matchKey: string) => {
       this.broadcast().emit("match:commit", matchKey);
       this.match = null;
+      this.state = MatchState.RESULTS_COMMITTED;
     });
   }
 }
