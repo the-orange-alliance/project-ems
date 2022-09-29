@@ -303,7 +303,20 @@ export const matchByMatchKey = selectorFamily<Match | undefined, string>({
   get:
     (matchKey: string) =>
     ({ get }) =>
-      get(matches).find((m) => m.matchKey === matchKey)
+      get(matches).find((m) => m.matchKey === matchKey),
+  set:
+    (matchKey: string) =>
+    ({ get, set }, newValue) => {
+      if (newValue instanceof DefaultValue || !newValue) return;
+      const oldMatches = get(matches);
+      const index = oldMatches.findIndex((m) => m.matchKey === matchKey);
+      if (index < 0) return;
+      set(matches, [
+        ...oldMatches.slice(0, index),
+        newValue,
+        ...oldMatches.slice(index + 1)
+      ]);
+    }
 });
 
 export const matchesByTournamentType = selectorFamily<Match[], TournamentType>({

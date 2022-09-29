@@ -23,6 +23,7 @@ const ScoreSheet: FC = () => {
   }, []);
 
   const onUpdate = (newMatch: Match) => {
+    console.log(newMatch);
     setMatch(newMatch);
   };
 
@@ -39,10 +40,15 @@ const ScoreSheet: FC = () => {
 
   return (
     <Paper sx={{ padding: (theme) => theme.spacing(2) }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-        <Typography variant='h3'>
-          Carbon Level
-        </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          alignItems: 'center'
+        }}
+      >
+        <Typography variant='h3'>Carbon Level</Typography>
         <CarbonLevelInput
           value={(match?.details as CarbonCaptureDetails)?.carbonPoints || 0}
           onChange={updateScore}

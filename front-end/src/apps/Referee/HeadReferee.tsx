@@ -3,7 +3,7 @@ import { useRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import { loadedMatchKey } from 'src/stores/Recoil';
-import { Box } from '@mui/material'
+import { Box } from '@mui/material';
 import RefereeSheet from './components/games/CarbonCapture/RefereeSheet';
 import ScoreSheetSmall from './components/games/CarbonCapture/ScoreSheetSmall';
 
@@ -28,9 +28,9 @@ const HeadReferee: FC = () => {
   return (
     <DefaultLayout containerWidth='xl'>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px' }} >
-            <RefereeSheet alliance='red' />
-            <RefereeSheet />
+        <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
+          <RefereeSheet alliance='red' />
+          <RefereeSheet />
         </Box>
         <ScoreSheetSmall />
       </Box>

@@ -1,5 +1,9 @@
 import { clientFetcher } from '@toa-lib/client';
-import { isMatch, MatchState } from '@toa-lib/models';
+import {
+  defaultCarbonCaptureDetails,
+  isMatch,
+  MatchState
+} from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
 import { useRecoilCallback, useRecoilState, useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
@@ -19,7 +23,6 @@ import MatchResults from './displays/fgc_2022/MatchResults/MatchResults';
 
 const AudienceDisplay: FC = () => {
   const setState = useSetRecoilState(matchStateAtom);
-  const setMatchKey = useSetRecoilState(loadedMatchKey);
   const [display, setDisplay] = useRecoilState(displayID);
   const [socket, connected] = useSocket();
 
@@ -43,10 +46,24 @@ const AudienceDisplay: FC = () => {
     };
   }, []);
 
-  const onPrestart = (matchKey: string) => {
-    setMatchKey(matchKey);
-    setDisplay(1);
-  };
+  const onPrestart = useRecoilCallback(
+    ({ set }) =>
+      async (matchKey: string) => {
+        const match = await clientFetcher(
+          `match/all/${matchKey}`,
+          'GET',
+          undefined,
+          isMatch
+        );
+        // TODO - Create a resetMatch() method that would help here.
+        match.details = defaultCarbonCaptureDetails;
+        match.redScore = 0;
+        match.blueScore = 0;
+        set(loadedMatchKey, matchKey);
+        set(matchInProgress, match);
+        set(displayID, 1);
+      }
+  );
 
   const onStart = () => {
     setState(MatchState.MATCH_IN_PROGRESS);
@@ -62,24 +79,12 @@ const AudienceDisplay: FC = () => {
     setDisplay(id);
   };
 
-  const onCommit = useRecoilCallback(
-    ({ set, snapshot }) =>
-      async (matchKey: string) => {
-        const storedKey = await snapshot.getPromise(loadedMatchKey);
-        if (matchKey === storedKey) {
-          // Re-fetch the data
-          const newMatch = await clientFetcher(
-            `match/all/${matchKey}`,
-            'GET',
-            undefined,
-            isMatch
-          );
-          set(matchInProgress, newMatch);
-        } else {
-          set(loadedMatchKey, matchKey);
-        }
-      }
-  );
+  const onCommit = useRecoilCallback(({ set }) => async (matchKey: string) => {
+    set(
+      matchInProgress,
+      await clientFetcher(`match/all/${matchKey}`, 'GET', undefined, isMatch)
+    );
+  });
 
   return (
     <ChromaLayout>

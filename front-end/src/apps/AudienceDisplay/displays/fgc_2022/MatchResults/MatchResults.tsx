@@ -241,7 +241,7 @@ const MatchResults: FC = () => {
                     COOPERTITION BONUS
                   </div>
                   <div className='res-detail-right'>
-                    +{details.coopertitionBonusLevel}
+                    +{details.coopertitionBonusLevel * 100}
                   </div>
                 </div>
                 <div className='res-detail-row'>

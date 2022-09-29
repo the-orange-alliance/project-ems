@@ -31,6 +31,9 @@ export default class Match extends Room {
       // Send prestart information
       socket.emit("match:prestart", this.matchKey);
       socket.emit("match:display", this.displayID);
+      if (this.match) {
+        socket.emit("match:update", this.match);
+      }
     }
 
     if (this.timer.inProgress()) {
