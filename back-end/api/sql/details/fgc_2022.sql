@@ -1,4 +1,5 @@
 ALTER TABLE "ranking" ADD COLUMN rankingScore INT;
+ALTER TABLE "ranking" ADD COLUMN highestScore INT;
 ALTER TABLE "ranking" ADD COLUMN carbonPoints INT;
 
 ALTER TABLE "match_detail" ADD COLUMN carbonPoints INT;
