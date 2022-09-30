@@ -1,7 +1,8 @@
+import { Team } from './Team';
 import { isNonNullObject, isNumber, isString } from './types';
 
 export interface Ranking {
-  rankKey: number;
+  rankKey: string;
   teamKey: number;
   rank: number;
   rankChange: number;
@@ -10,6 +11,7 @@ export interface Ranking {
   losses: number;
   ties: number;
   allianceKey: string;
+  team?: Team;
 }
 
 export const isRanking = (obj: unknown): obj is Ranking =>
@@ -23,3 +25,20 @@ export const isRanking = (obj: unknown): obj is Ranking =>
   isNumber(obj.losses) &&
   isNumber(obj.ties) &&
   isString(obj.allianceKey);
+
+export function reconcileTeamRankings(
+  teams: Team[],
+  rankings: Ranking[]
+): Ranking[] {
+  const map: Map<number, Team> = new Map();
+  for (const team of teams) {
+    map.set(team.teamKey, team);
+  }
+
+  const newRankings: Ranking[] = [];
+  for (const ranking of rankings) {
+    newRankings.push({ ...ranking, team: map.get(ranking.teamKey) });
+  }
+
+  return newRankings;
+}

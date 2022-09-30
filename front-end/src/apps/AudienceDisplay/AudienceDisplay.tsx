@@ -1,7 +1,7 @@
 import { clientFetcher } from '@toa-lib/client';
 import { isMatch, MatchState } from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useRecoilCallback, useRecoilState, useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
@@ -25,7 +25,8 @@ const AudienceDisplay: FC = () => {
   const setState = useSetRecoilState(matchStateAtom);
   const [display, setDisplay] = useRecoilState(displayID);
   const [socket, connected] = useSocket();
-  const { mode } = useParams();
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get('mode');
 
   useEffect(() => {
     if (connected) {

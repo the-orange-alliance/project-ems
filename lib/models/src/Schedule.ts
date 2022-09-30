@@ -2,7 +2,7 @@ import moment from 'moment';
 import { Team } from './Team';
 import { isArray, isNonNullObject, isNumber, isString } from './types';
 
-const FGC_PREMIERE_CYCLE_TIME = 10;
+const FGC_PREMIERE_CYCLE_TIME = 7;
 const FGC_SIDE_FIELDS_CYCLE_TIME = 7;
 
 export type TournamentType =

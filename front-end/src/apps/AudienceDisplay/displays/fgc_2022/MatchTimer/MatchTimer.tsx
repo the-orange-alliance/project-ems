@@ -13,6 +13,8 @@ import {
 } from 'src/apps/AudienceDisplay/Audio';
 import './MatchTimer.css';
 
+import FGC_BG from '../res/global-bg.png';
+
 const startAudio = initAudio(MATCH_START);
 const abortAudio = initAudio(MATCH_ABORT);
 const endgameAudio = initAudio(MATCH_ENDGAME);
@@ -28,7 +30,10 @@ const RedParticipant: FC<{ participant: MatchParticipant }> = ({
       </div>
       <div className='team-flag'>
         <span
-          className={'flag-icon flag-icon-' + participant.team?.countryCode}
+          className={
+            'flag-icon flag-icon-' +
+            participant.team?.countryCode.toLocaleLowerCase()
+          }
         />
       </div>
     </div>
@@ -42,7 +47,9 @@ const BlueParticipant: FC<{ participant: MatchParticipant }> = ({
     <div className='team right-team'>
       <div className='team-flag'>
         <span
-          className={'flag-icon flag-icon-' + participant.team?.countryCode}
+          className={
+            'flag-icon flag-icon-' + participant.team?.countryCode.toLowerCase()
+          }
         />
       </div>
       <div className='team-name-right'>
@@ -102,7 +109,7 @@ const MatchTimer: FC = () => {
   };
 
   return (
-    <div id={'fgc-body'}>
+    <div id='fgc-body' style={{ backgroundImage: `url(${FGC_BG})` }}>
       <div id='timer-info'>
         <div id='timer-info-left'>
           <div className='timer-info-left center-items'>

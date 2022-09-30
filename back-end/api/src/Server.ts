@@ -17,6 +17,7 @@ import teamController from './controllers/Team';
 import storageController from './controllers/Storage';
 import scheduleController from './controllers/Schedule';
 import matchController from './controllers/Match';
+import rankingController from './controllers/Ranking';
 import { handleCatchAll, handleErrors } from './middleware/ErrorHandler';
 import logger from './util/Logger';
 import { initDatabase } from './db/Database';
@@ -59,6 +60,7 @@ app.use('/teams', teamController);
 app.use('/storage', storageController);
 app.use('/schedule', scheduleController);
 app.use('/match', matchController);
+app.use('/ranking', rankingController);
 
 // Define root/testing paths
 app.get('/', requireAuth, (req, res) => {

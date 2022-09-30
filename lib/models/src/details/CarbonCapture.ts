@@ -72,7 +72,7 @@ export function calculateRankings(
           rank: 0,
           rankChange: 0,
           rankingScore: 0,
-          rankKey: rankingMap.size,
+          rankKey: '',
           teamKey: participant.teamKey,
           ties: 0,
           wins: 0,
@@ -133,7 +133,7 @@ export function calculateRankings(
     const ranking = {
       ...rankingMap.get(key)
     } as CarbonCaptureRanking;
-    const lowestScore = Math.min(...scores);
+    const lowestScore = ranking.played > 0 ? Math.min(...scores) : 0;
     const index = scores.findIndex((s) => s === lowestScore);
     const newScores = [...scores.splice(0, index), ...scores.splice(index + 1)];
     ranking.rankingScore =
@@ -141,12 +141,22 @@ export function calculateRankings(
     rankingMap.set(key, ranking);
   }
 
-  // In this loop calculate a team's rank
-  const rankings = [...rankingMap.values()];
+  // In this loop calculate team rankings
+  const rankings = [...rankingMap.values()].sort(compareRankings);
 
   // In this loop calculate the rank change
+  for (let i = 0; i < rankings.length; i++) {
+    const prevRanking = prevRankings.find(
+      (r) => r.teamKey === rankings[i].teamKey
+    );
+    rankings[i].rank = i + 1;
+    if (prevRanking) {
+      rankings[i].rankChange = prevRanking.rank - rankings[i].rank;
+      rankings[i].rankKey = prevRanking.rankKey;
+    }
+  }
 
-  return Array.from(rankingMap.values());
+  return rankings;
 }
 
 export function calculateScore(
@@ -185,4 +195,18 @@ function getMultiplier(robotStatus: number): number {
     default:
       return 0;
   }
+}
+
+function compareRankings(
+  a: CarbonCaptureRanking,
+  b: CarbonCaptureRanking
+): number {
+  if (a.rankingScore > b.rankingScore) {
+    return 1;
+  } else if (a.highestScore > b.highestScore) {
+    return 1;
+  } else if (a.carbonPoints > b.carbonPoints) {
+    return 1;
+  }
+  return -1;
 }
