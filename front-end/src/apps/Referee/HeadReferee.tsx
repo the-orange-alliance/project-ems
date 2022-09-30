@@ -32,10 +32,10 @@ const HeadReferee: FC = () => {
     <DefaultLayout containerWidth='xl'>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
-          <RefereeSheet alliance={redAlliance} />
-          <RefereeSheet alliance={blueAlliance} />
+          <RefereeSheet alliance={redAlliance} headRef />
+          <RefereeSheet alliance={blueAlliance} headRef />
         </Box>
-        <ScoreSheetSmall />
+        <ScoreSheetSmall headRef />
       </Box>
     </DefaultLayout>
   );

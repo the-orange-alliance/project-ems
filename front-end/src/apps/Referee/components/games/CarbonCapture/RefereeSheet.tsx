@@ -8,10 +8,11 @@ import {
 } from '@mui/material';
 import {
   matchInProgress,
-  matchInProgressParticipantByKey
+  matchInProgressParticipantByKey,
+  matchStateAtom
 } from 'src/stores/Recoil';
-import { useRecoilState } from 'recoil';
-import { CarbonCaptureDetails, MatchParticipant } from '@toa-lib/models';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { CarbonCaptureDetails, MatchParticipant, MatchState } from '@toa-lib/models';
 import NumberInput from '../../NumberInput';
 import { useSocket } from 'src/api/SocketProvider';
 
@@ -193,7 +194,7 @@ const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
   );
 };
 
-const Fouls: FC<{ alliance: MatchParticipant[] }> = ({ alliance }) => {
+const Fouls: FC<{ alliance: MatchParticipant[], disabled?: boolean }> = ({ alliance, disabled }) => {
   const [match, setMatch] = useRecoilState(matchInProgress);
   const [updateReady, setUpdateReady] = useState(false);
   const [socket] = useSocket();
@@ -236,12 +237,15 @@ const Fouls: FC<{ alliance: MatchParticipant[] }> = ({ alliance }) => {
             : match?.blueMinPen) || 0
         }
         onChange={handleFoulChange}
+        disabled={disabled}
       />
     </Box>
   );
 };
 
-const RefereeSheet: FC<{ alliance: MatchParticipant[] }> = ({ alliance }) => {
+const RefereeSheet: FC<{ alliance: MatchParticipant[], headRef?: boolean }> = ({ alliance, headRef }) => {
+  const matchState = useRecoilValue(matchStateAtom); // TODO(jan): fix this
+
   return (
     <Paper
       sx={{
@@ -264,7 +268,7 @@ const RefereeSheet: FC<{ alliance: MatchParticipant[] }> = ({ alliance }) => {
             participantKey={p.matchParticipantKey}
           />
         ))}
-        <Fouls alliance={alliance} />
+        <Fouls alliance={alliance} disabled={headRef && matchState != MatchState.MATCH_COMPLETE} />
       </Box>
     </Paper>
   );
