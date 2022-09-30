@@ -219,7 +219,7 @@ export async function matchOver(carbonPoints: number): Promise<void> {
   setLEDMatchOver(true);
   switch (matchOverStlye) {
     case 'carbon':
-      // socket?.emit('fcs:update', setLEDLength(led));
+      socket?.emit('fcs:update', setLEDLength(led));
       break;
     case 'full':
       socket?.emit('fcs:update', setLEDLength(120));
@@ -228,15 +228,9 @@ export async function matchOver(carbonPoints: number): Promise<void> {
       break;
   }
   await new Promise((resolve) => setTimeout(resolve, 250));
-  console.log(matchOverPattern);
   switch (matchOverPattern) {
     case 1:
-      if (carbonColor) {
-        socket?.emit('fcs:update', setLEDPattern(LED_COLOR2));
-      } else {
-        socket?.emit('fcs:update', setLEDPattern(LED_COLOR1));
-      }
-      // await updateSink(carbonPoints);
+      await updateSink(carbonPoints);
       break;
     default:
       socket?.emit('fcs:update', setLEDPattern(matchOverPattern));
