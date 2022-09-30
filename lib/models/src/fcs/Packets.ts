@@ -44,9 +44,9 @@ export const LED_COLOR_DARK_GRAY   = 1985;
 const calcPulseWidth = (ledLength: number): number => {
   const maxPwm = 990;
   const minPwm = 10;
+  const led1Pwm = 14
   const totalLedLength = 120;
-
-  return (ledLength * (maxPwm - minPwm)) / totalLedLength + minPwm;
+  return Math.floor(ledLength * (maxPwm-minPwm) / totalLedLength + led1Pwm);
 };
 
 export const setLEDLength = (length: number): FieldControlPacket => {
