@@ -1,11 +1,13 @@
 import { FC, useEffect } from 'react';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import DefaultLayout from 'src/layouts/DefaultLayout';
-import { loadedMatchKey } from 'src/stores/Recoil';
+import { loadedMatchKey, matchInProgress } from 'src/stores/Recoil';
 import RefereeSheet from './components/games/CarbonCapture/RefereeSheet';
 
 const BlueReferee: FC = () => {
+  const match = useRecoilValue(matchInProgress);
+  const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
   const [, setMatchKey] = useRecoilState(loadedMatchKey);
   const [socket, connected] = useSocket();
 
@@ -25,7 +27,7 @@ const BlueReferee: FC = () => {
 
   return (
     <DefaultLayout containerWidth='xl'>
-      <RefereeSheet />
+      <RefereeSheet alliance={blueAlliance}/>
     </DefaultLayout>
   );
 };

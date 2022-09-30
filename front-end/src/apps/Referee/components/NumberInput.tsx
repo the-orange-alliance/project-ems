@@ -6,9 +6,10 @@ import TextField from '@mui/material/TextField';
 interface Props {
   value: number;
   onChange: (newValue: number) => void;
+  disabled?: boolean;
 }
 
-const NumberInput: FC<Props> = ({ value, onChange }) => {
+const NumberInput: FC<Props> = ({ value, onChange, disabled }) => {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) =>
     onChange(parseInt(event.target.value));
   const increment = () => onChange(value + 1);
@@ -16,11 +17,11 @@ const NumberInput: FC<Props> = ({ value, onChange }) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
-      <Button variant='contained' onClick={decrement}>
+      <Button variant='contained' onClick={decrement} disabled={disabled}>
         -
       </Button>
-      <TextField onChange={handleChange} value={value} type='number' />
-      <Button variant='contained' onClick={increment}>
+      <TextField onChange={handleChange} value={value} type='number' disabled={disabled} />
+      <Button variant='contained' onClick={increment} disabled={disabled}>
         +
       </Button>
     </Box>
