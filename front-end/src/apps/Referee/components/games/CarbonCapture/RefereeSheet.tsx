@@ -193,6 +193,54 @@ const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
   );
 };
 
+const Fouls: FC<{ alliance: MatchParticipant[] }> = ({ alliance }) => {
+  const [match, setMatch] = useRecoilState(matchInProgress);
+  const [updateReady, setUpdateReady] = useState(false);
+  const [socket] = useSocket();
+
+  useEffect(() => {
+    if (updateReady) {
+      setUpdateReady(false);
+      socket?.emit('match:update', match);
+    }
+  }, [updateReady]);
+
+  const handleFoulChange = (newFoulCount: number) => {
+    if (match) {
+      const newMatch = Object.assign({}, match);
+      if (alliance?.some((p) => p.station < 20)) {
+        newMatch.redMinPen = newFoulCount;
+      } else {
+        newMatch.blueMinPen = newFoulCount;
+      }
+      setMatch(newMatch);
+      setUpdateReady(true);
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        width: '100%',
+        alignItems: 'center'
+      }}
+    >
+      <Typography variant='h6'>Fouls</Typography>
+      <NumberInput
+        value={
+          (alliance?.some((p) => p.station < 20)
+            ? match?.redMinPen
+            : match?.blueMinPen) || 0
+        }
+        onChange={handleFoulChange}
+      />
+    </Box>
+  );
+};
+
 const RefereeSheet: FC<{ alliance: MatchParticipant[] }> = ({ alliance }) => {
   return (
     <Paper
@@ -216,19 +264,7 @@ const RefereeSheet: FC<{ alliance: MatchParticipant[] }> = ({ alliance }) => {
             participantKey={p.matchParticipantKey}
           />
         ))}
-
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            width: '100%',
-            alignItems: 'center'
-          }}
-        >
-          <Typography variant='h6'>Fouls</Typography>
-          <NumberInput value={0} />
-        </Box>
+        <Fouls alliance={alliance} />
       </Box>
     </Paper>
   );
