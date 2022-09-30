@@ -64,7 +64,7 @@ const MatchStatus: FC = () => {
     setMode('MATCH END');
     setState(MatchState.MATCH_COMPLETE);
     const thisMatch = await snapshot.getPromise(matchInProgress);
-    matchOver((thisMatch?.details as any)?.carbonPointts);
+    matchOver((thisMatch?.details as any)?.carbonPoints);
   });
   const onMatchAbort = () => {
     setMode('MATCH ABORTED');

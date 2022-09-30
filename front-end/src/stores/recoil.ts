@@ -443,11 +443,11 @@ export const fieldEndgameStartDuration = atom({
 });
 export const fieldEndgameStart = atom({
   key: 'fieldEndgameStartAtom',
-  default: 'slow'
+  default: 15
 });
 export const fieldEndgameHB = atom({
   key: 'fieldEndgameHBAtom',
-  default: 'slow'
+  default: 15
 });
 export const fieldCountdownStyle = atom({
   key: 'fieldCountdownStyleAtom',
@@ -464,6 +464,21 @@ export const fieldMatchOverStyle = atom({
 export const fieldMatchOverLEDPattern = atom({
   key: 'fieldMatchOverLEDPatternAtom',
   default: 1
+});
+
+export const fieldColor1 = atom({
+  key: 'fieldColor1Atom',
+  default: 1965
+});
+
+export const fieldColor2 = atom({
+  key: 'fieldColor2Atom',
+  default: 1955
+});
+
+export const fieldTotalSetupDuration = atom({
+  key: 'fieldTotalSetupDurationAtom',
+  default: 10000
 });
 /* AUDIENCE DISPLAY SECTION */
 export const displayID = atom({
