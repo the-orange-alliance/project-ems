@@ -266,8 +266,18 @@ export const matchStateAtom = atom<MatchState>({
   default: MatchState.MATCH_NOT_SELECTED
 });
 
+export const matchModeAtom = atom<string>({
+  key: 'matchModeAtom',
+  default: 'NO MATCH SELECTED'
+});
+
 export const loadedMatchKey = atom<string | null>({
   key: 'loadedMatchKeyAtom',
+  default: null
+});
+
+export const matchResult = atom<Match | null>({
+  key: 'matchResultAtom',
   default: null
 });
 

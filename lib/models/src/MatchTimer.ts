@@ -96,6 +96,15 @@ export class MatchTimer extends EventEmitter {
     }
   }
 
+  public reset() {
+    if (!this.inProgress()) {
+      this._mode = MatchMode.RESET;
+      this._timerID = null;
+      this._timeLeft = getMatchTime(this._matchConfig);
+      this._modeTimeLeft = this._matchConfig.delayTime;
+    }
+  }
+
   public inProgress() {
     return this._timerID !== null;
   }

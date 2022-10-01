@@ -229,7 +229,7 @@ export function getMatchKeyPartialFromType(type: TournamentType) {
     case 'Qualification':
       return 'Q';
     case 'Ranking':
-      return 'E';
+      return 'R';
     default:
       return 'P';
   }
@@ -272,5 +272,23 @@ export function reconcileMatchParticipants(
     const newMatch = { ...match, participants: map.get(match.matchKey) };
     newMatches.push(newMatch);
   }
+  return newMatches;
+}
+
+export function reconcileMatchDetails(
+  matches: Match[],
+  details: MatchDetails[]
+): Match[] {
+  const map: Map<string, MatchDetails> = new Map();
+  for (const detail of details) {
+    map.set(detail.matchKey, detail);
+  }
+
+  const newMatches: Match[] = [];
+
+  for (const match of matches) {
+    newMatches.push({ ...match, details: map.get(match.matchKey) });
+  }
+
   return newMatches;
 }

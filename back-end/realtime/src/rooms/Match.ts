@@ -133,6 +133,7 @@ export default class Match extends Room {
       this.broadcast().emit("match:commit", matchKey);
       this.match = null;
       this.state = MatchState.RESULTS_COMMITTED;
+      logger.info(`committing scores for ${matchKey}`);
     });
   }
 }

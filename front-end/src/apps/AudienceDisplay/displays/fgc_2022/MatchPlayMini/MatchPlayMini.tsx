@@ -90,12 +90,12 @@ const MatchPlayMini: FC = () => {
 
         <div id='mini-score-container-scores'>
           <div id='mini-score-container-red'>
-            <div className='red-bg center-items'>
+            <div className='red-bg center'>
               <span>{match?.redScore}</span>
             </div>
           </div>
           <div id='mini-score-container-blue'>
-            <div className='blue-bg center-items'>
+            <div className='blue-bg center'>
               <span>{match?.blueScore}</span>
             </div>
           </div>

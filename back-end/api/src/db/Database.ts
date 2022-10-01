@@ -115,6 +115,17 @@ export async function selectAllJoinWhere(
   }
 }
 
+export async function deleteWhere(
+  table: string,
+  where: string
+): Promise<any[]> {
+  try {
+    return await db.all(`DELETE FROM ${table} WHERE ${where};`);
+  } catch (e) {
+    throw new ApiDatabaseError(table, e);
+  }
+}
+
 export async function insertValue<T>(
   table: string,
   values: Record<keyof NonNullable<T>, unknown>[]
