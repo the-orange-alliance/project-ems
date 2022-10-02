@@ -1,4 +1,4 @@
-import { FC, ChangeEvent } from 'react';
+import { FC, useEffect, ChangeEvent } from 'react';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
@@ -23,6 +23,11 @@ import {
   fieldTotalSetupDuration
 } from 'src/stores/Recoil';
 import MenuItem from '@mui/material/MenuItem';
+import useLocalStorage from 'src/stores/LocalStorage';
+import {
+  defaultFieldOptions,
+  FieldOptions
+} from '@toa-lib/models/build/FieldControl';
 
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
@@ -44,7 +49,42 @@ const SettingsApp: FC = () => {
   );
   const [color1, setColor1] = useRecoilState(fieldColor1);
   const [color2, setColor2] = useRecoilState(fieldColor2);
-  const [totalSetupDuration, setTotalSetupDuration] = useRecoilState(fieldTotalSetupDuration);
+  const [totalSetupDuration, setTotalSetupDuration] = useRecoilState(
+    fieldTotalSetupDuration
+  );
+
+  const [, setOptions] = useLocalStorage<FieldOptions>(
+    'ems:fcs:options',
+    defaultFieldOptions
+  );
+
+  useEffect(() => {
+    setOptions({
+      motorDuration,
+      endGameStartDuration: endgameStartDuration,
+      endGameStart: endGameStartHB,
+      endGameHB,
+      countdownStyle,
+      countdownDuration,
+      matchEndStyle: matchOverStyle,
+      matchEndPattern: matchOverLEDPattern,
+      primaryColor: color1,
+      secondaryColor: color2,
+      setupDuration: totalSetupDuration
+    });
+  }, [
+    motorDuration,
+    endgameStartDuration,
+    endGameStartHB,
+    endGameHB,
+    countdownStyle,
+    countdownDuration,
+    matchOverStyle,
+    matchOverLEDPattern,
+    color1,
+    color2,
+    totalSetupDuration
+  ]);
 
   const changeDarkMode = (): void => {
     setDarkMode(!darkMode);
