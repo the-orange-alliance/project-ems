@@ -115,7 +115,7 @@ const MatchResults: FC = () => {
                     <img
                       alt={'empty'}
                       src={'https://img.icons8.com/ios-filled/500/carbon.png'}
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-red'>CARBON POINTS</div>
@@ -128,7 +128,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://www.freeiconspng.com/thumbs/platform-icon/platform-icon-12.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-red'>
@@ -145,7 +145,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://cdn3.iconfinder.com/data/icons/ui-essential-elements/110/Subtract-512.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-red'>
@@ -162,7 +162,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://icons.veryicon.com/png/o/miscellaneous/linear-icon-45/hamburger-menu-5.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-red'>
@@ -179,7 +179,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://cdn0.iconfinder.com/data/icons/glyphpack/36/filter-512.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-red'>
@@ -196,7 +196,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://www.citypng.com/public/uploads/small/11639603912fxsbaimc7z0azr4dfynd9zzascvbwln0fuq9bvg3wwcasg50ykyuzk4vrn3rkkkqdjvugwhuujquhrfqeng0ekx1thaqus2x4hae.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-red'>
@@ -213,7 +213,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://www.freeiconspng.com/thumbs/do-not-sign-icon/do-not-sign-icon-png-4.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left penalty right-red'>
@@ -254,7 +254,7 @@ const MatchResults: FC = () => {
                     <img
                       alt={'empty'}
                       src={'https://img.icons8.com/ios-filled/500/carbon.png'}
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-blue'>
@@ -269,7 +269,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://www.freeiconspng.com/thumbs/platform-icon/platform-icon-12.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-blue'>
@@ -286,7 +286,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://cdn3.iconfinder.com/data/icons/ui-essential-elements/110/Subtract-512.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-blue'>
@@ -303,7 +303,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://icons.veryicon.com/png/o/miscellaneous/linear-icon-45/hamburger-menu-5.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-blue'>
@@ -320,7 +320,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://cdn0.iconfinder.com/data/icons/glyphpack/36/filter-512.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-blue'>
@@ -337,7 +337,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://www.citypng.com/public/uploads/small/11639603912fxsbaimc7z0azr4dfynd9zzascvbwln0fuq9bvg3wwcasg50ykyuzk4vrn3rkkkqdjvugwhuujquhrfqeng0ekx1thaqus2x4hae.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left right-blue'>
@@ -354,7 +354,7 @@ const MatchResults: FC = () => {
                       src={
                         'https://www.freeiconspng.com/thumbs/do-not-sign-icon/do-not-sign-icon-png-4.png'
                       }
-                      className='fit-w'
+                      className='fit-h'
                     />
                   </div>
                   <div className='res-detail-left penalty right-blue'>

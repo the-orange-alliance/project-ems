@@ -160,6 +160,7 @@
   align-items: center;
   justify-content: center;
   padding: 3px;
+  max-height: 2em;
 }
 .res-detail-left {
   width: 60%;

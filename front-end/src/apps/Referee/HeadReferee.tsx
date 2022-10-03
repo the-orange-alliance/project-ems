@@ -7,6 +7,7 @@ import RefereeSheet from './components/games/CarbonCapture/RefereeSheet';
 import ScoreSheetSmall from './components/games/CarbonCapture/ScoreSheetSmall';
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
 import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
+import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
 
 const HeadReferee: FC = () => {
   const match = useRecoilValue(matchInProgress);
@@ -17,6 +18,7 @@ const HeadReferee: FC = () => {
     <DefaultLayout containerWidth='xl'>
       <PrestartListener />
       <MatchStateListener />
+      <MatchUpdateListener />
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
           <RefereeSheet alliance={redAlliance || []} headRef />

@@ -1,31 +1,15 @@
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { matchInProgress, matchStateAtom } from 'src/stores/Recoil';
-import { CarbonCaptureDetails, Match, MatchState } from '@toa-lib/models';
+import { CarbonCaptureDetails, MatchState } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
 import NumberInput from '../../NumberInput';
 
 const ScoreSheetSmall: FC<{ headRef?: boolean }> = ({ headRef }) => {
   const [match, setMatch] = useRecoilState(matchInProgress);
-  const [socket, connected] = useSocket();
+  const [socket] = useSocket();
   const matchState = useRecoilValue(matchStateAtom); // TODO(jan): fix this
-
-  useEffect(() => {
-    if (connected) {
-      socket?.on('match:update', onUpdate);
-    }
-  }, [connected]);
-
-  useEffect(() => {
-    return () => {
-      socket?.removeListener('match:update', onUpdate);
-    };
-  }, []);
-
-  const onUpdate = (newMatch: Match) => {
-    setMatch(newMatch);
-  };
 
   const updateScore = (newScore: number) => {
     if (match && match.details) {
