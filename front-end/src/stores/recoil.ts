@@ -523,6 +523,10 @@ export const fieldTotalSetupDuration = atom({
   key: 'fieldTotalSetupDurationAtom',
   default: 10000
 });
+export const fieldMotorReverseDuration = atom({
+  key: 'fieldMotorReverseDurationAtom',
+  default: 3000
+});
 /* AUDIENCE DISPLAY SECTION */
 export const displayID = atom({
   key: 'displayIDAtom',
