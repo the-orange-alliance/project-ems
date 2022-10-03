@@ -8,6 +8,7 @@ import {
   LED_PRESTART,
   MOTOR_DISABLE,
   MOTOR_FORWARD,
+  MOTOR_REVERSE,
   setLEDLength,
   setLEDPattern
 } from '@toa-lib/models';
@@ -26,6 +27,7 @@ let matchOverStlye: string | null;
 let carbonColor = false;
 let LED_COLOR1: number;
 let LED_COLOR2: number;
+let motorReverseDuration: number;
 
 const COOPERTITION: number = 165 * 0.66;
 export function setLEDEndgame(state: boolean) {
@@ -106,7 +108,8 @@ export async function prepareField(
   moPattern: number,
   color1: number,
   color2: number,
-  tSetupDuration: number
+  tSetupDuration: number,
+  mReverseDuration: number
 ): Promise<void> {
   endGameStartSpeed = endgameStartHBSpeed;
   endGameSpeed = endGameHBSpeed;
@@ -115,6 +118,7 @@ export async function prepareField(
   matchOverPattern = moPattern;
   LED_COLOR1 = color1;
   LED_COLOR2 = color2;
+  motorReverseDuration =mReverseDuration;
   setLEDEndgame(false);
   setLEDMatchOver(false);
   socket?.emit('fcs:update', setLEDPattern(LED_COLOR2));
@@ -151,9 +155,16 @@ export async function prepareField(
   return;
 }
 
-export function sendAbortMatch(): void {
+export async function sendAbortMatch(): Promise<void> {
   socket?.emit('match:abort');
+  await reverseMotors();
   socket?.emit('fcs:update', LED_FIELDFAULT);
+}
+export async function reverseMotors(): Promise<void> {
+  socket?.emit('fcs:update', MOTOR_REVERSE);
+  setTimeout(() => {
+    socket?.emit('fcs:update', MOTOR_DISABLE);
+  }, motorReverseDuration);
 }
 
 /* TODO - this is game-specific */
@@ -206,6 +217,7 @@ export async function sendCommitScores(matchKey: string): Promise<void> {
   socket?.emit('match:commit', matchKey);
   socket?.emit('fcs:update', setLEDLength(120));
   await new Promise((resolve) => setTimeout(resolve, 250));
+  await reverseMotors();
   socket?.emit('fcs:update', LED_ALLCLEAR);
 }
 

@@ -12,7 +12,7 @@ import {
   fieldEndgameStartDuration,
   fieldMatchOverLEDPattern,
   fieldMatchOverStyle,
-  fieldMotorDuration, fieldTotalSetupDuration,
+  fieldMotorDuration, fieldMotorReverseDuration, fieldTotalSetupDuration,
   matchStateAtom,
   timer
 } from 'src/stores/Recoil';
@@ -36,6 +36,7 @@ const StartMatchButton: FC = () => {
   const color1 = useRecoilValue(fieldColor1);
   const color2 = useRecoilValue(fieldColor2);
   const totalSetupDuration = useRecoilValue(fieldTotalSetupDuration);
+  const motorReverseDuration = useRecoilValue(fieldMotorReverseDuration);
 
   const [loading, setLoading] = useState(false);
   const { startMatchEnabled } = useButtonState();
@@ -69,7 +70,8 @@ const StartMatchButton: FC = () => {
       moPattern,
       color1,
       color2,
-      totalSetupDuration
+      totalSetupDuration,
+      motorReverseDuration
     );
     setState(MatchState.FIELD_READY);
     setState(MatchState.MATCH_READY);

@@ -20,7 +20,8 @@ import {
   fieldMatchOverLEDPattern,
   fieldColor1,
   fieldColor2,
-  fieldTotalSetupDuration
+  fieldTotalSetupDuration,
+  fieldMotorReverseDuration
 } from 'src/stores/Recoil';
 import MenuItem from '@mui/material/MenuItem';
 import useLocalStorage from 'src/stores/LocalStorage';
@@ -48,6 +49,9 @@ const SettingsApp: FC = () => {
   const [color2, setColor2] = useRecoilState(fieldColor2);
   const [totalSetupDuration, setTotalSetupDuration] = useRecoilState(
     fieldTotalSetupDuration
+  );  
+  const [motorReverseDuration, setMotorReverseDuration] = useRecoilState(
+    fieldMotorReverseDuration
   );
 
   const [, setOptions] = useLocalStorage<FieldOptions>(
@@ -67,7 +71,8 @@ const SettingsApp: FC = () => {
       matchEndPattern: matchOverLEDPattern,
       primaryColor: color1,
       secondaryColor: color2,
-      setupDuration: totalSetupDuration
+      setupDuration: totalSetupDuration,
+      motorReverseDuration: motorReverseDuration
     });
   }, [
     motorDuration,
@@ -80,7 +85,8 @@ const SettingsApp: FC = () => {
     matchOverLEDPattern,
     color1,
     color2,
-    totalSetupDuration
+    totalSetupDuration,
+    motorReverseDuration
   ]);
 
   const changeDarkMode = (): void => {
@@ -119,6 +125,9 @@ const SettingsApp: FC = () => {
   };
   const changeTotalSetupDuration = (event: ChangeEvent<HTMLInputElement>) => {
     setTotalSetupDuration(parseInt(event.target.value));
+  };
+  const changeMotorReversDuration = (event: ChangeEvent<HTMLInputElement>) => {
+    setMotorReverseDuration(parseInt(event.target.value));
   };
 
   return (
@@ -164,6 +173,29 @@ const SettingsApp: FC = () => {
               label={
                 <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
                   Field Preparation Motor Duration
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <TextField
+                  value={motorReverseDuration}
+                  onChange={changeMotorReversDuration}
+                />
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Field Reset Motor Duration
                 </Typography>
               }
               labelPlacement='start'
