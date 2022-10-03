@@ -98,6 +98,8 @@ const MatchPlay: FC = () => {
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
+  const name = match?.matchName ? match.matchName.split(' ')[2] : '';
+
   useEffect(() => {
     if (connected) {
       socket?.on('match:start', matchStart);
@@ -183,7 +185,7 @@ const MatchPlay: FC = () => {
         </div>
         <div id='play-display-base-bottom'>
           <div className='info-col'>
-            <span className='info-field'>MATCH: {match?.matchName}</span>
+            <span className='info-field'>MATCH: {name}</span>
           </div>
           <div className='info-col'>
             <span className='info-field'>FIRST Global 2022</span>

@@ -82,6 +82,7 @@ export const useSocket = (): [
 /* Utility/helper functions for socket state */
 export function sendPrestart(matchKey: string): void {
   socket?.emit('match:prestart', matchKey);
+  socket?.emit('fcs:update', LED_ALLCLEAR);
 }
 
 export function setDisplays(): void {

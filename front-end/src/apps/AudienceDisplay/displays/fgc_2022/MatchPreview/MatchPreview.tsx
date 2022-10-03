@@ -38,6 +38,8 @@ const MatchPreview: FC = () => {
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
+  const name = match?.matchName ? match.matchName.split(' ')[2] : '';
+
   return (
     <div id='fgc-body' style={{ backgroundImage: `url(${FGC_BG})` }}>
       <div id='fgc-container'>
@@ -55,7 +57,7 @@ const MatchPreview: FC = () => {
               <span>MATCH</span>
             </div>
             <div className='pre-match-info-right center'>
-              <span>{match?.matchName}</span>
+              <span>{name}</span>
             </div>
           </div>
           <div id='fgc-pre-match-info-left'>
