@@ -1,9 +1,6 @@
 import { createSocket } from '@toa-lib/client';
 import {
   LED_ALLCLEAR,
-  LED_CARBON,
-  LED_COOPERTITION,
-  LED_COUNTDOWN,
   LED_FIELDFAULT,
   LED_PRESTART,
   MOTOR_DISABLE,

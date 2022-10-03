@@ -1,10 +1,16 @@
 import { FC } from 'react';
 import Button from '@mui/material/Button';
 import { useButtonState } from '../../util/ButtonState';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import {
+  useRecoilState,
+  useRecoilValue,
+  useResetRecoilState,
+  useSetRecoilState
+} from 'recoil';
 import {
   loadedMatchKey,
   matchesByTournamentType,
+  matchInProgress,
   matchStateAtom,
   selectedTournamentType
 } from 'src/stores/Recoil';
@@ -16,6 +22,7 @@ const PostResultsButton: FC = () => {
   const type = useRecoilValue(selectedTournamentType);
   const typeMatches = useRecoilValue(matchesByTournamentType(type));
   const setState = useSetRecoilState(matchStateAtom);
+  const resetMatch = useResetRecoilState(matchInProgress);
 
   const { postResultsEnabled } = useButtonState();
 
@@ -25,6 +32,7 @@ const PostResultsButton: FC = () => {
     const index = typeMatches.findIndex((m) => m.matchKey === matchKey);
     if (typeMatches[index + 1]) {
       setMatchKey(typeMatches[index + 1].matchKey);
+      resetMatch();
     }
   };
 
