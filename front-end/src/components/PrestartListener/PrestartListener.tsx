@@ -3,7 +3,7 @@ import { isMatch, defaultCarbonCaptureDetails } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilCallback } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
-import { loadedMatchKey, matchInProgress, displayID } from 'src/stores/Recoil';
+import { loadedMatchKey, matchInProgress } from 'src/stores/Recoil';
 
 const PrestartListener: FC = () => {
   const [socket, connected] = useSocket();
@@ -38,9 +38,16 @@ const PrestartListener: FC = () => {
         newMatch.blueMinPen = 0;
         newMatch.redScore = 0;
         newMatch.blueScore = 0;
+        // Reset participant cards
+        if (newMatch.participants) {
+          for (const participant of newMatch.participants) {
+            participant.cardStatus = 0;
+            participant.disqualified = 0;
+            participant.noShow = 0;
+          }
+        }
         set(loadedMatchKey, matchKey);
         set(matchInProgress, newMatch);
-        set(displayID, 1);
       }
   );
 
