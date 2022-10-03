@@ -51,6 +51,8 @@ const MatchResults: FC = () => {
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
+  const name = match?.matchName ? match.matchName.split(' ')[2] : '';
+
   const details = isCarbonCaptureDetails(someDetails)
     ? someDetails
     : defaultCarbonCaptureDetails;
@@ -90,7 +92,7 @@ const MatchResults: FC = () => {
             <span>RESULTS</span>
           </div>
           <div id='res-header-right'>
-            <div className='res-header-item'>MATCH: {match?.matchName}</div>
+            <div className='res-header-item'>MATCH: {name}</div>
             <div className='res-header-item'>FIELD: {match?.fieldNumber}</div>
           </div>
         </div>

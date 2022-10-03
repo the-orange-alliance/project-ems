@@ -66,6 +66,8 @@ const MatchTimer: FC = () => {
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
+  const name = match?.matchName ? match.matchName.split(' ')[2] : '';
+
   useEffect(() => {
     if (connected) {
       socket?.on('match:start', matchStart);
@@ -116,7 +118,7 @@ const MatchTimer: FC = () => {
             <span>MATCH</span>
           </div>
           <div className='timer-info-right center'>
-            <span>{match?.matchName}</span>
+            <span>{name}</span>
           </div>
         </div>
         <div id='timer-info-left'>
