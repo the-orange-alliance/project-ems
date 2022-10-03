@@ -26,7 +26,6 @@ const AudienceDisplay: FC = () => {
     if (connected) {
       socket?.on('match:display', onDisplay);
       socket?.on('match:commit', onCommit);
-      console.log('here4');
     }
   }, [connected]);
 

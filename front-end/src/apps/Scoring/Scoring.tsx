@@ -7,10 +7,14 @@ import RedAlliance from './components/RedAlliance/RedAlliance';
 import BlueAlliance from './components/BlueAlliance/BlueAlliance';
 import MatchStatus from './components/MatchStatus/MatchStatus';
 import UnloadListener from 'src/components/UnloadListener/UnloadListener';
+import PrestartListener from 'src/components/PrestartListener/PrestartListener';
+import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
 
 const ScoringApp: FC = () => {
   return (
     <DefaultLayout containerWidth='xl'>
+      <PrestartListener />
+      <MatchStateListener />
       <UnloadListener />
       <MatchControl />
       <Grid

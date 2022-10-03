@@ -30,29 +30,24 @@ const MatchStatus: FC = () => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('match:prestart', onMatchPrestart);
       socket?.on('match:auto', onMatchAuto);
       socket?.on('match:tele', onMatchTele);
       socket?.on('match:endgame', onMatchEndGame);
       socket?.on('match:end', onMatchEnd);
-      socket?.on('match:abort', onMatchAbort);
       socket?.on('match:update', onMatchUpdate);
     }
   }, [connected, socket]);
 
   useEffect(() => {
     return () => {
-      socket?.removeListener('match:prestart', onMatchPrestart);
       socket?.removeListener('match:auto', onMatchAuto);
       socket?.removeListener('match:tele', onMatchTele);
       socket?.removeListener('match:endgame', onMatchEndGame);
       socket?.removeListener('match:end', onMatchEnd);
-      socket?.removeListener('match:abort', onMatchAbort);
       socket?.removeListener('match:update', onMatchUpdate);
     };
   }, []);
 
-  const onMatchPrestart = () => setMode('PRESTART COMPLETE');
   const onMatchAuto = () => setMode('AUTONOMOUS');
   const onMatchTele = () => setMode('TELEOPERATED');
   const onMatchEndGame = useRecoilCallback(({ snapshot }) => async () => {
@@ -66,9 +61,6 @@ const MatchStatus: FC = () => {
     const thisMatch = await snapshot.getPromise(matchInProgress);
     matchOver((thisMatch?.details as any)?.carbonPoints);
   });
-  const onMatchAbort = () => {
-    setMode('MATCH ABORTED');
-  };
   const onMatchUpdate = useRecoilCallback(({ set }) => async (match: Match) => {
     if (match.details && isCarbonCaptureDetails(match.details)) {
       await updateSink(match.details.carbonPoints);
