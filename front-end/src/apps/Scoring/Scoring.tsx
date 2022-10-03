@@ -6,10 +6,12 @@ import MatchSelection from './components/MatchSelection/MatchSelection';
 import RedAlliance from './components/RedAlliance/RedAlliance';
 import BlueAlliance from './components/BlueAlliance/BlueAlliance';
 import MatchStatus from './components/MatchStatus/MatchStatus';
+import UnloadListener from 'src/components/UnloadListener/UnloadListener';
 
 const ScoringApp: FC = () => {
   return (
     <DefaultLayout containerWidth='xl'>
+      <UnloadListener />
       <MatchControl />
       <Grid
         sx={{ marginTop: (theme) => theme.spacing(2) }}
