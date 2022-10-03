@@ -49,7 +49,7 @@ export const useButtonState = (): ControlButtons => {
         setButtonStates({
           prestartEnabled: true,
           audienceDisplayEnabled: true,
-          fieldPrepEnabled: false,
+          fieldPrepEnabled: true,
           startMatchEnabled: true,
           commitEnabled: false,
           postResultsEnabled: false
@@ -59,7 +59,7 @@ export const useButtonState = (): ControlButtons => {
         setButtonStates({
           prestartEnabled: true,
           audienceDisplayEnabled: true,
-          fieldPrepEnabled: false,
+          fieldPrepEnabled: true,
           startMatchEnabled: true,
           commitEnabled: false,
           postResultsEnabled: false
@@ -69,7 +69,7 @@ export const useButtonState = (): ControlButtons => {
         setButtonStates({
           prestartEnabled: true,
           audienceDisplayEnabled: true,
-          fieldPrepEnabled: false,
+          fieldPrepEnabled: true,
           startMatchEnabled: true,
           commitEnabled: false,
           postResultsEnabled: false
