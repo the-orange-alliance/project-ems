@@ -46,7 +46,7 @@ const calcPulseWidth = (ledLength: number): number => {
   const minPwm = 10;
   const led1Pwm = 14
   const totalLedLength = 120;
-  return Math.floor(ledLength * (maxPwm-minPwm) / totalLedLength + led1Pwm);
+  return Math.min(Math.floor(ledLength * (maxPwm-minPwm) / totalLedLength + led1Pwm),990);
 };
 
 export const setLEDLength = (length: number): FieldControlPacket => {
