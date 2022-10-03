@@ -7,6 +7,7 @@ import { matchInProgress } from 'src/stores/Recoil';
 
 const RedAlliance: FC = () => {
   const match = useRecoilValue(matchInProgress);
+
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   return (
     <Paper

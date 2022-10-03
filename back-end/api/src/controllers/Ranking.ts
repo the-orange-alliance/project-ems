@@ -1,15 +1,13 @@
 import {
+  calculateRankings,
+  getMatchKeyPartialFromKey,
   isTeamArray,
+  Ranking,
+  reconcileMatchDetails,
   reconcileMatchParticipants,
-  Team,
-  TournamentType
+  reconcileTeamRankings,
+  Team
 } from '@toa-lib/models';
-import { calculateRankings } from '@toa-lib/models/build/details/CarbonCapture';
-import {
-  getMatchKeyPartialFromType,
-  reconcileMatchDetails
-} from '@toa-lib/models/build/Match';
-import { Ranking, reconcileTeamRankings } from '@toa-lib/models/build/Ranking';
 import { NextFunction, Response, Request, Router } from 'express';
 import {
   deleteWhere,
@@ -19,39 +17,40 @@ import {
   updateWhere
 } from '../db/Database';
 import { validateBody } from '../middleware/BodyValidator';
+import { DataNotFoundError } from '../util/Errors';
 
 const router = Router();
 
-router.get(
-  '/:partial',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (req.query.tournamentLevel) {
       const rankings = await selectAllWhere(
         'ranking',
-        `rankKey LIKE ${req.params.partial}%`
+        `tournamentLevel = ${req.query.tournamentLevel}`
       );
       const teams = await selectAll('team');
       res.send(reconcileTeamRankings(teams, rankings));
-    } catch (e) {
-      return next(e);
+    } else {
+      return next(DataNotFoundError);
     }
+  } catch (e) {
+    return next(e);
   }
-);
+});
 
 router.post(
-  '/create/:type',
+  '/create/:tournamentLevel',
   validateBody(isTeamArray),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const type = getMatchKeyPartialFromType(
-        req.params.type as TournamentType
-      );
+      const tournamentLevel = req.params.tournamentLevel;
       const teams: Team[] = req.body;
       const eventKeyArgs = teams[0].eventParticipantKey.split('-');
       eventKeyArgs.pop();
       const eventKey = eventKeyArgs.toString().replace(/,/g, '-');
       const rankings: Ranking[] = teams.map((t) => ({
-        rankKey: `${eventKey}-${type}-${t.teamKey}`,
+        rankKey: `${eventKey}-${tournamentLevel}-${t.teamKey}`,
+        tournamentLevel: parseInt(tournamentLevel),
         rank: 0,
         allianceKey: '',
         losses: 0,
@@ -70,22 +69,22 @@ router.post(
 );
 
 router.post(
-  '/calculate/:partial',
+  '/calculate/:tournamentLevel',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const partial = req.params.partial;
-      const type = '';
+      const tournamentLevel = req.params.tournamentLevel;
       const matches = await selectAllWhere(
         'match',
-        `matchKey LIKE ${partial}%`
+        `tournamentLevel = ${tournamentLevel}`
       );
+      const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
       const participants = await selectAllWhere(
         'match_participant',
-        `matchKey LIKE ${partial}%`
+        `matchKey LIKE "${matchKeyPartial}%"`
       );
       const details = await selectAllWhere(
         'match_detail',
-        `matchKey LIKE ${partial}%`
+        `matchKey LIKE "${matchKeyPartial}%"`
       );
       const matchesWithParticipants = reconcileMatchParticipants(
         matches,
@@ -95,11 +94,14 @@ router.post(
         matchesWithParticipants,
         details
       );
-      const prevRankings = await selectAllWhere('ranking', `rankKey LIKE%`);
+      const prevRankings = await selectAllWhere(
+        'ranking',
+        `tournamentLevel = ${tournamentLevel}`
+      );
       const rankings = calculateRankings(matchesWithDetails, prevRankings);
-      await deleteWhere('ranking', `rankKey LIKE%`);
+      await deleteWhere('ranking', `tournamentLevel = ${tournamentLevel}`);
       await insertValue('ranking', rankings);
-      res.status(200).send({});
+      res.send(rankings);
     } catch (e) {
       return next(e);
     }

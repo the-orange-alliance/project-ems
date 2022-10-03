@@ -1,8 +1,5 @@
 import { UserLoginResponse } from '@toa-lib/models';
-import {
-  FieldOptions,
-  defaultFieldOptions
-} from '@toa-lib/models/build/FieldControl';
+import { FieldOptions, defaultFieldOptions } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';

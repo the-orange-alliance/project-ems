@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
-import { matchResult } from 'src/stores/Recoil';
+import { matchResult, rankingsByMatch } from 'src/stores/Recoil';
 import './MatchResults.css';
 
 import FGC_BG from '../res/global-bg.png';
@@ -11,16 +11,26 @@ import BLUE_LOSE from '../res/Blue_Lose_Top.png';
 import {
   defaultCarbonCaptureDetails,
   isCarbonCaptureDetails,
-  MatchParticipant
+  MatchParticipant,
+  Ranking
 } from '@toa-lib/models';
 
-const Participant: FC<{ participant: MatchParticipant }> = ({
-  participant
+const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
+  participant,
+  ranking
 }) => {
   return (
     <div className='res-team-row bottom-red'>
       <div className='res-team-name'>{participant?.team?.teamNameLong}</div>
-      <div className='res-team-rank'>#5</div>
+      <div className='res-team-rank'>
+        {ranking && (
+          <span>
+            {ranking.rankChange > 0
+              ? `#${ranking.rank} (+${ranking.rankChange})`
+              : `#${ranking.rank} (${ranking.rankChange})`}
+          </span>
+        )}
+      </div>
       <div className='res-team-flag'>
         <span
           className={
@@ -35,6 +45,7 @@ const Participant: FC<{ participant: MatchParticipant }> = ({
 
 const MatchResults: FC = () => {
   const match = useRecoilValue(matchResult);
+  const rankings = useRecoilValue(rankingsByMatch(match?.matchKey || ''));
   const someDetails = match?.details;
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
@@ -81,7 +92,11 @@ const MatchResults: FC = () => {
             <div className='res-card-middle fgc-red-bg'>
               <div className='res-card-teams'>
                 {redAlliance?.map((p) => (
-                  <Participant key={p.matchParticipantKey} participant={p} />
+                  <Participant
+                    key={p.matchParticipantKey}
+                    participant={p}
+                    ranking={rankings.find((r) => r.teamKey === p.teamKey)}
+                  />
                 ))}
               </div>
               <div className='res-card-details'>
@@ -176,7 +191,11 @@ const MatchResults: FC = () => {
             <div className='res-card-middle fgc-blue-bg'>
               <div className='res-card-teams'>
                 {blueAlliance?.map((p) => (
-                  <Participant key={p.matchParticipantKey} participant={p} />
+                  <Participant
+                    key={p.matchParticipantKey}
+                    participant={p}
+                    ranking={rankings.find((r) => r.teamKey === p.teamKey)}
+                  />
                 ))}
               </div>
               <div className='res-card-details'>

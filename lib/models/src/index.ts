@@ -100,7 +100,8 @@ export {
   getMatchKeyPartialFromType,
   getTournamentLevelFromType,
   getMatchKeyPartialFromKey,
-  reconcileMatchParticipants
+  reconcileMatchParticipants,
+  reconcileMatchDetails
 } from './Match';
 
 export {
@@ -116,9 +117,11 @@ export {
   HubFunctions,
   FieldControlPacket,
   HubMessage,
-  HubParameters
+  HubParameters,
+  FieldOptions,
+  defaultFieldOptions
 } from './FieldControl';
 
 export * from './fcs';
-
+export * from './Ranking';
 export * from './details';

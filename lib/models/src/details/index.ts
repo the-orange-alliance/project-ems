@@ -1,8 +1,1 @@
-export {
-  CarbonCaptureDetails,
-  CarbonCaptureRanking,
-  isCarbonCaptureDetails,
-  isCarbonCaptureRanking,
-  calculateScore,
-  defaultCarbonCaptureDetails
-} from './CarbonCapture';
+export * from './CarbonCapture';

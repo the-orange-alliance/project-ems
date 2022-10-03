@@ -1,9 +1,10 @@
 import { Team } from './Team';
-import { isNonNullObject, isNumber, isString } from './types';
+import { isArray, isNonNullObject, isNumber, isString } from './types';
 
 export interface Ranking {
   rankKey: string;
   teamKey: number;
+  tournamentLevel: number;
   rank: number;
   rankChange: number;
   played: number;
@@ -16,8 +17,9 @@ export interface Ranking {
 
 export const isRanking = (obj: unknown): obj is Ranking =>
   isNonNullObject(obj) &&
-  isNumber(obj.rankKey) &&
+  isString(obj.rankKey) &&
   isNumber(obj.teamKey) &&
+  isNumber(obj.tournamentLevel) &&
   isNumber(obj.rank) &&
   isNumber(obj.rankChange) &&
   isNumber(obj.played) &&
@@ -25,6 +27,9 @@ export const isRanking = (obj: unknown): obj is Ranking =>
   isNumber(obj.losses) &&
   isNumber(obj.ties) &&
   isString(obj.allianceKey);
+
+export const isRankingArray = (obj: unknown): obj is Ranking[] =>
+  isArray(obj) && obj.every((o) => isRanking(o));
 
 export function reconcileTeamRankings(
   teams: Team[],

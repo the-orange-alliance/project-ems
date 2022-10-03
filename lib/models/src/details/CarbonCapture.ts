@@ -65,6 +65,7 @@ export function calculateRankings(
     for (const participant of match.participants) {
       if (!rankingMap.get(participant.teamKey)) {
         rankingMap.set(participant.teamKey, {
+          tournamentLevel: match.tournamentLevel,
           allianceKey: '',
           carbonPoints: 0,
           losses: 0,
@@ -87,8 +88,9 @@ export function calculateRankings(
       if (
         !isCarbonCaptureDetails(match.details) ||
         participant.disqualified === 1
-      )
+      ) {
         continue;
+      }
 
       const ranking = {
         ...(rankingMap.get(participant.teamKey) as CarbonCaptureRanking)
@@ -122,7 +124,6 @@ export function calculateRankings(
       if (participant.disqualified === 1) continue;
       ranking.played = ranking.played + 1;
       ranking.carbonPoints = ranking.carbonPoints + match.details.carbonPoints;
-      scoresMap.set(participant.teamKey, scores);
       rankingMap.set(participant.teamKey, ranking);
     }
   }
@@ -136,8 +137,12 @@ export function calculateRankings(
     const lowestScore = ranking.played > 0 ? Math.min(...scores) : 0;
     const index = scores.findIndex((s) => s === lowestScore);
     const newScores = [...scores.splice(0, index), ...scores.splice(index + 1)];
-    ranking.rankingScore =
-      newScores.reduce((prev, curr) => prev + curr) / newScores.length;
+    if (newScores.length > 0) {
+      ranking.rankingScore =
+        newScores.reduce((prev, curr) => prev + curr) / newScores.length;
+    } else {
+      ranking.rankingScore = 0;
+    }
     rankingMap.set(key, ranking);
   }
 
@@ -151,7 +156,9 @@ export function calculateRankings(
     );
     rankings[i].rank = i + 1;
     if (prevRanking) {
-      rankings[i].rankChange = prevRanking.rank - rankings[i].rank;
+      const rankDelta =
+        prevRanking.rank === 0 ? 0 : prevRanking.rank - rankings[i].rank;
+      rankings[i].rankChange = rankDelta;
       rankings[i].rankKey = prevRanking.rankKey;
     }
   }
@@ -159,6 +166,7 @@ export function calculateRankings(
   return rankings;
 }
 
+// TODO - calculate penalties
 export function calculateScore(
   details: CarbonCaptureDetails
 ): [number, number] {
@@ -202,11 +210,11 @@ function compareRankings(
   b: CarbonCaptureRanking
 ): number {
   if (a.rankingScore > b.rankingScore) {
-    return 1;
+    return -1;
   } else if (a.highestScore > b.highestScore) {
-    return 1;
+    return -1;
   } else if (a.carbonPoints > b.carbonPoints) {
-    return 1;
+    return -1;
   }
-  return -1;
+  return 1;
 }

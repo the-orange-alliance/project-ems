@@ -28,7 +28,9 @@ import {
   MatchTimer,
   isMatch,
   getTournamentLevelFromType,
-  MatchDetails
+  MatchDetails,
+  Ranking,
+  isRankingArray
 } from '@toa-lib/models';
 import {
   atom,
@@ -440,6 +442,42 @@ export const matchInProgressDetails = selector<MatchDetails | null>({
       set(matchInProgress, { ...newMatch, details });
     }
   }
+});
+
+/*RANKINGS SECTION  */
+export const rankings = selectorFamily<Ranking[], number>({
+  key: 'rankingsAtom',
+  get: (tournamentLevel: number) => async () => {
+    try {
+      return await clientFetcher(
+        `ranking?tournamentLevel=${tournamentLevel}`,
+        'GET',
+        undefined,
+        isRankingArray
+      );
+    } catch (e) {
+      // TODO - better error-handling
+      return [];
+    }
+  }
+});
+
+export const rankingsByMatch = selectorFamily<Ranking[], string>({
+  key: 'rankingsByMatch',
+  get:
+    (matchKey: string) =>
+    async ({ get }) => {
+      const match = get(matchByMatchKey(matchKey));
+      if (!match || !match.participants) return [];
+      console.log(
+        match.tournamentLevel,
+        match.participants,
+        get(rankings(match.tournamentLevel))
+      );
+      return get(rankings(match.tournamentLevel)).filter((r) =>
+        match.participants?.find((p) => p.teamKey === r.teamKey)
+      );
+    }
 });
 
 /* FIELD SECTION */

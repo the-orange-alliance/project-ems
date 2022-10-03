@@ -4,9 +4,9 @@ import { Team } from './Team';
 import { isArray, isNonNullObject, isNumber, isString } from './types';
 
 // Tournament Levels
-export const TEST_LEVEL = -1;
-export const PRACTICE_LEVEL = 0;
-export const QUALIFICATION_LEVEL = 1;
+export const TEST_LEVEL = 0;
+export const PRACTICE_LEVEL = 1;
+export const QUALIFICATION_LEVEL = 2;
 export const ROUND_ROBIN_LEVEL = 20;
 export const RANKING_LEVEL = 30;
 export const OCTOFINALS_LEVEL = 100;

@@ -24,10 +24,7 @@ import {
 } from 'src/stores/Recoil';
 import MenuItem from '@mui/material/MenuItem';
 import useLocalStorage from 'src/stores/LocalStorage';
-import {
-  defaultFieldOptions,
-  FieldOptions
-} from '@toa-lib/models/build/FieldControl';
+import { defaultFieldOptions, FieldOptions } from '@toa-lib/models';
 
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);

@@ -5,6 +5,7 @@ import {
   isUser,
   isUserLoginResponse,
   isUserArray,
+  isRankingArray,
   UserLoginResponse,
   Event,
   isEvent,
@@ -14,7 +15,8 @@ import {
   Match,
   isMatchArray,
   MatchDetails,
-  MatchParticipant
+  MatchParticipant,
+  Ranking
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -115,6 +117,17 @@ export const patchWholeMatch = async (match: Match): Promise<void> => {
     console.log(e);
   }
 };
+
+export const createRankings = (
+  tournamentLevel: number,
+  teams: Team[]
+): Promise<void> =>
+  clientFetcher(`ranking/create/${tournamentLevel}`, 'POST', teams);
+
+export const recalculateRankings = (
+  tournamentLevel: number
+): Promise<Ranking[]> =>
+  clientFetcher(`ranking/calculate/${tournamentLevel}`, 'POST', isRankingArray);
 
 /** React hooks to use GET requests for data. */
 export const useLoginAttempt = (

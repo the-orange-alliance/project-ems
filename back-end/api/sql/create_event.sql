@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS "alliance" (
 CREATE TABLE IF NOT EXISTS "ranking" (
     "rankKey" VARCHAR(40) PRIMARY KEY NOT NULL,
     "teamKey" INT NOT NULL,
+    "tournamentLevel": INT NOT NULL,
     "rank" INT NOT NULL,
     "rankChange" INT,
     "played" INT,
