@@ -8,11 +8,11 @@ import {
   fieldCountdownDuration,
   fieldCountdownStyle,
   fieldEndgameHB,
-  fieldEndgameStart,
-  fieldEndgameStartDuration,
   fieldMatchOverLEDPattern,
   fieldMatchOverStyle,
-  fieldMotorDuration, fieldMotorReverseDuration, fieldTotalSetupDuration,
+  fieldMotorDuration,
+  fieldMotorReverseDuration,
+  fieldTotalSetupDuration,
   matchStateAtom,
   timer
 } from 'src/stores/Recoil';
@@ -26,9 +26,7 @@ import {
 const StartMatchButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
   const motorDuration = useRecoilValue(fieldMotorDuration);
-  const egStartspeed = useRecoilValue(fieldEndgameStart);
   const egSpeed = useRecoilValue(fieldEndgameHB);
-  const egDuration = useRecoilValue(fieldEndgameStartDuration);
   const cdStyle = useRecoilValue(fieldCountdownStyle);
   const cdDuration = useRecoilValue(fieldCountdownDuration);
   const moStyle = useRecoilValue(fieldMatchOverStyle);
@@ -61,9 +59,7 @@ const StartMatchButton: FC = () => {
     setLoading(true);
     await prepareField(
       motorDuration,
-      egStartspeed,
       egSpeed,
-      egDuration,
       cdStyle,
       cdDuration,
       moStyle,

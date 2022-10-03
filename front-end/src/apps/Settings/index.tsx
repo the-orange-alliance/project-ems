@@ -11,9 +11,7 @@ import { useRecoilState } from 'recoil';
 import {
   darkModeAtom,
   fieldMotorDuration,
-  fieldEndgameStart,
   fieldEndgameHB,
-  fieldEndgameStartDuration,
   fieldCountdownStyle,
   fieldCountdownDuration,
   fieldMatchOverStyle,
@@ -30,10 +28,6 @@ import { defaultFieldOptions, FieldOptions } from '@toa-lib/models';
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
   const [motorDuration, setMotorDuration] = useRecoilState(fieldMotorDuration);
-  const [endgameStartDuration, setEndgameStartDuration] = useRecoilState(
-    fieldEndgameStartDuration
-  );
-  const [endGameStartHB, setEndgameStart] = useRecoilState(fieldEndgameStart);
   const [endGameHB, setEndgameHB] = useRecoilState(fieldEndgameHB);
   const [countdownStyle, setCountdownStyle] =
     useRecoilState(fieldCountdownStyle);
@@ -49,7 +43,7 @@ const SettingsApp: FC = () => {
   const [color2, setColor2] = useRecoilState(fieldColor2);
   const [totalSetupDuration, setTotalSetupDuration] = useRecoilState(
     fieldTotalSetupDuration
-  );  
+  );
   const [motorReverseDuration, setMotorReverseDuration] = useRecoilState(
     fieldMotorReverseDuration
   );
@@ -62,8 +56,6 @@ const SettingsApp: FC = () => {
   useEffect(() => {
     setOptions({
       motorDuration,
-      endGameStartDuration: endgameStartDuration,
-      endGameStart: endGameStartHB,
       endGameHB,
       countdownStyle,
       countdownDuration,
@@ -76,8 +68,6 @@ const SettingsApp: FC = () => {
     });
   }, [
     motorDuration,
-    endgameStartDuration,
-    endGameStartHB,
     endGameHB,
     countdownStyle,
     countdownDuration,
@@ -95,12 +85,6 @@ const SettingsApp: FC = () => {
 
   const changeMotorDuration = (event: ChangeEvent<HTMLInputElement>) => {
     setMotorDuration(parseInt(event.target.value));
-  };
-  const changeEndgameStartDuration = (event: ChangeEvent<HTMLInputElement>) => {
-    setEndgameStartDuration(parseInt(event.target.value));
-  };
-  const changeEndgameStartHB = (event: SelectChangeEvent) => {
-    setEndgameStart(parseInt(event.target.value));
   };
   const changeEndgameHB = (event: SelectChangeEvent) => {
     setEndgameHB(parseInt(event.target.value));
@@ -196,57 +180,6 @@ const SettingsApp: FC = () => {
               label={
                 <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
                   Field Reset Motor Duration
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={
-                <TextField
-                  value={endgameStartDuration}
-                  onChange={changeEndgameStartDuration}
-                />
-              }
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  Start of End Game Duration
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={
-                <Select
-                  value={endGameStartHB as unknown as string}
-                  label='Speed'
-                  onChange={changeEndgameStartHB}
-                >
-                  <MenuItem value={15}>Slow</MenuItem>
-                  <MenuItem value={25}>Medium</MenuItem>
-                  <MenuItem value={35}>Fast</MenuItem>
-                </Select>
-              }
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  End Game Start Heartbeat
                 </Typography>
               }
               labelPlacement='start'
