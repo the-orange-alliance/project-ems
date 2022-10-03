@@ -197,7 +197,7 @@ export async function updateSink(carbonPoints: number): Promise<void> {
 export async function endGameFlash(carbonPoints: number): Promise<void> {
   const led = calcLedFromCm(carbonPoints);
   setLEDEndgame(true);
-  socket?.emit('fcs:update', setLEDLength(120));
+  socket?.emit('fcs:update', setLEDLength(110));
   await new Promise((resolve) => setTimeout(resolve, 250));
   if (carbonPoints >= COOPERTITION) {
     socket?.emit('fcs:update', setLEDPattern(1600 + endGameStartSpeed));
