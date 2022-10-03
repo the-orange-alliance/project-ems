@@ -1,16 +1,17 @@
 import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
-import { matchInProgress } from 'src/stores/Recoil';
+import { matchInProgress, rankingsByMatch } from 'src/stores/Recoil';
 import './MatchPreview.css';
 
 import FGC_BG from '../res/global-bg.png';
 import FGC_LOGO from '../res/Global_Logo.png';
 import RED_FLAG from '../res/Red_Team_Tag.png';
 import BLUE_FLAG from '../res/Blue_Team_Tag.png';
-import { MatchParticipant } from '@toa-lib/models';
+import { MatchParticipant, Ranking } from '@toa-lib/models';
 
-const Participant: FC<{ participant: MatchParticipant }> = ({
-  participant
+const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
+  participant,
+  ranking
 }) => {
   return (
     <div className='pre-match-alliance-row pre-match-border'>
@@ -25,13 +26,14 @@ const Participant: FC<{ participant: MatchParticipant }> = ({
       <div className={'pre-match-team'}>
         ({participant?.team?.country})&nbsp;{participant?.team?.teamNameLong}
       </div>
-      <div className='pre-match-rank'>#5</div>
+      <div className='pre-match-rank'>{ranking && `#${ranking.rank}`}</div>
     </div>
   );
 };
 
 const MatchPreview: FC = () => {
   const match = useRecoilValue(matchInProgress);
+  const rankings = useRecoilValue(rankingsByMatch(match?.matchKey || ''));
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
@@ -71,7 +73,11 @@ const MatchPreview: FC = () => {
           </div>
           <div className='pre-match-alliance-right'>
             {redAlliance?.map((p) => (
-              <Participant key={p.matchParticipantKey} participant={p} />
+              <Participant
+                key={p.matchParticipantKey}
+                participant={p}
+                ranking={rankings.find((r) => r.teamKey === p.teamKey)}
+              />
             ))}
           </div>
         </div>
@@ -81,7 +87,11 @@ const MatchPreview: FC = () => {
           </div>
           <div className='pre-match-alliance-right'>
             {blueAlliance?.map((p) => (
-              <Participant key={p.matchParticipantKey} participant={p} />
+              <Participant
+                key={p.matchParticipantKey}
+                participant={p}
+                ranking={rankings.find((r) => r.teamKey === p.teamKey)}
+              />
             ))}
           </div>
         </div>

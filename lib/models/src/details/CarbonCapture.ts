@@ -168,6 +168,8 @@ export function calculateRankings(
 
 // TODO - calculate penalties
 export function calculateScore(
+  redPen: number,
+  bluePen: number,
   details: CarbonCaptureDetails
 ): [number, number] {
   const coopertition = details.coopertitionBonusLevel * 100;
@@ -185,7 +187,10 @@ export function calculateScore(
       getMultiplier(details.blueRobotThreeStorage)) *
       details.carbonPoints +
     coopertition;
-  return [Math.ceil(redScore), Math.ceil(blueScore)];
+  return [
+    Math.ceil(redScore * (1 - redPen * 0.1)),
+    Math.ceil(blueScore * (1 - bluePen * 0.1))
+  ];
 }
 
 function getMultiplier(robotStatus: number): number {

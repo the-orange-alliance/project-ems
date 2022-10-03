@@ -123,6 +123,8 @@ export default class Match extends Room {
         coopertitionBonusLevel;
 
       const [redScore, blueScore] = calculateScore(
+        this.match.redMinPen,
+        this.match.blueMinPen,
         this.match.details as CarbonCaptureDetails
       );
       this.match.redScore = redScore;

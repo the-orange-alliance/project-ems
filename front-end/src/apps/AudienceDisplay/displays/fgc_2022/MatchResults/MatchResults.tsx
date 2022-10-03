@@ -25,7 +25,7 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
       <div className='res-team-rank'>
         {ranking && (
           <span>
-            {ranking.rankChange > 0
+            {ranking.rankChange >= 0
               ? `#${ranking.rank} (+${ranking.rankChange})`
               : `#${ranking.rank} (${ranking.rankChange})`}
           </span>
@@ -58,8 +58,18 @@ const MatchResults: FC = () => {
   const redScore = match?.redScore || 0;
   const blueScore = match?.blueScore || 0;
 
-  const redTop = redScore > blueScore ? RED_WIN : RED_LOSE;
-  const blueTop = blueScore > redScore ? BLUE_WIN : BLUE_LOSE;
+  const redTop =
+    redScore > blueScore
+      ? RED_WIN
+      : redScore === blueScore
+      ? RED_WIN
+      : RED_LOSE;
+  const blueTop =
+    blueScore > redScore
+      ? BLUE_WIN
+      : redScore === blueScore
+      ? BLUE_WIN
+      : BLUE_LOSE;
 
   const redStorage = [
     details.redRobotOneStorage,
@@ -102,14 +112,24 @@ const MatchResults: FC = () => {
               <div className='res-card-details'>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={'https://img.icons8.com/ios-filled/500/carbon.png'}
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-red'>CARBON POINTS</div>
                   <div className='res-detail-right'>{details.carbonPoints}</div>
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://www.freeiconspng.com/thumbs/platform-icon/platform-icon-12.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-red'>
                     STORAGE LEVEL 1
@@ -120,7 +140,13 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://cdn3.iconfinder.com/data/icons/ui-essential-elements/110/Subtract-512.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-red'>
                     STORAGE LEVEL 2
@@ -131,7 +157,13 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://icons.veryicon.com/png/o/miscellaneous/linear-icon-45/hamburger-menu-5.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-red'>
                     STORAGE LEVEL 3
@@ -142,7 +174,13 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://cdn0.iconfinder.com/data/icons/glyphpack/36/filter-512.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-red'>
                     STORAGE LEVEL 4
@@ -153,7 +191,13 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://www.citypng.com/public/uploads/small/11639603912fxsbaimc7z0azr4dfynd9zzascvbwln0fuq9bvg3wwcasg50ykyuzk4vrn3rkkkqdjvugwhuujquhrfqeng0ekx1thaqus2x4hae.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-red'>
                     COOPERTITION BONUS
@@ -164,13 +208,19 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://www.freeiconspng.com/thumbs/do-not-sign-icon/do-not-sign-icon-png-4.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left penalty right-red'>
                     PENALTY
                   </div>
                   <div className='res-detail-right penalty'>
-                    {match?.blueMinPen}
+                    {match?.redMinPen ? `-${match.redMinPen * 10}%` : 0}
                   </div>
                 </div>
               </div>
@@ -201,7 +251,11 @@ const MatchResults: FC = () => {
               <div className='res-card-details'>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={'https://img.icons8.com/ios-filled/500/carbon.png'}
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-blue'>
                     CARBON POINTS
@@ -210,7 +264,13 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://www.freeiconspng.com/thumbs/platform-icon/platform-icon-12.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-blue'>
                     STORAGE LEVEL 1
@@ -221,7 +281,13 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://cdn3.iconfinder.com/data/icons/ui-essential-elements/110/Subtract-512.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-blue'>
                     STORAGE LEVEL 2
@@ -232,7 +298,13 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://icons.veryicon.com/png/o/miscellaneous/linear-icon-45/hamburger-menu-5.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-blue'>
                     STORAGE LEVEL 3
@@ -243,7 +315,13 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://cdn0.iconfinder.com/data/icons/glyphpack/36/filter-512.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-blue'>
                     STORAGE LEVEL 4
@@ -254,7 +332,13 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://www.citypng.com/public/uploads/small/11639603912fxsbaimc7z0azr4dfynd9zzascvbwln0fuq9bvg3wwcasg50ykyuzk4vrn3rkkkqdjvugwhuujquhrfqeng0ekx1thaqus2x4hae.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left right-blue'>
                     COOPERTITION BONUS
@@ -265,13 +349,19 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={''} className='fit-h' />
+                    <img
+                      alt={'empty'}
+                      src={
+                        'https://www.freeiconspng.com/thumbs/do-not-sign-icon/do-not-sign-icon-png-4.png'
+                      }
+                      className='fit-w'
+                    />
                   </div>
                   <div className='res-detail-left penalty right-blue'>
                     PENALTY
                   </div>
                   <div className='res-detail-right penalty'>
-                    {match?.redMinPen}
+                    {match?.blueMinPen ? `-${match.redMinPen * 10}%` : 0}
                   </div>
                 </div>
               </div>
