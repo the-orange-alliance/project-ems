@@ -16,6 +16,7 @@ import {
 } from './apps/Referee';
 import AudienceDisplay from './apps/AudienceDisplay';
 import FieldDebugger from './apps/FieldDebugger';
+import Reports from './apps/Reports';
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
@@ -113,6 +114,13 @@ const AppRoutes: AppRoute[] = [
     path: '/admin',
     group: 0,
     element: <AdminApp />,
+    hidden: true
+  },
+  {
+    name: 'Reports App',
+    path: '/reports',
+    group: 0,
+    element: <Reports />,
     hidden: true
   },
   {

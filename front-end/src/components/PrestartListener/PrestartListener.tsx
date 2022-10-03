@@ -34,6 +34,8 @@ const PrestartListener: FC = () => {
         newMatch.details = { ...defaultCarbonCaptureDetails };
         newMatch.details.matchKey = match.matchKey;
         newMatch.details.matchDetailKey = match.matchDetailKey;
+        newMatch.redMinPen = 0;
+        newMatch.blueMinPen = 0;
         newMatch.redScore = 0;
         newMatch.blueScore = 0;
         set(loadedMatchKey, matchKey);
