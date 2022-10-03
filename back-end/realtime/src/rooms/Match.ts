@@ -27,18 +27,22 @@ export default class Match extends Room {
 
   public initializeEvents(socket: Socket): void {
     // These are in case of mid-match disconnect/reconnects
-    if (this.state >= MatchState.PRESTART_COMPLETE && this.matchKey) {
+    if (
+      this.state >= MatchState.PRESTART_COMPLETE &&
+      this.matchKey &&
+      !this.timer.inProgress()
+    ) {
       // Send prestart information
       socket.emit("match:prestart", this.matchKey);
       socket.emit("match:display", this.displayID);
-      if (this.match) {
-        socket.emit("match:update", this.match);
-      }
     }
 
-    if (this.timer.inProgress()) {
+    if (this.match && this.timer.inProgress()) {
       socket.emit("match:update", this.match);
-      socket.emit("match:display", this.displayID);
+    }
+
+    if (this.state === MatchState.RESULTS_COMMITTED) {
+      socket.emit("match:commit", this.matchKey);
     }
 
     // Event listeners for matches
@@ -46,6 +50,7 @@ export default class Match extends Room {
       this.matchKey = matchKey;
       this.broadcast().emit("match:prestart", matchKey);
       this.broadcast().emit("match:display", 1);
+      this.displayID = 1;
       this.state = MatchState.PRESTART_COMPLETE;
       logger.info(`prestarting ${matchKey}`);
     });
@@ -85,6 +90,7 @@ export default class Match extends Room {
         this.state = MatchState.PRESTART_READY;
         logger.info("match aborted");
       });
+      this.displayID = 2;
       this.timer.start();
       logger.info(`match started: ${this.matchKey}`);
     });

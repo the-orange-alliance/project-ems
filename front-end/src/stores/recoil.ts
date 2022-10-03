@@ -469,11 +469,6 @@ export const rankingsByMatch = selectorFamily<Ranking[], string>({
     async ({ get }) => {
       const match = get(matchByMatchKey(matchKey));
       if (!match || !match.participants) return [];
-      console.log(
-        match.tournamentLevel,
-        match.participants,
-        get(rankings(match.tournamentLevel))
-      );
       return get(rankings(match.tournamentLevel)).filter((r) =>
         match.participants?.find((p) => p.teamKey === r.teamKey)
       );
