@@ -16,9 +16,7 @@ import { socketConnectedAtom } from 'src/stores/Recoil';
 let LEDEndgame = false;
 let LEDMatchOver = false;
 let socket: Socket | null = null;
-let endGameStartSpeed: number;
 let endGameSpeed: number;
-let endGameDuration: number;
 let matchOverPattern: number;
 let matchOverStlye: string | null;
 let carbonColor = false;
@@ -100,9 +98,7 @@ export function sendStartMatch(): void {
 
 export async function prepareField(
   duration: number,
-  endgameStartHBSpeed: number,
   endGameHBSpeed: number,
-  egDuration: number,
   cdStyle: string,
   cdDuration: number,
   moStyle: string,
@@ -112,9 +108,7 @@ export async function prepareField(
   tSetupDuration: number,
   mReverseDuration: number
 ): Promise<void> {
-  endGameStartSpeed = endgameStartHBSpeed;
   endGameSpeed = endGameHBSpeed;
-  endGameDuration = egDuration;
   matchOverStlye = moStyle;
   matchOverPattern = moPattern;
   LED_COLOR1 = color1;
@@ -197,16 +191,8 @@ export async function updateSink(carbonPoints: number): Promise<void> {
 export async function endGameFlash(carbonPoints: number): Promise<void> {
   const led = calcLedFromCm(carbonPoints);
   setLEDEndgame(true);
-  socket?.emit('fcs:update', setLEDLength(110));
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  if (carbonPoints >= COOPERTITION) {
-    socket?.emit('fcs:update', setLEDPattern(1600 + endGameStartSpeed));
-  } else {
-    socket?.emit('fcs:update', setLEDPattern(1500 + endGameStartSpeed));
-  }
-  await new Promise((resolve) => setTimeout(resolve, endGameDuration));
-  socket?.emit('fcs:update', setLEDLength(led));
-  await new Promise((resolve) => setTimeout(resolve, 250));
+  // socket?.emit('fcs:update', setLEDLength(led));
+  // await new Promise((resolve) => setTimeout(resolve, 250));
   if (carbonPoints >= COOPERTITION) {
     socket?.emit('fcs:update', setLEDPattern(1600 + endGameSpeed));
   } else {
@@ -218,7 +204,6 @@ export async function sendCommitScores(matchKey: string): Promise<void> {
   socket?.emit('match:commit', matchKey);
   socket?.emit('fcs:update', setLEDLength(120));
   await new Promise((resolve) => setTimeout(resolve, 250));
-  await reverseMotors();
   socket?.emit('fcs:update', LED_ALLCLEAR);
 }
 
@@ -249,6 +234,7 @@ export async function matchOver(carbonPoints: number): Promise<void> {
       socket?.emit('fcs:update', setLEDPattern(matchOverPattern));
       break;
   }
+  reverseMotors();
 }
 export async function sendPostResults(): Promise<void> {
   socket?.emit('match:display', 3);

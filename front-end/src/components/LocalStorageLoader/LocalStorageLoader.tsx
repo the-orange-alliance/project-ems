@@ -8,8 +8,6 @@ import {
   userAtom,
   hostIP,
   fieldMotorDuration,
-  fieldEndgameStartDuration,
-  fieldEndgameStart,
   fieldEndgameHB,
   fieldCountdownStyle,
   fieldCountdownDuration,
@@ -17,7 +15,7 @@ import {
   fieldMatchOverLEDPattern,
   fieldColor1,
   fieldColor2,
-  fieldTotalSetupDuration
+  fieldTotalSetupDuration, fieldMotorReverseDuration
 } from 'src/stores/Recoil';
 
 const LocalStorageLoader: FC = () => {
@@ -25,8 +23,6 @@ const LocalStorageLoader: FC = () => {
   const host = useRecoilValue(hostIP);
 
   const setMotorDuration = useSetRecoilState(fieldMotorDuration);
-  const setEndGameStartDuration = useSetRecoilState(fieldEndgameStartDuration);
-  const setEndGameStart = useSetRecoilState(fieldEndgameStart);
   const setEndGameHB = useSetRecoilState(fieldEndgameHB);
   const setCountdownStyle = useSetRecoilState(fieldCountdownStyle);
   const setCountdownDuration = useSetRecoilState(fieldCountdownDuration);
@@ -35,6 +31,7 @@ const LocalStorageLoader: FC = () => {
   const setColor1 = useSetRecoilState(fieldColor1);
   const setColor2 = useSetRecoilState(fieldColor2);
   const setSetupDuration = useSetRecoilState(fieldTotalSetupDuration);
+  const setMotorReverseDuration = useSetRecoilState(fieldMotorReverseDuration);
 
   const [, , setupSocket] = useSocket();
 
@@ -54,8 +51,6 @@ const LocalStorageLoader: FC = () => {
 
   useEffect(() => {
     setMotorDuration(options.motorDuration);
-    setEndGameStartDuration(options.endGameStartDuration);
-    setEndGameStart(options.endGameStart);
     setEndGameHB(options.endGameHB);
     setCountdownStyle(options.countdownStyle);
     setCountdownDuration(options.countdownDuration);
@@ -64,6 +59,7 @@ const LocalStorageLoader: FC = () => {
     setColor1(options.primaryColor);
     setColor2(options.secondaryColor);
     setSetupDuration(options.setupDuration);
+    setMotorReverseDuration(options.motorReverseDuration);
   }, [options]);
 
   return null;

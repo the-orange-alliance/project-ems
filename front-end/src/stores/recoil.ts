@@ -480,14 +480,6 @@ export const fieldMotorDuration = atom({
   key: 'fieldMotorDurationAtom',
   default: 3000 // in ms
 });
-export const fieldEndgameStartDuration = atom({
-  key: 'StartEndgameDurationAtom',
-  default: 3000 // in ms
-});
-export const fieldEndgameStart = atom({
-  key: 'fieldEndgameStartAtom',
-  default: 15
-});
 export const fieldEndgameHB = atom({
   key: 'fieldEndgameHBAtom',
   default: 15
