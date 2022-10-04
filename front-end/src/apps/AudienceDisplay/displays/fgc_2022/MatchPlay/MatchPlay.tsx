@@ -1,4 +1,9 @@
-import { Match, MatchParticipant } from '@toa-lib/models';
+import {
+  defaultCarbonCaptureDetails,
+  isCarbonCaptureDetails,
+  Match,
+  MatchParticipant
+} from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
@@ -94,11 +99,16 @@ const CardStatus: FC<{ status: number }> = ({ status }) => {
 const MatchPlay: FC = () => {
   const [match, setMatch] = useRecoilState(matchInProgress);
   const [socket, connected] = useSocket();
+  const someDetails = match?.details;
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
   const name = match?.matchName ? match.matchName.split(' ')[2] : '';
+
+  const details = isCarbonCaptureDetails(someDetails)
+    ? someDetails
+    : defaultCarbonCaptureDetails;
 
   useEffect(() => {
     if (connected) {
@@ -167,6 +177,16 @@ const MatchPlay: FC = () => {
                 <div className='red-bg center'>
                   <span>{match?.redScore || 0}</span>
                 </div>
+              </div>
+              <div id='score-container-sink'>
+                <div id='score-container-sink-fill' />
+                <div
+                  id='score-container-sink-complete'
+                  style={{ top: `${(1 - details.carbonPoints / 165) * 100}%` }}
+                  className={
+                    details.coopertitionBonusLevel > 0 ? 'coopertition' : ''
+                  }
+                />
               </div>
               <div id='score-container-blue'>
                 <div className='blue-bg center'>
