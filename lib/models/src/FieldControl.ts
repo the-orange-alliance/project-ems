@@ -39,5 +39,5 @@ export const defaultFieldOptions: FieldOptions = {
   primaryColor: 1965,
   secondaryColor: 1955,
   setupDuration: 10000,
-  motorReverseDuration:3000
+  motorReverseDuration:3000,
 };
