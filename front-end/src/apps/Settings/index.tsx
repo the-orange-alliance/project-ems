@@ -1,12 +1,20 @@
 import { FC, useEffect, ChangeEvent } from 'react';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import DefaultLayout from 'src/layouts/DefaultLayout';
-import { FormControlLabel, FormGroup, Switch } from '@mui/material';
+import {
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  ListItemText,
+  OutlinedInput,
+  Switch
+} from '@mui/material';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   darkModeAtom,
@@ -20,11 +28,14 @@ import {
   fieldColor2,
   fieldTotalSetupDuration,
   fieldMotorReverseDuration,
-  hostIP
+  hostIP,
+  fieldControl,
+  eventFields
 } from 'src/stores/Recoil';
 import MenuItem from '@mui/material/MenuItem';
 import useLocalStorage from 'src/stores/LocalStorage';
 import { defaultFieldOptions, FieldOptions } from '@toa-lib/models';
+import { APIOptions } from '@toa-lib/client';
 
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
@@ -49,11 +60,15 @@ const SettingsApp: FC = () => {
     fieldMotorReverseDuration
   );
   const [host, setHost] = useRecoilState(hostIP);
+  const [fields, setFields] = useRecoilState(fieldControl);
+  const allFields = useRecoilValue(eventFields);
 
   const [, setOptions] = useLocalStorage<FieldOptions>(
     'ems:fcs:options',
     defaultFieldOptions
   );
+  const [, setStorageHost] = useLocalStorage<string>('ems:host', host);
+  const [, setStorageFields] = useLocalStorage<number[]>('ems:fields', fields);
 
   useEffect(() => {
     setOptions({
@@ -80,6 +95,16 @@ const SettingsApp: FC = () => {
     totalSetupDuration,
     motorReverseDuration
   ]);
+
+  useEffect(() => {
+    setStorageHost(host);
+    // Update API
+    APIOptions.host = `http://${host}`;
+  }, [host]);
+
+  useEffect(() => {
+    setStorageFields(fields);
+  }, [fields]);
 
   const changeDarkMode = (): void => {
     setDarkMode(!darkMode);
@@ -117,6 +142,12 @@ const SettingsApp: FC = () => {
   };
   const changeHost = (event: ChangeEvent<HTMLInputElement>) => {
     setHost(event.target.value);
+  };
+  const changeFields = (event: SelectChangeEvent<number[]>) => {
+    const {
+      target: { value }
+    } = event;
+    setFields(typeof value === 'string' ? [] : value);
   };
 
   return (
@@ -392,6 +423,61 @@ const SettingsApp: FC = () => {
                 <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
                   API Host (For multi-field setups)
                 </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Select
+                  labelId='demo-multiple-checkbox-label'
+                  id='demo-multiple-checkbox'
+                  multiple
+                  value={fields}
+                  onChange={changeFields}
+                  input={<OutlinedInput label='Tag' />}
+                  renderValue={(selected) => selected.join(', ')}
+                >
+                  {allFields.map((field) => (
+                    <MenuItem key={field} value={field}>
+                      <Checkbox checked={fields.indexOf(field) > -1} />
+                      <ListItemText primary={`Field ${field}`} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Field Control
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Button variant='contained' color='error'>
+                  Update Network Settings
+                </Button>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }} />
               }
               labelPlacement='start'
               sx={{ padding: (theme) => theme.spacing(2) }}

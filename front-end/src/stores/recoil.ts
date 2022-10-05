@@ -55,9 +55,19 @@ export const hostIP = atom<string>({
   key: 'hostIPAtom',
   default: window.location.hostname
 });
-export const fields = atom<number[]>({
+export const eventFields = selector<number[]>({
+  key: 'fieldsSelector',
+  get: ({ get }) => {
+    const fields = [];
+    for (let i = 0; i < get(eventAtom).fieldCount; i++) {
+      fields.push(i + 1);
+    }
+    return fields;
+  }
+});
+export const fieldControl = atom<number[]>({
   key: 'fieldsAtom',
-  default: []
+  default: eventFields
 });
 
 /* Internal state management */

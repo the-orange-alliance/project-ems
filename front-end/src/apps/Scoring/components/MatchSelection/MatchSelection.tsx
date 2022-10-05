@@ -3,6 +3,7 @@ import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
+  fieldControl,
   loadedMatchKey,
   matchesByTournamentType,
   matchStateAtom,
@@ -20,6 +21,7 @@ const MatchSelection: FC = () => {
   const tournamentType = useRecoilValue(selectedTournamentType);
   const state = useRecoilValue(matchStateAtom);
   const matches = useRecoilValue(matchesByTournamentType(tournamentType));
+  const fields = useRecoilValue(fieldControl);
   const setSelectedMatchKey = useSetRecoilState(loadedMatchKey);
 
   const handleSelect = (matchKey: string): void => {
@@ -44,7 +46,7 @@ const MatchSelection: FC = () => {
           state >= MatchState.PRESTART_COMPLETE &&
           state <= MatchState.MATCH_COMPLETE
         }
-        matches={matches}
+        matches={matches.filter((m) => fields.indexOf(m.fieldNumber) > -1)}
         onSelect={handleSelect}
       />
     </Paper>

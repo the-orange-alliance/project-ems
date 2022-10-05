@@ -1,7 +1,11 @@
-import { UserLoginResponse } from '@toa-lib/models';
-import { FieldOptions, defaultFieldOptions } from '@toa-lib/models';
+import {
+  UserLoginResponse,
+  FieldOptions,
+  defaultFieldOptions
+} from '@toa-lib/models';
+import { APIOptions } from '@toa-lib/client';
 import { FC, useEffect } from 'react';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import useLocalStorage from 'src/stores/LocalStorage';
 import {
@@ -16,12 +20,12 @@ import {
   fieldColor1,
   fieldColor2,
   fieldTotalSetupDuration,
-  fieldMotorReverseDuration
+  fieldMotorReverseDuration,
+  fieldControl
 } from 'src/stores/Recoil';
 
 const LocalStorageLoader: FC = () => {
   const [user, setUser] = useRecoilState(userAtom);
-  const host = useRecoilValue(hostIP);
 
   const setMotorDuration = useSetRecoilState(fieldMotorDuration);
   const setEndGameHB = useSetRecoilState(fieldEndgameHB);
@@ -33,6 +37,8 @@ const LocalStorageLoader: FC = () => {
   const setColor2 = useSetRecoilState(fieldColor2);
   const setSetupDuration = useSetRecoilState(fieldTotalSetupDuration);
   const setMotorReverseDuration = useSetRecoilState(fieldMotorReverseDuration);
+  const setHost = useSetRecoilState(hostIP);
+  const setFields = useSetRecoilState(fieldControl);
 
   const [, , setupSocket] = useSocket();
 
@@ -42,6 +48,8 @@ const LocalStorageLoader: FC = () => {
     'ems:fcs:options',
     defaultFieldOptions
   );
+  const [host] = useLocalStorage<string>('ems:host', null);
+  const [fields] = useLocalStorage<number[]>('ems:fields', []);
 
   useEffect(() => {
     if (value && !user) {
@@ -62,6 +70,14 @@ const LocalStorageLoader: FC = () => {
     setSetupDuration(options.setupDuration);
     setMotorReverseDuration(options.motorReverseDuration);
   }, [options]);
+
+  useEffect(() => {
+    setHost(host);
+    setFields(fields);
+    // Update API
+    APIOptions.host = `http://${host}`;
+    console.log('I AM HERE');
+  }, [host, fields]);
 
   return null;
 };
