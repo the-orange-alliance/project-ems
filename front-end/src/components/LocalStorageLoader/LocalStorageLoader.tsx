@@ -15,7 +15,8 @@ import {
   fieldMatchOverLEDPattern,
   fieldColor1,
   fieldColor2,
-  fieldTotalSetupDuration, fieldMotorReverseDuration
+  fieldTotalSetupDuration,
+  fieldMotorReverseDuration
 } from 'src/stores/Recoil';
 
 const LocalStorageLoader: FC = () => {

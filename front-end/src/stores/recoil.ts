@@ -55,6 +55,10 @@ export const hostIP = atom<string>({
   key: 'hostIPAtom',
   default: window.location.hostname
 });
+export const fields = atom<number[]>({
+  key: 'fieldsAtom',
+  default: []
+});
 
 /* Internal state management */
 export const selectedTeamAtom = atom<Team | null>({

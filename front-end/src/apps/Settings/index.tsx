@@ -7,7 +7,7 @@ import TextField from '@mui/material/TextField';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import { FormControlLabel, FormGroup, Switch } from '@mui/material';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   darkModeAtom,
   fieldMotorDuration,
@@ -19,7 +19,8 @@ import {
   fieldColor1,
   fieldColor2,
   fieldTotalSetupDuration,
-  fieldMotorReverseDuration
+  fieldMotorReverseDuration,
+  hostIP
 } from 'src/stores/Recoil';
 import MenuItem from '@mui/material/MenuItem';
 import useLocalStorage from 'src/stores/LocalStorage';
@@ -47,6 +48,7 @@ const SettingsApp: FC = () => {
   const [motorReverseDuration, setMotorReverseDuration] = useRecoilState(
     fieldMotorReverseDuration
   );
+  const [host, setHost] = useRecoilState(hostIP);
 
   const [, setOptions] = useLocalStorage<FieldOptions>(
     'ems:fcs:options',
@@ -113,10 +115,13 @@ const SettingsApp: FC = () => {
   const changeMotorReversDuration = (event: ChangeEvent<HTMLInputElement>) => {
     setMotorReverseDuration(parseInt(event.target.value));
   };
+  const changeHost = (event: ChangeEvent<HTMLInputElement>) => {
+    setHost(event.target.value);
+  };
 
   return (
     <DefaultLayout containerWidth='md'>
-      <Paper>
+      <Paper sx={{ marginBottom: (theme) => theme.spacing(8) }}>
         <Box sx={{ padding: (theme) => theme.spacing(2) }}>
           <Typography variant='h4'>Settings</Typography>
         </Box>
@@ -367,6 +372,25 @@ const SettingsApp: FC = () => {
               label={
                 <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
                   Color 2
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <Divider />
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={<TextField value={host} onChange={changeHost} />}
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  API Host (For multi-field setups)
                 </Typography>
               }
               labelPlacement='start'
