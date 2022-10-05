@@ -69,6 +69,10 @@ export const fieldControl = atom<number[]>({
   key: 'fieldsAtom',
   default: eventFields
 });
+export const followerMode = atom<boolean>({
+  key: 'followerModeAtom',
+  default: false
+});
 
 /* Internal state management */
 export const selectedTeamAtom = atom<Team | null>({

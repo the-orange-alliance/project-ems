@@ -21,7 +21,8 @@ import {
   fieldColor2,
   fieldTotalSetupDuration,
   fieldMotorReverseDuration,
-  fieldControl
+  fieldControl,
+  followerMode
 } from 'src/stores/Recoil';
 
 const LocalStorageLoader: FC = () => {
@@ -39,6 +40,7 @@ const LocalStorageLoader: FC = () => {
   const setMotorReverseDuration = useSetRecoilState(fieldMotorReverseDuration);
   const setHost = useSetRecoilState(hostIP);
   const setFields = useSetRecoilState(fieldControl);
+  const setFollower = useSetRecoilState(followerMode);
 
   const [, , setupSocket] = useSocket();
 
@@ -50,6 +52,7 @@ const LocalStorageLoader: FC = () => {
   );
   const [host] = useLocalStorage<string>('ems:host', null);
   const [fields] = useLocalStorage<number[]>('ems:fields', []);
+  const [mode] = useLocalStorage<boolean>('ems:mode', false);
 
   useEffect(() => {
     if (value && !user) {
@@ -76,8 +79,11 @@ const LocalStorageLoader: FC = () => {
     setFields(fields);
     // Update API
     APIOptions.host = `http://${host}`;
-    console.log('I AM HERE');
   }, [host, fields]);
+
+  useEffect(() => {
+    setFollower(mode);
+  }, [mode]);
 
   return null;
 };

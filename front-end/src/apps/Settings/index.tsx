@@ -30,7 +30,8 @@ import {
   fieldMotorReverseDuration,
   hostIP,
   fieldControl,
-  eventFields
+  eventFields,
+  followerMode
 } from 'src/stores/Recoil';
 import MenuItem from '@mui/material/MenuItem';
 import useLocalStorage from 'src/stores/LocalStorage';
@@ -62,6 +63,7 @@ const SettingsApp: FC = () => {
   const [host, setHost] = useRecoilState(hostIP);
   const [fields, setFields] = useRecoilState(fieldControl);
   const allFields = useRecoilValue(eventFields);
+  const [follower, setFollower] = useRecoilState(followerMode);
 
   const [, setOptions] = useLocalStorage<FieldOptions>(
     'ems:fcs:options',
@@ -69,6 +71,7 @@ const SettingsApp: FC = () => {
   );
   const [, setStorageHost] = useLocalStorage<string>('ems:host', host);
   const [, setStorageFields] = useLocalStorage<number[]>('ems:fields', fields);
+  const [, setStorageMode] = useLocalStorage<boolean>('ems:mode', follower);
 
   useEffect(() => {
     setOptions({
@@ -148,6 +151,10 @@ const SettingsApp: FC = () => {
       target: { value }
     } = event;
     setFields(typeof value === 'string' ? [] : value);
+  };
+  const changeFollowerMode = () => {
+    setFollower((prev: boolean) => !prev);
+    setStorageMode(!follower);
   };
 
   return (
@@ -418,7 +425,33 @@ const SettingsApp: FC = () => {
             }}
           >
             <FormControlLabel
-              control={<TextField value={host} onChange={changeHost} />}
+              control={
+                <Switch value={follower} onChange={changeFollowerMode} />
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Follower Mode
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <TextField
+                  value={host}
+                  onChange={changeHost}
+                  disabled={!follower}
+                />
+              }
               label={
                 <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
                   API Host (For multi-field setups)
@@ -445,6 +478,7 @@ const SettingsApp: FC = () => {
                   onChange={changeFields}
                   input={<OutlinedInput label='Tag' />}
                   renderValue={(selected) => selected.join(', ')}
+                  disabled={!follower}
                 >
                   {allFields.map((field) => (
                     <MenuItem key={field} value={field}>
@@ -472,7 +506,7 @@ const SettingsApp: FC = () => {
           >
             <FormControlLabel
               control={
-                <Button variant='contained' color='error'>
+                <Button variant='contained' color='error' disabled={!follower}>
                   Update Network Settings
                 </Button>
               }
