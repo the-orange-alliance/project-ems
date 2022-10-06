@@ -109,6 +109,10 @@ const SettingsApp: FC = () => {
     setStorageFields(fields);
   }, [fields]);
 
+  useEffect(() => {
+    setStorageMode(follower);
+  }, [follower]);
+
   const changeDarkMode = (): void => {
     setDarkMode(!darkMode);
   };
@@ -154,7 +158,6 @@ const SettingsApp: FC = () => {
   };
   const changeFollowerMode = () => {
     setFollower((prev: boolean) => !prev);
-    setStorageMode(!follower);
   };
 
   return (

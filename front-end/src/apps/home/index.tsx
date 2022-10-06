@@ -17,7 +17,12 @@ const GridAppCard = (props: AppCardProps) => (
 const HomeApp: FC = () => {
   return (
     <DefaultLayout>
-      <Grid container spacing={4} columns={15}>
+      <Grid
+        container
+        spacing={4}
+        columns={15}
+        sx={{ marginBottom: (theme) => theme.spacing(4) }}
+      >
         <GridAppCard title='Event Manager' to='/event-manager' />
         <GridAppCard title='Team Manager' to='/team-manager' />
         <GridAppCard title='Match Manager' to='/match-manager' />

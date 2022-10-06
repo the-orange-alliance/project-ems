@@ -1,17 +1,22 @@
-import { FC, useState } from 'react';
-import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
+import { FC, ReactNode, useState } from 'react';
+import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import PaperLayout from 'src/layouts/PaperLayout';
 import TournamentDropdown from 'src/components/Dropdowns/TournamentDropdown';
 import TwoColumnHeader from 'src/components/Headers/TwoColumnHeader';
 import { TEST_LEVEL } from '@toa-lib/models';
 import GeneralReports from './GeneralReports';
+import ReportView from './components/ReportView';
 
 const Reports: FC = () => {
   const [selectedType, setSelectedType] = useState(TEST_LEVEL);
+  const [report, setReport] = useState<ReactNode | null>(null);
 
   const handleTournamentChange = (value: number) => setSelectedType(value);
+  const handleReportUpdate = (c: ReactNode) => {
+    setReport(c);
+  };
+  const handleReturn = () => setReport(null);
 
   return (
     <PaperLayout
@@ -28,29 +33,15 @@ const Reports: FC = () => {
         />
       }
     >
-      <Grid container spacing={3} sx={{ padding: (theme) => theme.spacing(2) }}>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <Button variant='contained' fullWidth>
-            Teams Report
-          </Button>
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <Button variant='contained' fullWidth>
-            Schedule Report
-          </Button>
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <Button variant='contained' fullWidth>
-            Schedule Report
-          </Button>
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <Button variant='contained' fullWidth>
-            Schedule Report
-          </Button>
-        </Grid>
-      </Grid>
-      <GeneralReports />
+      <Box sx={{ padding: (theme) => theme.spacing(3) }}>
+        {report ? (
+          <ReportView onReturn={handleReturn}>{report}</ReportView>
+        ) : (
+          <>
+            <GeneralReports onGenerate={handleReportUpdate} />
+          </>
+        )}
+      </Box>
     </PaperLayout>
   );
 };
