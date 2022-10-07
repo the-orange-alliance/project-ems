@@ -13,9 +13,9 @@ const GeneralReports: FC<ReportProps> = ({ onGenerate }) => {
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} sm={6} md={3} lg={2}>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
         <Button variant='contained' fullWidth onClick={generateTeamReport}>
-          Teams Report
+          Competing Teams Report
         </Button>
       </Grid>
     </Grid>

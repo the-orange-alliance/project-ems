@@ -23,8 +23,7 @@ const Report: FC<Props> = ({ name, children }) => {
       </Typography>
       <Divider
         sx={{
-          marginTop: (theme) => theme.spacing(2),
-          marginBottom: (theme) => theme.spacing(2)
+          marginTop: (theme) => theme.spacing(2)
         }}
       />
       {children}

@@ -95,7 +95,7 @@ export function calculateRankings(
       const ranking = {
         ...(rankingMap.get(participant.teamKey) as CarbonCaptureRanking)
       };
-      const scores = [...(scoresMap.get(participant.teamKey) as number[])];
+      const scores = scoresMap.get(participant.teamKey) as number[];
       const redWin = match.redScore > match.blueScore;
       const isTie = match.redScore === match.blueScore;
 
@@ -120,7 +120,6 @@ export function calculateRankings(
           ranking.highestScore = match.blueScore;
         }
       }
-
       if (participant.disqualified === 1) continue;
       ranking.played = ranking.played + 1;
       ranking.carbonPoints = ranking.carbonPoints + match.details.carbonPoints;
@@ -130,13 +129,17 @@ export function calculateRankings(
 
   // In this loop, calculate ranking score
   for (const key of rankingMap.keys()) {
-    const scores = scoresMap.get(key) as number[];
+    const scores = scoresMap.get(key);
+    if (!scores) continue;
     const ranking = {
       ...rankingMap.get(key)
     } as CarbonCaptureRanking;
     const lowestScore = ranking.played > 0 ? Math.min(...scores) : 0;
     const index = scores.findIndex((s) => s === lowestScore);
-    const newScores = [...scores.splice(0, index), ...scores.splice(index + 1)];
+    const newScores =
+      scores.length > 1
+        ? [...scores.splice(0, index), ...scores.splice(index + 1)]
+        : scores;
     if (newScores.length > 0) {
       ranking.rankingScore =
         newScores.reduce((prev, curr) => prev + curr) / newScores.length;

@@ -17,11 +17,10 @@ const TeamsReport: FC<Props> = ({ teams }) => {
     <Report name='Competing Teams'>
       <TableContainer>
         <Table size='small'>
-          <TableHead>
+          <TableHead sx={{ backgroundColor: 'lightgrey' }}>
             <TableRow>
               <TableCell>Team Name (long)</TableCell>
               <TableCell>Team Name (short)</TableCell>
-              <TableCell>Robot Name</TableCell>
               <TableCell>Location</TableCell>
               <TableCell>Country Code</TableCell>
               <TableCell>Flag</TableCell>
@@ -33,7 +32,6 @@ const TeamsReport: FC<Props> = ({ teams }) => {
               <TableRow key={t.eventParticipantKey}>
                 <TableCell>{t.teamNameLong}</TableCell>
                 <TableCell>{t.teamNameShort}</TableCell>
-                <TableCell>{t.robotName}</TableCell>
                 <TableCell>
                   {[t.city, t.stateProv, t.country]
                     .filter((str) => str.length > 0)
