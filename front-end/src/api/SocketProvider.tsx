@@ -153,6 +153,7 @@ export async function prepareField(
 export async function sendAbortMatch(): Promise<void> {
   socket?.emit('match:abort');
   await reverseMotors();
+  setLEDEndgame(false);
   socket?.emit('fcs:update', LED_FIELDFAULT);
 }
 export async function reverseMotors(): Promise<void> {
