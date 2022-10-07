@@ -209,7 +209,7 @@
   border-right: 2px solid #2e3190;
 }
 .penalty {
-  color: rgb(118, 39, 45);
+  color: #ff3333;
 }
 
 @media only screen and (max-width: 1600px) {

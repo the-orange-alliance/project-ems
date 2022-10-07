@@ -19,12 +19,10 @@ const TournamentReports: FC<ReportProps> = ({ onGenerate }) => {
   const levelRankings = useRecoilValue(rankings(level));
 
   const generateScheduleReport = () =>
-    onGenerate(<MatchReport matches={matches} identifier='teamNameLong' />);
+    onGenerate(<MatchReport matches={matches} identifier='city' />);
 
   const generateRankingReport = () =>
-    onGenerate(
-      <RankingReport rankings={levelRankings} identifier='teamNameLong' />
-    );
+    onGenerate(<RankingReport rankings={levelRankings} identifier='city' />);
 
   return (
     <Grid container spacing={3}>

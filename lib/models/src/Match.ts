@@ -1,3 +1,4 @@
+import moment from 'moment';
 import { CarbonCaptureDetails } from './details';
 import { EventSchedule, ScheduleItem, TournamentType } from './Schedule';
 import { Team } from './Team';
@@ -136,6 +137,7 @@ export function assignMatchTimes(
   for (const item of items) {
     if (item.isMatch) {
       newMatches.push({ ...matches[matchNumber], startTime: item.startTime });
+      matchNumber++;
     }
   }
   return newMatches;
@@ -219,6 +221,18 @@ export function assignMatchFieldsForFGC(
       matchNumber++;
     }
   }
+
+  const sortedMatches = newMatches.sort((a, b) =>
+    moment(a.startTime).isAfter(b.startTime) ? 1 : -1
+  );
+
+  for (let i = 0; i < sortedMatches.length; i++) {
+    const name = sortedMatches[i].matchName;
+    const fields = name.split(' ');
+    sortedMatches[i].matchName =
+      name.substring(0, name.length - fields[fields.length - 1].length - 1) + i;
+  }
+
   return newMatches;
 }
 

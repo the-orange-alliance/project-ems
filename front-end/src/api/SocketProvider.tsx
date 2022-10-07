@@ -200,6 +200,10 @@ export async function endGameFlash(carbonPoints: number): Promise<void> {
   }
 }
 
+export async function sendAllClear(): Promise<void> {
+  socket?.emit('fcs:update', LED_ALLCLEAR);
+}
+
 export async function sendCommitScores(matchKey: string): Promise<void> {
   socket?.emit('match:commit', matchKey);
   socket?.emit('fcs:update', setLEDLength(120));

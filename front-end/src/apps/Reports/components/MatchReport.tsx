@@ -5,9 +5,9 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
-import { DATE_FORMAT_MIN_SHORT, Match, Team } from '@toa-lib/models';
+import { Match, Team } from '@toa-lib/models';
 import Report from './Report';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import { useRecoilValue } from 'recoil';
 import { teamByTeamKey } from 'src/stores/Recoil';
 
@@ -24,28 +24,30 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
           <TableHead sx={{ backgroundColor: 'lightgrey' }}>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>Field</TableCell>
+              <TableCell size='small'>Field</TableCell>
               <TableCell>Time</TableCell>
-              <TableCell>Red 1</TableCell>
-              <TableCell>Red 2</TableCell>
-              <TableCell>Red 3</TableCell>
-              <TableCell>Blue 1</TableCell>
-              <TableCell>Blue 2</TableCell>
-              <TableCell>Blue 3</TableCell>
+              <TableCell size='small'>Red 1</TableCell>
+              <TableCell size='small'>Red 2</TableCell>
+              <TableCell size='small'>Red 3</TableCell>
+              <TableCell size='small'>Blue 1</TableCell>
+              <TableCell size='small'>Blue 2</TableCell>
+              <TableCell size='small'>Blue 3</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {matches.map((m) => (
               <TableRow key={m.matchKey}>
                 <TableCell>{m.matchName}</TableCell>
-                <TableCell>{m.fieldNumber}</TableCell>
+                <TableCell size='small'>{m.fieldNumber}</TableCell>
                 <TableCell>
-                  {moment(m.startTime).format(DATE_FORMAT_MIN_SHORT)}
+                  {moment
+                    .tz(m.startTime, moment.tz.guess())
+                    .format('ddd HH:mm zz')}
                 </TableCell>
                 {m.participants?.map((p) => {
                   const team = useRecoilValue(teamByTeamKey(p.teamKey));
                   return (
-                    <TableCell key={p.matchParticipantKey}>
+                    <TableCell key={p.matchParticipantKey} size='small'>
                       {identifier && team ? team[identifier] : p.teamKey}
                     </TableCell>
                   );

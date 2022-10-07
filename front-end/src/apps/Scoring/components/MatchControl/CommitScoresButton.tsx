@@ -9,13 +9,19 @@ import {
   matchStateAtom
 } from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
-import { sendCommitScores } from 'src/api/SocketProvider';
+import { sendAllClear, sendCommitScores } from 'src/api/SocketProvider';
 import { patchWholeMatch, recalculateRankings } from 'src/api/ApiProvider';
 
 const CommitScoresButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
   const { commitEnabled } = useButtonState();
+  const [cleared, setCleared] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const onClear = () => {
+    setCleared(true);
+    sendAllClear();
+  };
 
   const commitScores = useRecoilCallback(({ snapshot, set }) => async () => {
     const match = await snapshot.getPromise(matchInProgress);
@@ -29,26 +35,27 @@ const CommitScoresButton: FC = () => {
     setState(MatchState.RESULTS_COMMITTED);
   });
 
-  return state === MatchState.MATCH_COMPLETE ? (
+  return !cleared ? (
+    <Button
+      disabled={!commitEnabled}
+      className='yellow-bg'
+      variant='contained'
+      fullWidth
+      onClick={onClear}
+    >
+      All Clear
+    </Button>
+  ) : (
     <LoadingButton
       disabled={!commitEnabled}
       fullWidth
       variant='contained'
       onClick={loading ? undefined : commitScores}
-      className='yellow-bg-imp'
+      className='yellow-bg'
       loading={loading}
     >
       Commit
     </LoadingButton>
-  ) : (
-    <Button
-      disabled={!commitEnabled}
-      fullWidth
-      variant='contained'
-      onClick={commitScores}
-    >
-      Commit
-    </Button>
   );
 };
 
