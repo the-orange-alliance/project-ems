@@ -29,15 +29,19 @@ export default class Match extends Room {
     // These are in case of mid-match disconnect/reconnects
     if (
       this.state >= MatchState.PRESTART_COMPLETE &&
-      this.matchKey
+      this.matchKey &&
+      !this.timer.inProgress()
     ) {
       // Send prestart information
       socket.emit("match:prestart", this.matchKey);
       socket.emit("match:display", this.displayID);
     }
 
-    if (this.timer.inProgress()) {
+    if (this.timer.inProgress() && this.match) {
       socket.emit("match:update", this.match);
+    } else if (this.timer.inProgress() && !this.match) {
+      logger.warn('no match data for this match - sending prestart');
+      socket.emit('match:prestart', this.matchKey);
     }
 
     if (this.state === MatchState.RESULTS_COMMITTED) {

@@ -255,7 +255,7 @@ const RefereeSheet: FC<{ alliance: MatchParticipant[]; headRef?: boolean }> = ({
   alliance,
   headRef
 }) => {
-  const matchState = useRecoilValue(matchStateAtom); // TODO(jan): fix this
+  const matchState = useRecoilValue(matchStateAtom);
 
   return (
     <Paper

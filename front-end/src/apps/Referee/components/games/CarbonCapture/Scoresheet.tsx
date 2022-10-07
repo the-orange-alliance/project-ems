@@ -1,30 +1,14 @@
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { useRecoilState } from 'recoil';
 import { matchInProgress } from 'src/stores/Recoil';
-import { CarbonCaptureDetails, Match } from '@toa-lib/models';
+import { CarbonCaptureDetails } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
 import CarbonLevelInput from './CarbonLevelInput';
 
 const ScoreSheet: FC = () => {
   const [match, setMatch] = useRecoilState(matchInProgress);
-  const [socket, connected] = useSocket();
-
-  useEffect(() => {
-    if (connected) {
-      socket?.on('match:update', onUpdate);
-    }
-  }, [connected]);
-
-  useEffect(() => {
-    return () => {
-      socket?.removeListener('match:update', onUpdate);
-    };
-  }, []);
-
-  const onUpdate = (newMatch: Match) => {
-    setMatch(newMatch);
-  };
+  const [socket] = useSocket();
 
   const updateScore = (newScore: number) => {
     if (match && match.details) {
