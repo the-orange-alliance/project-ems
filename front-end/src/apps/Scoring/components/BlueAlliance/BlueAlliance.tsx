@@ -4,6 +4,7 @@ import Grid from '@mui/material/Grid';
 import TeamStatusRow from '../Status/TeamStatusRow';
 import { useRecoilValue } from 'recoil';
 import { matchInProgress } from 'src/stores/Recoil';
+import BlueScoreBreakdown from '../ScoreBreakdown/BlueScoreBreakdown';
 
 const BlueAlliance: FC = () => {
   const match = useRecoilValue(matchInProgress);
@@ -24,7 +25,7 @@ const BlueAlliance: FC = () => {
           ))}
         </Grid>
         <Grid item md={4}>
-          {match?.blueScore}
+          <BlueScoreBreakdown />
         </Grid>
       </Grid>
     </Paper>

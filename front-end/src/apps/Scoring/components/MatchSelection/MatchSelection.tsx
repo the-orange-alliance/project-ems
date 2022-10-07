@@ -1,11 +1,17 @@
 import { FC, useEffect } from 'react';
 import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import {
+  useRecoilState,
+  useRecoilValue,
+  useResetRecoilState,
+  useSetRecoilState
+} from 'recoil';
 import {
   fieldControl,
   loadedMatchKey,
   matchesByTournamentType,
+  matchInProgress,
   matchStateAtom,
   selectedTournamentLevel,
   selectedTournamentType
@@ -23,9 +29,11 @@ const MatchSelection: FC = () => {
   const matches = useRecoilValue(matchesByTournamentType(tournamentType));
   const fields = useRecoilValue(fieldControl);
   const setSelectedMatchKey = useSetRecoilState(loadedMatchKey);
+  const resetMatch = useResetRecoilState(matchInProgress);
 
   const handleSelect = (matchKey: string): void => {
     setSelectedMatchKey(matchKey);
+    resetMatch();
   };
 
   useEffect(() => {
