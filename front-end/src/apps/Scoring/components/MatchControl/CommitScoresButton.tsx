@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 import Button from '@mui/material/Button';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useButtonState } from '../../util/ButtonState';
-import { useRecoilState, useRecoilCallback } from 'recoil';
+import { useRecoilCallback, useSetRecoilState } from 'recoil';
 import {
   matchByMatchKey,
   matchInProgress,
@@ -13,7 +13,7 @@ import { sendAllClear, sendCommitScores } from 'src/api/SocketProvider';
 import { patchWholeMatch, recalculateRankings } from 'src/api/ApiProvider';
 
 const CommitScoresButton: FC = () => {
-  const [state, setState] = useRecoilState(matchStateAtom);
+  const setState = useSetRecoilState(matchStateAtom);
   const { commitEnabled } = useButtonState();
   const [cleared, setCleared] = useState(false);
   const [loading, setLoading] = useState(false);
