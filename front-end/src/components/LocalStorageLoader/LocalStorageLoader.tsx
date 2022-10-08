@@ -78,7 +78,7 @@ const LocalStorageLoader: FC = () => {
     setHost(host);
     setFields(fields);
     // Update API
-    APIOptions.host = `http://${host}`;
+    APIOptions.host = host.startsWith('http') ? host : `http://${host}`;
   }, [host, fields]);
 
   useEffect(() => {
