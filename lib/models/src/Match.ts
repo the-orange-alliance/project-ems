@@ -226,11 +226,26 @@ export function assignMatchFieldsForFGC(
     moment(a.startTime).isAfter(b.startTime) ? 1 : -1
   );
 
+  let shouldSwitch = false;
   for (let i = 0; i < sortedMatches.length; i++) {
     const name = sortedMatches[i].matchName;
     const fields = name.split(' ');
     sortedMatches[i].matchName =
-      name.substring(0, name.length - fields[fields.length - 1].length - 1) + i;
+      name.substring(0, name.length - fields[fields.length - 1].length - 1) +
+      ' ' +
+      i;
+
+    if (i % 3 === 0) {
+      sortedMatches[i].fieldNumber = 5;
+      if (shouldSwitch) {
+        shouldSwitch = false;
+      } else {
+        shouldSwitch = true;
+      }
+    } else {
+      const number = shouldSwitch ? i % 3 : (i % 3) + 2;
+      sortedMatches[i].fieldNumber = number;
+    }
   }
 
   return newMatches;

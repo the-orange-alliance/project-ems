@@ -20,7 +20,11 @@ import {
 import Days from './Days';
 import ScheduleItemTable from './ScheduleItemTable';
 import { useFlags } from 'src/stores/AppFlags';
-import { postSchedule, setApiStorage } from 'src/api/ApiProvider';
+import {
+  deleteSchedule,
+  postSchedule,
+  setApiStorage
+} from 'src/api/ApiProvider';
 
 /**
  * TODO - This entire schedule file is for FIRST GLOBAL purposes only. Needs to be modified
@@ -88,6 +92,7 @@ const SetupSchedule: FC = () => {
     const eventKey = await snapshot.getPromise(eventKeySelector);
     const scheduleItems = generateScheduleWithPremiereField(schedule, eventKey);
     setScheduleItems(scheduleItems);
+    await deleteSchedule(tournamentType);
     await setFlag(
       'createdSchedules',
       flags.createdSchedules

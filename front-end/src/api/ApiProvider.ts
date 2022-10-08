@@ -16,7 +16,8 @@ import {
   isMatchArray,
   MatchDetails,
   MatchParticipant,
-  Ranking
+  Ranking,
+  TournamentType
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -80,6 +81,9 @@ export const patchSchedule = async (
   scheduleKey: string,
   item: ScheduleItem
 ): Promise<void> => clientFetcher(`schedule/${scheduleKey}`, 'PATCH', item);
+
+export const deleteSchedule = (type: TournamentType): Promise<void> =>
+  clientFetcher(`schedule/${type}`, 'DELETE');
 
 export const createMatchSchedule = async (
   params: MatchMakerParams

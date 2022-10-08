@@ -43,6 +43,7 @@ export async function createEventBase(): Promise<void> {
     await db.exec(createQuery);
     return;
   } catch (e) {
+    console.log(e);
     throw e;
   }
 }

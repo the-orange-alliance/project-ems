@@ -1,6 +1,7 @@
 import { isScheduleItemArray, isTeam, isTeamArray } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import {
+  deleteWhere,
   insertValue,
   selectAll,
   selectAllWhere,
@@ -44,6 +45,18 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       await insertValue('schedule', req.body);
+      res.status(200).send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.delete(
+  '/:type',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await deleteWhere('schedule', `type = "${req.params.type}"`);
       res.status(200).send({});
     } catch (e) {
       return next(e);

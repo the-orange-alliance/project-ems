@@ -9,7 +9,7 @@ import TableBody from '@mui/material/TableBody';
 import { DATE_FORMAT_MIN_SHORT, Match } from '@toa-lib/models';
 import moment from 'moment';
 import { useRecoilValue } from 'recoil';
-import { loadedMatchKey, teamByTeamKey } from 'src/stores/Recoil';
+import { loadedMatchKey, teamsAtom } from 'src/stores/Recoil';
 
 interface Props {
   matches: Match[];
@@ -19,6 +19,7 @@ interface Props {
 
 const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
   const selectedMatchKey = useRecoilValue(loadedMatchKey);
+  const teams = useRecoilValue(teamsAtom);
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
@@ -67,10 +68,10 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                   <TableCell>{match.redScore}</TableCell>
                   <TableCell>{match.blueScore}</TableCell>
                   {match.participants?.map((p) => {
-                    const team = useRecoilValue(teamByTeamKey(p.teamKey));
+                    const team = teams.find((t) => p.teamKey === t.teamKey);
                     return (
                       <TableCell key={p.matchParticipantKey}>
-                        {team?.country}
+                        {team ? team.country : p.teamKey}
                       </TableCell>
                     );
                   })}
