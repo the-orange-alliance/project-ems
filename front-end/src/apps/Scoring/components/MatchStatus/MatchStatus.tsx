@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
@@ -17,6 +18,9 @@ import {
 } from 'src/api/SocketProvider';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
 import { isCarbonCaptureDetails, Match, MatchState } from '@toa-lib/models';
+
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const MatchStatus: FC = () => {
   const selectedMatch = useRecoilValue(loadedMatch);
@@ -70,8 +74,20 @@ const MatchStatus: FC = () => {
 
   return (
     <Paper sx={{ paddingBottom: (theme) => theme.spacing(2), height: '100%' }}>
-      <Box sx={{ padding: (theme) => theme.spacing(2) }}>
+      <Box
+        sx={{
+          padding: (theme) => theme.spacing(2),
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center'
+        }}
+      >
         <Typography align='center'>{name}</Typography>
+        <Chip
+          icon={connected ? <CheckCircleOutlineIcon /> : <ErrorOutlineIcon />}
+          label={connected ? 'Connected' : 'Not Connected'}
+          color={connected ? 'success' : 'error'}
+        />
       </Box>
       <Divider />
       <Box sx={{ padding: (theme) => theme.spacing(2) }}>
