@@ -63,6 +63,10 @@ export default AudienceDisplay;
 
 function getDisplay(id: number, mode: string): ReactNode {
   switch (id) {
+    case -1:
+      return <div />;
+    case 0:
+      return <Blank />;
     case 1:
       return <MatchPreview />;
     case 2:

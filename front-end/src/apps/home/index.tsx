@@ -33,7 +33,7 @@ const HomeApp: FC = () => {
         <GridAppCard title='Account Manager' to='/accounts' />
         <GridAppCard
           title='Streaming App'
-          href='https://twitch.tv/theorangealliance2'
+          to='/streaming'
           imgSrc={twitchLogo}
         />
         <GridAppCard
