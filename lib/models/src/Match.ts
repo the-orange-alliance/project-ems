@@ -233,7 +233,7 @@ export function assignMatchFieldsForFGC(
     sortedMatches[i].matchName =
       name.substring(0, name.length - fields[fields.length - 1].length - 1) +
       ' ' +
-      i;
+      (i + 1);
 
     if (i % 3 === 0) {
       sortedMatches[i].fieldNumber = 5;
