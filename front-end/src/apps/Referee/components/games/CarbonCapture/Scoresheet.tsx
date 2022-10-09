@@ -5,6 +5,8 @@ import { matchInProgress } from 'src/stores/Recoil';
 import { CarbonCaptureDetails } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
 import CarbonLevelInput from './CarbonLevelInput';
+import MatchChip from 'src/components/MatchChip/MatchChip';
+import ConnectionChip from 'src/components/ConnectionChip/ConnectionChip';
 
 const ScoreSheet: FC = () => {
   const [match, setMatch] = useRecoilState(matchInProgress);
@@ -32,6 +34,10 @@ const ScoreSheet: FC = () => {
         }}
       >
         <Typography variant='h3'>Carbon Level</Typography>
+        <Box className='center'>
+          <ConnectionChip />
+          <MatchChip match={match} />
+        </Box>
         <CarbonLevelInput
           value={(match?.details as CarbonCaptureDetails)?.carbonPoints || 0}
           onChange={updateScore}

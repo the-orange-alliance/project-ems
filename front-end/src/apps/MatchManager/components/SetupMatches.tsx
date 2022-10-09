@@ -3,12 +3,17 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import MatchMakerQuality from './MatchMakerQuality';
-import { createMatchSchedule, postMatchSchedule } from 'src/api/ApiProvider';
+import {
+  createMatchSchedule,
+  createRankings,
+  postMatchSchedule
+} from 'src/api/ApiProvider';
 import { useRecoilCallback, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   eventAtom,
   matches,
   matchesByTournamentType,
+  selectedTournamentLevel,
   selectedTournamentType,
   tournamentScheduleItemAtomFamily,
   tournamentScheduleSelector
@@ -32,6 +37,7 @@ const SetupMatches: FC = () => {
     const { eventKey, fieldCount: fields } = await snapshot.getPromise(
       eventAtom
     );
+    const level = await snapshot.getPromise(selectedTournamentLevel);
     const schedule = await snapshot.getPromise(tournamentScheduleSelector);
     const teamKeys = schedule.teams.map((t) => t.teamKey);
     const items = await snapshot.getPromise(
@@ -49,6 +55,7 @@ const SetupMatches: FC = () => {
     });
     const fgcMatches = assignMatchFieldsForFGC(newMatches, items, schedule);
     setMatches((prev) => [...prev, ...fgcMatches]);
+    await createRankings(level, schedule.teams);
     setLoading(false);
   });
 

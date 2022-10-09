@@ -19,6 +19,8 @@ import {
 } from '@toa-lib/models';
 import NumberInput from '../../NumberInput';
 import { useSocket } from 'src/api/SocketProvider';
+import MatchChip from 'src/components/MatchChip/MatchChip';
+import ConnectionChip from 'src/components/ConnectionChip/ConnectionChip';
 
 const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
   const [participant, setParticipant] = useRecoilState(
@@ -256,6 +258,7 @@ const RefereeSheet: FC<{ alliance: MatchParticipant[]; headRef?: boolean }> = ({
   headRef
 }) => {
   const matchState = useRecoilValue(matchStateAtom);
+  const match = useRecoilValue(matchInProgress);
 
   return (
     <Paper
@@ -273,6 +276,10 @@ const RefereeSheet: FC<{ alliance: MatchParticipant[]; headRef?: boolean }> = ({
         <Typography variant='h5' sx={{ textAlign: 'center' }}>
           {alliance?.some((p) => p.station < 20) ? 'Red' : 'Blue'} Alliance
         </Typography>
+        <Box className='center'>
+          <ConnectionChip />
+          <MatchChip match={match} />
+        </Box>
         {alliance?.map((p) => (
           <TeamSection
             key={p.matchParticipantKey}
