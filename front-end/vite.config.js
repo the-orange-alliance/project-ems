@@ -13,12 +13,12 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['@toa-lib/client', '@toa-lib/models'],
+    include: ['@toa-lib'],
     force: true /* Use this option when @toa-lib needs to be rebuilt for some weird reason. */
   },
   build: {
     commonjsOptions: {
-      include: ['@toa-lib/client', '@toa-lib/models', /node_modules/]
+      include: [/@toa-lib/, /node_modules/]
     },
     rollupOptions: {
       external: ['node:events', 'events']

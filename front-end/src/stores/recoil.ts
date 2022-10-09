@@ -264,7 +264,7 @@ export const tournamentScheduleItemAtomFamily = atomFamily<
     key: 'tournamentScheduleItemAtomFamilySelectorFamily',
     get: (type: TournamentType) => async () => {
       try {
-        return await clientFetcher(
+        return await clientFetcher<ScheduleItem[]>(
           `schedule/${type}`,
           'GET',
           undefined,
@@ -307,13 +307,13 @@ export const matches = atom<Match[]>({
     key: 'matchesAtomSelector',
     get: async () => {
       try {
-        const matches = await clientFetcher(
+        const matches = await clientFetcher<Match[]>(
           'match',
           'GET',
           undefined,
           isMatchArray
         );
-        const participants = await clientFetcher(
+        const participants = await clientFetcher<MatchParticipant[]>(
           'match/participants',
           'GET',
           undefined,
@@ -389,7 +389,7 @@ export const matchInProgress = atom<Match | null>({
     get: async ({ get }) => {
       const matchKey = get(loadedMatchKey);
       try {
-        return await clientFetcher(
+        return await clientFetcher<Match>(
           `match/all/${matchKey}`,
           'GET',
           undefined,
@@ -467,7 +467,7 @@ export const rankings = selectorFamily<Ranking[], number>({
   key: 'rankingsAtom',
   get: (tournamentLevel: number) => async () => {
     try {
-      return await clientFetcher(
+      return await clientFetcher<Ranking[]>(
         `ranking?tournamentLevel=${tournamentLevel}`,
         'GET',
         undefined,

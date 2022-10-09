@@ -1,5 +1,5 @@
 import { clientFetcher } from '@toa-lib/client';
-import { isMatch, defaultCarbonCaptureDetails } from '@toa-lib/models';
+import { isMatch, defaultCarbonCaptureDetails, Match } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilCallback } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
@@ -23,7 +23,7 @@ const PrestartListener: FC = () => {
   const onPrestart = useRecoilCallback(
     ({ set }) =>
       async (matchKey: string) => {
-        const match = await clientFetcher(
+        const match: Match = await clientFetcher(
           `match/all/${matchKey}`,
           'GET',
           undefined,

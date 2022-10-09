@@ -1,5 +1,5 @@
 import { clientFetcher } from '@toa-lib/client';
-import { isMatch } from '@toa-lib/models';
+import { isMatch, Match } from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useRecoilCallback, useRecoilState } from 'recoil';
@@ -41,7 +41,7 @@ const AudienceDisplay: FC = () => {
   };
 
   const onCommit = useRecoilCallback(({ set }) => async (matchKey: string) => {
-    const match = await clientFetcher(
+    const match: Match = await clientFetcher(
       `match/all/${matchKey}`,
       'GET',
       undefined,
