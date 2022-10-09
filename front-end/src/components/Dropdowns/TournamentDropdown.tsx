@@ -22,13 +22,17 @@ const TournamentDropdown: FC<Props> = ({ value, onChange }) => {
 
   return (
     <FormControl variant='standard' sx={{ m: 1, minWidth: 120 }}>
-      <Select value={value} onChange={handleChange} label='Tournament'>
-        <MenuItem value={TEST_LEVEL}>Test</MenuItem>
-        <MenuItem value={PRACTICE_LEVEL}>Practice</MenuItem>
-        <MenuItem value={QUALIFICATION_LEVEL}>Quals</MenuItem>
-        <MenuItem value={ROUND_ROBIN_LEVEL}>Round Robin</MenuItem>
-        <MenuItem value={RANKING_LEVEL}>Ranking</MenuItem>
-        <MenuItem value={OCTOFINALS_LEVEL}>Elims</MenuItem>
+      <Select
+        value={value.toString()}
+        onChange={handleChange}
+        label='Tournament'
+      >
+        <MenuItem value={TEST_LEVEL.toString()}>Test</MenuItem>
+        <MenuItem value={PRACTICE_LEVEL.toString()}>Practice</MenuItem>
+        <MenuItem value={QUALIFICATION_LEVEL.toString()}>Quals</MenuItem>
+        <MenuItem value={ROUND_ROBIN_LEVEL.toString()}>Round Robin</MenuItem>
+        <MenuItem value={RANKING_LEVEL.toString()}>Ranking</MenuItem>
+        <MenuItem value={OCTOFINALS_LEVEL.toString()}>Elims</MenuItem>
       </Select>
     </FormControl>
   );

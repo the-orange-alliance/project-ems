@@ -8,8 +8,7 @@ const LoginButton: FC = () => {
   const openDialog = () => setOpen(true);
   const closeDialog = () => setOpen(false);
 
-  const onSubmit = async (err: unknown | undefined) => {
-    console.log(err);
+  const onSubmit = async () => {
     setOpen(false);
   };
 

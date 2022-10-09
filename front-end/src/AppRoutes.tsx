@@ -3,7 +3,7 @@ import HomeApp from './apps/Home';
 import EventManagerApp from './apps/EventManager';
 import SettingsApp from './apps/Settings';
 import AccountManager from './apps/AccountManager';
-import AdminApp from './apps/Admin/AdminApp';
+import AdminApp from './apps/Admin';
 import TeamManager from './apps/TeamManager';
 import MatchManager from './apps/MatchManager';
 import ScoringApp from './apps/Scoring';
