@@ -1,8 +1,7 @@
 import { Server, Socket } from "socket.io";
-import FCS from "./FCS";
-import Match from "./Match";
-import MatchRoom from "./Match";
-import Room from "./Room";
+import FCS from "./FCS.js";
+import Match from "./Match.js";
+import Room from "./Room.js";
 
 const roomsMap: Map<string, Room> = new Map();
 

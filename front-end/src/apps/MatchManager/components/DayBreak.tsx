@@ -1,7 +1,6 @@
 import { Grid, TextField } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers';
-import { DATE_FORMAT_MIN_SHORT, Day, DayBreak } from '@toa-lib/models';
-import moment, { Moment } from 'moment';
+import { DateTime } from 'luxon';
 import { ChangeEvent, FC, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
@@ -19,8 +18,8 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
   const [day, setDay] = useRecoilState(tournamentScheduleDaySelector(dayId));
   const dayBreak = day.breaks[dayBreakId];
 
-  const [startDate, setStartDate] = useState<Moment | null>(moment());
-  const [endDate, setEndDate] = useState<Moment | null>(moment());
+  const [startDate, setStartDate] = useState<DateTime | null>(DateTime.now());
+  const [endDate, setEndDate] = useState<DateTime | null>(DateTime.now());
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = event.target;
@@ -28,13 +27,13 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
       ...dayBreak,
       [name]: type === 'number' ? parseInt(value) : value
     };
-    const newStartTime = moment(day.startTime).add(
-      Math.ceil(newBreak.afterMatch / schedule.matchConcurrency) *
-        schedule.cycleTime,
-      'minutes'
-    );
+    const newStartTime = DateTime.fromISO(day.startTime).plus({
+      minutes:
+        Math.ceil(newBreak.afterMatch / schedule.matchConcurrency) *
+        schedule.cycleTime
+    });
     handleStartChange(newStartTime);
-    handleEndChange(moment(newStartTime).add(newBreak.duration));
+    handleEndChange(newStartTime.plus({ minutes: newBreak.duration }));
     const newBreaks = [
       ...day.breaks.slice(0, newBreak.id),
       newBreak,
@@ -49,18 +48,20 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
     setDay({
       ...day,
       breaks: newBreaks,
-      endTime: moment(day.endTime).add(breaksDuration, 'minutes').toISOString()
+      endTime: DateTime.fromISO(day.endTime)
+        .plus({ minutes: breaksDuration })
+        .toISO()
     });
   };
 
-  const handleStartChange = (newValue: Moment | null) => {
-    const newTime = (newValue ? newValue : moment()).toISOString();
+  const handleStartChange = (newValue: DateTime | null) => {
+    const newTime = (newValue ? newValue : DateTime.now()).toISO();
     setStartDate(newValue);
     setDay({ ...day, startTime: newTime });
   };
 
-  const handleEndChange = (newValue: Moment | null) => {
-    const newTime = (newValue ? newValue : moment()).toISOString();
+  const handleEndChange = (newValue: DateTime | null) => {
+    const newTime = (newValue ? newValue : DateTime.now()).toISO();
     setEndDate(newValue);
     setDay({ ...day, endTime: newTime });
   };
@@ -107,7 +108,7 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
       <Grid item xs={12} sm={6} md={4} lg={4}>
         <DateTimePicker
           label='Start Date'
-          inputFormat={DATE_FORMAT_MIN_SHORT}
+          // inputFormat={DateTime.DATETIME_FULL}
           value={startDate}
           onChange={handleStartChange}
           disableMaskedInput
@@ -118,7 +119,7 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
       <Grid item xs={12} sm={6} md={4} lg={4}>
         <DateTimePicker
           label='End Date'
-          inputFormat={DATE_FORMAT_MIN_SHORT}
+          // inputFormat={DateTime.DATETIME_FULL}
           value={endDate}
           onChange={handleEndChange}
           disableMaskedInput

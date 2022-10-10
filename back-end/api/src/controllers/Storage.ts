@@ -1,7 +1,7 @@
 import { isAppStoragePatch, isAppStoragePost } from '@toa-lib/models';
 import { getAll, setAll, setKey } from '@toa-lib/server';
 import { NextFunction, Request, Response, Router } from 'express';
-import { validateBody } from '../middleware/BodyValidator';
+import { validateBody } from '../middleware/BodyValidator.js';
 
 const router = Router();
 

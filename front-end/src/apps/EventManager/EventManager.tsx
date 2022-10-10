@@ -1,5 +1,5 @@
 import { ChangeEvent, FC, useState, useEffect } from 'react';
-import moment, { Moment } from 'moment';
+import { DateTime } from 'luxon';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
@@ -12,8 +12,8 @@ import { eventAtom } from 'src/stores/Recoil';
 import { useFlags } from 'src/stores/AppFlags';
 
 const EventApp: FC = () => {
-  const [startDate, setStartDate] = useState<Moment | null>(moment());
-  const [endDate, setEndDate] = useState<Moment | null>(moment());
+  const [startDate, setStartDate] = useState<DateTime | null>(DateTime.now());
+  const [endDate, setEndDate] = useState<DateTime | null>(DateTime.now());
 
   const [flags, setFlag] = useFlags();
 
@@ -26,8 +26,8 @@ const EventApp: FC = () => {
         seasonKey: '22',
         regionKey: 'FGC',
         eventKey: '22-FGC-CMP',
-        startDate: startDate ? startDate.toISOString() : moment().toISOString(),
-        endDate: endDate ? endDate.toISOString() : moment().toISOString()
+        startDate: startDate ? startDate.toISO() : DateTime.now().toISO(),
+        endDate: endDate ? endDate.toISO() : DateTime.now().toISO()
       });
     }
   }, []);
@@ -40,19 +40,19 @@ const EventApp: FC = () => {
     }
   };
 
-  const handleStartChange = (newValue: Moment | null) => {
+  const handleStartChange = (newValue: DateTime | null) => {
     setStartDate(newValue);
     setEvent({
       ...event,
-      startDate: newValue ? newValue.toISOString() : moment().toISOString()
+      startDate: newValue ? newValue.toISO() : DateTime.now().toISO()
     });
   };
 
-  const handleEndChange = (newValue: Moment | null) => {
+  const handleEndChange = (newValue: DateTime | null) => {
     setEndDate(newValue);
     setEvent({
       ...event,
-      startDate: newValue ? newValue.toISOString() : moment().toISOString()
+      startDate: newValue ? newValue.toISO() : DateTime.now().toISO()
     });
   };
 

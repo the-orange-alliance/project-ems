@@ -1,4 +1,4 @@
-import moment from 'moment';
+import { DateTime } from 'luxon';
 import { Team } from './Team.js';
 import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
@@ -37,8 +37,8 @@ export interface DayBreak {
 export const defaultBreak: DayBreak = {
   id: 0,
   name: 'Break',
-  startTime: moment().toISOString(),
-  endTime: moment().toISOString(),
+  startTime: DateTime.now().toISO(),
+  endTime: DateTime.now().toISO(),
   duration: 30,
   afterMatch: 1
 };
@@ -53,8 +53,8 @@ export interface Day {
 
 export const defaultDay: Day = {
   id: 0,
-  startTime: moment().toISOString(),
-  endTime: moment().toISOString(),
+  startTime: DateTime.now().toISO(),
+  endTime: DateTime.now().toISO(),
   scheduledMatches: 0,
   breaks: []
 };
@@ -75,7 +75,7 @@ export const defaultScheduleItem: ScheduleItem = {
   name: '',
   type: 'Test',
   day: 0,
-  startTime: moment().toISOString(),
+  startTime: DateTime.now().toISO(),
   duration: 0,
   isMatch: false,
   tournamentId: -1
@@ -151,14 +151,14 @@ export function generateScheduleItems(
       item.day = day.id;
       item.name = schedule.type + ' Match ' + (totalMatches + 1);
       item.duration = schedule.cycleTime;
-      item.startTime = moment(day.startTime)
-        .add(
-          Math.ceil(matchIndex / schedule.matchConcurrency) *
-            schedule.cycleTime +
-            breakPadding,
-          'minutes'
-        )
-        .toISOString();
+      item.startTime = DateTime.fromISO(day.startTime)
+        .plus({
+          minutes:
+            Math.ceil(matchIndex / schedule.matchConcurrency) *
+              schedule.cycleTime +
+            breakPadding
+        })
+        .toISO();
       item.isMatch = true;
       item.tournamentId = schedule.tournamentId;
       scheduleItems.push(item);
@@ -205,9 +205,9 @@ export function generateScheduleWithPremiereField(
   let dayNormalTime = 0;
   for (const item of items) {
     if (prevItem.day !== item.day) {
-      schedule.days[prevItem.day].endTime = moment(prevItem.startTime)
-        .add(prevItem.duration, 'minutes')
-        .toISOString();
+      schedule.days[prevItem.day].endTime = DateTime.fromISO(prevItem.startTime)
+        .plus({ minutes: prevItem.duration })
+        .toISO();
       premiereIndex = 0;
       normalIndex = 0;
       index = 0;
@@ -238,16 +238,16 @@ export function generateScheduleWithPremiereField(
         if (!needsBufferMatch) {
           if (index % 7 < 4) {
             item.duration = FGC_PREMIERE_CYCLE_TIME;
-            item.startTime = moment(schedule.days[item.day].startTime)
-              .add(10 * normalIndex + breakPadding, 'minutes')
-              .toISOString();
+            item.startTime = DateTime.fromISO(schedule.days[item.day].startTime)
+              .plus({ minutes: 10 * normalIndex + breakPadding })
+              .toISO();
             dayNormalTime += item.duration / 2;
             // console.log("CREATING NORMAL MATCH", index, item.duration, dayPremiereTime, dayNormalTime);
           } else {
             item.duration = FGC_SIDE_FIELDS_CYCLE_TIME;
-            item.startTime = moment(schedule.days[item.day].startTime)
-              .add(item.duration * premiereIndex + breakPadding, 'minutes')
-              .toISOString();
+            item.startTime = DateTime.fromISO(schedule.days[item.day].startTime)
+              .plus({ minutes: item.duration * premiereIndex + breakPadding })
+              .toISO();
             dayPremiereTime += item.duration;
             premiereIndex++;
             // console.log("CREATING PREMIERE MATCH", index, item.duration, dayPremiereTime, dayNormalTime);
@@ -268,9 +268,9 @@ export function generateScheduleWithPremiereField(
         } else {
           // console.log("BUFFER MATCH");
           item.duration = FGC_PREMIERE_CYCLE_TIME;
-          item.startTime = moment(schedule.days[item.day].startTime)
-            .add(item.duration * normalIndex + breakPadding, 'minutes')
-            .toISOString();
+          item.startTime = DateTime.fromISO(schedule.days[item.day].startTime)
+            .plus({ minutes: item.duration * normalIndex + breakPadding })
+            .toISO();
           dayPremiereTime = 0;
           dayNormalTime = 0;
           bufferCount++;
@@ -282,22 +282,21 @@ export function generateScheduleWithPremiereField(
       }
     } else {
       const thisBreak = schedule.days[item.day].breaks[breakIndex];
-      schedule.days[item.day].breaks[breakIndex].startTime = moment(
+      schedule.days[item.day].breaks[breakIndex].startTime = DateTime.fromISO(
         prevItem.startTime
-      ).add(prevItem.duration, 'minutes');
-      schedule.days[item.day].breaks[breakIndex].endTime = moment(
+      ).plus({ minutes: prevItem.duration });
+      schedule.days[item.day].breaks[breakIndex].endTime = DateTime.fromISO(
         thisBreak.startTime
-      ).add(thisBreak.duration, 'minutes');
+      ).plus({ minutes: thisBreak.duration });
       breakPadding += item.duration;
       breakIndex++;
     }
     prevItem = item;
   }
   if (items.length > 0) {
-    schedule.days[prevItem.day].endTime = moment(prevItem.startTime).add(
-      prevItem.duration,
-      'minutes'
-    );
+    schedule.days[prevItem.day].endTime = DateTime.fromISO(
+      prevItem.startTime
+    ).plus({ minutes: prevItem.duration });
   }
   return items;
 }
@@ -334,16 +333,25 @@ export function useScheduleValidator(
   let allMatchesScheduled = true;
   let daysAreAfterEachOther = true;
   let daysHaveAtLeastOneMatch = true;
-  let previousDayStart = moment(schedule.days[0].startTime).subtract(1, 'days');
+  let previousDayStart = DateTime.fromISO(schedule.days[0].startTime).minus({
+    days: 1
+  });
   let validationMessage = '';
   for (const day of schedule.days) {
-    if (!moment(day.startTime).isAfter(previousDayStart, 'day')) {
+    if (DateTime.fromISO(day.startTime).day) {
+    }
+    if (
+      !(
+        DateTime.fromISO(day.startTime).startOf('day') >
+        previousDayStart.startOf('day')
+      )
+    ) {
       daysAreAfterEachOther = false;
     }
     if (day.scheduledMatches <= 0) {
       daysHaveAtLeastOneMatch = false;
     }
-    previousDayStart = moment(day.startTime);
+    previousDayStart = DateTime.fromISO(day.startTime);
   }
   allMatchesScheduled = remainingMatches === 0;
   if (!allMatchesScheduled) {

@@ -50,7 +50,7 @@ const LocalStorageLoader: FC = () => {
     'ems:fcs:options',
     defaultFieldOptions
   );
-  const [host] = useLocalStorage<string>('ems:host', APIOptions.host);
+  const [host] = useLocalStorage<string>('ems:host', window.location.hostname);
   const [fields] = useLocalStorage<number[]>('ems:fields', []);
   const [mode] = useLocalStorage<boolean>('ems:mode', false);
 

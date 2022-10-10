@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Realtime service for EMS.",
   "main": "build/Server.js",
+  "type": "module",
   "scripts": {
     "start": "tsc && node build/Server.js",
     "start:debug": "tsc && set DEBUG=*& node build/Server.js"

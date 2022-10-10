@@ -6,8 +6,8 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
-import { DATE_FORMAT_MIN, ScheduleItem } from '@toa-lib/models';
-import moment from 'moment';
+import { ScheduleItem } from '@toa-lib/models';
+import { DateTime } from 'luxon';
 
 interface Props {
   items: ScheduleItem[];
@@ -32,7 +32,9 @@ const ScheduleItemTable: FC<Props> = ({ items }) => {
                 <TableCell>{item.day}</TableCell>
                 <TableCell>{item.name}</TableCell>
                 <TableCell>
-                  {moment(item.startTime).format(DATE_FORMAT_MIN)}
+                  {DateTime.fromISO(item.startTime).toLocaleString(
+                    DateTime.DATETIME_MED
+                  )}
                 </TableCell>
                 <TableCell>{item.duration}</TableCell>
               </TableRow>

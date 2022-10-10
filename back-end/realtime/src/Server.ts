@@ -2,11 +2,11 @@ import express, { Application, json } from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import { urlencoded } from "body-parser";
+import parser from "body-parser";
 import jwt from "jsonwebtoken";
 import { environment as env, getIPv4 } from "@toa-lib/server";
-import logger from "./util/Logger";
-import { assignRooms, initRooms, leaveRooms } from "./rooms/Rooms";
+import logger from "./util/Logger.js";
+import { assignRooms, initRooms, leaveRooms } from "./rooms/Rooms.js";
 
 // Setup our environment
 env.loadAndSetDefaults();
@@ -19,7 +19,7 @@ const io = new Server(server);
 // Config middleware
 app.use(cors({ credentials: true }));
 app.use(json());
-app.use(urlencoded({ extended: false }));
+app.use(parser.urlencoded({ extended: false }));
 
 io.use((socket, next) => {
   if (socket.handshake.query && socket.handshake.query.token) {

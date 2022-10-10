@@ -1,6 +1,6 @@
 import { isString } from '@toa-lib/models';
 import { NextFunction, Request, Response } from 'express';
-import { InvalidQueryError } from '../util/Errors';
+import { InvalidQueryError } from '../util/Errors.js';
 
 export const requireParams =
   (params: string[]) => (req: Request, res: Response, next: NextFunction) => {

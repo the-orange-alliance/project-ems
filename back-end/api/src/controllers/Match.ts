@@ -16,9 +16,9 @@ import {
   selectAll,
   selectAllWhere,
   updateWhere
-} from '../db/Database';
-import { validateBody } from '../middleware/BodyValidator';
-import { DataNotFoundError } from '../util/Errors';
+} from '../db/Database.js';
+import { validateBody } from '../middleware/BodyValidator.js';
+import { DataNotFoundError } from '../util/Errors.js';
 import { join } from 'path';
 import { writeFile } from 'fs/promises';
 import {
@@ -26,7 +26,7 @@ import {
   getAppData,
   getArgFromQualityStr
 } from '@toa-lib/server';
-import logger from '../util/Logger';
+import logger from '../util/Logger.js';
 
 const router = Router();
 

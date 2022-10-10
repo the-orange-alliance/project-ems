@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import logger from '../util/Logger';
+import logger from '../util/Logger.js';
 import { ApiDatabaseError, ApiError, isApiError } from '@toa-lib/models';
-import { RouteNotFound } from '../util/Errors';
+import { RouteNotFound } from '../util/Errors.js';
 
 const handleErrors = (
   error: unknown,

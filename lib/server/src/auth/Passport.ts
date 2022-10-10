@@ -5,7 +5,7 @@ import {
   DEFAULT_ADMIN_PASSWORD,
   DEFAULT_ADMIN_USER,
   DEFAULT_ADMIN_USERNAME
-} from '@toa-lib/models/build/DefaultConfig';
+} from '@toa-lib/models';
 
 /**
  * Library file for using different passport strategies within EMS.

@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
-import getAppData from './Appdata';
+import getAppData from './Appdata.js';
 
 export async function setAll(
   file: string,

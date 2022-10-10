@@ -1,1 +1,1 @@
-export { jwtStrategy, localStrategy, requireAuth } from './Passport';
+export { jwtStrategy, localStrategy, requireAuth } from './Passport.js';

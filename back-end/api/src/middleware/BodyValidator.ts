@@ -1,6 +1,6 @@
 import { TypeGuard } from '@toa-lib/models';
 import { NextFunction, Request, Response } from 'express';
-import { BodyNotValidError, EmptyBodyError } from '../util/Errors';
+import { BodyNotValidError, EmptyBodyError } from '../util/Errors.js';
 
 export const validateBody =
   <T>(t: TypeGuard<T>) =>

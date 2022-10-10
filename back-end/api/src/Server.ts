@@ -1,7 +1,7 @@
 import express, { Application, json } from 'express';
 import { createServer } from 'http';
 import cors from 'cors';
-import { urlencoded } from 'body-parser';
+import parser from 'body-parser';
 import passport from 'passport';
 import {
   jwtStrategy,
@@ -10,17 +10,17 @@ import {
   environment as env,
   getIPv4
 } from '@toa-lib/server';
-import adminController from './controllers/Admin';
-import authController from './controllers/Authentication';
-import eventController from './controllers/Event';
-import teamController from './controllers/Team';
-import storageController from './controllers/Storage';
-import scheduleController from './controllers/Schedule';
-import matchController from './controllers/Match';
-import rankingController from './controllers/Ranking';
-import { handleCatchAll, handleErrors } from './middleware/ErrorHandler';
-import logger from './util/Logger';
-import { initDatabase } from './db/Database';
+import adminController from './controllers/Admin.js';
+import authController from './controllers/Authentication.js';
+import eventController from './controllers/Event.js';
+import teamController from './controllers/Team.js';
+import storageController from './controllers/Storage.js';
+import scheduleController from './controllers/Schedule.js';
+import matchController from './controllers/Match.js';
+import rankingController from './controllers/Ranking.js';
+import { handleCatchAll, handleErrors } from './middleware/ErrorHandler.js';
+import logger from './util/Logger.js';
+import { initDatabase } from './db/Database.js';
 
 // Setup our environment
 env.loadAndSetDefaults();
@@ -45,7 +45,7 @@ app.use(
   })
 );
 app.use(json());
-app.use(urlencoded({ extended: false }));
+app.use(parser.urlencoded({ extended: false }));
 app.use(passport.initialize());
 
 // Setup passport config

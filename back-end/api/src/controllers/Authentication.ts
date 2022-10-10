@@ -12,11 +12,11 @@ import {
   AuthenticationError,
   AuthenticationInvalidError,
   AuthenticationNotLocalError
-} from '../util/Errors';
-import { requireParams } from '../middleware/QueryParams';
-import { validateBody } from '../middleware/BodyValidator';
-import isLocal from '../util/Network';
-import { selectAll, setupUsers } from '../db/Database';
+} from '../util/Errors.js';
+import { requireParams } from '../middleware/QueryParams.js';
+import { validateBody } from '../middleware/BodyValidator.js';
+import isLocal from '../util/Network.js';
+import { selectAll, setupUsers } from '../db/Database.js';
 
 const router = Router();
 

@@ -4,7 +4,7 @@ import { RecoilRoot, useRecoilValue } from 'recoil';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import App from './App';
 import { fgcTheme } from './AppTheme';
 import { darkModeAtom } from './stores/Recoil';
@@ -33,7 +33,7 @@ root.render(
   <StrictMode>
     <RecoilRoot>
       <BrowserRouter>
-        <LocalizationProvider dateAdapter={AdapterMoment}>
+        <LocalizationProvider dateAdapter={AdapterLuxon}>
           <Suspense>
             <Main />
           </Suspense>

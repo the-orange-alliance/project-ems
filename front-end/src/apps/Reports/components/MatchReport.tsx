@@ -7,7 +7,7 @@ import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
 import { Match, Team } from '@toa-lib/models';
 import Report from './Report';
-import moment from 'moment-timezone';
+import { DateTime } from 'luxon';
 import { useRecoilValue } from 'recoil';
 import { teamByTeamKey } from 'src/stores/Recoil';
 
@@ -40,9 +40,9 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
                 <TableCell>{m.matchName}</TableCell>
                 <TableCell size='small'>{m.fieldNumber}</TableCell>
                 <TableCell>
-                  {moment
-                    .tz(m.startTime, moment.tz.guess())
-                    .format('ddd HH:mm zz')}
+                  {DateTime.fromISO(m.startTime).toLocaleString(
+                    DateTime.DATETIME_FULL
+                  )}
                 </TableCell>
                 {m.participants?.map((p) => {
                   const team = useRecoilValue(teamByTeamKey(p.teamKey));

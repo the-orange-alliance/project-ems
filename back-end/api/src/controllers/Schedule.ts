@@ -6,9 +6,9 @@ import {
   selectAll,
   selectAllWhere,
   updateWhere
-} from '../db/Database';
-import { validateBody } from '../middleware/BodyValidator';
-import { DataNotFoundError } from '../util/Errors';
+} from '../db/Database.js';
+import { validateBody } from '../middleware/BodyValidator.js';
+import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
 

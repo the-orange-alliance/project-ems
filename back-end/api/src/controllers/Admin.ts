@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { purgeAll } from '../db/Database';
+import { purgeAll } from '../db/Database.js';
 
 const router = Router();
 

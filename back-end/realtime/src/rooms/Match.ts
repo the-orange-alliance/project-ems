@@ -5,8 +5,8 @@ import {
   isCarbonCaptureDetails,
 } from "@toa-lib/models";
 import { Server, Socket } from "socket.io";
-import logger from "../util/Logger";
-import Room from "./Room";
+import logger from "../util/Logger.js";
+import Room from "./Room.js";
 
 export default class Match extends Room {
   private matchKey: string | null;

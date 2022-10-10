@@ -1,4 +1,4 @@
-import moment from 'moment';
+import { DateTime } from 'luxon';
 import { CarbonCaptureDetails } from './details/index.js';
 import { EventSchedule, ScheduleItem, TournamentType } from './Schedule.js';
 import { Team } from './Team.js';
@@ -223,7 +223,7 @@ export function assignMatchFieldsForFGC(
   }
 
   const sortedMatches = newMatches.sort((a, b) =>
-    moment(a.startTime).isAfter(b.startTime) ? 1 : -1
+    DateTime.fromISO(a.startTime) > DateTime.fromISO(b.startTime) ? 1 : -1
   );
 
   let shouldSwitch = false;

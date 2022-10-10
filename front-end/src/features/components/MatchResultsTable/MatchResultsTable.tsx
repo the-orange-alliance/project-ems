@@ -6,8 +6,8 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
-import { DATE_FORMAT_MIN_SHORT, Match } from '@toa-lib/models';
-import moment from 'moment';
+import { Match } from '@toa-lib/models';
+import { DateTime } from 'luxon';
 import { useRecoilValue } from 'recoil';
 import { loadedMatchKey, teamsAtom } from 'src/stores/Recoil';
 
@@ -63,7 +63,9 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                   <TableCell>{match.matchName}</TableCell>
                   <TableCell>{match.fieldNumber}</TableCell>
                   <TableCell>
-                    {moment(match.startTime).format(DATE_FORMAT_MIN_SHORT)}
+                    {DateTime.fromISO(match.startTime).toLocaleString(
+                      DateTime.DATETIME_FULL
+                    )}
                   </TableCell>
                   <TableCell>{match.redScore}</TableCell>
                   <TableCell>{match.blueScore}</TableCell>

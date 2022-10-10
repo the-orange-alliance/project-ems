@@ -1,5 +1,4 @@
 import { BroadcastOperator, Server, Socket } from "socket.io";
-import { DefaultEventsMap } from "socket.io/dist/typed-events";
 
 export default abstract class Room {
   private clients: Socket[];
@@ -24,7 +23,7 @@ export default abstract class Room {
     }
   }
 
-  public broadcast(): BroadcastOperator<DefaultEventsMap, any> {
+  public broadcast(): BroadcastOperator<any, any> {
     return this._server.in(this.getName());
   }
 

@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { FieldControlPacket } from "@toa-lib/models";
-import Room from "./Room";
+import Room from "./Room.js";
 
 export default class FCS extends Room {
   public constructor(server: Server) {

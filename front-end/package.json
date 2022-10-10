@@ -19,8 +19,7 @@
     "@toa-lib/client": "file:../lib/client",
     "@toa-lib/models": "file:../lib/models",
     "@vitejs/plugin-react": "^2.1.0",
-    "moment": "^2.29.4",
-    "moment-timezone": "^0.5.37",
+    "luxon": "^2.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.2",
@@ -30,6 +29,7 @@
     "swr": "^1.3.0"
   },
   "devDependencies": {
+    "@types/luxon": "^3.0.1",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@types/socket.io-client": "^3.0.0",
