@@ -1,4 +1,4 @@
-import { FieldControlPacket } from '../';
+import { FieldControlPacket } from '../FieldControl.js';
 
 const LEFT_MOTOR_CHANNEL = 0;
 const RIGHT_MOTOR_CHANNEL = 1;
@@ -29,24 +29,27 @@ export const LED_COLOR_RED_ORANGE = 1815;
 export const LED_COLOR_ORANGE = 1825;
 export const LED_COLOR_GOLD = 1835;
 export const LED_COLOR_LAWN_GREEN = 1855;
-export const LED_COLOR_LIME   = 1865;
+export const LED_COLOR_LIME = 1865;
 export const LED_COLOR_DARK_GREEN = 1875;
-export const LED_COLOR_BLUE_GREEN   = 1895;
-export const LED_COLOR_AQUA   = 1905;
-export const LED_COLOR_SKY_BLUE   = 1915;
-export const LED_COLOR_DARK_BLUE   = 1925;
-export const LED_COLOR_BLUE   = 1935;
-export const LED_COLOR_BLUE_VIOLET   = 1945;
-export const LED_COLOR_VIOLET   = 1955;
-export const LED_COLOR_GRAY   = 1975;
-export const LED_COLOR_DARK_GRAY   = 1985;
+export const LED_COLOR_BLUE_GREEN = 1895;
+export const LED_COLOR_AQUA = 1905;
+export const LED_COLOR_SKY_BLUE = 1915;
+export const LED_COLOR_DARK_BLUE = 1925;
+export const LED_COLOR_BLUE = 1935;
+export const LED_COLOR_BLUE_VIOLET = 1945;
+export const LED_COLOR_VIOLET = 1955;
+export const LED_COLOR_GRAY = 1975;
+export const LED_COLOR_DARK_GRAY = 1985;
 
 const calcPulseWidth = (ledLength: number): number => {
   const maxPwm = 990;
   const minPwm = 10;
-  const led1Pwm = 14
+  const led1Pwm = 14;
   const totalLedLength = 120;
-  return Math.min(Math.floor(ledLength * (maxPwm-minPwm) / totalLedLength + led1Pwm),990);
+  return Math.min(
+    Math.floor((ledLength * (maxPwm - minPwm)) / totalLedLength + led1Pwm),
+    990
+  );
 };
 
 export const setLEDLength = (length: number): FieldControlPacket => {

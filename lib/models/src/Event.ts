@@ -1,4 +1,4 @@
-import { isNonNullObject, isString } from './types';
+import { isNonNullObject, isString } from './types.js';
 
 export interface Event {
   eventKey: string;

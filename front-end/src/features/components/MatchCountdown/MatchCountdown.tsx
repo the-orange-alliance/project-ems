@@ -1,5 +1,5 @@
 import { MatchState } from '@toa-lib/models';
-import { duration } from 'moment';
+import * as moment from 'moment';
 import { FC, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
@@ -44,7 +44,7 @@ const MatchCountdown: FC = () => {
     }, 1000);
   });
 
-  const timeDuration = duration(time, 'seconds');
+  const timeDuration = moment.duration(time, 'seconds');
   const displayMinutes =
     timeDuration.minutes() < 10
       ? '0' + timeDuration.minutes().toString()

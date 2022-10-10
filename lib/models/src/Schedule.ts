@@ -1,6 +1,6 @@
 import moment from 'moment';
-import { Team } from './Team';
-import { isArray, isNonNullObject, isNumber, isString } from './types';
+import { Team } from './Team.js';
+import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
 const FGC_PREMIERE_CYCLE_TIME = 7;
 const FGC_SIDE_FIELDS_CYCLE_TIME = 7;

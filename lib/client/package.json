@@ -5,6 +5,7 @@
   "description": "Library for EMS clients.",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
+  "type": "module",
   "scripts": {
     "build": "tsc"
   },

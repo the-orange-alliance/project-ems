@@ -1,4 +1,4 @@
-import { isArray, isNonNullObject, isNumber, isString } from './types';
+import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
 export interface Team {
   teamKey: number;

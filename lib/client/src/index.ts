@@ -1,5 +1,5 @@
-export * from './providers';
-export * from './util';
-import { clientFetcher } from './providers/APIProvider';
+export * from './providers/index.js';
+export * from './util/index.js';
+import { clientFetcher } from './providers/APIProvider.js';
 
 export { clientFetcher };

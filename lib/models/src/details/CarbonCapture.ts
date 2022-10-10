@@ -1,6 +1,6 @@
-import { Match, MatchDetailBase } from '../Match';
-import { Ranking } from '../Ranking';
-import { isNonNullObject, isNumber } from '../types';
+import { Match, MatchDetailBase } from '../Match.js';
+import { Ranking } from '../Ranking.js';
+import { isNonNullObject, isNumber } from '../types.js';
 
 export interface CarbonCaptureDetails extends MatchDetailBase {
   carbonPoints: number;

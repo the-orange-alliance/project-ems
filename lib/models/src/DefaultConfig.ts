@@ -1,4 +1,4 @@
-import { User } from './User';
+import { User } from './User.js';
 
 // Default API Provider constants
 export const DEFAULT_API_HOST = 'http://localhost';

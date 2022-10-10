@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2016",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "declaration": true,
     "sourceMap": true,
     "outDir": "./build",

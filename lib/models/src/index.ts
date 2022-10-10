@@ -6,9 +6,9 @@ export {
   DEFAULT_ADMIN_PASSWORD,
   DEFAULT_ADMIN_USER,
   DEFAULT_ADMIN_USERNAME
-} from './DefaultConfig';
+} from './DefaultConfig.js';
 
-export { Displays } from './Audience';
+export { Displays } from './Audience.js';
 
 export {
   User,
@@ -18,10 +18,10 @@ export {
   isUserLoginResponse,
   isUserArray,
   isUserLogin
-} from './User';
+} from './User.js';
 
-export { Event, isEvent, defaultEvent } from './Event';
-export { Team, isTeam, isTeamArray, defaultTeam } from './Team';
+export { Event, isEvent, defaultEvent } from './Event.js';
+export { Team, isTeam, isTeamArray, defaultTeam } from './Team.js';
 
 export {
   ApiResponseError,
@@ -30,14 +30,14 @@ export {
   SQLError,
   isApiError,
   isSQLError
-} from './ApiErrors';
+} from './ApiErrors.js';
 
 export {
   ApiStoragePatch,
   ApiStoragePost,
   isAppStoragePatch,
   isAppStoragePost
-} from './ApiStorage';
+} from './ApiStorage.js';
 
 export {
   TypeGuard,
@@ -45,7 +45,7 @@ export {
   isNonNullObject,
   isNumber,
   isString
-} from './types';
+} from './types.js';
 
 export {
   Day,
@@ -66,7 +66,7 @@ export {
   isScheduleItemArray,
   useScheduleValidator,
   calculateTotalMatches
-} from './Schedule';
+} from './Schedule.js';
 
 export {
   FINALS_LEVEL,
@@ -102,7 +102,7 @@ export {
   getMatchKeyPartialFromKey,
   reconcileMatchParticipants,
   reconcileMatchDetails
-} from './Match';
+} from './Match.js';
 
 export {
   FGC_MATCH_CONFIG,
@@ -111,7 +111,7 @@ export {
   MatchMode,
   MatchTimer,
   getMatchTime
-} from './MatchTimer';
+} from './MatchTimer.js';
 
 export {
   HubFunctions,
@@ -120,8 +120,8 @@ export {
   HubParameters,
   FieldOptions,
   defaultFieldOptions
-} from './FieldControl';
+} from './FieldControl.js';
 
-export * from './fcs';
-export * from './Ranking';
-export * from './details';
+export * from './fcs/index.js';
+export * from './Ranking.js';
+export * from './details/index.js';

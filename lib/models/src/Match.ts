@@ -1,8 +1,8 @@
 import moment from 'moment';
-import { CarbonCaptureDetails } from './details';
-import { EventSchedule, ScheduleItem, TournamentType } from './Schedule';
-import { Team } from './Team';
-import { isArray, isNonNullObject, isNumber, isString } from './types';
+import { CarbonCaptureDetails } from './details/index.js';
+import { EventSchedule, ScheduleItem, TournamentType } from './Schedule.js';
+import { Team } from './Team.js';
+import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
 // Tournament Levels
 export const TEST_LEVEL = 0;

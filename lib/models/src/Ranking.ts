@@ -1,5 +1,5 @@
-import { Team } from './Team';
-import { isArray, isNonNullObject, isNumber, isString } from './types';
+import { Team } from './Team.js';
+import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
 export interface Ranking {
   rankKey: string;

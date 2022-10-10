@@ -1,1 +1,1 @@
-export * from './CarbonCapture';
+export * from './CarbonCapture.js';
