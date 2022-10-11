@@ -17,5 +17,14 @@ module.exports = {
       SERVICE_PORT: 8081,
       JWT_SECRET: 'toaadmin1'
     }
+  },{
+    name   : "EMS WEBAPP",
+    script : "serve",
+    env: {
+      NODE_ENV: "production",
+      PM2_SERVE_PATH: './webapp',
+      PM2_SERVE_PORT: 80,
+      PM2_SERVE_SPA: 'true',
+    }
   }]
 }

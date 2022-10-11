@@ -9,13 +9,17 @@ import App from './App';
 import { fgcTheme } from './AppTheme';
 import { darkModeAtom } from './stores/Recoil';
 import { APIOptions, SocketOptions } from '@toa-lib/client';
+import { getFromLocalStorage } from './stores/LocalStorage';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Error while trying to find document root.');
 const root = createRoot(container);
 
 // Configure lib-ems
-APIOptions.host = `http://${window.location.hostname}`;
+APIOptions.host = `http://${getFromLocalStorage(
+  'ems:host',
+  window.location.hostname
+)}`;
 APIOptions.port = 8080;
 SocketOptions.host = window.location.hostname;
 SocketOptions.port = 8081;

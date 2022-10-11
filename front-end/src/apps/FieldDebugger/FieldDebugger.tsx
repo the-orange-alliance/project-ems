@@ -1,8 +1,9 @@
-import { FieldControlPacket } from '@toa-lib/models';
+import { FieldControlPacket, LED_IDLE } from '@toa-lib/models';
 import { FC, useEffect, useState } from 'react';
 import { useSocket } from 'src/api/SocketProvider';
 import PaperLayout from 'src/layouts/PaperLayout';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 
 const FieldDebugger: FC = () => {
@@ -25,8 +26,13 @@ const FieldDebugger: FC = () => {
   const updatePackets = (packet: FieldControlPacket) =>
     setPackets((prev) => [...prev, packet]);
 
+  const sendTestPacket = () => socket?.emit('fcs:update', LED_IDLE);
+
   return (
     <PaperLayout containerWidth='xl'>
+      <Button variant='contained' onClick={sendTestPacket}>
+        Send Test Packet
+      </Button>
       <Box sx={{ padding: (theme) => theme.spacing(2) }}>
         {packets.map((p, i) => (
           <div key={`packet-${i}`}>
