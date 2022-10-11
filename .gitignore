@@ -1,2 +1,5 @@
 node_modules/
 build/
+bin/api
+bin/logs
+bin/realtime

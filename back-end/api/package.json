@@ -5,7 +5,9 @@
   "main": "build/Server.js",
   "type": "module",
   "scripts": {
-    "start": "tsc && node build/Server.js"
+    "start": "tsc && node build/Server.js",
+    "build": "tsc",
+    "dist": "ncc build build/Server.js -e sqlite3 -o dist"
   },
   "author": "Kyle Flynn",
   "license": "ISC",
@@ -18,6 +20,7 @@
     "@types/passport-jwt": "^3.0.6",
     "@types/passport-local": "^1.0.34",
     "@types/sqlite3": "^3.1.8",
+    "@vercel/ncc": "^0.34.0",
     "editorconfig": "^0.15.3",
     "eslint": "^8.20.0",
     "eslint-config-prettier": "^8.5.0",
