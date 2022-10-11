@@ -65,7 +65,12 @@ const TeamsTable: FC<Props> = ({ teams }) => {
                       .filter((str) => str.length > 0)
                       .toString()}
                   </TableCell>
-                  <TableCell>{team.countryCode}</TableCell>
+                  <TableCell>
+                    <span
+                      className={`flag-icon flag-icon-${team.countryCode.toLowerCase()}`}
+                    />
+                    &nbsp;({team.countryCode})
+                  </TableCell>
                   <TableCell align='center'>
                     <TableActions onDelete={onDelete} onEdit={onEdit} />
                   </TableCell>

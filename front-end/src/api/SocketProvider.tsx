@@ -25,6 +25,8 @@ let LED_COLOR2: number;
 let motorReverseDuration: number;
 
 const COOPERTITION: number = 165 * 0.66;
+const LED_BASE = 15;
+
 export function setLEDEndgame(state: boolean) {
   LEDEndgame = state;
 }
@@ -213,7 +215,7 @@ export async function sendCommitScores(matchKey: string): Promise<void> {
 }
 
 export function calcLedFromCm(carbon: number) {
-  return Math.min(Math.floor(Math.max(carbon, 0) / 1.52), 108);
+  return Math.min(Math.floor(Math.max(carbon + LED_BASE, 0) / 1.52), 108);
 }
 
 export async function matchOver(carbonPoints: number): Promise<void> {

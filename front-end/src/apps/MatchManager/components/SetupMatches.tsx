@@ -15,6 +15,7 @@ import {
   matchesByTournamentType,
   selectedTournamentLevel,
   selectedTournamentType,
+  tournamentScheduleAtomFamily,
   tournamentScheduleItemAtomFamily,
   tournamentScheduleSelector
 } from 'src/stores/Recoil';
@@ -24,7 +25,9 @@ import { CircularProgress } from '@mui/material';
 
 const SetupMatches: FC = () => {
   const type = useRecoilValue(selectedTournamentType);
+  const level = useRecoilValue(selectedTournamentLevel);
   const typeMatches = useRecoilValue(matchesByTournamentType(type));
+  const schedule = useRecoilValue(tournamentScheduleAtomFamily(type));
   const setMatches = useSetRecoilState(matches);
 
   const [quality, setQuality] = useState('best');
@@ -37,7 +40,6 @@ const SetupMatches: FC = () => {
     const { eventKey, fieldCount: fields } = await snapshot.getPromise(
       eventAtom
     );
-    const level = await snapshot.getPromise(selectedTournamentLevel);
     const schedule = await snapshot.getPromise(tournamentScheduleSelector);
     const teamKeys = schedule.teams.map((t) => t.teamKey);
     const items = await snapshot.getPromise(
@@ -55,11 +57,11 @@ const SetupMatches: FC = () => {
     });
     const fgcMatches = assignMatchFieldsForFGC(newMatches, items, schedule);
     setMatches((prev) => [...prev, ...fgcMatches]);
-    await createRankings(level, schedule.teams);
     setLoading(false);
   });
 
   const postMatches = async () => {
+    await createRankings(level, schedule.teams);
     await postMatchSchedule(typeMatches);
   };
 

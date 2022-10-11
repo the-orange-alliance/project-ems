@@ -15,7 +15,8 @@ import {
   insertValue,
   selectAll,
   selectAllWhere,
-  updateWhere
+  updateWhere,
+  __dirname
 } from '../db/Database.js';
 import { validateBody } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';

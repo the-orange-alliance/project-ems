@@ -10,7 +10,7 @@ import Report from './Report';
 import { DateTime } from 'luxon';
 import { useRecoilValue } from 'recoil';
 import { eventFields, teamsAtom } from 'src/stores/Recoil';
-import FieldsDropdown from 'src/components/FieldsDropdown/FieldsDropdown';
+import FieldsDropdown from 'src/components/Dropdowns/FieldsDropdown';
 
 interface Props {
   matches: Match[];
@@ -62,6 +62,7 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
                       return (
                         <TableCell key={p.matchParticipantKey} size='small'>
                           {identifier && team ? team[identifier] : p.teamKey}
+                          {p.surrogate ? '*' : ''}
                         </TableCell>
                       );
                     })}

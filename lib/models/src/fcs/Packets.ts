@@ -82,7 +82,7 @@ export const MOTOR_FORWARD: FieldControlPacket = {
       function: 'motor',
       parameters: {
         port: RIGHT_MOTOR_CHANNEL,
-        setpoint: 15000
+        setpoint: -15000
       }
     }
   ]
@@ -124,7 +124,7 @@ export const MOTOR_REVERSE: FieldControlPacket = {
       function: 'motor',
       parameters: {
         port: RIGHT_MOTOR_CHANNEL,
-        setpoint: -15000
+        setpoint: 15000
       }
     }
   ]

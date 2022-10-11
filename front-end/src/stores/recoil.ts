@@ -138,6 +138,11 @@ export const teamRemoveDialogOpen = atom<boolean>({
   default: false
 });
 
+export const matchEditDialogOpen = atom<boolean>({
+  key: 'matchEditDialogOpen',
+  default: false
+});
+
 /* EVENT SECTION - State management for event */
 export const eventAtom = atom<Event>({
   key: 'eventAtom',

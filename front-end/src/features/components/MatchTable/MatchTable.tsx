@@ -8,12 +8,18 @@ import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
 import { Match } from '@toa-lib/models';
 import { DateTime } from 'luxon';
+import { useRecoilValue } from 'recoil';
+import { teamsAtom } from 'src/stores/Recoil';
 
 interface Props {
   matches: Match[];
 }
 
 const MatchTable: FC<Props> = ({ matches }) => {
+  const teams = useRecoilValue(teamsAtom);
+  const allianceSize = matches[0].participants?.length
+    ? matches[0].participants.length / 2
+    : 3;
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
       <TableContainer>
@@ -23,12 +29,13 @@ const MatchTable: FC<Props> = ({ matches }) => {
               <TableCell>Name</TableCell>
               <TableCell>Field</TableCell>
               <TableCell>Time</TableCell>
-              <TableCell>Red 1</TableCell>
-              <TableCell>Red 2</TableCell>
-              <TableCell>Red 3</TableCell>
-              <TableCell>Blue 1</TableCell>
-              <TableCell>Blue 2</TableCell>
-              <TableCell>Blue 3</TableCell>
+              {matches[0].participants?.map((p, i) => (
+                <TableCell key={`robot-${i}`}>
+                  {i < allianceSize
+                    ? `Red ${i + 1}`
+                    : `Blue ${i + 1 - allianceSize}`}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -42,12 +49,14 @@ const MatchTable: FC<Props> = ({ matches }) => {
                       DateTime.DATETIME_FULL
                     )}
                   </TableCell>
-                  <TableCell>{match.participants?.[0].teamKey}</TableCell>
-                  <TableCell>{match.participants?.[1].teamKey}</TableCell>
-                  <TableCell>{match.participants?.[2].teamKey}</TableCell>
-                  <TableCell>{match.participants?.[3].teamKey}</TableCell>
-                  <TableCell>{match.participants?.[4].teamKey}</TableCell>
-                  <TableCell>{match.participants?.[5].teamKey}</TableCell>
+                  {match.participants?.map((p) => {
+                    const team = teams.find((t) => t.teamKey === p.teamKey);
+                    return (
+                      <TableCell key={p.matchParticipantKey}>
+                        {team ? team.city : p.teamKey}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               );
             })}

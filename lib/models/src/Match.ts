@@ -246,6 +246,11 @@ export function assignMatchFieldsForFGC(
       const number = shouldSwitch ? i % 3 : (i % 3) + 2;
       sortedMatches[i].fieldNumber = number;
     }
+    if (sortedMatches[i].fieldNumber === 2) {
+      sortedMatches[i].fieldNumber = 3;
+    } else if (sortedMatches[i].fieldNumber === 3) {
+      sortedMatches[i].fieldNumber = 2;
+    }
   }
 
   return newMatches;

@@ -74,6 +74,7 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                     return (
                       <TableCell key={p.matchParticipantKey}>
                         {team ? team.country : p.teamKey}
+                        {p.surrogate ? '*' : ''}
                       </TableCell>
                     );
                   })}

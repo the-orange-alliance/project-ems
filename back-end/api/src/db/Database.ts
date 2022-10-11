@@ -2,7 +2,11 @@ import { PromisedDatabase } from 'promised-sqlite3';
 import { getAppData, environment as env } from '@toa-lib/server';
 import { ApiDatabaseError } from '@toa-lib/models';
 import { mkdir, readFile } from 'node:fs/promises';
-import { sep, join } from 'path';
+import { sep, join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+export const __dirname = dirname(__filename);
 
 const db = new PromisedDatabase();
 

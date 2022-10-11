@@ -8,6 +8,7 @@ import { selectedTournamentLevel } from 'src/stores/Recoil';
 import SetupTeams from './SetupTeams';
 import SetupSchedule from './SetupSchedule';
 import SetupMatches from './SetupMatches';
+import MatchEditor from './MatchEditor';
 
 const AppTabs: FC = () => {
   const tournament = useRecoilValue(selectedTournamentLevel);
@@ -28,6 +29,7 @@ const AppTabs: FC = () => {
           <Tab label='Participating Teams' />
           <Tab label='Schedule Parameters' />
           <Tab label='Match Maker' />
+          <Tab label='Match Editor' />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
@@ -38,6 +40,9 @@ const AppTabs: FC = () => {
       </TabPanel>
       <TabPanel value={value} index={2}>
         <SetupMatches />
+      </TabPanel>
+      <TabPanel value={value} index={3}>
+        <MatchEditor />
       </TabPanel>
     </Box>
   );

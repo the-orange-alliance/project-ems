@@ -40,17 +40,17 @@ const TournamentReports: FC<ReportProps> = ({ onGenerate }) => {
         </Button>
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={3}>
-        <Button variant='contained' fullWidth onClick={generateRankingReport}>
-          Ranking Report
-        </Button>
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
         <Button
           variant='contained'
           fullWidth
           onClick={generateScheduleByTeamReport}
         >
           Schedule By Team Report
+        </Button>
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Button variant='contained' fullWidth onClick={generateRankingReport}>
+          Ranking Report
         </Button>
       </Grid>
     </Grid>

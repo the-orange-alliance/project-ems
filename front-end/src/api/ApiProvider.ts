@@ -110,12 +110,15 @@ export const patchMatchParticipants = async (
 
 export const patchWholeMatch = async (match: Match): Promise<void> => {
   try {
-    if (!match.details || !match.participants) return;
-    await Promise.all([
-      patchMatch(match),
-      patchMatchDetails(match.details),
-      patchMatchParticipants(match.participants)
-    ]);
+    const promises: Promise<any>[] = [];
+    promises.push(patchMatch(match));
+    if (match.details) {
+      patchMatchDetails(match.details);
+    }
+    if (match.participants) {
+      patchMatchParticipants(match.participants);
+    }
+    await Promise.all(promises);
   } catch (e) {
     // TODO - better error-handling
     console.log(e);
