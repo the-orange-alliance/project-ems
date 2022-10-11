@@ -79,7 +79,6 @@ const LocalStorageLoader: FC = () => {
     setFields(fields);
     // Update API
     APIOptions.host = `http://${host}`;
-    console.log('updating host', { host }, { APIOptions });
   }, [host, fields]);
 
   useEffect(() => {

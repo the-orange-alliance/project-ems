@@ -103,7 +103,6 @@ const SettingsApp: FC = () => {
     setStorageHost(host);
     // Update API
     APIOptions.host = `http://${host}`;
-    console.log('updating host', { host }, { APIOptions });
   }, [host]);
 
   useEffect(() => {

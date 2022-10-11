@@ -1,13 +1,13 @@
 import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
 import { matchInProgress, rankingsByMatch } from 'src/stores/Recoil';
+import { MatchParticipant, Ranking } from '@toa-lib/models';
 import './MatchPreview.css';
 
 import FGC_BG from '../res/global-bg.png';
 import FGC_LOGO from '../res/Global_Logo.png';
 import RED_FLAG from '../res/Red_Team_Tag.png';
 import BLUE_FLAG from '../res/Blue_Team_Tag.png';
-import { MatchParticipant, Ranking } from '@toa-lib/models';
 
 const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
   participant,

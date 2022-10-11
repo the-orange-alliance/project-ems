@@ -14,7 +14,6 @@ const UnloadListener: FC = () => {
   }, []);
 
   const onUnload = (e: BeforeUnloadEvent) => {
-    console.log('I AM HERE');
     if (state >= MatchState.PRESTART_COMPLETE) {
       e.preventDefault();
       e.returnValue = '';

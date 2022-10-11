@@ -8,13 +8,19 @@ import { eventAtom } from 'src/stores/Recoil';
 interface Props {
   name: string;
   children?: ReactNode;
+  pagebreak?: boolean;
 }
 
-const Report: FC<Props> = ({ name, children }) => {
+const Report: FC<Props> = ({ name, children, pagebreak }) => {
   const eventName = useRecoilValue(eventAtom)?.eventName;
 
   return (
-    <Box sx={{ marginTop: (theme) => theme.spacing(2) }}>
+    <Box
+      sx={{
+        marginTop: (theme) => theme.spacing(2),
+        pageBreakAfter: pagebreak ? 'always' : 'avoid'
+      }}
+    >
       <Typography align='center' variant='h4'>
         {eventName}
       </Typography>

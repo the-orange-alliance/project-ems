@@ -33,7 +33,6 @@ const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
   useEffect(() => {
     if (updateReady) {
       setUpdateReady(false);
-      console.log('i am emitting an update');
       socket?.emit('match:update', match);
     }
   }, [updateReady]);
