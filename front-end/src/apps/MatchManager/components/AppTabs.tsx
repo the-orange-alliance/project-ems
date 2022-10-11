@@ -9,6 +9,8 @@ import SetupTeams from './SetupTeams';
 import SetupSchedule from './SetupSchedule';
 import SetupMatches from './SetupMatches';
 import MatchEditor from './MatchEditor';
+import { FINALS_LEVEL, ROUND_ROBIN_LEVEL } from '@toa-lib/models';
+import SetupAlliances from './SetupAlliances';
 
 const AppTabs: FC = () => {
   const tournament = useRecoilValue(selectedTournamentLevel);
@@ -33,7 +35,11 @@ const AppTabs: FC = () => {
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
-        <SetupTeams />
+        {tournament === ROUND_ROBIN_LEVEL || tournament === FINALS_LEVEL ? (
+          <SetupAlliances />
+        ) : (
+          <SetupTeams />
+        )}
       </TabPanel>
       <TabPanel value={value} index={1}>
         <SetupSchedule />

@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS "alliance" (
     "allianceNameShort" VARCHAR(5),
     "allianceNameLong" VARCHAR(50),
     "isCaptain" INT,
+    "order" INT,
     FOREIGN KEY (teamKey) REFERENCES "team"(teamKey)
 );
 

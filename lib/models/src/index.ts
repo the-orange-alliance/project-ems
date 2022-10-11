@@ -125,3 +125,4 @@ export {
 export * from './fcs/index.js';
 export * from './Ranking.js';
 export * from './details/index.js';
+export * from './Alliance.js';

@@ -30,7 +30,9 @@ import {
   getTournamentLevelFromType,
   MatchDetails,
   Ranking,
-  isRankingArray
+  isRankingArray,
+  isAllianceArray,
+  AllianceMember
 } from '@toa-lib/models';
 import {
   atom,
@@ -496,6 +498,27 @@ export const rankingsByMatch = selectorFamily<Ranking[], string>({
         match.participants?.find((p) => p.teamKey === r.teamKey)
       );
     }
+});
+
+/* ALLIANCE SECTION */
+export const allinaceMembers = atom<AllianceMember[]>({
+  key: 'allianceAtom',
+  default: selector<AllianceMember[]>({
+    key: 'allianceSelector',
+    get: async () => {
+      try {
+        return await clientFetcher<AllianceMember[]>(
+          `alliance`,
+          'GET',
+          undefined,
+          isAllianceArray
+        );
+      } catch (e) {
+        // TODO - better error-handling
+        return [];
+      }
+    }
+  })
 });
 
 /* FIELD SECTION */

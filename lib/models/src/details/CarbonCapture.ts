@@ -101,28 +101,40 @@ export function calculateRankings(
 
       if (participant.station < 20) {
         // Red Alliance
-        scoresMap.set(participant.teamKey, [...scores, match.redScore]);
-        ranking.wins = ranking.wins + (redWin ? 1 : 0);
-        ranking.losses = ranking.losses + (redWin ? 0 : 1);
-        ranking.ties = ranking.ties + (isTie ? 1 : 0);
-        if (ranking.highestScore < match.redScore) {
-          ranking.highestScore = match.redScore;
+        if (participant.cardStatus === 2) {
+          scoresMap.set(participant.teamKey, [...scores, match.redScore]);
+          ranking.losses = ranking.losses + 1;
+        } else {
+          scoresMap.set(participant.teamKey, [...scores, match.redScore]);
+          ranking.wins = ranking.wins + (redWin ? 1 : 0);
+          ranking.losses = ranking.losses + (redWin ? 0 : 1);
+          ranking.ties = ranking.ties + (isTie ? 1 : 0);
+          if (ranking.highestScore < match.redScore) {
+            ranking.highestScore = match.redScore;
+          }
         }
       }
 
       if (participant.station >= 20) {
         // Blue Alliance
-        scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
-        ranking.wins = ranking.wins + (redWin ? 0 : 1);
-        ranking.losses = ranking.losses + (redWin ? 1 : 0);
-        ranking.ties = ranking.ties + (isTie ? 1 : 0);
-        if (ranking.highestScore < match.blueScore) {
-          ranking.highestScore = match.blueScore;
+        if (participant.cardStatus === 2) {
+          scoresMap.set(participant.teamKey, [...scores, match.redScore]);
+          ranking.losses = ranking.losses + 1;
+        } else {
+          scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
+          ranking.wins = ranking.wins + (redWin ? 0 : 1);
+          ranking.losses = ranking.losses + (redWin ? 1 : 0);
+          ranking.ties = ranking.ties + (isTie ? 1 : 0);
+          if (ranking.highestScore < match.blueScore) {
+            ranking.highestScore = match.blueScore;
+          }
         }
       }
-      if (participant.disqualified === 1) continue;
+      if (participant.cardStatus < 2) {
+        ranking.carbonPoints =
+          ranking.carbonPoints + match.details.carbonPoints;
+      }
       ranking.played = ranking.played + 1;
-      ranking.carbonPoints = ranking.carbonPoints + match.details.carbonPoints;
       rankingMap.set(participant.teamKey, ranking);
     }
   }

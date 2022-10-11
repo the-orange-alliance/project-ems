@@ -18,6 +18,7 @@ import storageController from './controllers/Storage.js';
 import scheduleController from './controllers/Schedule.js';
 import matchController from './controllers/Match.js';
 import rankingController from './controllers/Ranking.js';
+import allianceController from './controllers/Alliance.js';
 import { handleCatchAll, handleErrors } from './middleware/ErrorHandler.js';
 import logger from './util/Logger.js';
 import { initDatabase } from './db/Database.js';
@@ -61,6 +62,7 @@ app.use('/storage', storageController);
 app.use('/schedule', scheduleController);
 app.use('/match', matchController);
 app.use('/ranking', rankingController);
+app.use('/alliance', allianceController);
 
 // Define root/testing paths
 app.get('/', requireAuth, (req, res) => {

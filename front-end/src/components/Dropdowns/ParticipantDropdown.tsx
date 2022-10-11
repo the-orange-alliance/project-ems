@@ -7,7 +7,7 @@ import { teamsAtom } from 'src/stores/Recoil';
 import { Team } from '@toa-lib/models';
 
 interface Props {
-  teamKey: number;
+  teamKey: number | null;
   onChange: (team: Team | null) => void;
 }
 
