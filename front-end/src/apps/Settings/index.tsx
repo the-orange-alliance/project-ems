@@ -37,7 +37,7 @@ import {
 import MenuItem from '@mui/material/MenuItem';
 import useLocalStorage from 'src/stores/LocalStorage';
 import { defaultFieldOptions, FieldOptions } from '@toa-lib/models';
-import { APIOptions } from '@toa-lib/client';
+import { APIOptions, clientFetcher } from '@toa-lib/client';
 
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
@@ -173,6 +173,9 @@ const SettingsApp: FC = () => {
   const changeChromaKey = (event: ChangeEvent<HTMLInputElement>) => {
     setChromaKey(event.target.value);
   };
+  const forceResultsSync = () => {
+    clientFetcher('results/sync/all', 'POST');
+  };
 
   return (
     <DefaultLayout containerWidth='md'>
@@ -182,6 +185,25 @@ const SettingsApp: FC = () => {
         </Box>
         <Divider />
         <Box>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              onClick={forceResultsSync}
+              control={
+                <Button variant='contained'>Force Results Site Sync</Button>
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }} />
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
           <FormGroup
             sx={{
               '&:hover': {
