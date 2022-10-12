@@ -1,8 +1,11 @@
 import { FC, ChangeEvent } from 'react';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
+import Checkbox from '@mui/material/Checkbox';
 import { useRecoilState } from 'recoil';
 import { matchByMatchKey } from 'src/stores/Recoil';
+import { FormControlLabel } from '@mui/material';
+import { Match } from '@toa-lib/models';
 
 interface Props {
   matchKey: string;
@@ -106,6 +109,22 @@ const MatchInfo: FC<Props> = ({ matchKey }) => {
           fullWidth
           name='blueMinPen'
           onChange={handleUpdates}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={6}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={(match?.result ?? -1) > -1}
+              onChange={(e) => {
+                setMatch({
+                  ...match,
+                  result: e.target.checked ? 0 : -1
+                } as Match);
+              }}
+            />
+          }
+          label='Publish Results?'
         />
       </Grid>
     </Grid>
