@@ -12,13 +12,13 @@ import { selectAll, selectAllWhere } from '../db/Database.js';
 
 const router = Router();
 
-const request = (path: string, data: RequestInit) =>
+const request = (path: string, options: RequestInit) =>
   fetch(environment.get().resultsApiBaseUrl + path, {
-    ...data,
+    ...options,
     headers: {
       Authorization: `Bearer ${environment.get().resultsApiKey}`,
       'Content-Type': 'application/json',
-      ...data?.headers
+      ...options?.headers
     }
   });
 
