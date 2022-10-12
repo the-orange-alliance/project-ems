@@ -10,7 +10,7 @@ export interface MatchConfiguration {
 
 export const FGC_MATCH_CONFIG: MatchConfiguration = {
   transitionTime: 0,
-  delayTime: 0,
+  delayTime: 10,
   autoTime: 0,
   teleTime: 150,
   endTime: 30
@@ -18,7 +18,7 @@ export const FGC_MATCH_CONFIG: MatchConfiguration = {
 
 export const FRC_MATCH_CONFIG: MatchConfiguration = {
   transitionTime: 0,
-  delayTime: 0,
+  delayTime: 10,
   autoTime: 15,
   teleTime: 135,
   endTime: 30

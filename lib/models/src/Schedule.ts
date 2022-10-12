@@ -303,6 +303,60 @@ export function generateScheduleWithPremiereField(
   return items;
 }
 
+export function generateFGCRoundRobinSchedule(
+  schedule: EventSchedule,
+  eventKey: string
+): ScheduleItem[] {
+  const items: ScheduleItem[] = [];
+  for (let i = 0; i < 16; i++) {
+    items.push({
+      day: 0,
+      duration: schedule.cycleTime,
+      isMatch: true,
+      key:
+        eventKey +
+        '-' +
+        schedule.type.substring(0, 1) +
+        (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
+        (i + 1).toString().padStart(3, '0'),
+      name: 'Match ' + (i + 1),
+      startTime: DateTime.fromISO(schedule.days[0].startTime)
+        .plus({ minutes: schedule.cycleTime * i })
+        .toISO(),
+      tournamentId: schedule.tournamentId,
+      type: schedule.type
+    });
+  }
+  return items;
+}
+
+export function generateFinalsSchedule(
+  schedule: EventSchedule,
+  eventKey: string
+): ScheduleItem[] {
+  const items: ScheduleItem[] = [];
+  for (let i = 0; i < 3; i++) {
+    items.push({
+      day: 0,
+      duration: schedule.cycleTime,
+      isMatch: true,
+      key:
+        eventKey +
+        '-' +
+        schedule.type.substring(0, 1) +
+        (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
+        (i + 1).toString().padStart(3, '0'),
+      name: 'Match ' + (i + 1),
+      startTime: DateTime.fromISO(schedule.days[0].startTime)
+        .plus({ minutes: schedule.cycleTime * i })
+        .toISO(),
+      tournamentId: schedule.tournamentId,
+      type: schedule.type
+    });
+  }
+  return items;
+}
+
 interface ScheduleValidator {
   maxTotalMatches: number;
   remainingMatches: number;

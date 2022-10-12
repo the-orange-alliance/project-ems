@@ -124,7 +124,7 @@ export default class Match extends Room {
 
       // Calculate coopertition
       let coopertitionBonusLevel = 0;
-      if ((this.match.details as any).carbonPoints >= 165 * 0.66) {
+      if ((this.match.details as any).carbonPoints >= 109) {
         coopertitionBonusLevel = 1;
       }
       if ((this.match.details as any).carbonPoints >= 165) {

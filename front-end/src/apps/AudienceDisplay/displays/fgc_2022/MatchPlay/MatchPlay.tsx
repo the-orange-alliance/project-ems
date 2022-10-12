@@ -15,26 +15,31 @@ import {
   MATCH_ABORT,
   MATCH_END,
   MATCH_ENDGAME,
-  MATCH_START
+  MATCH_START,
+  MATCH_TELE
 } from 'src/apps/AudienceDisplay/Audio';
 
 import FGC_LOGO from '../res/Global_Logo.png';
-import NO_CARD from '../res/Penalty_Blank.png';
-import YELLOW_CARD from '../res/Penalty_Yellow_Dot.png';
-import RED_CARD from '../res/Penalty_Red_Dot.png';
+import STORAGE_0_ICON from '../res/Storage_Level_0.png';
+import STORAGE_1_ICON from '../res/Storage_Level_1.png';
+import STORAGE_2_ICON from '../res/Storage_Level_2.png';
+import STORAGE_3_ICON from '../res/Storage_Level_3.png';
+import STORAGE_4_ICON from '../res/Storage_Level_4.png';
 
 const startAudio = initAudio(MATCH_START);
+const teleAudio = initAudio(MATCH_TELE);
 const abortAudio = initAudio(MATCH_ABORT);
 const endgameAudio = initAudio(MATCH_ENDGAME);
 const endAudio = initAudio(MATCH_END);
 
-const RedParticipant: FC<{ participant: MatchParticipant }> = ({
-  participant
+const RedParticipant: FC<{ participant: MatchParticipant; level: number }> = ({
+  participant,
+  level
 }) => {
   return (
     <div className='team'>
-      <CardStatus status={participant.cardStatus} />
-      <div className='team-name-left'>
+      <StorageStatus level={level} />
+      <div className='team-name-left-p'>
         <span>{participant.team?.country}</span>
       </div>
       <div className='team-flag'>
@@ -48,8 +53,9 @@ const RedParticipant: FC<{ participant: MatchParticipant }> = ({
   );
 };
 
-const BlueParticipant: FC<{ participant: MatchParticipant }> = ({
-  participant
+const BlueParticipant: FC<{ participant: MatchParticipant; level: number }> = ({
+  participant,
+  level
 }) => {
   return (
     <div className='team'>
@@ -61,39 +67,31 @@ const BlueParticipant: FC<{ participant: MatchParticipant }> = ({
           }
         />
       </div>
-      <div className='team-name-right'>
+      <div className='team-name-right-p'>
         <span>{participant.team?.country}</span>
       </div>
-      <CardStatus status={participant.cardStatus} />
+      <StorageStatus level={level} />
     </div>
   );
 };
 
-const CardStatus: FC<{ status: number }> = ({ status }) => {
-  const getCardImage = (cardStatus: number) => {
-    switch (cardStatus) {
-      case 0:
-        return NO_CARD;
+const StorageStatus: FC<{ level: number }> = ({ level }) => {
+  const getImg = () => {
+    switch (level) {
       case 1:
-        return YELLOW_CARD;
+        return STORAGE_1_ICON;
       case 2:
-        return RED_CARD;
+        return STORAGE_2_ICON;
+      case 3:
+        return STORAGE_3_ICON;
+      case 4:
+        return STORAGE_4_ICON;
       default:
-        return NO_CARD;
+        return STORAGE_0_ICON;
     }
   };
 
-  return (
-    <div className='team-card'>
-      <div className='card-container'>
-        <img
-          alt={'team card status'}
-          src={getCardImage(status)}
-          className='fit-h'
-        />
-      </div>
-    </div>
-  );
+  return <img src={getImg()} className='fit-h' />;
 };
 
 const MatchPlay: FC = () => {
@@ -109,10 +107,21 @@ const MatchPlay: FC = () => {
   const details = isCarbonCaptureDetails(someDetails)
     ? someDetails
     : defaultCarbonCaptureDetails;
+  const redStorage = [
+    details.redRobotOneStorage,
+    details.redRobotTwoStorage,
+    details.redRobotTwoStorage
+  ];
+  const blueStorage = [
+    details.blueRobotOneStorage,
+    details.blueRobotTwoStorage,
+    details.blueRobotThreeStorage
+  ];
 
   useEffect(() => {
     if (connected) {
       socket?.on('match:start', matchStart);
+      socket?.on('match:tele', matchTele);
       socket?.on('match:abort', matchAbort);
       socket?.on('match:endgame', matchEndGame);
       socket?.on('match:end', matchEnd);
@@ -123,6 +132,7 @@ const MatchPlay: FC = () => {
   useEffect(() => {
     return () => {
       socket?.removeListener('match:start', matchStart);
+      socket?.removeListener('match:tele', matchTele);
       socket?.removeListener('match:abort', matchAbort);
       socket?.removeListener('match:endgame', matchEndGame);
       socket?.removeListener('match:end', matchEnd);
@@ -132,6 +142,10 @@ const MatchPlay: FC = () => {
 
   const matchStart = () => {
     startAudio.play();
+  };
+
+  const matchTele = () => {
+    teleAudio.play();
   };
 
   const matchAbort = () => {
@@ -158,8 +172,12 @@ const MatchPlay: FC = () => {
         <div id='play-display-base-top'>
           <div id='play-display-left-score'>
             <div className='teams red-bg left-score'>
-              {redAlliance?.map((p) => (
-                <RedParticipant key={p.matchParticipantKey} participant={p} />
+              {redAlliance?.map((p, i) => (
+                <RedParticipant
+                  key={p.matchParticipantKey}
+                  participant={p}
+                  level={redStorage[i]}
+                />
               ))}
             </div>
           </div>
@@ -197,8 +215,12 @@ const MatchPlay: FC = () => {
           </div>
           <div id='play-display-right-score'>
             <div className='teams blue-bg right-score'>
-              {blueAlliance?.map((p) => (
-                <BlueParticipant key={p.matchParticipantKey} participant={p} />
+              {blueAlliance?.map((p, i) => (
+                <BlueParticipant
+                  key={p.matchParticipantKey}
+                  participant={p}
+                  level={blueStorage[i]}
+                />
               ))}
             </div>
           </div>

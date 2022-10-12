@@ -8,6 +8,7 @@ import {
   useSetRecoilState
 } from 'recoil';
 import {
+  fieldControl,
   loadedMatchKey,
   matchesByTournamentType,
   matchInProgress,
@@ -21,6 +22,7 @@ const PostResultsButton: FC = () => {
   const [matchKey, setMatchKey] = useRecoilState(loadedMatchKey);
   const type = useRecoilValue(selectedTournamentType);
   const typeMatches = useRecoilValue(matchesByTournamentType(type));
+  const fields = useRecoilValue(fieldControl);
   const setState = useSetRecoilState(matchStateAtom);
   const resetMatch = useResetRecoilState(matchInProgress);
 
@@ -29,8 +31,11 @@ const PostResultsButton: FC = () => {
   const postResults = () => {
     sendPostResults();
     setState(MatchState.RESULTS_POSTED);
-    const index = typeMatches.findIndex((m) => m.matchKey === matchKey);
-    if (typeMatches[index + 1]) {
+    const filteredMatches = typeMatches.filter(
+      (m) => fields.indexOf(m.fieldNumber) > -1
+    );
+    const index = filteredMatches.findIndex((m) => m.matchKey === matchKey);
+    if (filteredMatches[index + 1]) {
       setMatchKey(typeMatches[index + 1].matchKey);
       resetMatch();
     }

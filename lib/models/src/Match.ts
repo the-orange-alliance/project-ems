@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { AllianceMember } from './Alliance.js';
 import { CarbonCaptureDetails } from './details/index.js';
 import { EventSchedule, ScheduleItem, TournamentType } from './Schedule.js';
 import { Team } from './Team.js';
@@ -256,6 +257,50 @@ export function assignMatchFieldsForFGC(
   return newMatches;
 }
 
+export function createFixedMatches(
+  items: ScheduleItem[],
+  allianceMembers: AllianceMember[],
+  matchMap: number[][],
+  eventKey: string
+): Match[] {
+  const matches: Match[] = [];
+  let matchNumber = 0;
+  for (const item of items) {
+    if (!item.isMatch) continue;
+    const matchKey = `${eventKey}-${getMatchKeyPartialFromType(item.type)}${(
+      matchNumber + 1
+    )
+      .toString()
+      .padStart(3, '0')}`;
+
+    const match: Match = {
+      fieldNumber: 1,
+      matchKey,
+      matchDetailKey: matchKey + 'D',
+      matchName: item.name,
+      result: -1,
+      tournamentLevel: getTournamentLevelFromType(item.type),
+      active: 0,
+      blueMajPen: 0,
+      blueMinPen: 0,
+      blueScore: 0,
+      cycleTime: 0,
+      prestartTime: '',
+      redMajPen: 0,
+      redMinPen: 0,
+      redScore: 0,
+      scheduledTime: item.startTime,
+      startTime: item.startTime,
+      uploaded: 0
+    };
+    const matchAllianceMap = matchMap[matchNumber];
+
+    matches.push(match);
+    matchNumber++;
+  }
+  return matches;
+}
+
 export function getMatchKeyPartialFromType(type: TournamentType) {
   switch (type) {
     case 'Test':
@@ -280,6 +325,10 @@ export function getTournamentLevelFromType(type: TournamentType) {
     case 'Qualification':
       return QUALIFICATION_LEVEL;
     case 'Ranking':
+      return RANKING_LEVEL;
+    case 'Round Robin':
+      return ROUND_ROBIN_LEVEL;
+    case 'Finals':
       return FINALS_LEVEL;
     default:
       return PRACTICE_LEVEL;

@@ -52,8 +52,8 @@ const MatchStatus: FC = () => {
     };
   }, []);
 
-  const onMatchAuto = () => setMode('AUTONOMOUS');
-  const onMatchTele = () => setMode('TELEOPERATED');
+  const onMatchAuto = () => setMode('AUTO');
+  const onMatchTele = () => setMode('TELEOP');
   const onMatchEndGame = useRecoilCallback(({ snapshot }) => async () => {
     setMode('ENDGAME');
     const thisMatch = await snapshot.getPromise(matchInProgress);

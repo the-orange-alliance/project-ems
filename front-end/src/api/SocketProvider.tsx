@@ -24,7 +24,7 @@ let LED_COLOR1: number;
 let LED_COLOR2: number;
 let motorReverseDuration: number;
 
-const COOPERTITION: number = 165 * 0.66;
+const COOPERTITION = 109;
 const LED_BASE = 15;
 
 export function setLEDEndgame(state: boolean) {
@@ -130,6 +130,7 @@ export async function prepareField(
     }
   };
   const raceLight = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     for (let i = 108; i >= 0; i = i - Math.min(108 / 3)) {
       socket?.emit('fcs:update', setLEDLength(i));
       await new Promise((resolve) => setTimeout(resolve, cdDuration / 3));
@@ -218,7 +219,7 @@ export async function sendCommitScores(matchKey: string): Promise<void> {
 }
 
 export function calcLedFromCm(carbon: number) {
-  return Math.min(Math.floor(Math.max(carbon + LED_BASE, 0) / 1.52), 108);
+  return Math.min(Math.floor(Math.max(carbon + LED_BASE, 0) / 1.648), 108);
 }
 
 export async function matchOver(carbonPoints: number): Promise<void> {

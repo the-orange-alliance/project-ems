@@ -47,26 +47,7 @@ export {
   isString
 } from './types.js';
 
-export {
-  Day,
-  DayBreak,
-  EventSchedule,
-  ScheduleItem,
-  TournamentType,
-  TournamentTypes,
-  defaultBreak,
-  defaultDay,
-  defaultEventSchedule,
-  defaultScheduleItem,
-  DATE_FORMAT_MIN,
-  DATE_FORMAT_MIN_SHORT,
-  generateScheduleItems,
-  generateScheduleWithPremiereField,
-  isScheduleItem,
-  isScheduleItemArray,
-  useScheduleValidator,
-  calculateTotalMatches
-} from './Schedule.js';
+export * from './Schedule.js';
 
 export {
   FINALS_LEVEL,
