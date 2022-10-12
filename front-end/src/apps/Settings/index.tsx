@@ -194,11 +194,11 @@ const SettingsApp: FC = () => {
           >
             <FormControlLabel
               onClick={forceResultsSync}
-              control={
-                <Button variant='contained'>Force Results Site Sync</Button>
-              }
+              control={<Button variant='contained'>Force Sync</Button>}
               label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }} />
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Results Site
+                </Typography>
               }
               labelPlacement='start'
               sx={{ padding: (theme) => theme.spacing(2) }}
