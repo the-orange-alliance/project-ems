@@ -22,25 +22,51 @@ const request = (path: string, data: RequestInit) =>
     }
   });
 
+export const postRankings = async () => {
+  const [rankingsRaw, teams] = await Promise.all([
+    selectAllWhere(
+      'ranking',
+      `tournamentLevel = ${getTournamentLevelFromType('Qualification')}`
+    ),
+    selectAll('team')
+  ]);
+  await request('/upload/teams', {
+    method: 'POST',
+    body: JSON.stringify(teams)
+  });
+
+  const rankings = reconcileTeamRankings(teams, rankingsRaw);
+  await request('/upload/rankings', {
+    method: 'POST',
+    body: JSON.stringify(rankings)
+  });
+};
+
+export const postMatchResults = async (matchKey: string) => {
+  const [match] = await selectAllWhere('match', `matchKey = "${matchKey}"`);
+  const participants = await selectAllWhere(
+    'match_participant',
+    `matchKey = "${matchKey}"`
+  );
+  const [details] = await selectAllWhere(
+    'match_detail',
+    `matchKey = "${matchKey}"`
+  );
+  match.participants = participants;
+  match.details = details;
+
+  await request('/upload/matches', {
+    method: 'PUT',
+    body: JSON.stringify([match])
+  });
+
+  await postRankings();
+};
+
 router.post(
   '/sync/all',
   async (req: Request, res: Response, next: NextFunction) => {
-    const [rankingsRaw, teams] = await Promise.all([
-      selectAllWhere(
-        'ranking',
-        `tournamentLevel = ${getTournamentLevelFromType('Qualification')}`
-      ),
-      selectAll('team')
-    ]);
-    const teamsReq = await request('/upload/teams', {
-      method: 'POST',
-      body: JSON.stringify(teams)
-    });
-    const rankings = reconcileTeamRankings(teams, rankingsRaw);
-    const rankingsReq = await request('/upload/rankings', {
-      method: 'POST',
-      body: JSON.stringify(rankings)
-    });
+    await postRankings();
 
     const matches = await selectAll('match');
     const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
@@ -65,7 +91,7 @@ router.post(
       body: JSON.stringify(matchesWithDetails)
     });
 
-    res.send({ success: teamsReq.ok && rankingsReq.ok && matchesReq.ok });
+    res.send({ success: matchesReq.ok });
   }
 );
 

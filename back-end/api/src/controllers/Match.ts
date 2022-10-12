@@ -28,6 +28,7 @@ import {
   getArgFromQualityStr
 } from '@toa-lib/server';
 import logger from '../util/Logger.js';
+import { postMatchResults } from './Results.js';
 
 const router = Router();
 
@@ -158,14 +159,12 @@ router.patch(
   validateBody(isMatch),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const matchKey = req.params.matchKey;
       const match = req.body;
       if (match.details) delete match.details;
       if (match.participants) delete match.participants;
-      await updateWhere(
-        'match',
-        req.body,
-        `matchKey = "${req.params.matchKey}"`
-      );
+      await updateWhere('match', req.body, `matchKey = "${matchKey}"`);
+      postMatchResults(matchKey);
       res.status(200).send({});
     } catch (e) {
       return next(e);
