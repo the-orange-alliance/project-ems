@@ -31,7 +31,8 @@ import {
   hostIP,
   fieldControl,
   eventFields,
-  followerMode
+  followerMode,
+  displayChromaKey
 } from 'src/stores/Recoil';
 import MenuItem from '@mui/material/MenuItem';
 import useLocalStorage from 'src/stores/LocalStorage';
@@ -69,9 +70,15 @@ const SettingsApp: FC = () => {
     'ems:fcs:options',
     defaultFieldOptions
   );
+  const [chromaKey, setChromaKey] = useRecoilState(displayChromaKey);
+
   const [, setStorageHost] = useLocalStorage<string>('ems:host', host);
   const [, setStorageFields] = useLocalStorage<number[]>('ems:fields', fields);
   const [, setStorageMode] = useLocalStorage<boolean>('ems:mode', follower);
+  const [, setStorageChroma] = useLocalStorage<string>(
+    'ems:aud:chroma',
+    chromaKey
+  );
 
   useEffect(() => {
     setOptions({
@@ -112,6 +119,10 @@ const SettingsApp: FC = () => {
   useEffect(() => {
     setStorageMode(follower);
   }, [follower]);
+
+  useEffect(() => {
+    setStorageChroma(chromaKey);
+  }, [chromaKey]);
 
   const changeDarkMode = (): void => {
     setDarkMode(!darkMode);
@@ -158,6 +169,9 @@ const SettingsApp: FC = () => {
   };
   const changeFollowerMode = () => {
     setFollower((prev: boolean) => !prev);
+  };
+  const changeChromaKey = (event: ChangeEvent<HTMLInputElement>) => {
+    setChromaKey(event.target.value);
   };
 
   return (
@@ -413,6 +427,26 @@ const SettingsApp: FC = () => {
               label={
                 <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
                   Color 2
+                </Typography>
+              }
+              labelPlacement='start'
+              sx={{ padding: (theme) => theme.spacing(2) }}
+            />
+          </FormGroup>
+          <FormGroup
+            sx={{
+              '&:hover': {
+                backgroundColor: (theme) => theme.palette.action.hover
+              }
+            }}
+          >
+            <FormControlLabel
+              control={
+                <TextField value={chromaKey} onChange={changeChromaKey} />
+              }
+              label={
+                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
+                  Audience Display Chroma
                 </Typography>
               }
               labelPlacement='start'

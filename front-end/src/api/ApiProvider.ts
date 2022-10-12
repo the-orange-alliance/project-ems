@@ -17,7 +17,8 @@ import {
   MatchDetails,
   MatchParticipant,
   Ranking,
-  TournamentType
+  TournamentType,
+  AllianceMember
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -135,6 +136,9 @@ export const recalculateRankings = (
   tournamentLevel: number
 ): Promise<Ranking[]> =>
   clientFetcher(`ranking/calculate/${tournamentLevel}`, 'POST', isRankingArray);
+
+export const postAllianceMembers = (members: AllianceMember[]): Promise<void> =>
+  clientFetcher(`alliance`, 'POST', members);
 
 /** React hooks to use GET requests for data. */
 export const useLoginAttempt = (

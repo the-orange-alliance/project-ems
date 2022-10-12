@@ -22,7 +22,8 @@ import {
   fieldTotalSetupDuration,
   fieldMotorReverseDuration,
   fieldControl,
-  followerMode
+  followerMode,
+  displayChromaKey
 } from 'src/stores/Recoil';
 
 const LocalStorageLoader: FC = () => {
@@ -41,6 +42,7 @@ const LocalStorageLoader: FC = () => {
   const setHost = useSetRecoilState(hostIP);
   const setFields = useSetRecoilState(fieldControl);
   const setFollower = useSetRecoilState(followerMode);
+  const setChroma = useSetRecoilState(displayChromaKey);
 
   const [, , setupSocket] = useSocket();
 
@@ -53,6 +55,7 @@ const LocalStorageLoader: FC = () => {
   const [host] = useLocalStorage<string>('ems:host', window.location.hostname);
   const [fields] = useLocalStorage<number[]>('ems:fields', []);
   const [mode] = useLocalStorage<boolean>('ems:mode', false);
+  const [chromaKey] = useLocalStorage<string>('ems:aud:chroma', '#ff00ff');
 
   useEffect(() => {
     if (value && !user) {
@@ -84,6 +87,10 @@ const LocalStorageLoader: FC = () => {
   useEffect(() => {
     setFollower(mode);
   }, [mode]);
+
+  useEffect(() => {
+    setChroma(chromaKey);
+  }, [chromaKey]);
 
   return null;
 };

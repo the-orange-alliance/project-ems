@@ -26,6 +26,9 @@ export default class Match extends Room {
   }
 
   public initializeEvents(socket: Socket): void {
+    // Emit the last known display
+    socket.emit('match:display', this.displayID);
+
     // These are in case of mid-match disconnect/reconnects
     if (
       this.state >= MatchState.PRESTART_COMPLETE &&

@@ -11,9 +11,11 @@ export type TournamentType =
   | 'Qualification'
   | 'Round Robin'
   | 'Ranking'
-  | 'Eliminations';
+  | 'Eliminations'
+  | 'Finals';
 
 export const TournamentTypes: TournamentType[] = [
+  'Finals',
   'Eliminations',
   'Practice',
   'Qualification',

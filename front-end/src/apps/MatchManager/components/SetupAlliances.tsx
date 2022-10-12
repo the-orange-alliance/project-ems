@@ -11,6 +11,7 @@ import {
 import { AllianceMember, defaultAllianceMember, Team } from '@toa-lib/models';
 import AutocompleteTeam from 'src/features/components/AutocompleteTeam/AutoCompleteTeam';
 import { replaceInArray } from 'src/stores/Util';
+import { postAllianceMembers } from 'src/api/ApiProvider';
 
 const SetupAlliances: FC = () => {
   const [allianceMembers, setAllianceMembers] = useRecoilState(allinaceMembers);
@@ -30,6 +31,10 @@ const SetupAlliances: FC = () => {
       });
     }
     setAllianceMembers((prev) => [...prev, ...newMembers]);
+  };
+
+  const postAlliances = async () => {
+    await postAllianceMembers(allianceMembers);
   };
 
   return (
@@ -63,6 +68,13 @@ const SetupAlliances: FC = () => {
             </Grid>
           );
         })}
+        {allianceMembers.length > 0 && (
+          <Grid item xs={12} sm={12} md={3}>
+            <Button variant='contained' onClick={postAlliances}>
+              Post Alliances
+            </Button>
+          </Grid>
+        )}
       </Grid>
     </Box>
   );

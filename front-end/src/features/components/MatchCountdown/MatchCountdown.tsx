@@ -54,7 +54,7 @@ const MatchCountdown: FC = () => {
   const onAbort = () => timer.abort();
   const onEnd = () => timer.stop();
 
-  return <>{timeDuration.toFormat('mm:ss')}</>;
+  return <>{timeDuration.toFormat('m:ss')}</>;
 };
 
 export default MatchCountdown;

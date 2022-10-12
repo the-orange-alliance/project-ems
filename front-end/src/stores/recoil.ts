@@ -572,3 +572,7 @@ export const displayID = atom({
   key: 'displayIDAtom',
   default: 0
 });
+export const displayChromaKey = atom({
+  key: 'chromaKeyAtom',
+  default: '#ff00ff'
+});

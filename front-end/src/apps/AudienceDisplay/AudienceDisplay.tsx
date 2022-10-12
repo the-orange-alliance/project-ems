@@ -2,12 +2,12 @@ import { clientFetcher } from '@toa-lib/client';
 import { isMatch, Match } from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useRecoilCallback, useRecoilState } from 'recoil';
+import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
 import ChromaLayout from 'src/layouts/ChromaLayout';
-import { displayID, matchResult } from 'src/stores/Recoil';
+import { displayChromaKey, displayID, matchResult } from 'src/stores/Recoil';
 import './AudienceDisplay.less';
 import Blank from './displays/fgc_2022/Blank/Blank';
 import MatchPlay from './displays/fgc_2022/MatchPlay/MatchPlay';
@@ -18,6 +18,7 @@ import MatchTimer from './displays/fgc_2022/MatchTimer/MatchTimer';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayID);
+  const chromaKey = useRecoilValue(displayChromaKey);
   const [socket, connected] = useSocket();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode');
@@ -54,7 +55,9 @@ const AudienceDisplay: FC = () => {
     <ChromaLayout>
       <MatchStateListener />
       <PrestartListener />
-      <div id='aud-base'>{getDisplay(display, mode || '')}</div>
+      <div id='aud-base' style={{ backgroundColor: chromaKey }}>
+        {getDisplay(display, mode || '')}
+      </div>
     </ChromaLayout>
   );
 };

@@ -1,5 +1,6 @@
 import { FC, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
+import { useSearchParams } from 'react-router-dom';
 import { useSocket } from 'src/api/SocketProvider';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
 import { matchInProgress, timer } from 'src/stores/Recoil';
@@ -14,7 +15,6 @@ import {
 } from 'src/apps/AudienceDisplay/Audio';
 
 import FGC_LOGO from '../res/Global_Logo.png';
-import { useParams } from 'react-router-dom';
 
 const startAudio = initAudio(MATCH_START);
 const abortAudio = initAudio(MATCH_ABORT);
@@ -24,7 +24,8 @@ const endAudio = initAudio(MATCH_END);
 const MatchPlayMini: FC = () => {
   const [match, setMatch] = useRecoilState(matchInProgress);
   const [socket, connected] = useSocket();
-  const { position } = useParams();
+  const [searchParams] = useSearchParams();
+  const position = searchParams.get('position');
 
   useEffect(() => {
     if (connected) {
@@ -78,6 +79,10 @@ const MatchPlayMini: FC = () => {
       return 'mini-bot-left';
     } else if (position === 'bot-right') {
       return 'mini-bot-right';
+    } else if (position === 'bot-center') {
+      return 'mini-bot-center';
+    } else if (position === 'top-center') {
+      return 'mini-top-center';
     }
   };
 

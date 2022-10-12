@@ -9,12 +9,12 @@
 }
 
 .mini-top-left {
-  top: 5vh;
+  top: 2.5vh;
   left: 5vw;
 }
 
 .mini-top-right {
-  top: 5vh;
+  top: 2.5vh;
   left: 87vw;
 }
 
@@ -26,6 +26,16 @@
 .mini-bot-right {
   top: 80vh;
   left: 87vw;
+}
+
+.mini-bot-center {
+  top: 80vh;
+  left: 45.5vw;
+}
+
+.mini-top-center {
+  top: 2.5vh;
+  left: 45.5vw;
 }
 
 #mini-score-container-header {

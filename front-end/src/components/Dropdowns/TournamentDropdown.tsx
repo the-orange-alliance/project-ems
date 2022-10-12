@@ -3,6 +3,7 @@ import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import {
+  FINALS_LEVEL,
   OCTOFINALS_LEVEL,
   PRACTICE_LEVEL,
   QUALIFICATION_LEVEL,
@@ -32,6 +33,7 @@ const TournamentDropdown: FC<Props> = ({ value, onChange }) => {
         <MenuItem value={QUALIFICATION_LEVEL.toString()}>Quals</MenuItem>
         <MenuItem value={ROUND_ROBIN_LEVEL.toString()}>Round Robin</MenuItem>
         <MenuItem value={RANKING_LEVEL.toString()}>Ranking</MenuItem>
+        <MenuItem value={FINALS_LEVEL.toString()}>Finals</MenuItem>
         <MenuItem value={OCTOFINALS_LEVEL.toString()}>Elims</MenuItem>
       </Select>
     </FormControl>
