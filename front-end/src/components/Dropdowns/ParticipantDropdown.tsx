@@ -21,7 +21,7 @@ const ParticipantDropdown: FC<Props> = ({ teamKey, onChange }) => {
     <Autocomplete
       fullWidth
       disablePortal
-      value={team}
+      value={team || null}
       options={teams}
       getOptionLabel={(option) => option.city}
       renderOption={(props, option) => (

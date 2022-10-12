@@ -258,6 +258,8 @@ export function assignMatchFieldsForFGC(
 
 export function getMatchKeyPartialFromType(type: TournamentType) {
   switch (type) {
+    case 'Test':
+      return 'T';
     case 'Practice':
       return 'P';
     case 'Qualification':

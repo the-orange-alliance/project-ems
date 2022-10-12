@@ -308,31 +308,33 @@ export const matchResult = atom<Match | null>({
   default: null
 });
 
+export const defaultMatches = selector<Match[]>({
+  key: 'matchesAtomSelector',
+  get: async () => {
+    try {
+      const matches = await clientFetcher<Match[]>(
+        'match',
+        'GET',
+        undefined,
+        isMatchArray
+      );
+      const participants = await clientFetcher<MatchParticipant[]>(
+        'match/participants',
+        'GET',
+        undefined,
+        isMatchParticipantArray
+      );
+      return reconcileMatchParticipants(matches, participants);
+    } catch (e) {
+      // TODO - Better error-handling
+      return [];
+    }
+  }
+});
+
 export const matches = atom<Match[]>({
   key: 'matchesAtom',
-  default: selector<Match[]>({
-    key: 'matchesAtomSelector',
-    get: async () => {
-      try {
-        const matches = await clientFetcher<Match[]>(
-          'match',
-          'GET',
-          undefined,
-          isMatchArray
-        );
-        const participants = await clientFetcher<MatchParticipant[]>(
-          'match/participants',
-          'GET',
-          undefined,
-          isMatchParticipantArray
-        );
-        return reconcileMatchParticipants(matches, participants);
-      } catch (e) {
-        // TODO - Better error-handling
-        return [];
-      }
-    }
-  })
+  default: defaultMatches
 });
 
 export const matchByMatchKey = selectorFamily<Match | undefined, string>({

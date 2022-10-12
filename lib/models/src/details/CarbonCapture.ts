@@ -87,7 +87,8 @@ export function calculateRankings(
 
       if (
         !isCarbonCaptureDetails(match.details) ||
-        participant.disqualified === 1
+        participant.disqualified === 1 ||
+        participant.surrogate > 0
       ) {
         continue;
       }
@@ -146,11 +147,12 @@ export function calculateRankings(
     const ranking = {
       ...rankingMap.get(key)
     } as CarbonCaptureRanking;
+
     const lowestScore = ranking.played > 0 ? Math.min(...scores) : 0;
     const index = scores.findIndex((s) => s === lowestScore);
     const newScores =
       scores.length > 1
-        ? [...scores.splice(0, index), ...scores.splice(index + 1)]
+        ? [...scores.slice(0, index), ...scores.slice(index + 1)]
         : scores;
     if (newScores.length > 0) {
       ranking.rankingScore =

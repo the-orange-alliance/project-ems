@@ -139,7 +139,7 @@ const EventApp: FC = () => {
         <Grid item xs={12} sm={6} md={4}>
           <DesktopDatePicker
             label='Start Date'
-            inputFormat='MM/DD/YYYY'
+            inputFormat='DDDD'
             value={startDate}
             onChange={handleStartChange}
             renderInput={(params) => <TextField {...params} fullWidth />}
@@ -148,7 +148,7 @@ const EventApp: FC = () => {
         <Grid item xs={12} sm={6} md={4}>
           <DesktopDatePicker
             label='End Date'
-            inputFormat='MM/DD/YYYY'
+            inputFormat='DDDD'
             value={endDate}
             onChange={handleEndChange}
             renderInput={(params) => <TextField {...params} fullWidth />}

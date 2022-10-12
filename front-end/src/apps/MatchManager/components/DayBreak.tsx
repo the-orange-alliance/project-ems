@@ -108,7 +108,7 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
       <Grid item xs={12} sm={6} md={4} lg={4}>
         <DateTimePicker
           label='Start Date'
-          // inputFormat={DateTime.DATETIME_FULL}
+          inputFormat='fff'
           value={startDate}
           onChange={handleStartChange}
           disableMaskedInput
@@ -119,7 +119,7 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
       <Grid item xs={12} sm={6} md={4} lg={4}>
         <DateTimePicker
           label='End Date'
-          // inputFormat={DateTime.DATETIME_FULL}
+          inputFormat='fff'
           value={endDate}
           onChange={handleEndChange}
           disableMaskedInput

@@ -22,7 +22,7 @@ const SetupAlliances: FC = () => {
     for (let i = 0; i < 4; i++) {
       newMembers.push({
         ...defaultAllianceMember,
-        allianceKey: `${eventKey}-${level}-A${allianceMembers.length}`,
+        allianceKey: `${eventKey}-${level}-A${allianceMembers.length + i}`,
         allianceRank: allianceMembers.length / 4 + 1,
         isCaptain: i === 0,
         order: i + 1,
@@ -33,13 +33,14 @@ const SetupAlliances: FC = () => {
   };
 
   return (
-    <Box>
-      {allianceMembers.length === 0 && (
-        <Button variant='contained' onClick={generateSlots}>
-          Generate Alliance Slots
-        </Button>
-      )}
+    <Box sx={{ padding: (theme) => theme.spacing(3) }}>
       <Grid container spacing={3}>
+        <Grid item xs={12} sm={12} md={3}>
+          <Button variant='contained' onClick={generateSlots}>
+            Generate Alliance Slots
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={12} md={9} />
         {allianceMembers.map((a) => {
           const onUpdate = (team: Team | null) => {
             if (team) {
@@ -54,7 +55,7 @@ const SetupAlliances: FC = () => {
           };
 
           return (
-            <Grid key={a.allianceKey} item xs={12} sm={6} md={4}>
+            <Grid key={a.allianceKey} item xs={12} sm={6} md={3}>
               <AutocompleteTeam
                 teamKey={a.teamKey === -1 ? null : a.teamKey}
                 onUpdate={onUpdate}

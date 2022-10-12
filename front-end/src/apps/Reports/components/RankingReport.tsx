@@ -22,7 +22,7 @@ const RankingReport: FC<Props> = ({ rankings, identifier }) => {
             <TableRow>
               <TableCell>Rank</TableCell>
               <TableCell>Team</TableCell>
-              <TableCell>Record (W-L-T)</TableCell>
+              <TableCell>Played</TableCell>
               <TableCell>Ranking Score</TableCell>
               <TableCell>Highest Score</TableCell>
               <TableCell>Carbon Points</TableCell>
@@ -35,7 +35,7 @@ const RankingReport: FC<Props> = ({ rankings, identifier }) => {
                 <TableCell>
                   {identifier && r.team ? r.team[identifier] : r.teamKey}
                 </TableCell>
-                <TableCell>{`${r.wins}-${r.losses}-${r.ties}`}</TableCell>
+                <TableCell>{(r as any).played}</TableCell>
                 <TableCell>{(r as any).rankingScore}</TableCell>
                 <TableCell>{(r as any).highestScore}</TableCell>
                 <TableCell>{(r as any).carbonPoints}</TableCell>

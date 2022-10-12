@@ -8,7 +8,7 @@ import {
   matchInProgress,
   matchStateAtom
 } from 'src/stores/Recoil';
-import { MatchState } from '@toa-lib/models';
+import { Match, MatchState } from '@toa-lib/models';
 import { sendAllClear, sendCommitScores } from 'src/api/SocketProvider';
 import { patchWholeMatch, recalculateRankings } from 'src/api/ApiProvider';
 
@@ -24,8 +24,9 @@ const CommitScoresButton: FC = () => {
   };
 
   const commitScores = useRecoilCallback(({ snapshot, set }) => async () => {
-    const match = await snapshot.getPromise(matchInProgress);
-    if (!match || !match.details || !match.participants) return;
+    const oldMatch = await snapshot.getPromise(matchInProgress);
+    if (!oldMatch || !oldMatch.details || !oldMatch.participants) return;
+    const match: Match = { ...oldMatch, result: 0 };
     setLoading(true);
     await patchWholeMatch(match);
     set(matchByMatchKey(match.matchKey), match);

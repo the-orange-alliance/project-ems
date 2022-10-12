@@ -41,6 +41,11 @@ const HomeApp: FC = () => {
           imgSrc={audienceDisplayLogo}
           to='/audience'
         />
+        <GridAppCard
+          title='Queueing Display'
+          imgSrc={audienceDisplayLogo}
+          to='/queueing'
+        />
         <GridAppCard title='Report App' to='/reports' />
         <GridAppCard title='Settings' imgSrc={settingsLogo} to='/settings' />
       </Grid>

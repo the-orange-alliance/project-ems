@@ -18,6 +18,7 @@ import AudienceDisplay from './apps/AudienceDisplay';
 import FieldDebugger from './apps/FieldDebugger';
 import Reports from './apps/Reports';
 import Streaming from './apps/Streaming/Streaming';
+import QueueingDisplay from './apps/QueueingDisplay';
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
@@ -142,6 +143,12 @@ const AppRoutes: AppRoute[] = [
     path: '/streaming',
     group: 0,
     element: <Streaming />
+  },
+  {
+    name: 'Queueing Display',
+    path: '/queueing',
+    group: 0,
+    element: <QueueingDisplay />
   }
 ];
 

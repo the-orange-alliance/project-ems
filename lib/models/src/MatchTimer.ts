@@ -12,7 +12,7 @@ export const FGC_MATCH_CONFIG: MatchConfiguration = {
   transitionTime: 0,
   delayTime: 0,
   autoTime: 0,
-  teleTime: 60,
+  teleTime: 150,
   endTime: 30
 };
 

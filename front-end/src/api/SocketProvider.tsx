@@ -96,6 +96,9 @@ export function sendPrepareField(): void {
 export function sendStartMatch(): void {
   socket?.emit('match:start');
   socket?.emit('fcs:update', setLEDPattern(LED_COLOR1));
+  setTimeout(() => {
+    socket?.emit('fcs:update', setLEDLength(calcLedFromCm(0)));
+  }, 250);
 }
 
 export async function prepareField(
