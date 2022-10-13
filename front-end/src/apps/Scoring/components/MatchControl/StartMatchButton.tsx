@@ -42,10 +42,10 @@ const StartMatchButton: FC = () => {
 
   const startMatch = async () => {
     setLoading(true);
+    await updateField();
     timer.start();
     sendStartMatch();
     setState(MatchState.MATCH_IN_PROGRESS);
-    await updateField();
     setLoading(false);
   };
 
@@ -70,6 +70,8 @@ const StartMatchButton: FC = () => {
       totalSetupDuration,
       motorReverseDuration
     );
+    setState(MatchState.FIELD_READY);
+    setState(MatchState.MATCH_READY);
     setLoading(false);
   };
 

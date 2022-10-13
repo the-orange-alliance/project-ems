@@ -25,6 +25,7 @@ import STORAGE_1_ICON from '../res/Storage_Level_1.png';
 import STORAGE_2_ICON from '../res/Storage_Level_2.png';
 import STORAGE_3_ICON from '../res/Storage_Level_3.png';
 import STORAGE_4_ICON from '../res/Storage_Level_4.png';
+import { useSearchParams } from 'react-router-dom';
 
 const startAudio = initAudio(MATCH_START);
 const teleAudio = initAudio(MATCH_TELE);
@@ -32,7 +33,7 @@ const abortAudio = initAudio(MATCH_ABORT);
 const endgameAudio = initAudio(MATCH_ENDGAME);
 const endAudio = initAudio(MATCH_END);
 
-const RedParticipant: FC<{ participant: MatchParticipant; level: number }> = ({
+const LeftParticipant: FC<{ participant: MatchParticipant; level: number }> = ({
   participant,
   level
 }) => {
@@ -53,10 +54,10 @@ const RedParticipant: FC<{ participant: MatchParticipant; level: number }> = ({
   );
 };
 
-const BlueParticipant: FC<{ participant: MatchParticipant; level: number }> = ({
-  participant,
-  level
-}) => {
+const RightParticipant: FC<{
+  participant: MatchParticipant;
+  level: number;
+}> = ({ participant, level }) => {
   return (
     <div className='team'>
       <div className='team-flag'>
@@ -98,6 +99,8 @@ const MatchPlay: FC = () => {
   const [match, setMatch] = useRecoilState(matchInProgress);
   const [socket, connected] = useSocket();
   const someDetails = match?.details;
+  const [searchParams] = useSearchParams();
+  const flip = searchParams.get('flip') === 'true';
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
@@ -171,9 +174,9 @@ const MatchPlay: FC = () => {
       <div id='play-display-base'>
         <div id='play-display-base-top'>
           <div id='play-display-left-score'>
-            <div className='teams red-bg left-score'>
-              {redAlliance?.map((p, i) => (
-                <RedParticipant
+            <div className={`teams left-score ${flip ? 'blue-bg' : 'red-bg'}`}>
+              {(flip ? blueAlliance : redAlliance)?.map((p, i) => (
+                <LeftParticipant
                   key={p.matchParticipantKey}
                   participant={p}
                   level={redStorage[i]}
@@ -191,11 +194,20 @@ const MatchPlay: FC = () => {
               </span>
             </div>
             <div id='score-container-scores'>
-              <div id='score-container-red'>
-                <div className='red-bg center'>
-                  <span>{match?.redScore || 0}</span>
+              {!flip && (
+                <div id='score-container-red'>
+                  <div className='red-bg center'>
+                    <span>{match?.redScore || 0}</span>
+                  </div>
                 </div>
-              </div>
+              )}
+              {flip && (
+                <div id='score-container-blue'>
+                  <div className='blue-bg center'>
+                    <span>{match?.blueScore || 0}</span>
+                  </div>
+                </div>
+              )}
               <div id='score-container-sink'>
                 <div id='score-container-sink-fill' />
                 <div
@@ -206,17 +218,26 @@ const MatchPlay: FC = () => {
                   }
                 />
               </div>
-              <div id='score-container-blue'>
-                <div className='blue-bg center'>
-                  <span>{match?.blueScore || 0}</span>
+              {flip && (
+                <div id='score-container-red'>
+                  <div className='red-bg center'>
+                    <span>{match?.redScore || 0}</span>
+                  </div>
                 </div>
-              </div>
+              )}
+              {!flip && (
+                <div id='score-container-blue'>
+                  <div className='blue-bg center'>
+                    <span>{match?.blueScore || 0}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div id='play-display-right-score'>
-            <div className='teams blue-bg right-score'>
-              {blueAlliance?.map((p, i) => (
-                <BlueParticipant
+            <div className={`teams right-score ${flip ? 'red-bg' : 'blue-bg'}`}>
+              {(flip ? redAlliance : blueAlliance)?.map((p, i) => (
+                <RightParticipant
                   key={p.matchParticipantKey}
                   participant={p}
                   level={blueStorage[i]}
