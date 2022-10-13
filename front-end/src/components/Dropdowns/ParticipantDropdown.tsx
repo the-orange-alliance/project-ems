@@ -8,10 +8,11 @@ import { Team } from '@toa-lib/models';
 
 interface Props {
   teamKey: number | null;
+  disabled?: boolean;
   onChange: (team: Team | null) => void;
 }
 
-const ParticipantDropdown: FC<Props> = ({ teamKey, onChange }) => {
+const ParticipantDropdown: FC<Props> = ({ teamKey, disabled, onChange }) => {
   const teams = useRecoilValue(teamsAtom);
   const team = teams.find((t) => t.teamKey === teamKey);
 
@@ -21,6 +22,7 @@ const ParticipantDropdown: FC<Props> = ({ teamKey, onChange }) => {
     <Autocomplete
       fullWidth
       disablePortal
+      disabled={disabled}
       value={team || null}
       options={teams}
       getOptionLabel={(option) => option.city}
@@ -36,9 +38,14 @@ const ParticipantDropdown: FC<Props> = ({ teamKey, onChange }) => {
         </Box>
       )}
       renderInput={(params) => (
-        <TextField {...params} inputProps={{ ...params.inputProps }} />
+        <TextField
+          {...params}
+          inputProps={{ ...params.inputProps }}
+          sx={{ padding: 0, margin: 0 }}
+        />
       )}
       onChange={handleChange}
+      sx={{ padding: 0 }}
     />
   );
 };

@@ -1,10 +1,15 @@
 import { FC, useEffect } from 'react';
 import Button from '@mui/material/Button';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { loadedMatchKey, matchStateAtom } from 'src/stores/Recoil';
+import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
+import {
+  loadedMatchKey,
+  matchInProgressParticipants,
+  matchStateAtom
+} from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
 import { useButtonState } from '../../util/ButtonState';
 import { sendPrestart } from 'src/api/SocketProvider';
+import { patchMatchParticipants } from 'src/api/ApiProvider';
 
 const PrestartButton: FC = () => {
   const { prestartEnabled } = useButtonState();
@@ -21,12 +26,21 @@ const PrestartButton: FC = () => {
     }
   }, [selectedMatchKey, state]);
 
-  const prestart = async () => {
-    if (selectedMatchKey) {
-      sendPrestart(selectedMatchKey);
-      setState(MatchState.PRESTART_COMPLETE);
-    }
-  };
+  const prestart = useRecoilCallback(
+    ({ snapshot }) =>
+      async () => {
+        const participants = await snapshot.getPromise(
+          matchInProgressParticipants
+        );
+        if (selectedMatchKey && participants) {
+          sendPrestart(selectedMatchKey);
+          setState(MatchState.PRESTART_COMPLETE);
+          // Send updated participant list.
+          await patchMatchParticipants(participants);
+        }
+      },
+    [selectedMatchKey]
+  );
 
   const cancelPrestart = async () => {
     setState(MatchState.PRESTART_READY);
