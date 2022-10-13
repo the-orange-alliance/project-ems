@@ -9,7 +9,12 @@ import { Match, Team } from '@toa-lib/models';
 import Report from './Report';
 import { DateTime } from 'luxon';
 import { useRecoilValue } from 'recoil';
-import { eventFields, teamsAtom } from 'src/stores/Recoil';
+import {
+  eventFields,
+  selectedTournamentType,
+  teamsAtom,
+  tournamentScheduleItemAtomFamily
+} from 'src/stores/Recoil';
 import FieldsDropdown from 'src/components/Dropdowns/FieldsDropdown';
 
 interface Props {
@@ -18,9 +23,15 @@ interface Props {
 }
 
 const MatchReport: FC<Props> = ({ matches, identifier }) => {
+  const type = useRecoilValue(selectedTournamentType);
   const teams = useRecoilValue(teamsAtom);
+  const items = useRecoilValue(tournamentScheduleItemAtomFamily(type));
   const allFields = useRecoilValue(eventFields);
   const [fields, setFields] = useState(allFields);
+
+  const fieldMatches = matches.filter(
+    (m) => fields.indexOf(m.fieldNumber) > -1
+  );
 
   const changeFields = (newFields: number[]) => setFields(newFields);
 
@@ -29,7 +40,7 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
       <div className='no-print'>
         <FieldsDropdown fields={fields} onChange={changeFields} />
       </div>
-      <Report name='Match Schedule'>
+      <Report name={`${type} Match Schedule`}>
         <TableContainer>
           <Table size='small'>
             <TableHead sx={{ backgroundColor: 'lightgrey' }}>
@@ -46,28 +57,47 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {matches
-                .filter((m) => fields.indexOf(m.fieldNumber) > -1)
-                .map((m) => (
-                  <TableRow key={m.matchKey}>
-                    <TableCell>{m.matchName}</TableCell>
-                    <TableCell size='small'>{m.fieldNumber}</TableCell>
-                    <TableCell>
-                      {DateTime.fromISO(m.startTime).toLocaleString(
-                        DateTime.DATETIME_FULL
-                      )}
-                    </TableCell>
-                    {m.participants?.map((p) => {
-                      const team = teams.find((t) => t.teamKey == p.teamKey);
-                      return (
-                        <TableCell key={p.matchParticipantKey} size='small'>
-                          {identifier && team ? team[identifier] : p.teamKey}
-                          {p.surrogate ? '*' : ''}
+              {items
+                .filter(
+                  (i) =>
+                    !i.isMatch ||
+                    fieldMatches.find((m) => m.matchName === i.name)
+                )
+                .map((i) => {
+                  const m = matches.find((m) => m.matchName === i.name);
+                  if (i.isMatch) {
+                    return (
+                      <TableRow key={i.key}>
+                        <TableCell>{m?.matchName}</TableCell>
+                        <TableCell size='small'>{m?.fieldNumber}</TableCell>
+                        <TableCell>
+                          {DateTime.fromISO(m?.startTime || '').toLocaleString(
+                            DateTime.DATETIME_FULL
+                          )}
                         </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))}
+                        {m?.participants?.map((p) => {
+                          const team = teams.find(
+                            (t) => t.teamKey == p.teamKey
+                          );
+                          return (
+                            <TableCell key={p.matchParticipantKey} size='small'>
+                              {identifier && team
+                                ? team[identifier]
+                                : p.teamKey}
+                              {p.surrogate ? '*' : ''}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    );
+                  } else {
+                    return (
+                      <TableRow key={i.key}>
+                        <TableCell colSpan={9}>{i.name}</TableCell>
+                      </TableRow>
+                    );
+                  }
+                })}
             </TableBody>
           </Table>
         </TableContainer>

@@ -33,21 +33,20 @@ const Day: FC<Props> = ({ id }) => {
       ...prev,
       scheduledMatches: parseInt(event.target.value)
     }));
-    updateEndTime();
+    updateEndTime(day.startTime);
   };
 
   const handleStartChange = (newValue: DateTime | null) => {
     const newTime = (newValue ? newValue : DateTime.now()).toISO();
     setStartDate(newValue);
     setDay((prev) => ({ ...prev, startTime: newTime }));
-    updateEndTime();
+    updateEndTime(newTime);
   };
 
   const handleEndChange = (newValue: DateTime | null) => {
     const newTime = (newValue ? newValue : DateTime.now()).toISO();
     setEndDate(newValue);
     setDay((prev) => ({ ...prev, endTime: newTime }));
-    updateEndTime();
   };
 
   const addBreak = () => {
@@ -62,7 +61,7 @@ const Day: FC<Props> = ({ id }) => {
     }));
   };
 
-  const updateEndTime = () => {
+  const updateEndTime = (startTime: string) => {
     const matchesDuration =
       Math.ceil(day.scheduledMatches / schedule.matchConcurrency) *
       schedule.cycleTime;
@@ -73,7 +72,7 @@ const Day: FC<Props> = ({ id }) => {
             .map((dayBreak) => dayBreak.duration)
             .reduce((prev, curr) => prev + curr)
         : 0;
-    const newEndTime = DateTime.fromISO(day.startTime).plus({
+    const newEndTime = DateTime.fromISO(startTime).plus({
       minutes: matchesDuration + breaksDuration
     });
     setEndDate(newEndTime);

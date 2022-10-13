@@ -45,8 +45,8 @@ app.use(
     origin: true
   })
 );
-app.use(json());
-app.use(parser.urlencoded({ extended: false }));
+app.use(json({ limit: '50mb' }));
+app.use(parser.urlencoded({ extended: false, limit: '50mb' }));
 app.use(passport.initialize());
 
 // Setup passport config

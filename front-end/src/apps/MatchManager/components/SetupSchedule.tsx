@@ -15,7 +15,6 @@ import {
 import {
   calculateTotalMatches,
   useScheduleValidator,
-  generateScheduleWithPremiereField,
   generateScheduleItems
 } from '@toa-lib/models';
 import Days from './Days';
@@ -128,9 +127,9 @@ const SetupSchedule: FC = () => {
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={3}>
           <TextField
-            name='teamsPerAlliance'
-            label='Teams Per Alliance'
-            value={schedule.teamsPerAlliance}
+            name='cycleTime'
+            label='Cycle Time'
+            value={schedule.cycleTime}
             fullWidth
             onChange={handleChange}
             type='number'
