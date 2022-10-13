@@ -140,10 +140,10 @@ export async function prepareField(
     }
   };
   const raceLight = async () => {
-    for (let i = 108; i >= 0; i = i - Math.min(108 / 3)) {
+    for (let i = 108-Math.min(108 / 3); i >= 0; i = i - Math.min(108 / 3)) {
       
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      socket?.emit('fcs:update', setLEDLength(i));
+      socket?.emit('fcs:update', setLEDLength(Math.max(i,0)));
     }
   };
   switch (cdStyle) {
