@@ -3,9 +3,25 @@ import { Duration } from 'luxon';
 import { FC, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
+import {
+  initAudio,
+  MATCH_START,
+  MATCH_ABORT,
+  MATCH_ENDGAME,
+  MATCH_END
+} from 'src/apps/AudienceDisplay/Audio';
 import { matchStateAtom, matchTimeAtom, timer } from 'src/stores/Recoil';
 
-const MatchCountdown: FC = () => {
+const startAudio = initAudio(MATCH_START);
+const abortAudio = initAudio(MATCH_ABORT);
+const endgameAudio = initAudio(MATCH_ENDGAME);
+const endAudio = initAudio(MATCH_END);
+
+interface Props {
+  audio?: boolean;
+}
+
+const MatchCountdown: FC<Props> = ({ audio }) => {
   const matchState = useRecoilValue(matchStateAtom);
   const [time, setTime] = useRecoilState(matchTimeAtom);
   const [socket, connected] = useSocket();
@@ -15,7 +31,9 @@ const MatchCountdown: FC = () => {
       socket?.on('match:prestart', onPrestart);
       socket?.on('match:start', onStart);
       socket?.on('match:abort', onAbort);
-      socket?.on('match:end', onEnd);
+
+      timer.on('timer:endgame', onEndgame);
+      timer.on('timer:end', onEnd);
     }
   }, [connected]);
 
@@ -31,7 +49,9 @@ const MatchCountdown: FC = () => {
       socket?.off('match:prestart', onPrestart);
       socket?.off('match:start', onStart);
       socket?.off('match:abort', onAbort);
-      socket?.off('match:end', onEnd);
+
+      timer.off('timer:endgame', onEndgame);
+      timer.off('timer:end', onEnd);
       clearInterval(test);
     };
   }, []);
@@ -48,9 +68,22 @@ const MatchCountdown: FC = () => {
     timer.reset();
     setTime(timer.timeLeft);
   };
-  const onStart = () => timer.start();
-  const onAbort = () => timer.abort();
-  const onEnd = () => timer.stop();
+  const onStart = () => {
+    if (audio) startAudio.play();
+    timer.start();
+  };
+  const onAbort = () => {
+    if (audio) abortAudio.play();
+    timer.abort();
+  };
+  const onEnd = () => {
+    if (audio) endAudio.play();
+    timer.stop();
+  };
+
+  const onEndgame = () => {
+    if (audio) endgameAudio.play();
+  };
 
   return <>{timeDuration.toFormat('m:ss')}</>;
 };

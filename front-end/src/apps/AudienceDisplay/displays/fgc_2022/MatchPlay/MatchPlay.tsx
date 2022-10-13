@@ -10,14 +10,6 @@ import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdow
 import { matchInProgress, timer } from 'src/stores/Recoil';
 import './MatchPlay.less';
 import { useSocket } from 'src/api/SocketProvider';
-import {
-  initAudio,
-  MATCH_ABORT,
-  MATCH_END,
-  MATCH_ENDGAME,
-  MATCH_START,
-  MATCH_TELE
-} from 'src/apps/AudienceDisplay/Audio';
 
 import FGC_LOGO from '../res/Global_Logo.png';
 import STORAGE_0_ICON from '../res/Storage_Level_0.png';
@@ -26,12 +18,6 @@ import STORAGE_2_ICON from '../res/Storage_Level_2.png';
 import STORAGE_3_ICON from '../res/Storage_Level_3.png';
 import STORAGE_4_ICON from '../res/Storage_Level_4.png';
 import { useSearchParams } from 'react-router-dom';
-
-const startAudio = initAudio(MATCH_START);
-const teleAudio = initAudio(MATCH_TELE);
-const abortAudio = initAudio(MATCH_ABORT);
-const endgameAudio = initAudio(MATCH_ENDGAME);
-const endAudio = initAudio(MATCH_END);
 
 const LeftParticipant: FC<{ participant: MatchParticipant; level: number }> = ({
   participant,
@@ -123,47 +109,15 @@ const MatchPlay: FC = () => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('match:start', matchStart);
-      socket?.on('match:abort', matchAbort);
       socket?.on('match:update', matchUpdate);
-
-      timer?.on('timer:endgame', matchEndGame);
-      timer?.on('timer:end', matchEnd);
-      timer?.on('timer:tele', matchTele);
     }
   }, [connected]);
 
   useEffect(() => {
     return () => {
-      socket?.removeListener('match:start', matchStart);
-      socket?.removeListener('match:abort', matchAbort);
       socket?.removeListener('match:update', matchUpdate);
-
-      timer?.removeListener('timer:endgame', matchEndGame);
-      timer?.removeListener('timer:end', matchEnd);
-      timer?.removeListener('timer:tele', matchTele);
     };
   }, []);
-
-  const matchStart = () => {
-    startAudio.play();
-  };
-
-  const matchTele = () => {
-    teleAudio.play();
-  };
-
-  const matchAbort = () => {
-    abortAudio.play();
-  };
-
-  const matchEndGame = () => {
-    endgameAudio.play();
-  };
-
-  const matchEnd = () => {
-    endAudio.play();
-  };
 
   const matchUpdate = (newMatch: Match) => {
     if (timer.inProgress()) {
@@ -192,7 +146,7 @@ const MatchPlay: FC = () => {
             </div>
             <div id='score-container-timer'>
               <span>
-                <MatchCountdown />
+                <MatchCountdown audio />
               </span>
             </div>
             <div id='score-container-scores'>
