@@ -142,7 +142,10 @@ const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
       }}
     >
       <Typography variant='h6'>
-        {participant?.team?.teamNameLong} ({participant?.team?.country})
+        <span
+          className={`flag-icon flag-icon-${participant?.team?.countryCode.toLowerCase()}`}
+        />
+        &nbsp;{participant?.team?.city}
       </Typography>
 
       <Box
