@@ -7,6 +7,7 @@ export interface ControlButtons {
   prestartEnabled: boolean;
   audienceDisplayEnabled: boolean;
   fieldPrepEnabled: boolean;
+  fieldDumpEnabled: boolean;
   startMatchEnabled: boolean;
   commitEnabled: boolean;
   postResultsEnabled: boolean;
@@ -18,6 +19,7 @@ export const useButtonState = (): ControlButtons => {
     prestartEnabled: false,
     audienceDisplayEnabled: false,
     fieldPrepEnabled: false,
+    fieldDumpEnabled: false,
     startMatchEnabled: false,
     commitEnabled: false,
     postResultsEnabled: false
@@ -30,6 +32,7 @@ export const useButtonState = (): ControlButtons => {
           prestartEnabled: false,
           audienceDisplayEnabled: false,
           fieldPrepEnabled: false,
+          fieldDumpEnabled: false,
           startMatchEnabled: false,
           commitEnabled: false,
           postResultsEnabled: false
@@ -40,6 +43,7 @@ export const useButtonState = (): ControlButtons => {
           prestartEnabled: true,
           audienceDisplayEnabled: false,
           fieldPrepEnabled: false,
+          fieldDumpEnabled: false,
           startMatchEnabled: false,
           commitEnabled: false,
           postResultsEnabled: false
@@ -50,6 +54,7 @@ export const useButtonState = (): ControlButtons => {
           prestartEnabled: true,
           audienceDisplayEnabled: true,
           fieldPrepEnabled: true,
+          fieldDumpEnabled: false,
           startMatchEnabled: false,
           commitEnabled: false,
           postResultsEnabled: false
@@ -59,8 +64,9 @@ export const useButtonState = (): ControlButtons => {
         setButtonStates({
           prestartEnabled: true,
           audienceDisplayEnabled: true,
-          fieldPrepEnabled: true,
-          startMatchEnabled: true,
+          fieldPrepEnabled: false,
+          fieldDumpEnabled: true,
+          startMatchEnabled: false,
           commitEnabled: false,
           postResultsEnabled: false
         });
@@ -69,7 +75,8 @@ export const useButtonState = (): ControlButtons => {
         setButtonStates({
           prestartEnabled: true,
           audienceDisplayEnabled: true,
-          fieldPrepEnabled: true,
+          fieldPrepEnabled: false,
+          fieldDumpEnabled: false,
           startMatchEnabled: true,
           commitEnabled: false,
           postResultsEnabled: false
@@ -80,6 +87,7 @@ export const useButtonState = (): ControlButtons => {
           prestartEnabled: false,
           audienceDisplayEnabled: false,
           fieldPrepEnabled: false,
+          fieldDumpEnabled: false,
           startMatchEnabled: true,
           commitEnabled: false,
           postResultsEnabled: false
@@ -90,6 +98,7 @@ export const useButtonState = (): ControlButtons => {
           prestartEnabled: true,
           audienceDisplayEnabled: false,
           fieldPrepEnabled: false,
+          fieldDumpEnabled: false,
           startMatchEnabled: false,
           commitEnabled: false,
           postResultsEnabled: false
@@ -100,6 +109,7 @@ export const useButtonState = (): ControlButtons => {
           prestartEnabled: false,
           audienceDisplayEnabled: false,
           fieldPrepEnabled: false,
+          fieldDumpEnabled: false,
           startMatchEnabled: false,
           commitEnabled: true,
           postResultsEnabled: false
@@ -110,6 +120,7 @@ export const useButtonState = (): ControlButtons => {
           prestartEnabled: true,
           audienceDisplayEnabled: false,
           fieldPrepEnabled: false,
+          fieldDumpEnabled: false,
           startMatchEnabled: false,
           commitEnabled: true,
           postResultsEnabled: false
@@ -120,6 +131,7 @@ export const useButtonState = (): ControlButtons => {
           prestartEnabled: true,
           audienceDisplayEnabled: false,
           fieldPrepEnabled: false,
+          fieldDumpEnabled: false,
           startMatchEnabled: false,
           commitEnabled: false,
           postResultsEnabled: true
@@ -130,6 +142,7 @@ export const useButtonState = (): ControlButtons => {
           prestartEnabled: true,
           audienceDisplayEnabled: false,
           fieldPrepEnabled: false,
+          fieldDumpEnabled: false,
           startMatchEnabled: false,
           commitEnabled: false,
           postResultsEnabled: false
@@ -140,6 +153,7 @@ export const useButtonState = (): ControlButtons => {
           prestartEnabled: true,
           audienceDisplayEnabled: false,
           fieldPrepEnabled: false,
+          fieldDumpEnabled: false,
           startMatchEnabled: false,
           commitEnabled: false,
           postResultsEnabled: false

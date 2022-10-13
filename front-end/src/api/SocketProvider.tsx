@@ -101,6 +101,16 @@ export function sendStartMatch(): void {
   socket?.emit('fcs:update', setLEDPattern(LED_COLOR1));
 }
 
+export async function dump(duration: number) {
+  return new Promise((resolve) => {
+    socket?.emit('fcs:update', MOTOR_FORWARD);
+    setTimeout(() => {
+      socket?.emit('fcs:update', MOTOR_DISABLE);
+      resolve(null);
+    }, duration);
+  });
+}
+
 export async function prepareField(
   duration: number,
   endGameHBSpeed: number,
@@ -130,20 +140,12 @@ export async function prepareField(
     }
   };
   const raceLight = async () => {
-    // await new Promise((resolve) => setTimeout(resolve, 1000));
     for (let i = 108; i >= 0; i = i - Math.min(108 / 3)) {
       
       await new Promise((resolve) => setTimeout(resolve, 1000));
       socket?.emit('fcs:update', setLEDLength(i));
     }
   };
-  // socket?.emit('fcs:update', MOTOR_FORWARD);
-  // setTimeout(() => {
-  //   socket?.emit('fcs:update', MOTOR_DISABLE);
-  // }, duration);
-  // await new Promise((resolve) =>
-  //   setTimeout(resolve, Math.max(tSetupDuration - cdDuration, 0))
-  // );
   switch (cdStyle) {
     case 'style1':
       await countdown();
