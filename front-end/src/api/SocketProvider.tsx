@@ -101,6 +101,16 @@ export function sendStartMatch(): void {
   }, 250);
 }
 
+export async function dump(duration: number) {
+  return new Promise((resolve) => {
+    socket?.emit('fcs:update', MOTOR_FORWARD);
+    setTimeout(() => {
+      socket?.emit('fcs:update', MOTOR_DISABLE);
+      resolve(null);
+    }, duration);
+  });
+}
+
 export async function prepareField(
   duration: number,
   endGameHBSpeed: number,
@@ -136,10 +146,6 @@ export async function prepareField(
       await new Promise((resolve) => setTimeout(resolve, cdDuration / 3));
     }
   };
-  socket?.emit('fcs:update', MOTOR_FORWARD);
-  setTimeout(() => {
-    socket?.emit('fcs:update', MOTOR_DISABLE);
-  }, duration);
   await new Promise((resolve) =>
     setTimeout(resolve, Math.max(tSetupDuration - cdDuration, 0))
   );
