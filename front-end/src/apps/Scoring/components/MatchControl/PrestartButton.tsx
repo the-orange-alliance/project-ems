@@ -33,11 +33,10 @@ const PrestartButton: FC = () => {
           matchInProgressParticipants
         );
         if (selectedMatchKey && participants) {
-          console.log(selectedMatchKey);
-          sendPrestart(selectedMatchKey);
-          setState(MatchState.PRESTART_COMPLETE);
           // Send updated participant list.
           await patchMatchParticipants(participants);
+          sendPrestart(selectedMatchKey);
+          setState(MatchState.PRESTART_COMPLETE);
         }
       },
     [selectedMatchKey]
