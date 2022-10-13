@@ -124,22 +124,24 @@ const MatchPlay: FC = () => {
   useEffect(() => {
     if (connected) {
       socket?.on('match:start', matchStart);
-      socket?.on('match:tele', matchTele);
       socket?.on('match:abort', matchAbort);
-      socket?.on('match:endgame', matchEndGame);
-      socket?.on('match:end', matchEnd);
       socket?.on('match:update', matchUpdate);
+
+      timer?.on('timer:endgame', matchEndGame);
+      timer?.on('timer:end', matchEnd);
+      timer?.on('timer:tele', matchTele);
     }
   }, [connected]);
 
   useEffect(() => {
     return () => {
       socket?.removeListener('match:start', matchStart);
-      socket?.removeListener('match:tele', matchTele);
       socket?.removeListener('match:abort', matchAbort);
-      socket?.removeListener('match:endgame', matchEndGame);
-      socket?.removeListener('match:end', matchEnd);
       socket?.removeListener('match:update', matchUpdate);
+
+      timer?.removeListener('timer:endgame', matchEndGame);
+      timer?.removeListener('timer:end', matchEnd);
+      timer?.removeListener('timer:tele', matchTele);
     };
   }, []);
 
