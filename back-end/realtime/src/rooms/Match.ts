@@ -40,7 +40,7 @@ export default class Match extends Room {
       socket.emit("match:display", this.displayID);
     }
 
-    if (this.timer.inProgress() && this.match) {
+    if ((this.timer.inProgress() && this.match) || this.state === MatchState.MATCH_COMPLETE) {
       socket.emit("match:update", this.match);
     } else if (this.timer.inProgress() && !this.match) {
       logger.warn('no match data for this match - sending prestart');

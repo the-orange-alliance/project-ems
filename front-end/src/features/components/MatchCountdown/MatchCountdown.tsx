@@ -24,11 +24,15 @@ const MatchCountdown: FC = () => {
       timer.reset();
       setTime(timer.timeLeft);
     }
+    const test = setInterval(() => {
+      setTime(timer.timeLeft);
+    }, 500);
     return () => {
       socket?.off('match:prestart', onPrestart);
       socket?.off('match:start', onStart);
       socket?.off('match:abort', onAbort);
       socket?.off('match:end', onEnd);
+      clearInterval(test);
     };
   }, []);
 
@@ -37,12 +41,6 @@ const MatchCountdown: FC = () => {
       setTime(timer.timeLeft);
     }
   }, [matchState]);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setTime(timer.timeLeft);
-    }, 1000);
-  });
 
   const timeDuration = Duration.fromObject({ seconds: time });
 
