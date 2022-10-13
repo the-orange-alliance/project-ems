@@ -1,8 +1,8 @@
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useButtonState } from '../../util/ButtonState';
-import { useRecoilCallback, useSetRecoilState } from 'recoil';
+import { useRecoilCallback, useRecoilState } from 'recoil';
 import {
   matchByMatchKey,
   matchInProgress,
@@ -13,10 +13,16 @@ import { sendAllClear, sendCommitScores } from 'src/api/SocketProvider';
 import { patchWholeMatch, recalculateRankings } from 'src/api/ApiProvider';
 
 const CommitScoresButton: FC = () => {
-  const setState = useSetRecoilState(matchStateAtom);
+  const [state, setState] = useRecoilState(matchStateAtom);
   const { commitEnabled } = useButtonState();
   const [cleared, setCleared] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (state >= MatchState.RESULTS_POSTED) {
+      setCleared(false);
+    }
+  }, [state]);
 
   const onClear = () => {
     setCleared(true);

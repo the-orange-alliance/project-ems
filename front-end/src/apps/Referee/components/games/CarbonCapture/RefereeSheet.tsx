@@ -256,10 +256,8 @@ const Fouls: FC<{ alliance: MatchParticipant[]; disabled?: boolean }> = ({
 };
 
 const RefereeSheet: FC<{ alliance: MatchParticipant[]; headRef?: boolean }> = ({
-  alliance,
-  headRef
+  alliance
 }) => {
-  const matchState = useRecoilValue(matchStateAtom);
   const match = useRecoilValue(matchInProgress);
 
   return (
@@ -288,10 +286,7 @@ const RefereeSheet: FC<{ alliance: MatchParticipant[]; headRef?: boolean }> = ({
             participantKey={p.matchParticipantKey}
           />
         ))}
-        <Fouls
-          alliance={alliance}
-          disabled={headRef && matchState != MatchState.MATCH_COMPLETE}
-        />
+        <Fouls alliance={alliance} />
       </Box>
     </Paper>
   );

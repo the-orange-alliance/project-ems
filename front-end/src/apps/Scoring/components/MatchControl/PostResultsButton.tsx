@@ -36,7 +36,7 @@ const PostResultsButton: FC = () => {
     );
     const index = filteredMatches.findIndex((m) => m.matchKey === matchKey);
     if (filteredMatches[index + 1]) {
-      setMatchKey(typeMatches[index + 1].matchKey);
+      setMatchKey(filteredMatches[index + 1].matchKey);
       resetMatch();
     }
   };

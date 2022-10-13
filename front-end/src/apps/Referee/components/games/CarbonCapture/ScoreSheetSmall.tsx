@@ -1,15 +1,14 @@
 import { FC } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { matchInProgress, matchStateAtom } from 'src/stores/Recoil';
-import { CarbonCaptureDetails, MatchState } from '@toa-lib/models';
+import { useRecoilState } from 'recoil';
+import { matchInProgress } from 'src/stores/Recoil';
+import { CarbonCaptureDetails } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
 import NumberInput from '../../NumberInput';
 
-const ScoreSheetSmall: FC<{ headRef?: boolean }> = ({ headRef }) => {
+const ScoreSheetSmall: FC<{ headRef?: boolean }> = () => {
   const [match, setMatch] = useRecoilState(matchInProgress);
   const [socket] = useSocket();
-  const matchState = useRecoilValue(matchStateAtom); // TODO(jan): fix this
 
   const updateScore = (newScore: number) => {
     if (match && match.details) {
@@ -36,7 +35,6 @@ const ScoreSheetSmall: FC<{ headRef?: boolean }> = ({ headRef }) => {
         <NumberInput
           value={(match?.details as CarbonCaptureDetails)?.carbonPoints || 0}
           onChange={updateScore}
-          disabled={headRef && matchState != MatchState.MATCH_COMPLETE}
         />
       </Box>
     </Paper>
