@@ -32,6 +32,10 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
         Math.ceil(newBreak.afterMatch / schedule.matchConcurrency) *
         schedule.cycleTime
     });
+    newBreak.startTime = newStartTime.toISO();
+    newBreak.endTime = newStartTime
+      .plus({ minutes: newBreak.duration })
+      .toISO();
     handleStartChange(newStartTime);
     handleEndChange(newStartTime.plus({ minutes: newBreak.duration }));
     const newBreaks = [

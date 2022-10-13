@@ -136,7 +136,7 @@ export function generateScheduleItems(
     let breakPadding = 0;
     let dayMatches = 0;
     for (let i = 0; i < day.scheduledMatches; i++) {
-      const item: ScheduleItem = Object.assign({}, defaultScheduleItem);
+      const item: ScheduleItem = { ...defaultScheduleItem };
       const breakIndex = matchBreaks.indexOf(dayMatches + 1);
       item.type = schedule.type;
       let matchIndex = dayMatches;
@@ -167,7 +167,7 @@ export function generateScheduleItems(
       dayMatches++;
       totalMatches++;
       if (breakIndex !== -1) {
-        const breakItem: ScheduleItem = defaultScheduleItem;
+        const breakItem: ScheduleItem = { ...defaultScheduleItem };
         breakItem.key =
           eventKey +
           '-' +

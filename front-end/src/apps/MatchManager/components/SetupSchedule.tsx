@@ -15,7 +15,8 @@ import {
 import {
   calculateTotalMatches,
   useScheduleValidator,
-  generateScheduleWithPremiereField
+  generateScheduleWithPremiereField,
+  generateScheduleItems
 } from '@toa-lib/models';
 import Days from './Days';
 import ScheduleItemTable from './ScheduleItemTable';
@@ -46,6 +47,7 @@ const SetupSchedule: FC = () => {
     setSchedule((prev) => ({
       ...prev,
       matchConcurrency: 3,
+      cycleTime: 7,
       hasPremiereField: true,
       type: tournamentType,
       teamsParticipating: scheduledTeams.length,
@@ -90,7 +92,8 @@ const SetupSchedule: FC = () => {
 
   const generateSchedule = useRecoilCallback(({ snapshot }) => async () => {
     const eventKey = await snapshot.getPromise(eventKeySelector);
-    const scheduleItems = generateScheduleWithPremiereField(schedule, eventKey);
+    console.log(schedule);
+    const scheduleItems = generateScheduleItems(schedule, eventKey);
     setScheduleItems(scheduleItems);
     await deleteSchedule(tournamentType);
     await setFlag(
