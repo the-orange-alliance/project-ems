@@ -6,6 +6,7 @@ import FieldPrepButton from './FieldPrepButton';
 import StartMatchButton from './StartMatchButton';
 import CommitScoresButton from './CommitScoresButton';
 import PostResultsButton from './PostResultsButton';
+import StupidButton from './StupidButton';
 
 const MatchControl: FC = () => {
   return (
@@ -16,8 +17,11 @@ const MatchControl: FC = () => {
       <Grid item xs={12} sm={6} md={4} lg={2}>
         <AudienceDisplayButton />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
+      <Grid item xs={12} sm={6} md={4} lg={1}>
         <FieldPrepButton />
+      </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={1}>
+        <StupidButton />
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={2}>
         <StartMatchButton />

@@ -6,32 +6,32 @@ import { matchStateAtom } from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
 import { sendPrepareField } from 'src/api/SocketProvider';
 
-const FieldPrepButton: FC = () => {
+const StupidButton: FC = () => {
   const setState = useSetRecoilState(matchStateAtom);
 
-  const { fieldPrepEnabled } = useButtonState();
+  const { fieldDumpEnabled } = useButtonState();
 
   const [loading, setLoading] = useState(false);
 
   const updateField = async () => {
     setLoading(true);
     sendPrepareField();
-    setState(MatchState.FIELD_READY);
+    setState(MatchState.MATCH_READY);
     setLoading(false);
   };
 
   return (
     <LoadingButton
-      disabled={!fieldPrepEnabled}
+      disabled={!fieldDumpEnabled}
       color='success'
       fullWidth
       variant='contained'
       onClick={loading ? undefined : updateField}
       loading={loading}
     >
-      Prep
+      DUMP
     </LoadingButton>
   );
 };
 
-export default FieldPrepButton;
+export default StupidButton;
