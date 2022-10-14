@@ -76,7 +76,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     if (!environment.isProd()) return res.send({ success: false });
 
-    const matches = await selectAll('match');
+    const matches = await selectAllWhere('match', `tournamentLevel = 30`);
     const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
     const participants = await selectAllWhere(
       'match_participant',
