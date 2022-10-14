@@ -23,6 +23,7 @@ import { DataNotFoundError } from '../util/Errors.js';
 import { join } from 'path';
 import { writeFile } from 'fs/promises';
 import {
+  environment,
   executeMatchMaker,
   getAppData,
   getArgFromQualityStr
@@ -164,7 +165,7 @@ router.patch(
       if (match.details) delete match.details;
       if (match.participants) delete match.participants;
       await updateWhere('match', req.body, `matchKey = "${matchKey}"`);
-      if (match.tournamentLevel >= PRACTICE_LEVEL) {
+      if (match.tournamentLevel >= PRACTICE_LEVEL && environment.isProd()) {
         try {
           logger.info('attempting to update results site...');
           postMatchResults(matchKey);

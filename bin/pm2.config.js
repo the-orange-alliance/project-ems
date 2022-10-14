@@ -3,14 +3,14 @@ module.exports = {
     name   : "EMS API",
     script : "./api/index.js",
     env: {
-      "NODE_ENV": "production",
+      NODE_ENV: "production",
       SERVICE_NAME: "ems-api",
       SERVICE_PORT: 8080,
       JWT_SECRET: 'toaadmin1'
     },
     env_production: {
       env: {
-      "NODE_ENV": "production",
+      NODE_ENV: "production",
       SERVICE_NAME: "ems-api",
       SERVICE_PORT: 8080,
       JWT_SECRET: 'toaadmin1'

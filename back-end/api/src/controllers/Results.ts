@@ -63,6 +63,7 @@ export const postMatchResults = async (matchKey: string) => {
 router.post(
   '/sync/rankings/:tournamentLevel',
   async (req: Request, res: Response, next: NextFunction) => {
+    if (!environment.isProd()) return res.send({ success: false });
     const rankingsReq = await postRankings(
       parseInt(req.params.tournamentLevel)
     );
@@ -73,6 +74,8 @@ router.post(
 router.post(
   '/sync/matches',
   async (req: Request, res: Response, next: NextFunction) => {
+    if (!environment.isProd()) return res.send({ success: false });
+
     const matches = await selectAll('match');
     const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
     const participants = await selectAllWhere(
