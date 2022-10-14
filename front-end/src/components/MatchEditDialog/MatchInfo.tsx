@@ -5,7 +5,7 @@ import Checkbox from '@mui/material/Checkbox';
 import { useRecoilState } from 'recoil';
 import { matchByMatchKey } from 'src/stores/Recoil';
 import { FormControlLabel } from '@mui/material';
-import { Match } from '@toa-lib/models';
+import { calculateScore, CarbonCaptureDetails, Match } from '@toa-lib/models';
 
 interface Props {
   matchKey: string;
@@ -16,9 +16,15 @@ const MatchInfo: FC<Props> = ({ matchKey }) => {
 
   const handleUpdates = (e: ChangeEvent<HTMLInputElement>) => {
     const { value, name, type } = e.target;
+    if (!match) return;
     const typedValue = type === 'number' ? parseInt(value) : value;
+    const [redScore, blueScore] = calculateScore(
+      match.redMinPen,
+      match.blueMinPen,
+      match.details as CarbonCaptureDetails
+    );
     if (match) {
-      setMatch({ ...match, [name]: typedValue });
+      setMatch({ ...match, redScore, blueScore, [name]: typedValue });
     }
   };
 

@@ -4,6 +4,8 @@ import TextField from '@mui/material/TextField';
 import { useRecoilState } from 'recoil';
 import { matchByMatchKey } from 'src/stores/Recoil';
 import {
+  calculateScore,
+  CarbonCaptureDetails,
   defaultCarbonCaptureDetails,
   isCarbonCaptureDetails
 } from '@toa-lib/models';
@@ -20,9 +22,20 @@ const MatchDetailInfo: FC<Props> = ({ matchKey }) => {
 
   const handleUpdates = (e: ChangeEvent<HTMLInputElement>) => {
     const { value, name, type } = e.target;
+    if (!match) return;
     const typedValue = type === 'number' ? parseInt(value) : value;
-    if (match && match.details) {
-      setMatch({ ...match, details: { ...match.details, [name]: typedValue } });
+    const details = {
+      ...match.details,
+      [name]: typedValue
+    } as CarbonCaptureDetails;
+    console.log(details);
+    const [redScore, blueScore] = calculateScore(
+      match.redMinPen,
+      match.blueMinPen,
+      details
+    );
+    if (match) {
+      setMatch({ ...match, details, redScore, blueScore });
     }
   };
 
@@ -132,6 +145,16 @@ const MatchDetailInfo: FC<Props> = ({ matchKey }) => {
           type='number'
           fullWidth
           name='blueRobotThreeStorage'
+          onChange={handleUpdates}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={3}>
+        <TextField
+          label='Carbon Points'
+          value={details.carbonPoints}
+          type='number'
+          fullWidth
+          name='carbonPoints'
           onChange={handleUpdates}
         />
       </Grid>

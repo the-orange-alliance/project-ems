@@ -32,6 +32,7 @@ export default class Match extends Room {
     // These are in case of mid-match disconnect/reconnects
     if (
       this.state >= MatchState.PRESTART_COMPLETE &&
+      this.state !== MatchState.MATCH_COMPLETE &&
       this.matchKey &&
       !this.timer.inProgress()
     ) {
