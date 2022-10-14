@@ -22,6 +22,7 @@ const AudienceDisplay: FC = () => {
   const [socket, connected] = useSocket();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode');
+  const role = searchParams.get('role');
 
   useEffect(() => {
     if (connected) {
@@ -31,11 +32,15 @@ const AudienceDisplay: FC = () => {
   }, [connected]);
 
   useEffect(() => {
+    setTimeout(() => {
+      if (role === 'stream' && display === 1) setDisplay(2);
+    }, 20000);
+
     return () => {
       socket?.removeListener('match:display', onDisplay);
       socket?.removeListener('match:commit', onCommit);
     };
-  }, []);
+  }, [display]);
 
   const onDisplay = (id: number) => {
     setDisplay(id);

@@ -59,6 +59,7 @@ const MatchResults: FC = () => {
   const rankingsRefresh = useRecoilRefresher_UNSTABLE(
     rankingsByMatch(match?.matchKey || '')
   );
+
   const someDetails = match?.details;
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
