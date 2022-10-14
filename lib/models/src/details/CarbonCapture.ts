@@ -155,8 +155,9 @@ export function calculateRankings(
         ? [...scores.slice(0, index), ...scores.slice(index + 1)]
         : scores;
     if (newScores.length > 0) {
-      ranking.rankingScore =
-        newScores.reduce((prev, curr) => prev + curr) / newScores.length;
+      ranking.rankingScore = Math.ceil(
+        newScores.reduce((prev, curr) => prev + curr) / newScores.length
+      );
     } else {
       ranking.rankingScore = 0;
     }
@@ -165,7 +166,6 @@ export function calculateRankings(
 
   // In this loop calculate team rankings
   const rankings = [...rankingMap.values()].sort(compareRankings);
-
   // In this loop calculate the rank change
   for (let i = 0; i < rankings.length; i++) {
     const prevRanking = prevRankings.find(
@@ -231,12 +231,13 @@ function compareRankings(
   a: CarbonCaptureRanking,
   b: CarbonCaptureRanking
 ): number {
-  if (a.rankingScore > b.rankingScore) {
-    return -1;
-  } else if (a.highestScore > b.highestScore) {
-    return -1;
-  } else if (a.carbonPoints > b.carbonPoints) {
-    return -1;
+  if (a.rankingScore !== b.rankingScore) {
+    return b.rankingScore - a.rankingScore;
+  } else if (a.highestScore !== b.highestScore) {
+    return b.highestScore - a.rankingScore;
+  } else if (a.carbonPoints !== b.carbonPoints) {
+    return b.carbonPoints - a.carbonPoints;
+  } else {
+    return 0;
   }
-  return 1;
 }

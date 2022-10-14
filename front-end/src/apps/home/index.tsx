@@ -6,6 +6,7 @@ import AppCard, { AppCardProps } from 'src/components/AppCard/AppCard';
 import twitchLogo from 'src/assets/images/twitch-logo.png';
 import audienceDisplayLogo from 'src/assets/images/audience-display-logo.png';
 import settingsLogo from 'src/assets/images/settings-logo.png';
+import revLogo from 'src/assets/images/rev.png';
 
 const GridAppCard = (props: AppCardProps) => (
   <Grid item xs={5} md={3}>
@@ -48,6 +49,7 @@ const HomeApp: FC = () => {
         />
         <GridAppCard title='Report App' to='/reports' />
         <GridAppCard title='Settings' imgSrc={settingsLogo} to='/settings' />
+        <GridAppCard title='JB App' imgSrc={revLogo} to='/jb' />
       </Grid>
     </DefaultLayout>
   );
