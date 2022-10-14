@@ -6,6 +6,8 @@ interface EnvironmentConfig {
   servicePort: string;
   jwtSecret: string;
   nodeEnv: string;
+  resultsApiBaseUrl: string;
+  resultsApiKey: string | null;
 }
 
 /**
@@ -27,7 +29,9 @@ class Environment {
       serviceHost: '',
       servicePort: '',
       jwtSecret: '',
-      nodeEnv: ''
+      nodeEnv: '',
+      resultsApiBaseUrl: '',
+      resultsApiKey: null
     };
   }
 
@@ -46,6 +50,10 @@ class Environment {
     this.env.servicePort = process.env.SERVICE_PORT || '8080';
     this.env.jwtSecret = process.env.JWT_SECRET || 'fgc2022';
     this.env.nodeEnv = process.env.NODE_ENV || 'development';
+    this.env.nodeEnv = process.env.RESULTS_API_BASE_URL || 'development';
+    this.env.resultsApiBaseUrl =
+      process.env.RESULTS_API_BASE_URL || 'https://api.first.global';
+    this.env.resultsApiKey = process.env.RESULTS_API_KEY || null;
   }
 
   public get(): EnvironmentConfig {
