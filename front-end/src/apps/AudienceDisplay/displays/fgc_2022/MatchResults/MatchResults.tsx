@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import { useRecoilValue } from 'recoil';
+import { FC, useEffect } from 'react';
+import { useRecoilRefresher_UNSTABLE, useRecoilValue } from 'recoil';
 import { matchResult, rankingsByMatch } from 'src/stores/Recoil';
 import './MatchResults.css';
 
@@ -56,6 +56,9 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
 const MatchResults: FC = () => {
   const match = useRecoilValue(matchResult);
   const rankings = useRecoilValue(rankingsByMatch(match?.matchKey || ''));
+  const rankingsRefresh = useRecoilRefresher_UNSTABLE(
+    rankingsByMatch(match?.matchKey || '')
+  );
   const someDetails = match?.details;
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
@@ -93,6 +96,10 @@ const MatchResults: FC = () => {
     details.blueRobotTwoStorage,
     details.blueRobotThreeStorage
   ];
+
+  useEffect(() => {
+    rankingsRefresh();
+  }, [match]);
 
   return (
     <div id='fgc-body' style={{ backgroundImage: `url(${FGC_BG})` }}>

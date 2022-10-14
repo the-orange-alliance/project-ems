@@ -13,6 +13,7 @@ import {
   deleteWhere,
   insertValue,
   selectAll,
+  selectAllJoinWhere,
   selectAllWhere,
   updateWhere
 } from '../db/Database.js';
@@ -37,6 +38,26 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     return next(e);
   }
 });
+
+router.get(
+  '/:matchKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const matchKey = req.params.matchKey;
+      const [match] = await selectAllWhere('match', `matchKey = "${matchKey}"`);
+      const tournamentLevel = match.tournamentLevel;
+      const rankings = await selectAllJoinWhere(
+        'ranking',
+        'match_participant',
+        'teamKey',
+        `matchKey = "${matchKey}" AND tournamentLevel = ${tournamentLevel}`
+      );
+      res.send(rankings);
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
 
 router.post(
   '/create/:tournamentLevel',

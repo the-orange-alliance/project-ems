@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import { useRecoilValue } from 'recoil';
+import { FC, useEffect } from 'react';
+import { useRecoilRefresher_UNSTABLE, useRecoilValue } from 'recoil';
 import { matchInProgress, rankingsByMatch } from 'src/stores/Recoil';
 import { MatchParticipant, Ranking } from '@toa-lib/models';
 import './MatchPreview.css';
@@ -34,11 +34,18 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
 const MatchPreview: FC = () => {
   const match = useRecoilValue(matchInProgress);
   const rankings = useRecoilValue(rankingsByMatch(match?.matchKey || ''));
+  const rankingsRefresh = useRecoilRefresher_UNSTABLE(
+    rankingsByMatch(match?.matchKey || '')
+  );
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
   const name = match?.matchName ? match.matchName.split(' ')[2] : '';
+
+  useEffect(() => {
+    rankingsRefresh();
+  }, [match]);
 
   return (
     <div id='fgc-body' style={{ backgroundImage: `url(${FGC_BG})` }}>
