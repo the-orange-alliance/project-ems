@@ -43,14 +43,12 @@ const StartMatchButton: FC = () => {
   const startMatch = async () => {
     setLoading(true);
     await updateField();
-    timer.start();
     sendStartMatch();
     setState(MatchState.MATCH_IN_PROGRESS);
     setLoading(false);
   };
 
   const abortMatch = () => {
-    timer.stop();
     sendAbortMatch();
     setState(MatchState.MATCH_ABORTED);
     setState(MatchState.PRESTART_READY);
