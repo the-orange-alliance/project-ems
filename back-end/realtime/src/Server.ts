@@ -9,7 +9,7 @@ import logger from "./util/Logger.js";
 import { assignRooms, initRooms, leaveRooms } from "./rooms/Rooms.js";
 
 // Setup our environment
-env.loadAndSetDefaults();
+env.loadAndSetDefaults(process.env);
 
 // Bind socket.io to express to our http server
 const app: Application = express();

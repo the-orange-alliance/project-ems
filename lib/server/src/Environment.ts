@@ -42,18 +42,17 @@ class Environment {
     return Environment._instance;
   }
 
-  public loadAndSetDefaults() {
+  public loadAndSetDefaults(env: any) {
     dotenv.config();
 
-    this.env.serviceName = process.env.SERVICE_NAME || 'api';
-    this.env.serviceHost = process.env.SERVICE_HOST || '127.0.0.1';
-    this.env.servicePort = process.env.SERVICE_PORT || '8080';
-    this.env.jwtSecret = process.env.JWT_SECRET || 'fgc2022';
-    this.env.nodeEnv = process.env.NODE_ENV || 'development';
-    this.env.nodeEnv = process.env.RESULTS_API_BASE_URL || 'development';
+    this.env.serviceName = env.SERVICE_NAME || 'api';
+    this.env.serviceHost = env.SERVICE_HOST || '127.0.0.1';
+    this.env.servicePort = env.SERVICE_PORT || '8080';
+    this.env.jwtSecret = env.JWT_SECRET || 'fgc2022';
+    this.env.nodeEnv = env.NODE_ENV || 'development';
     this.env.resultsApiBaseUrl =
-      process.env.RESULTS_API_BASE_URL || 'https://api.first.global';
-    this.env.resultsApiKey = process.env.RESULTS_API_KEY || null;
+      env.RESULTS_API_BASE_URL || 'https://api.first.global';
+    this.env.resultsApiKey = env.RESULTS_API_KEY || null;
   }
 
   public get(): EnvironmentConfig {

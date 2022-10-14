@@ -1,4 +1,5 @@
 import { Box, Button, Divider, Paper, Typography } from '@mui/material';
+import { clientFetcher } from '@toa-lib/client';
 import { getTournamentLevelFromType } from '@toa-lib/models';
 import { FC } from 'react';
 import { useRecoilCallback } from 'recoil';
@@ -34,6 +35,7 @@ const AdminApp: FC = () => {
     const type = await snapshot.getPromise(selectedTournamentType);
     const tournamentLevel = getTournamentLevelFromType(type);
     await recalculateRankings(tournamentLevel);
+    await clientFetcher(`results/sync/rankings/${tournamentLevel}`, 'POST');
   });
 
   return (

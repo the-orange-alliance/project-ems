@@ -25,7 +25,7 @@ import logger from './util/Logger.js';
 import { initDatabase } from './db/Database.js';
 
 // Setup our environment
-env.loadAndSetDefaults();
+env.loadAndSetDefaults(process.env);
 
 // App setup - if any of these fail the server should exit.
 try {

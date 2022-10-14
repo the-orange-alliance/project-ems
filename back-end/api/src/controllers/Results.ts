@@ -13,7 +13,7 @@ import { selectAll, selectAllWhere } from '../db/Database.js';
 const router = Router();
 
 const request = (path: string, options: RequestInit) =>
-  fetch(environment.get().resultsApiBaseUrl + path, {
+  fetch.default(environment.get().resultsApiBaseUrl + path, {
     ...options,
     headers: {
       Authorization: `Bearer ${environment.get().resultsApiKey}`,
@@ -22,12 +22,9 @@ const request = (path: string, options: RequestInit) =>
     }
   });
 
-export const postRankings = async () => {
+export const postRankings = async (tournamentLevel: number) => {
   const [rankingsRaw, teams] = await Promise.all([
-    selectAllWhere(
-      'ranking',
-      `tournamentLevel = ${getTournamentLevelFromType('Qualification')}`
-    ),
+    selectAllWhere('ranking', `tournamentLevel = ${tournamentLevel}`),
     selectAll('team')
   ]);
   await request('/upload/teams', {
@@ -36,7 +33,7 @@ export const postRankings = async () => {
   });
 
   const rankings = reconcileTeamRankings(teams, rankingsRaw);
-  await request('/upload/rankings', {
+  return await request('/upload/rankings', {
     method: 'POST',
     body: JSON.stringify(rankings)
   });
@@ -60,14 +57,22 @@ export const postMatchResults = async (matchKey: string) => {
     body: JSON.stringify([match])
   });
 
-  await postRankings();
+  await postRankings(match.tournamentLevel);
 };
 
 router.post(
-  '/sync/all',
+  '/sync/rankings/:tournamentLevel',
   async (req: Request, res: Response, next: NextFunction) => {
-    await postRankings();
+    const rankingsReq = await postRankings(
+      parseInt(req.params.tournamentLevel)
+    );
+    res.send({ success: rankingsReq.ok });
+  }
+);
 
+router.post(
+  '/sync/matches',
+  async (req: Request, res: Response, next: NextFunction) => {
     const matches = await selectAll('match');
     const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
     const participants = await selectAllWhere(

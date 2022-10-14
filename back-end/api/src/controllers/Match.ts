@@ -3,12 +3,12 @@ import {
   isMatchMakerRequest,
   MatchMakerParams,
   Match,
-  MatchParticipant,
   MatchDetailBase,
   getTournamentLevelFromType,
   TournamentType,
   isMatch,
-  isMatchParticipantArray
+  isMatchParticipantArray,
+  PRACTICE_LEVEL
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import {
@@ -164,7 +164,14 @@ router.patch(
       if (match.details) delete match.details;
       if (match.participants) delete match.participants;
       await updateWhere('match', req.body, `matchKey = "${matchKey}"`);
-      postMatchResults(matchKey);
+      if (match.tournamentLevel >= PRACTICE_LEVEL) {
+        try {
+          logger.info('attempting to update results site...');
+          postMatchResults(matchKey);
+        } catch (e) {
+          logger.warn(e);
+        }
+      }
       res.status(200).send({});
     } catch (e) {
       return next(e);

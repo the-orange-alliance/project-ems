@@ -174,7 +174,7 @@ const SettingsApp: FC = () => {
     setChromaKey(event.target.value);
   };
   const forceResultsSync = () => {
-    clientFetcher('results/sync/all', 'POST');
+    clientFetcher('results/sync/matches', 'POST');
   };
 
   return (
