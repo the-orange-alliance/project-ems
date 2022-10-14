@@ -1,5 +1,5 @@
-import { FC, SyntheticEvent, useState } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { FC, SyntheticEvent, useState, useEffect } from 'react';
+import { useRecoilState } from 'recoil';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -11,8 +11,9 @@ import { Tabs, Tab } from '@mui/material';
 import TabPanel from 'src/components/TabPanel/TabPanel';
 import MatchInfo from './MatchInfo';
 import MatchParticipantInfo from './MatchParticipantInfo';
-import { patchWholeMatch } from 'src/api/ApiProvider';
+import { patchWholeMatch, useMatchAll } from 'src/api/ApiProvider';
 import MatchDetailInfo from './MatchDetailInfo';
+import { sendCommitScores } from 'src/api/SocketProvider';
 
 interface Props {
   matchKey: string;
@@ -20,7 +21,12 @@ interface Props {
 
 const MatchEditDialog: FC<Props> = ({ matchKey }) => {
   const [open, setOpen] = useRecoilState(matchEditDialogOpen);
-  const match = useRecoilValue(matchByMatchKey(matchKey));
+  const [match, setMatch] = useRecoilState(matchByMatchKey(matchKey));
+  const { data: reqMatch } = useMatchAll(matchKey);
+
+  useEffect(() => {
+    if (reqMatch) setMatch(reqMatch);
+  }, [reqMatch]);
 
   const [value, setValue] = useState<number>(0);
 
@@ -30,6 +36,13 @@ const MatchEditDialog: FC<Props> = ({ matchKey }) => {
   const handleUpdate = async () => {
     if (match) {
       await patchWholeMatch(match);
+    }
+    setOpen(false);
+  };
+  const handleUpdatePost = async () => {
+    if (match) {
+      await patchWholeMatch(match);
+      await sendCommitScores(match.matchKey);
     }
     setOpen(false);
   };
@@ -63,6 +76,9 @@ const MatchEditDialog: FC<Props> = ({ matchKey }) => {
         </TabPanel>
       </DialogContent>
       <DialogActions>
+        <Button onClick={handleUpdatePost} color='error'>
+          Update & Post
+        </Button>
         <Button onClick={handleUpdate}>Update</Button>
         <Button onClick={handleClose}>Cancel</Button>
       </DialogActions>

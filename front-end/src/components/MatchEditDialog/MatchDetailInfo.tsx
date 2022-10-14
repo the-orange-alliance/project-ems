@@ -70,7 +70,7 @@ const MatchDetailInfo: FC<Props> = ({ matchKey }) => {
       </Grid>
       <Grid item xs={12} sm={6} md={3}>
         <TextField
-          label='Tourney Lvl'
+          label='Carbon Points'
           value={details.carbonPoints}
           type='number'
           fullWidth
@@ -145,16 +145,6 @@ const MatchDetailInfo: FC<Props> = ({ matchKey }) => {
           type='number'
           fullWidth
           name='blueRobotThreeStorage'
-          onChange={handleUpdates}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={3}>
-        <TextField
-          label='Carbon Points'
-          value={details.carbonPoints}
-          type='number'
-          fullWidth
-          name='carbonPoints'
           onChange={handleUpdates}
         />
       </Grid>

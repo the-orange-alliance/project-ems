@@ -1,4 +1,5 @@
 import { FC, ChangeEvent } from 'react';
+import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import Checkbox from '@mui/material/Checkbox';
@@ -18,13 +19,14 @@ const MatchInfo: FC<Props> = ({ matchKey }) => {
     const { value, name, type } = e.target;
     if (!match) return;
     const typedValue = type === 'number' ? parseInt(value) : value;
+    const newMatch = { ...match, [name]: typedValue };
     const [redScore, blueScore] = calculateScore(
-      match.redMinPen,
-      match.blueMinPen,
-      match.details as CarbonCaptureDetails
+      newMatch.redMinPen,
+      newMatch.blueMinPen,
+      newMatch.details as CarbonCaptureDetails
     );
     if (match) {
-      setMatch({ ...match, redScore, blueScore, [name]: typedValue });
+      setMatch({ ...newMatch, redScore, blueScore });
     }
   };
 

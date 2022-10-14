@@ -18,7 +18,8 @@ import {
   MatchParticipant,
   Ranking,
   TournamentType,
-  AllianceMember
+  AllianceMember,
+  isMatch
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -176,3 +177,14 @@ export const useTeams = (): SWRResponse<Team[], ApiResponseError> =>
   useSWR('teams', (url) => clientFetcher(url, 'GET'), {
     revalidateOnFocus: false
   });
+
+export const useMatchAll = (
+  matchKey?: string
+): SWRResponse<Match, ApiResponseError> =>
+  useSWR<Match>(
+    matchKey ? `match/all/${matchKey}` : '',
+    (url) => clientFetcher(url, 'GET', undefined, isMatch),
+    {
+      revalidateOnFocus: false
+    }
+  );
