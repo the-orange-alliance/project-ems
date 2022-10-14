@@ -19,6 +19,7 @@ import FieldDebugger from './apps/FieldDebugger';
 import Reports from './apps/Reports';
 import Streaming from './apps/Streaming/Streaming';
 import QueueingDisplay from './apps/QueueingDisplay';
+import JBApp from './apps/JBApp';
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
@@ -149,6 +150,12 @@ const AppRoutes: AppRoute[] = [
     path: '/queueing',
     group: 0,
     element: <QueueingDisplay />
+  },
+  {
+    name: 'JB App',
+    path: '/jb',
+    group: 0,
+    element: <JBApp />
   }
 ];
 

@@ -86,7 +86,7 @@ const MatchResults: FC = () => {
   const redStorage = [
     details.redRobotOneStorage,
     details.redRobotTwoStorage,
-    details.redRobotTwoStorage
+    details.redRobotThreeStorage
   ];
   const blueStorage = [
     details.blueRobotOneStorage,
