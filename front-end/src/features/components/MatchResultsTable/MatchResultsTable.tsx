@@ -20,7 +20,9 @@ interface Props {
 const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
   const selectedMatchKey = useRecoilValue(loadedMatchKey);
   const teams = useRecoilValue(teamsAtom);
-
+  const allianceSize = matches?.[0]?.participants?.length
+    ? matches[0].participants.length / 2
+    : 3;
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
       <TableContainer>
@@ -32,12 +34,13 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
               <TableCell>Time</TableCell>
               <TableCell>Red Score</TableCell>
               <TableCell>Blue Score</TableCell>
-              <TableCell>Red 1</TableCell>
-              <TableCell>Red 2</TableCell>
-              <TableCell>Red 3</TableCell>
-              <TableCell>Blue 1</TableCell>
-              <TableCell>Blue 2</TableCell>
-              <TableCell>Blue 3</TableCell>
+              {matches?.[0]?.participants?.map((p, i) => (
+                <TableCell key={`robot-${i}`}>
+                  {i < allianceSize
+                    ? `Red ${i + 1}`
+                    : `Blue ${i + 1 - allianceSize}`}
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -67,8 +70,12 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                       DateTime.DATETIME_FULL
                     )}
                   </TableCell>
-                  <TableCell>{match.redScore}</TableCell>
-                  <TableCell>{match.blueScore}</TableCell>
+                  <TableCell className={match.result > -1 ? 'red' : ''}>
+                    {match.redScore}
+                  </TableCell>
+                  <TableCell className={match.result > -1 ? 'blue' : ''}>
+                    {match.blueScore}
+                  </TableCell>
                   {match.participants?.map((p) => {
                     const team = teams.find((t) => p.teamKey === t.teamKey);
                     return (

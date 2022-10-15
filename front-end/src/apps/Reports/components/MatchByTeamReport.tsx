@@ -18,6 +18,10 @@ interface Props {
 }
 
 const MatchByTeamReport: FC<Props> = ({ teams, matches, identifier }) => {
+  const allianceSize = matches?.[0]?.participants?.length
+    ? matches[0].participants.length / 2
+    : 3;
+
   const teamsMap: Map<number, Match[]> = useMemo(() => {
     const newMap: Map<number, Match[]> = new Map();
     for (const match of matches) {
@@ -49,12 +53,13 @@ const MatchByTeamReport: FC<Props> = ({ teams, matches, identifier }) => {
                     <TableCell>Name</TableCell>
                     <TableCell size='small'>Field</TableCell>
                     <TableCell>Time</TableCell>
-                    <TableCell size='small'>Red 1</TableCell>
-                    <TableCell size='small'>Red 2</TableCell>
-                    <TableCell size='small'>Red 3</TableCell>
-                    <TableCell size='small'>Blue 1</TableCell>
-                    <TableCell size='small'>Blue 2</TableCell>
-                    <TableCell size='small'>Blue 3</TableCell>
+                    {matches?.[0]?.participants?.map((p, i) => (
+                      <TableCell key={`robot-${i}`}>
+                        {i < allianceSize
+                          ? `Red ${i + 1}`
+                          : `Blue ${i + 1 - allianceSize}`}
+                      </TableCell>
+                    ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>

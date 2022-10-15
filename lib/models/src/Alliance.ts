@@ -8,7 +8,7 @@ export interface AllianceMember {
   allianceNameLong: string;
   allianceNameShort: string;
   isCaptain: boolean;
-  order: number;
+  pickOrder: number;
 }
 
 export const defaultAllianceMember: AllianceMember = {
@@ -19,13 +19,13 @@ export const defaultAllianceMember: AllianceMember = {
   allianceNameLong: '',
   allianceNameShort: '',
   isCaptain: false,
-  order: -1
+  pickOrder: -1
 };
 
 export const isAllianceMember = (obj: unknown): obj is AllianceMember =>
   isNonNullObject(obj) &&
   isString(obj.allianceKey) &&
-  isString(obj.allianceRank) &&
+  isNumber(obj.allianceRank) &&
   isNumber(obj.teamKey);
 
 export const isAllianceArray = (obj: unknown): obj is AllianceMember[] =>

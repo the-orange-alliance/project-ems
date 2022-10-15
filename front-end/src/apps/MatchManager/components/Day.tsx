@@ -10,14 +10,14 @@ import {
   tournamentScheduleDaySelector,
   tournamentScheduleSelector
 } from 'src/stores/Recoil';
-import { defaultBreak } from '@toa-lib/models';
+import { Day, defaultBreak } from '@toa-lib/models';
 import DayBreak from './DayBreak';
 
 interface Props {
   id: number;
 }
 
-const Day: FC<Props> = ({ id }) => {
+const DayComponent: FC<Props> = ({ id }) => {
   const schedule = useRecoilValue(tournamentScheduleSelector);
   const [day, setDay] = useRecoilState(tournamentScheduleDaySelector(id));
 
@@ -29,18 +29,17 @@ const Day: FC<Props> = ({ id }) => {
   }, [day.breaks]);
 
   const changeMatches = (event: ChangeEvent<HTMLInputElement>) => {
-    setDay((prev) => ({
-      ...prev,
-      scheduledMatches: parseInt(event.target.value)
-    }));
-    updateEndTime(day.startTime);
+    const newDay = { ...day, scheduledMatches: parseInt(event.target.value) };
+    setDay(newDay);
+    updateEndTime(newDay);
   };
 
   const handleStartChange = (newValue: DateTime | null) => {
     const newTime = (newValue ? newValue : DateTime.now()).toISO();
+    const newDay = { ...day, startTime: newTime };
     setStartDate(newValue);
-    setDay((prev) => ({ ...prev, startTime: newTime }));
-    updateEndTime(newTime);
+    setDay(newDay);
+    updateEndTime(newDay);
   };
 
   const handleEndChange = (newValue: DateTime | null) => {
@@ -61,18 +60,18 @@ const Day: FC<Props> = ({ id }) => {
     }));
   };
 
-  const updateEndTime = (startTime: string) => {
+  const updateEndTime = (newDay: Day) => {
     const matchesDuration =
-      Math.ceil(day.scheduledMatches / schedule.matchConcurrency) *
+      Math.ceil(newDay.scheduledMatches / schedule.matchConcurrency) *
       schedule.cycleTime;
 
     const breaksDuration =
-      day.breaks.length > 0
-        ? day.breaks
+      newDay.breaks.length > 0
+        ? newDay.breaks
             .map((dayBreak) => dayBreak.duration)
             .reduce((prev, curr) => prev + curr)
         : 0;
-    const newEndTime = DateTime.fromISO(startTime).plus({
+    const newEndTime = DateTime.fromISO(newDay.startTime).plus({
       minutes: matchesDuration + breaksDuration
     });
     setEndDate(newEndTime);
@@ -163,4 +162,4 @@ const Day: FC<Props> = ({ id }) => {
   );
 };
 
-export default Day;
+export default DayComponent;

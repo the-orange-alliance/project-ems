@@ -3,10 +3,11 @@ import { useRecoilRefresher_UNSTABLE, useRecoilValue } from 'recoil';
 import { matchResult, rankingsByMatch } from 'src/stores/Recoil';
 import './MatchResults.css';
 
+import NorthIcon from '@mui/icons-material/North';
+import SouthIcon from '@mui/icons-material/South';
+
 import FGC_BG from '../res/global-bg.png';
-import RED_WIN from '../res/Red_Win_Top.png';
 import RED_LOSE from '../res/Red_Lose_Top.png';
-import BLUE_WIN from '../res/Blue_Win_Top.png';
 import BLUE_LOSE from '../res/Blue_Lose_Top.png';
 
 // Icons
@@ -25,6 +26,12 @@ import {
   Ranking
 } from '@toa-lib/models';
 
+function getName(name: string): string {
+  const params = name.split(' ');
+  if (params.length <= 1) return name;
+  return params.length === 3 ? params[2] : `${name.charAt(0)}${params[3]}`;
+}
+
 const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
   participant,
   ranking
@@ -35,9 +42,17 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
       <div className='res-team-rank'>
         {ranking && (
           <span>
-            {ranking.rankChange >= 0
-              ? `#${ranking.rank} (+${ranking.rankChange})`
-              : `#${ranking.rank} (${ranking.rankChange})`}
+            {ranking.rankChange > 0 ? (
+              <div className='center'>
+                #{ranking.rank} (<NorthIcon />
+                {ranking.rankChange})
+              </div>
+            ) : (
+              <div className='center'>
+                #{ranking.rank} (<SouthIcon />
+                {Math.abs(ranking.rankChange)})
+              </div>
+            )}
           </span>
         )}
       </div>
@@ -65,27 +80,14 @@ const MatchResults: FC = () => {
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
-  const name = match?.matchName ? match.matchName.split(' ')[2] : '';
+  const name = getName(match ? match.matchName : '');
 
   const details = isCarbonCaptureDetails(someDetails)
     ? someDetails
     : defaultCarbonCaptureDetails;
 
-  const redScore = match?.redScore || 0;
-  const blueScore = match?.blueScore || 0;
-
-  const redTop =
-    redScore > blueScore
-      ? RED_WIN
-      : redScore === blueScore
-      ? RED_WIN
-      : RED_LOSE;
-  const blueTop =
-    blueScore > redScore
-      ? BLUE_WIN
-      : redScore === blueScore
-      ? BLUE_WIN
-      : BLUE_LOSE;
+  const redTop = RED_LOSE;
+  const blueTop = BLUE_LOSE;
 
   const redStorage = [
     details.redRobotOneStorage,
@@ -309,7 +311,7 @@ const MatchResults: FC = () => {
                     PENALTY
                   </div>
                   <div className='res-detail-right penalty'>
-                    {match?.blueMinPen ? `-${match.redMinPen * 10}%` : 0}
+                    {match?.blueMinPen ? `-${match.blueMinPen * 10}%` : 0}
                   </div>
                 </div>
               </div>

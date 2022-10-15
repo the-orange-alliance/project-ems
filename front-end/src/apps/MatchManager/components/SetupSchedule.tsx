@@ -91,7 +91,6 @@ const SetupSchedule: FC = () => {
 
   const generateSchedule = useRecoilCallback(({ snapshot }) => async () => {
     const eventKey = await snapshot.getPromise(eventKeySelector);
-    console.log(schedule);
     const scheduleItems = generateScheduleItems(schedule, eventKey);
     setScheduleItems(scheduleItems);
     await deleteSchedule(tournamentType);

@@ -53,6 +53,17 @@ export const useButtonState = (): ControlButtons => {
         setButtonStates({
           prestartEnabled: true,
           audienceDisplayEnabled: true,
+          fieldPrepEnabled: false,
+          fieldDumpEnabled: false,
+          startMatchEnabled: false,
+          commitEnabled: false,
+          postResultsEnabled: false
+        });
+        break;
+      case MatchState.AUDIENCE_READY:
+        setButtonStates({
+          prestartEnabled: true,
+          audienceDisplayEnabled: true,
           fieldPrepEnabled: true,
           fieldDumpEnabled: false,
           startMatchEnabled: false,

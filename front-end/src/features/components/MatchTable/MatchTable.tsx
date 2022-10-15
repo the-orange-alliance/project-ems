@@ -17,7 +17,7 @@ interface Props {
 
 const MatchTable: FC<Props> = ({ matches }) => {
   const teams = useRecoilValue(teamsAtom);
-  const allianceSize = matches[0].participants?.length
+  const allianceSize = matches?.[0]?.participants?.length
     ? matches[0].participants.length / 2
     : 3;
   return (
@@ -29,7 +29,7 @@ const MatchTable: FC<Props> = ({ matches }) => {
               <TableCell>Name</TableCell>
               <TableCell>Field</TableCell>
               <TableCell>Time</TableCell>
-              {matches[0].participants?.map((p, i) => (
+              {matches?.[0]?.participants?.map((p, i) => (
                 <TableCell key={`robot-${i}`}>
                   {i < allianceSize
                     ? `Red ${i + 1}`

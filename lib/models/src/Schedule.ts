@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { getMatchKeyPartialFromType } from './Match.js';
 import { Team } from './Team.js';
 import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
@@ -308,7 +309,30 @@ export function generateFGCRoundRobinSchedule(
   eventKey: string
 ): ScheduleItem[] {
   const items: ScheduleItem[] = [];
+  let breakPadding = 0;
   for (let i = 0; i < 16; i++) {
+    const day = schedule.days[0];
+    const matchBreaks = schedule.days[0].breaks.map((b) => b.afterMatch);
+    const breakIndex = matchBreaks.indexOf(i);
+    if (breakIndex > -1) {
+      const breakItem: ScheduleItem = { ...defaultScheduleItem };
+      breakItem.key =
+        eventKey +
+        '-' +
+        getMatchKeyPartialFromType(schedule.type) +
+        (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
+        (items.length + 1).toString().padStart(3, '0');
+      breakItem.day = day.id;
+      breakItem.duration = day.breaks[breakIndex].duration;
+      breakItem.name = day.breaks[breakIndex].name;
+      breakItem.startTime = DateTime.fromISO(day.breaks[breakIndex].startTime)
+        .plus({ minutes: breakPadding })
+        .toISO();
+      breakItem.isMatch = false;
+      items.push(breakItem);
+      breakPadding += day.breaks[breakIndex].duration;
+    }
+
     items.push({
       day: 0,
       duration: schedule.cycleTime,
@@ -316,12 +340,12 @@ export function generateFGCRoundRobinSchedule(
       key:
         eventKey +
         '-' +
-        schedule.type.substring(0, 1) +
+        getMatchKeyPartialFromType(schedule.type) +
         (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
-        (i + 1).toString().padStart(3, '0'),
+        (items.length + 1).toString().padStart(3, '0'),
       name: 'Match ' + (i + 1),
       startTime: DateTime.fromISO(schedule.days[0].startTime)
-        .plus({ minutes: schedule.cycleTime * i })
+        .plus({ minutes: schedule.cycleTime * i + breakPadding })
         .toISO(),
       tournamentId: schedule.tournamentId,
       type: schedule.type
@@ -335,7 +359,30 @@ export function generateFinalsSchedule(
   eventKey: string
 ): ScheduleItem[] {
   const items: ScheduleItem[] = [];
+  let breakPadding = 0;
   for (let i = 0; i < 3; i++) {
+    const day = schedule.days[0];
+    const matchBreaks = schedule.days[0].breaks.map((b) => b.afterMatch);
+    const breakIndex = matchBreaks.indexOf(i);
+    if (breakIndex > -1) {
+      const breakItem: ScheduleItem = { ...defaultScheduleItem };
+      breakItem.key =
+        eventKey +
+        '-' +
+        getMatchKeyPartialFromType(schedule.type) +
+        (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
+        (items.length + 1).toString().padStart(3, '0');
+      breakItem.day = day.id;
+      breakItem.duration = day.breaks[breakIndex].duration;
+      breakItem.name = day.breaks[breakIndex].name;
+      breakItem.startTime = DateTime.fromISO(day.breaks[breakIndex].startTime)
+        .plus({ minutes: breakPadding })
+        .toISO();
+      breakItem.isMatch = false;
+      items.push(breakItem);
+      breakPadding += day.breaks[breakIndex].duration;
+    }
+
     items.push({
       day: 0,
       duration: schedule.cycleTime,
@@ -343,12 +390,12 @@ export function generateFinalsSchedule(
       key:
         eventKey +
         '-' +
-        schedule.type.substring(0, 1) +
+        getMatchKeyPartialFromType(schedule.type) +
         (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
-        (i + 1).toString().padStart(3, '0'),
+        (items.length + 1).toString().padStart(3, '0'),
       name: 'Match ' + (i + 1),
       startTime: DateTime.fromISO(schedule.days[0].startTime)
-        .plus({ minutes: schedule.cycleTime * i })
+        .plus({ minutes: schedule.cycleTime * i + breakPadding })
         .toISO(),
       tournamentId: schedule.tournamentId,
       type: schedule.type

@@ -165,7 +165,7 @@ router.patch(
       if (match.details) delete match.details;
       if (match.participants) delete match.participants;
       await updateWhere('match', req.body, `matchKey = "${matchKey}"`);
-      if (match.tournamentLevel >= PRACTICE_LEVEL && environment.isProd()) {
+      if (match.tournamentLevel > PRACTICE_LEVEL && environment.isProd()) {
         try {
           logger.info('attempting to update results site...');
           postMatchResults(matchKey);

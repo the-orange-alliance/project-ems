@@ -85,7 +85,7 @@
   justify-content: flex-end;
   font-family: Roboto, sans-serif;
   font-weight: bold;
-  font-size: 1.75rem;
+  font-size: 1.75vw;
   color: #ffffff;
 }
 .res-card-teams {
@@ -110,28 +110,31 @@
   height: 100%;
   display: flex;
   align-items: center;
-  padding: 5px 10px 5px 10px;
+  padding: 5px 5px 5px 5px;
   font-family: Roboto, sans-serif;
   font-weight: bold;
-  font-size: 1.25rem;
+  font-size: 1.25vw;
   color: #ffffff;
 }
 .res-team-name {
-  width: 70%;
+  width: 60%;
   height: 100%;
   display: flex;
   align-items: center;
 }
 .res-team-rank {
-  width: 15%;
+  width: 28%;
   height: 100%;
   display: flex;
+  justify-content: flex-end;
   align-items: center;
+  font-size: 1vw;
 }
 .res-team-flag {
-  width: 15%;
+  width: 12%;
   height: 100%;
   display: flex;
+  justify-content: flex-end;
   align-items: center;
 }
 .res-team-flag > span {

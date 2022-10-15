@@ -32,6 +32,9 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
   const fieldMatches = matches.filter(
     (m) => fields.indexOf(m.fieldNumber) > -1
   );
+  const allianceSize = matches?.[0]?.participants?.length
+    ? matches[0].participants.length / 2
+    : 3;
 
   const changeFields = (newFields: number[]) => setFields(newFields);
 
@@ -48,12 +51,13 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
                 <TableCell>Name</TableCell>
                 <TableCell size='small'>Field</TableCell>
                 <TableCell>Time</TableCell>
-                <TableCell size='small'>Red 1</TableCell>
-                <TableCell size='small'>Red 2</TableCell>
-                <TableCell size='small'>Red 3</TableCell>
-                <TableCell size='small'>Blue 1</TableCell>
-                <TableCell size='small'>Blue 2</TableCell>
-                <TableCell size='small'>Blue 3</TableCell>
+                {matches?.[0]?.participants?.map((p, i) => (
+                  <TableCell key={`robot-${i}`}>
+                    {i < allianceSize
+                      ? `Red ${i + 1}`
+                      : `Blue ${i + 1 - allianceSize}`}
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
             <TableBody>

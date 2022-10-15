@@ -49,41 +49,7 @@ export {
 
 export * from './Schedule.js';
 
-export {
-  FINALS_LEVEL,
-  OCTOFINALS_LEVEL,
-  PRACTICE_LEVEL,
-  QUALIFICATION_LEVEL,
-  QUARTERFINALS_LEVEL,
-  RANKING_LEVEL,
-  RESULT_BLUE_WIN,
-  RESULT_GAME_SPECIFIC,
-  RESULT_NOT_PLAYED,
-  RESULT_RED_WIN,
-  RESULT_TIE,
-  ROUND_ROBIN_LEVEL,
-  SEMIFINALS_level,
-  TEST_LEVEL,
-  Alliance,
-  MatchState,
-  MatchMakerParams,
-  isMatchMakerRequest,
-  Match,
-  MatchDetailBase,
-  MatchDetails,
-  MatchParticipant,
-  isMatch,
-  isMatchArray,
-  isMatchParticipant,
-  isMatchParticipantArray,
-  assignMatchFieldsForFGC,
-  assignMatchTimes,
-  getMatchKeyPartialFromType,
-  getTournamentLevelFromType,
-  getMatchKeyPartialFromKey,
-  reconcileMatchParticipants,
-  reconcileMatchDetails
-} from './Match.js';
+export * from './Match.js';
 
 export {
   FGC_MATCH_CONFIG,

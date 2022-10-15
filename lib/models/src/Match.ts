@@ -29,14 +29,15 @@ export enum MatchState {
   MATCH_NOT_SELECTED = 0,
   PRESTART_READY = 1,
   PRESTART_COMPLETE = 2,
-  FIELD_READY = 3,
-  MATCH_READY = 4,
-  MATCH_IN_PROGRESS = 5,
-  MATCH_ABORTED = 6,
-  MATCH_COMPLETE = 7,
-  RESULTS_READY = 8,
-  RESULTS_COMMITTED = 9,
-  RESULTS_POSTED = 10
+  AUDIENCE_READY = 3,
+  FIELD_READY = 4,
+  MATCH_READY = 5,
+  MATCH_IN_PROGRESS = 6,
+  MATCH_ABORTED = 7,
+  MATCH_COMPLETE = 8,
+  RESULTS_READY = 9,
+  RESULTS_COMMITTED = 10,
+  RESULTS_POSTED = 11
 }
 
 export interface MatchMakerParams {
@@ -274,10 +275,10 @@ export function createFixedMatches(
       .padStart(3, '0')}`;
 
     const match: Match = {
-      fieldNumber: 1,
+      fieldNumber: 5,
       matchKey,
       matchDetailKey: matchKey + 'D',
-      matchName: item.name,
+      matchName: `${item.type} ${item.name}`,
       result: -1,
       tournamentLevel: getTournamentLevelFromType(item.type),
       active: 0,
@@ -294,7 +295,41 @@ export function createFixedMatches(
       uploaded: 0
     };
     const matchAllianceMap = matchMap[matchNumber];
+    const redAlliance = allianceMembers.filter(
+      (a) => a.allianceRank === matchAllianceMap[0]
+    );
+    const blueAlliance = allianceMembers.filter(
+      (a) => a.allianceRank === matchAllianceMap[1]
+    );
+    const participants: MatchParticipant[] = [];
+    for (const participant of redAlliance) {
+      participants.push({
+        matchKey,
+        matchParticipantKey: `${matchKey}-T${participants.length + 1}`,
+        teamKey: participant.teamKey,
+        station: 10 + participants.length + 1,
+        allianceKey: participant.allianceKey,
+        cardStatus: 0,
+        disqualified: 0,
+        noShow: 0,
+        surrogate: 0
+      });
+    }
 
+    for (const participant of blueAlliance) {
+      participants.push({
+        matchKey,
+        matchParticipantKey: `${matchKey}-T${participants.length + 1}`,
+        teamKey: participant.teamKey,
+        station: 20 + participants.length + 1,
+        allianceKey: participant.allianceKey,
+        cardStatus: 0,
+        disqualified: 0,
+        noShow: 0,
+        surrogate: 0
+      });
+    }
+    match.participants = participants;
     matches.push(match);
     matchNumber++;
   }
@@ -311,6 +346,8 @@ export function getMatchKeyPartialFromType(type: TournamentType) {
       return 'Q';
     case 'Ranking':
       return 'R';
+    case 'Round Robin':
+      return 'B';
     default:
       return 'P';
   }

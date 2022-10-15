@@ -9,6 +9,12 @@ import FGC_LOGO from '../res/Global_Logo.png';
 import RED_FLAG from '../res/Red_Team_Tag.png';
 import BLUE_FLAG from '../res/Blue_Team_Tag.png';
 
+function getName(name: string): string {
+  const params = name.split(' ');
+  if (params.length <= 1) return name;
+  return params.length === 3 ? params[2] : `${name.charAt(0)}${params[3]}`;
+}
+
 const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
   participant,
   ranking
@@ -41,7 +47,7 @@ const MatchPreview: FC = () => {
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
-  const name = match?.matchName ? match.matchName.split(' ')[2] : '';
+  const name = getName(match ? match.matchName : '');
 
   useEffect(() => {
     rankingsRefresh();

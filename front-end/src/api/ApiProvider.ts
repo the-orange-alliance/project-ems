@@ -133,6 +133,9 @@ export const createRankings = (
 ): Promise<void> =>
   clientFetcher(`ranking/create/${tournamentLevel}`, 'POST', teams);
 
+export const postRankings = (rankings: Ranking[]): Promise<void> =>
+  clientFetcher(`ranking`, 'POST', rankings);
+
 export const recalculateRankings = (
   tournamentLevel: number
 ): Promise<Ranking[]> =>

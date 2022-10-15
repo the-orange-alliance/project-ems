@@ -19,6 +19,12 @@ import STORAGE_3_ICON from '../res/Storage_Level_3.png';
 import STORAGE_4_ICON from '../res/Storage_Level_4.png';
 import { useSearchParams } from 'react-router-dom';
 
+function getName(name: string): string {
+  const params = name.split(' ');
+  if (params.length <= 1) return name;
+  return params.length === 3 ? params[2] : `${name.charAt(0)}${params[3]}`;
+}
+
 const LeftParticipant: FC<{ participant: MatchParticipant; level: number }> = ({
   participant,
   level
@@ -88,10 +94,14 @@ const MatchPlay: FC = () => {
   const [searchParams] = useSearchParams();
   const flip = searchParams.get('flip') === 'true';
 
-  const redAlliance = match?.participants?.filter((p) => p.station < 20);
-  const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
+  const redAlliance = match?.participants
+    ?.filter((p) => p.station < 20)
+    .slice(0, 3);
+  const blueAlliance = match?.participants
+    ?.filter((p) => p.station >= 20)
+    .slice(0, 3);
 
-  const name = match?.matchName ? match.matchName.split(' ')[2] : '';
+  const name = getName(match ? match.matchName : '');
 
   const details = isCarbonCaptureDetails(someDetails)
     ? someDetails

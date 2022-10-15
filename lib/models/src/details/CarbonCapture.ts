@@ -109,7 +109,7 @@ export function calculateRankings(
         } else {
           scoresMap.set(participant.teamKey, [...scores, match.redScore]);
           ranking.wins = ranking.wins + (redWin ? 1 : 0);
-          ranking.losses = ranking.losses + (redWin || isTie ? 0 : 1);
+          ranking.losses = ranking.losses + (redWin ? 0 : 1);
           ranking.ties = ranking.ties + (isTie ? 1 : 0);
           if (ranking.highestScore < match.redScore) {
             ranking.highestScore = match.redScore;
@@ -125,7 +125,7 @@ export function calculateRankings(
         } else {
           scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
           ranking.wins = ranking.wins + (blueWin ? 1 : 0);
-          ranking.losses = ranking.losses + (blueWin || isTie ? 0 : 1);
+          ranking.losses = ranking.losses + (blueWin ? 0 : 1);
           ranking.ties = ranking.ties + (isTie ? 1 : 0);
           if (ranking.highestScore < match.blueScore) {
             ranking.highestScore = match.blueScore;

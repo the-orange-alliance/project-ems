@@ -9,7 +9,7 @@ import {
 } from 'src/stores/Recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import AutocompleteTeam from 'src/features/components/AutocompleteTeam/AutoCompleteTeam';
-import { MatchState, PRACTICE_LEVEL, Team } from '@toa-lib/models';
+import { MatchState, RANKING_LEVEL, Team } from '@toa-lib/models';
 
 interface Props {
   participantKey: string;
@@ -52,7 +52,7 @@ const TeamStatusRow: FC<Props> = ({ participantKey }) => {
 
   const disabled =
     state >= MatchState.PRESTART_COMPLETE ||
-    (match ? match.tournamentLevel > PRACTICE_LEVEL : true);
+    (match ? match.tournamentLevel === RANKING_LEVEL : true);
 
   return (
     <Grid container spacing={3} sx={{ padding: (theme) => theme.spacing(1) }}>

@@ -1,29 +1,26 @@
-import { ReactNode } from 'react';
-import HomeApp from './apps/Home';
-import EventManagerApp from './apps/EventManager';
-import SettingsApp from './apps/Settings';
-import AccountManager from './apps/AccountManager';
-import AdminApp from './apps/Admin';
-import TeamManager from './apps/TeamManager';
-import MatchManager from './apps/MatchManager';
-import ScoringApp from './apps/Scoring';
-import {
-  RefereeApp,
-  ScoreKeeper,
-  HeadReferee,
-  RedReferee,
-  BlueReferee
-} from './apps/Referee';
-import AudienceDisplay from './apps/AudienceDisplay';
-import FieldDebugger from './apps/FieldDebugger';
-import Reports from './apps/Reports';
-import Streaming from './apps/Streaming/Streaming';
-import QueueingDisplay from './apps/QueueingDisplay';
-import JBApp from './apps/JBApp';
+import { ReactNode, lazy } from 'react';
+const HomeApp = lazy(() => import('./apps/Home/index'));
+const EventManagerApp = lazy(() => import('./apps/EventManager'));
+const SettingsApp = lazy(() => import('./apps/Settings'));
+const AccountManager = lazy(() => import('./apps/AccountManager'));
+const AdminApp = lazy(() => import('./apps/Admin'));
+const TeamManager = lazy(() => import('./apps/TeamManager'));
+const MatchManager = lazy(() => import('./apps/MatchManager'));
+const ScoringApp = lazy(() => import('./apps/Scoring'));
+const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
+const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));
+const RedReferee = lazy(() => import('./apps/Referee/RedReferee'));
+const BlueReferee = lazy(() => import('./apps/Referee/BlueReferee'));
+const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
+const AudienceDisplay = lazy(() => import('./apps/AudienceDisplay'));
+const FieldDebugger = lazy(() => import('./apps/FieldDebugger'));
+const Reports = lazy(() => import('./apps/Reports'));
+const Streaming = lazy(() => import('./apps/Streaming/Streaming'));
+const QueueingDisplay = lazy(() => import('./apps/QueueingDisplay'));
+const JBApp = lazy(() => import('./apps/JBApp'));
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
-
 export interface AppRoute {
   name: string;
   path: string;
