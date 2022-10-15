@@ -1,5 +1,11 @@
 import { clientFetcher } from '@toa-lib/client';
-import { isMatch, Match, MatchState } from '@toa-lib/models';
+import {
+  FINALS_LEVEL,
+  isMatch,
+  Match,
+  MatchState,
+  ROUND_ROBIN_LEVEL
+} from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
@@ -20,6 +26,7 @@ import MatchPlayMini from './displays/fgc_2022/MatchPlayMini/MatchPlayMini';
 import MatchPreview from './displays/fgc_2022/MatchPreview/MatchPreview';
 import MatchResults from './displays/fgc_2022/MatchResults/MatchResults';
 import MatchTimer from './displays/fgc_2022/MatchTimer/MatchTimer';
+import RankingsPlayoffs from './displays/fgc_2022/RankingsPlayoff/RankingsPlayoff';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayID);
@@ -92,6 +99,10 @@ function getDisplay(id: number, mode: string): ReactNode {
       return getPlayScreen(mode);
     case 3:
       return <MatchResults />;
+    case 4:
+      return <RankingsPlayoffs tournamentLevel={ROUND_ROBIN_LEVEL} />;
+    case 5:
+      return <RankingsPlayoffs tournamentLevel={FINALS_LEVEL} />;
     default:
       return <Blank />;
   }

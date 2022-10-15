@@ -1,3 +1,4 @@
+import { AllianceMember } from '../Alliance.js';
 import { Match, MatchDetailBase } from '../Match.js';
 import { Ranking } from '../Ranking.js';
 import { isNonNullObject, isNumber } from '../types.js';
@@ -181,6 +182,92 @@ export function calculateRankings(
     }
   }
 
+  return rankings;
+}
+
+export function calculatePlayoffsRank(
+  matches: Match[],
+  prevRankings: CarbonCaptureRanking[],
+  members: AllianceMember[]
+) {
+  const alliances: Map<number, CarbonCaptureRanking> = new Map();
+  const rankingMap: Map<number, CarbonCaptureRanking> = new Map();
+
+  for (const match of matches) {
+    if (!match.participants) break;
+    for (const participant of match.participants) {
+      if (!rankingMap.get(participant.teamKey)) {
+        rankingMap.set(participant.teamKey, {
+          tournamentLevel: match.tournamentLevel,
+          allianceKey: '',
+          carbonPoints: 0,
+          losses: 0,
+          played: 0,
+          rank: 0,
+          rankChange: 0,
+          rankingScore: 0,
+          rankKey: '',
+          teamKey: participant.teamKey,
+          ties: 0,
+          wins: 0,
+          highestScore: 0
+        });
+      }
+
+      if (!isCarbonCaptureDetails(match.details)) continue;
+      if (participant.cardStatus === 2) continue;
+
+      const ranking = {
+        ...(rankingMap.get(participant.teamKey) as CarbonCaptureRanking)
+      };
+
+      if (participant.station < 20) {
+        ranking.rankingScore += match.redScore;
+      } else if (participant.station >= 20) {
+        ranking.rankingScore += match.blueScore;
+      }
+
+      ranking.played += 1;
+      rankingMap.set(participant.teamKey, ranking);
+
+      // Alliance stuff
+      const member = members.find((m) => m.teamKey === ranking.teamKey);
+      if (member?.isCaptain) {
+        alliances.set(member.allianceRank, ranking);
+      }
+    }
+  }
+
+  const rankings = [...rankingMap.values()].sort(
+    (a, b) => b.rankingScore - a.rankingScore
+  );
+  const rankedMembers = [...rankings].map((r) =>
+    members.find((m) => m.teamKey === r.teamKey)
+  );
+
+  const allianceRankMap: Map<number, number> = new Map();
+  let allianceRank = 1;
+  rankedMembers.forEach((m, i) => {
+    if (m?.isCaptain) {
+      allianceRankMap.set(m.allianceRank, allianceRank);
+      allianceRank += 1;
+    }
+  });
+
+  for (let i = 0; i < rankings.length; i++) {
+    const member = rankedMembers[i];
+    const prevRanking = prevRankings.find(
+      (r) => r.teamKey === rankings[i].teamKey
+    );
+    if (prevRanking && member) {
+      rankings[i].rank = allianceRankMap.get(member.allianceRank) || 0;
+      const rankDelta =
+        prevRanking.rank === 0 ? 0 : prevRanking.rank - rankings[i].rank;
+      rankings[i].rankChange = rankDelta;
+      rankings[i].rankKey = prevRanking.rankKey;
+      rankings[i].allianceKey = prevRanking.allianceKey;
+    }
+  }
   return rankings;
 }
 

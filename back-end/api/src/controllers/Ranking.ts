@@ -1,5 +1,7 @@
 import {
   calculateRankings,
+  calculatePlayoffsRank,
+  FINALS_LEVEL,
   getMatchKeyPartialFromKey,
   isRankingArray,
   isTeamArray,
@@ -7,6 +9,7 @@ import {
   reconcileMatchDetails,
   reconcileMatchParticipants,
   reconcileTeamRankings,
+  ROUND_ROBIN_LEVEL,
   Team
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
@@ -15,8 +18,7 @@ import {
   insertValue,
   selectAll,
   selectAllJoinWhere,
-  selectAllWhere,
-  updateWhere
+  selectAllWhere
 } from '../db/Database.js';
 import { validateBody } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';
@@ -107,7 +109,7 @@ router.post(
   '/calculate/:tournamentLevel',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tournamentLevel = req.params.tournamentLevel;
+      const tournamentLevel = parseInt(req.params.tournamentLevel);
       const matches = await selectAllWhere(
         'match',
         `tournamentLevel = ${tournamentLevel}`
@@ -133,7 +135,16 @@ router.post(
         'ranking',
         `tournamentLevel = ${tournamentLevel}`
       );
-      const rankings = calculateRankings(matchesWithDetails, prevRankings);
+      const isPlayoffs =
+        tournamentLevel === ROUND_ROBIN_LEVEL ||
+        tournamentLevel === FINALS_LEVEL;
+      const members = await selectAllWhere(
+        'alliance',
+        `tournamentLevel = ${tournamentLevel}`
+      );
+      const rankings = isPlayoffs
+        ? calculatePlayoffsRank(matchesWithDetails, prevRankings, members)
+        : calculateRankings(matchesWithDetails, prevRankings);
       await deleteWhere('ranking', `tournamentLevel = ${tournamentLevel}`);
       await insertValue('ranking', rankings);
       res.send(rankings);

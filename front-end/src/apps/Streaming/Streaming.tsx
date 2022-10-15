@@ -13,6 +13,8 @@ const Streaming: FC = () => {
   const sendPreview = () => socket?.emit('match:display', 1);
   const sendPlay = () => socket?.emit('match:display', 2);
   const sendResults = () => socket?.emit('match:display', 3);
+  const sendRankingsRR = () => socket?.emit('match:display', 4);
+  const sendRankingsF = () => socket?.emit('match:display', 5);
 
   return (
     <PaperLayout
@@ -43,6 +45,16 @@ const Streaming: FC = () => {
         <Grid item xs={12} sm={6} md={4} lg={3}>
           <Button variant='contained' fullWidth onClick={sendResults}>
             Match Results
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <Button variant='contained' fullWidth onClick={sendRankingsRR}>
+            Rankings (Round Robin)
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <Button variant='contained' fullWidth onClick={sendRankingsF}>
+            Rankings (Finals)
           </Button>
         </Grid>
       </Grid>
