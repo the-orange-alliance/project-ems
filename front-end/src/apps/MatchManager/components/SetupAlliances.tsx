@@ -21,6 +21,7 @@ import { AllianceMember, defaultAllianceMember, Team } from '@toa-lib/models';
 import AutocompleteTeam from 'src/features/components/AutocompleteTeam/AutoCompleteTeam';
 import { replaceInArray } from 'src/stores/Util';
 import { postAllianceMembers } from 'src/api/ApiProvider';
+import { useSocket } from 'src/api/SocketProvider';
 
 const SetupAlliances: FC = () => {
   const [allAllianceMembers, setAllianceMembers] =
@@ -28,6 +29,7 @@ const SetupAlliances: FC = () => {
   const setSchedule = useSetRecoilState(tournamentScheduleSelector);
   const eventKey = useRecoilValue(eventKeySelector);
   const level = useRecoilValue(selectedTournamentLevel);
+  const [socket] = useSocket();
   const allianceMembers = allAllianceMembers.filter(
     (a) => a.tournamentLevel === level
   );
@@ -61,6 +63,14 @@ const SetupAlliances: FC = () => {
     await postAllianceMembers(allianceMembers);
   });
 
+  const setDisplay = () => {
+    socket?.emit('match:display', 6);
+  };
+
+  const updateDisplay = () => {
+    socket?.emit('match:alliance', allianceMembers);
+  };
+
   return (
     <Box sx={{ padding: (theme) => theme.spacing(3) }}>
       <Grid container spacing={3}>
@@ -69,7 +79,17 @@ const SetupAlliances: FC = () => {
             Generate Alliance Slots
           </Button>
         </Grid>
-        <Grid item xs={12} sm={12} md={9} />
+        <Grid item xs={12} sm={12} md={3}>
+          <Button variant='contained' onClick={setDisplay}>
+            Show Alliance Screen
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={12} md={3}>
+          <Button variant='contained' onClick={updateDisplay}>
+            Update Alliance Screen
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={12} md={3} />
         {allianceMembers.map((a) => {
           const onUpdate = (team: Team | null) => {
             if (team) {

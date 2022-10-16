@@ -20,6 +20,7 @@ import {
   matchStateAtom
 } from 'src/stores/Recoil';
 import './AudienceDisplay.less';
+import Alliances from './displays/fgc_2022/Alliances/Alliances';
 import Blank from './displays/fgc_2022/Blank/Blank';
 import MatchPlay from './displays/fgc_2022/MatchPlay/MatchPlay';
 import MatchPlayMini from './displays/fgc_2022/MatchPlayMini/MatchPlayMini';
@@ -103,6 +104,8 @@ function getDisplay(id: number, mode: string): ReactNode {
       return <RankingsPlayoffs tournamentLevel={ROUND_ROBIN_LEVEL} />;
     case 5:
       return <RankingsPlayoffs tournamentLevel={FINALS_LEVEL} />;
+    case 6:
+      return <Alliances />;
     default:
       return <Blank />;
   }

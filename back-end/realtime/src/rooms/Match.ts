@@ -1,4 +1,4 @@
-import { Match as MatchObj, MatchState, MatchTimer } from "@toa-lib/models";
+import { AllianceMember, Match as MatchObj, MatchState, MatchTimer } from "@toa-lib/models";
 import {
   calculateScore,
   CarbonCaptureDetails,
@@ -51,6 +51,11 @@ export default class Match extends Room {
     if (this.state === MatchState.RESULTS_COMMITTED) {
       socket.emit("match:commit", this.matchKey);
     }
+
+    // Event listener to remove soon
+    socket.on('match:alliance', (newAlliance: AllianceMember[]) => {
+      this.broadcast().emit('match:alliance', newAlliance);
+    });
 
     // Event listeners for matches
     socket.on("match:prestart", (matchKey: string) => {
