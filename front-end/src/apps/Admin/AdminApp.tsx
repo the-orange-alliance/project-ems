@@ -38,6 +38,18 @@ const AdminApp: FC = () => {
     await clientFetcher(`results/sync/rankings/${tournamentLevel}`, 'POST');
   });
 
+  const handleMatchSync = useRecoilCallback(({ snapshot }) => async () => {
+    const type = await snapshot.getPromise(selectedTournamentType);
+    const tournamentLevel = getTournamentLevelFromType(type);
+    await clientFetcher(`results/sync/matches/${tournamentLevel}`, 'POST');
+  });
+
+  const handleRankingsSync = useRecoilCallback(({ snapshot }) => async () => {
+    const type = await snapshot.getPromise(selectedTournamentType);
+    const tournamentLevel = getTournamentLevelFromType(type);
+    await clientFetcher(`results/sync/rankings/${tournamentLevel}`, 'POST');
+  });
+
   return (
     <DefaultLayout>
       <Paper>
@@ -60,6 +72,16 @@ const AdminApp: FC = () => {
           </Button>
           <Button variant='contained' color='error' onClick={handleRankings}>
             Re-Calculate Rankings
+          </Button>
+          <Button variant='contained' color='error' onClick={handleMatchSync}>
+            Sync Matches
+          </Button>
+          <Button
+            variant='contained'
+            color='error'
+            onClick={handleRankingsSync}
+          >
+            Sync Rankings
           </Button>
         </Box>
       </Paper>

@@ -103,4 +103,39 @@ router.post(
   }
 );
 
+router.post(
+  '/sync/matches/:tournamentLevel',
+  async (req: Request, res: Response, next: NextFunction) => {
+    if (!environment.isProd()) return res.send({ success: false });
+
+    const matches = await selectAllWhere(
+      'match',
+      `tournamentLevel = ${req.params.tournamentLevel}`
+    );
+    const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
+    const participants = await selectAllWhere(
+      'match_participant',
+      `matchKey LIKE "${matchKeyPartial}%"`
+    );
+    const details = await selectAllWhere(
+      'match_detail',
+      `matchKey LIKE "${matchKeyPartial}%"`
+    );
+    const matchesWithParticipants = reconcileMatchParticipants(
+      matches,
+      participants
+    );
+    const matchesWithDetails = reconcileMatchDetails(
+      matchesWithParticipants,
+      details
+    );
+    const matchesReq = await request('/upload/matches', {
+      method: 'POST',
+      body: JSON.stringify(matchesWithDetails)
+    });
+
+    res.send({ success: matchesReq.ok });
+  }
+);
+
 export default router;
