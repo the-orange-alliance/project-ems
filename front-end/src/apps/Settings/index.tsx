@@ -173,9 +173,6 @@ const SettingsApp: FC = () => {
   const changeChromaKey = (event: ChangeEvent<HTMLInputElement>) => {
     setChromaKey(event.target.value);
   };
-  const forceResultsSync = () => {
-    clientFetcher('results/sync/matches', 'POST');
-  };
 
   return (
     <DefaultLayout containerWidth='md'>
@@ -185,25 +182,6 @@ const SettingsApp: FC = () => {
         </Box>
         <Divider />
         <Box>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              onClick={forceResultsSync}
-              control={<Button variant='contained'>Force Sync</Button>}
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  Results Site
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
           <FormGroup
             sx={{
               '&:hover': {

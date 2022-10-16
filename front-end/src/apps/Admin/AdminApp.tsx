@@ -35,19 +35,15 @@ const AdminApp: FC = () => {
     const type = await snapshot.getPromise(selectedTournamentType);
     const tournamentLevel = getTournamentLevelFromType(type);
     await recalculateRankings(tournamentLevel);
-    await clientFetcher(`results/sync/rankings/${tournamentLevel}`, 'POST');
+    await clientFetcher(`results/sync/rankings`, 'POST');
   });
 
   const handleMatchSync = useRecoilCallback(({ snapshot }) => async () => {
-    const type = await snapshot.getPromise(selectedTournamentType);
-    const tournamentLevel = getTournamentLevelFromType(type);
-    await clientFetcher(`results/sync/matches/${tournamentLevel}`, 'POST');
+    await clientFetcher(`results/sync/matches`, 'POST');
   });
 
   const handleRankingsSync = useRecoilCallback(({ snapshot }) => async () => {
-    const type = await snapshot.getPromise(selectedTournamentType);
-    const tournamentLevel = getTournamentLevelFromType(type);
-    await clientFetcher(`results/sync/rankings/${tournamentLevel}`, 'POST');
+    await clientFetcher(`results/sync/rankings`, 'POST');
   });
 
   return (

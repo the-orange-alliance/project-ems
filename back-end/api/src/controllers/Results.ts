@@ -1,6 +1,5 @@
 import {
   getMatchKeyPartialFromKey,
-  getTournamentLevelFromType,
   reconcileMatchDetails,
   reconcileMatchParticipants,
   reconcileTeamRankings
@@ -22,9 +21,9 @@ const request = (path: string, options: RequestInit) =>
     }
   });
 
-export const postRankings = async (tournamentLevel: number) => {
+export const postRankings = async () => {
   const [rankingsRaw, teams] = await Promise.all([
-    selectAllWhere('ranking', `tournamentLevel = ${tournamentLevel}`),
+    selectAll('ranking'),
     selectAll('team')
   ]);
   await request('/upload/teams', {
@@ -57,16 +56,14 @@ export const postMatchResults = async (matchKey: string) => {
     body: JSON.stringify([match])
   });
 
-  await postRankings(match.tournamentLevel);
+  await postRankings();
 };
 
 router.post(
-  '/sync/rankings/:tournamentLevel',
+  '/sync/rankings',
   async (req: Request, res: Response, next: NextFunction) => {
     if (!environment.isProd()) return res.send({ success: false });
-    const rankingsReq = await postRankings(
-      parseInt(req.params.tournamentLevel)
-    );
+    const rankingsReq = await postRankings();
     res.send({ success: rankingsReq.ok });
   }
 );
@@ -76,42 +73,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     if (!environment.isProd()) return res.send({ success: false });
 
-    const matches = await selectAllWhere('match', `tournamentLevel = 30`);
-    const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
-    const participants = await selectAllWhere(
-      'match_participant',
-      `matchKey LIKE "${matchKeyPartial}%"`
-    );
-    const details = await selectAllWhere(
-      'match_detail',
-      `matchKey LIKE "${matchKeyPartial}%"`
-    );
-    const matchesWithParticipants = reconcileMatchParticipants(
-      matches,
-      participants
-    );
-    const matchesWithDetails = reconcileMatchDetails(
-      matchesWithParticipants,
-      details
-    );
-    const matchesReq = await request('/upload/matches', {
-      method: 'POST',
-      body: JSON.stringify(matchesWithDetails)
-    });
-
-    res.send({ success: matchesReq.ok });
-  }
-);
-
-router.post(
-  '/sync/matches/:tournamentLevel',
-  async (req: Request, res: Response, next: NextFunction) => {
-    if (!environment.isProd()) return res.send({ success: false });
-
-    const matches = await selectAllWhere(
-      'match',
-      `tournamentLevel = ${req.params.tournamentLevel}`
-    );
+    const matches = await selectAll('match');
     const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
     const participants = await selectAllWhere(
       'match_participant',
