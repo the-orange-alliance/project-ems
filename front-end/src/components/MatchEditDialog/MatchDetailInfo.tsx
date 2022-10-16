@@ -28,7 +28,6 @@ const MatchDetailInfo: FC<Props> = ({ matchKey }) => {
       ...match.details,
       [name]: typedValue
     } as CarbonCaptureDetails;
-    console.log(details);
     const [redScore, blueScore] = calculateScore(
       match.redMinPen,
       match.blueMinPen,
