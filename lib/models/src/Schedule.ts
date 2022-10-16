@@ -343,7 +343,7 @@ export function generateFGCRoundRobinSchedule(
         getMatchKeyPartialFromType(schedule.type) +
         (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
         (items.length + 1).toString().padStart(3, '0'),
-      name: 'Match ' + (i + 1),
+      name: schedule.type + ' Match ' + (i + 1),
       startTime: DateTime.fromISO(schedule.days[0].startTime)
         .plus({ minutes: schedule.cycleTime * i + breakPadding })
         .toISO(),
@@ -393,7 +393,7 @@ export function generateFinalsSchedule(
         getMatchKeyPartialFromType(schedule.type) +
         (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
         (items.length + 1).toString().padStart(3, '0'),
-      name: 'Match ' + (i + 1),
+      name: schedule.type + ' Match ' + (i + 1),
       startTime: DateTime.fromISO(schedule.days[0].startTime)
         .plus({ minutes: schedule.cycleTime * i + breakPadding })
         .toISO(),

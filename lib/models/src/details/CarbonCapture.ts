@@ -322,7 +322,7 @@ function compareRankings(
   if (a.rankingScore !== b.rankingScore) {
     return b.rankingScore - a.rankingScore;
   } else if (a.highestScore !== b.highestScore) {
-    return b.highestScore - a.rankingScore;
+    return b.highestScore - a.highestScore;
   } else if (a.carbonPoints !== b.carbonPoints) {
     return b.carbonPoints - a.carbonPoints;
   } else {

@@ -35,7 +35,6 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
   const allianceSize = matches?.[0]?.participants?.length
     ? matches[0].participants.length / 2
     : 3;
-
   const changeFields = (newFields: number[]) => setFields(newFields);
 
   return (
