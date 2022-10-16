@@ -32,7 +32,8 @@ import {
   Ranking,
   isRankingArray,
   isAllianceArray,
-  AllianceMember
+  AllianceMember,
+  FINALS_LEVEL
 } from '@toa-lib/models';
 import {
   atom,
@@ -100,6 +101,8 @@ export const selectedTournamentType = selector<TournamentType>({
         return 'Round Robin';
       case RANKING_LEVEL:
         return 'Ranking';
+      case FINALS_LEVEL:
+        return 'Finals';
       default:
         return 'Eliminations';
     }

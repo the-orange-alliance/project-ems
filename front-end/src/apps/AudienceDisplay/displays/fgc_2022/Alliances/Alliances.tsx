@@ -1,18 +1,20 @@
-import { FC, useEffect, useState } from 'react';
-import { AllianceMember } from '@toa-lib/models';
+import { FC, useEffect } from 'react';
+import { AllianceMember, ROUND_ROBIN_LEVEL } from '@toa-lib/models';
 import './Alliances.less';
 
 import FGC_BG from '../res/global-bg.png';
 import FGC_LOGO from '../res/Global_Logo.png';
 import { useSocket } from 'src/api/SocketProvider';
-import { useRecoilValue } from 'recoil';
-import { teamsAtom } from 'src/stores/Recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { allinaceMembers, teamsAtom } from 'src/stores/Recoil';
 
 const Alliances: FC = () => {
-  const [members, setMembers] = useState<AllianceMember[]>([]);
+  const [allMembers, setMembers] = useRecoilState(allinaceMembers);
   const teams = useRecoilValue(teamsAtom);
   const [socket, connected] = useSocket();
-
+  const members = allMembers.filter(
+    (m) => m.tournamentLevel === ROUND_ROBIN_LEVEL
+  );
   const allianceCaptains = members.filter((m) => m.isCaptain);
 
   useEffect(() => {
@@ -43,8 +45,12 @@ const Alliances: FC = () => {
           <table id='fgc-alliance-table'>
             <thead>
               <tr>
-                <th rowSpan={2}>Rank</th>
-                <th colSpan={4}>Alliance</th>
+                <th rowSpan={2} style={{ borderRight: '1px solid #eeeeee' }}>
+                  Name
+                </th>
+                <th colSpan={4} style={{ borderBottom: '1px solid #eeeeee' }}>
+                  Alliance
+                </th>
               </tr>
               <tr>
                 <th>Team 1</th>
@@ -56,7 +62,9 @@ const Alliances: FC = () => {
             <tbody>
               {allianceCaptains.map((r) => (
                 <tr key={r.allianceKey}>
-                  <td>{r.allianceRank}</td>
+                  <td style={{ borderRight: '1px solid black' }}>
+                    Alliance&nbsp;{r.allianceRank}
+                  </td>
                   {members
                     .filter((a) => a.allianceRank === r.allianceRank)
                     .map((a) => {

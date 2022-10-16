@@ -321,7 +321,7 @@ export function createFixedMatches(
         matchKey,
         matchParticipantKey: `${matchKey}-T${participants.length + 1}`,
         teamKey: participant.teamKey,
-        station: 20 + participants.length + 1,
+        station: 20 + participants.filter((p) => p.station >= 20).length + 1,
         allianceKey: participant.allianceKey,
         cardStatus: 0,
         disqualified: 0,
@@ -348,6 +348,8 @@ export function getMatchKeyPartialFromType(type: TournamentType) {
       return 'R';
     case 'Round Robin':
       return 'B';
+    case 'Finals':
+      return 'F';
     default:
       return 'P';
   }

@@ -35,7 +35,7 @@ const SetupSchedulePlayoffs: FC = () => {
   const [scheduleItems, setScheduleItems] = useRecoilState(
     tournamentScheduleItemAtomFamily(type)
   );
-
+  console.log(schedule);
   const [flags, setFlag] = useFlags();
 
   useEffect(() => {

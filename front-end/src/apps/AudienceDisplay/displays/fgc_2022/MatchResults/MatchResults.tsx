@@ -40,7 +40,7 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
     <div className='res-team-row bottom-red'>
       <div className='res-team-name'>{participant?.team?.teamNameLong}</div>
       <div className='res-team-rank'>
-        {ranking && (
+        {ranking && (participant.station === 11 || participant.station === 21) && (
           <span>
             {ranking.rankChange > 0 ? (
               <div className='center'>
