@@ -4,4 +4,3 @@ bin/api
 bin/logs
 bin/realtime
 bin/webapp
-*.zip
