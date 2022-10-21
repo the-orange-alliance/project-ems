@@ -36,7 +36,7 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
     ? matches[0].participants.length / 2
     : 3;
   const changeFields = (newFields: number[]) => setFields(newFields);
-
+  console.log(fieldMatches);
   return (
     <>
       <div className='no-print'>

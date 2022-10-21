@@ -215,11 +215,15 @@ export function calculatePlayoffsRank(
       }
 
       if (!isCarbonCaptureDetails(match.details)) continue;
-      if (participant.cardStatus === 2) continue;
 
       const ranking = {
         ...(rankingMap.get(participant.teamKey) as CarbonCaptureRanking)
       };
+
+      if (participant.cardStatus === 2) {
+        rankingMap.set(participant.teamKey, ranking);
+        continue;
+      }
 
       if (participant.station < 20) {
         ranking.rankingScore += match.redScore;
@@ -229,12 +233,6 @@ export function calculatePlayoffsRank(
 
       ranking.played += 1;
       rankingMap.set(participant.teamKey, ranking);
-
-      // Alliance stuff
-      const member = members.find((m) => m.teamKey === ranking.teamKey);
-      if (member?.isCaptain) {
-        alliances.set(member.allianceRank, ranking);
-      }
     }
   }
 
