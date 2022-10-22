@@ -63,7 +63,7 @@ export const isMatchMakerRequest = (obj: unknown): obj is MatchMakerParams =>
   isString(obj.quality) &&
   isArray(obj.teamKeys);
 
-export interface Match {
+export interface Match<T extends MatchDetailBase> {
   eventKey: string;
   tournamentKey: string;
   id: number;
@@ -83,17 +83,17 @@ export interface Match {
   result: number;
   uploaded: number;
   participants?: MatchParticipant[];
-  details?: MatchDetails;
+  details?: T;
 }
 
-export const isMatch = (obj: unknown): obj is Match =>
+export const isMatch = (obj: unknown): obj is Match<any> =>
   isNonNullObject(obj) &&
   isString(obj.eventKey) &&
   isString(obj.tournamentKey) &&
   isNumber(obj.id) &&
   isString(obj.matchName);
 
-export const isMatchArray = (obj: unknown): obj is Match[] =>
+export const isMatchArray = (obj: unknown): obj is Match<any>[] =>
   isArray(obj) && obj.every((o) => isMatch(o));
 
 export interface MatchParticipant {
@@ -134,14 +134,12 @@ export const isMatchDetail = (obj: MatchDetailBase): obj is MatchDetailBase =>
   isString(obj.tournamentKey) &&
   isNumber(obj.id);
 
-export type MatchDetails = MatchDetailBase | CarbonCaptureDetails;
-
 export function assignMatchTimes(
-  matches: Match[],
+  matches: Match<any>[],
   items: ScheduleItem[]
-): Match[] {
+): Match<any>[] {
   let matchNumber = 0;
-  const newMatches: Match[] = [];
+  const newMatches: Match<any>[] = [];
   for (const item of items) {
     if (item.isMatch) {
       newMatches.push({ ...matches[matchNumber], startTime: item.startTime });
@@ -155,13 +153,13 @@ export function createFixedMatches(
   items: ScheduleItem[],
   allianceMembers: AllianceMember[],
   matchMap: number[][]
-): Match[] {
-  const matches: Match[] = [];
+): Match<any>[] {
+  const matches: Match<any>[] = [];
   let matchNumber = 0;
   for (const item of items) {
     if (!item.isMatch) continue;
     const { eventKey, tournamentKey } = item;
-    const match: Match = {
+    const match: Match<any> = {
       eventKey,
       tournamentKey,
       id: matchNumber,
@@ -223,25 +221,6 @@ export function createFixedMatches(
   return matches;
 }
 
-export function getMatchKeyPartialFromType(type: TournamentType) {
-  switch (type) {
-    case 'Test':
-      return 'T';
-    case 'Practice':
-      return 'P';
-    case 'Qualification':
-      return 'Q';
-    case 'Ranking':
-      return 'R';
-    case 'Round Robin':
-      return 'B';
-    case 'Finals':
-      return 'F';
-    default:
-      return 'P';
-  }
-}
-
 export function getTournamentLevelFromType(type: TournamentType) {
   switch (type) {
     case 'Test':
@@ -261,14 +240,10 @@ export function getTournamentLevelFromType(type: TournamentType) {
   }
 }
 
-export function getMatchKeyPartialFromKey(matchKey: string) {
-  return matchKey.substring(0, matchKey.length - 3);
-}
-
 export function reconcileMatchParticipants(
-  matches: Match[],
+  matches: Match<any>[],
   participants: MatchParticipant[]
-): Match[] {
+): Match<any>[] {
   const map: Map<number, MatchParticipant[]> = new Map();
   for (const participant of participants) {
     if (!map.get(participant.id)) {
@@ -277,7 +252,7 @@ export function reconcileMatchParticipants(
     map.get(participant.id)?.push(participant);
   }
 
-  const newMatches: Match[] = [];
+  const newMatches: Match<any>[] = [];
 
   for (const match of matches) {
     const newMatch = { ...match, participants: map.get(match.id) };
@@ -286,16 +261,16 @@ export function reconcileMatchParticipants(
   return newMatches;
 }
 
-export function reconcileMatchDetails(
-  matches: Match[],
-  details: MatchDetails[]
-): Match[] {
-  const map: Map<number, MatchDetails> = new Map();
+export function reconcileMatchDetails<T extends MatchDetailBase>(
+  matches: Match<T>[],
+  details: T[]
+): Match<T>[] {
+  const map: Map<number, T> = new Map();
   for (const detail of details) {
     map.set(detail.id, detail);
   }
 
-  const newMatches: Match[] = [];
+  const newMatches: Match<any>[] = [];
 
   for (const match of matches) {
     newMatches.push({ ...match, details: map.get(match.id) });

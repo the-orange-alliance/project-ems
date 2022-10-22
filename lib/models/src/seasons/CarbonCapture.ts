@@ -55,7 +55,7 @@ export const isCarbonCaptureRanking = (
   isNumber(obj.carbonPoints);
 
 export function calculateRankings(
-  matches: Match[],
+  matches: Match<CarbonCaptureDetails>[],
   prevRankings: CarbonCaptureRanking[]
 ): CarbonCaptureRanking[] {
   const rankingMap: Map<number, CarbonCaptureRanking> = new Map();
@@ -187,7 +187,7 @@ export function calculateRankings(
 }
 
 export function calculatePlayoffsRank(
-  matches: Match[],
+  matches: Match<CarbonCaptureDetails>[],
   prevRankings: CarbonCaptureRanking[],
   members: AllianceMember[]
 ) {

@@ -88,24 +88,19 @@ passport.deserializeUser((id, cb) => {
 
 // Network variables
 const host = getIPv4();
+
 // Start the server
 server.listen(
   {
     host,
     port: env.get().servicePort
   },
-  () => {
+  () =>
     logger.info(
       `[${env.get().nodeEnv.charAt(0).toUpperCase()}][${env
         .get()
         .serviceName.toUpperCase()}] Server started on ${host}:${
         env.get().servicePort
       }`
-    );
-    logger.info(
-      env.isProd()
-        ? `posting scores to ${env.get().resultsApiBaseUrl}`
-        : 'not posting scores online'
-    );
-  }
+    )
 );

@@ -1,10 +1,4 @@
-import {
-  Match,
-  MatchMakerParams,
-  MatchParticipant,
-  getTournamentLevelFromType,
-  getMatchKeyPartialFromType
-} from '@toa-lib/models';
+import { Match, MatchMakerParams, MatchParticipant } from '@toa-lib/models';
 import { execFile } from 'child_process';
 
 export const getArgFromQualityStr = (quality: string): string => {
@@ -37,16 +31,16 @@ export const executeMatchMaker = async (
   });
 };
 
-function parseMatchMaker(output: string, params: MatchMakerParams): Match[] {
-  const matches: Match[] = [];
+function parseMatchMaker(
+  output: string,
+  params: MatchMakerParams
+): Match<any>[] {
+  const matches: Match<any>[] = [];
   const lines = output.toString().split('\n');
   for (const line of lines) {
     if (line.length <= 1) break;
     const properties = line.split(' ');
     const matchNumber = parseInt(properties[0]);
-    const matchKey = `${params.eventKey}-${getMatchKeyPartialFromType(
-      params.type
-    )}${matchNumber.toString().padStart(3, '0')}`;
     const participants: MatchParticipant[] = [];
 
     for (let i = 0; i < params.teamsPerAlliance * 2; i++) {

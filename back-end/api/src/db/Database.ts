@@ -54,7 +54,7 @@ export async function createEventBase(): Promise<void> {
 
 export async function createEventGameSpecifics(): Promise<void> {
   try {
-    const createQuery = await getQueryFromFile('details/fgc_2022.sql');
+    const createQuery = await getQueryFromFile('seasons/fgc_2022.sql');
     await db.exec(createQuery);
     return;
   } catch (e) {

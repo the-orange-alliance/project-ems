@@ -10,8 +10,9 @@ export * from './Schedule.js';
 export * from './Match.js';
 export * from './MatchTimer.js';
 export * from './FieldControl.js';
-export * from './fcs/index.js';
 export * from './Ranking.js';
-export * from './seasons/index.js';
 export * from './Alliance.js';
 export * from './Tournament.js';
+
+export * from './fcs/index.js';
+export * from './seasons/index.js';

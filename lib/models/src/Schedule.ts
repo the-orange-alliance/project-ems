@@ -1,5 +1,4 @@
 import { DateTime } from 'luxon';
-import { getMatchKeyPartialFromType } from './Match.js';
 import { Team } from './Team.js';
 import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 

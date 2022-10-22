@@ -14,10 +14,7 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const [data] = await selectAll('event');
-    if (!data) {
-      return next(DataNotFoundError);
-    }
+    const data = await selectAll('event');
     res.send(data);
   } catch (e) {
     return next(e);
