@@ -51,31 +51,31 @@ function parseMatchMaker(output: string, params: MatchMakerParams): Match[] {
 
     for (let i = 0; i < params.teamsPerAlliance * 2; i++) {
       participants.push({
+        eventKey: params.eventKey,
+        tournamentKey: params.tournamentKey,
+        id: matchNumber,
         cardStatus: 0,
-        matchKey,
-        matchParticipantKey: `${matchKey}-T${i + 1}`,
         station:
           i < params.teamsPerAlliance
             ? 11 + i
             : 21 + i - params.teamsPerAlliance,
         surrogate: parseInt(properties[i * 2 + 2].toString().replace('\r', '')),
         teamKey: parseInt(properties[i * 2 + 1]),
-        allianceKey: '',
         disqualified: 0,
         noShow: 0
       });
     }
 
     matches.push({
+      eventKey: params.eventKey,
+      tournamentKey: params.tournamentKey,
+      id: matchNumber,
       fieldNumber:
         matchNumber % params.fields === 0
           ? params.fields
           : matchNumber % params.fields,
-      matchDetailKey: `${matchKey}D`,
-      matchKey,
-      matchName: `${params.type} Match ${matchNumber}`,
+      name: `${params.type} Match ${matchNumber}`,
       result: -1,
-      tournamentLevel: getTournamentLevelFromType(params.type),
       active: 0,
       blueMajPen: 0,
       blueMinPen: 0,

@@ -3,9 +3,6 @@ import { getMatchKeyPartialFromType } from './Match.js';
 import { Team } from './Team.js';
 import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
-const FGC_PREMIERE_CYCLE_TIME = 7;
-const FGC_SIDE_FIELDS_CYCLE_TIME = 7;
-
 export type TournamentType =
   | 'Test'
   | 'Practice'
@@ -63,40 +60,45 @@ export const defaultDay: Day = {
 };
 
 export interface ScheduleItem {
-  key: string;
+  eventKey: string;
+  tournamentKey: string;
+  id: number;
   name: string;
   type: TournamentType;
   day: number;
   startTime: string;
   duration: number;
   isMatch: boolean;
-  tournamentId: number;
 }
 
 export const defaultScheduleItem: ScheduleItem = {
-  key: '',
+  eventKey: '',
+  tournamentKey: '',
+  id: -1,
   name: '',
   type: 'Test',
   day: 0,
   startTime: DateTime.now().toISO(),
   duration: 0,
-  isMatch: false,
-  tournamentId: -1
+  isMatch: false
 };
 
 export const isScheduleItem = (obj: unknown): obj is ScheduleItem =>
   isNonNullObject(obj) &&
-  isString(obj.key) &&
+  isString(obj.eventKey) &&
+  isString(obj.tournamentKey) &&
+  isNumber(obj.id) &&
   isString(obj.name) &&
   isNumber(obj.day) &&
   isString(obj.startTime) &&
-  isNumber(obj.duration) &&
-  isNumber(obj.tournamentId);
+  isNumber(obj.duration);
 
 export const isScheduleItemArray = (obj: unknown): obj is ScheduleItem[] =>
   isArray(obj) && obj.every((o) => isScheduleItem(o));
 
 export interface EventSchedule {
+  eventKey: string;
+  tournamentKey: string;
   type: TournamentType;
   days: Day[];
   matchConcurrency: number;
@@ -107,10 +109,11 @@ export interface EventSchedule {
   totalMatches: number;
   cycleTime: number;
   hasPremiereField: boolean;
-  tournamentId: number;
 }
 
 export const defaultEventSchedule: EventSchedule = {
+  tournamentKey: '',
+  eventKey: '',
   type: 'Test',
   days: [],
   matchConcurrency: 1,
@@ -120,8 +123,7 @@ export const defaultEventSchedule: EventSchedule = {
   matchesPerTeam: 5,
   totalMatches: 0,
   cycleTime: 5,
-  hasPremiereField: false,
-  tournamentId: -1
+  hasPremiereField: false
 };
 
 export function generateScheduleItems(
@@ -145,12 +147,9 @@ export function generateScheduleItems(
         matchIndex = dayMatches - schedule.matchConcurrency + 1;
       }
 
-      item.key =
-        eventKey +
-        '-' +
-        schedule.type.substring(0, 1) +
-        (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
-        (scheduleItems.length + 1).toString().padStart(3, '0');
+      item.eventKey = schedule.eventKey;
+      item.tournamentKey = schedule.tournamentKey;
+      item.id = scheduleItems.length;
       item.day = day.id;
       item.name = schedule.type + ' Match ' + (totalMatches + 1);
       item.duration = schedule.cycleTime;
@@ -163,245 +162,27 @@ export function generateScheduleItems(
         })
         .toISO();
       item.isMatch = true;
-      item.tournamentId = schedule.tournamentId;
+      item.tournamentKey = schedule.tournamentKey;
       scheduleItems.push(item);
       dayMatches++;
       totalMatches++;
       if (breakIndex !== -1) {
         const breakItem: ScheduleItem = { ...defaultScheduleItem };
-        breakItem.key =
-          eventKey +
-          '-' +
-          schedule.type.substring(0, 1) +
-          (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
-          (scheduleItems.length + 1).toString().padStart(3, '0');
+        breakItem.eventKey = schedule.eventKey;
+        breakItem.tournamentKey = schedule.tournamentKey;
+        breakItem.id = scheduleItems.length;
         breakItem.day = day.id;
         breakItem.duration = day.breaks[breakIndex].duration;
         breakItem.name = day.breaks[breakIndex].name;
         breakItem.startTime = day.breaks[breakIndex].startTime;
         breakItem.isMatch = false;
-        item.tournamentId = schedule.tournamentId;
+        item.tournamentKey = schedule.tournamentKey;
         scheduleItems.push(breakItem);
         breakPadding += day.breaks[breakIndex].duration;
       }
     }
   }
   return scheduleItems;
-}
-
-export function generateScheduleWithPremiereField(
-  oldSchedule: EventSchedule,
-  eventKey: string
-): ScheduleItem[] {
-  const items = generateScheduleItems(oldSchedule, eventKey);
-  const schedule = JSON.parse(JSON.stringify(oldSchedule));
-  let index = 0;
-  let normalIndex = 0;
-  let premiereIndex = 0;
-  let [prevItem] = items;
-  let breakPadding = 0;
-  let breakIndex = 0;
-
-  let needsBufferMatch = false;
-  let bufferCount = 0;
-  let dayPremiereTime = 0;
-  let dayNormalTime = 0;
-  for (const item of items) {
-    if (prevItem.day !== item.day) {
-      schedule.days[prevItem.day].endTime = DateTime.fromISO(prevItem.startTime)
-        .plus({ minutes: prevItem.duration })
-        .toISO();
-      premiereIndex = 0;
-      normalIndex = 0;
-      index = 0;
-      breakPadding = 0;
-      breakIndex = 0;
-      dayPremiereTime = 0;
-      dayNormalTime = 0;
-      needsBufferMatch = false;
-    }
-
-    if (item.isMatch) {
-      // For all matches that are NOT on the final day. FIRST GLOBAL ONLY.
-      if (
-        item.day + 1 === schedule.days.length &&
-        schedule.type === 'Qualification'
-      ) {
-        item.duration = FGC_SIDE_FIELDS_CYCLE_TIME;
-        item.startTime = schedule.days[item.day].startTime
-          .add(7 * premiereIndex + breakPadding, 'minutes')
-          .toISOString();
-        index++;
-        if (index % 3 === 0) {
-          index = 0;
-          premiereIndex++;
-        }
-        // TODO - Test and make sure this reflects on the fields.
-      } else {
-        if (!needsBufferMatch) {
-          if (index % 7 < 4) {
-            item.duration = FGC_PREMIERE_CYCLE_TIME;
-            item.startTime = DateTime.fromISO(schedule.days[item.day].startTime)
-              .plus({ minutes: 10 * normalIndex + breakPadding })
-              .toISO();
-            dayNormalTime += item.duration / 2;
-            // console.log("CREATING NORMAL MATCH", index, item.duration, dayPremiereTime, dayNormalTime);
-          } else {
-            item.duration = FGC_SIDE_FIELDS_CYCLE_TIME;
-            item.startTime = DateTime.fromISO(schedule.days[item.day].startTime)
-              .plus({ minutes: item.duration * premiereIndex + breakPadding })
-              .toISO();
-            dayPremiereTime += item.duration;
-            premiereIndex++;
-            // console.log("CREATING PREMIERE MATCH", index, item.duration, dayPremiereTime, dayNormalTime);
-          }
-          if (index % 7 === 1) {
-            normalIndex++;
-          }
-          if (index % 7 === 6) {
-            // console.log("NEW MATCH PAIRS");
-            index = 0;
-            normalIndex++;
-            bufferCount = 0;
-            needsBufferMatch =
-              dayPremiereTime - dayNormalTime === FGC_PREMIERE_CYCLE_TIME;
-          } else {
-            index++;
-          }
-        } else {
-          // console.log("BUFFER MATCH");
-          item.duration = FGC_PREMIERE_CYCLE_TIME;
-          item.startTime = DateTime.fromISO(schedule.days[item.day].startTime)
-            .plus({ minutes: item.duration * normalIndex + breakPadding })
-            .toISO();
-          dayPremiereTime = 0;
-          dayNormalTime = 0;
-          bufferCount++;
-          needsBufferMatch = bufferCount < 2;
-          if (!needsBufferMatch) {
-            normalIndex++;
-          }
-        }
-      }
-    } else {
-      const thisBreak = schedule.days[item.day].breaks[breakIndex];
-      schedule.days[item.day].breaks[breakIndex].startTime = DateTime.fromISO(
-        prevItem.startTime
-      ).plus({ minutes: prevItem.duration });
-      schedule.days[item.day].breaks[breakIndex].endTime = DateTime.fromISO(
-        thisBreak.startTime
-      ).plus({ minutes: thisBreak.duration });
-      breakPadding += item.duration;
-      breakIndex++;
-    }
-    prevItem = item;
-  }
-  if (items.length > 0) {
-    schedule.days[prevItem.day].endTime = DateTime.fromISO(
-      prevItem.startTime
-    ).plus({ minutes: prevItem.duration });
-  }
-  return items;
-}
-
-export function generateFGCRoundRobinSchedule(
-  schedule: EventSchedule,
-  eventKey: string
-): ScheduleItem[] {
-  const items: ScheduleItem[] = [];
-  let breakPadding = 0;
-  for (let i = 0; i < 16; i++) {
-    const day = schedule.days[0];
-    const matchBreaks = schedule.days[0].breaks.map((b) => b.afterMatch);
-    const breakIndex = matchBreaks.indexOf(i);
-    if (breakIndex > -1) {
-      const breakItem: ScheduleItem = { ...defaultScheduleItem };
-      breakItem.key =
-        eventKey +
-        '-' +
-        getMatchKeyPartialFromType(schedule.type) +
-        (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
-        (items.length + 1).toString().padStart(3, '0');
-      breakItem.day = day.id;
-      breakItem.duration = day.breaks[breakIndex].duration;
-      breakItem.name = day.breaks[breakIndex].name;
-      breakItem.startTime = DateTime.fromISO(day.breaks[breakIndex].startTime)
-        .plus({ minutes: breakPadding })
-        .toISO();
-      breakItem.isMatch = false;
-      items.push(breakItem);
-      breakPadding += day.breaks[breakIndex].duration;
-    }
-
-    items.push({
-      day: 0,
-      duration: schedule.cycleTime,
-      isMatch: true,
-      key:
-        eventKey +
-        '-' +
-        getMatchKeyPartialFromType(schedule.type) +
-        (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
-        (items.length + 1).toString().padStart(3, '0'),
-      name: schedule.type + ' Match ' + (i + 1),
-      startTime: DateTime.fromISO(schedule.days[0].startTime)
-        .plus({ minutes: schedule.cycleTime * i + breakPadding })
-        .toISO(),
-      tournamentId: schedule.tournamentId,
-      type: schedule.type
-    });
-  }
-  return items;
-}
-
-export function generateFinalsSchedule(
-  schedule: EventSchedule,
-  eventKey: string
-): ScheduleItem[] {
-  const items: ScheduleItem[] = [];
-  let breakPadding = 0;
-  for (let i = 0; i < 3; i++) {
-    const day = schedule.days[0];
-    const matchBreaks = schedule.days[0].breaks.map((b) => b.afterMatch);
-    const breakIndex = matchBreaks.indexOf(i);
-    if (breakIndex > -1) {
-      const breakItem: ScheduleItem = { ...defaultScheduleItem };
-      breakItem.key =
-        eventKey +
-        '-' +
-        getMatchKeyPartialFromType(schedule.type) +
-        (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
-        (items.length + 1).toString().padStart(3, '0');
-      breakItem.day = day.id;
-      breakItem.duration = day.breaks[breakIndex].duration;
-      breakItem.name = day.breaks[breakIndex].name;
-      breakItem.startTime = DateTime.fromISO(day.breaks[breakIndex].startTime)
-        .plus({ minutes: breakPadding })
-        .toISO();
-      breakItem.isMatch = false;
-      items.push(breakItem);
-      breakPadding += day.breaks[breakIndex].duration;
-    }
-
-    items.push({
-      day: 0,
-      duration: schedule.cycleTime,
-      isMatch: true,
-      key:
-        eventKey +
-        '-' +
-        getMatchKeyPartialFromType(schedule.type) +
-        (schedule.tournamentId > -1 ? schedule.tournamentId : '') +
-        (items.length + 1).toString().padStart(3, '0'),
-      name: schedule.type + ' Match ' + (i + 1),
-      startTime: DateTime.fromISO(schedule.days[0].startTime)
-        .plus({ minutes: schedule.cycleTime * i + breakPadding })
-        .toISO(),
-      tournamentId: schedule.tournamentId,
-      type: schedule.type
-    });
-  }
-  return items;
 }
 
 interface ScheduleValidator {

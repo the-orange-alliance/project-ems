@@ -15,7 +15,6 @@ export interface Event {
   endDate: string;
   country: string;
   website: string;
-  fieldCount: number;
 }
 
 export const defaultEvent: Event = {
@@ -32,8 +31,7 @@ export const defaultEvent: Event = {
   startDate: '',
   endDate: '',
   country: '',
-  website: '',
-  fieldCount: 2
+  website: ''
 };
 
 export const isEvent = (obj: unknown): obj is Event =>
