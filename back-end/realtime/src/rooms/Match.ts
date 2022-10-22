@@ -1,4 +1,9 @@
-import { AllianceMember, Match as MatchObj, MatchState, MatchTimer } from "@toa-lib/models";
+import {
+  AllianceMember,
+  Match as MatchObj,
+  MatchState,
+  MatchTimer,
+} from "@toa-lib/models";
 import {
   calculateScore,
   CarbonCaptureDetails,
@@ -10,7 +15,7 @@ import Room from "./Room.js";
 
 export default class Match extends Room {
   private matchKey: string | null;
-  private match: MatchObj | null;
+  private match: MatchObj<any> | null;
   private timer: MatchTimer;
   private state: MatchState;
   private displayID: number;
@@ -27,7 +32,7 @@ export default class Match extends Room {
 
   public initializeEvents(socket: Socket): void {
     // Emit the last known display
-    socket.emit('match:display', this.displayID);
+    socket.emit("match:display", this.displayID);
 
     // These are in case of mid-match disconnect/reconnects
     if (
@@ -41,11 +46,14 @@ export default class Match extends Room {
       socket.emit("match:display", this.displayID);
     }
 
-    if ((this.timer.inProgress() && this.match) || this.state === MatchState.MATCH_COMPLETE) {
+    if (
+      (this.timer.inProgress() && this.match) ||
+      this.state === MatchState.MATCH_COMPLETE
+    ) {
       socket.emit("match:update", this.match);
     } else if (this.timer.inProgress() && !this.match) {
-      logger.warn('no match data for this match - sending prestart');
-      socket.emit('match:prestart', this.matchKey);
+      logger.warn("no match data for this match - sending prestart");
+      socket.emit("match:prestart", this.matchKey);
     }
 
     if (this.state === MatchState.RESULTS_COMMITTED) {
@@ -53,8 +61,8 @@ export default class Match extends Room {
     }
 
     // Event listener to remove soon
-    socket.on('match:alliance', (newAlliance: AllianceMember[]) => {
-      this.broadcast().emit('match:alliance', newAlliance);
+    socket.on("match:alliance", (newAlliance: AllianceMember[]) => {
+      this.broadcast().emit("match:alliance", newAlliance);
     });
 
     // Event listeners for matches
@@ -110,7 +118,7 @@ export default class Match extends Room {
       this.displayID = id;
       this.broadcast().emit("match:display", id);
     });
-    socket.on("match:update", (match: MatchObj) => {
+    socket.on("match:update", (match: MatchObj<any>) => {
       this.match = { ...match };
       if (!match.details || this.state >= MatchState.RESULTS_COMMITTED) return;
       if (!isCarbonCaptureDetails(match.details)) {
@@ -137,8 +145,7 @@ export default class Match extends Room {
         (this.match.details as any).carbonPoints = 165;
         coopertitionBonusLevel = 2;
       }
-      (this.match.details as any).coopertitionBonusLevel =
-        coopertitionBonusLevel;
+      this.match.details.coopertitionBonusLevel = coopertitionBonusLevel;
 
       const [redScore, blueScore] = calculateScore(
         this.match.redMinPen,

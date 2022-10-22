@@ -1,6 +1,4 @@
 import {
-  getMatchKeyPartialFromKey,
-  getTournamentLevelFromType,
   reconcileMatchDetails,
   reconcileMatchParticipants,
   reconcileTeamRankings
@@ -77,7 +75,7 @@ router.post(
     if (!environment.isProd()) return res.send({ success: false });
 
     const matches = await selectAllWhere('match', `tournamentLevel = 30`);
-    const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
+    const matchKeyPartial = '';
     const participants = await selectAllWhere(
       'match_participant',
       `matchKey LIKE "${matchKeyPartial}%"`
@@ -112,7 +110,7 @@ router.post(
       'match',
       `tournamentLevel = ${req.params.tournamentLevel}`
     );
-    const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
+    const matchKeyPartial = '';
     const participants = await selectAllWhere(
       'match_participant',
       `matchKey LIKE "${matchKeyPartial}%"`

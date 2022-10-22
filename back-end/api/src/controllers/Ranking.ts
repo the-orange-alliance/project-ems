@@ -2,7 +2,6 @@ import {
   calculateRankings,
   calculatePlayoffsRank,
   FINALS_LEVEL,
-  getMatchKeyPartialFromKey,
   isRankingArray,
   isTeamArray,
   Ranking,
@@ -76,18 +75,18 @@ router.post(
 );
 
 router.post(
-  '/create/:tournamentLevel',
+  '/create/:tournamentKey',
   validateBody(isTeamArray),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tournamentLevel = req.params.tournamentLevel;
+      const tournamentKey = req.params.tournamentKey;
       const teams: Team[] = req.body;
       const eventKeyArgs = teams[0].eventParticipantKey.split('-');
       eventKeyArgs.pop();
       const eventKey = eventKeyArgs.toString().replace(/,/g, '-');
       const rankings: Ranking[] = teams.map((t) => ({
-        rankKey: `${eventKey}-${tournamentLevel}-${t.teamKey}`,
-        tournamentLevel: parseInt(tournamentLevel),
+        eventKey: t.eventKey,
+        tournamentKey,
         rank: 0,
         allianceKey: '',
         losses: 0,
@@ -105,53 +104,52 @@ router.post(
   }
 );
 
-router.post(
-  '/calculate/:tournamentLevel',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const tournamentLevel = parseInt(req.params.tournamentLevel);
-      const matches = await selectAllWhere(
-        'match',
-        `tournamentLevel = ${tournamentLevel}`
-      );
-      const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
-      const participants = await selectAllWhere(
-        'match_participant',
-        `matchKey LIKE "${matchKeyPartial}%"`
-      );
-      const details = await selectAllWhere(
-        'match_detail',
-        `matchKey LIKE "${matchKeyPartial}%"`
-      );
-      const matchesWithParticipants = reconcileMatchParticipants(
-        matches,
-        participants
-      );
-      const matchesWithDetails = reconcileMatchDetails(
-        matchesWithParticipants,
-        details
-      );
-      const prevRankings = await selectAllWhere(
-        'ranking',
-        `tournamentLevel = ${tournamentLevel}`
-      );
-      const isPlayoffs =
-        tournamentLevel === ROUND_ROBIN_LEVEL ||
-        tournamentLevel === FINALS_LEVEL;
-      const members = await selectAllWhere(
-        'alliance',
-        `tournamentLevel = ${tournamentLevel}`
-      );
-      const rankings = isPlayoffs
-        ? calculatePlayoffsRank(matchesWithDetails, prevRankings, members)
-        : calculateRankings(matchesWithDetails, prevRankings);
-      await deleteWhere('ranking', `tournamentLevel = ${tournamentLevel}`);
-      await insertValue('ranking', rankings);
-      res.send(rankings);
-    } catch (e) {
-      return next(e);
-    }
-  }
-);
+// router.post(
+//   '/calculate/:tournamentLevel',
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const tournamentLevel = parseInt(req.params.tournamentLevel);
+//       const matches = await selectAllWhere(
+//         'match',
+//         `tournamentLevel = ${tournamentLevel}`
+//       );
+//       const participants = await selectAllWhere(
+//         'match_participant',
+//         `matchKey LIKE "${matchKeyPartial}%"`
+//       );
+//       const details = await selectAllWhere(
+//         'match_detail',
+//         `matchKey LIKE "${matchKeyPartial}%"`
+//       );
+//       const matchesWithParticipants = reconcileMatchParticipants(
+//         matches,
+//         participants
+//       );
+//       const matchesWithDetails = reconcileMatchDetails(
+//         matchesWithParticipants,
+//         details
+//       );
+//       const prevRankings = await selectAllWhere(
+//         'ranking',
+//         `tournamentLevel = ${tournamentLevel}`
+//       );
+//       const isPlayoffs =
+//         tournamentLevel === ROUND_ROBIN_LEVEL ||
+//         tournamentLevel === FINALS_LEVEL;
+//       const members = await selectAllWhere(
+//         'alliance',
+//         `tournamentLevel = ${tournamentLevel}`
+//       );
+//       const rankings = isPlayoffs
+//         ? calculatePlayoffsRank(matchesWithDetails, prevRankings, members)
+//         : calculateRankings(matchesWithDetails, prevRankings);
+//       await deleteWhere('ranking', `tournamentLevel = ${tournamentLevel}`);
+//       await insertValue('ranking', rankings);
+//       res.send(rankings);
+//     } catch (e) {
+//       return next(e);
+//     }
+//   }
+// );
 
 export default router;

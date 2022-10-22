@@ -134,16 +134,17 @@ router.post(
   validateBody(isMatchArray),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const pureMatches: Match[] = req.body.map((m: Match) => ({
+      const pureMatches: Match<any>[] = req.body.map((m: Match<any>) => ({
         ...m
       }));
       for (const match of pureMatches) delete match.participants;
       const participants = req.body
-        .map((match: Match) => match.participants || [])
+        .map((match: Match<any>) => match.participants || [])
         .flat();
-      const details: MatchDetailBase[] = req.body.map((match: Match) => ({
-        matchKey: match.matchKey,
-        matchDetailKey: match.matchDetailKey
+      const details: MatchDetailBase[] = req.body.map((match: Match<any>) => ({
+        eventKey: match.eventKey,
+        tournamentKey: match.tournamentKey,
+        id: match.id
       }));
       await insertValue('match', pureMatches);
       await insertValue('match_participant', participants);

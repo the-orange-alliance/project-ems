@@ -28,7 +28,6 @@ import {
   MatchTimer,
   isMatch,
   getTournamentLevelFromType,
-  MatchDetails,
   Ranking,
   isRankingArray,
   isAllianceArray,
@@ -60,12 +59,8 @@ export const hostIP = atom<string>({
 });
 export const eventFields = selector<number[]>({
   key: 'fieldsSelector',
-  get: ({ get }) => {
-    const fields = [];
-    for (let i = 0; i < get(eventAtom).fieldCount; i++) {
-      fields.push(i + 1);
-    }
-    return fields;
+  get: () => {
+    return [];
   }
 });
 export const fieldControl = atom<number[]>({
@@ -306,16 +301,16 @@ export const loadedMatchKey = atom<string | null>({
   default: null
 });
 
-export const matchResult = atom<Match | null>({
+export const matchResult = atom<Match<any> | null>({
   key: 'matchResultAtom',
   default: null
 });
 
-export const defaultMatches = selector<Match[]>({
+export const defaultMatches = selector<Match<any>[]>({
   key: 'matchesAtomSelector',
   get: async () => {
     try {
-      const matches = await clientFetcher<Match[]>(
+      const matches = await clientFetcher<Match<any>[]>(
         'match',
         'GET',
         undefined,
@@ -335,45 +330,45 @@ export const defaultMatches = selector<Match[]>({
   }
 });
 
-export const matches = atom<Match[]>({
+export const matches = atom<Match<any>[]>({
   key: 'matchesAtom',
   default: defaultMatches
 });
 
-export const matchByMatchKey = selectorFamily<Match | undefined, string>({
-  key: 'matchByMatchKeySelectorFamily',
+export const matchesByEventKey = selectorFamily<Match<any> | undefined, string>(
+  {
+    key: 'matchByMatchKeySelectorFamily',
+    get:
+      (eventKey: string) =>
+      ({ get }) =>
+        get(matches).find((m) => m.eventKey === eventKey),
+    set:
+      (eventKey: string) =>
+      ({ get, set }, newValue) => {
+        if (newValue instanceof DefaultValue || !newValue) return;
+        const oldMatches = get(matches);
+        const index = oldMatches.findIndex((m) => m.eventKey === eventKey);
+        if (index < 0) return;
+        set(matches, [
+          ...oldMatches.slice(0, index),
+          newValue,
+          ...oldMatches.slice(index + 1)
+        ]);
+      }
+  }
+);
+
+export const matchesByTournamentKey = selectorFamily<Match<any>[], string>({
+  key: 'matchesByTournamentKeySelectorFamily',
   get:
-    (matchKey: string) =>
+    (key: string) =>
     ({ get }) =>
-      get(matches).find((m) => m.matchKey === matchKey),
-  set:
-    (matchKey: string) =>
-    ({ get, set }, newValue) => {
-      if (newValue instanceof DefaultValue || !newValue) return;
-      const oldMatches = get(matches);
-      const index = oldMatches.findIndex((m) => m.matchKey === matchKey);
-      if (index < 0) return;
-      set(matches, [
-        ...oldMatches.slice(0, index),
-        newValue,
-        ...oldMatches.slice(index + 1)
-      ]);
-    }
+      get(matches).filter((m) => m.tournamentKey === key)
 });
 
-export const matchesByTournamentType = selectorFamily<Match[], TournamentType>({
-  key: 'matchesByTournamentTypeSelectorFamily',
-  get:
-    (type: TournamentType) =>
-    ({ get }) =>
-      get(matches).filter(
-        (m) => m.tournamentLevel === getTournamentLevelFromType(type)
-      )
-});
-
-export const loadedMatch = selector<Match | undefined>({
+export const loadedMatch = selector<Match<any> | undefined>({
   key: 'loadedMatchSelector',
-  get: ({ get }) => get(matchByMatchKey(get(loadedMatchKey) || ''))
+  get: ({ get }) => get(matchesByEventKey(get(loadedMatchKey) || ''))
 });
 
 export const loadedMatchParticipantsByAlliance = selectorFamily<
@@ -394,14 +389,14 @@ export const matchTimeAtom = atom({
   default: timer.timeLeft
 });
 
-export const matchInProgress = atom<Match | null>({
+export const matchInProgress = atom<Match<any> | null>({
   key: 'matchInProgress',
-  default: selector<Match | null>({
+  default: selector<Match<any> | null>({
     key: 'matchInProgressSelector',
     get: async ({ get }) => {
       const matchKey = get(loadedMatchKey);
       try {
-        return await clientFetcher<Match>(
+        return await clientFetcher<Match<any>>(
           `match/all/${matchKey}`,
           'GET',
           undefined,
@@ -423,8 +418,8 @@ export const matchInProgressParticipants = selector<
   set: ({ set, get }, defaultValue) => {
     const participants =
       defaultValue instanceof DefaultValue ? [] : defaultValue;
-    const oldMatch: Match | null = get(matchInProgress);
-    const newMatch: Match | null = Object.assign({}, oldMatch);
+    const oldMatch: Match<any> | null = get(matchInProgress);
+    const newMatch: Match<any> | null = Object.assign({}, oldMatch);
     newMatch.participants = participants;
     if (newMatch) {
       set(matchInProgress, newMatch);
@@ -526,50 +521,6 @@ export const allinaceMembers = atom<AllianceMember[]>({
   })
 });
 
-/* FIELD SECTION */
-export const fieldMotorDuration = atom({
-  key: 'fieldMotorDurationAtom',
-  default: 3000 // in ms
-});
-export const fieldEndgameHB = atom({
-  key: 'fieldEndgameHBAtom',
-  default: 15
-});
-export const fieldCountdownStyle = atom({
-  key: 'fieldCountdownStyleAtom',
-  default: 'style1'
-});
-export const fieldCountdownDuration = atom({
-  key: 'fieldCountdownDurationAtom',
-  default: 3000 // in ms
-});
-export const fieldMatchOverStyle = atom({
-  key: 'fieldMatchOverStyleAtom',
-  default: 'carbon'
-});
-export const fieldMatchOverLEDPattern = atom({
-  key: 'fieldMatchOverLEDPatternAtom',
-  default: 1
-});
-
-export const fieldColor1 = atom({
-  key: 'fieldColor1Atom',
-  default: 1965
-});
-
-export const fieldColor2 = atom({
-  key: 'fieldColor2Atom',
-  default: 1955
-});
-
-export const fieldTotalSetupDuration = atom({
-  key: 'fieldTotalSetupDurationAtom',
-  default: 10000
-});
-export const fieldMotorReverseDuration = atom({
-  key: 'fieldMotorReverseDurationAtom',
-  default: 3000
-});
 /* AUDIENCE DISPLAY SECTION */
 export const displayID = atom({
   key: 'displayIDAtom',
