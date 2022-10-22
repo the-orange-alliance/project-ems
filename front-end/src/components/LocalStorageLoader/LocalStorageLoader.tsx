@@ -11,16 +11,6 @@ import useLocalStorage from 'src/stores/LocalStorage';
 import {
   userAtom,
   hostIP,
-  fieldMotorDuration,
-  fieldEndgameHB,
-  fieldCountdownStyle,
-  fieldCountdownDuration,
-  fieldMatchOverStyle,
-  fieldMatchOverLEDPattern,
-  fieldColor1,
-  fieldColor2,
-  fieldTotalSetupDuration,
-  fieldMotorReverseDuration,
   fieldControl,
   followerMode,
   displayChromaKey
@@ -29,16 +19,6 @@ import {
 const LocalStorageLoader: FC = () => {
   const [user, setUser] = useRecoilState(userAtom);
 
-  const setMotorDuration = useSetRecoilState(fieldMotorDuration);
-  const setEndGameHB = useSetRecoilState(fieldEndgameHB);
-  const setCountdownStyle = useSetRecoilState(fieldCountdownStyle);
-  const setCountdownDuration = useSetRecoilState(fieldCountdownDuration);
-  const setMatchEndStyle = useSetRecoilState(fieldMatchOverStyle);
-  const setMatchEndPattern = useSetRecoilState(fieldMatchOverLEDPattern);
-  const setColor1 = useSetRecoilState(fieldColor1);
-  const setColor2 = useSetRecoilState(fieldColor2);
-  const setSetupDuration = useSetRecoilState(fieldTotalSetupDuration);
-  const setMotorReverseDuration = useSetRecoilState(fieldMotorReverseDuration);
   const setHost = useSetRecoilState(hostIP);
   const setFields = useSetRecoilState(fieldControl);
   const setFollower = useSetRecoilState(followerMode);
@@ -63,19 +43,6 @@ const LocalStorageLoader: FC = () => {
       setupSocket(value.token);
     }
   }, [user, value, host]);
-
-  useEffect(() => {
-    setMotorDuration(options.motorDuration);
-    setEndGameHB(options.endGameHB);
-    setCountdownStyle(options.countdownStyle);
-    setCountdownDuration(options.countdownDuration);
-    setMatchEndStyle(options.matchEndStyle);
-    setMatchEndPattern(options.matchEndPattern);
-    setColor1(options.primaryColor);
-    setColor2(options.secondaryColor);
-    setSetupDuration(options.setupDuration);
-    setMotorReverseDuration(options.motorReverseDuration);
-  }, [options]);
 
   useEffect(() => {
     setHost(host);

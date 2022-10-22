@@ -17,22 +17,12 @@ import {
 } from '@mui/material';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
-  darkModeAtom,
-  fieldMotorDuration,
-  fieldEndgameHB,
-  fieldCountdownStyle,
-  fieldCountdownDuration,
-  fieldMatchOverStyle,
-  fieldMatchOverLEDPattern,
-  fieldColor1,
-  fieldColor2,
-  fieldTotalSetupDuration,
-  fieldMotorReverseDuration,
   hostIP,
   fieldControl,
   eventFields,
   followerMode,
-  displayChromaKey
+  displayChromaKey,
+  darkModeAtom
 } from 'src/stores/Recoil';
 import MenuItem from '@mui/material/MenuItem';
 import useLocalStorage from 'src/stores/LocalStorage';
@@ -41,26 +31,6 @@ import { APIOptions, clientFetcher } from '@toa-lib/client';
 
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
-  const [motorDuration, setMotorDuration] = useRecoilState(fieldMotorDuration);
-  const [endGameHB, setEndgameHB] = useRecoilState(fieldEndgameHB);
-  const [countdownStyle, setCountdownStyle] =
-    useRecoilState(fieldCountdownStyle);
-  const [countdownDuration, setCountdownDuration] = useRecoilState(
-    fieldCountdownDuration
-  );
-  const [matchOverStyle, setMatchOverStyle] =
-    useRecoilState(fieldMatchOverStyle);
-  const [matchOverLEDPattern, setMatchOverLEDPattern] = useRecoilState(
-    fieldMatchOverLEDPattern
-  );
-  const [color1, setColor1] = useRecoilState(fieldColor1);
-  const [color2, setColor2] = useRecoilState(fieldColor2);
-  const [totalSetupDuration, setTotalSetupDuration] = useRecoilState(
-    fieldTotalSetupDuration
-  );
-  const [motorReverseDuration, setMotorReverseDuration] = useRecoilState(
-    fieldMotorReverseDuration
-  );
   const [host, setHost] = useRecoilState(hostIP);
   const [fields, setFields] = useRecoilState(fieldControl);
   const allFields = useRecoilValue(eventFields);
@@ -79,32 +49,6 @@ const SettingsApp: FC = () => {
     'ems:aud:chroma',
     chromaKey
   );
-
-  useEffect(() => {
-    setOptions({
-      motorDuration,
-      endGameHB,
-      countdownStyle,
-      countdownDuration,
-      matchEndStyle: matchOverStyle,
-      matchEndPattern: matchOverLEDPattern,
-      primaryColor: color1,
-      secondaryColor: color2,
-      setupDuration: totalSetupDuration,
-      motorReverseDuration: motorReverseDuration
-    });
-  }, [
-    motorDuration,
-    endGameHB,
-    countdownStyle,
-    countdownDuration,
-    matchOverStyle,
-    matchOverLEDPattern,
-    color1,
-    color2,
-    totalSetupDuration,
-    motorReverseDuration
-  ]);
 
   useEffect(() => {
     setStorageHost(host);
@@ -126,37 +70,6 @@ const SettingsApp: FC = () => {
 
   const changeDarkMode = (): void => {
     setDarkMode(!darkMode);
-  };
-
-  const changeMotorDuration = (event: ChangeEvent<HTMLInputElement>) => {
-    setMotorDuration(parseInt(event.target.value));
-  };
-  const changeEndgameHB = (event: SelectChangeEvent) => {
-    setEndgameHB(parseInt(event.target.value));
-  };
-  const changeCountdownStyle = (event: SelectChangeEvent) => {
-    setCountdownStyle(event.target.value);
-  };
-  const changeCountdownDuration = (event: ChangeEvent<HTMLInputElement>) => {
-    setCountdownDuration(parseInt(event.target.value));
-  };
-  const changeMatchOverStyle = (event: SelectChangeEvent) => {
-    setMatchOverStyle(event.target.value);
-  };
-  const changeMatchOverLEDPattern = (event: ChangeEvent<HTMLInputElement>) => {
-    setMatchOverLEDPattern(parseInt(event.target.value));
-  };
-  const changeColor1 = (event: ChangeEvent<HTMLInputElement>) => {
-    setColor1(parseInt(event.target.value));
-  };
-  const changeColor2 = (event: ChangeEvent<HTMLInputElement>) => {
-    setColor2(parseInt(event.target.value));
-  };
-  const changeTotalSetupDuration = (event: ChangeEvent<HTMLInputElement>) => {
-    setTotalSetupDuration(parseInt(event.target.value));
-  };
-  const changeMotorReversDuration = (event: ChangeEvent<HTMLInputElement>) => {
-    setMotorReverseDuration(parseInt(event.target.value));
   };
   const changeHost = (event: ChangeEvent<HTMLInputElement>) => {
     setHost(event.target.value);
@@ -216,239 +129,6 @@ const SettingsApp: FC = () => {
               label={
                 <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
                   Dark Mode
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={
-                <TextField
-                  value={motorDuration}
-                  onChange={changeMotorDuration}
-                />
-              }
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  Field Preparation Motor Duration
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={
-                <TextField
-                  value={motorReverseDuration}
-                  onChange={changeMotorReversDuration}
-                />
-              }
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  Field Reset Motor Duration
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={
-                <Select
-                  value={endGameHB as unknown as string}
-                  label='Speed'
-                  onChange={changeEndgameHB}
-                >
-                  <MenuItem value={15}>Slow</MenuItem>
-                  <MenuItem value={25}>Medium</MenuItem>
-                  <MenuItem value={35}>Fast</MenuItem>
-                </Select>
-              }
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  End Game Heartbeat
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={
-                <TextField
-                  value={countdownDuration}
-                  onChange={changeCountdownDuration}
-                />
-              }
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  Countdown Duration
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={
-                <TextField
-                  value={totalSetupDuration}
-                  onChange={changeTotalSetupDuration}
-                />
-              }
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  Total Setup Duration
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={
-                <Select
-                  value={countdownStyle}
-                  label='Style'
-                  onChange={changeCountdownStyle}
-                >
-                  <MenuItem value={'style1'}>Countdown</MenuItem>
-                  <MenuItem value={'style2'}>Race Light</MenuItem>
-                </Select>
-              }
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  Countdown Style
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={
-                <Select
-                  value={matchOverStyle}
-                  label='Style'
-                  onChange={changeMatchOverStyle}
-                >
-                  <MenuItem value={'carbon'}>Carbon</MenuItem>
-                  <MenuItem value={'full'}>Full Tower</MenuItem>
-                </Select>
-              }
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  Match Over Style
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={
-                <TextField
-                  value={matchOverLEDPattern}
-                  onChange={changeMatchOverLEDPattern}
-                />
-              }
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  Match Over LED Pattern
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={<TextField value={color1} onChange={changeColor1} />}
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  Color 1
-                </Typography>
-              }
-              labelPlacement='start'
-              sx={{ padding: (theme) => theme.spacing(2) }}
-            />
-          </FormGroup>
-          <FormGroup
-            sx={{
-              '&:hover': {
-                backgroundColor: (theme) => theme.palette.action.hover
-              }
-            }}
-          >
-            <FormControlLabel
-              control={<TextField value={color2} onChange={changeColor2} />}
-              label={
-                <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-                  Color 2
                 </Typography>
               }
               labelPlacement='start'

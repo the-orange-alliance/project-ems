@@ -27,7 +27,6 @@ import {
   MatchParticipant,
   MatchTimer,
   isMatch,
-  getTournamentLevelFromType,
   Ranking,
   isRankingArray,
   isAllianceArray,
@@ -330,196 +329,196 @@ export const defaultMatches = selector<Match<any>[]>({
   }
 });
 
-export const matches = atom<Match<any>[]>({
-  key: 'matchesAtom',
-  default: defaultMatches
-});
+// export const matches = atom<Match<any>[]>({
+//   key: 'matchesAtom',
+//   default: defaultMatches
+// });
 
-export const matchesByEventKey = selectorFamily<Match<any> | undefined, string>(
-  {
-    key: 'matchByMatchKeySelectorFamily',
-    get:
-      (eventKey: string) =>
-      ({ get }) =>
-        get(matches).find((m) => m.eventKey === eventKey),
-    set:
-      (eventKey: string) =>
-      ({ get, set }, newValue) => {
-        if (newValue instanceof DefaultValue || !newValue) return;
-        const oldMatches = get(matches);
-        const index = oldMatches.findIndex((m) => m.eventKey === eventKey);
-        if (index < 0) return;
-        set(matches, [
-          ...oldMatches.slice(0, index),
-          newValue,
-          ...oldMatches.slice(index + 1)
-        ]);
-      }
-  }
-);
+// export const matchesByEventKey = selectorFamily<Match<any> | undefined, string>(
+//   {
+//     key: 'matchByMatchKeySelectorFamily',
+//     get:
+//       (eventKey: string) =>
+//       ({ get }) =>
+//         get(matches).find((m) => m.eventKey === eventKey),
+//     set:
+//       (eventKey: string) =>
+//       ({ get, set }, newValue) => {
+//         if (newValue instanceof DefaultValue || !newValue) return;
+//         const oldMatches = get(matches);
+//         const index = oldMatches.findIndex((m) => m.eventKey === eventKey);
+//         if (index < 0) return;
+//         set(matches, [
+//           ...oldMatches.slice(0, index),
+//           newValue,
+//           ...oldMatches.slice(index + 1)
+//         ]);
+//       }
+//   }
+// );
 
-export const matchesByTournamentKey = selectorFamily<Match<any>[], string>({
-  key: 'matchesByTournamentKeySelectorFamily',
-  get:
-    (key: string) =>
-    ({ get }) =>
-      get(matches).filter((m) => m.tournamentKey === key)
-});
+// export const matchesByTournamentKey = selectorFamily<Match<any>[], string>({
+//   key: 'matchesByTournamentKeySelectorFamily',
+//   get:
+//     (key: string) =>
+//     ({ get }) =>
+//       get(matches).filter((m) => m.tournamentKey === key)
+// });
 
-export const loadedMatch = selector<Match<any> | undefined>({
-  key: 'loadedMatchSelector',
-  get: ({ get }) => get(matchesByEventKey(get(loadedMatchKey) || ''))
-});
+// export const loadedMatch = selector<Match<any> | undefined>({
+//   key: 'loadedMatchSelector',
+//   get: ({ get }) => get(matchesByEventKey(get(loadedMatchKey) || ''))
+// });
 
-export const loadedMatchParticipantsByAlliance = selectorFamily<
-  MatchParticipant[],
-  Alliance
->({
-  key: 'loadedMatchParticipantsSelector',
-  get:
-    (a: Alliance) =>
-    ({ get }) =>
-      get(loadedMatch)?.participants?.filter((p) =>
-        a === 'red' ? p.station < 20 : p.station >= 20
-      ) || []
-});
+// export const loadedMatchParticipantsByAlliance = selectorFamily<
+//   MatchParticipant[],
+//   Alliance
+// >({
+//   key: 'loadedMatchParticipantsSelector',
+//   get:
+//     (a: Alliance) =>
+//     ({ get }) =>
+//       get(loadedMatch)?.participants?.filter((p) =>
+//         a === 'red' ? p.station < 20 : p.station >= 20
+//       ) || []
+// });
 
-export const matchTimeAtom = atom({
-  key: 'matchTimeAtom',
-  default: timer.timeLeft
-});
+// export const matchTimeAtom = atom({
+//   key: 'matchTimeAtom',
+//   default: timer.timeLeft
+// });
 
-export const matchInProgress = atom<Match<any> | null>({
-  key: 'matchInProgress',
-  default: selector<Match<any> | null>({
-    key: 'matchInProgressSelector',
-    get: async ({ get }) => {
-      const matchKey = get(loadedMatchKey);
-      try {
-        return await clientFetcher<Match<any>>(
-          `match/all/${matchKey}`,
-          'GET',
-          undefined,
-          isMatch
-        );
-      } catch (e) {
-        // TODO - better error-handling
-        return null;
-      }
-    }
-  })
-});
+// export const matchInProgress = atom<Match<any> | null>({
+//   key: 'matchInProgress',
+//   default: selector<Match<any> | null>({
+//     key: 'matchInProgressSelector',
+//     get: async ({ get }) => {
+//       const matchKey = get(loadedMatchKey);
+//       try {
+//         return await clientFetcher<Match<any>>(
+//           `match/all/${matchKey}`,
+//           'GET',
+//           undefined,
+//           isMatch
+//         );
+//       } catch (e) {
+//         // TODO - better error-handling
+//         return null;
+//       }
+//     }
+//   })
+// });
 
-export const matchInProgressParticipants = selector<
-  MatchParticipant[] | undefined
->({
-  key: 'matchInProgressParticipants',
-  get: ({ get }) => get(matchInProgress)?.participants || [],
-  set: ({ set, get }, defaultValue) => {
-    const participants =
-      defaultValue instanceof DefaultValue ? [] : defaultValue;
-    const oldMatch: Match<any> | null = get(matchInProgress);
-    const newMatch: Match<any> | null = Object.assign({}, oldMatch);
-    newMatch.participants = participants;
-    if (newMatch) {
-      set(matchInProgress, newMatch);
-    }
-  }
-});
+// export const matchInProgressParticipants = selector<
+//   MatchParticipant[] | undefined
+// >({
+//   key: 'matchInProgressParticipants',
+//   get: ({ get }) => get(matchInProgress)?.participants || [],
+//   set: ({ set, get }, defaultValue) => {
+//     const participants =
+//       defaultValue instanceof DefaultValue ? [] : defaultValue;
+//     const oldMatch: Match<any> | null = get(matchInProgress);
+//     const newMatch: Match<any> | null = Object.assign({}, oldMatch);
+//     newMatch.participants = participants;
+//     if (newMatch) {
+//       set(matchInProgress, newMatch);
+//     }
+//   }
+// });
 
-export const matchInProgressParticipantByKey = selectorFamily<
-  MatchParticipant | undefined,
-  string
->({
-  key: 'matchInProgressParticipantByKeySelectorFamily',
-  set:
-    (participantKey: string) =>
-    ({ set, get }, newValue) => {
-      const oldParticipants = get(matchInProgressParticipants);
-      if (newValue instanceof DefaultValue || !newValue || !oldParticipants)
-        return;
-      const index = oldParticipants?.findIndex(
-        (p) => p.matchParticipantKey === participantKey
-      );
-      if (index < 0) return;
-      set(matchInProgressParticipants, [
-        ...oldParticipants.slice(0, index),
-        newValue,
-        ...oldParticipants.slice(index + 1)
-      ]);
-    },
-  get:
-    (participantKey: string) =>
-    ({ get }) =>
-      get(matchInProgressParticipants)?.find(
-        (p) => p.matchParticipantKey === participantKey
-      )
-});
+// export const matchInProgressParticipantByKey = selectorFamily<
+//   MatchParticipant | undefined,
+//   string
+// >({
+//   key: 'matchInProgressParticipantByKeySelectorFamily',
+//   set:
+//     (participantKey: string) =>
+//     ({ set, get }, newValue) => {
+//       const oldParticipants = get(matchInProgressParticipants);
+//       if (newValue instanceof DefaultValue || !newValue || !oldParticipants)
+//         return;
+//       const index = oldParticipants?.findIndex(
+//         (p) => p.matchParticipantKey === participantKey
+//       );
+//       if (index < 0) return;
+//       set(matchInProgressParticipants, [
+//         ...oldParticipants.slice(0, index),
+//         newValue,
+//         ...oldParticipants.slice(index + 1)
+//       ]);
+//     },
+//   get:
+//     (participantKey: string) =>
+//     ({ get }) =>
+//       get(matchInProgressParticipants)?.find(
+//         (p) => p.matchParticipantKey === participantKey
+//       )
+// });
 
-export const matchInProgressDetails = selector<MatchDetails | null>({
-  key: 'matchInProgressDetails',
-  get: ({ get }) => get(matchInProgress)?.details || null,
-  set: ({ set, get }, defaultValue) => {
-    const details = defaultValue instanceof DefaultValue ? null : defaultValue;
-    const oldMatch = get(matchInProgress);
-    const newMatch = Object.assign({}, oldMatch);
-    if (newMatch && details) {
-      set(matchInProgress, { ...newMatch, details });
-    }
-  }
-});
+// export const matchInProgressDetails = selector<MatchDetails | null>({
+//   key: 'matchInProgressDetails',
+//   get: ({ get }) => get(matchInProgress)?.details || null,
+//   set: ({ set, get }, defaultValue) => {
+//     const details = defaultValue instanceof DefaultValue ? null : defaultValue;
+//     const oldMatch = get(matchInProgress);
+//     const newMatch = Object.assign({}, oldMatch);
+//     if (newMatch && details) {
+//       set(matchInProgress, { ...newMatch, details });
+//     }
+//   }
+// });
 
-/*RANKINGS SECTION  */
-export const rankings = selectorFamily<Ranking[], number>({
-  key: 'rankingsAtom',
-  get: (tournamentLevel: number) => async () => {
-    try {
-      return await clientFetcher<Ranking[]>(
-        `ranking?tournamentLevel=${tournamentLevel}`,
-        'GET',
-        undefined,
-        isRankingArray
-      );
-    } catch (e) {
-      // TODO - better error-handling
-      return [];
-    }
-  }
-});
+// /*RANKINGS SECTION  */
+// export const rankings = selectorFamily<Ranking[], number>({
+//   key: 'rankingsAtom',
+//   get: (tournamentLevel: number) => async () => {
+//     try {
+//       return await clientFetcher<Ranking[]>(
+//         `ranking?tournamentLevel=${tournamentLevel}`,
+//         'GET',
+//         undefined,
+//         isRankingArray
+//       );
+//     } catch (e) {
+//       // TODO - better error-handling
+//       return [];
+//     }
+//   }
+// });
 
-export const rankingsByMatch = selectorFamily<Ranking[], string>({
-  key: 'rankingsByMatch',
-  get:
-    (matchKey: string) =>
-    async ({ get }) => {
-      const match = get(matchByMatchKey(matchKey));
-      if (!match || !match.participants) return [];
-      return get(rankings(match.tournamentLevel)).filter((r) =>
-        match.participants?.find((p) => p.teamKey === r.teamKey)
-      );
-    }
-});
+// export const rankingsByMatch = selectorFamily<Ranking[], string>({
+//   key: 'rankingsByMatch',
+//   get:
+//     (matchKey: string) =>
+//     async ({ get }) => {
+//       const match = get(matchByMatchKey(matchKey));
+//       if (!match || !match.participants) return [];
+//       return get(rankings(match.tournamentLevel)).filter((r) =>
+//         match.participants?.find((p) => p.teamKey === r.teamKey)
+//       );
+//     }
+// });
 
-/* ALLIANCE SECTION */
-export const allinaceMembers = atom<AllianceMember[]>({
-  key: 'allianceAtom',
-  default: selector<AllianceMember[]>({
-    key: 'allianceSelector',
-    get: async () => {
-      try {
-        return await clientFetcher<AllianceMember[]>(
-          `alliance`,
-          'GET',
-          undefined,
-          isAllianceArray
-        );
-      } catch (e) {
-        // TODO - better error-handling
-        return [];
-      }
-    }
-  })
-});
+// /* ALLIANCE SECTION */
+// export const allinaceMembers = atom<AllianceMember[]>({
+//   key: 'allianceAtom',
+//   default: selector<AllianceMember[]>({
+//     key: 'allianceSelector',
+//     get: async () => {
+//       try {
+//         return await clientFetcher<AllianceMember[]>(
+//           `alliance`,
+//           'GET',
+//           undefined,
+//           isAllianceArray
+//         );
+//       } catch (e) {
+//         // TODO - better error-handling
+//         return [];
+//       }
+//     }
+//   })
+// });
 
 /* AUDIENCE DISPLAY SECTION */
 export const displayID = atom({
