@@ -154,17 +154,6 @@ const EventApp: FC = () => {
             renderInput={(params) => <TextField {...params} fullWidth />}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <TextField
-            type='number'
-            name='fieldCount'
-            label='Field Count'
-            variant='standard'
-            fullWidth
-            value={event.fieldCount}
-            onChange={handleChange}
-          />
-        </Grid>
       </Grid>
       {!flags.createdEvent && (
         <Button variant='contained' onClick={setup}>
