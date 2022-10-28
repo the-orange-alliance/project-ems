@@ -4,14 +4,14 @@ import { setApiStorage, setApiStorageKey } from 'src/api/ApiProvider';
 import { appFlagsAtom } from './Recoil';
 
 export interface AppFlags {
-  createdEvent: boolean;
+  createdEvents: string[];
   createdTeams: boolean;
   createdAccounts: boolean;
   createdSchedules: TournamentType[];
 }
 
 export const defaultFlags: AppFlags = {
-  createdEvent: false,
+  createdEvents: [],
   createdTeams: false,
   createdAccounts: false,
   createdSchedules: []

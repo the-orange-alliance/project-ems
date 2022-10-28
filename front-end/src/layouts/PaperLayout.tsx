@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { Breakpoint } from '@mui/material';
@@ -90,7 +90,7 @@ const PaperLayout: FC<Props> = ({
             </>
           )}
           <Box sx={{ padding: padding ? (theme) => theme.spacing(2) : 0 }}>
-            {children}
+            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
           </Box>
         </Paper>
       </Container>

@@ -2,11 +2,10 @@ CREATE TABLE IF NOT EXISTS "event" (
     "eventKey" VARCHAR(15) NOT NULL,
     "seasonKey" VARCHAR(4) NOT NULL,
     "regionKey" VARCHAR(4) NOT NULL,
-    "eventType" VARCHAR(8) NOT NULL,
+    "eventTypeKey" VARCHAR(8) NOT NULL,
     "eventName" VARCHAR(255) NOT NULL,
     "divisionName" VARCHAR(255) NULL,
     "venue" VARCHAR(255),
-    "eventTypeKey" VARCHAR(25),
     "city" VARCHAR(255),
     "stateProv" VARCHAR(255),
     "startDate" VARCHAR(255),
@@ -63,7 +62,6 @@ CREATE TABLE IF NOT EXISTS "ranking" (
     "eventKey" VARCHAR(25) NOT NULL,
     "tournamentKey" VARCHAR(25) NOT NULL,
     "teamKey" INT NOT NULL,
-    "tournamentKey" INT NOT NULL,
     "rank" INT NOT NULL,
     "rankChange" INT,
     "played" INT,
@@ -96,7 +94,6 @@ CREATE TABLE IF NOT EXISTS "match" (
     "tournamentKey" VARCHAR(25) NOT NULL,
     "id" INT NOT NULL,
     "name" VARCHAR(50) NOT NULL,
-    "tournamentKey" INT NOT NULL,
     "scheduledTime" VARCHAR(255),
     "startTime" VARCHAR(255),
     "prestartTime" VARCHAR(255),
@@ -130,7 +127,7 @@ CREATE TABLE IF NOT EXISTS "match_participant" (
     FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
     FOREIGN KEY (id) REFERENCES "match"(id),
-    FOREIGN KEY (teamKey) REFERENCES "team"(teamKey),
+    FOREIGN KEY (teamKey) REFERENCES "team"(teamKey)
 );
 
 CREATE TABLE IF NOT EXISTS "match_detail" (

@@ -41,8 +41,8 @@ export const login = async (
 export const logout = async (): Promise<void> =>
   clientFetcher('auth/logout', 'GET');
 
-export const setupEventBase = async (): Promise<void> =>
-  clientFetcher('event/setup', 'GET');
+export const setupEventBase = async (seasonKey: string): Promise<void> =>
+  clientFetcher(`event/setup/${seasonKey}`, 'GET');
 
 export const setupDefaultAccounts = async (): Promise<void> =>
   clientFetcher('auth/setup', 'GET');

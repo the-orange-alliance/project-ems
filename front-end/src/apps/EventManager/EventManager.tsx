@@ -2,7 +2,8 @@ import { FC } from 'react';
 import PaperLayout from 'src/layouts/PaperLayout';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import EventsTable from 'src/features/components/EventsTable/EventsTable';
+import Events from './components/Events';
+import EventForm from './components/EventForm';
 
 const EventManager: FC = () => {
   return (
@@ -11,8 +12,13 @@ const EventManager: FC = () => {
       header={<Typography variant='h4'>Event Manager</Typography>}
       padding
     >
-      <Box sx={{ marginBottom: (theme) => theme.spacing(2) }}>
-        <EventsTable events={[]} />
+      <Box
+        sx={{
+          marginBottom: (theme) => theme.spacing(2)
+        }}
+      >
+        <Events />
+        <EventForm />
       </Box>
     </PaperLayout>
   );

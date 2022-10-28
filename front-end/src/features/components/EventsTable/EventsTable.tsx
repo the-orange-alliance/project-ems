@@ -37,11 +37,9 @@ const EventsTable: FC<Props> = ({ events }) => {
               const endDate = DateTime.fromISO(e.endDate);
               return (
                 <TableRow key={`event-${i}`}>
-                  <TableCell>
-                    {e.seasonKey}-{e.regionKey}-{e.eventKey}
-                  </TableCell>
+                  <TableCell>{e.eventKey}</TableCell>
                   <TableCell>{e.eventName}</TableCell>
-                  <TableCell>{e.eventType}</TableCell>
+                  <TableCell>{e.eventTypeKey}</TableCell>
                   <TableCell>
                     {e.venue}&nbsp;-&nbsp;
                     {location}
