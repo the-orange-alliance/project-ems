@@ -24,6 +24,14 @@ export const currentEventAtom = atom<Event | null>({
   default: null
 });
 
+export const currentEventKeySelector = selector<string>({
+  key: 'currentEventSelector',
+  get: () => {
+    const [, eventKey] = window.location.pathname.split('/');
+    return eventKey;
+  }
+});
+
 /**
  * @section EVENT STATE
  * Recoil state management for various events
@@ -33,14 +41,7 @@ const eventsSelector = selector<Event[]>({
   key: 'eventsSelector',
   get: async () => {
     try {
-      const events = await clientFetcher(
-        'event',
-        'GET',
-        undefined,
-        isEventArray
-      );
-      console.log(events);
-      return events;
+      return await clientFetcher('event', 'GET', undefined, isEventArray);
     } catch (e) {
       console.log(e);
       return [];

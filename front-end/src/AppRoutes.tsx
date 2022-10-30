@@ -2,6 +2,7 @@ import { ReactNode, lazy } from 'react';
 const HomeApp = lazy(() => import('./apps/Home/index'));
 const EventManagerApp = lazy(() => import('./apps/EventManager'));
 const SettingsApp = lazy(() => import('./apps/Settings'));
+const EventSelection = lazy(() => import('./apps/EventSelection'));
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const AdminApp = lazy(() => import('./apps/Admin'));
 // const TeamManager = lazy(() => import('./apps/TeamManager'));
@@ -33,22 +34,29 @@ export interface AppRoute {
 
 const AppRoutes: AppRoute[] = [
   {
-    name: 'Home',
+    name: 'Event Selection',
     path: '/',
     group: 0,
-    element: <HomeApp />,
-    icon: <HomeIcon />
+    element: <EventSelection />,
+    icon: <EventIcon />
   },
   {
     name: 'Event Manager',
-    path: '/event-manager',
+    path: '/:eventKey/event-manager',
     group: 0,
     element: <EventManagerApp />,
     icon: <EventIcon />
   },
   {
+    name: 'Event Home',
+    path: '/:eventKey',
+    group: 0,
+    element: <HomeApp />,
+    icon: <HomeIcon />
+  },
+  {
     name: 'Settings',
-    path: '/settings',
+    path: '/:eventKey/settings',
     group: 0,
     element: <SettingsApp />
   }

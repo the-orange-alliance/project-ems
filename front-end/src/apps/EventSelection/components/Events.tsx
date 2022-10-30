@@ -7,16 +7,22 @@ import { eventsAtom, currentEventAtom } from 'src/stores/NewRecoil';
 import { defaultEvent, Event, EventTypes } from '@toa-lib/models';
 import UpgradedTable from 'src/components/UpgradedTable/UpgradedTable';
 import { DateTime } from 'luxon';
+import { useNavigate } from 'react-router-dom';
 
 const Events: FC = () => {
   const events = useRecoilValue(eventsAtom);
   const [event, setEvent] = useRecoilState(currentEventAtom);
 
+  const navigate = useNavigate();
+
   const createEvent = () => {
     setEvent(defaultEvent);
   };
 
-  const selectEvent = (e: Event) => setEvent(e);
+  const selectEvent = (e: Event) => {
+    navigate(`/${e.eventKey}`);
+    setEvent(e);
+  };
 
   if (event) return null;
 
