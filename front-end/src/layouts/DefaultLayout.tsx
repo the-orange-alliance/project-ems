@@ -18,12 +18,20 @@ import { userAtom } from 'src/stores/Recoil';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import emsAvatar from 'src/assets/favicon.ico';
 import LogoutButton from 'src/features/components/LogoutButton/LogoutButton';
+
 interface Props {
+  title?: string;
+  titleLink?: string;
   containerWidth?: Breakpoint | false;
   children?: ReactNode;
 }
 
-const DefaultLayout: FC<Props> = ({ containerWidth, children }: Props) => {
+const DefaultLayout: FC<Props> = ({
+  title,
+  titleLink,
+  containerWidth,
+  children
+}: Props) => {
   const user = useRecoilValue(userAtom);
   return (
     <Box sx={{ display: 'flex' }}>
@@ -42,9 +50,22 @@ const DefaultLayout: FC<Props> = ({ containerWidth, children }: Props) => {
               sx={{ padding: '4px' }}
             />
           </IconButton>
-          <Typography variant='h6' noWrap style={{ flexGrow: 1 }}>
-            Event Management System | Home
-          </Typography>
+          {titleLink && (
+            <Typography
+              variant='h6'
+              noWrap
+              style={{ flexGrow: 1 }}
+              component={Link}
+              to={titleLink}
+            >
+              {title ? title : 'Event Management System'}
+            </Typography>
+          )}
+          {!titleLink && (
+            <Typography variant='h6' noWrap style={{ flexGrow: 1 }}>
+              {title ? title : 'Event Management System'}
+            </Typography>
+          )}
           {user ? (
             <>
               <Button color='inherit'>Docs</Button>

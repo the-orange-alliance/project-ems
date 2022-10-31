@@ -1,6 +1,7 @@
 import { clientFetcher } from '@toa-lib/client';
 import { Event, isEventArray } from '@toa-lib/models';
-import { atom, selector } from 'recoil';
+import { atom, DefaultValue, selector } from 'recoil';
+import { replaceInArray } from './Util';
 
 /**
  * @section UI STATE
@@ -19,16 +20,25 @@ export const snackbarMessageAtom = atom<string>({
  * @section SELECTION STATE
  * Recoil state management for selecting data
  */
-export const currentEventAtom = atom<Event | null>({
-  key: 'currentEventAtom',
-  default: null
-});
-
 export const currentEventKeySelector = selector<string>({
-  key: 'currentEventSelector',
+  key: 'currentEventKeySelector',
   get: () => {
     const [, eventKey] = window.location.pathname.split('/');
     return eventKey;
+  }
+});
+
+export const currentEventSelector = selector<Event | null>({
+  key: 'currentEventSelector',
+  get: ({ get }) =>
+    get(eventsAtom).find((e) => e.eventKey === get(currentEventKeySelector)) ??
+    null,
+  set: ({ get, set }, newValue) => {
+    if (newValue instanceof DefaultValue || !newValue) return;
+    const events = get(eventsAtom);
+    const eventKey = get(currentEventKeySelector);
+    const newEvents = replaceInArray(events, 'eventKey', eventKey, newValue);
+    set(eventsAtom, newEvents ?? events);
   }
 });
 

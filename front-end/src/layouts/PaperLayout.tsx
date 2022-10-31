@@ -22,6 +22,8 @@ import LogoutButton from 'src/features/components/LogoutButton/LogoutButton';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 
 interface Props {
+  title?: string;
+  titleLink?: string;
   header?: ReactNode | string;
   containerWidth?: Breakpoint | false;
   children?: ReactNode;
@@ -29,6 +31,8 @@ interface Props {
 }
 
 const PaperLayout: FC<Props> = ({
+  title,
+  titleLink,
   header,
   containerWidth,
   children,
@@ -52,9 +56,22 @@ const PaperLayout: FC<Props> = ({
               sx={{ padding: '4px' }}
             />
           </IconButton>
-          <Typography variant='h6' noWrap style={{ flexGrow: 1 }}>
-            Event Management System | Home
-          </Typography>
+          {titleLink && (
+            <Typography
+              variant='h6'
+              noWrap
+              style={{ flexGrow: 1 }}
+              component={Link}
+              to={titleLink}
+            >
+              {title ? title : 'Event Management System'}
+            </Typography>
+          )}
+          {!titleLink && (
+            <Typography variant='h6' noWrap style={{ flexGrow: 1 }}>
+              {title ? title : 'Event Management System'}
+            </Typography>
+          )}
           {user ? (
             <>
               <Button color='inherit'>Docs</Button>

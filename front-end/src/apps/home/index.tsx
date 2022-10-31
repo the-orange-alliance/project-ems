@@ -3,7 +3,7 @@ import Grid from '@mui/material/Grid';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import AppCard, { AppCardProps } from 'src/components/AppCard/AppCard';
 import { useRecoilValue } from 'recoil';
-import { currentEventKeySelector } from 'src/stores/NewRecoil';
+import { currentEventSelector } from 'src/stores/NewRecoil';
 
 import twitchLogo from 'src/assets/images/twitch-logo.png';
 import audienceDisplayLogo from 'src/assets/images/audience-display-logo.png';
@@ -18,16 +18,19 @@ const GridAppCard = (props: AppCardProps) => (
 
 // TODO - Just incorporate from AppRoutes to eliminate having to modify 2+ places.
 const HomeApp: FC = () => {
-  const eventKey = useRecoilValue(currentEventKeySelector);
+  const event = useRecoilValue(currentEventSelector);
   return (
-    <DefaultLayout>
+    <DefaultLayout title={event?.eventName}>
       <Grid
         container
         spacing={4}
         columns={15}
         sx={{ marginBottom: (theme) => theme.spacing(4) }}
       >
-        <GridAppCard title='Event Manager' to={`/${eventKey}/event-manager`} />
+        <GridAppCard
+          title='Event Manager'
+          to={`/${event?.eventKey}/event-manager`}
+        />
         <GridAppCard title='Team Manager' to='/team-manager' />
         {/* <GridAppCard title='Match Manager' to='/match-manager' />
         <GridAppCard title='Scoring App' to='/scoring' />

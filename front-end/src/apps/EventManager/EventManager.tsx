@@ -3,10 +3,15 @@ import PaperLayout from 'src/layouts/PaperLayout';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import EventForm from '../../features/components/EventForm/EventForm';
+import { useRecoilState } from 'recoil';
+import { currentEventSelector } from 'src/stores/NewRecoil';
 
 const EventManager: FC = () => {
+  const [event, setEvent] = useRecoilState(currentEventSelector);
   return (
     <PaperLayout
+      title={`${event?.eventName} | Event Manager`}
+      titleLink={`/${event?.eventKey}`}
       containerWidth='lg'
       header={<Typography variant='h4'>Event Manager</Typography>}
       padding
@@ -16,7 +21,7 @@ const EventManager: FC = () => {
           marginBottom: (theme) => theme.spacing(2)
         }}
       >
-        <EventForm />
+        <EventForm event={event} onChange={setEvent} />
       </Box>
     </PaperLayout>
   );

@@ -1,30 +1,28 @@
 import { FC } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilValue } from 'recoil';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import { eventsAtom, currentEventAtom } from 'src/stores/NewRecoil';
-import { defaultEvent, Event, EventTypes } from '@toa-lib/models';
+import { eventsAtom } from 'src/stores/NewRecoil';
+import { Event, EventTypes } from '@toa-lib/models';
 import UpgradedTable from 'src/components/UpgradedTable/UpgradedTable';
 import { DateTime } from 'luxon';
 import { useNavigate } from 'react-router-dom';
 
-const Events: FC = () => {
+interface Props {
+  onCreateDefault: () => void;
+}
+
+const Events: FC<Props> = ({ onCreateDefault }) => {
   const events = useRecoilValue(eventsAtom);
-  const [event, setEvent] = useRecoilState(currentEventAtom);
 
   const navigate = useNavigate();
 
-  const createEvent = () => {
-    setEvent(defaultEvent);
-  };
+  const createEvent = () => onCreateDefault();
 
   const selectEvent = (e: Event) => {
     navigate(`/${e.eventKey}`);
-    setEvent(e);
   };
-
-  if (event) return null;
 
   return (
     <>
