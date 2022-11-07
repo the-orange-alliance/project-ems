@@ -1,6 +1,13 @@
 import { clientFetcher } from '@toa-lib/client';
-import { Event, isEventArray } from '@toa-lib/models';
-import { atom, DefaultValue, selector } from 'recoil';
+import { Event, isEventArray, isTeamArray, Team } from '@toa-lib/models';
+import {
+  atom,
+  atomFamily,
+  DefaultValue,
+  selector,
+  selectorFamily
+} from 'recoil';
+import { eventKeySelector } from './Recoil';
 import { replaceInArray } from './Util';
 
 /**
@@ -62,4 +69,29 @@ const eventsSelector = selector<Event[]>({
 export const eventsAtom = atom<Event[]>({
   key: 'eventsAtom',
   default: eventsSelector
+});
+
+/**
+ * @section TEAM STATE
+ * Recoil state management for teams
+ */
+const teamsByEventSelectorFam = selectorFamily<Team[], string>({
+  key: 'teamsByEventSelectorFam',
+  get: (eventKey: string) => async (): Promise<Team[]> => {
+    try {
+      return await clientFetcher(
+        `teams/${eventKey}`,
+        'GET',
+        undefined,
+        isTeamArray
+      );
+    } catch (e) {
+      return [];
+    }
+  }
+});
+
+export const teamsByEventAtomFam = atomFamily<Team[], string>({
+  key: 'teamsByEventAtomFam',
+  default: teamsByEventSelectorFam
 });

@@ -3,7 +3,6 @@ import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 export interface Team {
   eventKey: string;
   teamKey: number;
-  eventParticipantKey: string;
   hasCard: boolean;
   teamNameShort: string;
   teamNameLong: string;
@@ -19,7 +18,6 @@ export interface Team {
 export const defaultTeam: Team = {
   eventKey: '',
   teamKey: 0,
-  eventParticipantKey: '',
   hasCard: false,
   teamNameShort: '',
   teamNameLong: '',
@@ -33,10 +31,7 @@ export const defaultTeam: Team = {
 };
 
 export const isTeam = (obj: unknown): obj is Team =>
-  isNonNullObject(obj) &&
-  isString(obj.eventKey) &&
-  isNumber(obj.teamKey) &&
-  isString(obj.eventParticipantKey);
+  isNonNullObject(obj) && isString(obj.eventKey) && isNumber(obj.teamKey);
 
 export const isTeamArray = (obj: unknown): obj is Team[] =>
   isArray(obj) && obj.every((o) => isTeam(o));

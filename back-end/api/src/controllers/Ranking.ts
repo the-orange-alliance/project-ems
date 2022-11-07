@@ -81,9 +81,10 @@ router.post(
     try {
       const tournamentKey = req.params.tournamentKey;
       const teams: Team[] = req.body;
-      const eventKeyArgs = teams[0].eventParticipantKey.split('-');
-      eventKeyArgs.pop();
-      const eventKey = eventKeyArgs.toString().replace(/,/g, '-');
+      const eventKey = '';
+      // const eventKeyArgs = teams[0].eventParticipantKey.split('-');
+      // eventKeyArgs.pop();
+      // const eventKey = eventKeyArgs.toString().replace(/,/g, '-');
       const rankings: Ranking[] = teams.map((t) => ({
         eventKey: t.eventKey,
         tournamentKey,

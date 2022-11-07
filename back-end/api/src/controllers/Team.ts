@@ -21,12 +21,12 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 router.get(
-  '/:teamKey',
+  '/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await selectAllWhere(
         'team',
-        `teamKey = ${req.params.teamKey}`
+        `eventKey = "${req.params.eventKey}"`
       );
       if (!data) {
         return next(DataNotFoundError);

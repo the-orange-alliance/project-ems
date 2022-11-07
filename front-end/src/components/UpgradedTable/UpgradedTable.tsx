@@ -9,7 +9,7 @@ import TableBody from '@mui/material/TableBody';
 interface Props<T> {
   data: T[];
   headers: string[];
-  renderRow: (row: T) => string[];
+  renderRow: (row: T) => (string | number)[];
   onSelect?: (row: T) => void;
 }
 
@@ -42,7 +42,9 @@ const UpgradedTable = <T,>({
                   className={onSelect ? 'mouse-click' : ''}
                 >
                   {rowData.map((cell, j) => (
-                    <TableCell key={`cell-${i}-${j}`}>{cell}</TableCell>
+                    <TableCell key={`cell-${i}-${j}`}>
+                      {cell.toString()}
+                    </TableCell>
                   ))}
                 </TableRow>
               );
