@@ -1,10 +1,10 @@
 import { FC } from 'react';
-import PaperLayout from 'src/layouts/PaperLayout';
+import PaperLayout from '@layouts/PaperLayout';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import EventForm from '../../features/components/EventForm/EventForm';
+import EventForm from '@features/components/EventForm/EventForm';
 import { useRecoilState } from 'recoil';
-import { currentEventSelector } from 'src/stores/NewRecoil';
+import { currentEventSelector } from '@stores/NewRecoil';
 
 const EventManager: FC = () => {
   const [event, setEvent] = useRecoilState(currentEventSelector);

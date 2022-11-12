@@ -1,12 +1,12 @@
 import { FC, useState } from 'react';
-import PaperLayout from 'src/layouts/PaperLayout';
+import PaperLayout from '@layouts/PaperLayout';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Events from './components/Events';
-import EventForm from '../../features/components/EventForm/EventForm';
+import EventForm from '@features/components/EventForm/EventForm';
 import { defaultEvent } from '@toa-lib/models';
 import { useSetRecoilState } from 'recoil';
-import { eventsAtom } from 'src/stores/NewRecoil';
+import { eventsAtom } from '@stores/NewRecoil';
 import { useNavigate } from 'react-router-dom';
 
 const EventSelection: FC = () => {

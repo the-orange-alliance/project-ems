@@ -1,9 +1,9 @@
 import { FC } from 'react';
 import Grid from '@mui/material/Grid';
-import DefaultLayout from 'src/layouts/DefaultLayout';
-import AppCard, { AppCardProps } from 'src/components/AppCard/AppCard';
+import DefaultLayout from '@layouts/DefaultLayout';
+import AppCard, { AppCardProps } from '@components/AppCard/AppCard';
 import { useRecoilValue } from 'recoil';
-import { currentEventSelector } from 'src/stores/NewRecoil';
+import { currentEventSelector } from '@stores/NewRecoil';
 
 import twitchLogo from 'src/assets/images/twitch-logo.png';
 import audienceDisplayLogo from 'src/assets/images/audience-display-logo.png';

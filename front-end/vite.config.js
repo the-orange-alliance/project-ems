@@ -9,7 +9,12 @@ export default defineConfig({
   publicDir: './public',
   resolve: {
     alias: {
-      src: resolve(__dirname, 'src')
+      src: resolve(__dirname, 'src'),
+      '@assets': resolve(__dirname, './src/assets'),
+      '@components': resolve(__dirname, './src/components'),
+      '@features': resolve(__dirname, './src/features'),
+      '@layouts': resolve(__dirname, './src/layouts'),
+      '@stores': resolve(__dirname, './src/stores')
     }
   },
   optimizeDeps: {
