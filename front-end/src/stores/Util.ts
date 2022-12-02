@@ -1,7 +1,7 @@
 export function replaceInArray<T>(
   items: T[],
   key: keyof T,
-  value: string,
+  value: string | number,
   newValue: T
 ): T[] | undefined {
   const index = items?.findIndex((i) => i[key] === value);

@@ -7,7 +7,6 @@ import {
   selector,
   selectorFamily
 } from 'recoil';
-import { eventKeySelector } from './Recoil';
 import { replaceInArray } from './Util';
 
 /**
@@ -46,6 +45,34 @@ export const currentEventSelector = selector<Event | null>({
     const eventKey = get(currentEventKeySelector);
     const newEvents = replaceInArray(events, 'eventKey', eventKey, newValue);
     set(eventsAtom, newEvents ?? events);
+  }
+});
+
+export const currentTeamKeyAtom = atom<number | null>({
+  key: 'currentTeamKeyAtom',
+  default: null
+});
+
+export const currentTeamSelector = selector<Team | null>({
+  key: 'currentTeamSelector',
+  get: ({ get }) => {
+    const teamKey = get(currentTeamKeyAtom);
+    const eventKey = get(currentEventKeySelector);
+    const team = get(teamsByEventAtomFam(eventKey));
+    return (
+      team.find((t) => t.teamKey === teamKey && t.eventKey === eventKey) ?? null
+    );
+  },
+  set: ({ get, set }, newValue) => {
+    if (newValue instanceof DefaultValue || !newValue) return;
+    const teams = get(teamsByEventAtomFam(newValue.eventKey));
+    const newTeams = replaceInArray(
+      teams,
+      'teamKey',
+      newValue.teamKey,
+      newValue
+    );
+    set(teamsByEventAtomFam(newValue.eventKey), newTeams ?? teams);
   }
 });
 

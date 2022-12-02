@@ -4,13 +4,13 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import FormControl from '@mui/material/FormControl';
 import LoadingButton from '@mui/lab/LoadingButton';
-import ViewReturn from 'src/components/ViewReturn/ViewReturn';
-import SeasonDropdown from 'src/components/Dropdowns/SeasonDropdown';
-import EventTypeDropdown from 'src/components/Dropdowns/EventTypeDropdown';
-import DatePicker from 'src/components/DatePicker/DatePicker';
+import ViewReturn from '@components/ViewReturn/ViewReturn';
+import SeasonDropdown from '@components/Dropdowns/SeasonDropdown';
+import EventTypeDropdown from '@components/Dropdowns/EventTypeDropdown';
+import DatePicker from '@components/DatePicker/DatePicker';
 import { patchEvent, postEvent, setupEventBase } from 'src/api/ApiProvider';
-import { useSnackbar } from 'src/features/hooks/use-snackbar';
-import { useFlags } from 'src/stores/AppFlags';
+import { useSnackbar } from '@features/hooks/use-snackbar';
+import { useFlags } from '@stores/AppFlags';
 import { Event } from '@toa-lib/models';
 
 const FormField: FC<{
