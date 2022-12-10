@@ -8,3 +8,11 @@ export function replaceInArray<T>(
   if (index < 0) return undefined;
   return [...items.slice(0, index), newValue, ...items.slice(index + 1)];
 }
+
+export function removeFromArray<T>(
+  items: T[],
+  key: keyof T,
+  value: string | number
+): T[] {
+  return [...items.filter((i) => i[key] !== value)];
+}

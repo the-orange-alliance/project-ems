@@ -4,6 +4,7 @@ import { RecoilRoot, useRecoilValue } from 'recoil';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
+import { Provider as ModalProvider } from '@ebay/nice-modal-react';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import App from './App';
 import { fgcTheme } from './AppTheme';
@@ -28,7 +29,9 @@ function Main() {
   const darkMode = useRecoilValue(darkModeAtom);
   return (
     <ThemeProvider theme={useMemo(() => fgcTheme(darkMode), [darkMode])}>
-      <App />
+      <ModalProvider>
+        <App />
+      </ModalProvider>
     </ThemeProvider>
   );
 }

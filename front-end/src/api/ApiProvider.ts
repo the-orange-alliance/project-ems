@@ -14,7 +14,7 @@ import {
   MatchMakerParams,
   Match,
   isMatchArray,
-  MatchDetails,
+  MatchDetailBase,
   MatchParticipant,
   Ranking,
   TournamentType,
