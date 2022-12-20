@@ -1,9 +1,10 @@
-import { ReactNode, lazy } from 'react';
+import React, { ReactNode, lazy } from 'react';
 const HomeApp = lazy(() => import('./apps/Home/index'));
 const EventManagerApp = lazy(() => import('./apps/EventManager'));
 const SettingsApp = lazy(() => import('./apps/Settings'));
 const EventSelection = lazy(() => import('./apps/EventSelection'));
 const TeamManager = lazy(() => import('./apps/TeamManager'));
+const TournamentManager = lazy(() => import('./apps/TournamentManager'));
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const AdminApp = lazy(() => import('./apps/Admin'));
 // const MatchManager = lazy(() => import('./apps/MatchManager'));
@@ -59,6 +60,13 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/team-manager',
     group: 0,
     element: <TeamManager />,
+    icon: <HomeIcon />
+  },
+  {
+    name: 'Tournament Manager',
+    path: '/:eventKey/tournament-manager',
+    group: 0,
+    element: <TournamentManager />,
     icon: <HomeIcon />
   },
   {
