@@ -19,7 +19,7 @@
     "@toa-lib/client": "file:../lib/client",
     "@toa-lib/models": "file:../lib/models",
     "@vitejs/plugin-react": "^2.1.0",
-    "luxon": "^2.5.0",
+    "luxon": "^2.5.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.2",
