@@ -1,5 +1,12 @@
 import { clientFetcher } from '@toa-lib/client';
-import { Event, isEventArray, isTeamArray, Team } from '@toa-lib/models';
+import {
+  Event,
+  isEventArray,
+  isTeamArray,
+  isTournamentArray,
+  Team,
+  Tournament
+} from '@toa-lib/models';
 import {
   atom,
   atomFamily,
@@ -121,4 +128,32 @@ const teamsByEventSelectorFam = selectorFamily<Team[], string>({
 export const teamsByEventAtomFam = atomFamily<Team[], string>({
   key: 'teamsByEventAtomFam',
   default: teamsByEventSelectorFam
+});
+
+/**
+ * @section TOURNAMENT STATE
+ * Recoil state management for tournaments
+ */
+export const tournamentsByEventSelectorFam = selectorFamily<
+  Tournament[],
+  string
+>({
+  key: 'tournamentsByEventSelectorFam',
+  get: (eventKey: string) => async (): Promise<Tournament[]> => {
+    try {
+      return await clientFetcher(
+        `tournaments/${eventKey}`,
+        'GET',
+        undefined,
+        isTournamentArray
+      );
+    } catch (e) {
+      return [];
+    }
+  }
+});
+
+export const tournamentsByEventAtomFam = atomFamily<Tournament[], string>({
+  key: 'tournamentsByEventAtomFam',
+  default: tournamentsByEventSelectorFam
 });

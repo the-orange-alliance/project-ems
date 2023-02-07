@@ -7,7 +7,6 @@ import { snackbarMessageAtom, snackbarOpenAtom } from 'src/stores/NewRecoil';
  * The goal is to have the following
  * const { showSnackbar, Snackbar } = useSnackbar();
  */
-
 interface UseSnackbarResult {
   showSnackbar: (msg: string) => void;
   AppSnackbar: FC;

@@ -19,7 +19,8 @@ import {
   Ranking,
   TournamentType,
   AllianceMember,
-  isMatch
+  isMatch,
+  Tournament
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -75,6 +76,16 @@ export const postTeams = async (teams: Team[]): Promise<void> =>
 
 export const patchTeam = async (teamKey: string, team: Team): Promise<void> =>
   clientFetcher(`teams/${teamKey}`, 'PATCH', team);
+
+export const postTournament = async (tournament: Tournament): Promise<void> =>
+  clientFetcher('tournament', 'POST', tournament);
+
+export const patchTournament = async (tournament: Tournament): Promise<void> =>
+  clientFetcher(
+    `tournament/${tournament.eventKey}/${tournament.tournamentKey}`,
+    'POST',
+    tournament
+  );
 
 export const postSchedule = async (items: ScheduleItem[]): Promise<void> =>
   clientFetcher('schedule', 'POST', items);

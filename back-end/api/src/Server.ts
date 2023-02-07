@@ -20,6 +20,7 @@ import matchController from './controllers/Match.js';
 import rankingController from './controllers/Ranking.js';
 import allianceController from './controllers/Alliance.js';
 import resultsController from './controllers/Results.js';
+import tournamentController from './controllers/Tournament.js';
 import { handleCatchAll, handleErrors } from './middleware/ErrorHandler.js';
 import logger from './util/Logger.js';
 import { initDatabase } from './db/Database.js';
@@ -65,6 +66,7 @@ app.use('/match', matchController);
 app.use('/ranking', rankingController);
 app.use('/alliance', allianceController);
 app.use('/results', resultsController);
+app.use('/tournament', tournamentController);
 
 // Define root/testing paths
 app.get('/', requireAuth, (req, res) => {

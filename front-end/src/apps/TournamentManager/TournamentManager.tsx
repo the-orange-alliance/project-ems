@@ -1,6 +1,7 @@
 import { FC } from 'react';
+import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import PaperLayout from 'src/layouts/PaperLayout';
+import PaperLayout from '@layouts/PaperLayout';
 
 const TournamentManager: FC = () => {
   return (
@@ -9,7 +10,7 @@ const TournamentManager: FC = () => {
       header={<Typography variant='h4'>Tournament Manager</Typography>}
       padding
     >
-      <div>hello world</div>
+      <Box>hello world</Box>
     </PaperLayout>
   );
 };

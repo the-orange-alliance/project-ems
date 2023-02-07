@@ -1,4 +1,4 @@
-import { isNonNullObject, isNumber, isString } from './types.js';
+import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
 export interface Tournament {
   eventKey: string;
@@ -23,3 +23,6 @@ export const isTournament = (obj: unknown): obj is Tournament =>
   isString(obj.eventKey) &&
   isString(obj.tournamentKey) &&
   isNumber(obj.tournamentLevel);
+
+export const isTournamentArray = (obj: unknown): obj is Tournament[] =>
+  isArray(obj) && obj.every((o) => isTournament(o));
