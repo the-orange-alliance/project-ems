@@ -9,6 +9,10 @@ import {
   currentTournamentKeyAtom,
   tournamentsByEventAtomFam
 } from 'src/stores/NewRecoil';
+import { defaultTournament, Tournament } from '@toa-lib/models';
+import { removeFromArray } from 'src/stores/Util';
+import { useModal } from '@ebay/nice-modal-react';
+import TournamentRemovalDialog from '@components/Dialogs/TournamentRemovalDialog';
 
 import AddIcon from '@mui/icons-material/Add';
 
@@ -23,7 +27,35 @@ const Tournaments: FC = () => {
   // Local State
   const [loading, setLoading] = useState(false);
 
+  // Dialogs
+  const removeModal = useModal(TournamentRemovalDialog);
+
   if (!event) return null;
+
+  const handleCreate = () => {
+    const { eventKey } = event;
+    setTournaments((prev) => [
+      {
+        ...defaultTournament,
+        eventKey,
+        tournamentKey: tournaments.length.toString()
+      },
+      ...prev
+    ]);
+  };
+
+  const handleModify = (t: Tournament) => {
+    setTournamentKey(t.tournamentKey);
+  };
+
+  const handleDelete = async (t: Tournament) => {
+    const confirm = await removeModal.show({ tournament: t });
+    if (confirm) {
+      setTournaments(
+        removeFromArray(tournaments, 'tournamentKey', t.tournamentKey)
+      );
+    }
+  };
 
   return (
     <>
@@ -42,7 +74,11 @@ const Tournaments: FC = () => {
         >
           Upload Tournaments
         </LoadingButton>
-        <Button variant='contained' sx={{ paddinG: '6px', minWidth: '24px' }}>
+        <Button
+          variant='contained'
+          sx={{ padding: '6px', minWidth: '24px' }}
+          onClick={handleCreate}
+        >
           <AddIcon />
         </Button>
       </Box>
@@ -59,6 +95,8 @@ const Tournaments: FC = () => {
             t.fields
           ];
         }}
+        onModify={handleModify}
+        onDelete={handleDelete}
       />
     </>
   );

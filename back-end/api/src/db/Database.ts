@@ -141,7 +141,7 @@ export async function insertValue<T>(
     const columns = getColumns(values);
     const query = `INSERT INTO ${table} (${Array.from(
       columns
-    ).toString()}) VALUES ${getValuesString(columns, values)}`;
+    ).toString()}) VALUES ${getValuesString(columns, values)};`;
     return await db.all(query);
   } catch (e) {
     throw new ApiDatabaseError(table, e);

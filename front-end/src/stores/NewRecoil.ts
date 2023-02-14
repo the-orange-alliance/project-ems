@@ -162,3 +162,28 @@ export const currentTournamentKeyAtom = atom<string | null>({
   key: 'currentTournamentKeyAtom',
   default: null
 });
+
+export const currentTournamentSelector = selector<Tournament | null>({
+  key: 'currentTournamentSelector',
+  get: ({ get }) => {
+    const tournamentKey = get(currentTournamentKeyAtom);
+    const eventKey = get(currentEventKeySelector);
+    const tournaments = get(tournamentsByEventAtomFam(eventKey));
+    return (
+      tournaments.find(
+        (t) => t.tournamentKey === tournamentKey && t.eventKey === eventKey
+      ) ?? null
+    );
+  },
+  set: ({ get, set }, newValue) => {
+    if (newValue instanceof DefaultValue || !newValue) return;
+    const tournaments = get(tournamentsByEventAtomFam(newValue.eventKey));
+    const newTeams = replaceInArray(
+      tournaments,
+      'tournamentKey',
+      newValue.tournamentKey,
+      newValue
+    );
+    set(tournamentsByEventAtomFam(newValue.eventKey), newTeams ?? tournaments);
+  }
+});

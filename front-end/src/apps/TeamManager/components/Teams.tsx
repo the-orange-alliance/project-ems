@@ -108,7 +108,7 @@ const Teams: FC = () => {
         {!createdTeams && (
           <Button
             variant='contained'
-            sx={{ paddinG: '6px', minWidth: '24px' }}
+            sx={{ padding: '6px', minWidth: '24px' }}
             onClick={handleCreate}
           >
             <AddIcon />
