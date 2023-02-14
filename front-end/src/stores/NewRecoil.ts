@@ -142,7 +142,7 @@ export const tournamentsByEventSelectorFam = selectorFamily<
   get: (eventKey: string) => async (): Promise<Tournament[]> => {
     try {
       return await clientFetcher(
-        `tournaments/${eventKey}`,
+        `tournament/${eventKey}`,
         'GET',
         undefined,
         isTournamentArray
