@@ -157,3 +157,8 @@ export const tournamentsByEventAtomFam = atomFamily<Tournament[], string>({
   key: 'tournamentsByEventAtomFam',
   default: tournamentsByEventSelectorFam
 });
+
+export const currentTournamentKeyAtom = atom<string | null>({
+  key: 'currentTournamentKeyAtom',
+  default: null
+});

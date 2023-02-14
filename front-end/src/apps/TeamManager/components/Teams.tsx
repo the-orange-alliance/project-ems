@@ -17,9 +17,9 @@ import { removeFromArray } from 'src/stores/Util';
 import { useModal } from '@ebay/nice-modal-react';
 import { useSnackbar } from 'src/features/hooks/use-snackbar';
 import TeamRemovalDialog from 'src/components/Dialogs/TeamRemovalDialog';
+import { postTeams } from 'src/api/ApiProvider';
 
 import AddIcon from '@mui/icons-material/Add';
-import { postTeams } from 'src/api/ApiProvider';
 
 const Teams: FC = () => {
   // Recoil State
