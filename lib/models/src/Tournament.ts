@@ -12,7 +12,7 @@ export interface Tournament {
 export const defaultTournament: Tournament = {
   eventKey: '',
   tournamentKey: '',
-  tournamentLevel: -1,
+  tournamentLevel: 0,
   fieldCount: 1,
   fields: ['Field 1'],
   name: ''

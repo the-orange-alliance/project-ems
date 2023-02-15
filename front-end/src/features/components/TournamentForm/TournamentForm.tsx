@@ -1,16 +1,16 @@
 import { FC, ChangeEvent, useState } from 'react';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
 import ViewReturn from '@components/ViewReturn/ViewReturn';
+import TournamentDropdown from '@components/Dropdowns/TournamentDropdown';
 import {
-  currentTeamKeyAtom,
-  currentTeamSelector,
   currentTournamentKeyAtom,
   currentTournamentSelector
 } from '@stores/NewRecoil';
+import Fields from './Fields';
 import { Tournament } from '@toa-lib/models';
 
 const FormField: FC<{
@@ -56,6 +56,13 @@ const TournamentForm: FC<Props> = ({ onSubmit }) => {
     });
   };
 
+  const handleLevelChange = (tournamentLevel: number) => {
+    setTournament({
+      ...tournament,
+      tournamentLevel
+    });
+  };
+
   const onReturn = () => {
     setTournamentKey(null);
   };
@@ -63,7 +70,7 @@ const TournamentForm: FC<Props> = ({ onSubmit }) => {
   const handleSubmit = () => onSubmit(tournament);
 
   return (
-    <div>
+    <>
       <ViewReturn title='Teams' onClick={onReturn} />
       <Grid container spacing={3}>
         <FormField
@@ -78,26 +85,28 @@ const TournamentForm: FC<Props> = ({ onSubmit }) => {
           value={tournament.name}
           onChange={handleChange}
         />
-        <FormField
-          name='tournamentLevel'
-          label='Level'
-          value={tournament.tournamentLevel}
-          onChange={handleChange}
-        />
-        <FormField
-          name='fieldCount'
-          label='Field Count'
-          type='number'
-          value={tournament.fieldCount}
-          onChange={handleChange}
-        />
-        <Grid item xs={12} sm={12} md={12}>
-          <Button variant='contained' onClick={handleSubmit}>
-            Submit Changes
-          </Button>
+        <Grid item xs={12} sm={6} md={4}>
+          <TournamentDropdown
+            fullWidth
+            value={tournament.tournamentLevel}
+            onChange={handleLevelChange}
+          />
         </Grid>
       </Grid>
-    </div>
+      <Fields
+        tournament={tournament}
+        onUpdate={() => {
+          return;
+        }}
+      />
+      <Button
+        variant='contained'
+        sx={{ marginTop: (theme) => theme.spacing(2) }}
+        onClick={handleSubmit}
+      >
+        Submit Changes
+      </Button>
+    </>
   );
 };
 

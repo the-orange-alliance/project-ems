@@ -3,7 +3,7 @@ import { ScheduleItem, TournamentType } from './Schedule.js';
 import { Team } from './Team.js';
 import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
-// Tournament Levels
+// Match Levels
 export const TEST_LEVEL = 0;
 export const PRACTICE_LEVEL = 1;
 export const QUALIFICATION_LEVEL = 2;
