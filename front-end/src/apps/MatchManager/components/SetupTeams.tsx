@@ -4,17 +4,15 @@ import TeamSelectionTable from './TeamSelectionTable';
 import { Button } from '@mui/material';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
-  selectedTournamentType,
-  teamsAtom,
-  teamsInScheduleSelectorFamily
-} from 'src/stores/Recoil';
+  currentEventKeySelector,
+  currentScheduledTeamsSelector,
+  teamsByEventAtomFam
+} from 'src/stores/NewRecoil';
 
 const SetupTeams: FC = () => {
-  const tournamentType = useRecoilValue(selectedTournamentType);
-  const eventTeams = useRecoilValue(teamsAtom);
-  const setScheduledTeams = useSetRecoilState(
-    teamsInScheduleSelectorFamily(tournamentType)
-  );
+  const eventKey = useRecoilValue(currentEventKeySelector);
+  const eventTeams = useRecoilValue(teamsByEventAtomFam(eventKey));
+  const setScheduledTeams = useSetRecoilState(currentScheduledTeamsSelector);
 
   const toggleAll = () =>
     setScheduledTeams((prev) => (prev.length > 0 ? [] : eventTeams));

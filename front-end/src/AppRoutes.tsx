@@ -7,7 +7,7 @@ const TeamManager = lazy(() => import('./apps/TeamManager'));
 const TournamentManager = lazy(() => import('./apps/TournamentManager'));
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const AdminApp = lazy(() => import('./apps/Admin'));
-// const MatchManager = lazy(() => import('./apps/MatchManager'));
+const MatchManager = lazy(() => import('./apps/MatchManager'));
 // const ScoringApp = lazy(() => import('./apps/Scoring'));
 // const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 // const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));
@@ -70,25 +70,18 @@ const AppRoutes: AppRoute[] = [
     icon: <HomeIcon />
   },
   {
+    name: 'Match Manager',
+    path: '/:eventKey/match-manager',
+    group: 0,
+    element: <MatchManager />,
+    hidden: true
+  },
+  {
     name: 'Settings',
     path: '/:eventKey/settings',
     group: 0,
     element: <SettingsApp />
   }
-  // {
-  //   name: 'Team Manager',
-  //   path: '/team-manager',
-  //   group: 0,
-  //   element: <TeamManager />,
-  //   hidden: true
-  // },
-  // {
-  //   name: 'Match Manager',
-  //   path: '/match-manager',
-  //   group: 0,
-  //   element: <MatchManager />,
-  //   hidden: true
-  // },
   // {
   //   name: 'Account Manager',
   //   path: '/accounts',

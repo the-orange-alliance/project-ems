@@ -1,6 +1,8 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
+  defaultEventSchedule,
   Event,
+  EventSchedule,
   isEventArray,
   isTeamArray,
   isTournamentArray,
@@ -185,5 +187,73 @@ export const currentTournamentSelector = selector<Tournament | null>({
       newValue
     );
     set(tournamentsByEventAtomFam(newValue.eventKey), newTeams ?? tournaments);
+  }
+});
+
+/**
+ * @section TOURNAMENT SCHEDULE STATE
+ * Recoil state management for tournament schedules
+ */
+export const schedulesByEventSelectorFam = selectorFamily<
+  EventSchedule[],
+  string
+>({
+  key: 'schedulesByEventSelectorFam',
+  get: (eventKey: string) => async (): Promise<EventSchedule[]> => {
+    try {
+      return await clientFetcher(`storage/${eventKey}.json`, 'GET');
+    } catch (e) {
+      return [];
+    }
+  }
+});
+
+export const schedulesByEventAtomFam = atomFamily<EventSchedule[], string>({
+  key: 'schedulesByEventAtomFam',
+  default: schedulesByEventSelectorFam
+});
+
+export const currentScheduleByTournamentSelector = selector<EventSchedule>({
+  key: 'currentScheduleByTournamentSelector',
+  get: ({ get }) => {
+    const tournament = get(currentTournamentSelector);
+    const schedules = get(schedulesByEventAtomFam(tournament?.eventKey ?? ''));
+    return (
+      schedules.find((s) => s.tournamentKey === tournament?.tournamentKey) ??
+      defaultEventSchedule
+    );
+  },
+  set: ({ get, set }, newValue) => {
+    const tournament = get(currentTournamentSelector);
+    const schedules = get(schedulesByEventAtomFam(tournament?.eventKey ?? ''));
+    const currentSchedule = schedules.find(
+      (s) => s.tournamentKey === tournament?.tournamentKey
+    );
+    if (!currentSchedule || newValue instanceof DefaultValue || !newValue) {
+      return;
+    }
+    const newSchedules = replaceInArray(
+      schedules,
+      'tournamentKey',
+      currentSchedule.tournamentKey,
+      newValue
+    );
+    set(
+      schedulesByEventAtomFam(currentSchedule.eventKey),
+      newSchedules ?? schedules
+    );
+  }
+});
+
+export const currentScheduledTeamsSelector = selector<Team[]>({
+  key: 'currentScheduledTeams',
+  get: ({ get }) => {
+    return get(currentScheduleByTournamentSelector)?.teams ?? [];
+  },
+  set: ({ get, set }, newValue) => {
+    const schedule = get(currentScheduleByTournamentSelector);
+    console.log({ newValue, schedule });
+    if (!schedule || newValue instanceof DefaultValue) return;
+    set(currentScheduleByTournamentSelector, { ...schedule, teams: newValue });
   }
 });
