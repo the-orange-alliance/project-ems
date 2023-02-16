@@ -91,13 +91,14 @@ export const patchTournament = async (tournament: Tournament): Promise<void> =>
 export const postSchedule = async (items: ScheduleItem[]): Promise<void> =>
   clientFetcher('schedule', 'POST', items);
 
-export const patchSchedule = async (
-  scheduleKey: string,
-  item: ScheduleItem
-): Promise<void> => clientFetcher(`schedule/${scheduleKey}`, 'PATCH', item);
+export const patchSchedule = async (item: ScheduleItem): Promise<void> =>
+  clientFetcher(`/${item.eventKey}/schedule/${item.id}`, 'PATCH', item);
 
-export const deleteSchedule = (type: TournamentType): Promise<void> =>
-  clientFetcher(`schedule/${type}`, 'DELETE');
+export const deleteSchedule = (
+  eventKey: string,
+  tournamentKey: string
+): Promise<void> =>
+  clientFetcher(`/${eventKey}/schedule/${tournamentKey}`, 'DELETE');
 
 export const createMatchSchedule = async (
   params: MatchMakerParams

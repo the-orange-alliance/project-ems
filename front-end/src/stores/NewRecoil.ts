@@ -4,8 +4,10 @@ import {
   Event,
   EventSchedule,
   isEventArray,
+  isScheduleItemArray,
   isTeamArray,
   isTournamentArray,
+  ScheduleItem,
   Team,
   Tournament
 } from '@toa-lib/models';
@@ -16,7 +18,7 @@ import {
   selector,
   selectorFamily
 } from 'recoil';
-import { replaceInArray } from './Util';
+import { replaceAllInArray, replaceInArray } from './Util';
 
 /**
  * @section UI STATE
@@ -252,8 +254,66 @@ export const currentScheduledTeamsSelector = selector<Team[]>({
   },
   set: ({ get, set }, newValue) => {
     const schedule = get(currentScheduleByTournamentSelector);
-    console.log({ newValue, schedule });
     if (!schedule || newValue instanceof DefaultValue) return;
-    set(currentScheduleByTournamentSelector, { ...schedule, teams: newValue });
+    set(currentScheduleByTournamentSelector, {
+      ...schedule,
+      teams: newValue,
+      teamsParticipating: newValue.length
+    });
+  }
+});
+
+// TODO - Need day/daybreak mutable selector
+
+/**
+ * @section SCHEDULE ITEM STATE
+ * Recoil state management for tournament schedules
+ */
+export const scheduleItemsByEventSelectorFam = selectorFamily<
+  ScheduleItem[],
+  string
+>({
+  key: 'scheduleItemsByEventSelectorFam',
+  get: (eventKey: string) => async (): Promise<ScheduleItem[]> => {
+    try {
+      return await clientFetcher(
+        `/${eventKey}`,
+        'GET',
+        undefined,
+        isScheduleItemArray
+      );
+    } catch (e) {
+      return [];
+    }
+  }
+});
+
+export const scheduleItemsByEventAtomFam = atomFamily<ScheduleItem[], string>({
+  key: 'scheduleItemsByEventAtomFam',
+  default: scheduleItemsByEventSelectorFam
+});
+
+export const currentScheduleItemsByTournamentSelector = selector<
+  ScheduleItem[]
+>({
+  key: 'currentScheduleItemsByTournamentSelector',
+  get: ({ get }) => {
+    const eventKey = get(currentEventKeySelector);
+    const tournamentKey = get(currentTournamentKeyAtom);
+    return get(scheduleItemsByEventAtomFam(eventKey)).filter(
+      (i) => i.tournamentKey === tournamentKey
+    );
+  },
+  set: ({ set, get }, newValue) => {
+    const eventKey = get(currentEventKeySelector);
+    const tournamentKey = get(currentTournamentKeyAtom);
+    if (!eventKey || !tournamentKey || newValue instanceof DefaultValue) {
+      return [];
+    }
+    const scheduleItems = get(scheduleItemsByEventAtomFam(eventKey));
+    set(
+      scheduleItemsByEventAtomFam(eventKey),
+      replaceAllInArray(scheduleItems, 'tournamentKey', tournamentKey, newValue)
+    );
   }
 });
