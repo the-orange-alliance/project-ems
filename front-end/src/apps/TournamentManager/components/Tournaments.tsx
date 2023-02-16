@@ -3,16 +3,25 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import LoadingButton from '@mui/lab/LoadingButton';
 import UpgradedTable from '@components/UpgradedTable/UpgradedTable';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import {
+  useRecoilCallback,
+  useRecoilState,
+  useRecoilValue,
+  useSetRecoilState
+} from 'recoil';
 import {
   currentEventSelector,
   currentTournamentKeyAtom,
-  tournamentsByEventAtomFam
+  tournamentsByEventAtomFam,
+  tournamentsByEventSelectorFam
 } from 'src/stores/NewRecoil';
 import { defaultTournament, Tournament } from '@toa-lib/models';
 import { removeFromArray } from 'src/stores/Util';
 import { useModal } from '@ebay/nice-modal-react';
 import TournamentRemovalDialog from '@components/Dialogs/TournamentRemovalDialog';
+import { postTournaments } from 'src/api/ApiProvider';
+import { useSnackbar } from 'src/features/hooks/use-snackbar';
+import { useFlags } from 'src/stores/AppFlags';
 
 import AddIcon from '@mui/icons-material/Add';
 
@@ -27,10 +36,36 @@ const Tournaments: FC = () => {
   // Local State
   const [loading, setLoading] = useState(false);
 
+  // Custom Hooks
+  const { showSnackbar } = useSnackbar();
+  const [flags, setFlags] = useFlags();
+
   // Dialogs
   const removeModal = useModal(TournamentRemovalDialog);
 
   if (!event) return null;
+
+  const handlePost = useRecoilCallback(({ snapshot }) => async () => {
+    try {
+      // The following logic takes the differences and uploads the new objects.
+      const prevTournaments = await snapshot.getPromise(
+        tournamentsByEventSelectorFam(event.eventKey)
+      );
+      const newTournaments = tournaments.filter(
+        (t) => !prevTournaments.includes(t)
+      );
+      setLoading(true);
+      await postTournaments(newTournaments);
+      await setFlags('createdTournaments', [
+        ...flags.createdTournaments,
+        event.eventKey
+      ]);
+      setLoading(false);
+      showSnackbar('Tournaments successfully created');
+    } catch (e) {
+      setLoading(false);
+    }
+  });
 
   const handleCreate = () => {
     const { eventKey } = event;
@@ -71,6 +106,7 @@ const Tournaments: FC = () => {
           loading={loading}
           variant='contained'
           disabled={tournaments.length <= 0}
+          onClick={handlePost}
         >
           Upload Tournaments
         </LoadingButton>
@@ -87,12 +123,13 @@ const Tournaments: FC = () => {
         headers={['Event', 'Tournament ID', 'Name', 'Tournament', 'Fields']}
         renderRow={(t) => {
           const { eventName } = event;
+          const fields = `[${t.fields.toString().replaceAll(',', ', ')}]`;
           return [
             eventName,
             t.tournamentKey,
             t.name,
             t.tournamentLevel,
-            t.fields
+            fields
           ];
         }}
         onModify={handleModify}

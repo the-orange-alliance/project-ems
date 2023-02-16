@@ -18,10 +18,26 @@ export const defaultTournament: Tournament = {
   name: ''
 };
 
+export const toTournamentJSON = (
+  tournament: Tournament
+): Record<string, unknown> => {
+  return { ...tournament, fields: JSON.stringify(tournament.fields) };
+};
+
+export const fromTournamentJSON = (
+  obj: Record<string, string | number>
+): Tournament => {
+  const tournament = { ...obj, fields: JSON.parse(obj.fields.toString()) };
+  if (!isTournament(tournament))
+    throw Error('Error while parsing JSON as Tournament object');
+  return tournament;
+};
+
 export const isTournament = (obj: unknown): obj is Tournament =>
   isNonNullObject(obj) &&
   isString(obj.eventKey) &&
   isString(obj.tournamentKey) &&
+  isArray(obj.fields) &&
   isNumber(obj.tournamentLevel);
 
 export const isTournamentArray = (obj: unknown): obj is Tournament[] =>

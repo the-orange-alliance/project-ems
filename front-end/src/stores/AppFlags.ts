@@ -6,6 +6,7 @@ import { appFlagsAtom } from './Recoil';
 export interface AppFlags {
   createdEvents: string[];
   createdTeams: string[];
+  createdTournaments: string[];
   createdAccounts: boolean;
   createdSchedules: TournamentType[];
 }
@@ -13,6 +14,7 @@ export interface AppFlags {
 export const defaultFlags: AppFlags = {
   createdEvents: [],
   createdTeams: [],
+  createdTournaments: [],
   createdAccounts: false,
   createdSchedules: []
 };

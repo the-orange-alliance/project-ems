@@ -77,8 +77,9 @@ export const postTeams = async (teams: Team[]): Promise<void> =>
 export const patchTeam = async (teamKey: string, team: Team): Promise<void> =>
   clientFetcher(`teams/${teamKey}`, 'PATCH', team);
 
-export const postTournament = async (tournament: Tournament): Promise<void> =>
-  clientFetcher('tournament', 'POST', tournament);
+export const postTournaments = async (
+  tournaments: Tournament[]
+): Promise<void> => clientFetcher('tournament', 'POST', tournaments);
 
 export const patchTournament = async (tournament: Tournament): Promise<void> =>
   clientFetcher(

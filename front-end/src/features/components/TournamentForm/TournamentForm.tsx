@@ -63,6 +63,14 @@ const TournamentForm: FC<Props> = ({ onSubmit }) => {
     });
   };
 
+  const handleFieldUpdate = (fields: string[]) => {
+    setTournament({
+      ...tournament,
+      fields,
+      fieldCount: fields.length
+    });
+  };
+
   const onReturn = () => {
     setTournamentKey(null);
   };
@@ -93,12 +101,7 @@ const TournamentForm: FC<Props> = ({ onSubmit }) => {
           />
         </Grid>
       </Grid>
-      <Fields
-        tournament={tournament}
-        onUpdate={() => {
-          return;
-        }}
-      />
+      <Fields tournament={tournament} onUpdate={handleFieldUpdate} />
       <Button
         variant='contained'
         sx={{ marginTop: (theme) => theme.spacing(2) }}
