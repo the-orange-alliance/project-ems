@@ -3,14 +3,19 @@ import Typography from '@mui/material/Typography';
 import TwoColumnHeader from 'src/components/Headers/TwoColumnHeader';
 import PaperLayout from 'src/layouts/PaperLayout';
 import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
-import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilCallback, useRecoilValue } from 'recoil';
 import {
   currentEventKeySelector,
   currentTournamentKeyAtom,
   schedulesByEventAtomFam
 } from 'src/stores/NewRecoil';
 import MatchManagerTabs from './components/AppTabs';
-import { defaultEventSchedule } from '@toa-lib/models';
+import {
+  defaultEventSchedule,
+  EventSchedule,
+  levelToType,
+  Tournament
+} from '@toa-lib/models';
 
 const MatchManager: FC = () => {
   const eventKey = useRecoilValue(currentEventKeySelector);
@@ -18,23 +23,27 @@ const MatchManager: FC = () => {
 
   const handleTournamentChange = useRecoilCallback(
     ({ snapshot, set }) =>
-      async (value: string) => {
+      async (tournament: Tournament | null) => {
+        if (!tournament) return;
         const schedules = await snapshot.getPromise(
           schedulesByEventAtomFam(eventKey)
         );
-        if (!schedules.find((s) => s.tournamentKey === value)) {
+        if (
+          !schedules.find((s) => s.tournamentKey === tournament.tournamentKey)
+        ) {
           // There is no schedule and we need to generate a default event schedule.
-          const newSchedule = {
+          const newSchedule: EventSchedule = {
             ...defaultEventSchedule,
             eventKey,
-            tournamentKey: value
+            tournamentKey: tournament.tournamentKey,
+            type: levelToType(tournament.tournamentLevel)
           };
           set(schedulesByEventAtomFam(eventKey), (prev) => [
             ...prev,
             newSchedule
           ]);
         }
-        set(currentTournamentKeyAtom, value);
+        set(currentTournamentKeyAtom, tournament.tournamentKey);
       }
   );
 

@@ -10,7 +10,7 @@ import {
   QUARTERFINALS_LEVEL,
   RANKING_LEVEL,
   ROUND_ROBIN_LEVEL,
-  SEMIFINALS_level,
+  SEMIFINALS_LEVEL,
   TEST_LEVEL
 } from '@toa-lib/models';
 
@@ -46,7 +46,7 @@ const TournamentDropdown: FC<Props> = ({ value, fullWidth, onChange }) => {
         <MenuItem value={QUARTERFINALS_LEVEL.toString()}>
           Quarterfinals
         </MenuItem>
-        <MenuItem value={SEMIFINALS_level.toString()}>Semifinals</MenuItem>
+        <MenuItem value={SEMIFINALS_LEVEL.toString()}>Semifinals</MenuItem>
         <MenuItem value={FINALS_LEVEL.toString()}>Finals</MenuItem>
       </Select>
     </FormControl>

@@ -4,12 +4,13 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { useRecoilValue } from 'recoil';
 import { tournamentsByEventAtomFam } from 'src/stores/NewRecoil';
+import { Tournament } from '@toa-lib/models';
 
 interface Props {
   eventKey: string;
   value: string | null;
   fullWidth?: boolean;
-  onChange: (value: string) => void;
+  onChange: (tournament: Tournament | null) => void;
 }
 
 const EventTournamentsDropdown: FC<Props> = ({
@@ -22,12 +23,14 @@ const EventTournamentsDropdown: FC<Props> = ({
 
   useEffect(() => {
     if (!value && tournaments.length > 0) {
-      onChange(tournaments[0].tournamentKey);
+      onChange(tournaments[0]);
     }
   }, [tournaments]);
 
   const handleChange = (event: SelectChangeEvent) =>
-    onChange(event.target.value);
+    onChange(
+      tournaments.find((t) => t.tournamentKey === event.target.value) ?? null
+    );
 
   return (
     <FormControl

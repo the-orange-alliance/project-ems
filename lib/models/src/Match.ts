@@ -11,7 +11,7 @@ export const ROUND_ROBIN_LEVEL = 20;
 export const RANKING_LEVEL = 30;
 export const OCTOFINALS_LEVEL = 100;
 export const QUARTERFINALS_LEVEL = 200;
-export const SEMIFINALS_level = 300;
+export const SEMIFINALS_LEVEL = 300;
 export const FINALS_LEVEL = 400;
 
 // Different Result Types

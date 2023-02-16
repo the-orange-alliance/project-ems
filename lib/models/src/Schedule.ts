@@ -1,4 +1,15 @@
 import { DateTime } from 'luxon';
+import {
+  FINALS_LEVEL,
+  OCTOFINALS_LEVEL,
+  PRACTICE_LEVEL,
+  QUALIFICATION_LEVEL,
+  QUARTERFINALS_LEVEL,
+  RANKING_LEVEL,
+  ROUND_ROBIN_LEVEL,
+  SEMIFINALS_LEVEL,
+  TEST_LEVEL
+} from './Match.js';
 import { Team } from './Team.js';
 import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
@@ -20,6 +31,31 @@ export const TournamentTypes: TournamentType[] = [
   'Round Robin',
   'Test'
 ];
+
+export const levelToType = (level: number): TournamentType => {
+  switch (level) {
+    case TEST_LEVEL:
+      return 'Test';
+    case PRACTICE_LEVEL:
+      return 'Practice';
+    case QUALIFICATION_LEVEL:
+      return 'Qualification';
+    case RANKING_LEVEL:
+      return 'Ranking';
+    case ROUND_ROBIN_LEVEL:
+      return 'Round Robin';
+    case OCTOFINALS_LEVEL:
+      return 'Eliminations';
+    case QUARTERFINALS_LEVEL:
+      return 'Eliminations';
+    case SEMIFINALS_LEVEL:
+      return 'Eliminations';
+    case FINALS_LEVEL:
+      return 'Eliminations';
+    default:
+      return 'Qualification';
+  }
+};
 
 export const DATE_FORMAT_MIN = 'dddd, MMMM Do YYYY, h:mm a';
 export const DATE_FORMAT_MIN_SHORT = 'ddd, MMMM Do YYYY, h:mm a';
