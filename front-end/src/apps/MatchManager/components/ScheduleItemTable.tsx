@@ -28,7 +28,7 @@ const ScheduleItemTable: FC<Props> = ({ items }) => {
           </TableHead>
           <TableBody>
             {items.map((item) => (
-              <TableRow key={item.key} hover>
+              <TableRow key={item.id} hover>
                 <TableCell>{item.day}</TableCell>
                 <TableCell>{item.name}</TableCell>
                 <TableCell>

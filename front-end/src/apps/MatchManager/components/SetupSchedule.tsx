@@ -24,11 +24,6 @@ import {
   setApiStorage
 } from 'src/api/ApiProvider';
 
-/**
- * TODO - This entire schedule file is for FIRST GLOBAL purposes only. Needs to be modified
- * for other purposes.
- */
-
 const SetupSchedule: FC = () => {
   const tournament = useRecoilValue(currentTournamentSelector);
   const [schedule, setSchedule] = useRecoilState(
@@ -40,17 +35,6 @@ const SetupSchedule: FC = () => {
 
   const [flags, setFlag] = useFlags();
   const { valid, validationMessage } = useScheduleValidator(schedule);
-
-  // useEffect(() => {
-  //   setSchedule((prev) => ({
-  //     ...prev,
-  //     totalMatches: calculateTotalMatches(
-  //       prev.teams.length,
-  //       prev.matchesPerTeam,
-  //       prev.teamsPerAlliance
-  //     )
-  //   }));
-  // }, []);
 
   useEffect(() => {
     setSchedule((prev) => ({
@@ -81,10 +65,11 @@ const SetupSchedule: FC = () => {
       ...flags.createdSchedules,
       tournament.eventKey
     ]);
-    const storedSchedule = Object.assign({}, { ...schedule });
-    // await setApiStorage(`${schedule.type}.json`, storedSchedule);
-    // await postSchedule(scheduleItems);
-    console.log({ storedSchedule });
+    await setApiStorage(
+      `${schedule.eventKey}_${schedule.tournamentKey}.json`,
+      schedule
+    );
+    await postSchedule(scheduleItems);
   };
 
   return (

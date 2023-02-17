@@ -4,9 +4,9 @@ import { DateTime } from 'luxon';
 import { ChangeEvent, FC, useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
-  tournamentScheduleDaySelector,
-  tournamentScheduleSelector
-} from 'src/stores/Recoil';
+  currentScheduleByTournamentSelector,
+  currentScheduleDaySelectorFam
+} from 'src/stores/NewRecoil';
 
 interface Props {
   dayId: number;
@@ -14,8 +14,8 @@ interface Props {
 }
 
 const Break: FC<Props> = ({ dayId, dayBreakId }) => {
-  const schedule = useRecoilValue(tournamentScheduleSelector);
-  const [day, setDay] = useRecoilState(tournamentScheduleDaySelector(dayId));
+  const schedule = useRecoilValue(currentScheduleByTournamentSelector);
+  const [day, setDay] = useRecoilState(currentScheduleDaySelectorFam(dayId));
   const dayBreak = day.breaks[dayBreakId];
 
   const [startDate, setStartDate] = useState<DateTime | null>(DateTime.now());

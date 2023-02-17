@@ -1,5 +1,7 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
+  Day,
+  defaultDay,
   defaultEventSchedule,
   Event,
   EventSchedule,
@@ -203,6 +205,7 @@ export const schedulesByEventSelectorFam = selectorFamily<
   key: 'schedulesByEventSelectorFam',
   get: (eventKey: string) => async (): Promise<EventSchedule[]> => {
     try {
+      // TODO - Need a better way to find all schedules.
       return await clientFetcher(`storage/${eventKey}.json`, 'GET');
     } catch (e) {
       return [];
@@ -264,6 +267,23 @@ export const currentScheduledTeamsSelector = selector<Team[]>({
 });
 
 // TODO - Need day/daybreak mutable selector
+export const currentScheduleDaySelectorFam = selectorFamily<Day, number>({
+  key: 'currentScheduleDaySelectorFam',
+  get:
+    (id: number) =>
+    ({ get }) => {
+      return get(currentScheduleByTournamentSelector).days[id];
+    },
+  set:
+    (id: number) =>
+    ({ set }, newValue) => {
+      const newDay = newValue instanceof DefaultValue ? defaultDay : newValue;
+      set(currentScheduleByTournamentSelector, (prev) => ({
+        ...prev,
+        days: replaceInArray(prev.days, 'id', id, newDay) ?? prev.days
+      }));
+    }
+});
 
 /**
  * @section SCHEDULE ITEM STATE
@@ -293,6 +313,7 @@ export const scheduleItemsByEventAtomFam = atomFamily<ScheduleItem[], string>({
   default: scheduleItemsByEventSelectorFam
 });
 
+// TODO - Need default selector?
 export const currentScheduleItemsByTournamentSelector = selector<
   ScheduleItem[]
 >({

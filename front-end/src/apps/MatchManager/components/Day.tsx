@@ -6,10 +6,12 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { tournamentScheduleDaySelector } from 'src/stores/Recoil';
 import { Day, defaultBreak } from '@toa-lib/models';
 import DayBreak from './DayBreak';
-import { currentScheduleByTournamentSelector } from 'src/stores/NewRecoil';
+import {
+  currentScheduleByTournamentSelector,
+  currentScheduleDaySelectorFam
+} from 'src/stores/NewRecoil';
 
 interface Props {
   id: number;
@@ -17,7 +19,7 @@ interface Props {
 
 const DayComponent: FC<Props> = ({ id }) => {
   const schedule = useRecoilValue(currentScheduleByTournamentSelector);
-  const [day, setDay] = useRecoilState(tournamentScheduleDaySelector(id));
+  const [day, setDay] = useRecoilState(currentScheduleDaySelectorFam(id));
 
   const [startDate, setStartDate] = useState<DateTime | null>(DateTime.now());
   const [endDate, setEndDate] = useState<DateTime | null>(DateTime.now());

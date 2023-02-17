@@ -16,6 +16,7 @@ import {
   levelToType,
   Tournament
 } from '@toa-lib/models';
+import { clientFetcher } from '@toa-lib/client';
 
 const MatchManager: FC = () => {
   const eventKey = useRecoilValue(currentEventKeySelector);
@@ -24,20 +25,28 @@ const MatchManager: FC = () => {
   const handleTournamentChange = useRecoilCallback(
     ({ snapshot, set }) =>
       async (tournament: Tournament | null) => {
-        if (!tournament) return;
+        if (!tournament || tournament.eventKey.length <= 0) return;
         const schedules = await snapshot.getPromise(
           schedulesByEventAtomFam(eventKey)
         );
         if (
           !schedules.find((s) => s.tournamentKey === tournament.tournamentKey)
         ) {
-          // There is no schedule and we need to generate a default event schedule.
-          const newSchedule: EventSchedule = {
-            ...defaultEventSchedule,
-            eventKey,
-            tournamentKey: tournament.tournamentKey,
-            type: levelToType(tournament.tournamentLevel)
-          };
+          let newSchedule: EventSchedule;
+          try {
+            newSchedule = await clientFetcher(
+              `storage/${tournament.eventKey}_${tournament.tournamentKey}.json`,
+              'GET'
+            );
+          } catch {
+            // There is no schedule and we need to generate a default event schedule.
+            newSchedule = {
+              ...defaultEventSchedule,
+              eventKey,
+              tournamentKey: tournament.tournamentKey,
+              type: levelToType(tournament.tournamentLevel)
+            };
+          }
           set(schedulesByEventAtomFam(eventKey), (prev) => [
             ...prev,
             newSchedule
