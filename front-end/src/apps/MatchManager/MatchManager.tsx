@@ -33,13 +33,13 @@ const MatchManager: FC = () => {
           !schedules.find((s) => s.tournamentKey === tournament.tournamentKey)
         ) {
           let newSchedule: EventSchedule;
+          // There is no schedule and we need to either find one or generate one.
           try {
             newSchedule = await clientFetcher(
               `storage/${tournament.eventKey}_${tournament.tournamentKey}.json`,
               'GET'
             );
           } catch {
-            // There is no schedule and we need to generate a default event schedule.
             newSchedule = {
               ...defaultEventSchedule,
               eventKey,

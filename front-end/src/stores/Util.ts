@@ -15,7 +15,7 @@ export function replaceAllInArray<T>(
   condition: string | number,
   newItems: T[]
 ): T[] {
-  const keyItems = items.filter((i) => i[key] === condition);
+  const keyItems = items.filter((i) => i[key] !== condition);
   return [...keyItems, ...newItems];
 }
 

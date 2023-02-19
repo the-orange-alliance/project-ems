@@ -45,7 +45,7 @@ export interface MatchMakerParams {
   fields: number;
   eventKey: string;
   tournamentKey: string;
-  type: TournamentType;
+  name: string;
   quality: string;
   teamKeys: number[];
 }
@@ -57,7 +57,7 @@ export const isMatchMakerRequest = (obj: unknown): obj is MatchMakerParams =>
   isNumber(obj.matchesPerTeam) &&
   isNumber(obj.fields) &&
   isString(obj.eventKey) &&
-  isString(obj.type) &&
+  isString(obj.name) &&
   isString(obj.quality) &&
   isArray(obj.teamKeys);
 
@@ -89,7 +89,7 @@ export const isMatch = (obj: unknown): obj is Match<any> =>
   isString(obj.eventKey) &&
   isString(obj.tournamentKey) &&
   isNumber(obj.id) &&
-  isString(obj.matchName);
+  isString(obj.name);
 
 export const isMatchArray = (obj: unknown): obj is Match<any>[] =>
   isArray(obj) && obj.every((o) => isMatch(o));

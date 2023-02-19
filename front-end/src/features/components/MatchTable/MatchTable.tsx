@@ -12,7 +12,7 @@ import { useRecoilValue } from 'recoil';
 import { teamsAtom } from 'src/stores/Recoil';
 
 interface Props {
-  matches: Match[];
+  matches: Match<any>[];
 }
 
 const MatchTable: FC<Props> = ({ matches }) => {
@@ -41,8 +41,8 @@ const MatchTable: FC<Props> = ({ matches }) => {
           <TableBody>
             {matches.map((match) => {
               return (
-                <TableRow key={match.matchKey} hover>
-                  <TableCell>{match.matchName}</TableCell>
+                <TableRow key={match.name} hover>
+                  <TableCell>{match.name}</TableCell>
                   <TableCell>{match.fieldNumber}</TableCell>
                   <TableCell>
                     {DateTime.fromISO(match.startTime).toLocaleString(
@@ -52,7 +52,7 @@ const MatchTable: FC<Props> = ({ matches }) => {
                   {match.participants?.map((p) => {
                     const team = teams.find((t) => t.teamKey === p.teamKey);
                     return (
-                      <TableCell key={p.matchParticipantKey}>
+                      <TableCell key={`${match.id}-${p.teamKey}`}>
                         {team ? team.city : p.teamKey}
                       </TableCell>
                     );

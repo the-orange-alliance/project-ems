@@ -1,58 +1,49 @@
 import {
-  calculateRankings,
-  calculatePlayoffsRank,
-  FINALS_LEVEL,
   isRankingArray,
   isTeamArray,
   Ranking,
-  reconcileMatchDetails,
-  reconcileMatchParticipants,
   reconcileTeamRankings,
-  ROUND_ROBIN_LEVEL,
   Team
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import {
-  deleteWhere,
   insertValue,
-  selectAll,
   selectAllJoinWhere,
   selectAllWhere
 } from '../db/Database.js';
 import { validateBody } from '../middleware/BodyValidator.js';
-import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (req.query.tournamentLevel) {
-      const rankings = await selectAllWhere(
-        'ranking',
-        `tournamentLevel = ${req.query.tournamentLevel}`
-      );
-      const teams = await selectAll('team');
-      res.send(reconcileTeamRankings(teams, rankings));
-    } else {
-      return next(DataNotFoundError);
-    }
-  } catch (e) {
-    return next(e);
-  }
-});
-
 router.get(
-  '/:matchKey',
+  '/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const matchKey = req.params.matchKey;
-      const [match] = await selectAllWhere('match', `matchKey = "${matchKey}"`);
-      const tournamentLevel = match.tournamentLevel;
+      const rankings = await selectAllWhere(
+        'ranking',
+        `eventKey = ${req.params.eventKey}`
+      );
+      const teams = await selectAllWhere(
+        'team',
+        `eventKey = ${req.params.eventKey}`
+      );
+      res.send(reconcileTeamRankings(teams, rankings));
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.get(
+  '/:eventKey/:tournamentKey/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventKey, tournamentKey, id } = req.params;
       const rankings = await selectAllJoinWhere(
         'ranking',
         'match_participant',
         'teamKey',
-        `matchKey = "${matchKey}" AND tournamentLevel = ${tournamentLevel}`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
       );
       res.send(rankings);
     } catch (e) {
@@ -79,17 +70,12 @@ router.post(
   validateBody(isTeamArray),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tournamentKey = req.params.tournamentKey;
+      const { tournamentKey } = req.params;
       const teams: Team[] = req.body;
-      const eventKey = '';
-      // const eventKeyArgs = teams[0].eventParticipantKey.split('-');
-      // eventKeyArgs.pop();
-      // const eventKey = eventKeyArgs.toString().replace(/,/g, '-');
       const rankings: Ranking[] = teams.map((t) => ({
         eventKey: t.eventKey,
         tournamentKey,
         rank: 0,
-        allianceKey: '',
         losses: 0,
         played: 0,
         rankChange: 0,

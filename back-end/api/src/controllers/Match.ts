@@ -23,55 +23,23 @@ import { DataNotFoundError } from '../util/Errors.js';
 import { join } from 'path';
 import { writeFile } from 'fs/promises';
 import {
-  environment,
   executeMatchMaker,
   getAppData,
   getArgFromQualityStr
 } from '@toa-lib/server';
 import logger from '../util/Logger.js';
-import { postMatchResults } from './Results.js';
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (req.query.tournamentLevel) {
-      const data = await selectAllWhere(
-        'match',
-        `tournamentLevel = ${req.query.tournamentLevel}`
-      );
-      res.send(data);
-    } else if (req.query.type) {
-      const data = await selectAllWhere(
-        'match',
-        `tournamentLevel = ${getTournamentLevelFromType(
-          req.query.type as TournamentType
-        )}`
-      );
-      res.send(data);
-    } else {
-      const data = await selectAll('match');
-      res.send(data);
-    }
-  } catch (e) {
-    return next(e);
-  }
-});
-
 router.get(
-  '/participants',
+  '/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.query.matchKeyPartial) {
-        const data = await selectAllWhere(
-          'match_participant',
-          `matchKey LIKE "${req.query.matchKeyPartial}%"`
-        );
-        res.send(data);
-      } else {
-        const data = await selectAll('match_participant');
-        res.send(data);
-      }
+      const data = await selectAllWhere(
+        'match',
+        `eventKey = "${req.params.eventKey}"`
+      );
+      res.send(data);
     } catch (e) {
       return next(e);
     }
@@ -79,24 +47,58 @@ router.get(
 );
 
 router.get(
-  '/all/:matchKey',
+  '/participants/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const matchKey = req.params.matchKey;
-      const [match] = await selectAllWhere('match', `matchKey = "${matchKey}"`);
+      const data = await selectAllWhere(
+        'match_participant',
+        `eventKey = "${req.params.eventKey}"`
+      );
+      res.send(data);
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+// TODO - This might never function because it might just match /participants
+router.get(
+  '/:eventKey/:tournamentKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await selectAllWhere(
+        'match',
+        `eventKey = "${req.params.eventKey}" AND tournamentKey = "${req.params.tournamentKey}"`
+      );
+      res.send(data);
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.get(
+  '/all/:eventKey/:tournamentKey/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventKey, tournamentKey, id } = req.params;
+      const [match] = await selectAllWhere(
+        'match',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
+      );
       const participants = await selectAllWhere(
         'match_participant',
-        `matchKey = "${matchKey}"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
       );
       const [details] = await selectAllWhere(
         'match_detail',
-        `matchKey = "${matchKey}"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
       );
 
       for (let i = 0; i < participants.length; i++) {
         const [team] = await selectAllWhere(
           'team',
-          `teamKey = "${participants[i].teamKey}"`
+          `teamKey = "${participants[i].teamKey}" AND eventKey = "${eventKey}"`
         );
         participants[i].team = team;
       }
@@ -112,12 +114,13 @@ router.get(
 );
 
 router.get(
-  '/:matchKey',
+  '/:eventKey/:tournamentKey/:id',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { eventKey, tournamentKey, id } = req.params;
       const data = await selectAllWhere(
         'match',
-        `matchKey = ${req.params.matchKey}`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
       );
       if (!data) {
         return next(DataNotFoundError);
@@ -157,38 +160,18 @@ router.post(
 );
 
 router.patch(
-  '/:matchKey',
+  '/:eventKey/:tournamentKey/:id',
   validateBody(isMatch),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const matchKey = req.params.matchKey;
+      const { eventKey, tournamentKey, id } = req.params;
       const match = req.body;
       if (match.details) delete match.details;
       if (match.participants) delete match.participants;
-      await updateWhere('match', req.body, `matchKey = "${matchKey}"`);
-      if (match.tournamentLevel > PRACTICE_LEVEL && environment.isProd()) {
-        try {
-          logger.info('attempting to update results site...');
-          postMatchResults(matchKey);
-        } catch (e) {
-          logger.warn(e);
-        }
-      }
-      res.status(200).send({});
-    } catch (e) {
-      return next(e);
-    }
-  }
-);
-
-router.patch(
-  '/:matchKey/details',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
       await updateWhere(
-        'match_detail',
+        'match',
         req.body,
-        `matchKey = "${req.params.matchKey}"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
       );
       res.status(200).send({});
     } catch (e) {
@@ -198,17 +181,35 @@ router.patch(
 );
 
 router.patch(
-  '/:matchKey/participants',
+  '/details/:eventKey/:tournamentKey/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventKey, tournamentKey, id } = req.params;
+      await updateWhere(
+        'match_detail',
+        req.body,
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
+      );
+      res.status(200).send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.patch(
+  '/participants/:eventKey/:tournamentKey/:id',
   validateBody(isMatchParticipantArray),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { eventKey, tournamentKey, id } = req.params;
       const participants = req.body;
       for (const participant of participants) {
         if (participant.team) delete participant.team;
         await updateWhere(
           'match_participant',
           participant,
-          `matchParticipantKey = "${participant.matchParticipantKey}"`
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
         );
       }
       res.status(200).send({});
@@ -227,7 +228,10 @@ router.post(
       const matchMakerPath = join(__dirname, '../../bin/MatchMaker.exe');
       // First we have to make the teamlist for matchmaker
       const config: MatchMakerParams = req.body;
-      const teamsPath = join(getAppData('ems'), `${config.type}-teams.txt`);
+      const teamsPath = join(
+        getAppData('ems'),
+        `${config.eventKey}-${config.name}_teams.txt`
+      );
       const contents = config.teamKeys.toString().replace(/,/g, '\n');
       await writeFile(teamsPath, contents);
       logger.info(`wrote teams file at ${teamsPath}`);

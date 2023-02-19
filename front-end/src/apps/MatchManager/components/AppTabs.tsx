@@ -60,8 +60,7 @@ const AppTabs: FC = () => {
           // <SetupMatchesPlayoffs />
           <></>
         ) : (
-          <></>
-          // <SetupMatches />
+          <SetupMatches />
         )}
       </TabPanel>
       <TabPanel value={value} index={3}>

@@ -161,10 +161,7 @@ export const defaultEventSchedule: EventSchedule = {
   hasPremiereField: false
 };
 
-export function generateScheduleItems(
-  schedule: EventSchedule,
-  eventKey: string
-): ScheduleItem[] {
+export function generateScheduleItems(schedule: EventSchedule): ScheduleItem[] {
   const scheduleItems: ScheduleItem[] = [];
   let totalMatches = 0;
   for (const day of schedule.days) {

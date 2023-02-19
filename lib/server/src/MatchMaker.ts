@@ -68,7 +68,7 @@ function parseMatchMaker(
         matchNumber % params.fields === 0
           ? params.fields
           : matchNumber % params.fields,
-      name: `${params.type} Match ${matchNumber}`,
+      name: `${params.name} Match ${matchNumber}`,
       result: -1,
       active: 0,
       blueMajPen: 0,

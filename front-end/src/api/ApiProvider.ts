@@ -141,10 +141,10 @@ export const patchWholeMatch = async (match: Match): Promise<void> => {
 };
 
 export const createRankings = (
-  tournamentLevel: number,
+  tournamentKey: string,
   teams: Team[]
 ): Promise<void> =>
-  clientFetcher(`ranking/create/${tournamentLevel}`, 'POST', teams);
+  clientFetcher(`ranking/create/${tournamentKey}`, 'POST', teams);
 
 export const postRankings = (rankings: Ranking[]): Promise<void> =>
   clientFetcher(`ranking`, 'POST', rankings);

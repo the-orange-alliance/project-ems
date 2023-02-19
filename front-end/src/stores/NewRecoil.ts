@@ -6,9 +6,14 @@ import {
   Event,
   EventSchedule,
   isEventArray,
+  isMatchArray,
+  isMatchParticipantArray,
   isScheduleItemArray,
   isTeamArray,
   isTournamentArray,
+  Match,
+  MatchState,
+  reconcileMatchParticipants,
   ScheduleItem,
   Team,
   Tournament
@@ -287,7 +292,7 @@ export const currentScheduleDaySelectorFam = selectorFamily<Day, number>({
 
 /**
  * @section SCHEDULE ITEM STATE
- * Recoil state management for tournament schedules
+ * Recoil state management for schedule items
  */
 export const scheduleItemsByEventSelectorFam = selectorFamily<
   ScheduleItem[],
@@ -297,7 +302,7 @@ export const scheduleItemsByEventSelectorFam = selectorFamily<
   get: (eventKey: string) => async (): Promise<ScheduleItem[]> => {
     try {
       return await clientFetcher(
-        `/${eventKey}`,
+        `schedule/${eventKey}`,
         'GET',
         undefined,
         isScheduleItemArray
@@ -313,7 +318,6 @@ export const scheduleItemsByEventAtomFam = atomFamily<ScheduleItem[], string>({
   default: scheduleItemsByEventSelectorFam
 });
 
-// TODO - Need default selector?
 export const currentScheduleItemsByTournamentSelector = selector<
   ScheduleItem[]
 >({
@@ -335,6 +339,78 @@ export const currentScheduleItemsByTournamentSelector = selector<
     set(
       scheduleItemsByEventAtomFam(eventKey),
       replaceAllInArray(scheduleItems, 'tournamentKey', tournamentKey, newValue)
+    );
+  }
+});
+
+/**
+ * @section MATCH STATE
+ * Recoil state management for matches
+ */
+export const matchStateAtom = atom<MatchState>({
+  key: 'matchStateAtom',
+  default: MatchState.MATCH_NOT_SELECTED
+});
+
+export const matchStatusAtom = atom<string>({
+  key: 'matchStatusAtom',
+  default: 'NO MATCH SELECTED'
+});
+
+export const currentMatchKeyAtom = atom<string | null>({
+  key: 'currentMatchKeyAtom',
+  default: null
+});
+
+export const matchesByEventSelectorFam = selectorFamily<Match<any>[], string>({
+  key: 'matchesByEventSelectorFam',
+  get: (eventKey: string) => async (): Promise<Match<any>[]> => {
+    try {
+      const matches = await clientFetcher(
+        `match/${eventKey}`,
+        'GET',
+        undefined,
+        isMatchArray
+      );
+      const participants = await clientFetcher(
+        `match/participants/${eventKey}`,
+        'GET',
+        undefined,
+        isMatchParticipantArray
+      );
+      return reconcileMatchParticipants(matches, participants);
+    } catch (e) {
+      return [];
+    }
+  }
+});
+
+export const matchesByEventAtomFam = atomFamily<Match<any>[], string>({
+  key: 'matchesByEventSelectorFam',
+  default: matchesByEventSelectorFam
+});
+
+export const matchesByTournamentSelector = selector<Match<any>[]>({
+  key: 'matchesByTournamentSelector',
+  get: ({ get }) => {
+    const tournament = get(currentTournamentSelector);
+    if (!tournament) return [];
+    return get(matchesByEventAtomFam(tournament.eventKey)).filter(
+      (m) => m.tournamentKey === tournament.tournamentKey
+    );
+  },
+  set: ({ get, set }, newValue) => {
+    const tournament = get(currentTournamentSelector);
+    if (!tournament || newValue instanceof DefaultValue) return;
+    const matches = get(matchesByEventAtomFam(tournament.eventKey));
+    set(
+      matchesByEventAtomFam(tournament.eventKey),
+      replaceAllInArray(
+        matches,
+        'tournamentKey',
+        tournament.tournamentKey,
+        newValue
+      )
     );
   }
 });
