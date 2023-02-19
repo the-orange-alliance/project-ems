@@ -2,11 +2,11 @@ import { MatchState } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
-import { matchModeAtom, matchStateAtom } from 'src/stores/Recoil';
+import { matchStatusAtom, matchStateAtom } from 'src/stores/NewRecoil';
 
 const MatchStateListener: FC = () => {
   const setState = useSetRecoilState(matchStateAtom);
-  const setMode = useSetRecoilState(matchModeAtom);
+  const setMode = useSetRecoilState(matchStatusAtom);
   const [socket, connected] = useSocket();
 
   useEffect(() => {

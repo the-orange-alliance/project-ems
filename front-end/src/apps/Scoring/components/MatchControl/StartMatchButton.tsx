@@ -2,41 +2,13 @@ import { FC, useState } from 'react';
 import Button from '@mui/material/Button';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useButtonState } from '../../util/ButtonState';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import {
-  fieldColor1,
-  fieldColor2,
-  fieldCountdownDuration,
-  fieldCountdownStyle,
-  fieldEndgameHB,
-  fieldMatchOverLEDPattern,
-  fieldMatchOverStyle,
-  fieldMotorDuration,
-  fieldMotorReverseDuration,
-  fieldTotalSetupDuration,
-  matchStateAtom,
-  timer
-} from 'src/stores/Recoil';
+import { useRecoilState } from 'recoil';
 import { MatchState } from '@toa-lib/models';
-import {
-  prepareField,
-  sendAbortMatch,
-  sendStartMatch
-} from 'src/api/SocketProvider';
+import { sendAbortMatch, sendStartMatch } from 'src/api/SocketProvider';
+import { matchStateAtom } from 'src/stores/NewRecoil';
 
 const StartMatchButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
-  const motorDuration = useRecoilValue(fieldMotorDuration);
-  const egSpeed = useRecoilValue(fieldEndgameHB);
-  const cdStyle = useRecoilValue(fieldCountdownStyle);
-  const cdDuration = useRecoilValue(fieldCountdownDuration);
-  const moStyle = useRecoilValue(fieldMatchOverStyle);
-  const moPattern = useRecoilValue(fieldMatchOverLEDPattern);
-  const color1 = useRecoilValue(fieldColor1);
-  const color2 = useRecoilValue(fieldColor2);
-  const totalSetupDuration = useRecoilValue(fieldTotalSetupDuration);
-  const motorReverseDuration = useRecoilValue(fieldMotorReverseDuration);
-
   const [loading, setLoading] = useState(false);
   const { startMatchEnabled } = useButtonState();
 
@@ -56,18 +28,6 @@ const StartMatchButton: FC = () => {
 
   const updateField = async () => {
     setLoading(true);
-    await prepareField(
-      motorDuration,
-      egSpeed,
-      cdStyle,
-      cdDuration,
-      moStyle,
-      moPattern,
-      color1,
-      color2,
-      totalSetupDuration,
-      motorReverseDuration
-    );
     setState(MatchState.FIELD_READY);
     setState(MatchState.MATCH_READY);
     setLoading(false);

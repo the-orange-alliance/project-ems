@@ -286,7 +286,7 @@ export const tournamentScheduleItemAtomFamily = atomFamily<
 export const timer: MatchTimer = new MatchTimer();
 
 export const matchStateAtom = atom<MatchState>({
-  key: 'matchStateAtom',
+  key: 'matchStateAtom2',
   default: MatchState.MATCH_NOT_SELECTED
 });
 

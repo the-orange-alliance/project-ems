@@ -10,7 +10,7 @@ import {
   MATCH_ENDGAME,
   MATCH_END
 } from 'src/apps/AudienceDisplay/Audio';
-import { matchStateAtom, matchTimeAtom, timer } from 'src/stores/Recoil';
+import { matchStateAtom, matchTimeAtom, timer } from 'src/stores/NewRecoil';
 
 const startAudio = initAudio(MATCH_START);
 const abortAudio = initAudio(MATCH_ABORT);

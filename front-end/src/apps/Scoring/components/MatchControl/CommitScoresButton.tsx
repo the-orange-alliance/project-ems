@@ -4,13 +4,13 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { useButtonState } from '../../util/ButtonState';
 import { useRecoilCallback, useRecoilState } from 'recoil';
 import {
-  matchByMatchKey,
-  matchInProgress,
+  matchByCurrentIdSelectorFam,
+  matchInProgressAtom,
   matchStateAtom
-} from 'src/stores/Recoil';
+} from 'src/stores/NewRecoil';
 import { Match, MatchState } from '@toa-lib/models';
-import { sendAllClear, sendCommitScores } from 'src/api/SocketProvider';
-import { patchWholeMatch, recalculateRankings } from 'src/api/ApiProvider';
+import { sendAllClear } from 'src/api/SocketProvider';
+import { patchWholeMatch } from 'src/api/ApiProvider';
 
 const CommitScoresButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
@@ -30,15 +30,15 @@ const CommitScoresButton: FC = () => {
   };
 
   const commitScores = useRecoilCallback(({ snapshot, set }) => async () => {
-    const oldMatch = await snapshot.getPromise(matchInProgress);
+    const oldMatch = await snapshot.getPromise(matchInProgressAtom);
     if (!oldMatch || !oldMatch.details || !oldMatch.participants) return;
-    const match: Match = { ...oldMatch, result: 0 };
+    const match: Match<any> = { ...oldMatch, result: 0 };
     setLoading(true);
     await patchWholeMatch(match);
-    set(matchByMatchKey(match.matchKey), match);
-    await recalculateRankings(match.tournamentLevel);
+    set(matchByCurrentIdSelectorFam(match.id), match);
+    // await recalculateRankings(match.tournamentLevel);
     setLoading(false);
-    sendCommitScores(match.matchKey);
+    // sendCommitScores(match.id);
     setState(MatchState.RESULTS_COMMITTED);
   });
 

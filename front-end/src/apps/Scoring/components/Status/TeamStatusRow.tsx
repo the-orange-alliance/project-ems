@@ -5,15 +5,19 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import AutocompleteTeam from 'src/features/components/AutocompleteTeam/AutoCompleteTeam';
 import { MatchState, Team } from '@toa-lib/models';
-import { matchInProgressAtom, matchStateAtom } from 'src/stores/NewRecoil';
+import {
+  matchInProgressAtom,
+  matchInProgressParticipantsByStationSelectorFam,
+  matchStateAtom
+} from 'src/stores/NewRecoil';
 
 interface Props {
-  id: number;
+  station: number;
 }
 
-const TeamStatusRow: FC<Props> = ({ id }) => {
+const TeamStatusRow: FC<Props> = ({ station }) => {
   const [participant, setParticipant] = useRecoilState(
-    matchInProgressParticipantByKey(participantKey)
+    matchInProgressParticipantsByStationSelectorFam(station)
   );
   const match = useRecoilValue(matchInProgressAtom);
   const state = useRecoilValue(matchStateAtom);

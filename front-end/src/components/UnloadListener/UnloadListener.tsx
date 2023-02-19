@@ -1,7 +1,7 @@
 import { MatchState } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
-import { matchStateAtom } from 'src/stores/Recoil';
+import { matchStateAtom } from 'src/stores/NewRecoil';
 
 const UnloadListener: FC = () => {
   const state = useRecoilValue(matchStateAtom);

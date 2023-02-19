@@ -43,7 +43,7 @@ const HomeApp: FC = () => {
           title='Match Manager'
           to={`/${event?.eventKey}/match-manager`}
         />
-        <GridAppCard title='Scoring App' to='/scoring' />
+        <GridAppCard title='Scoring App' to={`/${event?.eventKey}/scoring`} />
         {/* <GridAppCard title='Referee App' to='/referee' />
         <GridAppCard title='Admin App' to='/admin' />
         <GridAppCard title='Field Debugger' to='/fcs-debug' />

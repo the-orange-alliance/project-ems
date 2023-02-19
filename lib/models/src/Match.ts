@@ -61,6 +61,12 @@ export const isMatchMakerRequest = (obj: unknown): obj is MatchMakerParams =>
   isString(obj.quality) &&
   isArray(obj.teamKeys);
 
+export interface MatchKey {
+  eventKey: string;
+  tournamentKey: string;
+  id: number;
+}
+
 export interface Match<T extends MatchDetailBase> {
   eventKey: string;
   tournamentKey: string;

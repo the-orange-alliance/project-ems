@@ -1,45 +1,46 @@
 import { FC, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
-import {
-  loadedMatchKey,
-  matchInProgressParticipants,
-  matchStateAtom
-} from 'src/stores/Recoil';
 import { MatchState } from '@toa-lib/models';
 import { useButtonState } from '../../util/ButtonState';
 import { sendPrestart } from 'src/api/SocketProvider';
 import { patchMatchParticipants } from 'src/api/ApiProvider';
+import {
+  currentMatchSelector,
+  matchInProgressParticipantsSelector,
+  matchStateAtom
+} from 'src/stores/NewRecoil';
 
 const PrestartButton: FC = () => {
   const { prestartEnabled } = useButtonState();
   const [state, setState] = useRecoilState(matchStateAtom);
-  const selectedMatchKey = useRecoilValue(loadedMatchKey);
+  const currentMatch = useRecoilValue(currentMatchSelector);
 
   const canCancelPrestart =
     state !== MatchState.PRESTART_READY &&
     state <= MatchState.MATCH_IN_PROGRESS;
 
   useEffect(() => {
-    if (selectedMatchKey && state === MatchState.MATCH_NOT_SELECTED) {
+    if (currentMatch && state === MatchState.MATCH_NOT_SELECTED) {
       setState(MatchState.PRESTART_READY);
     }
-  }, [selectedMatchKey, state]);
+  }, [currentMatch, state]);
 
   const prestart = useRecoilCallback(
     ({ snapshot }) =>
       async () => {
         const participants = await snapshot.getPromise(
-          matchInProgressParticipants
+          matchInProgressParticipantsSelector
         );
-        if (selectedMatchKey && participants) {
+        if (currentMatch && participants) {
           // Send updated participant list.
+          const { eventKey, tournamentKey, id } = currentMatch;
           await patchMatchParticipants(participants);
-          sendPrestart(selectedMatchKey);
+          sendPrestart({ eventKey, tournamentKey, id });
           setState(MatchState.PRESTART_COMPLETE);
         }
       },
-    [selectedMatchKey]
+    [currentMatch]
   );
 
   const cancelPrestart = async () => {

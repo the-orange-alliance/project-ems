@@ -3,6 +3,7 @@ import {
   LED_ALLCLEAR,
   LED_FIELDFAULT,
   LED_PRESTART,
+  MatchKey,
   MOTOR_DISABLE,
   MOTOR_FORWARD,
   MOTOR_REVERSE,
@@ -80,8 +81,8 @@ export const useSocket = (): [
 };
 
 /* Utility/helper functions for socket state */
-export function sendPrestart(matchKey: string): void {
-  socket?.emit('match:prestart', matchKey);
+export function sendPrestart(key: MatchKey): void {
+  socket?.emit('match:prestart', { key });
   socket?.emit('fcs:update', LED_ALLCLEAR);
 }
 
@@ -140,15 +141,13 @@ export async function prepareField(
     }
   };
   const raceLight = async () => {
-    for (let i = 108-Math.min(108 / 3); i >= 0; i = i - Math.min(108 / 3)) {
-      if(i==108)
-      {
+    for (let i = 108 - Math.min(108 / 3); i >= 0; i = i - Math.min(108 / 3)) {
+      if (i == 108) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-      else{
+      } else {
         await new Promise((resolve) => setTimeout(resolve, 900));
       }
-      socket?.emit('fcs:update', setLEDLength(Math.max(i,0)));
+      socket?.emit('fcs:update', setLEDLength(Math.max(i, 0)));
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   };

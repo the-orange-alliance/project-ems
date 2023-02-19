@@ -78,7 +78,7 @@ const AppRoutes: AppRoute[] = [
   },
   {
     name: 'Scoring App',
-    path: '/scoring',
+    path: '/:eventKey/scoring',
     group: 0,
     element: <ScoringApp />
   },

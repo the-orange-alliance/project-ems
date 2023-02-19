@@ -1,6 +1,5 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
-  Alliance,
   Day,
   defaultDay,
   defaultEventSchedule,
@@ -16,6 +15,7 @@ import {
   Match,
   MatchParticipant,
   MatchState,
+  MatchTimer,
   reconcileMatchParticipants,
   ScheduleItem,
   Team,
@@ -95,6 +95,11 @@ export const currentTeamSelector = selector<Team | null>({
     );
     set(teamsByEventAtomFam(newValue.eventKey), newTeams ?? teams);
   }
+});
+
+export const currentTeamsByEventSelector = selector<Team[]>({
+  key: `currentTeamsByEventSelector`,
+  get: ({ get }) => get(teamsByEventAtomFam(get(currentEventKeySelector)))
 });
 
 /**
@@ -214,7 +219,8 @@ export const schedulesByEventSelectorFam = selectorFamily<
   get: (eventKey: string) => async (): Promise<EventSchedule[]> => {
     try {
       // TODO - Need a better way to find all schedules.
-      return await clientFetcher(`storage/${eventKey}.json`, 'GET');
+      return [];
+      // return await clientFetcher(`storage/${eventKey}.json`, 'GET');
     } catch (e) {
       return [];
     }
@@ -360,18 +366,21 @@ export const matchStatusAtom = atom<string>({
   default: 'NO MATCH SELECTED'
 });
 
-export const currentMatchKeyAtom = atom<string | null>({
-  key: 'currentMatchKeyAtom',
+export const currentMatchIdAtom = atom<number | null>({
+  key: 'currentMatchIdAtom',
   default: null
 });
 
 export const currentMatchSelector = selector<Match<any> | null>({
   key: 'currentMatchSelector',
   get: async ({ get }) => {
-    const matchKey = get(currentMatchKeyAtom);
+    const eventKey = get(currentEventKeySelector);
+    const tournamentKey = get(currentTournamentKeyAtom);
+    const id = get(currentMatchIdAtom);
+    if (!eventKey || !tournamentKey || !id) return null;
     try {
       return await clientFetcher<Match<any>>(
-        `match/all/${matchKey}`,
+        `match/all/${eventKey}/${tournamentKey}/${id}`,
         'GET',
         undefined,
         isMatch
@@ -448,6 +457,27 @@ export const matchesByTournamentSelector = selector<Match<any>[]>({
   }
 });
 
+export const matchByCurrentIdSelectorFam = selectorFamily<
+  Match<any> | undefined,
+  number
+>({
+  key: 'matchByCurrentIdSelectorFam',
+  get:
+    (id: number) =>
+    ({ get }) =>
+      get(matchesByTournamentSelector).find((m) => m.id === id),
+  set:
+    (id: number) =>
+    ({ get, set }, newValue) => {
+      const matches = get(matchesByTournamentSelector);
+      if (!newValue || newValue instanceof DefaultValue) return;
+      set(
+        matchesByTournamentSelector,
+        replaceInArray(matches, 'id', id, newValue) ?? matches
+      );
+    }
+});
+
 export const matchInProgressParticipantsSelector = selector<MatchParticipant[]>(
   {
     key: 'matchInProgressParticipantsSelector',
@@ -461,15 +491,37 @@ export const matchInProgressParticipantsSelector = selector<MatchParticipant[]>(
   }
 );
 
-export const matchInProgressParticipantsByAllianceSelectorFam = selectorFamily<
-  MatchParticipant[],
-  Alliance
+export const matchInProgressParticipantsByStationSelectorFam = selectorFamily<
+  MatchParticipant | undefined,
+  number
 >({
   key: 'matchInProgressParticipantsByAllianceSelector',
   get:
-    (alliance: Alliance) =>
+    (station: number) =>
     ({ get }) =>
-      get(matchInProgressParticipantsSelector).filter((p) =>
-        alliance === 'red' ? p.station < 20 : p.station >= 20
-      )
+      get(matchInProgressParticipantsSelector).find(
+        (p) => p.station === station
+      ),
+  set:
+    (station: number) =>
+    ({ get, set }, newValue) => {
+      const participants = get(matchInProgressParticipantsSelector);
+      if (!newValue || newValue instanceof DefaultValue) return;
+      set(
+        matchInProgressParticipantsSelector,
+        replaceInArray(participants, 'station', station, newValue) ??
+          participants
+      );
+    }
+});
+
+/**
+ * @section MATCH PLAYING STATE
+ * Recoil state management for when matches are currently being played.
+ */
+export const timer: MatchTimer = new MatchTimer();
+
+export const matchTimeAtom = atom({
+  key: 'matchTimeAtom',
+  default: timer.timeLeft
 });

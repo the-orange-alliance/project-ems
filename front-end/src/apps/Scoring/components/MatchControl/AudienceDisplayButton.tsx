@@ -3,7 +3,7 @@ import Button from '@mui/material/Button';
 import { useButtonState } from '../../util/ButtonState';
 import { setDisplays } from 'src/api/SocketProvider';
 import { useSetRecoilState } from 'recoil';
-import { matchStateAtom } from 'src/stores/Recoil';
+import { matchStateAtom } from 'src/stores/NewRecoil';
 import { MatchState } from '@toa-lib/models';
 
 const AudienceDisplayButton: FC = () => {
