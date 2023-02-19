@@ -1,17 +1,20 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
+  Alliance,
   Day,
   defaultDay,
   defaultEventSchedule,
   Event,
   EventSchedule,
   isEventArray,
+  isMatch,
   isMatchArray,
   isMatchParticipantArray,
   isScheduleItemArray,
   isTeamArray,
   isTournamentArray,
   Match,
+  MatchParticipant,
   MatchState,
   reconcileMatchParticipants,
   ScheduleItem,
@@ -362,6 +365,36 @@ export const currentMatchKeyAtom = atom<string | null>({
   default: null
 });
 
+export const currentMatchSelector = selector<Match<any> | null>({
+  key: 'currentMatchSelector',
+  get: async ({ get }) => {
+    const matchKey = get(currentMatchKeyAtom);
+    try {
+      return await clientFetcher<Match<any>>(
+        `match/all/${matchKey}`,
+        'GET',
+        undefined,
+        isMatch
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+});
+
+// This atom is for matches that are selected
+export const currentMatchAtom = atom<Match<any> | null>({
+  key: 'currentMatchAtom',
+  default: currentMatchSelector
+});
+
+// This atom is for matches that are currently being played - so that we
+// can load/play different matches at the same time.
+export const matchInProgressAtom = atom<Match<any> | null>({
+  key: 'matchInProgressAtom',
+  default: currentMatchSelector
+});
+
 export const matchesByEventSelectorFam = selectorFamily<Match<any>[], string>({
   key: 'matchesByEventSelectorFam',
   get: (eventKey: string) => async (): Promise<Match<any>[]> => {
@@ -413,4 +446,30 @@ export const matchesByTournamentSelector = selector<Match<any>[]>({
       )
     );
   }
+});
+
+export const matchInProgressParticipantsSelector = selector<MatchParticipant[]>(
+  {
+    key: 'matchInProgressParticipantsSelector',
+    get: ({ get }) => get(matchInProgressAtom)?.participants || [],
+    set: ({ set, get }, newValue) => {
+      const participants = newValue instanceof DefaultValue ? [] : newValue;
+      const match = get(matchInProgressAtom);
+      if (!match) return;
+      set(matchInProgressAtom, { ...Object.assign({}, match), participants });
+    }
+  }
+);
+
+export const matchInProgressParticipantsByAllianceSelectorFam = selectorFamily<
+  MatchParticipant[],
+  Alliance
+>({
+  key: 'matchInProgressParticipantsByAllianceSelector',
+  get:
+    (alliance: Alliance) =>
+    ({ get }) =>
+      get(matchInProgressParticipantsSelector).filter((p) =>
+        alliance === 'red' ? p.station < 20 : p.station >= 20
+      )
 });

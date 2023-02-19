@@ -2,24 +2,20 @@ import { FC, useEffect, useState } from 'react';
 import Grid from '@mui/material/Grid';
 import TeamCardStatus from './TeamCardStatus';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import {
-  matchInProgress,
-  matchInProgressParticipantByKey,
-  matchStateAtom
-} from 'src/stores/Recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import AutocompleteTeam from 'src/features/components/AutocompleteTeam/AutoCompleteTeam';
-import { MatchState, RANKING_LEVEL, Team } from '@toa-lib/models';
+import { MatchState, Team } from '@toa-lib/models';
+import { matchInProgressAtom, matchStateAtom } from 'src/stores/NewRecoil';
 
 interface Props {
-  participantKey: string;
+  id: number;
 }
 
-const TeamStatusRow: FC<Props> = ({ participantKey }) => {
+const TeamStatusRow: FC<Props> = ({ id }) => {
   const [participant, setParticipant] = useRecoilState(
     matchInProgressParticipantByKey(participantKey)
   );
-  const match = useRecoilValue(matchInProgress);
+  const match = useRecoilValue(matchInProgressAtom);
   const state = useRecoilValue(matchStateAtom);
 
   const [updateReady, setUpdateReady] = useState(false);
@@ -50,9 +46,7 @@ const TeamStatusRow: FC<Props> = ({ participantKey }) => {
     }
   };
 
-  const disabled =
-    state >= MatchState.PRESTART_COMPLETE ||
-    (match ? match.tournamentLevel === RANKING_LEVEL : true);
+  const disabled = state >= MatchState.PRESTART_COMPLETE;
 
   return (
     <Grid container spacing={3} sx={{ padding: (theme) => theme.spacing(1) }}>
