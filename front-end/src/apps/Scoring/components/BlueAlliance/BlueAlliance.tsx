@@ -16,7 +16,7 @@ const BlueAlliance: FC = () => {
       <Grid container spacing={3}>
         <Grid item md={8}>
           {blueAlliance?.map((p) => (
-            <TeamStatusRow key={p.id} station={p.station} />
+            <TeamStatusRow key={p.teamKey} station={p.station} />
           ))}
         </Grid>
         {/* <Grid item md={4}>
