@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS "event" (
     "endDate" VARCHAR(255),
     "country" VARCHAR(255),
     "website" VARCHAR(255),
-    PRIMARY KEY (eventKey)
+    PRIMARY KEY (eventKey),
+    UNIQUE (eventKey)
 );
 
 CREATE TABLE IF NOT EXISTS "team" (
@@ -29,6 +30,7 @@ CREATE TABLE IF NOT EXISTS "team" (
     "rookieYear" INT,
     "cardStatus" INT,
     PRIMARY KEY (eventKey, teamKey),
+    UNIQUE (eventKey, teamKey),
     FOREIGN KEY (eventKey) REFERENCES "event"(eventKey)
 );
 
@@ -40,6 +42,7 @@ CREATE TABLE IF NOT EXISTS "tournament" (
     "fields" VARCHAR(255),
     "name" VARCHAR(255),
     PRIMARY KEY (eventKey, tournamentKey),
+    UNIQUE (eventKey, tournamentKey),
     FOREIGN KEY (eventKey) REFERENCES "event"(eventKey)
 );
 
@@ -53,6 +56,7 @@ CREATE TABLE IF NOT EXISTS "alliance" (
     "isCaptain" INT,
     "pickOrder" INT,
     PRIMARY KEY (eventKey, tournamentKey, teamKey),
+    UNIQUE (eventKey, tournamentKey, teamKey),
     FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
     FOREIGN KEY (teamKey) REFERENCES "team"(teamKey)
@@ -69,6 +73,7 @@ CREATE TABLE IF NOT EXISTS "ranking" (
     "losses" INT,
     "ties" INT,
     PRIMARY KEY (eventKey, tournamentKey, teamKey),
+    UNIQUE (eventKey, tournamentKey, teamKey),
     FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
     FOREIGN KEY (teamKey) REFERENCES "team"(teamKey)
@@ -85,6 +90,7 @@ CREATE TABLE IF NOT EXISTS "schedule" (
     "duration" INT NOT NULL,
     "isMatch" INT NOT NULL,
     PRIMARY KEY (eventKey, tournamentKey, id),
+    UNIQUE (eventKey, tournamentKey, id),
     FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey)
 );
@@ -109,6 +115,7 @@ CREATE TABLE IF NOT EXISTS "match" (
     "result" INT,
     "uploaded" INT,
     PRIMARY KEY (eventKey, tournamentKey, id),
+    UNIQUE (eventKey, tournamentKey, id),
     FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey)
 );
@@ -117,13 +124,14 @@ CREATE TABLE IF NOT EXISTS "match_participant" (
     "eventKey" VARCHAR(25) NOT NULL,
     "tournamentKey" VARCHAR(25) NOT NULL,
     "id" INT NOT NULL,
-    "teamKey" INT NOT NULL,
     "station" INT NOT NULL,
+    "teamKey" INT NOT NULL,
     "disqualified" INT,
     "cardStatus" INT,
     "surrogate" INT,
     "noShow" INT,
-    PRIMARY KEY (eventKey, tournamentKey, id, teamKey),
+    PRIMARY KEY (eventKey, tournamentKey, id, station),
+    UNIQUE (eventKey, tournamentKey, id, station),
     FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
     FOREIGN KEY (id) REFERENCES "match"(id),
@@ -135,6 +143,7 @@ CREATE TABLE IF NOT EXISTS "match_detail" (
     "tournamentKey" VARCHAR(25) NOT NULL,
     "id" INT NOT NULL,
     PRIMARY KEY (eventKey, tournamentKey, id),
+    UNIQUE (eventKey, tournamentKey, id),
     FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
     FOREIGN KEY (id) REFERENCES "match"(id)

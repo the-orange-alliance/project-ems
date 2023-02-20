@@ -80,7 +80,9 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                   {match.participants?.map((p) => {
                     const team = teams.find((t) => p.teamKey === t.teamKey);
                     return (
-                      <TableCell key={p.teamKey}>
+                      <TableCell
+                        key={`${match.eventKey}-${match.id}-${p.station}`}
+                      >
                         {team ? team.country : p.teamKey}
                         {p.surrogate ? '*' : ''}
                       </TableCell>

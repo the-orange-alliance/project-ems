@@ -20,7 +20,8 @@ import {
   TournamentType,
   AllianceMember,
   isMatch,
-  Tournament
+  Tournament,
+  MatchKey
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -102,28 +103,29 @@ export const deleteSchedule = (
 
 export const createMatchSchedule = async (
   params: MatchMakerParams
-): Promise<Match[]> =>
+): Promise<Match<any>[]> =>
   clientFetcher('match/create', 'POST', params, isMatchArray);
 
-export const postMatchSchedule = async (matches: Match[]): Promise<void> =>
+export const postMatchSchedule = async (matches: Match<any>[]): Promise<void> =>
   clientFetcher('match', 'POST', matches);
 
-export const patchMatch = async (match: Match): Promise<void> =>
+export const patchMatch = async (match: Match<any>): Promise<void> =>
   clientFetcher(`match/${match.matchKey}`, 'PATCH', match);
 
 export const patchMatchDetails = async (details: MatchDetails): Promise<void> =>
   clientFetcher(`match/${details.matchKey}/details`, 'PATCH', details);
 
 export const patchMatchParticipants = async (
+  key: MatchKey,
   participants: MatchParticipant[]
 ): Promise<void> =>
   clientFetcher(
-    `match/${participants[0].matchKey}/participants`,
+    `match/participants/${key.eventKey}/${key.tournamentKey}/${key.id}`,
     'PATCH',
     participants
   );
 
-export const patchWholeMatch = async (match: Match): Promise<void> => {
+export const patchWholeMatch = async (match: Match<any>): Promise<void> => {
   try {
     const promises: Promise<any>[] = [];
     promises.push(patchMatch(match));
@@ -131,7 +133,14 @@ export const patchWholeMatch = async (match: Match): Promise<void> => {
       patchMatchDetails(match.details);
     }
     if (match.participants) {
-      patchMatchParticipants(match.participants);
+      patchMatchParticipants(
+        {
+          eventKey: match.eventKey,
+          tournamentKey: match.tournamentKey,
+          id: match.id
+        },
+        match.participants
+      );
     }
     await Promise.all(promises);
   } catch (e) {

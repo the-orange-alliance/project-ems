@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MatchState } from '@toa-lib/models';
 import { useRecoilValue } from 'recoil';
-import { matchStateAtom } from 'src/stores/Recoil';
+import { matchStateAtom } from 'src/stores/NewRecoil';
 
 export interface ControlButtons {
   prestartEnabled: boolean;

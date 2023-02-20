@@ -105,7 +105,7 @@ export const selectedTournamentType = selector<TournamentType>({
 
 /* SOCKET SECTION */
 export const socketConnectedAtom = atom<boolean>({
-  key: 'socketConnectedAtom',
+  key: 'socketConnectedAtom2',
   default: false
 });
 

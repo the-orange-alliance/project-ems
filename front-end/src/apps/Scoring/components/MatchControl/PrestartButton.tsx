@@ -1,20 +1,17 @@
 import { FC, useEffect } from 'react';
 import Button from '@mui/material/Button';
-import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { MatchState } from '@toa-lib/models';
 import { useButtonState } from '../../util/ButtonState';
-import { sendPrestart } from 'src/api/SocketProvider';
-import { patchMatchParticipants } from 'src/api/ApiProvider';
-import {
-  currentMatchSelector,
-  matchInProgressParticipantsSelector,
-  matchStateAtom
-} from 'src/stores/NewRecoil';
+import { currentMatchSelector, matchStateAtom } from 'src/stores/NewRecoil';
+import { usePrestartCallback } from '../../hooks/use-match-control';
 
 const PrestartButton: FC = () => {
   const { prestartEnabled } = useButtonState();
   const [state, setState] = useRecoilState(matchStateAtom);
   const currentMatch = useRecoilValue(currentMatchSelector);
+
+  const prestart = usePrestartCallback();
 
   const canCancelPrestart =
     state !== MatchState.PRESTART_READY &&
@@ -26,22 +23,15 @@ const PrestartButton: FC = () => {
     }
   }, [currentMatch, state]);
 
-  const prestart = useRecoilCallback(
-    ({ snapshot }) =>
-      async () => {
-        const participants = await snapshot.getPromise(
-          matchInProgressParticipantsSelector
-        );
-        if (currentMatch && participants) {
-          // Send updated participant list.
-          const { eventKey, tournamentKey, id } = currentMatch;
-          await patchMatchParticipants(participants);
-          sendPrestart({ eventKey, tournamentKey, id });
-          setState(MatchState.PRESTART_COMPLETE);
-        }
-      },
-    [currentMatch]
-  );
+  const sendPrestart = async () => {
+    try {
+      await prestart();
+      setState(MatchState.PRESTART_COMPLETE);
+    } catch (e) {
+      // TODO - better error-handling
+      console.log(e);
+    }
+  };
 
   const cancelPrestart = async () => {
     setState(MatchState.PRESTART_READY);
@@ -58,7 +48,12 @@ const PrestartButton: FC = () => {
       Cancel Prestart
     </Button>
   ) : (
-    <Button fullWidth color='warning' variant='contained' onClick={prestart}>
+    <Button
+      fullWidth
+      color='warning'
+      variant='contained'
+      onClick={sendPrestart}
+    >
       Prestart
     </Button>
   );

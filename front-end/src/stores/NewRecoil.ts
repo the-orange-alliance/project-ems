@@ -44,6 +44,15 @@ export const snackbarMessageAtom = atom<string>({
 });
 
 /**
+ * @section NETWORK STATE
+ * Recoil state management for backend network interactions
+ */
+export const socketConnectedAtom = atom<boolean>({
+  key: 'socketConnectedAtom',
+  default: false
+});
+
+/**
  * @section SELECTION STATE
  * Recoil state management for selecting data
  */

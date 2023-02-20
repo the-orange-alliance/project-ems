@@ -206,10 +206,11 @@ router.patch(
       const participants = req.body;
       for (const participant of participants) {
         if (participant.team) delete participant.team;
+        const { station } = participant;
         await updateWhere(
           'match_participant',
           participant,
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id} AND station = ${station}`
         );
       }
       res.status(200).send({});

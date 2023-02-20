@@ -6,7 +6,7 @@ export const options = {
   port: DEFAULT_SOCKET_PORT
 };
 
-export function createSocket(token: string): Socket {
+export function createSocket(token: string): Socket<any, any> {
   return io(`ws://${options.host}:${options.port}`, {
     rejectUnauthorized: false,
     transports: ['websocket'],
