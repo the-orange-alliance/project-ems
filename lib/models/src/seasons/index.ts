@@ -18,4 +18,14 @@ export const PowerPlaySeason: Season = {
   name: 'Power Play'
 };
 
-export const Seasons: Season[] = [CarbonCaptureSeason, PowerPlaySeason];
+export const ChargedUpSeason: Season = {
+  key: 'frc_2023',
+  program: 'frc',
+  name: 'Charged Up'
+};
+
+export const Seasons: Season[] = [
+  CarbonCaptureSeason,
+  PowerPlaySeason,
+  ChargedUpSeason
+];
