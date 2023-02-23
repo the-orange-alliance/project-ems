@@ -1,6 +1,6 @@
 import { useRecoilCallback } from 'recoil';
 import { patchMatchParticipants } from 'src/api/ApiProvider';
-import { sendPrestart } from 'src/api/SocketProvider';
+import { sendPrestart, setDisplays } from 'src/api/SocketProvider';
 import {
   currentMatchSelector,
   matchInProgressParticipantsSelector
@@ -8,10 +8,10 @@ import {
 
 export const usePrestartCallback = () => {
   const prestart = useRecoilCallback(({ snapshot }) => async () => {
-    const currentMatch = await snapshot.getPromise(currentMatchSelector);
-    const participants = await snapshot.getPromise(
-      matchInProgressParticipantsSelector
-    );
+    const [currentMatch, participants] = await Promise.all([
+      snapshot.getPromise(currentMatchSelector),
+      snapshot.getPromise(matchInProgressParticipantsSelector)
+    ]);
     if (currentMatch && participants.length > 0) {
       const { eventKey, tournamentKey, id } = currentMatch;
       await patchMatchParticipants(
@@ -19,7 +19,19 @@ export const usePrestartCallback = () => {
         participants
       );
       sendPrestart({ eventKey, tournamentKey, id });
+    } else {
+      throw new Error(
+        'Tried to prestart, but there was no current match or participants.'
+      );
     }
   });
   return prestart;
+};
+
+export const useSetDisplaysCallback = () => {
+  const set = () => {
+    setDisplays();
+  };
+
+  return set;
 };

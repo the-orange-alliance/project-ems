@@ -1,5 +1,6 @@
 export * from './CarbonCapture.js';
 export * from './PowerPlay.js';
+export * from './ChargedUp.js';
 
 export interface Season {
   key: string;

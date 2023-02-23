@@ -1,14 +1,16 @@
 import { FC } from 'react';
 import Button from '@mui/material/Button';
 import { useButtonState } from '../../util/ButtonState';
-import { setDisplays } from 'src/api/SocketProvider';
 import { useSetRecoilState } from 'recoil';
 import { matchStateAtom } from 'src/stores/NewRecoil';
 import { MatchState } from '@toa-lib/models';
+import { useSetDisplaysCallback } from '../../hooks/use-match-control';
 
 const AudienceDisplayButton: FC = () => {
   const { audienceDisplayEnabled } = useButtonState();
   const setState = useSetRecoilState(matchStateAtom);
+
+  const setDisplays = useSetDisplaysCallback();
 
   const updateDisplays = () => {
     setDisplays();
