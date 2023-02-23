@@ -44,6 +44,19 @@ export const snackbarMessageAtom = atom<string>({
 });
 
 /**
+ * @section AUDIENCE DISPLAY STATE
+ * Recoil state management for audience display
+ */
+export const displayID = atom({
+  key: 'displayIDAtom',
+  default: 0
+});
+export const displayChromaKey = atom({
+  key: 'chromaKeyAtom',
+  default: '#ff00ff'
+});
+
+/**
  * @section NETWORK STATE
  * Recoil state management for backend network interactions
  */
@@ -410,6 +423,12 @@ export const currentMatchAtom = atom<Match<any> | null>({
 // can load/play different matches at the same time.
 export const matchInProgressAtom = atom<Match<any> | null>({
   key: 'matchInProgressAtom',
+  default: currentMatchSelector
+});
+
+// This atom is for match results.
+export const matchResultAtom = atom<Match<any> | null>({
+  key: 'matchResultAtom',
   default: currentMatchSelector
 });
 
