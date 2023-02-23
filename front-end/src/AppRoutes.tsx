@@ -7,6 +7,7 @@ const TeamManager = lazy(() => import('./apps/TeamManager'));
 const TournamentManager = lazy(() => import('./apps/TournamentManager'));
 const MatchManager = lazy(() => import('./apps/MatchManager'));
 const ScoringApp = lazy(() => import('./apps/Scoring'));
+const AudienceDisplay = lazy(() => import('./apps/AudienceDisplay'));
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const AdminApp = lazy(() => import('./apps/Admin'));
 // const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
@@ -14,7 +15,6 @@ const ScoringApp = lazy(() => import('./apps/Scoring'));
 // const RedReferee = lazy(() => import('./apps/Referee/RedReferee'));
 // const BlueReferee = lazy(() => import('./apps/Referee/BlueReferee'));
 // const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
-// const AudienceDisplay = lazy(() => import('./apps/AudienceDisplay'));
 // const FieldDebugger = lazy(() => import('./apps/FieldDebugger'));
 // const Reports = lazy(() => import('./apps/Reports'));
 // const Streaming = lazy(() => import('./apps/Streaming/Streaming'));
@@ -87,6 +87,12 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/settings',
     group: 0,
     element: <SettingsApp />
+  },
+  {
+    name: 'Audience Display',
+    path: '/:eventKey/audience',
+    group: 0,
+    element: <AudienceDisplay />
   }
   // {
   //   name: 'Account Manager',
@@ -124,12 +130,6 @@ const AppRoutes: AppRoute[] = [
   //   path: '/referee/blue',
   //   group: 0,
   //   element: <BlueReferee />
-  // },
-  // {
-  //   name: 'Audience Display',
-  //   path: '/audience',
-  //   group: 0,
-  //   element: <AudienceDisplay />
   // },
   // {
   //   name: 'Admin App',

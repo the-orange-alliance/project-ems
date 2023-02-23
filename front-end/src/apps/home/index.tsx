@@ -44,6 +44,11 @@ const HomeApp: FC = () => {
           to={`/${event?.eventKey}/match-manager`}
         />
         <GridAppCard title='Scoring App' to={`/${event?.eventKey}/scoring`} />
+        <GridAppCard
+          title='Audience Display'
+          imgSrc={audienceDisplayLogo}
+          to={`/${event?.eventKey}/audience`}
+        />
         {/* <GridAppCard title='Referee App' to='/referee' />
         <GridAppCard title='Admin App' to='/admin' />
         <GridAppCard title='Field Debugger' to='/fcs-debug' />
@@ -52,11 +57,6 @@ const HomeApp: FC = () => {
           title='Streaming App'
           to='/streaming'
           imgSrc={twitchLogo}
-        />
-        <GridAppCard
-          title='Audience Display'
-          imgSrc={audienceDisplayLogo}
-          to='/audience'
         />
         <GridAppCard
           title='Queueing Display'

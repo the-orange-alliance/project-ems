@@ -1,5 +1,5 @@
 import { clientFetcher } from '@toa-lib/client';
-import { isMatch, Match, MatchKey } from '@toa-lib/models';
+import { Displays, isMatch, Match, MatchKey } from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
 import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
@@ -12,6 +12,7 @@ import {
   matchResultAtom
 } from 'src/stores/NewRecoil';
 import './AudienceDisplay.less';
+import MatchPreview from './displays/frc_2023/MatchPreview/MatchPreview';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayID);
@@ -63,6 +64,8 @@ function getDisplay(id: number): ReactNode {
   switch (id) {
     case -1:
       return <div />;
+    case Displays.MATCH_PREVIEW:
+      return <MatchPreview />;
     default:
       return <div />;
   }
