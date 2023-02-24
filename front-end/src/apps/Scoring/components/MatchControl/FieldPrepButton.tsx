@@ -16,7 +16,7 @@ const FieldPrepButton: FC = () => {
   const updateField = async () => {
     setLoading(true);
     sendPrepareField();
-    setState(MatchState.FIELD_READY);
+    setState(MatchState.MATCH_READY);
     setLoading(false);
   };
 
@@ -29,7 +29,7 @@ const FieldPrepButton: FC = () => {
       onClick={loading ? undefined : updateField}
       loading={loading}
     >
-      Prep
+      Prep (Not Used)
     </LoadingButton>
   );
 };

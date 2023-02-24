@@ -11,8 +11,11 @@ import {
   displayID,
   matchResultAtom
 } from 'src/stores/NewRecoil';
-import './AudienceDisplay.less';
 import MatchPreview from './displays/frc_2023/MatchPreview/MatchPreview';
+import MatchPlay from './displays/frc_2023/MatchPlay/MatchPlay';
+
+import './AudienceDisplay.less';
+import MatchResults from './displays/frc_2023/MatchResults/MatchResults';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayID);
@@ -66,6 +69,10 @@ function getDisplay(id: number): ReactNode {
       return <div />;
     case Displays.MATCH_PREVIEW:
       return <MatchPreview />;
+    case Displays.MATCH_START:
+      return <MatchPlay />;
+    case Displays.MATCH_RESULTS:
+      return <MatchResults />;
     default:
       return <div />;
   }

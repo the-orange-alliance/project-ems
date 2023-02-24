@@ -98,7 +98,7 @@ router.get(
       for (let i = 0; i < participants.length; i++) {
         const [team] = await selectAllWhere(
           'team',
-          `teamKey = "${participants[i].teamKey}" AND eventKey = "${eventKey}"`
+          `teamKey = ${participants[i].teamKey} AND eventKey = "${eventKey}"`
         );
         participants[i].team = team;
       }
