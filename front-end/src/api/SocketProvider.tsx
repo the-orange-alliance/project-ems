@@ -79,8 +79,8 @@ export async function sendAllClear(): Promise<void> {
   // socket?.emit('fcs:update', LED_ALLCLEAR);
 }
 
-export async function sendCommitScores(matchKey: string): Promise<void> {
-  socket?.emit('match:commit', matchKey);
+export async function sendCommitScores(key: MatchKey): Promise<void> {
+  socket?.emit('match:commit', key);
 }
 
 export async function sendPostResults(): Promise<void> {

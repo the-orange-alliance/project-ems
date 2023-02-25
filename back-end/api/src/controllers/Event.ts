@@ -5,6 +5,7 @@ import {
   createEventGameSpecifics,
   insertValue,
   selectAll,
+  selectAllWhere,
   updateWhere
 } from '../db/Database.js';
 import { validateBody } from '../middleware/BodyValidator.js';
@@ -19,6 +20,19 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     return next(e);
   }
 });
+
+router.get(
+  '/:eventKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventKey } = req.params;
+      const data = await selectAllWhere('event', `eventKey = "${eventKey}"`);
+      res.send(data);
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
 
 router.post(
   '/',

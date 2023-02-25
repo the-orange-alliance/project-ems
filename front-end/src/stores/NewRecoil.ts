@@ -553,3 +553,8 @@ export const matchTimeAtom = atom({
   key: 'matchTimeAtom',
   default: timer.timeLeft
 });
+
+export const matchTimeModeAtom = atom({
+  key: 'matchTimeModeAtom',
+  default: timer.modeTimeLeft
+});

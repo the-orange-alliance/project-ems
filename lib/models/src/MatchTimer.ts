@@ -17,7 +17,7 @@ export const FGC_MATCH_CONFIG: MatchConfiguration = {
 };
 
 export const FRC_MATCH_CONFIG: MatchConfiguration = {
-  transitionTime: 0,
+  transitionTime: 3,
   delayTime: 0,
   autoTime: 15,
   teleTime: 135,
@@ -48,7 +48,7 @@ export class MatchTimer extends EventEmitter {
 
     this._mode = MatchMode.RESET;
     this._timerID = null;
-    this._matchConfig = FGC_MATCH_CONFIG;
+    this._matchConfig = FRC_MATCH_CONFIG;
     this._timeLeft = getMatchTime(this._matchConfig);
     this._modeTimeLeft = this._matchConfig.delayTime;
   }

@@ -82,7 +82,7 @@ const MatchStatus: FC = () => {
           {mode}
         </Typography>
         <Typography align='center' variant='h5'>
-          <MatchCountdown audio />
+          <MatchCountdown />
         </Typography>
       </Box>
     </Paper>

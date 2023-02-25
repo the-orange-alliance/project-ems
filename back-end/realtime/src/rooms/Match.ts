@@ -1,5 +1,7 @@
 import {
   AllianceMember,
+  calculateCURankingPoints,
+  calculateCUScore,
   Match as MatchObj,
   MatchKey,
   MatchState,
@@ -119,32 +121,20 @@ export default class Match extends Room {
     socket.on("match:update", (match: MatchObj<any>) => {
       this.match = { ...match };
       if (!match.details || this.state >= MatchState.RESULTS_COMMITTED) return;
-
-      // Calculate coopertition
-      let coopertitionBonusLevel = 0;
-      if ((this.match.details as any).carbonPoints >= 109) {
-        coopertitionBonusLevel = 1;
-      }
-      if ((this.match.details as any).carbonPoints >= 165) {
-        (this.match.details as any).carbonPoints = 165;
-        coopertitionBonusLevel = 2;
-      }
-      this.match.details.coopertitionBonusLevel = coopertitionBonusLevel;
-
-      // const [redScore, blueScore] = calculateScore(
-      //   this.match.redMinPen,
-      //   this.match.blueMinPen,
-      //   this.match.details as CarbonCaptureDetails
-      // );
-      // this.match.redScore = redScore;
-      // this.match.blueScore = blueScore;
+      // TODO - Parameterize this from an interface.
+      const [redScore, blueScore] = calculateCUScore(this.match);
+      this.match.redScore = redScore;
+      this.match.blueScore = blueScore;
+      this.match.details = calculateCURankingPoints(this.match.details);
       this.broadcast().emit("match:update", this.match);
     });
-    socket.on("match:commit", (matchKey: string) => {
-      this.broadcast().emit("match:commit", matchKey);
+    socket.on("match:commit", (key: MatchKey) => {
+      this.broadcast().emit("match:commit", key);
       this.match = null;
       this.state = MatchState.RESULTS_COMMITTED;
-      logger.info(`committing scores for ${matchKey}`);
+      logger.info(
+        `committing scores for ${key.eventKey}-${key.tournamentKey}-${key.id}`
+      );
     });
   }
 }

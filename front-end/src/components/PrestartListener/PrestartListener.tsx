@@ -1,10 +1,10 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
   isMatch,
-  defaultCarbonCaptureDetails,
   Match,
   MatchDetailBase,
-  MatchKey
+  MatchKey,
+  defaultChargedUpDetails
 } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilCallback } from 'recoil';
@@ -35,9 +35,10 @@ const PrestartListener: FC = () => {
     );
     const newMatch = { ...match };
     // TODO - Create a resetMatch() method that would help here.
-    newMatch.details = { ...defaultCarbonCaptureDetails };
+    newMatch.details = { ...defaultChargedUpDetails };
     newMatch.details.eventKey = match.eventKey;
     newMatch.details.tournamentKey = match.tournamentKey;
+    newMatch.details.id = match.id;
     newMatch.id = match.id;
     newMatch.redMinPen = 0;
     newMatch.blueMinPen = 0;

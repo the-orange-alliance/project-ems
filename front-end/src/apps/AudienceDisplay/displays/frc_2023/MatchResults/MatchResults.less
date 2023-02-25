@@ -115,7 +115,8 @@
 
 .cu-result-alliance-scores {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 12px;
   align-items: center;
   height: 7vh;
   width: 100%;
@@ -130,6 +131,8 @@
 .cu-result-text {
   width: 15vw;
   height: 75%;
+  position: absolute;
+  left: 0;
 }
 
 .cu-result-score {
@@ -139,14 +142,12 @@
 }
 
 .cu-result-score-rp {
-  position: absolute;
   right: 10vw;
   width: 15vh;
   display: flex;
   justify-content: center;
   align-items: center;
   border: 2px solid black;
-  border-left: 1px solid black;
 }
 
 #cu-result-bot {
