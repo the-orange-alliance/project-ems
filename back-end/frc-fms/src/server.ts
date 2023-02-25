@@ -69,8 +69,6 @@ export class EmsFrcFms {
 
     public async initFms() {
         // Init EMS
-        // EMSProvider.initialize(host, parseInt(process.env.REACT_APP_EMS_API_PORT as string, 10));
-        // SocketProvider.initialize(host, EMSProvider);
         await this.initSocket();
 
         // Load Settings from EMS DB
@@ -154,34 +152,43 @@ export class EmsFrcFms {
 
     private async initSocket() {
         const token = await getToken();
-        console.log('token: ' + token)
+        // @ts-ignore
         this.socket = createSocket(token);
-        logger.info('✅ Successfully recieved token from EMS');
+        if(token) logger.info('✅ Successfully recieved token from EMS');
+        else logger.info('❌ Failed to get key from FMS. Things won\'t work!')
         // Setup Socket Connect/Disconnect
-        this.socket.on("connect", () => {
+        this.socket?.on("connect", () => {
             logger.info("✔ Connected to EMS through SocketIO.");
             this.socket?.emit("identify","ems-frc-fms-main", ["event", "scoring", "referee", "fms"]);
         });
-        this.socket.on("disconnect", () => {
+        this.socket?.on("disconnect", () => {
             logger.error("❌ Disconnected from SocketIO.");
         });
-        this.socket.on("error", () => {
+        this.socket?.on("error", () => {
             logger.error("❌ Error With SocketIO, not connected to EMS");
         });
-        this.socket.on("fms-ping", () => {
+        this.socket?.on("fms-ping", () => {
             this.socket?.emit("fms-pong");
         });
-        this.socket.on("fms-settings-update", (data: string) => {
+        this.socket?.on("fms-settings-update", (data: string) => {
             this.updateSettings(JSON.parse(data));
             this.socket?.emit("fms-settings-update-success", JSON.stringify(this.settings.toJson()));
         });
 
         // Manage Socket Events
-        this.socket.on("prestart-response", (err: any, matchJSON: any) => {
+        this.socket?.on("prestart-response", (err: any, matchJSON: any) => {
             logger.info('🔁 Prestart Command Issued');
             this.matchState = MatchMode.PRESTART;
             this.fmsOnPrestart(matchJSON);
         });
+
+        // Update all instances
+        DriverstationSupport.getInstance().setSocket(this.socket);
+        AccesspointSupport.getInstance().setSocket(this.socket);
+        PlcSupport.getInstance().setSocket(this.socket);
+        SwitchSupport.getInstance().setSocket(this.socket);
+
+        
     }
 
     private fmsOnPrestart(match: Match<any>) {
@@ -199,7 +206,7 @@ export class EmsFrcFms {
         DriverstationSupport.getInstance().onPrestart(this.activeMatch);
         if(this.settings.enableAdvNet) {
             // Configure AP
-            AccesspointSupport.getInstance().handleTeamWifiConfig(match.participants ?? []);
+            AccesspointSupport.getInstance().handleTeamWifiConfig(match.eventKey, match.participants ?? []);
             // Configure Switch
             SwitchSupport.getInstance().configTeamEthernet();
         }
@@ -210,17 +217,17 @@ export class EmsFrcFms {
     }
 
     private initTimer() {
-        this.socket?.on("match-start", (timerConfig: any) => {
+        this.socket?.on("match:start", (timerConfig: any) => {
             this._timer.matchConfig = timerConfig;
             // Signal DriverStation Start
             DriverstationSupport.getInstance().driverStationMatchStart();
-            this._timer.on("match-end", () => {
+            this._timer.on("match:end", () => {
                 this.removeMatchlisteners()
             });
-            this._timer.on("match-auto", () => {this.matchState = MatchMode.AUTONOMOUS});
-            this._timer.on("match-transition", () => {this.matchState = MatchMode.TRANSITION});
-            this._timer.on("match-tele", () => {this.matchState = MatchMode.TELEOPERATED});
-            this._timer.on("match-end", () => {this.matchState = MatchMode.ENDED});
+            this._timer.on("match:auto", () => {this.matchState = MatchMode.AUTONOMOUS});
+            // this._timer.on("match-transition", () => {this.matchState = MatchMode.TRANSITION});
+            this._timer.on("match:tele", () => {this.matchState = MatchMode.TELEOPERATED});
+            this._timer.on("match:end", () => {this.matchState = MatchMode.ENDED});
 
             logger.info('Match Started');
             this._timer.start();
@@ -234,7 +241,7 @@ export class EmsFrcFms {
                 }
             }, 1000);
         });
-        this.socket?.on("match-abort", () => {
+        this.socket?.on("match:abort", () => {
             this._timer.abort();
             this.timeLeft = this._timer.timeLeft;
             this.removeMatchlisteners();
@@ -242,11 +249,11 @@ export class EmsFrcFms {
     }
 
     private removeMatchlisteners() {
-        this._timer.removeAllListeners("match-auto");
-        this._timer.removeAllListeners("match-transition");
-        this._timer.removeAllListeners("match-tele");
-        this._timer.removeAllListeners("match-endgame");
-        this._timer.removeAllListeners("match-end");
+        this._timer.removeAllListeners("match:auto");
+        this._timer.removeAllListeners("match:transition");
+        this._timer.removeAllListeners("match:tele");
+        this._timer.removeAllListeners("match:endgame");
+        this._timer.removeAllListeners("match:end");
     }
 
     private startDriverStation() {
@@ -287,22 +294,22 @@ class FMSSettings {
     public apAdminWpa: string;
     public switchIp: string;
     public switchPassword: string;
-    public enablePlc: false;
+    public enablePlc: boolean;
     public plcIp: string;
 
     constructor() {
-        this.enableFms = false;
-        this.enableAdvNet = false;
-        this.apIp = '10.0.100.1';
+        this.enableFms = true;
+        this.enableAdvNet = true;
+        this.apIp = '10.0.100.3';
         this.apUsername = 'root';
-        this.apPassword = '56Seven';
+        this.apPassword = '1234Five';
         this.apTeamCh = '157';
         this.apAdminCh = '-1';
-        this.apAdminWpa = '56Seven';
+        this.apAdminWpa = '1234Five';
         this.switchIp = '10.0.100.2';
-        this.switchPassword = '56Seven';
-        this.enablePlc = false;
-        this.plcIp = '10.0.100.10';
+        this.switchPassword = '1234Five';
+        this.enablePlc = true;
+        this.plcIp = '10.0.100.40';
     }
      public fromJson(json: any): this {
          this.enableFms = json.enable_fms;

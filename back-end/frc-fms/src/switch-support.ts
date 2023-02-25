@@ -1,6 +1,7 @@
 import {Telnet as telnet_client} from "telnet-client"
 import {EmsFrcFms} from "./server.js";
 import logger from "./logger.js";
+import { Socket } from "socket.io-client";
 
 export class SwitchSupport {
   private static _instance: SwitchSupport;
@@ -8,6 +9,8 @@ export class SwitchSupport {
   private telnetPort = 23;
   private fmsIpAddress = "10.0.100.5";
   private switch: SwitchStatus = new SwitchStatus();
+
+  private socket: Socket | null = null;
 
   //Vlans
   private red1Vlan  = 10;
@@ -22,6 +25,10 @@ export class SwitchSupport {
       SwitchSupport._instance = new SwitchSupport();
     }
     return SwitchSupport._instance;
+  }
+
+  public setSocket(socket: Socket | null) {
+    this.socket = socket;
   }
 
   public setSettings(address: string, username: string, password: string) {
@@ -84,8 +91,7 @@ export class SwitchSupport {
     }
     const command = commands.join('\n')
     this.runConfigCommand(command).then(() => {
-      // TODO: Fix Socket
-      // SocketProvider.emit('fms-switch-ready');
+      this.socket?.emit('frc-fms:switch-ready');
       logger.info('✔ Updated field switch (' + this.switch.address + ') configuration')
       return this.getTeamVlans();
     }).then((newConf) => {

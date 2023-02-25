@@ -5,6 +5,7 @@ import {PlcOutputCoils} from "./models/PlcOutputCoils.js";
 import {EmsFrcFms} from "./server.js";
 import { MatchMode } from "@toa-lib/models";
 import ModbusRTU from "modbus-serial";
+import { Socket } from "socket.io-client";
 
 // Modbus Crash Course
 // Registers: ?Counters?
@@ -22,11 +23,17 @@ export class PlcSupport {
   private firstConn = false;
   private lastSentHeartbeat = 0;
 
+  private socket: Socket | null = null;
+
   public static getInstance(): PlcSupport {
     if (typeof PlcSupport._instance === "undefined") {
       PlcSupport._instance = new PlcSupport();
     }
     return PlcSupport._instance;
+  }
+
+  public setSocket(socket: Socket | null) {
+    this.socket = socket;
   }
 
   public initPlc(address: string) {
@@ -76,12 +83,10 @@ export class PlcSupport {
         this.plc.inputs.fromArray(data.data);
         if(!this.plc.inputs.equals(this.plc.oldInputs)) {
           // We have a new input, lets notify
-          // TODO: Socket
-          // SocketProvider.emit("plc-update", this.plc.inputs.toJSON());
+          this.socket?.emit("plc-update", this.plc.inputs.toJSON());
           if(this.plc.inputs.fieldEstop) {
             logger.info('🛑 Field E-STOP Pressed! This can\'t be good!');
-            // TODO: ESTOP
-            // SocketProvider.emit('abort');
+            this.socket?.emit('abort');
           }
           this.plc.oldInputs = new PlcInputs().fromArray(data.data);
         }

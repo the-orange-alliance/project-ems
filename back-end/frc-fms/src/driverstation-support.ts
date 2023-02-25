@@ -5,6 +5,7 @@ import logger from "./logger.js";
 import {EmsFrcFms} from "./server.js";
 import {PlcSupport, ROBOT_CONNECTED, ROBOT_DISCONNECTED, STACK_LIGHT_OFF, STACK_LIGHT_ON} from "./plc-support.js";
 import { Match, MatchMode } from "@toa-lib/models";
+import { Socket } from "socket.io-client";
 
 const udpDSListener = dgram.createSocket("udp4");
 let tcpListener = net.createServer();
@@ -23,6 +24,8 @@ export class DriverstationSupport {
 
     private soundedBuzzer = false;
 
+    private socket: Socket | null = null;
+
     // TODO: Figure this out
     public colorToSend = 0;
 
@@ -39,6 +42,10 @@ export class DriverstationSupport {
             DriverstationSupport._instance = new DriverstationSupport();
         }
         return DriverstationSupport._instance;
+    }
+
+    public setSocket(socket: Socket | null) {
+        this.socket = socket;
     }
 
     dsInit(host: string): any {
@@ -336,8 +343,7 @@ export class DriverstationSupport {
             // register socket to update twice a second
             if(!this.updateSocketInterval) {
                 this.updateSocketInterval = setInterval(() => {
-                    // TODO
-                    // SocketProvider.emit('ds-update-all', this.dsToJsonObj());
+                    this.socket?.emit('ds-update-all', this.dsToJsonObj());
                 }, 500)
             }
         }
@@ -422,7 +428,7 @@ export class DriverstationSupport {
             this.allDriverStations[fmsStation] = ds;
         }
         // TODO:
-        // SocketProvider.emit('fms-ds-ready');
+        this.socket?.emit('frc-fms:ds-ready');
         logger.info('✔ Driver Station Prestart Completed');
     }
 

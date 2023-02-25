@@ -2,6 +2,8 @@ import logger from "./logger.js";
 import {EmsFrcFms} from "./server.js";
 import SSH2Promise from 'ssh2-promise';
 import { MatchParticipant } from "@toa-lib/models";
+import { getWpaKeys } from "./helpers/ems.js";
+import { Socket } from "socket.io-client";
 
 export class AccesspointSupport {
   private static _instance: AccesspointSupport;
@@ -11,6 +13,7 @@ export class AccesspointSupport {
   private accessPointPollPeriodSec: number          = 3;
   private accessPointRequestBufferSize: number      = 10;
   private accessPointConfigRetryIntervalSec: number = 5;
+  private socket: Socket | null = null;
 
   private ap: AccessPoint = new AccessPoint();
   private sshConn = new SSH2Promise({});
@@ -22,6 +25,10 @@ export class AccesspointSupport {
       AccesspointSupport._instance = new AccesspointSupport();
     }
     return AccesspointSupport._instance;
+  }
+
+  public setSocket(socket: Socket | null) {
+    this.socket = socket;
   }
 
   public setSettings(address: string, username: string, password: string, teamChannel: string, adminChannel: string, adminWpaKey: string, networkSecurityEnabled: boolean, TeamWifiStatuses: TeamWifiStatus[], initialStatusesFetched: boolean) {
@@ -56,13 +63,11 @@ export class AccesspointSupport {
     await this.runCommand(fullCommand);
   }
 
-  public async handleTeamWifiConfig(participants: MatchParticipant[]) {
+  public async handleTeamWifiConfig(eventKey: string, participants: MatchParticipant[]) {
     if (!this.ap.networkSecurityEnabled) return;
 
     // Get WPA Keys and init teamWifiStatuses
-    // TODO: WPA Keys
-    const wpaKeys: any[] = [];
-    // const wpaKeys = await EMSProvider.getWpaKeys();
+    const wpaKeys = await getWpaKeys(eventKey);
     for (const p of participants) {
       const tws = new TeamWifiStatus();
       tws.teamId = p.teamKey;
@@ -77,7 +82,7 @@ export class AccesspointSupport {
     }
 
     // Check AP config
-    if (this.checkTeamConfig()) return;
+    if (this.checkTeamConfig(participants)) return;
 
     // Generate Config Command
     const configCommand = this.generateApConfigForMatch(participants);
@@ -100,9 +105,8 @@ export class AccesspointSupport {
       if(!error) {
         // Update Team Statuses
         await this.updateTeamWifiStatus().catch(() => {});
-        if(this.checkTeamConfig()) {
-          // TODO
-          // SocketProvider.emit('fms-ap-ready')
+        if(this.checkTeamConfig(participants)) {
+          this.socket?.emit('fms-ap-ready')
           logger.info('✔ Successfully configured Wifi after ' + attemptCount + ' attempt(s).');
           return;
         }
@@ -122,12 +126,11 @@ export class AccesspointSupport {
   }
 
   // Returns true if the configured networks as read from the access point match the given teams.
-  public checkTeamConfig(): boolean {
+  public checkTeamConfig(participants: MatchParticipant[]): boolean {
     if(!this.ap.initialStatusesFetched || !EmsFrcFms.getInstance().activeMatch) return false;
-    for (const i in EmsFrcFms.getInstance().activeMatch.participants) {
-      // TODO:
-      // const p = EmsFrcFms.getInstance().activeMatch.participants[i];
-      //if (p && this.ap.TeamWifiStatuses[i] && this.ap.TeamWifiStatuses[i].teamId != p.teamKey) return false;
+    for (const i in participants) {
+      const p = participants[i];
+      if (p && this.ap.TeamWifiStatuses[i] && this.ap.TeamWifiStatuses[i].teamId != p.teamKey) return false;
     }
     return true;
   }
