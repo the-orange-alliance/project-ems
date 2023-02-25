@@ -68,7 +68,7 @@ io.on("connection", (socket) => {
 initRooms(io);
 
 // Network variables
-const host = "0.0.0.0";//getIPv4();
+const host = getIPv4();
 
 server.listen(
   {
