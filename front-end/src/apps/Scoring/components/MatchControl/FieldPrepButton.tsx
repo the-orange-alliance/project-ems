@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useButtonState } from '../../util/ButtonState';
 import { useSetRecoilState } from 'recoil';
-import { matchStateAtom } from 'src/stores/Recoil';
+import { matchStateAtom } from 'src/stores/NewRecoil';
 import { MatchState } from '@toa-lib/models';
 import { sendPrepareField } from 'src/api/SocketProvider';
 
@@ -16,7 +16,7 @@ const FieldPrepButton: FC = () => {
   const updateField = async () => {
     setLoading(true);
     sendPrepareField();
-    setState(MatchState.FIELD_READY);
+    setState(MatchState.MATCH_READY);
     setLoading(false);
   };
 
@@ -29,7 +29,7 @@ const FieldPrepButton: FC = () => {
       onClick={loading ? undefined : updateField}
       loading={loading}
     >
-      Prep
+      Prep (Not Used)
     </LoadingButton>
   );
 };

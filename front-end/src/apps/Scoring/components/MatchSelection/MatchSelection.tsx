@@ -7,46 +7,50 @@ import {
   useResetRecoilState,
   useSetRecoilState
 } from 'recoil';
-import {
-  fieldControl,
-  loadedMatchKey,
-  matchesByTournamentType,
-  matchInProgress,
-  matchStateAtom,
-  selectedTournamentLevel,
-  selectedTournamentType
-} from 'src/stores/Recoil';
 import MatchResultsTable from 'src/features/components/MatchResultsTable/MatchResultsTable';
-import TournamentDropdown from 'src/components/Dropdowns/TournamentDropdown';
-import { MatchState } from '@toa-lib/models';
+import { MatchState, Tournament } from '@toa-lib/models';
+import {
+  currentEventKeySelector,
+  currentMatchIdAtom,
+  currentTournamentKeyAtom,
+  matchesByTournamentSelector,
+  matchInProgressAtom,
+  matchStateAtom
+} from 'src/stores/NewRecoil';
+import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
 
 const MatchSelection: FC = () => {
-  const [tournamentLevel, setTournamentLevel] = useRecoilState(
-    selectedTournamentLevel
+  const [tournamentKey, setTournamentKey] = useRecoilState(
+    currentTournamentKeyAtom
   );
-  const tournamentType = useRecoilValue(selectedTournamentType);
+  const eventKey = useRecoilValue(currentEventKeySelector);
   const state = useRecoilValue(matchStateAtom);
-  const matches = useRecoilValue(matchesByTournamentType(tournamentType));
-  const fields = useRecoilValue(fieldControl);
-  const setSelectedMatchKey = useSetRecoilState(loadedMatchKey);
-  const resetMatch = useResetRecoilState(matchInProgress);
+  const matches = useRecoilValue(matchesByTournamentSelector);
 
-  const handleSelect = (matchKey: string): void => {
-    setSelectedMatchKey(matchKey);
+  // const fields = useRecoilValue(fieldControl);
+  const setSelectedMatchId = useSetRecoilState(currentMatchIdAtom);
+  const resetMatch = useResetRecoilState(matchInProgressAtom);
+
+  const handleSelect = (id: number): void => {
+    setSelectedMatchId(id);
     resetMatch();
   };
 
   useEffect(() => {
-    setSelectedMatchKey(null);
-  }, [tournamentLevel]);
+    setSelectedMatchId(null);
+  }, [tournamentKey]);
 
-  const changeTournamentLevel = (value: number) => setTournamentLevel(value);
+  const handleTournamentChange = (tournament: Tournament | null) => {
+    if (!tournament) return;
+    setTournamentKey(tournament.tournamentKey);
+  };
 
   return (
     <Paper sx={{ padding: (theme) => theme.spacing(2) }}>
-      <TournamentDropdown
-        value={tournamentLevel}
-        onChange={changeTournamentLevel}
+      <EventTournamentsDropdown
+        eventKey={eventKey}
+        value={tournamentKey}
+        onChange={handleTournamentChange}
       />
       <Divider />
       <MatchResultsTable
@@ -54,7 +58,8 @@ const MatchSelection: FC = () => {
           state >= MatchState.PRESTART_COMPLETE &&
           state <= MatchState.MATCH_COMPLETE
         }
-        matches={matches.filter((m) => fields.indexOf(m.fieldNumber) > -1)}
+        matches={matches}
+        // matches={matches.filter((m) => fields.indexOf(m.fieldNumber) > -1)}
         onSelect={handleSelect}
       />
     </Paper>

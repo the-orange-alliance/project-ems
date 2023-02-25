@@ -1,11 +1,9 @@
-import { DateTime } from 'luxon';
 import { AllianceMember } from './Alliance.js';
-import { CarbonCaptureDetails } from './details/index.js';
-import { EventSchedule, ScheduleItem, TournamentType } from './Schedule.js';
+import { ScheduleItem, TournamentType } from './Schedule.js';
 import { Team } from './Team.js';
 import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
-// Tournament Levels
+// Match Levels
 export const TEST_LEVEL = 0;
 export const PRACTICE_LEVEL = 1;
 export const QUALIFICATION_LEVEL = 2;
@@ -13,7 +11,7 @@ export const ROUND_ROBIN_LEVEL = 20;
 export const RANKING_LEVEL = 30;
 export const OCTOFINALS_LEVEL = 100;
 export const QUARTERFINALS_LEVEL = 200;
-export const SEMIFINALS_level = 300;
+export const SEMIFINALS_LEVEL = 300;
 export const FINALS_LEVEL = 400;
 
 // Different Result Types
@@ -46,7 +44,8 @@ export interface MatchMakerParams {
   matchesPerTeam: number;
   fields: number;
   eventKey: string;
-  type: TournamentType;
+  tournamentKey: string;
+  name: string;
   quality: string;
   teamKeys: number[];
 }
@@ -58,15 +57,21 @@ export const isMatchMakerRequest = (obj: unknown): obj is MatchMakerParams =>
   isNumber(obj.matchesPerTeam) &&
   isNumber(obj.fields) &&
   isString(obj.eventKey) &&
-  isString(obj.type) &&
+  isString(obj.name) &&
   isString(obj.quality) &&
   isArray(obj.teamKeys);
 
-export interface Match {
-  matchKey: string;
-  matchDetailKey: string;
-  matchName: string;
-  tournamentLevel: number;
+export interface MatchKey {
+  eventKey: string;
+  tournamentKey: string;
+  id: number;
+}
+
+export interface Match<T extends MatchDetailBase> {
+  eventKey: string;
+  tournamentKey: string;
+  id: number;
+  name: string;
   scheduledTime: string;
   prestartTime: string;
   startTime: string;
@@ -82,34 +87,37 @@ export interface Match {
   result: number;
   uploaded: number;
   participants?: MatchParticipant[];
-  details?: MatchDetails;
+  details?: T;
 }
 
-export const isMatch = (obj: unknown): obj is Match =>
+export const isMatch = (obj: unknown): obj is Match<any> =>
   isNonNullObject(obj) &&
-  isString(obj.matchKey) &&
-  isString(obj.matchDetailKey) &&
-  isString(obj.matchName);
+  isString(obj.eventKey) &&
+  isString(obj.tournamentKey) &&
+  isNumber(obj.id) &&
+  isString(obj.name);
 
-export const isMatchArray = (obj: unknown): obj is Match[] =>
+export const isMatchArray = (obj: unknown): obj is Match<any>[] =>
   isArray(obj) && obj.every((o) => isMatch(o));
 
 export interface MatchParticipant {
-  matchParticipantKey: string;
-  matchKey: string;
+  eventKey: string;
+  tournamentKey: string;
+  id: number;
   teamKey: number;
   station: number;
   disqualified: number;
   cardStatus: number;
   surrogate: number;
   noShow: number;
-  allianceKey: string;
   team?: Team;
 }
 
 export const isMatchParticipant = (obj: unknown): obj is MatchParticipant =>
   isNonNullObject(obj) &&
-  isString(obj.matchKey) &&
+  isString(obj.eventKey) &&
+  isString(obj.tournamentKey) &&
+  isNumber(obj.id) &&
   isNumber(obj.teamKey) &&
   isNumber(obj.station);
 
@@ -119,23 +127,23 @@ export const isMatchParticipantArray = (
   isArray(obj) && obj.every((o) => isMatchParticipant(o));
 
 export interface MatchDetailBase {
-  matchDetailKey: string;
-  matchKey: string;
+  eventKey: string;
+  tournamentKey: string;
+  id: number;
 }
 
 export const isMatchDetail = (obj: MatchDetailBase): obj is MatchDetailBase =>
   isNonNullObject(obj) &&
-  isString(obj.matchDetailKey) &&
-  isString(obj.matchKey);
-
-export type MatchDetails = MatchDetailBase | CarbonCaptureDetails;
+  isString(obj.eventKey) &&
+  isString(obj.tournamentKey) &&
+  isNumber(obj.id);
 
 export function assignMatchTimes(
-  matches: Match[],
+  matches: Match<any>[],
   items: ScheduleItem[]
-): Match[] {
+): Match<any>[] {
   let matchNumber = 0;
-  const newMatches: Match[] = [];
+  const newMatches: Match<any>[] = [];
   for (const item of items) {
     if (item.isMatch) {
       newMatches.push({ ...matches[matchNumber], startTime: item.startTime });
@@ -145,142 +153,23 @@ export function assignMatchTimes(
   return newMatches;
 }
 
-export function assignMatchFieldsForFGC(
-  matches: Match[],
-  items: ScheduleItem[],
-  schedule: EventSchedule
-): Match[] {
-  let matchNumber = 0;
-  let fieldIndex = 0;
-  let index = 0;
-  const newMatches: Match[] = [];
-  for (const item of items) {
-    // This is assuming scheduleItems and matchList have the same lengths...
-    if (item.isMatch) {
-      const newMatch: Match = Object.assign({}, matches[matchNumber]);
-      newMatch.startTime = item.startTime;
-      // TODO - Only a FIRST Global thing.
-      if (
-        item.day + 1 === schedule.days.length &&
-        schedule.type === 'Qualification'
-      ) {
-        // This is the last day. Only use fields 3, 4, and 5.
-        newMatch.fieldNumber = index + 3;
-        index++;
-        if (index % 3 === 0) {
-          index = 0;
-        }
-      } else {
-        // TODO - ONLY A FIRST GLOBAL THING.
-        if (item.duration === 7) {
-          newMatch.fieldNumber = 5; // Premiere field.
-        } else {
-          if (fieldIndex >= 4) {
-            fieldIndex = 1;
-          } else {
-            fieldIndex++;
-          }
-          if (fieldIndex === 1) {
-            newMatch.fieldNumber = 1; // Normal field.
-          }
-          if (fieldIndex === 2) {
-            newMatch.fieldNumber = 4; // Normal field.
-          }
-          if (fieldIndex === 3) {
-            newMatch.fieldNumber = 2; // Normal field.
-          }
-          if (fieldIndex === 4) {
-            newMatch.fieldNumber = 3; // Normal field.
-          }
-        }
-      }
-      matchNumber++;
-      newMatches.push(newMatch);
-    } else if (item.isMatch) {
-      const newMatch: Match = Object.assign({}, matches[matchNumber]);
-
-      if (fieldIndex >= 4) {
-        fieldIndex = 1;
-      } else {
-        fieldIndex++;
-      }
-
-      newMatch.startTime = item.startTime;
-
-      if (fieldIndex === 1) {
-        newMatch.fieldNumber = 1; // Normal field.
-      }
-      if (fieldIndex === 2) {
-        newMatch.fieldNumber = 4; // Normal field.
-      }
-      if (fieldIndex === 3) {
-        newMatch.fieldNumber = 2; // Normal field.
-      }
-      if (fieldIndex === 4) {
-        newMatch.fieldNumber = 3; // Normal field.
-      }
-      newMatches.push(newMatch);
-      matchNumber++;
-    }
-  }
-
-  const sortedMatches = newMatches.sort((a, b) =>
-    DateTime.fromISO(a.startTime) > DateTime.fromISO(b.startTime) ? 1 : -1
-  );
-
-  let shouldSwitch = false;
-  for (let i = 0; i < sortedMatches.length; i++) {
-    const name = sortedMatches[i].matchName;
-    const fields = name.split(' ');
-    sortedMatches[i].matchName =
-      name.substring(0, name.length - fields[fields.length - 1].length - 1) +
-      ' ' +
-      (i + 1);
-
-    if (i % 3 === 0) {
-      sortedMatches[i].fieldNumber = 5;
-      if (shouldSwitch) {
-        shouldSwitch = false;
-      } else {
-        shouldSwitch = true;
-      }
-    } else {
-      const number = shouldSwitch ? i % 3 : (i % 3) + 2;
-      sortedMatches[i].fieldNumber = number;
-    }
-    if (sortedMatches[i].fieldNumber === 2) {
-      sortedMatches[i].fieldNumber = 3;
-    } else if (sortedMatches[i].fieldNumber === 3) {
-      sortedMatches[i].fieldNumber = 2;
-    }
-  }
-
-  return newMatches;
-}
-
 export function createFixedMatches(
   items: ScheduleItem[],
   allianceMembers: AllianceMember[],
-  matchMap: number[][],
-  eventKey: string
-): Match[] {
-  const matches: Match[] = [];
+  matchMap: number[][]
+): Match<any>[] {
+  const matches: Match<any>[] = [];
   let matchNumber = 0;
   for (const item of items) {
     if (!item.isMatch) continue;
-    const matchKey = `${eventKey}-${getMatchKeyPartialFromType(item.type)}${(
-      matchNumber + 1
-    )
-      .toString()
-      .padStart(3, '0')}`;
-
-    const match: Match = {
-      fieldNumber: 5,
-      matchKey,
-      matchDetailKey: matchKey + 'D',
-      matchName: `${item.type} ${item.name}`,
+    const { eventKey, tournamentKey } = item;
+    const match: Match<any> = {
+      eventKey,
+      tournamentKey,
+      id: matchNumber,
+      fieldNumber: 1,
+      name: `${item.type} ${item.name}`,
       result: -1,
-      tournamentLevel: getTournamentLevelFromType(item.type),
       active: 0,
       blueMajPen: 0,
       blueMinPen: 0,
@@ -304,11 +193,11 @@ export function createFixedMatches(
     const participants: MatchParticipant[] = [];
     for (const participant of redAlliance) {
       participants.push({
-        matchKey,
-        matchParticipantKey: `${matchKey}-T${participants.length + 1}`,
+        eventKey,
+        tournamentKey,
+        id: matchNumber,
         teamKey: participant.teamKey,
         station: 10 + participants.length + 1,
-        allianceKey: participant.allianceKey,
         cardStatus: 0,
         disqualified: 0,
         noShow: 0,
@@ -318,11 +207,11 @@ export function createFixedMatches(
 
     for (const participant of blueAlliance) {
       participants.push({
-        matchKey,
-        matchParticipantKey: `${matchKey}-T${participants.length + 1}`,
+        eventKey,
+        tournamentKey,
+        id: matchNumber,
         teamKey: participant.teamKey,
         station: 20 + participants.filter((p) => p.station >= 20).length + 1,
-        allianceKey: participant.allianceKey,
         cardStatus: 0,
         disqualified: 0,
         noShow: 0,
@@ -334,25 +223,6 @@ export function createFixedMatches(
     matchNumber++;
   }
   return matches;
-}
-
-export function getMatchKeyPartialFromType(type: TournamentType) {
-  switch (type) {
-    case 'Test':
-      return 'T';
-    case 'Practice':
-      return 'P';
-    case 'Qualification':
-      return 'Q';
-    case 'Ranking':
-      return 'R';
-    case 'Round Robin':
-      return 'B';
-    case 'Finals':
-      return 'F';
-    default:
-      return 'P';
-  }
 }
 
 export function getTournamentLevelFromType(type: TournamentType) {
@@ -374,44 +244,40 @@ export function getTournamentLevelFromType(type: TournamentType) {
   }
 }
 
-export function getMatchKeyPartialFromKey(matchKey: string) {
-  return matchKey.substring(0, matchKey.length - 3);
-}
-
 export function reconcileMatchParticipants(
-  matches: Match[],
+  matches: Match<any>[],
   participants: MatchParticipant[]
-): Match[] {
-  const map: Map<string, MatchParticipant[]> = new Map();
+): Match<any>[] {
+  const map: Map<number, MatchParticipant[]> = new Map();
   for (const participant of participants) {
-    if (!map.get(participant.matchKey)) {
-      map.set(participant.matchKey, []);
+    if (!map.get(participant.id)) {
+      map.set(participant.id, []);
     }
-    map.get(participant.matchKey)?.push(participant);
+    map.get(participant.id)?.push(participant);
   }
 
-  const newMatches: Match[] = [];
+  const newMatches: Match<any>[] = [];
 
   for (const match of matches) {
-    const newMatch = { ...match, participants: map.get(match.matchKey) };
+    const newMatch = { ...match, participants: map.get(match.id) };
     newMatches.push(newMatch);
   }
   return newMatches;
 }
 
-export function reconcileMatchDetails(
-  matches: Match[],
-  details: MatchDetails[]
-): Match[] {
-  const map: Map<string, MatchDetails> = new Map();
+export function reconcileMatchDetails<T extends MatchDetailBase>(
+  matches: Match<T>[],
+  details: T[]
+): Match<T>[] {
+  const map: Map<number, T> = new Map();
   for (const detail of details) {
-    map.set(detail.matchKey, detail);
+    map.set(detail.id, detail);
   }
 
-  const newMatches: Match[] = [];
+  const newMatches: Match<any>[] = [];
 
   for (const match of matches) {
-    newMatches.push({ ...match, details: map.get(match.matchKey) });
+    newMatches.push({ ...match, details: map.get(match.id) });
   }
 
   return newMatches;

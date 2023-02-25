@@ -2,24 +2,23 @@ import { Team } from './Team.js';
 import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
 export interface Ranking {
-  rankKey: string;
+  eventKey: string;
+  tournamentKey: string;
   teamKey: number;
-  tournamentLevel: number;
   rank: number;
   rankChange: number;
   played: number;
   wins: number;
   losses: number;
   ties: number;
-  allianceKey: string;
   team?: Team;
 }
 
 export const isRanking = (obj: unknown): obj is Ranking =>
   isNonNullObject(obj) &&
-  isString(obj.rankKey) &&
+  isString(obj.eventKey) &&
+  isString(obj.tournamentKey) &&
   isNumber(obj.teamKey) &&
-  isNumber(obj.tournamentLevel) &&
   isNumber(obj.rank) &&
   isNumber(obj.rankChange) &&
   isNumber(obj.played) &&

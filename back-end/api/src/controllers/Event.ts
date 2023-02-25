@@ -5,24 +5,34 @@ import {
   createEventGameSpecifics,
   insertValue,
   selectAll,
+  selectAllWhere,
   updateWhere
 } from '../db/Database.js';
 import { validateBody } from '../middleware/BodyValidator.js';
-import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const [data] = await selectAll('event');
-    if (!data) {
-      return next(DataNotFoundError);
-    }
+    const data = await selectAll('event');
     res.send(data);
   } catch (e) {
     return next(e);
   }
 });
+
+router.get(
+  '/:eventKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventKey } = req.params;
+      const data = await selectAllWhere('event', `eventKey = "${eventKey}"`);
+      res.send(data);
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
 
 router.post(
   '/',
@@ -55,12 +65,12 @@ router.patch(
 );
 
 router.get(
-  '/setup',
+  '/setup/:seasonKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const seasonKey = req.params.seasonKey;
       await createEventBase();
-      // TODO - one-time
-      await createEventGameSpecifics();
+      await createEventGameSpecifics(seasonKey);
       res.status(200).send({});
     } catch (e) {
       return next(e);

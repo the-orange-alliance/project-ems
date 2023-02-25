@@ -1,10 +1,10 @@
 import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
 export interface AllianceMember {
-  allianceKey: string;
+  eventKey: string;
+  tournamentKey: string;
   allianceRank: number;
   teamKey: number;
-  tournamentLevel: number;
   allianceNameLong: string;
   allianceNameShort: string;
   isCaptain: boolean;
@@ -12,10 +12,10 @@ export interface AllianceMember {
 }
 
 export const defaultAllianceMember: AllianceMember = {
-  allianceKey: '',
+  eventKey: '',
+  tournamentKey: '',
   allianceRank: -1,
   teamKey: -1,
-  tournamentLevel: -1,
   allianceNameLong: '',
   allianceNameShort: '',
   isCaptain: false,
@@ -24,7 +24,8 @@ export const defaultAllianceMember: AllianceMember = {
 
 export const isAllianceMember = (obj: unknown): obj is AllianceMember =>
   isNonNullObject(obj) &&
-  isString(obj.allianceKey) &&
+  isString(obj.eventKey) &&
+  isString(obj.tournamentKey) &&
   isNumber(obj.allianceRank) &&
   isNumber(obj.teamKey);
 

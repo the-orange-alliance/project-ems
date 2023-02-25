@@ -22,12 +22,30 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 router.get(
-  '/:type',
+  '/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await selectAllWhere(
         'schedule',
-        `type = '${req.params.type}'`
+        `eventKey = '${req.params.eventKey}'`
+      );
+      if (!data) {
+        return next(DataNotFoundError);
+      }
+      res.send(data);
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.get(
+  '/:eventKey/:tournamentKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await selectAllWhere(
+        'schedule',
+        `eventKey = "${req.params.eventKey}" AND tournamentKey = "${req.params.tournamentKey}"`
       );
       if (!data) {
         return next(DataNotFoundError);
@@ -53,10 +71,13 @@ router.post(
 );
 
 router.delete(
-  '/:type',
+  '/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await deleteWhere('schedule', `type = "${req.params.type}"`);
+      await deleteWhere(
+        'schedule',
+        `eventKey = "${req.params.eventKey}" AND tournamentKey = "${req.params.tournamentKey}"`
+      );
       res.status(200).send({});
     } catch (e) {
       return next(e);
@@ -65,14 +86,14 @@ router.delete(
 );
 
 router.patch(
-  '/:scheduleKey',
+  '/:eventKey/:tournamentKey/:id',
   validateBody(isTeam),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       await updateWhere(
         'schedule',
         req.body,
-        `scheduleKey = "${req.params.scheduleKey}"`
+        `eventKey = "${req.params.eventKey}" AND tournamentKey = "${req.params.eventKey}" AND id = "${req.params.id}"`
       );
       res.status(200).send({});
     } catch (e) {

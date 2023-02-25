@@ -8,13 +8,18 @@ import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
 import Tooltip from '@mui/material/Tooltip';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { teamsAtom, teamsInCurrentSchedule } from 'src/stores/Recoil';
+import {
+  currentEventKeySelector,
+  teamsByEventAtomFam,
+  currentScheduledTeamsSelector
+} from 'src/stores/NewRecoil';
 import { Checkbox } from '@mui/material';
 
 const TeamSelectionTable: FC = () => {
-  const teams = useRecoilValue(teamsAtom);
+  const eventKey = useRecoilValue(currentEventKeySelector);
+  const teams = useRecoilValue(teamsByEventAtomFam(eventKey));
   const [scheduledTeams, setScheduledTeams] = useRecoilState(
-    teamsInCurrentSchedule
+    currentScheduledTeamsSelector
   );
 
   return (
@@ -25,7 +30,6 @@ const TeamSelectionTable: FC = () => {
             <TableRow>
               <TableCell>Participating</TableCell>
               <TableCell>ID</TableCell>
-              <TableCell>Participant ID</TableCell>
               <TableCell>Name (short)</TableCell>
               <TableCell>Name (long)</TableCell>
               <TableCell>Robot</TableCell>
@@ -46,7 +50,7 @@ const TeamSelectionTable: FC = () => {
               };
 
               return (
-                <TableRow key={team.eventParticipantKey} hover>
+                <TableRow key={`${team.eventKey}-${team.teamKey}`} hover>
                   <TableCell>
                     <Checkbox
                       checked={
@@ -58,7 +62,6 @@ const TeamSelectionTable: FC = () => {
                     />
                   </TableCell>
                   <TableCell>{team.teamKey}</TableCell>
-                  <TableCell>{team.eventParticipantKey}</TableCell>
                   <TableCell>{team.teamNameShort}</TableCell>
                   <TableCell>{team.teamNameLong}</TableCell>
                   <TableCell>{team.robotName}</TableCell>

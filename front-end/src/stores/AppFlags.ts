@@ -1,18 +1,19 @@
-import { TournamentType } from '@toa-lib/models';
 import { useRecoilState } from 'recoil';
 import { setApiStorage, setApiStorageKey } from 'src/api/ApiProvider';
 import { appFlagsAtom } from './Recoil';
 
 export interface AppFlags {
-  createdEvent: boolean;
-  createdTeams: boolean;
+  createdEvents: string[];
+  createdTeams: string[];
+  createdTournaments: string[];
   createdAccounts: boolean;
-  createdSchedules: TournamentType[];
+  createdSchedules: string[];
 }
 
 export const defaultFlags: AppFlags = {
-  createdEvent: false,
-  createdTeams: false,
+  createdEvents: [],
+  createdTeams: [],
+  createdTournaments: [],
   createdAccounts: false,
   createdSchedules: []
 };

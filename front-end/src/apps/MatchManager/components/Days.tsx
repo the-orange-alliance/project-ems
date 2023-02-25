@@ -4,12 +4,14 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
 import { useRecoilState } from 'recoil';
-import { tournamentScheduleSelector } from 'src/stores/Recoil';
+import { currentScheduleByTournamentSelector } from 'src/stores/NewRecoil';
 import { defaultDay } from '@toa-lib/models';
 import Day from './Day';
 
 const Days: FC = () => {
-  const [schedule, setSchedule] = useRecoilState(tournamentScheduleSelector);
+  const [schedule, setSchedule] = useRecoilState(
+    currentScheduleByTournamentSelector
+  );
 
   const addDay = () => {
     const newDay = { ...defaultDay, id: schedule.days.length };

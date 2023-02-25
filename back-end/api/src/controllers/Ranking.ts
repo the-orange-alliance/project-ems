@@ -1,59 +1,52 @@
 import {
-  calculateRankings,
-  calculatePlayoffsRank,
-  FINALS_LEVEL,
-  getMatchKeyPartialFromKey,
+  calculateCUsRankings,
   isRankingArray,
   isTeamArray,
   Ranking,
   reconcileMatchDetails,
   reconcileMatchParticipants,
   reconcileTeamRankings,
-  ROUND_ROBIN_LEVEL,
   Team
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import {
-  deleteWhere,
   insertValue,
-  selectAll,
   selectAllJoinWhere,
   selectAllWhere
 } from '../db/Database.js';
 import { validateBody } from '../middleware/BodyValidator.js';
-import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (req.query.tournamentLevel) {
-      const rankings = await selectAllWhere(
-        'ranking',
-        `tournamentLevel = ${req.query.tournamentLevel}`
-      );
-      const teams = await selectAll('team');
-      res.send(reconcileTeamRankings(teams, rankings));
-    } else {
-      return next(DataNotFoundError);
-    }
-  } catch (e) {
-    return next(e);
-  }
-});
-
 router.get(
-  '/:matchKey',
+  '/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const matchKey = req.params.matchKey;
-      const [match] = await selectAllWhere('match', `matchKey = "${matchKey}"`);
-      const tournamentLevel = match.tournamentLevel;
+      const rankings = await selectAllWhere(
+        'ranking',
+        `eventKey = ${req.params.eventKey}`
+      );
+      const teams = await selectAllWhere(
+        'team',
+        `eventKey = ${req.params.eventKey}`
+      );
+      res.send(reconcileTeamRankings(teams, rankings));
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.get(
+  '/:eventKey/:tournamentKey/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventKey, tournamentKey, id } = req.params;
       const rankings = await selectAllJoinWhere(
         'ranking',
         'match_participant',
         'teamKey',
-        `matchKey = "${matchKey}" AND tournamentLevel = ${tournamentLevel}`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
       );
       res.send(rankings);
     } catch (e) {
@@ -76,20 +69,16 @@ router.post(
 );
 
 router.post(
-  '/create/:tournamentLevel',
+  '/create/:tournamentKey',
   validateBody(isTeamArray),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tournamentLevel = req.params.tournamentLevel;
+      const { tournamentKey } = req.params;
       const teams: Team[] = req.body;
-      const eventKeyArgs = teams[0].eventParticipantKey.split('-');
-      eventKeyArgs.pop();
-      const eventKey = eventKeyArgs.toString().replace(/,/g, '-');
       const rankings: Ranking[] = teams.map((t) => ({
-        rankKey: `${eventKey}-${tournamentLevel}-${t.teamKey}`,
-        tournamentLevel: parseInt(tournamentLevel),
+        eventKey: t.eventKey,
+        tournamentKey,
         rank: 0,
-        allianceKey: '',
         losses: 0,
         played: 0,
         rankChange: 0,
@@ -106,22 +95,21 @@ router.post(
 );
 
 router.post(
-  '/calculate/:tournamentLevel',
+  '/calculate/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tournamentLevel = parseInt(req.params.tournamentLevel);
+      const { eventKey, tournamentKey } = req.params;
       const matches = await selectAllWhere(
         'match',
-        `tournamentLevel = ${tournamentLevel}`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
-      const matchKeyPartial = getMatchKeyPartialFromKey(matches[0].matchKey);
       const participants = await selectAllWhere(
         'match_participant',
-        `matchKey LIKE "${matchKeyPartial}%"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
       const details = await selectAllWhere(
         'match_detail',
-        `matchKey LIKE "${matchKeyPartial}%"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
       const matchesWithParticipants = reconcileMatchParticipants(
         matches,
@@ -131,22 +119,7 @@ router.post(
         matchesWithParticipants,
         details
       );
-      const prevRankings = await selectAllWhere(
-        'ranking',
-        `tournamentLevel = ${tournamentLevel}`
-      );
-      const isPlayoffs =
-        tournamentLevel === ROUND_ROBIN_LEVEL ||
-        tournamentLevel === FINALS_LEVEL;
-      const members = await selectAllWhere(
-        'alliance',
-        `tournamentLevel = ${tournamentLevel}`
-      );
-      const rankings = isPlayoffs
-        ? calculatePlayoffsRank(matchesWithDetails, prevRankings, members)
-        : calculateRankings(matchesWithDetails, prevRankings);
-      await deleteWhere('ranking', `tournamentLevel = ${tournamentLevel}`);
-      await insertValue('ranking', rankings);
+      const rankings = calculateCUsRankings(matchesWithDetails);
       res.send(rankings);
     } catch (e) {
       return next(e);

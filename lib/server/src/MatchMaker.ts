@@ -1,10 +1,4 @@
-import {
-  Match,
-  MatchMakerParams,
-  MatchParticipant,
-  getTournamentLevelFromType,
-  getMatchKeyPartialFromType
-} from '@toa-lib/models';
+import { Match, MatchMakerParams, MatchParticipant } from '@toa-lib/models';
 import { execFile } from 'child_process';
 
 export const getArgFromQualityStr = (quality: string): string => {
@@ -37,45 +31,45 @@ export const executeMatchMaker = async (
   });
 };
 
-function parseMatchMaker(output: string, params: MatchMakerParams): Match[] {
-  const matches: Match[] = [];
+function parseMatchMaker(
+  output: string,
+  params: MatchMakerParams
+): Match<any>[] {
+  const matches: Match<any>[] = [];
   const lines = output.toString().split('\n');
   for (const line of lines) {
     if (line.length <= 1) break;
     const properties = line.split(' ');
     const matchNumber = parseInt(properties[0]);
-    const matchKey = `${params.eventKey}-${getMatchKeyPartialFromType(
-      params.type
-    )}${matchNumber.toString().padStart(3, '0')}`;
     const participants: MatchParticipant[] = [];
 
     for (let i = 0; i < params.teamsPerAlliance * 2; i++) {
       participants.push({
+        eventKey: params.eventKey,
+        tournamentKey: params.tournamentKey,
+        id: matchNumber,
         cardStatus: 0,
-        matchKey,
-        matchParticipantKey: `${matchKey}-T${i + 1}`,
         station:
           i < params.teamsPerAlliance
             ? 11 + i
             : 21 + i - params.teamsPerAlliance,
         surrogate: parseInt(properties[i * 2 + 2].toString().replace('\r', '')),
         teamKey: parseInt(properties[i * 2 + 1]),
-        allianceKey: '',
         disqualified: 0,
         noShow: 0
       });
     }
 
     matches.push({
+      eventKey: params.eventKey,
+      tournamentKey: params.tournamentKey,
+      id: matchNumber,
       fieldNumber:
         matchNumber % params.fields === 0
           ? params.fields
           : matchNumber % params.fields,
-      matchDetailKey: `${matchKey}D`,
-      matchKey,
-      matchName: `${params.type} Match ${matchNumber}`,
+      name: `${params.name} Match ${matchNumber}`,
       result: -1,
-      tournamentLevel: getTournamentLevelFromType(params.type),
       active: 0,
       blueMajPen: 0,
       blueMinPen: 0,

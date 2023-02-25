@@ -1,39 +1,68 @@
-import { isNonNullObject, isString } from './types.js';
+import { DateTime } from 'luxon';
+import { isArray, isNonNullObject, isString } from './types.js';
+
+export interface EventType {
+  key: string;
+  name: string;
+}
+
+export const EventTypes: EventType[] = [
+  {
+    key: 'qual',
+    name: 'Qualifier'
+  },
+  {
+    key: 'league_meet',
+    name: 'League Meet'
+  },
+  {
+    key: 'region_cmp',
+    name: 'Regional Championship'
+  },
+  {
+    key: 'region_super',
+    name: 'Super Regional'
+  },
+  {
+    key: 'cmp',
+    name: 'Championship'
+  },
+  {
+    key: 'off',
+    name: 'Offseason'
+  }
+];
 
 export interface Event {
   eventKey: string;
   seasonKey: string;
   regionKey: string;
-  eventType: string;
+  eventTypeKey: string;
   eventName: string;
   divisionName: string;
   venue: string;
-  eventTypeKey: string;
   city: string;
   stateProv: string;
   startDate: string;
   endDate: string;
   country: string;
   website: string;
-  fieldCount: number;
 }
 
 export const defaultEvent: Event = {
   eventKey: '',
   seasonKey: '',
   regionKey: '',
-  eventType: '',
+  eventTypeKey: '',
   eventName: '',
   divisionName: '',
   venue: '',
-  eventTypeKey: '',
   city: '',
   stateProv: '',
-  startDate: '',
-  endDate: '',
+  startDate: DateTime.now().toISO(),
+  endDate: DateTime.now().plus({ days: 1 }).toISO(),
   country: '',
-  website: '',
-  fieldCount: 2
+  website: ''
 };
 
 export const isEvent = (obj: unknown): obj is Event =>
@@ -41,5 +70,8 @@ export const isEvent = (obj: unknown): obj is Event =>
   isString(obj.eventKey) &&
   isString(obj.seasonKey) &&
   isString(obj.regionKey) &&
-  isString(obj.eventType) &&
+  isString(obj.eventTypeKey) &&
   isString(obj.eventName);
+
+export const isEventArray = (obj: unknown): obj is Event[] =>
+  isArray(obj) && obj.every((o) => isEvent(o));

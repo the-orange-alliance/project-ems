@@ -5,6 +5,10 @@
 @yellow: #c7d100;
 @red: #ce0000;
 
+.error {
+  color: @red;
+}
+
 .center {
   display: flex !important;
   justify-content: center;
@@ -109,4 +113,10 @@
   .no-print {
     display: none;
   }
+}
+
+/* CSS OVERRIDES */
+a.MuiTypography-root {
+  color: inherit;
+  text-decoration: none;
 }

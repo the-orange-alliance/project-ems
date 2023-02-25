@@ -11,14 +11,18 @@ import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const data = await selectAll('alliance');
-    res.send(data);
-  } catch (e) {
-    return next(e);
+router.get(
+  '/:eventKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const eventKey = req.params.eventKey;
+      const data = await selectAllWhere('alliance', `eventKey = "${eventKey}"`);
+      res.send(data);
+    } catch (e) {
+      return next(e);
+    }
   }
-});
+);
 
 router.get(
   '/:rank',

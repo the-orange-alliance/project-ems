@@ -4,7 +4,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import TabPanel from 'src/components/TabPanel/TabPanel';
 import { useRecoilValue } from 'recoil';
-import { selectedTournamentLevel } from 'src/stores/Recoil';
+import { currentTournamentSelector } from 'src/stores/NewRecoil';
 import SetupTeams from './SetupTeams';
 import SetupSchedule from './SetupSchedule';
 import SetupMatches from './SetupMatches';
@@ -15,7 +15,7 @@ import SetupSchedulePlayoffs from './SetupSchedulePlayoffs';
 import SetupMatchesPlayoffs from './SetupMatchesPlayoffs';
 
 const AppTabs: FC = () => {
-  const tournament = useRecoilValue(selectedTournamentLevel);
+  const tournament = useRecoilValue(currentTournamentSelector);
 
   const [value, setValue] = useState(0);
 
@@ -37,28 +37,35 @@ const AppTabs: FC = () => {
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
-        {tournament === ROUND_ROBIN_LEVEL || tournament === FINALS_LEVEL ? (
-          <SetupAlliances />
+        {tournament?.tournamentLevel === ROUND_ROBIN_LEVEL ||
+        tournament?.tournamentLevel === FINALS_LEVEL ? (
+          // <SetupAlliances />
+          <></>
         ) : (
           <SetupTeams />
         )}
       </TabPanel>
       <TabPanel value={value} index={1}>
-        {tournament === ROUND_ROBIN_LEVEL || tournament === FINALS_LEVEL ? (
-          <SetupSchedulePlayoffs />
+        {tournament?.tournamentLevel === ROUND_ROBIN_LEVEL ||
+        tournament?.tournamentLevel === FINALS_LEVEL ? (
+          // <SetupSchedulePlayoffs />
+          <></>
         ) : (
           <SetupSchedule />
         )}
       </TabPanel>
       <TabPanel value={value} index={2}>
-        {tournament === ROUND_ROBIN_LEVEL || tournament === FINALS_LEVEL ? (
-          <SetupMatchesPlayoffs />
+        {tournament?.tournamentLevel === ROUND_ROBIN_LEVEL ||
+        tournament?.tournamentLevel === FINALS_LEVEL ? (
+          // <SetupMatchesPlayoffs />
+          <></>
         ) : (
           <SetupMatches />
         )}
       </TabPanel>
       <TabPanel value={value} index={3}>
-        <MatchEditor />
+        <></>
+        {/* <MatchEditor /> */}
       </TabPanel>
     </Box>
   );

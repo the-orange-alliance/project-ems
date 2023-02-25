@@ -1,16 +1,19 @@
-import { AllianceMember, Match as MatchObj, MatchState, MatchTimer } from "@toa-lib/models";
 import {
-  calculateScore,
-  CarbonCaptureDetails,
-  isCarbonCaptureDetails,
+  AllianceMember,
+  calculateCURankingPoints,
+  calculateCUScore,
+  Match as MatchObj,
+  MatchKey,
+  MatchState,
+  MatchTimer,
 } from "@toa-lib/models";
 import { Server, Socket } from "socket.io";
 import logger from "../util/Logger.js";
 import Room from "./Room.js";
 
 export default class Match extends Room {
-  private matchKey: string | null;
-  private match: MatchObj | null;
+  private key: MatchKey | null;
+  private match: MatchObj<any> | null;
   private timer: MatchTimer;
   private state: MatchState;
   private displayID: number;
@@ -18,7 +21,7 @@ export default class Match extends Room {
   public constructor(server: Server) {
     super(server, "match");
 
-    this.matchKey = null;
+    this.key = null;
     this.match = null;
     this.timer = new MatchTimer();
     this.state = MatchState.MATCH_NOT_SELECTED;
@@ -27,47 +30,50 @@ export default class Match extends Room {
 
   public initializeEvents(socket: Socket): void {
     // Emit the last known display
-    socket.emit('match:display', this.displayID);
+    socket.emit("match:display", this.displayID);
 
     // These are in case of mid-match disconnect/reconnects
     if (
       this.state >= MatchState.PRESTART_COMPLETE &&
       this.state !== MatchState.MATCH_COMPLETE &&
-      this.matchKey &&
+      this.key &&
       !this.timer.inProgress()
     ) {
       // Send prestart information
-      socket.emit("match:prestart", this.matchKey);
+      socket.emit("match:prestart", this.key);
       socket.emit("match:display", this.displayID);
     }
 
-    if ((this.timer.inProgress() && this.match) || this.state === MatchState.MATCH_COMPLETE) {
+    if (
+      (this.timer.inProgress() && this.match) ||
+      this.state === MatchState.MATCH_COMPLETE
+    ) {
       socket.emit("match:update", this.match);
     } else if (this.timer.inProgress() && !this.match) {
-      logger.warn('no match data for this match - sending prestart');
-      socket.emit('match:prestart', this.matchKey);
+      logger.warn("no match data for this match - sending prestart");
+      socket.emit("match:prestart", this.key);
     }
 
     if (this.state === MatchState.RESULTS_COMMITTED) {
-      socket.emit("match:commit", this.matchKey);
+      socket.emit("match:commit", this.key);
     }
 
     // Event listener to remove soon
-    socket.on('match:alliance', (newAlliance: AllianceMember[]) => {
-      this.broadcast().emit('match:alliance', newAlliance);
+    socket.on("match:alliance", (newAlliance: AllianceMember[]) => {
+      this.broadcast().emit("match:alliance", newAlliance);
     });
 
     // Event listeners for matches
-    socket.on("match:prestart", (matchKey: string) => {
-      this.matchKey = matchKey;
-      this.broadcast().emit("match:prestart", matchKey);
+    socket.on("match:prestart", (key: MatchKey) => {
+      this.key = key;
+      this.broadcast().emit("match:prestart", key);
       this.broadcast().emit("match:display", 1);
       this.displayID = 1;
       this.state = MatchState.PRESTART_COMPLETE;
-      logger.info(`prestarting ${matchKey}`);
+      logger.info(`prestarting ${key.eventKey}-${key.tournamentKey}-${key.id}`);
     });
     socket.on("match:abort", () => {
-      this.matchKey = null;
+      this.key = null;
       this.timer.abort();
       this.state = MatchState.MATCH_ABORTED;
     });
@@ -104,56 +110,31 @@ export default class Match extends Room {
       });
       this.displayID = 2;
       this.timer.start();
-      logger.info(`match started: ${this.matchKey}`);
+      logger.info(
+        `match started: ${this.key?.eventKey}-${this.key?.tournamentKey}-${this.key?.id}`
+      );
     });
     socket.on("match:display", (id: number) => {
       this.displayID = id;
       this.broadcast().emit("match:display", id);
     });
-    socket.on("match:update", (match: MatchObj) => {
+    socket.on("match:update", (match: MatchObj<any>) => {
       this.match = { ...match };
       if (!match.details || this.state >= MatchState.RESULTS_COMMITTED) return;
-      if (!isCarbonCaptureDetails(match.details)) {
-        const details = match.details as CarbonCaptureDetails;
-        this.match.details = {
-          ...details,
-          carbonPoints: details.carbonPoints || 0,
-          redRobotOneStorage: details.redRobotOneStorage || 0,
-          redRobotTwoStorage: details.redRobotTwoStorage || 0,
-          redRobotThreeStorage: details.redRobotThreeStorage || 0,
-          blueRobotOneStorage: details.blueRobotOneStorage || 0,
-          blueRobotTwoStorage: details.blueRobotTwoStorage || 0,
-          blueRobotThreeStorage: details.blueRobotThreeStorage || 0,
-          coopertitionBonusLevel: details.coopertitionBonusLevel || 0,
-        };
-      }
-
-      // Calculate coopertition
-      let coopertitionBonusLevel = 0;
-      if ((this.match.details as any).carbonPoints >= 109) {
-        coopertitionBonusLevel = 1;
-      }
-      if ((this.match.details as any).carbonPoints >= 165) {
-        (this.match.details as any).carbonPoints = 165;
-        coopertitionBonusLevel = 2;
-      }
-      (this.match.details as any).coopertitionBonusLevel =
-        coopertitionBonusLevel;
-
-      const [redScore, blueScore] = calculateScore(
-        this.match.redMinPen,
-        this.match.blueMinPen,
-        this.match.details as CarbonCaptureDetails
-      );
+      // TODO - Parameterize this from an interface.
+      const [redScore, blueScore] = calculateCUScore(this.match);
       this.match.redScore = redScore;
       this.match.blueScore = blueScore;
+      this.match.details = calculateCURankingPoints(this.match.details);
       this.broadcast().emit("match:update", this.match);
     });
-    socket.on("match:commit", (matchKey: string) => {
-      this.broadcast().emit("match:commit", matchKey);
+    socket.on("match:commit", (key: MatchKey) => {
+      this.broadcast().emit("match:commit", key);
       this.match = null;
       this.state = MatchState.RESULTS_COMMITTED;
-      logger.info(`committing scores for ${matchKey}`);
+      logger.info(
+        `committing scores for ${key.eventKey}-${key.tournamentKey}-${key.id}`
+      );
     });
   }
 }

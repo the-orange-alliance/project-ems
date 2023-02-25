@@ -14,12 +14,15 @@ import {
   MatchMakerParams,
   Match,
   isMatchArray,
-  MatchDetails,
+  MatchDetailBase,
   MatchParticipant,
   Ranking,
   TournamentType,
   AllianceMember,
-  isMatch
+  isMatch,
+  Tournament,
+  MatchKey,
+  ChargedUpDetails
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -41,8 +44,8 @@ export const login = async (
 export const logout = async (): Promise<void> =>
   clientFetcher('auth/logout', 'GET');
 
-export const setupEventBase = async (): Promise<void> =>
-  clientFetcher('event/setup', 'GET');
+export const setupEventBase = async (seasonKey: string): Promise<void> =>
+  clientFetcher(`event/setup/${seasonKey}`, 'GET');
 
 export const setupDefaultAccounts = async (): Promise<void> =>
   clientFetcher('auth/setup', 'GET');
@@ -76,49 +79,79 @@ export const postTeams = async (teams: Team[]): Promise<void> =>
 export const patchTeam = async (teamKey: string, team: Team): Promise<void> =>
   clientFetcher(`teams/${teamKey}`, 'PATCH', team);
 
+export const postTournaments = async (
+  tournaments: Tournament[]
+): Promise<void> => clientFetcher('tournament', 'POST', tournaments);
+
+export const patchTournament = async (tournament: Tournament): Promise<void> =>
+  clientFetcher(
+    `tournament/${tournament.eventKey}/${tournament.tournamentKey}`,
+    'POST',
+    tournament
+  );
+
 export const postSchedule = async (items: ScheduleItem[]): Promise<void> =>
   clientFetcher('schedule', 'POST', items);
 
-export const patchSchedule = async (
-  scheduleKey: string,
-  item: ScheduleItem
-): Promise<void> => clientFetcher(`schedule/${scheduleKey}`, 'PATCH', item);
+export const patchSchedule = async (item: ScheduleItem): Promise<void> =>
+  clientFetcher(`${item.eventKey}/schedule/${item.id}`, 'PATCH', item);
 
-export const deleteSchedule = (type: TournamentType): Promise<void> =>
-  clientFetcher(`schedule/${type}`, 'DELETE');
+export const deleteSchedule = (
+  eventKey: string,
+  tournamentKey: string
+): Promise<void> =>
+  clientFetcher(`schedule/${eventKey}/${tournamentKey}`, 'DELETE');
 
 export const createMatchSchedule = async (
   params: MatchMakerParams
-): Promise<Match[]> =>
+): Promise<Match<any>[]> =>
   clientFetcher('match/create', 'POST', params, isMatchArray);
 
-export const postMatchSchedule = async (matches: Match[]): Promise<void> =>
+export const postMatchSchedule = async (matches: Match<any>[]): Promise<void> =>
   clientFetcher('match', 'POST', matches);
 
-export const patchMatch = async (match: Match): Promise<void> =>
-  clientFetcher(`match/${match.matchKey}`, 'PATCH', match);
+export const patchMatch = async (match: Match<any>): Promise<void> =>
+  clientFetcher(
+    `match/${match.eventKey}/${match.tournamentKey}/${match.id}`,
+    'PATCH',
+    match
+  );
 
-export const patchMatchDetails = async (details: MatchDetails): Promise<void> =>
-  clientFetcher(`match/${details.matchKey}/details`, 'PATCH', details);
+export const patchMatchDetails = async <T>(
+  match: Match<ChargedUpDetails>
+): Promise<void> =>
+  clientFetcher(
+    `match/details/${match.eventKey}/${match.tournamentKey}/${match.id}`,
+    'PATCH',
+    match.details
+  );
 
 export const patchMatchParticipants = async (
+  key: MatchKey,
   participants: MatchParticipant[]
 ): Promise<void> =>
   clientFetcher(
-    `match/${participants[0].matchKey}/participants`,
+    `match/participants/${key.eventKey}/${key.tournamentKey}/${key.id}`,
     'PATCH',
     participants
   );
 
-export const patchWholeMatch = async (match: Match): Promise<void> => {
+export const patchWholeMatch = async (match: Match<any>): Promise<void> => {
   try {
     const promises: Promise<any>[] = [];
     promises.push(patchMatch(match));
     if (match.details) {
-      patchMatchDetails(match.details);
+      patchMatchDetails(match);
     }
     if (match.participants) {
-      patchMatchParticipants(match.participants);
+      patchMatchParticipants(
+        {
+          eventKey: match.eventKey,
+          tournamentKey: match.tournamentKey,
+          id: match.id
+        },
+        match.participants
+      );
     }
     await Promise.all(promises);
   } catch (e) {
@@ -128,18 +161,23 @@ export const patchWholeMatch = async (match: Match): Promise<void> => {
 };
 
 export const createRankings = (
-  tournamentLevel: number,
+  tournamentKey: string,
   teams: Team[]
 ): Promise<void> =>
-  clientFetcher(`ranking/create/${tournamentLevel}`, 'POST', teams);
+  clientFetcher(`ranking/create/${tournamentKey}`, 'POST', teams);
 
 export const postRankings = (rankings: Ranking[]): Promise<void> =>
   clientFetcher(`ranking`, 'POST', rankings);
 
 export const recalculateRankings = (
-  tournamentLevel: number
+  eventKey: string,
+  tournamentKey: string
 ): Promise<Ranking[]> =>
-  clientFetcher(`ranking/calculate/${tournamentLevel}`, 'POST', isRankingArray);
+  clientFetcher(
+    `ranking/calculate/${eventKey}/${tournamentKey}`,
+    'POST',
+    isRankingArray
+  );
 
 export const postAllianceMembers = (members: AllianceMember[]): Promise<void> =>
   clientFetcher(`alliance`, 'POST', members);

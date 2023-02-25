@@ -52,9 +52,11 @@ export async function createEventBase(): Promise<void> {
   }
 }
 
-export async function createEventGameSpecifics(): Promise<void> {
+export async function createEventGameSpecifics(
+  seasonKey: string
+): Promise<void> {
   try {
-    const createQuery = await getQueryFromFile('details/fgc_2022.sql');
+    const createQuery = await getQueryFromFile(`seasons/${seasonKey}.sql`);
     await db.exec(createQuery);
     return;
   } catch (e) {
@@ -139,7 +141,7 @@ export async function insertValue<T>(
     const columns = getColumns(values);
     const query = `INSERT INTO ${table} (${Array.from(
       columns
-    ).toString()}) VALUES ${getValuesString(columns, values)}`;
+    ).toString()}) VALUES ${getValuesString(columns, values)};`;
     return await db.all(query);
   } catch (e) {
     throw new ApiDatabaseError(table, e);

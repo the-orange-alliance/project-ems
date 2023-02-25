@@ -5,32 +5,23 @@ import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { useRecoilCallback, useRecoilValue, useSetRecoilState } from 'recoil';
-import {
-  loadedMatch,
-  matchInProgress,
-  matchStateAtom
-} from 'src/stores/Recoil';
-import {
-  endGameFlash,
-  matchOver,
-  updateSink,
-  useSocket
-} from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/SocketProvider';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
-import { isCarbonCaptureDetails, Match, MatchState } from '@toa-lib/models';
+import { Match, MatchState } from '@toa-lib/models';
+import { matchInProgressAtom, matchStateAtom } from 'src/stores/NewRecoil';
 
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const MatchStatus: FC = () => {
-  const selectedMatch = useRecoilValue(loadedMatch);
+  const selectedMatch = useRecoilValue(matchInProgressAtom);
   const setState = useSetRecoilState(matchStateAtom);
 
   const [mode, setMode] = useState('NOT READY');
 
   const [socket, connected] = useSocket();
 
-  const name = selectedMatch ? selectedMatch.matchName : 'No Match Selected';
+  const name = selectedMatch ? selectedMatch.name : 'No Match Selected';
 
   useEffect(() => {
     if (connected) {
@@ -54,23 +45,19 @@ const MatchStatus: FC = () => {
 
   const onMatchAuto = () => setMode('AUTO');
   const onMatchTele = () => setMode('TELEOP');
-  const onMatchEndGame = useRecoilCallback(({ snapshot }) => async () => {
+  const onMatchEndGame = useRecoilCallback(() => async () => {
     setMode('ENDGAME');
-    const thisMatch = await snapshot.getPromise(matchInProgress);
-    endGameFlash((thisMatch?.details as any)?.carbonPoints);
   });
-  const onMatchEnd = useRecoilCallback(({ snapshot }) => async () => {
+  const onMatchEnd = useRecoilCallback(() => async () => {
     setMode('MATCH END');
     setState(MatchState.MATCH_COMPLETE);
-    const thisMatch = await snapshot.getPromise(matchInProgress);
-    matchOver((thisMatch?.details as any)?.carbonPoints);
   });
-  const onMatchUpdate = useRecoilCallback(({ set }) => async (match: Match) => {
-    if (match.details && isCarbonCaptureDetails(match.details)) {
-      await updateSink(match.details.carbonPoints);
-    }
-    set(matchInProgress, match);
-  });
+  const onMatchUpdate = useRecoilCallback(
+    ({ set }) =>
+      async (match: Match<any>) => {
+        set(matchInProgressAtom, match);
+      }
+  );
 
   return (
     <Paper sx={{ paddingBottom: (theme) => theme.spacing(2), height: '100%' }}>
@@ -95,7 +82,7 @@ const MatchStatus: FC = () => {
           {mode}
         </Typography>
         <Typography align='center' variant='h5'>
-          <MatchCountdown audio />
+          <MatchCountdown />
         </Typography>
       </Box>
     </Paper>

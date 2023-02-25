@@ -6,24 +6,35 @@ import { useSocket } from 'src/api/SocketProvider';
 import {
   initAudio,
   MATCH_START,
+  MATCH_TELE,
+  MATCH_TRANSITION,
   MATCH_ABORT,
   MATCH_ENDGAME,
   MATCH_END
 } from 'src/apps/AudienceDisplay/Audio';
-import { matchStateAtom, matchTimeAtom, timer } from 'src/stores/Recoil';
+import {
+  matchStateAtom,
+  matchTimeAtom,
+  matchTimeModeAtom,
+  timer
+} from 'src/stores/NewRecoil';
 
 const startAudio = initAudio(MATCH_START);
+const transitionAudio = initAudio(MATCH_TRANSITION);
+const teleAudio = initAudio(MATCH_TELE);
 const abortAudio = initAudio(MATCH_ABORT);
 const endgameAudio = initAudio(MATCH_ENDGAME);
 const endAudio = initAudio(MATCH_END);
 
 interface Props {
   audio?: boolean;
+  mode?: 'modeTime' | 'timeLeft';
 }
 
-const MatchCountdown: FC<Props> = ({ audio }) => {
+const MatchCountdown: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
   const matchState = useRecoilValue(matchStateAtom);
   const [time, setTime] = useRecoilState(matchTimeAtom);
+  const [modeTime, setModeTime] = useRecoilState(matchTimeModeAtom);
   const [socket, connected] = useSocket();
 
   useEffect(() => {
@@ -32,6 +43,8 @@ const MatchCountdown: FC<Props> = ({ audio }) => {
       socket?.on('match:start', onStart);
       socket?.on('match:abort', onAbort);
 
+      timer.on('timer:transition', onTransition);
+      timer.on('timer:tele', onTele);
       timer.on('timer:endgame', onEndgame);
       timer.on('timer:end', onEnd);
     }
@@ -41,28 +54,37 @@ const MatchCountdown: FC<Props> = ({ audio }) => {
     if (!timer.inProgress()) {
       timer.reset();
       setTime(timer.timeLeft);
+      setModeTime(timer.modeTimeLeft);
     }
-    const test = setInterval(() => {
+
+    const tick = setInterval(() => {
       setTime(timer.timeLeft);
+      setModeTime(timer.modeTimeLeft);
     }, 500);
+
     return () => {
       socket?.off('match:prestart', onPrestart);
       socket?.off('match:start', onStart);
       socket?.off('match:abort', onAbort);
 
+      timer.off('timer:transition', onTransition);
+      timer.off('timer:tele', onTele);
       timer.off('timer:endgame', onEndgame);
       timer.off('timer:end', onEnd);
-      clearInterval(test);
+      clearInterval(tick);
     };
   }, []);
 
   useEffect(() => {
     if (matchState === MatchState.MATCH_IN_PROGRESS && timer.inProgress()) {
       setTime(timer.timeLeft);
+      setModeTime(timer.modeTimeLeft);
     }
   }, [matchState]);
 
-  const timeDuration = Duration.fromObject({ seconds: time });
+  const timeDuration = Duration.fromObject({
+    seconds: mode === 'timeLeft' ? time : modeTime
+  });
 
   const onPrestart = () => {
     timer.reset();
@@ -71,6 +93,12 @@ const MatchCountdown: FC<Props> = ({ audio }) => {
   const onStart = () => {
     if (audio) startAudio.play();
     timer.start();
+  };
+  const onTransition = () => {
+    if (audio) transitionAudio.play();
+  };
+  const onTele = () => {
+    if (audio) teleAudio.play();
   };
   const onAbort = () => {
     if (audio) abortAudio.play();
@@ -85,7 +113,13 @@ const MatchCountdown: FC<Props> = ({ audio }) => {
     if (audio) endgameAudio.play();
   };
 
-  return <>{timeDuration.toFormat('m:ss')}</>;
+  return (
+    <>
+      {mode === 'timeLeft'
+        ? timeDuration.toFormat('m:ss')
+        : timeDuration.toFormat('s')}
+    </>
+  );
 };
 
 export default MatchCountdown;

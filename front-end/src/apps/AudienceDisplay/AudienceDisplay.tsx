@@ -1,13 +1,6 @@
 import { clientFetcher } from '@toa-lib/client';
-import {
-  FINALS_LEVEL,
-  isMatch,
-  Match,
-  MatchState,
-  ROUND_ROBIN_LEVEL
-} from '@toa-lib/models';
+import { Displays, isMatch, Match, MatchKey } from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
@@ -16,27 +9,18 @@ import ChromaLayout from 'src/layouts/ChromaLayout';
 import {
   displayChromaKey,
   displayID,
-  matchResult,
-  matchStateAtom
-} from 'src/stores/Recoil';
+  matchResultAtom
+} from 'src/stores/NewRecoil';
+import MatchPreview from './displays/frc_2023/MatchPreview/MatchPreview';
+import MatchPlay from './displays/frc_2023/MatchPlay/MatchPlay';
+
 import './AudienceDisplay.less';
-import Alliances from './displays/fgc_2022/Alliances/Alliances';
-import Blank from './displays/fgc_2022/Blank/Blank';
-import MatchPlay from './displays/fgc_2022/MatchPlay/MatchPlay';
-import MatchPlayMini from './displays/fgc_2022/MatchPlayMini/MatchPlayMini';
-import MatchPreview from './displays/fgc_2022/MatchPreview/MatchPreview';
-import MatchResults from './displays/fgc_2022/MatchResults/MatchResults';
-import MatchTimer from './displays/fgc_2022/MatchTimer/MatchTimer';
-import RankingsPlayoffs from './displays/fgc_2022/RankingsPlayoff/RankingsPlayoff';
+import MatchResults from './displays/frc_2023/MatchResults/MatchResults';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayID);
   const chromaKey = useRecoilValue(displayChromaKey);
-  const state = useRecoilValue(matchStateAtom);
   const [socket, connected] = useSocket();
-  const [searchParams] = useSearchParams();
-  const mode = searchParams.get('mode');
-  const role = searchParams.get('role');
 
   useEffect(() => {
     if (connected) {
@@ -46,15 +30,6 @@ const AudienceDisplay: FC = () => {
   }, [connected]);
 
   useEffect(() => {
-    setTimeout(() => {
-      if (
-        role === 'stream' &&
-        display === 1 &&
-        state >= MatchState.PRESTART_COMPLETE
-      )
-        setDisplay(2);
-    }, 20000);
-
     return () => {
       socket?.removeListener('match:display', onDisplay);
       socket?.removeListener('match:commit', onCommit);
@@ -65,14 +40,14 @@ const AudienceDisplay: FC = () => {
     setDisplay(id);
   };
 
-  const onCommit = useRecoilCallback(({ set }) => async (matchKey: string) => {
-    const match: Match = await clientFetcher(
-      `match/all/${matchKey}`,
+  const onCommit = useRecoilCallback(({ set }) => async (key: MatchKey) => {
+    const match: Match<any> = await clientFetcher(
+      `match/all/${key.eventKey}/${key.tournamentKey}/${key.id}`,
       'GET',
       undefined,
       isMatch
     );
-    set(matchResult, match);
+    set(matchResultAtom, match);
   });
 
   return (
@@ -80,7 +55,7 @@ const AudienceDisplay: FC = () => {
       <MatchStateListener />
       <PrestartListener />
       <div id='aud-base' style={{ backgroundColor: chromaKey }}>
-        {getDisplay(display, mode || '')}
+        {getDisplay(display)}
       </div>
     </ChromaLayout>
   );
@@ -88,36 +63,17 @@ const AudienceDisplay: FC = () => {
 
 export default AudienceDisplay;
 
-function getDisplay(id: number, mode: string): ReactNode {
+function getDisplay(id: number): ReactNode {
   switch (id) {
     case -1:
       return <div />;
-    case 0:
-      return <Blank />;
-    case 1:
+    case Displays.MATCH_PREVIEW:
       return <MatchPreview />;
-    case 2:
-      return getPlayScreen(mode);
-    case 3:
-      return <MatchResults />;
-    case 4:
-      return <RankingsPlayoffs tournamentLevel={ROUND_ROBIN_LEVEL} />;
-    case 5:
-      return <RankingsPlayoffs tournamentLevel={FINALS_LEVEL} />;
-    case 6:
-      return <Alliances />;
-    default:
-      return <Blank />;
-  }
-}
-
-function getPlayScreen(mode: string): ReactNode {
-  switch (mode) {
-    case 'field':
-      return <MatchTimer />;
-    case 'stream':
-      return <MatchPlayMini />;
-    default:
+    case Displays.MATCH_START:
       return <MatchPlay />;
+    case Displays.MATCH_RESULTS:
+      return <MatchResults />;
+    default:
+      return <div />;
   }
 }

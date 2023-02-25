@@ -20,7 +20,12 @@ const NumberInput: FC<Props> = ({ value, onChange, disabled }) => {
       <Button variant='contained' onClick={decrement} disabled={disabled}>
         -
       </Button>
-      <TextField onChange={handleChange} value={value} type='number' disabled={disabled} />
+      <TextField
+        onChange={handleChange}
+        value={value}
+        type='number'
+        disabled={disabled}
+      />
       <Button variant='contained' onClick={increment} disabled={disabled}>
         +
       </Button>

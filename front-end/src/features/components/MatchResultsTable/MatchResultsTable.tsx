@@ -9,17 +9,20 @@ import TableBody from '@mui/material/TableBody';
 import { Match } from '@toa-lib/models';
 import { DateTime } from 'luxon';
 import { useRecoilValue } from 'recoil';
-import { loadedMatchKey, teamsAtom } from 'src/stores/Recoil';
+import {
+  currentMatchIdAtom,
+  currentTeamsByEventSelector
+} from 'src/stores/NewRecoil';
 
 interface Props {
-  matches: Match[];
-  onSelect?: (matchKey: string) => void;
+  matches: Match<any>[];
+  onSelect?: (id: number) => void;
   disabled?: boolean;
 }
 
 const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
-  const selectedMatchKey = useRecoilValue(loadedMatchKey);
-  const teams = useRecoilValue(teamsAtom);
+  const currentMatchId = useRecoilValue(currentMatchIdAtom);
+  const teams = useRecoilValue(currentTeamsByEventSelector);
   const allianceSize = matches?.[0]?.participants?.length
     ? matches[0].participants.length / 2
     : 3;
@@ -45,25 +48,23 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
           </TableHead>
           <TableBody>
             {matches.map((match) => {
-              const isSelected = onSelect
-                ? selectedMatchKey === match.matchKey
-                : false;
+              const isSelected = onSelect ? currentMatchId === match.id : false;
 
               const select = () => {
                 if (!disabled) {
-                  onSelect?.(match.matchKey);
+                  onSelect?.(match.id);
                 }
               };
 
               return (
                 <TableRow
-                  key={match.matchKey}
+                  key={match.id}
                   hover
                   selected={isSelected}
                   onClick={select}
                   className={disabled ? 'mouse-disable' : 'mouse-click'}
                 >
-                  <TableCell>{match.matchName}</TableCell>
+                  <TableCell>{match.name}</TableCell>
                   <TableCell>{match.fieldNumber}</TableCell>
                   <TableCell>
                     {DateTime.fromISO(match.startTime).toLocaleString(
@@ -79,7 +80,9 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                   {match.participants?.map((p) => {
                     const team = teams.find((t) => p.teamKey === t.teamKey);
                     return (
-                      <TableCell key={p.matchParticipantKey}>
+                      <TableCell
+                        key={`${match.eventKey}-${match.id}-${p.station}`}
+                      >
                         {team ? team.country : p.teamKey}
                         {p.surrogate ? '*' : ''}
                       </TableCell>

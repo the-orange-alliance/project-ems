@@ -8,27 +8,22 @@ import {
   createRankings,
   postMatchSchedule
 } from 'src/api/ApiProvider';
-import { useRecoilCallback, useRecoilValue, useSetRecoilState } from 'recoil';
-import {
-  eventAtom,
-  matches,
-  matchesByTournamentType,
-  selectedTournamentLevel,
-  selectedTournamentType,
-  tournamentScheduleAtomFamily,
-  tournamentScheduleItemAtomFamily,
-  tournamentScheduleSelector
-} from 'src/stores/Recoil';
+import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import MatchTable from 'src/features/components/MatchTable/MatchTable';
-import { assignMatchFieldsForFGC } from '@toa-lib/models';
 import { CircularProgress } from '@mui/material';
+import {
+  currentEventSelector,
+  currentScheduleByTournamentSelector,
+  currentScheduleItemsByTournamentSelector,
+  currentTournamentSelector,
+  matchesByTournamentSelector
+} from 'src/stores/NewRecoil';
+import { assignMatchTimes } from '@toa-lib/models';
 
 const SetupMatches: FC = () => {
-  const type = useRecoilValue(selectedTournamentType);
-  const level = useRecoilValue(selectedTournamentLevel);
-  const typeMatches = useRecoilValue(matchesByTournamentType(type));
-  const schedule = useRecoilValue(tournamentScheduleAtomFamily(type));
-  const setMatches = useSetRecoilState(matches);
+  const tournament = useRecoilValue(currentTournamentSelector);
+  const schedule = useRecoilValue(currentScheduleByTournamentSelector);
+  const [matches, setMatches] = useRecoilState(matchesByTournamentSelector);
 
   const [quality, setQuality] = useState('best');
   const [loading, setLoading] = useState(false);
@@ -37,32 +32,33 @@ const SetupMatches: FC = () => {
 
   const createMatches = useRecoilCallback(({ snapshot }) => async () => {
     setLoading(true);
-    const { eventKey, fieldCount: fields } = await snapshot.getPromise(
-      eventAtom
-    );
-    const schedule = await snapshot.getPromise(tournamentScheduleSelector);
-    const teamKeys = schedule.teams.map((t) => t.teamKey);
+    const event = await snapshot.getPromise(currentEventSelector);
     const items = await snapshot.getPromise(
-      tournamentScheduleItemAtomFamily(schedule.type)
+      currentScheduleItemsByTournamentSelector
     );
-    const newMatches = await createMatchSchedule({
+    if (!event || !tournament) return;
+    const { eventKey } = event;
+    const { tournamentKey, fieldCount: fields, name } = tournament;
+    const teamKeys = schedule.teams.map((t) => t.teamKey);
+    const matches = await createMatchSchedule({
       eventKey,
+      tournamentKey: tournamentKey,
       quality,
       fields,
       matchesPerTeam: schedule.matchesPerTeam,
       teamsParticipating: schedule.teamsParticipating,
       teamsPerAlliance: schedule.teamsPerAlliance,
-      type,
-      teamKeys
+      teamKeys,
+      name
     });
-    const fgcMatches = assignMatchFieldsForFGC(newMatches, items, schedule);
-    setMatches((prev) => [...prev, ...fgcMatches]);
+    setMatches(assignMatchTimes(matches, items));
     setLoading(false);
   });
 
   const postMatches = async () => {
-    await createRankings(level, schedule.teams);
-    await postMatchSchedule(typeMatches);
+    if (!tournament) return;
+    await createRankings(tournament.tournamentKey, schedule.teams);
+    await postMatchSchedule(matches);
   };
 
   return (
@@ -82,8 +78,8 @@ const SetupMatches: FC = () => {
           marginBottom: (theme) => theme.spacing(2)
         }}
       />
-      {typeMatches.length > 0 && <MatchTable matches={typeMatches} />}
-      {typeMatches.length > 0 && (
+      {matches.length > 0 && <MatchTable matches={matches} />}
+      {matches.length > 0 && (
         <Button
           sx={{ marginTop: (theme) => theme.spacing(2) }}
           variant='contained'

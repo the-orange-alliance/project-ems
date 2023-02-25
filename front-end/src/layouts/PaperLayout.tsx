@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { Breakpoint } from '@mui/material';
@@ -14,14 +14,16 @@ import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import LoginButton from 'src/features/components/LoginButton/LoginButton';
-import { userAtom } from 'src/stores/Recoil';
-import emsAvatar from 'src/assets/favicon.ico';
-import LogoutButton from 'src/features/components/LogoutButton/LogoutButton';
+import LoginButton from '@features/components/LoginButton/LoginButton';
+import { userAtom } from '@stores/Recoil';
+import emsAvatar from '@assets/favicon.ico';
+import LogoutButton from '@features/components/LogoutButton/LogoutButton';
 
 import NotificationsIcon from '@mui/icons-material/Notifications';
 
 interface Props {
+  title?: string;
+  titleLink?: string;
   header?: ReactNode | string;
   containerWidth?: Breakpoint | false;
   children?: ReactNode;
@@ -29,6 +31,8 @@ interface Props {
 }
 
 const PaperLayout: FC<Props> = ({
+  title,
+  titleLink,
   header,
   containerWidth,
   children,
@@ -52,9 +56,22 @@ const PaperLayout: FC<Props> = ({
               sx={{ padding: '4px' }}
             />
           </IconButton>
-          <Typography variant='h6' noWrap style={{ flexGrow: 1 }}>
-            Event Management System | Home
-          </Typography>
+          {titleLink && (
+            <Typography
+              variant='h6'
+              noWrap
+              style={{ flexGrow: 1 }}
+              component={Link}
+              to={titleLink}
+            >
+              {title ? title : 'Event Management System'}
+            </Typography>
+          )}
+          {!titleLink && (
+            <Typography variant='h6' noWrap style={{ flexGrow: 1 }}>
+              {title ? title : 'Event Management System'}
+            </Typography>
+          )}
           {user ? (
             <>
               <Button color='inherit'>Docs</Button>
@@ -90,7 +107,7 @@ const PaperLayout: FC<Props> = ({
             </>
           )}
           <Box sx={{ padding: padding ? (theme) => theme.spacing(2) : 0 }}>
-            {children}
+            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
           </Box>
         </Paper>
       </Container>
