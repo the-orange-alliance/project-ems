@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
-import { eventFields } from 'src/stores/Recoil';
+import { currentTournamentFieldsSelector } from 'src/stores/NewRecoil';
 
 interface Props {
   fields: number[];
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const FieldsDropdown: FC<Props> = ({ fields, onChange }) => {
-  const allFields = useRecoilValue(eventFields);
+  const allFields = useRecoilValue(currentTournamentFieldsSelector);
 
   const changeFields = (event: SelectChangeEvent<number[]>) => {
     const {
@@ -36,8 +36,8 @@ const FieldsDropdown: FC<Props> = ({ fields, onChange }) => {
       renderValue={(selected) => selected.join(', ')}
     >
       {allFields.map((field) => (
-        <MenuItem key={field} value={field}>
-          <Checkbox checked={fields.indexOf(field) > -1} />
+        <MenuItem key={field.name} value={field.field}>
+          <Checkbox checked={fields.indexOf(field.field) > -1} />
           <ListItemText primary={`Field ${field}`} />
         </MenuItem>
       ))}

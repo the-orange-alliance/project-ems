@@ -124,6 +124,33 @@ export const currentTeamsByEventSelector = selector<Team[]>({
   get: ({ get }) => get(teamsByEventAtomFam(get(currentEventKeySelector)))
 });
 
+export const currentTournamentFieldsSelector = selector<
+  {
+    name: string;
+    field: number;
+  }[]
+>({
+  key: 'currentTournamentFieldsSelector',
+  get: ({ get }) => {
+    return (
+      get(currentTournamentSelector)?.fields.map((f, i) => ({
+        name: f,
+        field: i + 1
+      })) ?? []
+    );
+  }
+});
+
+export const currentTournamentFieldsAtom = atom<
+  {
+    name: string;
+    field: number;
+  }[]
+>({
+  key: 'currentTournamentFieldsAtom',
+  default: currentTournamentFieldsSelector
+});
+
 /**
  * @section EVENT STATE
  * Recoil state management for various events

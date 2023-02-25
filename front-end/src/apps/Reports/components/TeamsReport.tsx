@@ -29,7 +29,7 @@ const TeamsReport: FC<Props> = ({ teams }) => {
           </TableHead>
           <TableBody>
             {teams.map((t) => (
-              <TableRow key={t.eventParticipantKey}>
+              <TableRow key={t.teamKey}>
                 <TableCell>{t.teamNameLong}</TableCell>
                 <TableCell>{t.teamNameShort}</TableCell>
                 <TableCell>
