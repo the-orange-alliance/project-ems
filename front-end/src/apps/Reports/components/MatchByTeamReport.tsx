@@ -13,7 +13,7 @@ import { teamByTeamKey } from 'src/stores/Recoil';
 
 interface Props {
   teams: Team[];
-  matches: Match[];
+  matches: Match<any>[];
   identifier?: keyof Team;
 }
 
@@ -22,8 +22,8 @@ const MatchByTeamReport: FC<Props> = ({ teams, matches, identifier }) => {
     ? matches[0].participants.length / 2
     : 3;
 
-  const teamsMap: Map<number, Match[]> = useMemo(() => {
-    const newMap: Map<number, Match[]> = new Map();
+  const teamsMap: Map<number, Match<any>[]> = useMemo(() => {
+    const newMap: Map<number, Match<any>[]> = new Map();
     for (const match of matches) {
       if (!match.participants) continue;
       for (const participant of match.participants) {
@@ -64,8 +64,8 @@ const MatchByTeamReport: FC<Props> = ({ teams, matches, identifier }) => {
                 </TableHead>
                 <TableBody>
                   {teamsMap.get(t.teamKey)?.map((m) => (
-                    <TableRow key={`${t.teamKey}-${m.matchKey}`}>
-                      <TableCell>{m.matchName}</TableCell>
+                    <TableRow key={`${t.teamKey}-${m.id}`}>
+                      <TableCell>{m.name}</TableCell>
                       <TableCell size='small'>{m.fieldNumber}</TableCell>
                       <TableCell>
                         {DateTime.fromISO(m.startTime).toLocaleString(
@@ -75,7 +75,7 @@ const MatchByTeamReport: FC<Props> = ({ teams, matches, identifier }) => {
                       {m.participants?.map((p) => {
                         const team = useRecoilValue(teamByTeamKey(p.teamKey));
                         return (
-                          <TableCell key={p.matchParticipantKey} size='small'>
+                          <TableCell key={`${p.id}-${p.station}`} size='small'>
                             {identifier && team ? team[identifier] : p.teamKey}
                           </TableCell>
                         );

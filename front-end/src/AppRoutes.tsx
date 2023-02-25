@@ -11,13 +11,13 @@ const AudienceDisplay = lazy(() => import('./apps/AudienceDisplay'));
 const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 const RedReferee = lazy(() => import('./apps/Referee/RedReferee'));
 const BlueReferee = lazy(() => import('./apps/Referee/BlueReferee'));
+const Reports = lazy(() => import('./apps/Reports'));
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const AdminApp = lazy(() => import('./apps/Admin'));
 // const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 // const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));
 // const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
 // const FieldDebugger = lazy(() => import('./apps/FieldDebugger'));
-// const Reports = lazy(() => import('./apps/Reports'));
 // const Streaming = lazy(() => import('./apps/Streaming/Streaming'));
 // const QueueingDisplay = lazy(() => import('./apps/QueueingDisplay'));
 // const JBApp = lazy(() => import('./apps/JBApp'));
@@ -112,6 +112,13 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/referee/blue',
     group: 0,
     element: <BlueReferee />
+  },
+  {
+    name: 'Reports App',
+    path: '/:eventKey/reports',
+    group: 0,
+    element: <Reports />,
+    hidden: true
   }
   // {
   //   name: 'Account Manager',
@@ -138,13 +145,6 @@ const AppRoutes: AppRoute[] = [
   //   path: '/admin',
   //   group: 0,
   //   element: <AdminApp />,
-  //   hidden: true
-  // },
-  // {
-  //   name: 'Reports App',
-  //   path: '/reports',
-  //   group: 0,
-  //   element: <Reports />,
   //   hidden: true
   // },
   // {

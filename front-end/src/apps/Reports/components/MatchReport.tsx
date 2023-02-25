@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import TableContainer from '@mui/material/TableContainer';
 import Table from '@mui/material/Table';
 import TableHead from '@mui/material/TableHead';
@@ -9,40 +9,41 @@ import { Match, Team } from '@toa-lib/models';
 import Report from './Report';
 import { DateTime } from 'luxon';
 import { useRecoilValue } from 'recoil';
+// import FieldsDropdown from 'src/components/Dropdowns/FieldsDropdown';
 import {
-  eventFields,
-  selectedTournamentType,
-  teamsAtom,
-  tournamentScheduleItemAtomFamily
-} from 'src/stores/Recoil';
-import FieldsDropdown from 'src/components/Dropdowns/FieldsDropdown';
+  currentScheduleItemsByTournamentSelector,
+  currentTeamsByEventSelector,
+  currentTournamentSelector
+} from 'src/stores/NewRecoil';
 
 interface Props {
-  matches: Match[];
+  matches: Match<any>[];
   identifier?: keyof Team;
 }
 
 const MatchReport: FC<Props> = ({ matches, identifier }) => {
-  const type = useRecoilValue(selectedTournamentType);
-  const teams = useRecoilValue(teamsAtom);
-  const items = useRecoilValue(tournamentScheduleItemAtomFamily(type));
-  const allFields = useRecoilValue(eventFields);
-  const [fields, setFields] = useState(allFields);
+  const tournament = useRecoilValue(currentTournamentSelector);
+  const teams = useRecoilValue(currentTeamsByEventSelector);
+  const items = useRecoilValue(currentScheduleItemsByTournamentSelector);
 
-  const fieldMatches = matches.filter(
-    (m) => fields.indexOf(m.fieldNumber) > -1
-  );
+  if (!tournament) return null;
+
+  // const allFields = tournament.fields;
+  // const [fields, setFields] = useState(allFields);
+
+  // const fieldMatches = matches.filter(
+  //   (m) => fields.indexOf(m.fieldNumber) > -1
+  // );
   const allianceSize = matches?.[0]?.participants?.length
     ? matches[0].participants.length / 2
     : 3;
-  const changeFields = (newFields: number[]) => setFields(newFields);
-  console.log(fieldMatches);
+  // const changeFields = (newFields: number[]) => setFields(newFields);
   return (
     <>
-      <div className='no-print'>
+      {/* <div className='no-print'>
         <FieldsDropdown fields={fields} onChange={changeFields} />
-      </div>
-      <Report name={`${type} Match Schedule`}>
+      </div> */}
+      <Report name={`${tournament.name} Match Schedule`}>
         <TableContainer>
           <Table size='small'>
             <TableHead sx={{ backgroundColor: 'lightgrey' }}>
@@ -62,16 +63,14 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
             <TableBody>
               {items
                 .filter(
-                  (i) =>
-                    !i.isMatch ||
-                    fieldMatches.find((m) => m.matchName === i.name)
+                  (i) => !i.isMatch || matches.find((m) => m.name === i.name)
                 )
                 .map((i) => {
-                  const m = matches.find((m) => m.matchName === i.name);
+                  const m = matches.find((m) => m.name === i.name);
                   if (i.isMatch) {
                     return (
-                      <TableRow key={i.key}>
-                        <TableCell>{m?.matchName}</TableCell>
+                      <TableRow key={i.id}>
+                        <TableCell>{m?.name}</TableCell>
                         <TableCell size='small'>{m?.fieldNumber}</TableCell>
                         <TableCell>
                           {DateTime.fromISO(m?.startTime || '').toLocaleString(
@@ -83,7 +82,10 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
                             (t) => t.teamKey == p.teamKey
                           );
                           return (
-                            <TableCell key={p.matchParticipantKey} size='small'>
+                            <TableCell
+                              key={`${p.id}-${p.station}`}
+                              size='small'
+                            >
                               {identifier && team
                                 ? team[identifier]
                                 : p.teamKey}
@@ -95,7 +97,7 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
                     );
                   } else {
                     return (
-                      <TableRow key={i.key}>
+                      <TableRow key={i.id}>
                         <TableCell colSpan={9}>{i.name}</TableCell>
                       </TableRow>
                     );

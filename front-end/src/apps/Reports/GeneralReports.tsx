@@ -2,12 +2,12 @@ import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
-import { teamsAtom } from 'src/stores/Recoil';
 import TeamsReport from './components/TeamsReport';
 import { ReportProps } from '.';
+import { currentTeamsByEventSelector } from 'src/stores/NewRecoil';
 
 const GeneralReports: FC<ReportProps> = ({ onGenerate }) => {
-  const teams = useRecoilValue(teamsAtom);
+  const teams = useRecoilValue(currentTeamsByEventSelector);
 
   const generateTeamReport = () => onGenerate(<TeamsReport teams={teams} />);
 
