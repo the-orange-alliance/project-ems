@@ -83,7 +83,7 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                       <TableCell
                         key={`${match.eventKey}-${match.id}-${p.station}`}
                       >
-                        {team ? team.country : p.teamKey}
+                        {team ? team.teamKey : p.teamKey}
                         {p.surrogate ? '*' : ''}
                       </TableCell>
                     );

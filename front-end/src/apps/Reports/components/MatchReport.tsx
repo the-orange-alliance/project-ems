@@ -34,9 +34,10 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
   // const fieldMatches = matches.filter(
   //   (m) => fields.indexOf(m.fieldNumber) > -1
   // );
-  const allianceSize = matches?.[0]?.participants?.length
-    ? matches[0].participants.length / 2
-    : 3;
+  // const allianceSize = matches?.[0]?.participants?.length
+  //   ? matches[0].participants.length / 2
+  //   : 3;
+  const allianceSize = 3;
   // const changeFields = (newFields: number[]) => setFields(newFields);
   return (
     <>
@@ -69,7 +70,9 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
                   const m = matches.find((m) => m.name === i.name);
                   if (i.isMatch) {
                     return (
-                      <TableRow key={i.id}>
+                      <TableRow
+                        key={`${i.eventKey}-${i.tournamentKey}-${i.id}`}
+                      >
                         <TableCell>{m?.name}</TableCell>
                         <TableCell size='small'>{m?.fieldNumber}</TableCell>
                         <TableCell>
@@ -83,12 +86,10 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
                           );
                           return (
                             <TableCell
-                              key={`${p.id}-${p.station}`}
+                              key={`${p.eventKey}-${p.tournamentKey}-${p.id}-${p.teamKey}-${p.station}`}
                               size='small'
                             >
-                              {identifier && team
-                                ? team[identifier]
-                                : p.teamKey}
+                              {team?.teamKey}
                               {p.surrogate ? '*' : ''}
                             </TableCell>
                           );

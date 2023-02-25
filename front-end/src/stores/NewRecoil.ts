@@ -9,6 +9,7 @@ import {
   isMatch,
   isMatchArray,
   isMatchParticipantArray,
+  isRankingArray,
   isScheduleItemArray,
   isTeamArray,
   isTournamentArray,
@@ -16,6 +17,7 @@ import {
   MatchParticipant,
   MatchState,
   MatchTimer,
+  Ranking,
   reconcileMatchParticipants,
   ScheduleItem,
   Team,
@@ -568,6 +570,40 @@ export const matchInProgressParticipantsByStationSelectorFam = selectorFamily<
           participants
       );
     }
+});
+
+/**
+ * @section RANKINGS STATE
+ * Recoil state management for rankings.
+ */
+export const currentRankingsByTournamentSelector = selector<Ranking[] | null>({
+  key: 'currentRankingsByTournamentSelector',
+  get: async ({ get }) => {
+    const tournament = get(currentTournamentSelector);
+    if (!tournament) return null;
+    const { eventKey, tournamentKey } = tournament;
+    return await clientFetcher(
+      `ranking/${eventKey}/${tournamentKey}`,
+      'GET',
+      undefined,
+      isRankingArray
+    );
+  }
+});
+
+export const currentRankingsByMatchSelector = selector<Ranking[] | null>({
+  key: 'currentRankingsByTournamentSelector',
+  get: async ({ get }) => {
+    const match = get(currentMatchSelector);
+    if (!match) return null;
+    const { eventKey, tournamentKey, id } = match;
+    return await clientFetcher(
+      `ranking/${eventKey}/${tournamentKey}/${id}`,
+      'GET',
+      undefined,
+      isRankingArray
+    );
+  }
 });
 
 /**

@@ -25,7 +25,7 @@ const ParticipantDropdown: FC<Props> = ({ teamKey, disabled, onChange }) => {
       disabled={disabled}
       value={team || null}
       options={teams}
-      getOptionLabel={(option) => option.city}
+      getOptionLabel={(option) => option.teamKey + ''}
       renderOption={(props, option) => (
         <Box component='li' {...props}>
           <span
@@ -34,7 +34,7 @@ const ParticipantDropdown: FC<Props> = ({ teamKey, disabled, onChange }) => {
             }
           ></span>
           &nbsp;
-          <span>{option.city}</span>
+          <span>{option.teamKey}</span>
         </Box>
       )}
       renderInput={(params) => (
