@@ -108,8 +108,8 @@ const MatchResults: FC = () => {
   const isTie = match.redScore === match.blueScore;
   const redRP =
     (isTie ? 1 : isRedWin ? 2 : 0) +
-    match.details.blueActivationBonus +
-    match.details.blueSustainBonus;
+    match.details.redActivationBonus +
+    match.details.redSustainBonus;
   const blueRP =
     (isTie ? 1 : isRedWin ? 0 : 2) +
     match.details.blueActivationBonus +
