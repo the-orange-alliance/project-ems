@@ -1,119 +1,101 @@
-#cu-pre-top {
-  width: 85%;
-  margin-top: 2.5vh;
-  margin-left: auto;
-  margin-right: auto;
-  height: 10vh;
-  padding: 6px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 15px;
-  border: 3px solid #000000;
-  background-color: #151c25;
-  color: #ffffff;
+@cu-red-bg: rgba(120, 28, 25, 1);
+@cu-blue-bg: rgba(24, 64, 110, 1);
+@cu-red: rgb(218, 56, 50);
+@cu-blue: rgb(42, 100, 173);
+
+@header-height: 10vh;
+@footer-height: 0px;
+@teams-gap: 8px;
+
+#cu-body {
+  display: grid;
+  grid-template-rows: 1fr 4fr 1fr;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    'header'
+    'content'
+    'footer';
+  height: 100vh;
 }
 
-.cu-pre-match {
-  font-size: 2vw;
+#cu-header {
+  grid-area: header;
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr 4fr 1fr;
+  grid-template-areas: 'logo team';
+  background-color: white;
+  color: black;
+  padding: 0.5em 3em;
   font-weight: bold;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
-    1px 1px 0 #000;
-}
-
-#cu-pre-top > div {
   width: 100%;
-  height: 100%;
-}
-
-#cu-pre-mid {
-  width: 100%;
-  margin-top: 5vh;
-  height: 60vh;
-  padding: 2.5vh 6px 6px 6px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  flex-direction: column;
-  color: #ffffff;
-  font-weight: bold;
-  font-size: 1.5vw;
-}
-
-#cu-pre-mid-labels {
-  width: 85%;
-  height: 5vh;
-}
-
-.cu-pre-team {
-  width: 10%;
-  height: 100%;
-  padding-left: 10px;
-}
-
-.cu-pre-name {
-  width: 80%;
-  height: 100%;
-}
-
-.cu-pre-rank {
-  width: 10%;
-  height: 100%;
   text-align: center;
-}
-
-.cu-pre-mid-alliance {
-  width: 85%;
-  min-height: 25vh;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
-    1px 1px 0 #000;
-}
-
-.cu-pre-mid-alliance > div {
-  height: 6vh;
-  width: 100%;
-  margin-bottom: 1.25vh;
-}
-
-#cu-pre-bot {
-  position: relative;
-  width: 85%;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 5vh;
-  height: 10vh;
-  padding: 6px;
-  border-radius: 15px;
-  border: 3px solid #000000;
-  background-color: #151c25;
-}
-
-#cu-pre-bot > .cu-bot-logo {
-  position: absolute;
-  width: 5vw;
-  height: 100%;
-}
-
-#cu-pre-bot > .cu-bot-text {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: space-around;
   align-items: center;
+  height: @header-height;
+  font-size: 1.75em;
+}
+
+#cu-header-match {
+  font-size: 1.25em;
+}
+
+#cu-teams {
+  grid-area: content;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: 'red blue';
+  justify-items: center;
+  align-items: center;
+  font-size: 1.5em;
+}
+
+#cu-teams-red {
+  display: flex;
   flex-direction: column;
-  color: #ffffff;
-  font-size: 2vw;
-  font-weight: bold;
+  grid-template-columns: 1fr;
+  background-color: @cu-red-bg;
+  width: 100%;
+  height: 100vh;
+  place-content: center;
+  align-items: center;
+  gap: @teams-gap;
 }
 
-.blue-border {
-  background-color: #5c88ff;
-  border: 3px solid #000000;
-  border-radius: 15px;
+#cu-teams-red .cu-team {
+  background-color: @cu-red;
+}
+#cu-teams-blue .cu-team {
+  background-color: @cu-blue;
 }
 
-.red-border {
-  background-color: #ce2000;
-  border: 3px solid #000000;
-  border-radius: 15px;
+.cu-team {
+  border-radius: 8px;
+  padding: 0.75em;
+  color: white;
+  font-weight: normal;
+  width: 80%;
+  font-size: 1.75em;
+}
+
+#cu-teams-blue {
+  display: flex;
+  flex-direction: column;
+  grid-template-columns: 1fr;
+  background-color: @cu-blue-bg;
+  width: 100%;
+  height: 100%;
+  place-content: center;
+  align-items: center;
+  gap: @teams-gap;
+}
+
+#cu-footer {
+  grid-area: footer;
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: 'logo eventName optional-data';
+  background-color: black;
+  color: white;
 }

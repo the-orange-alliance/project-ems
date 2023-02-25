@@ -15,51 +15,30 @@ const MatchPreview: FC = () => {
 
   return (
     <div id='cu-body'>
-      <div id='cu-container'>
-        <div id='cu-pre-top' className='cu-border'>
-          <div className='center-items cu-pre-match'>{match?.name}</div>
+      <div id='cu-header'>
+        <div id='cu-header-up-next'>Up Next</div>
+        <div id='cu-header-match'>{match?.name}</div>
+        <div id='cu-header-logo'></div>
+      </div>
+      <div id='cu-teams'>
+        <div id='cu-teams-red'>
+          {redAlliance.map((p) => (
+            <div className='cu-team' key={p.teamKey}>
+              <div className='cu-team-team-number'>{p?.teamKey}</div>
+              <div className='cu-team-team-name'>{p?.team?.teamNameLong}</div>
+            </div>
+          ))}
         </div>
-        <div id='cu-pre-mid' className='cu-border'>
-          <div id='cu-pre-mid-labels' className='center-items'>
-            <div className='cu-pre-team'>Team #</div>
-            <div className='cu-pre-name'>Nickname</div>
-            <div className='cu-pre-rank'>Rank #</div>
-          </div>
-          <div className='cu-pre-mid-alliance'>
-            {redAlliance.map((p) => (
-              <div
-                key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
-                className='center-items red-border'
-              >
-                <div className='cu-pre-team center-left-items'>{p.teamKey}</div>
-                <div className='cu-pre-name center-left-items'>
-                  {p.team?.teamNameLong}
-                </div>
-                <div className='cu-pre-rank center-items'>#0</div>
-              </div>
-            ))}
-          </div>
-          <div className='cu-pre-mid-alliance'>
-            {blueAlliance.map((p) => (
-              <div
-                key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
-                className='center-items blue-border'
-              >
-                <div className='cu-pre-team center-left-items'>{p.teamKey}</div>
-                <div className='cu-pre-name center-left-items'>
-                  {p.team?.teamNameLong}
-                </div>
-                <div className='cu-pre-rank center-items'>#0</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div id='cu-pre-bot' className='cu-border'>
-          <div className='cu-bot-text'>
-            <span>{event?.eventName}</span>
-          </div>
+        <div id='cu-teams-blue'>
+          {blueAlliance.map((p) => (
+            <div className='cu-team' key={p.teamKey}>
+              <div className='cu-teams-team-number'>{p?.teamKey}</div>
+              <div className='cu-teams-team-name'>{p?.team?.teamNameLong}</div>
+            </div>
+          ))}
         </div>
       </div>
+      <div id='cu-footer'></div>
     </div>
   );
 };
