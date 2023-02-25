@@ -36,16 +36,16 @@ export class PlcSupport {
     this.socket = socket;
   }
 
-  public initPlc(address: string) {
+  public async initPlc(address: string) {
     this.plc.address = address;
-    this.client.connectTCP(this.plc.address, { port: this.modBusPort }).then(() => {
+    await this.client.connectTCP(this.plc.address, { port: this.modBusPort }).then(() => {
       logger.info('✔ Connected to PLC at ' + this.plc.address + ':' + this.modBusPort);
       this.sendCoils();
+      this.client.setID(1);
     }).catch((err: any) => {
       logger.error('❌ Failed to connect to PLC (' + this.plc.address + ':' + this.modBusPort + '): ' + err);
       this.firstConn = true;
     });
-    this.client.setID(1);
   }
 
   public getEstop(station: number) {
@@ -60,12 +60,12 @@ export class PlcSupport {
     }
   }
 
-  public runPlc() {
+  public async runPlc() {
     if(!this.client.isOpen) {
       if(this.firstConn) {
         logger.error('❌ Lost connection to PLC (' + this.plc.address + ':' + this.modBusPort + '), retrying');
         this.firstConn = false;
-        this.initPlc(this.plc.address);
+        await this.initPlc(this.plc.address);
       }
     } else {
       this.client.readHoldingRegisters(0, 10).then((data: ReadRegisterResult) =>{
@@ -83,10 +83,10 @@ export class PlcSupport {
         this.plc.inputs.fromArray(data.data);
         if(!this.plc.inputs.equals(this.plc.oldInputs)) {
           // We have a new input, lets notify
-          this.socket?.emit("plc-update", this.plc.inputs.toJSON());
+          this.socket?.emit("frc-fms:plc-update", this.plc.inputs.toJSON());
           if(this.plc.inputs.fieldEstop) {
             logger.info('🛑 Field E-STOP Pressed! This can\'t be good!');
-            this.socket?.emit('abort');
+            this.socket?.emit('match:abort');
           }
           this.plc.oldInputs = new PlcInputs().fromArray(data.data);
         }

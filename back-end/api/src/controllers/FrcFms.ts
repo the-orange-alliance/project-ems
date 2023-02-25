@@ -19,7 +19,7 @@ const router = Router();
 router.get(
   '/:event_key/wpakeys',
   async (req: Request, res: Response, next: NextFunction) => {
-    const keys = await selectAllWhere(WPAKeyDatabase, `eventKey = ${req.params.event_key}`);
+    const keys = await selectAllWhere(WPAKeyDatabase, `eventKey = '${req.params.event_key}'`);
     res.json(keys);
   }
 );

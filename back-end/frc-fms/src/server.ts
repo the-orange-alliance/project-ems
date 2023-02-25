@@ -26,7 +26,7 @@ if (process.argv[2] && process.argv[2].match(ipRegex)) {
 export class EmsFrcFms {
     private static _instance: EmsFrcFms;
     public _timer: MatchTimer = new MatchTimer();
-    public activeMatch: Match<any>;
+    public activeMatch: Match<any> | null;
     public timeLeft: number = 0;
     public matchState: number = 0;
     public event: Event;
@@ -84,9 +84,6 @@ export class EmsFrcFms {
         // Init Switch Configuration Tools
         if(this.settings.enableAdvNet) SwitchSupport.getInstance().setSettings(this.settings.switchIp, 'cisco', this.settings.switchPassword);
 
-        // Init PLC Connection
-        if(this.settings.enableAdvNet && this.settings.enablePlc) PlcSupport.getInstance().initPlc(this.settings.plcIp);
-
         // Init Timer
         this._timer = new MatchTimer();
         this.initTimer();
@@ -99,6 +96,7 @@ export class EmsFrcFms {
             this.startAPLoop();
         }
         if(this.settings.enableAdvNet && this.settings.enablePlc) {
+            await PlcSupport.getInstance().initPlc(this.settings.plcIp);
             clearInterval(this.plcInterval);
             this.startPLC();
         }
@@ -127,7 +125,7 @@ export class EmsFrcFms {
         }
     }
 
-    private updateSettings(newSettings: object) {
+    private async updateSettings(newSettings: object) {
         this.settings = new FMSSettings().fromJson(newSettings);
         // Update AP Settings
         if(this.settings.enableAdvNet) {
@@ -141,7 +139,7 @@ export class EmsFrcFms {
         if(this.settings.enableAdvNet) SwitchSupport.getInstance().setSettings(this.settings.switchIp, 'cisco', this.settings.switchPassword);
         // Update PLC Settings
         if(this.settings.enableAdvNet && this.settings.enablePlc) {
-            PlcSupport.getInstance().initPlc(this.settings.plcIp);
+            await PlcSupport.getInstance().initPlc(this.settings.plcIp);
             clearInterval(this.plcInterval);
             this.startPLC();
         } else {
@@ -154,12 +152,12 @@ export class EmsFrcFms {
         const token = await getToken();
         // @ts-ignore
         this.socket = createSocket(token);
-        if(token) logger.info('✅ Successfully recieved token from EMS');
+        if(token) logger.info('✔ Successfully recieved token from EMS');
         else logger.info('❌ Failed to get key from FMS. Things won\'t work!')
         // Setup Socket Connect/Disconnect
         this.socket?.on("connect", () => {
             logger.info("✔ Connected to EMS through SocketIO.");
-            this.socket?.emit("identify","ems-frc-fms-main", ["event", "scoring", "referee", "fms"]);
+            this.socket?.emit('rooms', ['match', 'fcs']);
         });
         this.socket?.on("disconnect", () => {
             logger.error("❌ Disconnected from SocketIO.");
@@ -176,11 +174,13 @@ export class EmsFrcFms {
         });
 
         // Manage Socket Events
-        this.socket?.on("prestart-response", (err: any, matchJSON: any) => {
+        this.socket?.on("match:prestart", (matchKey: MatchKey) => {
             logger.info('🔁 Prestart Command Issued');
             this.matchState = MatchMode.PRESTART;
-            this.fmsOnPrestart(matchJSON);
+            this.fmsOnPrestart(matchKey);
         });
+
+        this.socket?.connect();
 
         // Update all instances
         DriverstationSupport.getInstance().setSocket(this.socket);
@@ -191,22 +191,22 @@ export class EmsFrcFms {
         
     }
 
-    private fmsOnPrestart(match: Match<any>) {
-        this.getParticipantInformation(match).then((participants: MatchParticipant[]) => {
-            if (participants.length > 0) {
-                match.participants = participants;
-            }
-        }).catch(err => logger.error('❌ Error getting participant information: ' + err));
-        this.activeMatch = match;
-        if(!match) {
+    private async fmsOnPrestart(matchKey: MatchKey) {
+        this.activeMatch = await this.getMatch(matchKey).catch(err => {
+            logger.error('❌ Error getting participant information: ' + err);
+            return null;
+        });
+
+        if(!this.activeMatch) {
             logger.error('❌ Received prestart command, but found no active match');
+            return;
         }
 
         // Call DriverStation Prestart
         DriverstationSupport.getInstance().onPrestart(this.activeMatch);
         if(this.settings.enableAdvNet) {
             // Configure AP
-            AccesspointSupport.getInstance().handleTeamWifiConfig(match.eventKey, match.participants ?? []);
+            AccesspointSupport.getInstance().handleTeamWifiConfig(this.activeMatch.eventKey, this.activeMatch.participants ?? []);
             // Configure Switch
             SwitchSupport.getInstance().configTeamEthernet();
         }
@@ -217,19 +217,33 @@ export class EmsFrcFms {
     }
 
     private initTimer() {
-        this.socket?.on("match:start", (timerConfig: any) => {
-            this._timer.matchConfig = timerConfig;
+        this.socket?.on("match:start", () => {
+            // this._timer.matchConfig = timerConfig;
             // Signal DriverStation Start
             DriverstationSupport.getInstance().driverStationMatchStart();
-            this._timer.on("match:end", () => {
-                this.removeMatchlisteners()
+            this._timer.on("timer:auto", () => {
+                this.matchState = MatchMode.AUTONOMOUS
+                logger.info('▶ Autonomous');
             });
-            this._timer.on("match:auto", () => {this.matchState = MatchMode.AUTONOMOUS});
-            // this._timer.on("match-transition", () => {this.matchState = MatchMode.TRANSITION});
-            this._timer.on("match:tele", () => {this.matchState = MatchMode.TELEOPERATED});
-            this._timer.on("match:end", () => {this.matchState = MatchMode.ENDED});
+            this._timer.on("timer:transition", () => {
+                this.matchState = MatchMode.TRANSITION
+                logger.info('▶ Transistion');
+            });
+            this._timer.on("timer:tele", () => {
+                this.matchState = MatchMode.TELEOPERATED
+                logger.info('▶ Teleoperated');
+            });
+            this._timer.on("timer:endgame", () => {
+                this.matchState = MatchMode.ENDGAME
+                logger.info('▶ Endgame');
+            });
+            this._timer.on("timer:end", () => {
+                this.removeMatchlisteners()
+                this.matchState = MatchMode.ENDED
+                logger.info('⏹ Local Timer Ended');
+            });
 
-            logger.info('Match Started');
+            logger.info('▶ Match Started');
             this._timer.start();
             this.matchState = MatchMode.AUTONOMOUS;
             this.timeLeft = this._timer.timeLeft;
@@ -241,19 +255,28 @@ export class EmsFrcFms {
                 }
             }, 1000);
         });
+        this.socket?.on("match:end", () => {
+            this._timer.stop();
+            this.timeLeft = this._timer.timeLeft;
+            this.matchState = MatchMode.ENDED;
+            this.removeMatchlisteners();
+            logger.info('⏹ Remote Timer Ended');
+        });
         this.socket?.on("match:abort", () => {
             this._timer.abort();
             this.timeLeft = this._timer.timeLeft;
+            this.matchState = MatchMode.ABORTED;
             this.removeMatchlisteners();
+            logger.info('🛑 Match Aborted');
         });
     }
 
     private removeMatchlisteners() {
-        this._timer.removeAllListeners("match:auto");
-        this._timer.removeAllListeners("match:transition");
-        this._timer.removeAllListeners("match:tele");
-        this._timer.removeAllListeners("match:endgame");
-        this._timer.removeAllListeners("match:end");
+        this._timer.removeAllListeners("timer:auto");
+        this._timer.removeAllListeners("timer:transition");
+        this._timer.removeAllListeners("timer:tele");
+        this._timer.removeAllListeners("timer:endgame");
+        this._timer.removeAllListeners("timer:end");
     }
 
     private startDriverStation() {
@@ -271,13 +294,13 @@ export class EmsFrcFms {
         logger.info('✔ Access Point Manager Init Complete, Running Loop');
     }
 
-    private getParticipantInformation(prestartData: MatchKey): Promise<MatchParticipant[]> {
-        return new Promise<MatchParticipant[]>((resolve, reject) => {
+    private getMatch(prestartData: MatchKey): Promise<Match<any>> {
+        return new Promise<Match<any>>((resolve, reject) => {
             getMatch(prestartData).then((match: Match<any>) => {
-                resolve(match.participants ?? []);
+                resolve(match);
             }).catch(err => {
-                logger.error('❌ Error getting match teams: ' + err);
-                reject();
+                logger.error('❌ Error getting match: ' + err);
+                reject(null);
             });
         });
     }

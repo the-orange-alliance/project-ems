@@ -91,7 +91,7 @@ passport.deserializeUser((id, cb) => {
 });
 
 // Network variables
-const host = getIPv4();
+const host = '0.0.0.0' //getIPv4();
 
 // Start the server
 server.listen(

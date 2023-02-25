@@ -147,19 +147,11 @@ export class DriverstationSupport {
     // Parse TCP packet from the Driver Station
     private parseTcpPacket(chunk: Buffer, socket: net.Socket, remoteAddress: string | undefined) {
         const teamId = (chunk[3]<<8) + (chunk[4]);
-        let station = -1;
-        let recievedFirstPacket = false;
         if(this.allDriverStations[0]) { // Checks if we have driver stations
-            for(const ds of this.allDriverStations) {
-                if(ds && ds.teamId === teamId) {
-                    station = ds.allianceStation;
-                    recievedFirstPacket = ds.recievedFirstPacket;
-                    break;
-                }
-            }
+            let conn = this.allDriverStations.find(t => t.teamId === teamId)
 
-            if(station > -1 && !recievedFirstPacket && chunk.length === 5) {
-                this.handleFirstTCP(chunk, socket, teamId, station, remoteAddress);
+            if(conn && chunk.length === 5 /* && !conn.recievedFirstPacket */ ) { // we should be checking if its first packet but isnt always nice
+                this.handleFirstTCP(chunk, socket, teamId, conn.allianceStation, remoteAddress);
             } else if (chunk.length !== 5) {
                 this.handleRegularTCP(chunk, socket);
             } else {
@@ -233,7 +225,7 @@ export class DriverstationSupport {
         returnPacket[1] = 3; // Packet Size
         returnPacket[2] = 25; // Packet Type
         returnPacket[3] = this.convertEMSStationToFMS(station + ''); // Station
-        returnPacket[4] = dsStationStatus; // Station Status
+        returnPacket[4] = 0 // dsStationStatus; // Station Status // TODO: Reenable
         // Station Status:
         // 1 = "Move to Station <Assigned Station>"
         // 2 = "Waiting..."
@@ -306,9 +298,12 @@ export class DriverstationSupport {
                 } else if (mode === MatchMode.TRANSITION) {
                     this.allDriverStations[i].auto = false;
                     this.allDriverStations[i].enabled = false;
-                } else if (mode === MatchMode.TELEOPERATED) {
+                } else if (mode === MatchMode.TELEOPERATED || mode === MatchMode.ENDGAME) {
                     this.allDriverStations[i].auto = false;
                     this.allDriverStations[i].enabled = true;
+                } else if (mode === MatchMode.ABORTED) {
+                    this.allDriverStations[i].auto = false;
+                    this.allDriverStations[i].enabled = false;
                 } else {
                     this.allDriverStations[i].auto = false;
                     this.allDriverStations[i].enabled = false;
@@ -343,7 +338,7 @@ export class DriverstationSupport {
             // register socket to update twice a second
             if(!this.updateSocketInterval) {
                 this.updateSocketInterval = setInterval(() => {
-                    this.socket?.emit('ds-update-all', this.dsToJsonObj());
+                    this.socket?.emit('frc-fms:ds-update-all', this.dsToJsonObj());
                 }, 500)
             }
         }
@@ -476,13 +471,13 @@ export class DriverstationSupport {
         }
 
         // Match number.
-        const localMatchNum = activeMatch.id;
+        const localMatchNum = activeMatch?.id || -1;
         if (match.toLowerCase().indexOf("practice") > -1 || match.toLowerCase().indexOf("qual") > -1) {
             packet[7] = localMatchNum >> 8;
             packet[8] = localMatchNum & 0xff;
         } else if (match.toLowerCase().indexOf("elim") > -1 ) {
             // E.g. Quarter-final 3, match 1 will be numbered 431.
-            let fmsMatchNum = 0
+            let fmsMatchNum = 1
             // TODO: Tournament Level
             // switch(activeMatch.tournamentLevel) {
             //     case Match.OCTOFINALS_LEVEL:
@@ -523,6 +518,7 @@ export class DriverstationSupport {
 
         // Remaining number of seconds in match.
         const matchSecondsRemaining = EmsFrcFms.getInstance().timeLeft;
+        // console.log(matchSecondsRemaining)
 
         packet[20] = matchSecondsRemaining >> 8 & 0xff;
         packet[21] = matchSecondsRemaining & 0xff;

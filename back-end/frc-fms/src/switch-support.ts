@@ -45,7 +45,7 @@ export class SwitchSupport {
     let commands = [];
     let vlans = [this.red1Vlan, this.red2Vlan, this.red3Vlan, this.blue1Vlan, this.blue2Vlan, this.blue3Vlan];
     // Build Command to configure VLANs
-    for(const p of EmsFrcFms.getInstance().activeMatch.participants ?? []) {
+    for(const p of EmsFrcFms.getInstance().activeMatch?.participants ?? []) {
       const vlan = vlans[this.convertEMSStationToFMS(p.station)];
 
       // Locate current vlan config for this vlan
