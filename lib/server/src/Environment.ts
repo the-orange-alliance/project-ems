@@ -46,7 +46,7 @@ class Environment {
     dotenv.config();
 
     this.env.serviceName = env.SERVICE_NAME || 'api';
-    this.env.serviceHost = env.SERVICE_HOST || '127.0.0.1';
+    this.env.serviceHost = /*env.SERVICE_HOST || */ '0.0.0.0';
     this.env.servicePort = env.SERVICE_PORT || '8080';
     this.env.jwtSecret = env.JWT_SECRET || 'fgc2022';
     this.env.nodeEnv = env.NODE_ENV || 'development';
