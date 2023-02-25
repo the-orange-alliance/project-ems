@@ -9,8 +9,8 @@ import {
   matchStateAtom
 } from 'src/stores/NewRecoil';
 import { Match, MatchState } from '@toa-lib/models';
-import { sendAllClear } from 'src/api/SocketProvider';
-import { patchWholeMatch } from 'src/api/ApiProvider';
+import { sendAllClear, sendCommitScores } from 'src/api/SocketProvider';
+import { patchWholeMatch, recalculateRankings } from 'src/api/ApiProvider';
 
 const CommitScoresButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
@@ -36,9 +36,13 @@ const CommitScoresButton: FC = () => {
     setLoading(true);
     await patchWholeMatch(match);
     set(matchByCurrentIdSelectorFam(match.id), match);
-    // await recalculateRankings(match.tournamentLevel);
+    await recalculateRankings(match.eventKey, match.tournamentKey);
     setLoading(false);
-    // sendCommitScores(match.id);
+    sendCommitScores({
+      eventKey: match.eventKey,
+      tournamentKey: match.tournamentKey,
+      id: match.id
+    });
     setState(MatchState.RESULTS_COMMITTED);
   });
 

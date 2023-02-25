@@ -6,24 +6,11 @@ import Button from '@mui/material/Button';
 const AllianceCards: FC = () => {
   const navigate = useNavigate();
 
-  const openRed = () => navigate('/referee/red');
-  const openBlue = () => navigate('/referee/blue');
-  const openHead = () => navigate('/referee/head');
-  const openScoreKeeper = () => navigate('/referee/scorekeeper');
+  const openRed = () => navigate('red', { relative: 'route' });
+  const openBlue = () => navigate('blue', { relative: 'route' });
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
-        <Button
-          fullWidth
-          variant='contained'
-          className='black-bg-imp'
-          sx={{ height: '10em' }}
-          onClick={openHead}
-        >
-          Head Referee
-        </Button>
-      </Box>
       <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
         <Button
           fullWidth
@@ -42,17 +29,6 @@ const AllianceCards: FC = () => {
           onClick={openBlue}
         >
           Blue Alliance
-        </Button>
-      </Box>
-      <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
-        <Button
-          fullWidth
-          variant='contained'
-          className='yellow-bg-imp'
-          sx={{ height: '10em' }}
-          onClick={openScoreKeeper}
-        >
-          Score Keeper
         </Button>
       </Box>
     </Box>

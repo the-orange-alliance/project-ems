@@ -21,7 +21,8 @@ import {
   AllianceMember,
   isMatch,
   Tournament,
-  MatchKey
+  MatchKey,
+  ChargedUpDetails
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -110,10 +111,20 @@ export const postMatchSchedule = async (matches: Match<any>[]): Promise<void> =>
   clientFetcher('match', 'POST', matches);
 
 export const patchMatch = async (match: Match<any>): Promise<void> =>
-  clientFetcher(`match/${match.matchKey}`, 'PATCH', match);
+  clientFetcher(
+    `match/${match.eventKey}/${match.tournamentKey}/${match.id}`,
+    'PATCH',
+    match
+  );
 
-export const patchMatchDetails = async (details: MatchDetails): Promise<void> =>
-  clientFetcher(`match/${details.matchKey}/details`, 'PATCH', details);
+export const patchMatchDetails = async <T>(
+  match: Match<ChargedUpDetails>
+): Promise<void> =>
+  clientFetcher(
+    `match/details/${match.eventKey}/${match.tournamentKey}/${match.id}`,
+    'PATCH',
+    match.details
+  );
 
 export const patchMatchParticipants = async (
   key: MatchKey,
@@ -130,7 +141,7 @@ export const patchWholeMatch = async (match: Match<any>): Promise<void> => {
     const promises: Promise<any>[] = [];
     promises.push(patchMatch(match));
     if (match.details) {
-      patchMatchDetails(match.details);
+      patchMatchDetails(match);
     }
     if (match.participants) {
       patchMatchParticipants(
@@ -159,9 +170,14 @@ export const postRankings = (rankings: Ranking[]): Promise<void> =>
   clientFetcher(`ranking`, 'POST', rankings);
 
 export const recalculateRankings = (
-  tournamentLevel: number
+  eventKey: string,
+  tournamentKey: string
 ): Promise<Ranking[]> =>
-  clientFetcher(`ranking/calculate/${tournamentLevel}`, 'POST', isRankingArray);
+  clientFetcher(
+    `ranking/calculate/${eventKey}/${tournamentKey}`,
+    'POST',
+    isRankingArray
+  );
 
 export const postAllianceMembers = (members: AllianceMember[]): Promise<void> =>
   clientFetcher(`alliance`, 'POST', members);

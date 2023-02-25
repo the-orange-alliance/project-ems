@@ -6,6 +6,8 @@ import { useSocket } from 'src/api/SocketProvider';
 import {
   initAudio,
   MATCH_START,
+  MATCH_TELE,
+  MATCH_TRANSITION,
   MATCH_ABORT,
   MATCH_ENDGAME,
   MATCH_END
@@ -13,6 +15,8 @@ import {
 import { matchStateAtom, matchTimeAtom, timer } from 'src/stores/NewRecoil';
 
 const startAudio = initAudio(MATCH_START);
+const transitionAudio = initAudio(MATCH_TRANSITION);
+const teleAudio = initAudio(MATCH_TELE);
 const abortAudio = initAudio(MATCH_ABORT);
 const endgameAudio = initAudio(MATCH_ENDGAME);
 const endAudio = initAudio(MATCH_END);
@@ -32,6 +36,8 @@ const MatchCountdown: FC<Props> = ({ audio }) => {
       socket?.on('match:start', onStart);
       socket?.on('match:abort', onAbort);
 
+      timer.on('timer:transition', onTransition);
+      timer.on('timer:tele', onTele);
       timer.on('timer:endgame', onEndgame);
       timer.on('timer:end', onEnd);
     }
@@ -50,6 +56,8 @@ const MatchCountdown: FC<Props> = ({ audio }) => {
       socket?.off('match:start', onStart);
       socket?.off('match:abort', onAbort);
 
+      timer.off('timer:transition', onTransition);
+      timer.off('timer:tele', onTele);
       timer.off('timer:endgame', onEndgame);
       timer.off('timer:end', onEnd);
       clearInterval(test);
@@ -71,6 +79,12 @@ const MatchCountdown: FC<Props> = ({ audio }) => {
   const onStart = () => {
     if (audio) startAudio.play();
     timer.start();
+  };
+  const onTransition = () => {
+    if (audio) transitionAudio.play();
+  };
+  const onTele = () => {
+    if (audio) teleAudio.play();
   };
   const onAbort = () => {
     if (audio) abortAudio.play();

@@ -1,19 +1,53 @@
-import { FC } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
+import { getMatchTime } from '@toa-lib/models';
+import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
+import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
 import {
   currentEventSelector,
-  matchInProgressAtom
+  matchInProgressAtom,
+  matchTimeAtom,
+  timer
 } from 'src/stores/NewRecoil';
 import './MatchPlay.less';
 
 const MatchPlay: FC = () => {
   const event = useRecoilValue(currentEventSelector);
   const match = useRecoilValue(matchInProgressAtom);
+  const timeLeft = useRecoilValue(matchTimeAtom);
   const redAlliance = match?.participants?.filter((p) => p.station < 20) ?? [];
   const blueAlliance =
     match?.participants?.filter((p) => p.station >= 20) ?? [];
+
+  // Timer Style
+  const barWidth: number =
+    ((getMatchTime(timer.matchConfig) - timeLeft) /
+      getMatchTime(timer.matchConfig)) *
+    100;
+
+  const [timerStyle, setTimerStyle] = useState('green-bar');
+
+  useEffect(() => {
+    timer.on('timer:start', onTimerStart);
+    timer.on('timer:endgame', onTimerEndgame);
+    timer.on('timer:end', onTimerEnd);
+    timer.on('timer:abort', onTimerEnd);
+
+    return () => {
+      timer.off('timer:start', onTimerStart);
+      timer.off('timer:endgame', onTimerEndgame);
+      timer.off('timer:end', onTimerEnd);
+      timer.off('timer:abort', onTimerEnd);
+    };
+  });
+
+  const onTimerStart = () => setTimerStyle('green-bar');
+  const onTimerEndgame = () => setTimerStyle('yellow-bar');
+  const onTimerEnd = () => setTimerStyle('red-bar');
+
   return (
     <div>
+      <MatchUpdateListener stopAfterMatchEnd />
       <div id='cu-play-container'>
         <div id='cu-play-top' className='center-items'>
           <div id='cu-play-top-left' className='center-items'>
@@ -46,11 +80,15 @@ const MatchPlay: FC = () => {
               <div id='cu-play-mid-timer' className='center-items'>
                 <div
                   id='cu-play-mid-timer-bar'
-                  // style={'yellow'}
-                  className={''}
+                  style={{
+                    width: barWidth + '%',
+                    borderTopRightRadius: barWidth >= 99 ? 0 : undefined,
+                    borderBottomRightRadius: barWidth >= 99 ? 0 : undefined
+                  }}
+                  className={timerStyle}
                 />
                 <div id='cu-play-mid-timer-time' className='center-items'>
-                  00:00
+                  <MatchCountdown audio />
                 </div>
               </div>
               <div id='cu-play-mid-scores'>

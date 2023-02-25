@@ -6,14 +6,14 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 interface Props {
-  match: Match | null | undefined;
+  match: Match<any> | null | undefined;
 }
 
 const MatchChip: FC<Props> = ({ match }) => {
   return (
     <Chip
       icon={match ? <CheckCircleOutlineIcon /> : <ErrorOutlineIcon />}
-      label={match ? match.matchName : 'No Match Loaded'}
+      label={match ? match.name : 'No Match Loaded'}
       color={match ? 'success' : 'error'}
       sx={{ maxWidth: '220px' }}
     />

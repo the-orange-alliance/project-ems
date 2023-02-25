@@ -8,12 +8,13 @@ const TournamentManager = lazy(() => import('./apps/TournamentManager'));
 const MatchManager = lazy(() => import('./apps/MatchManager'));
 const ScoringApp = lazy(() => import('./apps/Scoring'));
 const AudienceDisplay = lazy(() => import('./apps/AudienceDisplay'));
+const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
+const RedReferee = lazy(() => import('./apps/Referee/RedReferee'));
+const BlueReferee = lazy(() => import('./apps/Referee/BlueReferee'));
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const AdminApp = lazy(() => import('./apps/Admin'));
 // const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 // const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));
-// const RedReferee = lazy(() => import('./apps/Referee/RedReferee'));
-// const BlueReferee = lazy(() => import('./apps/Referee/BlueReferee'));
 // const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
 // const FieldDebugger = lazy(() => import('./apps/FieldDebugger'));
 // const Reports = lazy(() => import('./apps/Reports'));
@@ -93,6 +94,24 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/audience',
     group: 0,
     element: <AudienceDisplay />
+  },
+  {
+    name: 'Referee App',
+    path: '/:eventKey/referee',
+    group: 0,
+    element: <RefereeApp />
+  },
+  {
+    name: 'Red Referee Page',
+    path: '/:eventKey/referee/red',
+    group: 0,
+    element: <RedReferee />
+  },
+  {
+    name: 'Blue Referee Page',
+    path: '/:eventKey/referee/blue',
+    group: 0,
+    element: <BlueReferee />
   }
   // {
   //   name: 'Account Manager',
@@ -102,11 +121,6 @@ const AppRoutes: AppRoute[] = [
   //   hidden: false
   // },
   // {
-  //   name: 'Referee App',
-  //   path: '/referee',
-  //   group: 0,
-  //   element: <RefereeApp />
-  // },
   // {
   //   name: 'Score Keeper Page',
   //   path: '/referee/scorekeeper',
@@ -118,18 +132,6 @@ const AppRoutes: AppRoute[] = [
   //   path: '/referee/head',
   //   group: 0,
   //   element: <HeadReferee />
-  // },
-  // {
-  //   name: 'Red Referee Page',
-  //   path: '/referee/red',
-  //   group: 0,
-  //   element: <RedReferee />
-  // },
-  // {
-  //   name: 'Blue Referee Page',
-  //   path: '/referee/blue',
-  //   group: 0,
-  //   element: <BlueReferee />
   // },
   // {
   //   name: 'Admin App',

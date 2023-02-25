@@ -1,11 +1,16 @@
-import { Match } from '@toa-lib/models';
+import { Match, MatchState } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
-import { matchInProgress } from 'src/stores/Recoil';
+import { matchInProgressAtom, matchStateAtom } from 'src/stores/NewRecoil';
 
-const MatchUpdateListener: FC = () => {
-  const setMatch = useSetRecoilState(matchInProgress);
+interface Props {
+  stopAfterMatchEnd?: boolean;
+}
+
+const MatchUpdateListener: FC<Props> = ({ stopAfterMatchEnd }) => {
+  const state = useRecoilValue(matchStateAtom);
+  const setMatch = useSetRecoilState(matchInProgressAtom);
   const [socket, connected] = useSocket();
 
   useEffect(() => {
@@ -20,8 +25,13 @@ const MatchUpdateListener: FC = () => {
     };
   }, []);
 
-  const onUpdate = (newMatch: Match) => {
-    setMatch(newMatch);
+  const onUpdate = (newMatch: Match<any>) => {
+    if (stopAfterMatchEnd && state >= MatchState.MATCH_COMPLETE) {
+      // Don't update anything.
+      return;
+    } else {
+      setMatch(newMatch);
+    }
   };
 
   return null;

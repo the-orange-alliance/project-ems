@@ -1,6 +1,14 @@
 import { Match, MatchDetailBase } from '../Match.js';
 import { Ranking } from '../Ranking.js';
 
+// TODO - I have an idea how to make this less ideal.
+/**
+ * interface SeasonDetailFunctions {
+     calculateScore;
+     calculateRankings;
+     calculateRP;
+   }
+ */
 export interface ChargedUpDetails extends MatchDetailBase {
   redAutoMobilityOne: number;
   redAutoMobilityTwo: number;
@@ -327,6 +335,27 @@ export function calculateCUScore(
   return [redScore + blueFouls, blueScore + redFouls];
 }
 
+export function calculateCURankingPoints(
+  details: ChargedUpDetails
+): ChargedUpDetails {
+  const redGoalLinks = details.coopertitionBonus ? 4 : 5;
+  const blueGoalLinks = details.coopertitionBonus ? 4 : 5;
+  const redChargePoints =
+    getRedAutoChargePoints(details) + getRedTeleChargePoints(details);
+  const blueChargePoints =
+    getBlueAutoChargePoints(details) + getBlueTeleChargePoints(details);
+  return Object.assign(
+    {},
+    {
+      ...details,
+      redSustainBonus: details.redLinks >= redGoalLinks ? 1 : 0,
+      blueSustainBonus: details.blueLinks >= blueGoalLinks ? 1 : 0,
+      redActivationBonus: redChargePoints >= 26 ? 1 : 0,
+      blueActivationBonus: blueChargePoints >= 26 ? 1 : 0
+    }
+  );
+}
+
 function compareRankings(a: ChargedUpRanking, b: ChargedUpRanking): number {
   if (a.rankingScore !== b.rankingScore) {
     return b.rankingScore - a.rankingScore;
@@ -369,6 +398,22 @@ function getParkStatus(status: number): number {
   return status === 3 ? 2 : 0;
 }
 
+function getRedAutoChargePoints(details: ChargedUpDetails): number {
+  const redAutoCharge =
+    getAutoChargeStatus(details.redAutoChargeOne) +
+    getAutoChargeStatus(details.redAutoChargeTwo) +
+    getAutoChargeStatus(details.redAutoChargeThree);
+  return redAutoCharge;
+}
+
+function getRedTeleChargePoints(details: ChargedUpDetails): number {
+  const points =
+    getTeleChargeStatus(details.redTeleChargeOne) +
+    getTeleChargeStatus(details.redTeleChargeTwo) +
+    getTeleChargeStatus(details.redTeleChargeThree);
+  return points;
+}
+
 function getRedAutoPoints(details: ChargedUpDetails): number {
   const redAutoMobility =
     (details.redAutoMobilityOne +
@@ -379,11 +424,24 @@ function getRedAutoPoints(details: ChargedUpDetails): number {
     details.redAutoTopPieces * 6 +
     details.redAutoMidPieces * 4 +
     details.redAutoLowPieces * 3;
-  const redAutoCharge =
-    getAutoChargeStatus(details.redAutoChargeOne) +
-    getAutoChargeStatus(details.redAutoChargeTwo) +
-    getAutoChargeStatus(details.redAutoChargeThree);
-  return redAutoMobility + redAutoPieces + redAutoCharge;
+
+  return redAutoMobility + redAutoPieces + getRedAutoChargePoints(details);
+}
+
+function getBlueAutoChargePoints(details: ChargedUpDetails): number {
+  const blueAutoCharge =
+    getAutoChargeStatus(details.blueAutoChargeOne) +
+    getAutoChargeStatus(details.blueAutoChargeTwo) +
+    getAutoChargeStatus(details.blueAutoChargeThree);
+  return blueAutoCharge;
+}
+
+function getBlueTeleChargePoints(details: ChargedUpDetails): number {
+  const points =
+    getTeleChargeStatus(details.blueTeleChargeOne) +
+    getTeleChargeStatus(details.blueTeleChargeTwo) +
+    getTeleChargeStatus(details.blueTeleChargeThree);
+  return points;
 }
 
 function getBlueAutoPoints(details: ChargedUpDetails): number {
@@ -396,9 +454,6 @@ function getBlueAutoPoints(details: ChargedUpDetails): number {
     details.blueAutoTopPieces * 6 +
     details.blueAutoMidPieces * 4 +
     details.blueAutoLowPieces * 3;
-  const blueAutoCharge =
-    getAutoChargeStatus(details.blueAutoChargeOne) +
-    getAutoChargeStatus(details.blueAutoChargeTwo) +
-    getAutoChargeStatus(details.blueAutoChargeThree);
-  return blueAutoMobility + blueAutoPieces + blueAutoCharge;
+
+  return blueAutoMobility + blueAutoPieces + getBlueAutoChargePoints(details);
 }
