@@ -34,6 +34,15 @@ CREATE TABLE IF NOT EXISTS "team" (
     FOREIGN KEY (eventKey) REFERENCES "event"(eventKey)
 );
 
+CREATE TABLE IF NOT EXISTS "fms_wpakeys" (
+    "teamKey" INT NOT NULL,
+    "eventKey" VARCHAR(25) NOT NULL,
+    "wpaKey" VARCHAR(25),
+    PRIMARY KEY (eventKey, teamKey),
+    UNIQUE (eventKey, teamKey),
+    FOREIGN KEY (eventKey) REFERENCES "event"(eventKey)
+);
+
 CREATE TABLE IF NOT EXISTS "tournament" (
     "eventKey" VARCHAR(25) NOT NULL,
     "tournamentKey" VARCHAR(25) NOT NULL,
