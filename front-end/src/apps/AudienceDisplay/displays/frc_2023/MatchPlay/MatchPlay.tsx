@@ -88,7 +88,7 @@ const MatchPlay: FC = () => {
                   className={timerStyle}
                 />
                 <div id='cu-play-mid-timer-time' className='center-items'>
-                  <MatchCountdown audio />
+                  <MatchCountdown audio mode='modeTime' />
                 </div>
               </div>
               <div id='cu-play-mid-scores'>

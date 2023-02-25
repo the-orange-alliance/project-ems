@@ -38,6 +38,7 @@ const PrestartListener: FC = () => {
     newMatch.details = { ...defaultChargedUpDetails };
     newMatch.details.eventKey = match.eventKey;
     newMatch.details.tournamentKey = match.tournamentKey;
+    newMatch.details.id = match.id;
     newMatch.id = match.id;
     newMatch.redMinPen = 0;
     newMatch.blueMinPen = 0;
