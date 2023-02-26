@@ -1,9 +1,9 @@
-import { Event, Match, WPAKey } from "@toa-lib/models";
+import { Event, Match, Tournament, WPAKey } from "@toa-lib/models";
 import { MatchKey } from "@toa-lib/models";
-import { environment } from "@toa-lib/server";
+import { environment, getIPv4 } from "@toa-lib/server";
 import fetch from "node-fetch";
 
-const host = environment.get().serviceHost || "10.0.100.5";
+const host = getIPv4();
 const port = environment.get().servicePort || "8080";
 
 export const getToken = async (): Promise<string> => {
@@ -48,7 +48,7 @@ export const getWpaKeys = async (eventKey: string): Promise<WPAKey[]> => {
 /**
  * Get match participants
  * @param matchKey the match to fetch
- * @returns The Event Data
+ * @returns The match
  */
 export const getMatch = async (matchKey: MatchKey): Promise<Match<any>> => {
   const resp = await fetch(
@@ -56,4 +56,17 @@ export const getMatch = async (matchKey: MatchKey): Promise<Match<any>> => {
   );
   const json = await resp.json();
   return json as Match<any>;
+};
+
+/**
+* Get tournaments
+* @param eventKey the eventKey to fetch tournaments for
+* @returns The Tournament Data
+*/
+export const getTournaments = async (eventKey: string): Promise<Tournament[]> => {
+ const resp = await fetch(
+   `http://${host}:${port}/tournament/${eventKey}`
+ );
+ const json = await resp.json();
+ return json as Tournament[];
 };

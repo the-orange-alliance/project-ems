@@ -2,6 +2,7 @@ import { Telnet as telnet_client } from "telnet-client"
 import logger from "./logger.js";
 import { Socket } from "socket.io-client";
 import { MatchParticipant } from "@toa-lib/models";
+import { convertEMSStationToFMS } from "./helpers/generic.js";
 
 export class SwitchSupport {
   private static _instance: SwitchSupport;
@@ -12,7 +13,7 @@ export class SwitchSupport {
 
   private socket: Socket | null = null;
 
-  //Vlans
+  // Vlans
   private red1Vlan = 10;
   private red2Vlan = 20;
   private red3Vlan = 30;
@@ -46,7 +47,7 @@ export class SwitchSupport {
     let vlans = [this.red1Vlan, this.red2Vlan, this.red3Vlan, this.blue1Vlan, this.blue2Vlan, this.blue3Vlan];
     // Build Command to configure VLANs
     for (const p of participants) {
-      const vlan = vlans[this.convertEMSStationToFMS(p.station)];
+      const vlan = vlans[convertEMSStationToFMS(p.station)];
 
       // Locate current vlan config for this vlan
       const currVlanConfIndex = oldConfig.findIndex(e => e.vlan === vlan);
@@ -106,50 +107,37 @@ export class SwitchSupport {
 
   private async getTeamVlans(): Promise<TeamSwitchConfig[]> {
     let error = false;
-    const data = await this.runCommand(`show running-config`).catch(() => { error = true; return "" });
+    const data = await this.runCommand('show running-config').catch(() => { error = true; return "" });
 
-    if (!error) {
-      const switchRegex = /interface Vlan(\d\d)\s+ip address 10.(\d+)\.(\d+).61/g;
-      const vlans = [];
-      let v;
-      do {
-        v = switchRegex.exec(data);
-        if (v && v.length > 2) vlans.push([v[1], v[2], v[3]]);
-      } while (v);
-      if (vlans.length < 1) return [];
-
-      const parsedVlans: TeamSwitchConfig[] = [];
-
-      // In theory vlan 100 should be read last and won't get done. otherwise we gotta check for that
-      for (let i = 0; i < vlans.length && i < 7; i++) {
-        const vConfig = vlans[i];
-        const t = new TeamSwitchConfig();
-        t.team100s = parseInt(vConfig[1]);
-        t.team1s = parseInt(vConfig[2]);
-        t.team = (parseInt(vConfig[1]) * 100) + parseInt(vConfig[2]);
-        t.vlan = parseInt(vConfig[0]);
-        parsedVlans.push(t);
-      }
-      return parsedVlans;
-    } else {
+    if (error) {
       logger.error('❌ Error reading switch config');
       return [];
     }
-  }
 
-  // This converts an EMS station to an FMS Station
-  // Ex. 11 = Red Alliance 1, Which will become Station 0
-  // Ex. 23 = Blue Alliance 3, Which will become Station 5
-  private convertEMSStationToFMS(station: number): number {
-    switch (station) {
-      case 11: return 0;
-      case 12: return 1;
-      case 13: return 2;
-      case 21: return 3;
-      case 22: return 4;
-      case 23: return 5;
-      default: return 0;
+    const switchRegex = /interface Vlan(\d\d)\s+ip address 10.(\d+)\.(\d+).61/g;
+    const vlans = [];
+    let v;
+    do {
+      v = switchRegex.exec(data);
+      if (v && v.length > 2) vlans.push([v[1], v[2], v[3]]);
+    } while (v);
+    if (vlans.length < 1) return [];
+
+    // Store parsed vlans
+    const parsedVlans: TeamSwitchConfig[] = [];
+
+    // In theory vlan 100 should be read last and won't get done. otherwise we gotta check for that
+    for (let i = 0; i < vlans.length && i < 7; i++) {
+      const vConfig = vlans[i];
+      const t = new TeamSwitchConfig();
+      t.team100s = parseInt(vConfig[1]);
+      t.team1s = parseInt(vConfig[2]);
+      t.team = (parseInt(vConfig[1]) * 100) + parseInt(vConfig[2]);
+      t.vlan = parseInt(vConfig[0]);
+      parsedVlans.push(t);
     }
+    return parsedVlans;
+
   }
 
   private runCommand(command: string): Promise<string> {

@@ -4,14 +4,12 @@ import DSConn from "./models/DSConn.js";
 import logger from "./logger.js";
 import { EmsFrcFms } from "./server.js";
 import {
-  PlcSupport,
-  ROBOT_CONNECTED,
-  ROBOT_DISCONNECTED,
-  STACK_LIGHT_OFF,
-  STACK_LIGHT_ON,
+  PlcSupport
 } from "./plc-support.js";
-import { Match, MatchMode } from "@toa-lib/models";
+import { defaultTournament, FINALS_LEVEL, Match, MatchMode, OCTOFINALS_LEVEL, PRACTICE_LEVEL, QUALIFICATION_LEVEL, QUARTERFINALS_LEVEL, RANKING_LEVEL, ROUND_ROBIN_LEVEL, SEMIFINALS_LEVEL, TEST_LEVEL, TournamentType, TournamentTypes } from "@toa-lib/models";
 import { Socket } from "socket.io-client";
+import { convertEMSStationToFMS } from "./helpers/generic.js";
+import { EStop, RobotStatus, StackLight } from "./models/PlcOutputCoils.js";
 
 const udpDSListener = dgram.createSocket("udp4");
 let tcpListener = net.createServer();
@@ -25,8 +23,6 @@ export class DriverstationSupport {
   private maxTcpPacketBytes = 4096;
 
   private updateSocketInterval: any;
-
-  private soundedBuzzer = false;
 
   private socket: Socket | null = null;
 
@@ -45,7 +41,7 @@ export class DriverstationSupport {
 
   private static _instance: DriverstationSupport;
 
-  public constructor() {}
+  public constructor() { }
 
   public static getInstance(): DriverstationSupport {
     if (typeof DriverstationSupport._instance === "undefined") {
@@ -61,6 +57,11 @@ export class DriverstationSupport {
   dsInit(host: string): any {
     this.udpInit(this.dsUdpReceivePort, host);
     this.tcpInit(this.dsTcpListenPort, host);
+
+    // Register socket to update twice a second
+    this.updateSocketInterval = setInterval(() => {
+      this.socket?.emit("frc-fms:ds-update-all", this.dsToJsonObj());
+    }, 500);
   }
 
   // Init the UDP Server: This listens for new drivers stations
@@ -69,9 +70,9 @@ export class DriverstationSupport {
       const address = udpDSListener.address();
       logger.info(
         "✔ Listening for DriverStations on UDP " +
-          address.address +
-          ":" +
-          address.port
+        address.address +
+        ":" +
+        address.port
       );
     });
 
@@ -98,80 +99,56 @@ export class DriverstationSupport {
   // Parse a UDP packet from the Driver Station
   // see https://frcture.readthedocs.io/en/latest/driverstation/ds_to_fms.html#status
   private parseUDPPacket(data: Buffer, remote: any) {
+    // Parse team number from packet
     const teamNum = (data[4] << 8) + data[5];
-    if (teamNum) {
-      // if team id is defined
-      let i = 0;
-      while (i < this.allDriverStations.length) {
-        // run through current driver staions
-        if (
-          this.allDriverStations[i] &&
-          this.allDriverStations[i].teamId === teamNum
-        ) {
-          // found team in DS list
-          PlcSupport.getInstance().setStationStack(i, ROBOT_CONNECTED);
-          this.allDriverStations[i].dsLinked = true;
-          this.allDriverStations[i].lastPacketTime = Date.now();
 
-          this.allDriverStations[i].radioLinked = (data[3] & 0x10) !== 0;
-          this.allDriverStations[i].robotLinked = (data[3] & 0x20) !== 0;
-          if (this.allDriverStations[i].robotLinked) {
-            this.allDriverStations[i].lastRobotLinkedTime = Date.now();
-            // Robot battery voltage, stored as volts * 256.
-            this.allDriverStations[i].batteryVoltage = data[6] + data[7] / 256;
-          }
-          return;
+    // If teamNum exists and isn't 0
+    if (teamNum) {
+      // Find driverstation
+      const fmsStation = this.allDriverStations.findIndex(ds => ds.teamId === teamNum);
+      // If we found driverstation, update its data
+      if (fmsStation > -1) {
+        PlcSupport.getInstance().setStationStack(fmsStation, RobotStatus.Connected);
+        // Mark as connected
+        this.allDriverStations[fmsStation].dsLinked = true;
+        // Update last packet time
+        this.allDriverStations[fmsStation].lastPacketTime = Date.now();
+        // Check if Radio is Linked
+        this.allDriverStations[fmsStation].radioLinked = (data[3] & 0x10) !== 0;
+        // Check if Robot is Linked
+        this.allDriverStations[fmsStation].robotLinked = (data[3] & 0x20) !== 0;
+        // If Robot is Linked, check Voltage
+        if (this.allDriverStations[fmsStation].robotLinked) {
+          // Update last robot linked time
+          this.allDriverStations[fmsStation].lastRobotLinkedTime = Date.now();
+          // Robot battery voltage, stored as volts * 256.
+          this.allDriverStations[fmsStation].batteryVoltage = data[6] + data[7] / 256;
         }
-        i++;
+      } else {
+        // DS not in active match
+        logger.info("❓ Couldn't find DS matched to UDP packet. Ignoring. ");
       }
-      // if for loop exits, we didn't find team in active match
-      logger.info("❓ Couldn't find DS matched to UDP packet. Ignoring. ");
     } else {
       // Probably just a keepalive packet?
-      //logger.info('Couldn\'t decipher team number from UDP packet');
+      // logger.info('Couldn\'t decipher team number from UDP packet');
     }
   }
 
   // Init the TCP server: This create connections to each Driver Station
   private tcpInit(port: number, host: string) {
-    tcpListener = net.createServer((socket: net.Socket) => {
-      //socket.pipe(socket);
-    });
+    // Create a server
+    tcpListener = net.createServer();
 
-    tcpListener.listen(port, host);
-
+    // Setup listen event
     tcpListener.on("listening", () => {
       logger.info("✔ Listening for DriverStations on TCP " + host + ":" + port);
     });
 
-    tcpListener.on("connection", (socket: net.Socket) => {
-      socket.setTimeout(this.dsTcpLinkTimeoutSec * 1000);
+    // Host/Port to listen on
+    tcpListener.listen(port, host);
 
-      if (this.allDriverStations[0]) {
-        logger.info(
-          `🔌 New DS TCP Connection Established for ${socket.remoteAddress}:${socket.remotePort}`
-        );
-        // this should read the first packet and assign the TCP connection to the proper alliance member
-        socket.on("data", (chunk: Buffer) => {
-          this.parseTcpPacket(chunk, socket, socket.remoteAddress);
-        });
-
-        socket.on("timeout", (err: Error) =>
-          logger.error("❌ Driver Station TCP Timeout")
-        );
-        socket.on("close", (wasError: boolean) =>
-          logger.error("❌ Driver Station TCP Closed. wasError: " + wasError)
-        );
-        socket.on("error", (err: Error) =>
-          logger.error(
-            "❌ Error occurred on Driver Station TCP socket: " +
-              JSON.stringify(err)
-          )
-        );
-      } else {
-        socket.destroy();
-      }
-    });
+    // Things to do upon a new TCP connection
+    tcpListener.on("connection", this.onTCPConnection);
 
     tcpListener.on("close", () =>
       logger.error("❌ DriverStation TCP Listener Closed")
@@ -182,47 +159,76 @@ export class DriverstationSupport {
     });
   }
 
+  // On TCP Connection
+  private onTCPConnection(socket: net.Socket) {
+    // Set timeout
+    socket.setTimeout(this.dsTcpLinkTimeoutSec * 1000);
+
+    // Check if there is an active match
+    if (!this.allDriverStations[0]) {
+      socket.destroy();
+      return;
+    }
+
+    logger.info(
+      `🔌 New DS TCP Connection Established for ${socket.remoteAddress}:${socket.remotePort}`
+    );
+
+    // This should read the first packet and assign the TCP connection to the proper alliance member
+    socket.on("data", (chunk: Buffer) => {
+      this.parseTcpPacket(chunk, socket, socket.remoteAddress);
+    });
+
+    socket.on("error", (err: Error) =>
+      logger.error(
+        `❌ Error occurred on Driver Station TCP socket: ${JSON.stringify(err)}`
+      )
+    );
+  }
+
   // Parse TCP packet from the Driver Station
   private parseTcpPacket(
     chunk: Buffer,
     socket: net.Socket,
     remoteAddress: string | undefined
   ) {
+    // Parse Team number from packet
     const teamId = (chunk[3] << 8) + chunk[4];
-    if (this.allDriverStations[0]) {
-      // Checks if we have driver stations
-      let conn = this.allDriverStations.find((t) => t.teamId === teamId);
 
-      if (conn && chunk.length === 5 /* && !conn.recievedFirstPacket */) {
-        // we should be checking if its first packet but isnt always nice
-        this.handleFirstTCP(
-          chunk,
-          socket,
-          teamId,
-          conn.allianceStation,
-          remoteAddress
-        );
-      } else if (chunk.length !== 5) {
-        this.handleRegularTCP(chunk, socket);
-      } else {
-        logger.info(
-          "✋ Rejecting DS Connection from team " +
-            teamId +
-            " who is not in the current match."
-        );
-        setTimeout(function () {
-          // wait before disconnecting
-          socket.destroy();
-        }, 1000);
-      }
-    } else {
-      // logger.info('Driver Station tried connection, but failed due to no active match');
+    // Check for active match
+    if (!this.allDriverStations[0]) {
       socket.destroy();
+      return;
+    }
+
+    // Find driverstation
+    let conn = this.allDriverStations.find((t) => t.teamId === teamId);
+
+    if (conn && chunk.length === 5 /* && !conn.recievedFirstPacket */) {
+      // we should be checking if its first packet but isnt always nice
+      this.handleFirstTCP(
+        chunk,
+        socket,
+        teamId,
+        conn.allianceStation,
+        remoteAddress
+      );
+    } else if (chunk.length !== 5) {
+      this.handleRegularTCP(chunk, socket);
+    } else {
+      logger.info(
+        `✋ Rejecting DS Connection from team ${teamId} who is not in the current match.`
+      );
+      setTimeout(function () {
+        // wait before disconnecting
+        socket.destroy();
+      }, 1000);
     }
   }
 
   // parse a regular TCP packet
   private handleRegularTCP(chunk: Buffer, socket: net.Socket) {
+    // Get team from IP to assume station
     const teamNum = this.getTeamFromIP(socket.remoteAddress);
 
     for (const i in this.allDriverStations) {
@@ -274,39 +280,47 @@ export class DriverstationSupport {
       socket.destroy();
       return;
     }
+
+    // Read team number from packet
     const teamFromPacket = (chunk[3] << 8) + chunk[4];
+
     // Read the team number from the IP address to check for a station mismatch.
-    let dsStationStatus = 0;
     const stationTeamId = this.getTeamFromIP(socket.remoteAddress);
+
+    // Weird station id
     if (stationTeamId < 0) {
       return;
     }
-    if (stationTeamId != teamFromPacket) {
-      if (stationTeamId === 100) {
-        logger.info(
-          `❗ Team ${teamId} is connected via the FIELD Network (Vlan 100). Things will work, but this is not the ideal configuration`
-        );
-      } else {
-        logger.info(
-          `❗ Team ${teamId} is in the incorrect station (Currently at ${stationTeamId}'s Station)`
-        );
-      }
 
-      dsStationStatus = 1;
+    // Station Status:
+    // 0 ="FMS Connected"
+    // 1 = "Move to Station <Assigned Station>"
+    // 2 = "Waiting..."
+    const isAtCorrectStation = stationTeamId === teamFromPacket || stationTeamId === 100;
+    if (!isAtCorrectStation) {
+      logger.info(
+        `❗ Team ${teamId} is in the incorrect station (Currently at ${stationTeamId}'s Station)`
+      );
+    } else if (stationTeamId === 100) {
+      logger.info(
+        `❗ Team ${teamId} is connected via the FIELD Network (Vlan 100). Things will work, but this is not the ideal configuration`
+      );
     }
+
+    // The FMS Station this DS is at (0-5)
+    const fmsStation = convertEMSStationToFMS(station);
+
     // Build Setup Packet
     // Note: If the DS gets a station status of 1, then it will Close the TCP connection, and cause a constant reconnect loop
     let returnPacket: Buffer = Buffer.alloc(5);
     returnPacket[0] = 0; // Packet Size
     returnPacket[1] = 3; // Packet Size
     returnPacket[2] = 25; // Packet Type
-    returnPacket[3] = this.convertEMSStationToFMS(station + ""); // Station
-    returnPacket[4] = 0; // dsStationStatus; // Station Status // TODO: Reenable
-    // Station Status:
-    // 1 = "Move to Station <Assigned Station>"
-    // 2 = "Waiting..."
+    returnPacket[3] = fmsStation; // Station
+    returnPacket[4] = isAtCorrectStation ? 0 : 1; // Station Status
+
+    // Write return packet
     if (socket.write(returnPacket)) {
-      const fmsStation = this.convertEMSStationToFMS(station + "");
       logger.info(
         `🕹 Accepted ${teamId}'s DriverStation into ${this.stationNames[fmsStation]}`
       );
@@ -319,7 +333,7 @@ export class DriverstationSupport {
       this.sendControlPacket(fmsStation);
     } else {
       logger.error(
-        "❌ Failed to send first packet to team " + teamId + "'s driver station"
+        `❌ Failed to send first packet to team ${teamId}'s driver station`
       );
     }
   }
@@ -335,169 +349,119 @@ export class DriverstationSupport {
     newDs.teamId = teamId;
     newDs.recievedFirstPacket = true;
     newDs.tcpConn = socket;
-    newDs.udpConn = dgram.createSocket("udp4");
+    newDs.udpConn = dgram.createSocket("udp4"); // Dummy socket until we get the real one
     if (remoteAddress) newDs.ipAddress = remoteAddress;
     newDs.allianceStation = allianceStation;
     newDs.dsLinked = true;
-    newDs.secondsSinceLastRobotLink = 0;
+    newDs.secondsSinceLastRobotLink = -1;
     newDs.lastPacketTime = Date.now();
-    newDs.lastRobotLinkedTime = Date.now();
-    return newDs;
-  }
+    newDs.lastRobotLinkedTime = -1
 
-  // This converts an EMS station to an FMS Station
-  // Ex. 11 = Red Alliance 1, Which will become Station 0
-  // Ex. 23 = Blue Alliance 3, Which will become Station 5
-  private convertEMSStationToFMS(emsStation: string): number {
-    switch (emsStation) {
-      case "11":
-        return 0b0;
-      case "12":
-        return 0b1;
-      case "13":
-        return 0b10;
-      case "21":
-        return 0b11;
-      case "22":
-        return 0b100;
-      case "23":
-        return 0b101;
-      default:
-        return 0b0;
-    }
+    // Set socket events
+    socket.on("timeout", (err: Error) =>
+      logger.error(`❌ Team ${teamId}'s Driver Station TCP Connection Timed Out`)
+    );
+
+    socket.on("close", (wasError: boolean) =>
+      logger.error(`❌ Team ${teamId}'s Driver Station TCP Socket was Closed. wasError: ` + wasError)
+    );
+
+    return newDs;
   }
 
   // Run all this stuff
   public runDriverStations() {
-    const stationStatuses = []; // This will be used to set field stack light
-    for (let i = 0; i < this.allDriverStations.length; i++) {
-      if (this.allDriverStations[i]) {
-        const mode = EmsFrcFms.getInstance().matchState;
+    // Field EStop Status
+    const fieldEStop = PlcSupport.getInstance().getEstop(EStop.Field);
+    const matchState = EmsFrcFms.getInstance().matchState;
+
+    // This will be used to set field stack light at the end
+    const stationStatuses = [];
+
+    for (let fmsStation = 0; fmsStation < this.allDriverStations.length; fmsStation++) {
+      const ds = this.allDriverStations[fmsStation];
+      if (ds) {
         // Update Driver Stations if E-STOP, Stop Match is Master E-STOP
-        // NOTE: EStop states from PLC are reversed... true = not pressed, false = pressed!
-        if (PlcSupport.getInstance().getEstop(99)) {
-          // Abort Match, Field ESTOP pressed
-          this.allDriverStations[i].estop = true;
+        if (fieldEStop) { // Field EStop is Pressed
+          ds.estop = true;
         } else if (
-          !PlcSupport.getInstance().getEstop(i) &&
-          !this.allDriverStations[i].estop
+          !PlcSupport.getInstance().getEstop(fmsStation) && // If EStop is pressed
+          matchState !== MatchMode.PRESTART && // Ignore estops during prestart
+          !ds.estop // Ignore if already pressed
         ) {
           // Team station estop pressed
-          logger.info(`❗ ${this.stationNames[i]} has E-STOPED their robot!`);
-          this.allDriverStations[i].estop = true;
-        } else if (
-          PlcSupport.getInstance().getEstop(i) &&
-          mode === MatchMode.PRESTART &&
-          this.allDriverStations[i].estop
-        ) {
-          //  Allow updating of estops during Prestart stage of match
-          this.allDriverStations[i].estop = false;
+          logger.info(`❗ ${this.stationNames[fmsStation]} has E-STOPED their robot!`);
+          ds.estop = true;
         }
 
-        if (mode === MatchMode.PRESTART) {
-          this.allDriverStations[i].auto = true;
-        } else if (mode === MatchMode.AUTONOMOUS) {
-          this.allDriverStations[i].auto = true;
-          this.allDriverStations[i].enabled = true;
-        } else if (mode === MatchMode.TRANSITION) {
-          this.allDriverStations[i].auto = false;
-          this.allDriverStations[i].enabled = false;
+        // In match calculations
+        if (ds.estop) { // If EStop is triggered, always set status to disabled
+          ds.auto = false;
+          ds.enabled = false;
+        } else if (matchState === MatchMode.PRESTART) {
+          ds.auto = true;
+        } else if (matchState === MatchMode.AUTONOMOUS) {
+          ds.auto = true;
+          ds.enabled = true;
+        } else if (matchState === MatchMode.TRANSITION) {
+          ds.auto = false;
+          ds.enabled = false;
         } else if (
-          mode === MatchMode.TELEOPERATED ||
-          mode === MatchMode.ENDGAME
+          matchState === MatchMode.TELEOPERATED ||
+          matchState === MatchMode.ENDGAME
         ) {
-          this.allDriverStations[i].auto = false;
-          this.allDriverStations[i].enabled = true;
-        } else if (mode === MatchMode.ABORTED) {
-          this.allDriverStations[i].auto = false;
-          this.allDriverStations[i].enabled = false;
+          ds.auto = false;
+          ds.enabled = true;
+        } else if (matchState === MatchMode.ABORTED) {
+          ds.auto = false;
+          ds.enabled = false;
         } else {
-          this.allDriverStations[i].auto = false;
-          this.allDriverStations[i].enabled = false;
+          ds.auto = false;
+          ds.enabled = false;
         }
 
-        if (this.allDriverStations[i].estop)
-          this.allDriverStations[i].enabled = false;
-
-        if (this.allDriverStations[i].udpConn) {
+        // If we have an active UDP connection, send a UDP Packet
+        if (ds.udpConn) {
           // TODO: Don't need to send this every time, unless it's during match
           // Maybe?
-          this.sendControlPacket(i);
+          this.sendControlPacket(fmsStation);
         }
+
+        // Check if all things are good
         let allIsGood = false;
-        const diff =
-          Date.now() -
-          new Date(this.allDriverStations[i].lastPacketTime).getDate();
-        if (Math.abs(diff / 1000) > this.dsTcpLinkTimeoutSec) {
-          // Driverstaion Timeout
-          this.allDriverStations[i].dsLinked = false;
-          this.allDriverStations[i].radioLinked = false;
-          this.allDriverStations[i].robotLinked = false;
-          this.allDriverStations[i].batteryVoltage = 0;
+
+        // Calculate time since last packet
+        const diff = Date.now() - ds.lastPacketTime;
+
+        // Driverstaion Timeout
+        if (diff > this.dsTcpLinkTimeoutSec) {
+          ds.dsLinked = false;
+          ds.radioLinked = false;
+          ds.robotLinked = false;
+          ds.batteryVoltage = 0;
           allIsGood = false;
-        } else {
+        } else { // Otherwise, check if all other statuses are good
           allIsGood =
-            this.allDriverStations[i].dsLinked &&
-            this.allDriverStations[i].radioLinked &&
-            this.allDriverStations[i].robotLinked &&
-            this.allDriverStations[i].batteryVoltage > 0;
+            ds.dsLinked &&
+            ds.radioLinked &&
+            ds.robotLinked &&
+            ds.batteryVoltage > 0;
         }
-        stationStatuses[i] = allIsGood;
+
+        // Update global stack tracker
+        stationStatuses[fmsStation] = allIsGood;
 
         // Set Alliance Stack Light
-        PlcSupport.getInstance().setStationStack(
-          i,
-          allIsGood ? ROBOT_CONNECTED : ROBOT_DISCONNECTED
-        );
+        PlcSupport.getInstance().setStationStack(fmsStation, allIsGood ? RobotStatus.Connected : RobotStatus.Disconnected);
 
-        this.allDriverStations[i].secondsSinceLastRobotLink = Math.abs(
-          diff / 1000
-        );
-      }
-      // register socket to update twice a second
-      if (!this.updateSocketInterval) {
-        this.updateSocketInterval = setInterval(() => {
-          this.socket?.emit("frc-fms:ds-update-all", this.dsToJsonObj());
-        }, 500);
+        // Update last link time
+        ds.secondsSinceLastRobotLink = Math.abs(diff / 1000);
       }
     }
-
-    if (stationStatuses.length > 5) {
-      // 6 teams
-      let blueGood =
-        stationStatuses[0] && stationStatuses[1] && stationStatuses[2];
-      let redGood =
-        stationStatuses[3] && stationStatuses[4] && stationStatuses[5];
-      if (!redGood || !blueGood) this.soundedBuzzer = false; // If a team has disconnected, we can sound the buzzer again when we go green
-      const green = redGood && blueGood ? STACK_LIGHT_ON : STACK_LIGHT_OFF;
-      // Red/Blue lights managed within PLC based on robot connection
-      PlcSupport.getInstance().setFieldStack(0, 0, 0, green, STACK_LIGHT_OFF);
-      if (
-        !this.isMatchInProgress() &&
-        !this.soundedBuzzer &&
-        blueGood &&
-        redGood
-      ) {
-        PlcSupport.getInstance().soundBuzzer();
-        this.soundedBuzzer = true;
-      }
-    }
-  }
-
-  private isMatchInProgress(): boolean {
-    return (
-      EmsFrcFms.getInstance()._timer.mode === MatchMode.TELEOPERATED ||
-      EmsFrcFms.getInstance()._timer.mode === MatchMode.AUTONOMOUS ||
-      EmsFrcFms.getInstance()._timer.mode === MatchMode.TRANSITION
-    );
   }
 
   private dsToJsonObj(): object[] {
-    const returnObj: object[] = [];
-    for (const ds of this.allDriverStations) {
-      if (ds) returnObj.push(ds.toJson());
-    }
-    return returnObj;
+    return this.allDriverStations.map(ds => ds.toJson());
   }
 
   // Send Control Packet
@@ -570,10 +534,9 @@ export class DriverstationSupport {
       const ds = new DSConn();
       ds.teamId = p.teamKey;
       ds.allianceStation = p.station;
-      const fmsStation = this.convertEMSStationToFMS(p.station + "");
+      const fmsStation = convertEMSStationToFMS(p.station);
       this.allDriverStations[fmsStation] = ds;
     }
-    // TODO:
     this.socket?.emit("frc-fms:ds-ready");
     logger.info("✔ Driver Station Prestart Completed");
   }
@@ -609,20 +572,30 @@ export class DriverstationSupport {
     packet[5] = dsNum;
 
     // Match type
-    // TODO: const match = activeMatch;
+    // 0 = Test, 1 = Practice, 2 = Quals, 3 = Elims
     const match = "qual";
-    if (match.toLowerCase().indexOf("prac") > -1) {
-      packet[6] = 1;
-    } else if (match.toLowerCase().indexOf("qual") > -1) {
-      packet[6] = 2;
-    } else if (match.toLowerCase().indexOf("elim") > -1) {
-      packet[6] = 3;
-    } else {
-      packet[6] = 0;
+    switch(EmsFrcFms.getInstance().activeTournament?.tournamentLevel ?? TEST_LEVEL) {
+      case TEST_LEVEL:
+        packet[6] = 0;
+      case PRACTICE_LEVEL:
+        packet[6] = 1;
+        break;
+      case QUALIFICATION_LEVEL:
+      case RANKING_LEVEL:
+        packet[6] = 2;
+        break;
+      case ROUND_ROBIN_LEVEL:
+      case OCTOFINALS_LEVEL:
+      case QUARTERFINALS_LEVEL:
+      case SEMIFINALS_LEVEL:
+      case FINALS_LEVEL:
+        packet[6] = 3;
+        break;
     }
 
     // Match number.
     const localMatchNum = activeMatch?.id || -1;
+    const activeTournamentLevel = EmsFrcFms.getInstance().activeTournament?.tournamentLevel ?? TEST_LEVEL;
     if (
       match.toLowerCase().indexOf("practice") > -1 ||
       match.toLowerCase().indexOf("qual") > -1
@@ -632,21 +605,21 @@ export class DriverstationSupport {
     } else if (match.toLowerCase().indexOf("elim") > -1) {
       // E.g. Quarter-final 3, match 1 will be numbered 431.
       let fmsMatchNum = 1;
-      // TODO: Tournament Level
-      // switch(activeMatch.tournamentLevel) {
-      //     case Match.OCTOFINALS_LEVEL:
-      //         fmsMatchNum = (800) + ((activeMatch.tournamentLevel - 20)*10) + localMatchNum;
-      //         break;
-      //     case Match.QUARTERFINALS_LEVEL:
-      //         fmsMatchNum = (400) + ((activeMatch.tournamentLevel - 20)*10) + localMatchNum;
-      //         break;
-      //     case Match.SEMIFINALS_level:
-      //         fmsMatchNum = (200) + ((activeMatch.tournamentLevel - 30)*10) + localMatchNum;
-      //         break;
-      //     case Match.FINALS_LEVEL:
-      //         fmsMatchNum = (110) + localMatchNum;
-      //         break;
-      // }
+      // TODO: Attempt to calculate current series
+      switch(activeTournamentLevel) {
+          case OCTOFINALS_LEVEL:
+              fmsMatchNum = (800) + ((1)*10) + localMatchNum;
+              break;
+          case QUARTERFINALS_LEVEL:
+              fmsMatchNum = (400) + ((1)*10) + localMatchNum;
+              break;
+          case SEMIFINALS_LEVEL:
+              fmsMatchNum = (200) + ((1)*10) + localMatchNum;
+              break;
+          case FINALS_LEVEL:
+              fmsMatchNum = (110) + localMatchNum;
+              break;
+      }
       packet[7] = fmsMatchNum >> 8;
       packet[8] = fmsMatchNum & 0xff;
     } else {

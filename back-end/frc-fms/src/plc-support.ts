@@ -1,7 +1,7 @@
 import logger from "./logger.js";
 import { ReadCoilResult, ReadRegisterResult } from "modbus-serial/ModbusRTU.js";
 import { PlcInputs } from "./models/PlcInputs.js";
-import { PlcOutputCoils } from "./models/PlcOutputCoils.js";
+import PlcOutputCoils, { EStop, RobotStatus, StackLight } from "./models/PlcOutputCoils.js";
 import { EmsFrcFms } from "./server.js";
 import { MatchMode } from "@toa-lib/models";
 import ModbusRTU from "modbus-serial";
@@ -50,31 +50,31 @@ export class PlcSupport {
       .catch((err: any) => {
         logger.error(
           "❌ Failed to connect to PLC (" +
-            this.plc.address +
-            ":" +
-            this.modBusPort +
-            "): " +
-            err
+          this.plc.address +
+          ":" +
+          this.modBusPort +
+          "): " +
+          err
         );
         this.firstConn = true;
       });
   }
 
-  public getEstop(station: number) {
+  public getEstop(station: EStop) {
     switch (station) {
-      case 0:
+      case EStop.Red1:
         return this.plc.inputs.redEstop1;
-      case 1:
+      case EStop.Red2:
         return this.plc.inputs.redEstop2;
-      case 2:
+      case EStop.Red3:
         return this.plc.inputs.redEstop3;
-      case 3:
+      case EStop.Blue1:
         return this.plc.inputs.blueEstop1;
-      case 4:
+      case EStop.Blue2:
         return this.plc.inputs.blueEstop2;
-      case 5:
+      case EStop.Blue3:
         return this.plc.inputs.blueEstop3;
-      case 99:
+      case EStop.Field:
         return this.plc.inputs.fieldEstop;
     }
   }
@@ -84,10 +84,10 @@ export class PlcSupport {
       if (this.firstConn) {
         logger.error(
           "❌ Lost connection to PLC (" +
-            this.plc.address +
-            ":" +
-            this.modBusPort +
-            "), retrying"
+          this.plc.address +
+          ":" +
+          this.modBusPort +
+          "), retrying"
         );
         this.firstConn = false;
         await this.initPlc(this.plc.address);
@@ -156,7 +156,7 @@ export class PlcSupport {
       });
   }
 
-  public setStationStack(station: number, status: boolean) {
+  public setStationStack(station: number, status: RobotStatus) {
     switch (station) {
       case 0:
         this.plc.coils.redOneConn = status;
@@ -178,25 +178,52 @@ export class PlcSupport {
         break;
     }
 
-    this.refreshGreen();
+    this.refreshFieldStack();
   }
 
-  private refreshGreen() {
-    if (
-      (this.plc.coils.blueOneConn || this.plc.coils.blueOneBypass) &&
-      (this.plc.coils.blueTwoConn || this.plc.coils.blueTwoBypass) &&
-      (this.plc.coils.blueThreeConn || this.plc.coils.blueThreeBypass) &&
-      (this.plc.coils.redOneConn || this.plc.coils.redOneBypass) &&
-      (this.plc.coils.redTwoConn || this.plc.coils.redTwoBypass) &&
-      (this.plc.coils.redThreeConn || this.plc.coils.redThreeBypass) &&
-      EmsFrcFms.getInstance().matchState === MatchMode.PRESTART
-    ) {
-      this.plc.coils.stackLightGreen = true;
-      this.soundBuzzer();
+  // We go green of all robots are either connected or bypassed
+  private refreshFieldStack() {
+    // Get Field Status
+    const status = EmsFrcFms.getInstance().matchState;
+
+    if (status >= MatchMode.PRESTART && status <= MatchMode.ENDED) {
+      const redGood =
+        (this.plc.coils.redOneConn || this.plc.coils.redOneBypass) &&
+        (this.plc.coils.redTwoConn || this.plc.coils.redTwoBypass) &&
+        (this.plc.coils.redThreeConn || this.plc.coils.redThreeBypass)
+
+      const blueGood =
+        (this.plc.coils.blueOneConn || this.plc.coils.blueOneBypass) &&
+        (this.plc.coils.blueTwoConn || this.plc.coils.blueTwoBypass) &&
+        (this.plc.coils.blueThreeConn || this.plc.coils.blueThreeBypass)
+
+
+      // These are calculated inside of the PLC
+      // Red Field Stack
+      // this.plc.coils.stackLightRed = redGood ? StackLight.Off : StackLight.On;
+
+      // Blue Field Stack
+      // this.plc.coils.stackLightBlue = blueGood ? StackLight.Off : StackLight.On;
+
+      // Calculate Green
+      if (redGood && blueGood) {
+        // Show Green
+        this.plc.coils.stackLightGreen = StackLight.On;
+
+        // If we're in prestart, sound the buzzer
+        if (status === MatchMode.PRESTART) {
+          this.soundBuzzer();
+        }
+      } else {
+        // Post-Match or Aborted
+        this.plc.coils.stackLightGreen = StackLight.Off;
+        this.plc.coils.stackLightBlue = StackLight.On;
+        this.plc.coils.stackLightRed = StackLight.On;
+      }
     }
   }
 
-  public setAllStationStacks(status: boolean) {
+  public setAllStationStacks(status: RobotStatus) {
     this.plc.coils.redOneConn = status;
     this.plc.coils.redTwoConn = status;
     this.plc.coils.redThreeConn = status;
@@ -207,34 +234,35 @@ export class PlcSupport {
 
   public soundBuzzer() {
     // Sound buzzer for 1.5 seconds
-    this.plc.coils.stackLightBuzzer = true;
+    this.plc.coils.stackLightBuzzer = StackLight.On;
     setTimeout(() => {
-      this.plc.coils.stackLightBuzzer = false;
+      this.plc.coils.stackLightBuzzer = StackLight.Off;
     }, 1500);
   }
 
   public setFieldStack(
-    blue: number,
-    red: number,
-    orange: number,
-    green: number,
-    buzzer: number
+    blue: StackLight,
+    red: StackLight,
+    orange: StackLight,
+    green: StackLight,
+    buzzer: StackLight
   ) {
-    this.plc.coils.stackLightBlue = blue === STACK_LIGHT_ON;
-    this.plc.coils.stackLightRed = red === STACK_LIGHT_ON;
-    this.plc.coils.stackLightOrange = orange === STACK_LIGHT_ON;
-    this.plc.coils.stackLightGreen = green === STACK_LIGHT_ON;
-    this.plc.coils.stackLightBuzzer = buzzer === STACK_LIGHT_ON;
+    this.plc.coils.stackLightBlue = blue;
+    this.plc.coils.stackLightRed = red;
+    this.plc.coils.stackLightOrange = orange;
+    this.plc.coils.stackLightGreen = green;
+    this.plc.coils.stackLightBuzzer = buzzer;
   }
 
+  // Actions to perform on prestart
   public onPrestart() {
-    this.setAllStationStacks(ROBOT_DISCONNECTED);
+    this.setAllStationStacks(RobotStatus.Disconnected);
     this.setFieldStack(
-      STACK_LIGHT_OFF,
-      STACK_LIGHT_OFF,
-      STACK_LIGHT_OFF,
-      STACK_LIGHT_OFF,
-      STACK_LIGHT_OFF
+      StackLight.Off,
+      StackLight.Off,
+      StackLight.Off,
+      StackLight.Off,
+      StackLight.Off
     );
   }
 }
@@ -263,9 +291,3 @@ class PlcStatus {
 }
 
 export default PlcSupport.getInstance();
-
-export const STACK_LIGHT_OFF = 0;
-export const STACK_LIGHT_ON = 1;
-
-export const ROBOT_DISCONNECTED = false;
-export const ROBOT_CONNECTED = true;

@@ -48,6 +48,7 @@ export class AccesspointSupport {
     await this.updateTeamWifiStatus().catch((error) => {logger.error(`❌ Routine AP (${this.ap.address}) status update failed: ${error}`)});
   }
 
+  // Configure the Admin Wifi
   public async configAdminWifi() {
     if (!this.ap.networkSecurityEnabled) return;
     const disabled = (parseInt(this.ap.adminChannel) < 1) ? 1 : 0;
@@ -63,6 +64,7 @@ export class AccesspointSupport {
     await this.runCommand(fullCommand);
   }
 
+  // Setup team wifi confi
   public async handleTeamWifiConfig(eventKey: string, participants: MatchParticipant[]) {
     if (!this.ap.networkSecurityEnabled) return;
 
@@ -101,7 +103,7 @@ export class AccesspointSupport {
         error = true;
       });
       // Wait before reading the config back on write success as it doesn't take effect right away, or before retrying on failure.
-      this.sleep(this.accessPointConfigRetryIntervalSec * 1000);
+      await this.sleep(this.accessPointConfigRetryIntervalSec * 1000);
       if(!error) {
         // Update Team Statuses
         await this.updateTeamWifiStatus().catch(() => {});
@@ -117,12 +119,8 @@ export class AccesspointSupport {
     }
   }
 
-  private sleep(milliseconds: number) {
-    const date = Date.now();
-    let currentDate = null;
-    do {
-      currentDate = Date.now();
-    } while (currentDate - date < milliseconds);
+  private async sleep(milliseconds: number) {
+    return new Promise(res => setTimeout(res, milliseconds))
   }
 
   // Returns true if the configured networks as read from the access point match the given teams.
