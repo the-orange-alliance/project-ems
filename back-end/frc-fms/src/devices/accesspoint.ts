@@ -1,9 +1,11 @@
-import logger from "./logger.js";
-import {EmsFrcFms} from "./server.js";
+import log from "../logger.js";
+import {EmsFrcFms} from "../server.js";
 import SSH2Promise from 'ssh2-promise';
 import { MatchParticipant } from "@toa-lib/models";
-import { getWpaKeys } from "./helpers/ems.js";
-import { Socket } from "socket.io-client";
+import { getWpaKeys } from "../helpers/ems.js";
+import { SocketSupport } from "./socket.js";
+
+const logger = log("ap")
 
 export class AccesspointSupport {
   private static _instance: AccesspointSupport;
@@ -13,7 +15,6 @@ export class AccesspointSupport {
   private accessPointPollPeriodSec: number          = 3;
   private accessPointRequestBufferSize: number      = 10;
   private accessPointConfigRetryIntervalSec: number = 5;
-  private socket: Socket | null = null;
 
   private ap: AccessPoint = new AccessPoint();
   private sshConn = new SSH2Promise({});
@@ -25,10 +26,6 @@ export class AccesspointSupport {
       AccesspointSupport._instance = new AccesspointSupport();
     }
     return AccesspointSupport._instance;
-  }
-
-  public setSocket(socket: Socket | null) {
-    this.socket = socket;
   }
 
   public setSettings(address: string, username: string, password: string, teamChannel: string, adminChannel: string, adminWpaKey: string, networkSecurityEnabled: boolean, TeamWifiStatuses: TeamWifiStatus[], initialStatusesFetched: boolean) {
@@ -89,7 +86,7 @@ export class AccesspointSupport {
     // Generate Config Command
     const configCommand = this.generateApConfigForMatch(participants);
     if (!configCommand || configCommand.length < 1) {
-      logger.info('Failed to generate a config for the AP');
+      logger.info('❌ Failed to generate a config for the AP');
       return;
     }
     const fullCommand = `uci batch <<ENDCONFIG && wifi radio0\n${configCommand}\nENDCONFIG\n`;
@@ -108,7 +105,7 @@ export class AccesspointSupport {
         // Update Team Statuses
         await this.updateTeamWifiStatus().catch(() => {});
         if(this.checkTeamConfig(participants)) {
-          this.socket?.emit('fms-ap-ready')
+          SocketSupport.getInstance().apReady();
           logger.info('✔ Successfully configured Wifi after ' + attemptCount + ' attempt(s).');
           return;
         }
@@ -193,7 +190,7 @@ export class AccesspointSupport {
         commands.push(`set wireless.@wifi-iface[${pos}].key='no-team-${pos}'`);
       } else {
         if(this.teamWifiStatuses[i].wpaKey.length < 8 || this.teamWifiStatuses[i].wpaKey.length > 63) {
-          logger.info(`Invalid WPA key ${this.teamWifiStatuses[i].wpaKey}' configured for team ${pars[i].teamKey}.`);
+          logger.info(`❌ Invalid WPA key ${this.teamWifiStatuses[i].wpaKey}' configured for team ${pars[i].teamKey}.`);
           return '';
         }
         commands.push(`set wireless.@wifi-iface[${pos}].disabled='0'`);

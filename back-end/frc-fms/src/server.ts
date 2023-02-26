@@ -1,26 +1,22 @@
-import logger from "./logger.js";
-import { DriverstationSupport } from "./driverstation-support.js";
-import { AccesspointSupport } from "./accesspoint-support.js";
-import { SwitchSupport } from "./switch-support.js";
-import { PlcSupport } from "./plc-support.js";
+import log from "./logger.js";
+import { DriverstationSupport } from "./devices/driverstation.js";
+import { AccesspointSupport } from "./devices/accesspoint.js";
+import { SwitchSupport } from "./devices/switch.js";
+import { PlcSupport } from "./devices/plc.js";
 import {
     Match,
     MatchTimer,
     Event,
     MatchMode,
-    MatchParticipant,
     MatchKey,
     Tournament,
 } from "@toa-lib/models";
-import { Socket } from "socket.io-client";
-import { getMatch, getToken } from "./helpers/ems.js";
-import { createSocket, SocketOptions } from "@toa-lib/client";
+import { getMatch } from "./helpers/ems.js";
 import { environment } from "@toa-lib/server";
+import { SocketSupport } from "./devices/socket.js";
+import FMSSettings from "./models/FMSSettings.js";
 
-/* Load our environment variables. The .env file is not included in the repository.
- * Only TOA staff/collaborators will have access to their own, specialized version of
- * the .env file.
- */
+const logger = log("server");
 
 const ipRegex =
     /\b(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\b/;
@@ -45,7 +41,6 @@ export class EmsFrcFms {
     private dsInterval: any;
     private apInterval: any;
     private plcInterval: any;
-    private socket: Socket | null = null;
     private settings: FMSSettings = new FMSSettings();
     public matchStateMap: Map<String, number> = new Map<String, number>([
         ["prestart", 0],
@@ -98,7 +93,10 @@ export class EmsFrcFms {
 
     public async initFms() {
         // Init EMS
-        await this.initSocket();
+        await SocketSupport.getInstance().initSocket();
+
+        // Add some socket events
+        await this.setupSocketEvents();
 
         // Load Settings from EMS DB
         await this.loadSettings();
@@ -148,6 +146,20 @@ export class EmsFrcFms {
 
         // Start FMS Services Updates
         this.startDriverStation();
+    }
+
+    private async setupSocketEvents() {
+        SocketSupport.getInstance().socket?.on("frc-fms:settings-update", (data: string) => {
+            this.updateSettings(JSON.parse(data));
+            SocketSupport.getInstance().settingsUpdateSuccess(this.settings);
+        });
+
+        // Manage Socket Events
+        SocketSupport.getInstance().socket?.on("match:prestart", (matchKey: MatchKey) => {
+            logger.info("🔁 Prestart Command Issued");
+            this.matchState = MatchMode.PRESTART;
+            this.fmsOnPrestart(matchKey);
+        });
     }
 
     private async loadSettings() {
@@ -215,52 +227,6 @@ export class EmsFrcFms {
         logger.info("✔ Updated Settings!");
     }
 
-    private async initSocket() {
-        const token = await getToken();
-        SocketOptions.host = "10.0.100.5";
-        SocketOptions.port = 8081;
-        // @ts-ignore
-        this.socket = createSocket(token);
-        if (token) logger.info("✔ Successfully recieved token from EMS");
-        else logger.info("❌ Failed to get key from FMS. Things won't work!");
-        // Setup Socket Connect/Disconnect
-        this.socket?.on("connect", () => {
-            logger.info("✔ Connected to EMS through SocketIO.");
-            this.socket?.emit("rooms", ["match", "fcs"]);
-        });
-        this.socket?.on("disconnect", () => {
-            logger.error("❌ Disconnected from SocketIO.");
-        });
-        this.socket?.on("error", () => {
-            logger.error("❌ Error With SocketIO, not connected to EMS");
-        });
-        this.socket?.on("fms-ping", () => {
-            this.socket?.emit("fms-pong");
-        });
-        this.socket?.on("fms-settings-update", (data: string) => {
-            this.updateSettings(JSON.parse(data));
-            this.socket?.emit(
-                "fms-settings-update-success",
-                JSON.stringify(this.settings.toJson())
-            );
-        });
-
-        // Manage Socket Events
-        this.socket?.on("match:prestart", (matchKey: MatchKey) => {
-            logger.info("🔁 Prestart Command Issued");
-            this.matchState = MatchMode.PRESTART;
-            this.fmsOnPrestart(matchKey);
-        });
-
-        this.socket?.connect();
-
-        // Update all instances
-        DriverstationSupport.getInstance().setSocket(this.socket);
-        AccesspointSupport.getInstance().setSocket(this.socket);
-        PlcSupport.getInstance().setSocket(this.socket);
-        SwitchSupport.getInstance().setSocket(this.socket);
-    }
-
     private async fmsOnPrestart(matchKey: MatchKey) {
         this.activeMatch = await this.getMatch(matchKey).catch((err) => {
             logger.error("❌ Error getting participant information: " + err);
@@ -290,7 +256,7 @@ export class EmsFrcFms {
     }
 
     private initTimer() {
-        this.socket?.on("match:start", () => {
+        SocketSupport.getInstance().socket?.on("match:start", () => {
             // this._timer.matchConfig = timerConfig;
             // Signal DriverStation Start
             DriverstationSupport.getInstance().driverStationMatchStart();
@@ -328,14 +294,14 @@ export class EmsFrcFms {
                 }
             }, 1000);
         });
-        this.socket?.on("match:end", () => {
+        SocketSupport.getInstance().socket?.on("match:end", () => {
             this._timer.stop();
             this.timeLeft = this._timer.timeLeft;
             this.matchState = MatchMode.ENDED;
             this.removeMatchlisteners();
             logger.info("⏹ Remote Timer Ended");
         });
-        this.socket?.on("match:abort", () => {
+        SocketSupport.getInstance().socket?.on("match:abort", () => {
             this._timer.abort();
             this.timeLeft = this._timer.timeLeft;
             this.matchState = MatchMode.ABORTED;
@@ -384,68 +350,6 @@ export class EmsFrcFms {
                     reject(null);
                 });
         });
-    }
-}
-
-class FMSSettings {
-    public enableFms: boolean;
-    public enableAdvNet: boolean;
-    public apIp: string;
-    public apUsername: string;
-    public apPassword: string;
-    public apTeamCh: string;
-    public apAdminCh: string;
-    public apAdminWpa: string;
-    public switchIp: string;
-    public switchPassword: string;
-    public enablePlc: boolean;
-    public plcIp: string;
-
-    constructor() {
-        this.enableFms = true;
-        this.enableAdvNet = true;
-        this.apIp = "10.0.100.3";
-        this.apUsername = "root";
-        this.apPassword = "1234Five";
-        this.apTeamCh = "157";
-        this.apAdminCh = "-1";
-        this.apAdminWpa = "1234Five";
-        this.switchIp = "10.0.100.2";
-        this.switchPassword = "1234Five";
-        this.enablePlc = true;
-        this.plcIp = "10.0.100.40";
-    }
-    public fromJson(json: any): this {
-        this.enableFms = json.enable_fms;
-        this.enableAdvNet = json.enable_adv_net;
-        this.apIp = json.ap_ip;
-        this.apUsername = json.ap_username;
-        this.apPassword = json.ap_password;
-        this.apTeamCh = json.ap_team_ch;
-        this.apAdminCh = json.ap_admin_ch;
-        this.apAdminWpa = json.ap_admin_wpa;
-        this.switchIp = json.switch_ip;
-        this.switchPassword = json.switch_password;
-        this.enablePlc = json.enable_plc;
-        this.plcIp = json.plc_ip;
-        return this;
-    }
-
-    public toJson(): object {
-        return {
-            enable_fms: this.enableFms,
-            enable_adv_net: this.enableAdvNet,
-            ap_ip: this.apIp,
-            ap_username: this.apUsername,
-            ap_password: this.apPassword,
-            ap_team_ch: this.apTeamCh,
-            ap_admin_ch: this.apAdminCh,
-            ap_admin_wpa: this.apAdminWpa,
-            switch_ip: this.switchIp,
-            switch_password: this.switchPassword,
-            enable_plc: this.enablePlc,
-            plc_ip: this.plcIp,
-        };
     }
 }
 

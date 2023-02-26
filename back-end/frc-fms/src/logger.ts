@@ -1,6 +1,10 @@
 import * as Winston from "winston";
 
-const logger = Winston.createLogger({
+const doPad = (str: string, longestWord: number) => {
+  return `[${str}]`.padEnd(longestWord + 2, " ");
+}
+
+const logger = (instance: string) => Winston.createLogger({
   transports: [
     new Winston.transports.Console()
   ],
@@ -9,7 +13,7 @@ const logger = Winston.createLogger({
     Winston.format.timestamp({
       format: "YYYY-MM-DD HH:mm:ss"
     }),
-    Winston.format.printf(info => `[ems-frc-fms][${info.level}][${info.timestamp}]: ${info.message}`)
+    Winston.format.printf(info => `[frc-fms]${doPad(info.level, 17)}[${info.timestamp}]${doPad(instance, 13)}: ${info.message}`)
   ),
   exitOnError: false
 });

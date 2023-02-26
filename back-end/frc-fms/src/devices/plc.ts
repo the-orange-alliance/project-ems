@@ -1,11 +1,13 @@
-import logger from "./logger.js";
+import log from "../logger.js";
 import { ReadCoilResult, ReadRegisterResult } from "modbus-serial/ModbusRTU.js";
-import { PlcInputs } from "./models/PlcInputs.js";
-import PlcOutputCoils, { EStop, RobotStatus, StackLight } from "./models/PlcOutputCoils.js";
-import { EmsFrcFms } from "./server.js";
+import { PlcInputs } from "../models/PlcInputs.js";
+import PlcOutputCoils, { EStop, RobotStatus, StackLight } from "../models/PlcOutputCoils.js";
+import { EmsFrcFms } from "../server.js";
 import { MatchMode } from "@toa-lib/models";
 import ModbusRTU from "modbus-serial";
 import { Socket } from "socket.io-client";
+
+const logger = log("plc")
 
 // Modbus Crash Course
 // Registers: ?Counters?

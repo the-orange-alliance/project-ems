@@ -1,18 +1,20 @@
 import * as dgram from "dgram";
 import * as net from "net";
-import DSConn from "./models/DSConn.js";
-import logger from "./logger.js";
-import { EmsFrcFms } from "./server.js";
+import DSConn from "../models/DSConn.js";
+import log from "../logger.js";
+import { EmsFrcFms } from "../server.js";
 import {
   PlcSupport
-} from "./plc-support.js";
-import { defaultTournament, FINALS_LEVEL, Match, MatchMode, OCTOFINALS_LEVEL, PRACTICE_LEVEL, QUALIFICATION_LEVEL, QUARTERFINALS_LEVEL, RANKING_LEVEL, ROUND_ROBIN_LEVEL, SEMIFINALS_LEVEL, TEST_LEVEL, TournamentType, TournamentTypes } from "@toa-lib/models";
-import { Socket } from "socket.io-client";
-import { convertEMSStationToFMS } from "./helpers/generic.js";
-import { EStop, RobotStatus, StackLight } from "./models/PlcOutputCoils.js";
+} from "./plc.js";
+import { FINALS_LEVEL, Match, MatchMode, OCTOFINALS_LEVEL, PRACTICE_LEVEL, QUALIFICATION_LEVEL, QUARTERFINALS_LEVEL, RANKING_LEVEL, ROUND_ROBIN_LEVEL, SEMIFINALS_LEVEL, TEST_LEVEL, TournamentType, TournamentTypes } from "@toa-lib/models";
+import { convertEMSStationToFMS } from "../helpers/generic.js";
+import { EStop, RobotStatus } from "../models/PlcOutputCoils.js";
+import { SocketSupport } from "./socket.js";
 
 const udpDSListener = dgram.createSocket("udp4");
 let tcpListener = net.createServer();
+
+const logger = log("driverstation");
 
 export class DriverstationSupport {
   private dsTcpListenPort = 1750;
@@ -23,8 +25,6 @@ export class DriverstationSupport {
   private maxTcpPacketBytes = 4096;
 
   private updateSocketInterval: any;
-
-  private socket: Socket | null = null;
 
   // TODO: Figure this out
   public colorToSend = 0;
@@ -50,17 +50,13 @@ export class DriverstationSupport {
     return DriverstationSupport._instance;
   }
 
-  public setSocket(socket: Socket | null) {
-    this.socket = socket;
-  }
-
   dsInit(host: string): any {
     this.udpInit(this.dsUdpReceivePort, host);
     this.tcpInit(this.dsTcpListenPort, host);
 
     // Register socket to update twice a second
     this.updateSocketInterval = setInterval(() => {
-      this.socket?.emit("frc-fms:ds-update-all", this.dsToJsonObj());
+      SocketSupport.getInstance().socket?.emit("frc-fms:ds-update-all", this.dsToJsonObj());
     }, 500);
   }
 
@@ -537,7 +533,7 @@ export class DriverstationSupport {
       const fmsStation = convertEMSStationToFMS(p.station);
       this.allDriverStations[fmsStation] = ds;
     }
-    this.socket?.emit("frc-fms:ds-ready");
+    SocketSupport.getInstance().dsReady();
     logger.info("✔ Driver Station Prestart Completed");
   }
 

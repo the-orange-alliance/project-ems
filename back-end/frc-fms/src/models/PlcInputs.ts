@@ -1,5 +1,6 @@
-import logger from "../logger.js";
+import log from "../logger.js";
 
+const logger = log("plc");
 export class PlcInputs {
   public fieldEstop: boolean;
   public redEstop1: boolean;
