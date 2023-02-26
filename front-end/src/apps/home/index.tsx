@@ -51,8 +51,8 @@ const HomeApp: FC = () => {
         />
         <GridAppCard title='Referee App' to={`/${event?.eventKey}/referee`} />
         <GridAppCard title='Report App' to={`/${event?.eventKey}/reports`} />
-        {/* <GridAppCard title='Admin App' to='/admin' />
-        <GridAppCard title='Field Debugger' to='/fcs-debug' />
+        <GridAppCard title='Admin App' to={`/${event?.eventKey}/admin`} />
+        {/* <GridAppCard title='Field Debugger' to='/fcs-debug' />
         <GridAppCard title='Account Manager' to='/accounts' />
         <GridAppCard
           title='Streaming App'

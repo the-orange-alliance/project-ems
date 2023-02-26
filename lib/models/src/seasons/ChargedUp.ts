@@ -1,4 +1,4 @@
-import { Match, MatchDetailBase } from '../Match.js';
+import { Match, MatchDetailBase, RESULT_NOT_PLAYED } from '../Match.js';
 import { Ranking } from '../Ranking.js';
 
 // TODO - I have an idea how to make this less ideal.
@@ -100,16 +100,18 @@ export interface ChargedUpRanking extends Ranking {
 }
 
 export function calculateCUsRankings(
-  matches: Match<ChargedUpDetails>[]
+  matches: Match<ChargedUpDetails>[],
+  prevRankings: ChargedUpRanking[]
 ): ChargedUpRanking[] {
-  const rankings: ChargedUpRanking[] = [];
   const rankingsMap = new Map<number, ChargedUpRanking>();
   const teamAlliancePoints = new Map<number, number>();
   const teamAllianceChargePoints = new Map<number, number>();
   const teamAllianceAutoPoints = new Map<number, number>();
   const teamRankingPoints = new Map<number, number>();
   for (const match of matches) {
-    if (!match.participants || !match.details) continue;
+    if (!match.participants || !match.details) {
+      continue;
+    }
     for (const participant of match.participants) {
       if (!rankingsMap.has(participant.teamKey)) {
         rankingsMap.set(participant.teamKey, {
@@ -155,10 +157,11 @@ export function calculateCUsRankings(
       const prevAutoPoints = teamAllianceAutoPoints.get(participant.teamKey);
       const prevRankingPoints = teamRankingPoints.get(participant.teamKey);
       if (
-        !prevPoints ||
-        !prevChargePoints ||
-        !prevAutoPoints ||
-        !prevRankingPoints
+        typeof prevPoints === 'undefined' ||
+        typeof prevChargePoints === 'undefined' ||
+        typeof prevAutoPoints === 'undefined' ||
+        typeof prevRankingPoints === 'undefined' ||
+        match.result <= RESULT_NOT_PLAYED
       ) {
         continue;
       }
@@ -223,36 +226,60 @@ export function calculateCUsRankings(
         rankingsMap.set(participant.teamKey, ranking);
       }
     }
+  }
 
-    for (const teamKey of rankingsMap.keys()) {
-      const ranking = {
-        ...(rankingsMap.get(teamKey) as ChargedUpRanking)
-      };
-      const autoPoints = teamAllianceAutoPoints.get(teamKey);
-      const chargePoints = teamAllianceChargePoints.get(teamKey);
-      const points = teamAlliancePoints.get(teamKey);
-      const rankingPoints = teamRankingPoints.get(teamKey);
+  for (const teamKey of rankingsMap.keys()) {
+    const ranking = {
+      ...(rankingsMap.get(teamKey) as ChargedUpRanking)
+    };
+    const autoPoints = teamAllianceAutoPoints.get(teamKey);
+    const chargePoints = teamAllianceChargePoints.get(teamKey);
+    const points = teamAlliancePoints.get(teamKey);
+    const rankingPoints = teamRankingPoints.get(teamKey);
 
-      if (!autoPoints || !chargePoints || !points || !rankingPoints) {
-        continue;
-      }
+    if (
+      typeof autoPoints === 'undefined' ||
+      typeof chargePoints === 'undefined' ||
+      typeof points === 'undefined' ||
+      typeof rankingPoints === 'undefined' ||
+      ranking.played <= 0
+    ) {
+      continue;
+    }
 
-      const avgAllianceAutoPoints = autoPoints / ranking.played;
-      const avgAllianceChargePoints = chargePoints / ranking.played;
-      const avgAlliancePoints = points / ranking.played;
-      const rankingScore =
-        (rankingPoints + ranking.wins * 2 + ranking.ties) / ranking.played;
+    const avgAllianceAutoPoints = autoPoints / ranking.played;
+    const avgAllianceChargePoints = chargePoints / ranking.played;
+    const avgAlliancePoints = points / ranking.played;
+    const rankingScore =
+      (rankingPoints + ranking.wins * 2 + ranking.ties) / ranking.played;
 
-      rankings.push({
-        ...ranking,
-        avgAllianceAutoPoints,
-        avgAllianceChargePoints,
-        avgAlliancePoints,
-        rankingScore
-      });
+    rankingsMap.set(teamKey, {
+      ...ranking,
+      avgAllianceAutoPoints,
+      avgAllianceChargePoints,
+      avgAlliancePoints,
+      rankingScore
+    });
+  }
+
+  const rankings = [...rankingsMap.values()].sort(compareRankings);
+
+  // In this loop calculate the rank change
+  for (let i = 0; i < rankings.length; i++) {
+    const prevRanking = prevRankings.find(
+      (r) => r.teamKey === rankings[i].teamKey
+    );
+    rankings[i].rank = i + 1;
+    if (prevRanking) {
+      const rankDelta =
+        prevRanking.rank === 0 ? 0 : prevRanking.rank - rankings[i].rank;
+      rankings[i].rankChange = rankDelta;
+      rankings[i].eventKey = prevRanking.eventKey;
+      rankings[i].tournamentKey = prevRanking.tournamentKey;
     }
   }
-  return [...rankings.sort(compareRankings)];
+
+  return rankings;
 }
 
 export function calculateCUScore(

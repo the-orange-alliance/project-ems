@@ -12,8 +12,8 @@ const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 const RedReferee = lazy(() => import('./apps/Referee/RedReferee'));
 const BlueReferee = lazy(() => import('./apps/Referee/BlueReferee'));
 const Reports = lazy(() => import('./apps/Reports'));
+const AdminApp = lazy(() => import('./apps/Admin'));
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
-// const AdminApp = lazy(() => import('./apps/Admin'));
 // const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 // const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));
 // const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
@@ -119,6 +119,13 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: <Reports />,
     hidden: true
+  },
+  {
+    name: 'Admin App',
+    path: '/:eventKey/admin',
+    group: 0,
+    element: <AdminApp />,
+    hidden: true
   }
   // {
   //   name: 'Account Manager',
@@ -139,13 +146,6 @@ const AppRoutes: AppRoute[] = [
   //   path: '/referee/head',
   //   group: 0,
   //   element: <HeadReferee />
-  // },
-  // {
-  //   name: 'Admin App',
-  //   path: '/admin',
-  //   group: 0,
-  //   element: <AdminApp />,
-  //   hidden: true
   // },
   // {
   //   name: 'Field Debugger',

@@ -19,6 +19,7 @@ import {
   matchesByTournamentSelector
 } from 'src/stores/NewRecoil';
 import { assignMatchTimes } from '@toa-lib/models';
+import { useSnackbar } from 'src/features/hooks/use-snackbar';
 
 const SetupMatches: FC = () => {
   const tournament = useRecoilValue(currentTournamentSelector);
@@ -27,6 +28,8 @@ const SetupMatches: FC = () => {
 
   const [quality, setQuality] = useState('best');
   const [loading, setLoading] = useState(false);
+
+  const { showSnackbar } = useSnackbar();
 
   const updateQuality = (quality: string) => setQuality(quality);
 
@@ -57,8 +60,13 @@ const SetupMatches: FC = () => {
 
   const postMatches = async () => {
     if (!tournament) return;
-    await createRankings(tournament.tournamentKey, schedule.teams);
-    await postMatchSchedule(matches);
+    try {
+      await createRankings(tournament.tournamentKey, schedule.teams);
+      await postMatchSchedule(matches);
+      showSnackbar('Match schedule successfully posted');
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   return (

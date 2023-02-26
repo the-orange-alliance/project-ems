@@ -1,19 +1,35 @@
-import { Box, Button, Divider, Paper, Typography } from '@mui/material';
-import { clientFetcher } from '@toa-lib/client';
-import { getTournamentLevelFromType } from '@toa-lib/models';
 import { FC } from 'react';
-import { useRecoilCallback } from 'recoil';
+import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
+import { Box, Button, Divider, Typography } from '@mui/material';
 import {
   createRankings,
   purgeAll,
   recalculateRankings
 } from 'src/api/ApiProvider';
-import DefaultLayout from 'src/layouts/DefaultLayout';
 import { useFlags } from 'src/stores/AppFlags';
-import { selectedTournamentType, teamsAtom } from 'src/stores/Recoil';
+import {
+  currentEventKeySelector,
+  currentTeamsByEventSelector,
+  currentTournamentKeyAtom,
+  currentTournamentSelector
+} from 'src/stores/NewRecoil';
+import PaperLayout from 'src/layouts/PaperLayout';
+import TwoColumnHeader from 'src/components/Headers/TwoColumnHeader';
+import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
+import { Tournament } from '@toa-lib/models';
 
 const AdminApp: FC = () => {
+  const [tournamentKey, setTournamentKey] = useRecoilState(
+    currentTournamentKeyAtom
+  );
+  const eventKey = useRecoilValue(currentEventKeySelector);
+
   const [, , purgeFlags] = useFlags();
+
+  const handleTournamentChange = (tournament: Tournament | null) => {
+    if (!tournament) return;
+    setTournamentKey(tournament.tournamentKey);
+  };
 
   const handlePurge = async (): Promise<void> => {
     try {
@@ -24,68 +40,57 @@ const AdminApp: FC = () => {
     }
   };
 
-  const handleTest = useRecoilCallback(({ snapshot }) => async () => {
-    const teams = await snapshot.getPromise(teamsAtom);
-    const type = await snapshot.getPromise(selectedTournamentType);
-    const tournamentLevel = getTournamentLevelFromType(type);
-    await createRankings(tournamentLevel, teams);
+  const handleRankingsCreate = useRecoilCallback(({ snapshot }) => async () => {
+    const teams = await snapshot.getPromise(currentTeamsByEventSelector);
+    const tournamentKey = await snapshot.getPromise(currentTournamentKeyAtom);
+    if (!tournamentKey) return;
+    await createRankings(tournamentKey, teams);
   });
 
   const handleRankings = useRecoilCallback(({ snapshot }) => async () => {
-    const type = await snapshot.getPromise(selectedTournamentType);
-    const tournamentLevel = getTournamentLevelFromType(type);
-    await recalculateRankings(tournamentLevel);
-    await clientFetcher(`results/sync/rankings/${tournamentLevel}`, 'POST');
-  });
-
-  const handleMatchSync = useRecoilCallback(({ snapshot }) => async () => {
-    const type = await snapshot.getPromise(selectedTournamentType);
-    const tournamentLevel = getTournamentLevelFromType(type);
-    await clientFetcher(`results/sync/matches/${tournamentLevel}`, 'POST');
-  });
-
-  const handleRankingsSync = useRecoilCallback(({ snapshot }) => async () => {
-    const type = await snapshot.getPromise(selectedTournamentType);
-    const tournamentLevel = getTournamentLevelFromType(type);
-    await clientFetcher(`results/sync/rankings/${tournamentLevel}`, 'POST');
+    const tournament = await snapshot.getPromise(currentTournamentSelector);
+    if (!tournament) return;
+    await recalculateRankings(tournament.eventKey, tournament.tournamentKey);
   });
 
   return (
-    <DefaultLayout>
-      <Paper>
-        <Box sx={{ padding: (theme) => theme.spacing(2) }}>
-          <Typography variant='h4'>Account Manager</Typography>
-        </Box>
-        <Divider />
-        <Box
-          sx={{
-            padding: (theme) => theme.spacing(2),
-            display: 'flex',
-            gap: '16px'
-          }}
+    <PaperLayout
+      header={
+        <TwoColumnHeader
+          left={<Typography variant='h4'>Admin App</Typography>}
+          right={
+            <EventTournamentsDropdown
+              eventKey={eventKey}
+              value={tournamentKey}
+              onChange={handleTournamentChange}
+            />
+          }
+        />
+      }
+    >
+      <Divider />
+      <Box
+        sx={{
+          padding: (theme) => theme.spacing(2),
+          display: 'flex',
+          gap: '16px'
+        }}
+      >
+        <Button variant='contained' color='error' onClick={handlePurge}>
+          Purge Event Data
+        </Button>
+        <Button
+          variant='contained'
+          color='error'
+          onClick={handleRankingsCreate}
         >
-          <Button variant='contained' color='error' onClick={handlePurge}>
-            Purge Event Data
-          </Button>
-          <Button variant='contained' color='error' onClick={handleTest}>
-            Create Rankings
-          </Button>
-          <Button variant='contained' color='error' onClick={handleRankings}>
-            Re-Calculate Rankings
-          </Button>
-          <Button variant='contained' color='error' onClick={handleMatchSync}>
-            Sync Matches
-          </Button>
-          <Button
-            variant='contained'
-            color='error'
-            onClick={handleRankingsSync}
-          >
-            Sync Rankings
-          </Button>
-        </Box>
-      </Paper>
-    </DefaultLayout>
+          Create Rankings
+        </Button>
+        <Button variant='contained' color='error' onClick={handleRankings}>
+          Re-Calculate Rankings
+        </Button>
+      </Box>
+    </PaperLayout>
   );
 };
 
