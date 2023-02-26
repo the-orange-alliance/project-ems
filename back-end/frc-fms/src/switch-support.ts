@@ -1,7 +1,7 @@
-import {Telnet as telnet_client} from "telnet-client"
-import {EmsFrcFms} from "./server.js";
+import { Telnet as telnet_client } from "telnet-client"
 import logger from "./logger.js";
 import { Socket } from "socket.io-client";
+import { MatchParticipant } from "@toa-lib/models";
 
 export class SwitchSupport {
   private static _instance: SwitchSupport;
@@ -13,9 +13,9 @@ export class SwitchSupport {
   private socket: Socket | null = null;
 
   //Vlans
-  private red1Vlan  = 10;
-  private red2Vlan  = 20;
-  private red3Vlan  = 30;
+  private red1Vlan = 10;
+  private red2Vlan = 20;
+  private red3Vlan = 30;
   private blue1Vlan = 40;
   private blue2Vlan = 50;
   private blue3Vlan = 60;
@@ -37,21 +37,21 @@ export class SwitchSupport {
     this.switch.password = password;
   }
 
-  public async configTeamEthernet() {
+  public async configTeamEthernet(participants: MatchParticipant[]) {
     const oldConfig = await this.getTeamVlans();
     let infoString = 'ℹ Currently configured vlans |'
-    for(const c of oldConfig) infoString += ` Vlan${c.vlan}: ${c.team} |`
+    for (const c of oldConfig) infoString += ` Vlan${c.vlan}: ${c.team} |`
     logger.info(infoString);
     let commands = [];
     let vlans = [this.red1Vlan, this.red2Vlan, this.red3Vlan, this.blue1Vlan, this.blue2Vlan, this.blue3Vlan];
     // Build Command to configure VLANs
-    for(const p of EmsFrcFms.getInstance().activeMatch?.participants ?? []) {
+    for (const p of participants) {
       const vlan = vlans[this.convertEMSStationToFMS(p.station)];
 
       // Locate current vlan config for this vlan
       const currVlanConfIndex = oldConfig.findIndex(e => e.vlan === vlan);
 
-      if (oldConfig[currVlanConfIndex] && oldConfig[currVlanConfIndex].teamKey === p.teamKey){
+      if (oldConfig[currVlanConfIndex] && oldConfig[currVlanConfIndex].team === p.teamKey) {
         // This team exists on this Vlan already. No need to reconfigure anything.
       } else {
         /* New Team. Clear Vlan and Reconfig */
@@ -62,15 +62,15 @@ export class SwitchSupport {
         commands.push(`no access-list 1${vlan}`); // Clear Access List
 
         // Setup DHCP pool for new Team
-        commands.push(`ip dhcp excluded-address 10.${Math.floor(p.teamKey/100)}.${p.teamKey%100}.1 10.${Math.floor(p.teamKey/100)}.${p.teamKey%100}.100`);
+        commands.push(`ip dhcp excluded-address 10.${Math.floor(p.teamKey / 100)}.${p.teamKey % 100}.1 10.${Math.floor(p.teamKey / 100)}.${p.teamKey % 100}.100`);
 
         // Disable Old DHCP Pool
         commands.push(`no ip dhcp pool dhcp${vlan}`);
 
         // Enable New DHCP Pool
         commands.push(`ip dhcp pool dhcp${vlan}`);
-        commands.push(`network 10.${Math.floor(p.teamKey/100)}.${p.teamKey%100}.0 255.255.255.0`);   // Setup IP Addresses
-        commands.push(`default-router 10.${Math.floor(p.teamKey/100)}.${p.teamKey%100}.61`);         // Set Default Gateway
+        commands.push(`network 10.${Math.floor(p.teamKey / 100)}.${p.teamKey % 100}.0 255.255.255.0`);   // Setup IP Addresses
+        commands.push(`default-router 10.${Math.floor(p.teamKey / 100)}.${p.teamKey % 100}.61`);         // Set Default Gateway
         commands.push(`lease 7`);                                                                       // Set DHCP Lease
         commands.push(`exit`);                                                                          // Exit DHCP conf
 
@@ -78,35 +78,35 @@ export class SwitchSupport {
         commands.push(`no access-list 1${vlan}`);
 
         // Allow IP Addresses to communicate to FMS
-        commands.push(`access-list 1${vlan} permit ip 10.${Math.floor(p.teamKey/100)}.${p.teamKey%100}.0 0.0.0.255 host ${this.fmsIpAddress}`);
+        commands.push(`access-list 1${vlan} permit ip 10.${Math.floor(p.teamKey / 100)}.${p.teamKey % 100}.0 0.0.0.255 host ${this.fmsIpAddress}`);
 
         // Protocols to allow to communicate with FMS
         commands.push(`access-list 1${vlan} permit udp any eq bootpc any eq bootps`);
 
         // Set Default Vlan IP Address
         commands.push(`interface Vlan${vlan}`);                                                            // Select VLAN
-        commands.push(`ip address 10.${Math.floor(p.teamKey/100)}.${p.teamKey%100}.61 255.255.255.0`);  // Set Switch's IP on Vlan
+        commands.push(`ip address 10.${Math.floor(p.teamKey / 100)}.${p.teamKey % 100}.61 255.255.255.0`);  // Set Switch's IP on Vlan
         commands.push(`exit`);                                                                             // Exit Vlan config
       }
     }
     const command = commands.join('\n')
-    this.runConfigCommand(command).then(() => {
+    this.runConfigCommand(command).then((res) => {
       this.socket?.emit('frc-fms:switch-ready');
       logger.info('✔ Updated field switch (' + this.switch.address + ') configuration')
       return this.getTeamVlans();
     }).then((newConf) => {
       // TODO: Use this info to ensure that switch config is correct
       let infoString = 'ℹ Newly configured vlans |'
-      for(const c of newConf) infoString += ` Vlan${c.vlan}: ${c.team} |`
+      for (const c of newConf) infoString += ` Vlan${c.vlan}: ${c.team} |`
       logger.info(infoString);
     }).catch(error => {
       logger.error('❌ Failed to update field switch (' + this.switch.address + ') configuration')
     });
   }
 
-  private async getTeamVlans(): Promise<any[]> {
+  private async getTeamVlans(): Promise<TeamSwitchConfig[]> {
     let error = false;
-    const data = await this.runCommand(`show running-config\n`).catch(() => {error = true});
+    const data = await this.runCommand(`show running-config`).catch(() => { error = true; return "" });
 
     if (!error) {
       const switchRegex = /interface Vlan(\d\d)\s+ip address 10.(\d+)\.(\d+).61/g;
@@ -116,12 +116,12 @@ export class SwitchSupport {
         v = switchRegex.exec(data);
         if (v && v.length > 2) vlans.push([v[1], v[2], v[3]]);
       } while (v);
-      if(vlans.length < 1) return [];
+      if (vlans.length < 1) return [];
 
-      const parsedVlans = [];
+      const parsedVlans: TeamSwitchConfig[] = [];
 
       // In theory vlan 100 should be read last and won't get done. otherwise we gotta check for that
-      for(let i = 0; i < vlans.length && i < 7; i++) {
+      for (let i = 0; i < vlans.length && i < 7; i++) {
         const vConfig = vlans[i];
         const t = new TeamSwitchConfig();
         t.team100s = parseInt(vConfig[1]);
@@ -140,8 +140,8 @@ export class SwitchSupport {
   // This converts an EMS station to an FMS Station
   // Ex. 11 = Red Alliance 1, Which will become Station 0
   // Ex. 23 = Blue Alliance 3, Which will become Station 5
-  private convertEMSStationToFMS(station: number): number{
-    switch(station) {
+  private convertEMSStationToFMS(station: number): number {
+    switch (station) {
       case 11: return 0;
       case 12: return 1;
       case 13: return 2;
@@ -152,7 +152,7 @@ export class SwitchSupport {
     }
   }
 
-  private runCommand(command: string): Promise<any> {
+  private runCommand(command: string): Promise<string> {
     return new Promise<any>(async (resolve, reject) => {
       const client = new telnet_client();
       const params = {
@@ -163,27 +163,35 @@ export class SwitchSupport {
         execTimeout: 10000,
       };
 
-      client.connect(params).then(() => {
-        const commands = [];
-        commands.push(this.switch.password); // Enter Password for Telnet Conn
-        commands.push('enable');             // Enable Cisco Console
-        commands.push(this.switch.password); // Password for Console
-        commands.push('terminal length 0');  // Set Terminal length to not have "more"
-        commands.push(command);              // Run Predefined commands
-        commands.push('');                   // Blank line. DON'T REMOVE!
-        commands.push('exit');               // Exit?
+      const commands = [];
+      commands.push(this.switch.password); // Enter Password for Telnet Conn
+      commands.push('enable');             // Enable Cisco Console
+      commands.push(this.switch.password); // Password for Console
+      commands.push('terminal length 0');  // Set Terminal length to not have "more"
+      commands.push(command);              // Run Predefined commands
+      commands.push('');                   // Blank line. DON'T REMOVE!
+      commands.push('exit\n');             // Exit?
 
-        return client.exec(commands.join('\n'));
-      }).then((res: string) => {
+      client.once("close", () => {
+        logger.info("🏁 Switch Connection Closed")
+      })
+
+      client.once("end", () => {
+        logger.info("🏁 Switch sent FIN (close-socket) packet. Reciprocating...")
+        client.end();
+      })
+
+      try {
+        await client.connect(params);
+        const res = await client.exec(commands.join('\n'), { execTimeout: 5000 })
         resolve(res);
-        return client.destroy();
-      }).catch((error) => {
-        reject(error)
-      });
+      } catch (e) {
+        reject(e);
+      }
     })
   }
 
-  private runConfigCommand(command: string): Promise<any> {
+  private runConfigCommand(command: string): Promise<string> {
     const commands = [];
     commands.push('config terminal');                     // Open Config Terminal
     commands.push(command);                               // Run Config Commands

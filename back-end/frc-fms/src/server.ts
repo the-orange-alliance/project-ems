@@ -273,7 +273,7 @@ export class EmsFrcFms {
         this.activeMatch.participants ?? []
       );
       // Configure Switch
-      SwitchSupport.getInstance().configTeamEthernet();
+      SwitchSupport.getInstance().configTeamEthernet(this.activeMatch.participants ?? []);
     }
     if (this.settings.enableAdvNet && this.settings.enablePlc) {
       // Set Field Lights
