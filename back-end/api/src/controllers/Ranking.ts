@@ -1,5 +1,8 @@
 import {
-  calculateCUsRankings,
+  ChargedUpDetails,
+  ChargedUpRanking,
+  getFunctionsBySeasonKey,
+  getSeasonKeyFromEventKey,
   isRankingArray,
   isTeamArray,
   Ranking,
@@ -16,6 +19,7 @@ import {
   selectAllWhere
 } from '../db/Database.js';
 import { validateBody } from '../middleware/BodyValidator.js';
+import { SeasonFunctionsMissing } from '../util/Errors.js';
 
 const router = Router();
 
@@ -143,7 +147,21 @@ router.post(
         'ranking',
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
-      const rankings = calculateCUsRankings(matchesWithDetails, prevRankings);
+
+      const seasonKey = getSeasonKeyFromEventKey(eventKey);
+      const functions = getFunctionsBySeasonKey<
+        ChargedUpDetails,
+        ChargedUpRanking
+      >(seasonKey);
+
+      if (!functions) {
+        return next(SeasonFunctionsMissing);
+      }
+
+      const rankings = functions.calculateRankings(
+        matchesWithDetails,
+        prevRankings
+      );
       await deleteWhere(
         'ranking',
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`

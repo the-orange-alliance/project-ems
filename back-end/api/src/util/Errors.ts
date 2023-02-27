@@ -45,3 +45,8 @@ export const RouteNotFound: ApiError = {
   code: 404,
   message: 'Route not found.'
 };
+
+export const SeasonFunctionsMissing: ApiError = {
+  code: 500,
+  message: 'Internal server error. Could not find season functions.'
+};

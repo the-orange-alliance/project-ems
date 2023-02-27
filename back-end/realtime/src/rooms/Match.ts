@@ -1,7 +1,7 @@
 import {
   AllianceMember,
-  calculateCURankingPoints,
-  calculateCUScore,
+  getFunctionsBySeasonKey,
+  getSeasonKeyFromEventKey,
   Match as MatchObj,
   MatchKey,
   MatchState,
@@ -120,12 +120,22 @@ export default class Match extends Room {
     });
     socket.on("match:update", (match: MatchObj<any>) => {
       this.match = { ...match };
-      if (!match.details || this.state >= MatchState.RESULTS_COMMITTED) return;
-      // TODO - Parameterize this from an interface.
-      const [redScore, blueScore] = calculateCUScore(this.match);
+      const seasonKey = getSeasonKeyFromEventKey(match.eventKey);
+      const functions = getFunctionsBySeasonKey(seasonKey);
+      if (
+        !match.details ||
+        !functions ||
+        this.state >= MatchState.RESULTS_COMMITTED
+      )
+        return;
+      const [redScore, blueScore] = functions.calculateScore(this.match);
       this.match.redScore = redScore;
       this.match.blueScore = blueScore;
-      this.match.details = calculateCURankingPoints(this.match.details);
+      if (functions.calculateRankingPoints) {
+        this.match.details = functions.calculateRankingPoints(
+          this.match.details
+        );
+      }
       this.broadcast().emit("match:update", this.match);
     });
     socket.on("match:commit", (key: MatchKey) => {

@@ -2,6 +2,25 @@ import { AllianceMember } from '../Alliance.js';
 import { Match, MatchDetailBase } from '../Match.js';
 import { Ranking } from '../Ranking.js';
 import { isNonNullObject, isNumber } from '../types.js';
+import { Season, SeasonFunctions } from './index.js';
+
+/**
+ * Main season function declaration for the whole file.
+ */
+const functions: SeasonFunctions<CarbonCaptureDetails, CarbonCaptureRanking> = {
+  calculateRankings,
+  calculateScore
+};
+
+export const CarbonCaptureSeason: Season<
+  CarbonCaptureDetails,
+  CarbonCaptureRanking
+> = {
+  key: 'fgc_2022',
+  program: 'fgc',
+  name: 'Carbon Capture',
+  functions
+};
 
 export interface CarbonCaptureDetails extends MatchDetailBase {
   carbonPoints: number;
@@ -54,7 +73,7 @@ export const isCarbonCaptureRanking = (
   isNumber(obj.rankingScore) &&
   isNumber(obj.carbonPoints);
 
-export function calculateRankings(
+function calculateRankings(
   matches: Match<CarbonCaptureDetails>[],
   prevRankings: CarbonCaptureRanking[]
 ): CarbonCaptureRanking[] {
@@ -271,10 +290,10 @@ export function calculatePlayoffsRank(
 
 // TODO - calculate penalties
 export function calculateScore(
-  redPen: number,
-  bluePen: number,
-  details: CarbonCaptureDetails
+  match: Match<CarbonCaptureDetails>
 ): [number, number] {
+  const { details } = match;
+  if (!details) return [0, 0];
   const coopertition = details.coopertitionBonusLevel * 100;
   const redScore =
     (1 +
@@ -291,8 +310,8 @@ export function calculateScore(
       details.carbonPoints +
     coopertition;
   return [
-    Math.ceil(redScore * (1 - redPen * 0.1)),
-    Math.ceil(blueScore * (1 - bluePen * 0.1))
+    Math.ceil(redScore * (1 - match.redMinPen * 0.1)),
+    Math.ceil(blueScore * (1 - match.blueMinPen * 0.1))
   ];
 }
 

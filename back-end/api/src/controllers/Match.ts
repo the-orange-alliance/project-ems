@@ -4,16 +4,12 @@ import {
   MatchMakerParams,
   Match,
   MatchDetailBase,
-  getTournamentLevelFromType,
-  TournamentType,
   isMatch,
-  isMatchParticipantArray,
-  PRACTICE_LEVEL
+  isMatchParticipantArray
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import {
   insertValue,
-  selectAll,
   selectAllWhere,
   updateWhere,
   __dirname
