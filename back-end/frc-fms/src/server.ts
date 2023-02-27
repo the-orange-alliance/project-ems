@@ -10,11 +10,12 @@ import {
     MatchMode,
     MatchKey,
     Tournament,
+    FMSSettings,
+    getDefaultFMSSettings,
 } from "@toa-lib/models";
 import { getMatch } from "./helpers/ems.js";
 import { environment } from "@toa-lib/server";
 import { SocketSupport } from "./devices/socket.js";
-import FMSSettings from "./models/FMSSettings.js";
 
 const logger = log("server");
 
@@ -41,7 +42,7 @@ export class EmsFrcFms {
     private dsInterval: any;
     private apInterval: any;
     private plcInterval: any;
-    private settings: FMSSettings = new FMSSettings();
+    private settings: FMSSettings = getDefaultFMSSettings();
     public matchStateMap: Map<String, number> = new Map<String, number>([
         ["prestart", 0],
         ["timeout", 1],
@@ -97,9 +98,6 @@ export class EmsFrcFms {
 
         // Add some socket events
         await this.setupSocketEvents();
-
-        // Load Settings from EMS DB
-        await this.loadSettings();
 
         // Init Timer
         this._timer = new MatchTimer();
@@ -162,35 +160,8 @@ export class EmsFrcFms {
         });
     }
 
-    private async loadSettings() {
-        // TODO: This will come through socket
-        // const events = await EMSProvider.getEvent();
-        const events: any[] = [];
-        if (events && events.length > 0) {
-            this.event = events[0];
-            // TODO: Config
-            // const config = await EMSProvider.getAdvNetConfig(this.event.eventKey);
-            const config: any = {};
-            if (!config.error) {
-                this.settings = new FMSSettings().fromJson(config);
-                logger.info(
-                    "✔ Loaded Settings for FMS with event " + this.event.eventKey
-                );
-            } else {
-                // await EMSProvider.postAdvNetConfig(this.event.eventKey, this.settings.toJson());
-                logger.info(
-                    "❗ No FMS configuration found for " +
-                    this.event.eventKey +
-                    ". Running with default settings."
-                );
-            }
-        } else {
-            logger.info("✔ No event found. Running with default settings.");
-        }
-    }
-
-    private async updateSettings(newSettings: object) {
-        this.settings = new FMSSettings().fromJson(newSettings);
+    private async updateSettings(newSettings: FMSSettings) {
+        this.settings = newSettings;
         // Update AP Settings
         if (this.settings.enableAdvNet) {
             AccesspointSupport.getInstance().setSettings(

@@ -1,9 +1,9 @@
 import log from "../logger.js";
 import { Socket } from "socket.io-client";
-import { SocketOptions } from "@toa-lib/client";
+import { SocketOptions, createSocket } from "@toa-lib/client";
 import { getToken } from "../helpers/ems.js";
-import FMSSettings from "../models/FMSSettings.js";
-import { createSocket } from "@toa-lib/client";
+import { getIPv4 } from "@toa-lib/server";
+import { FMSSettings } from "@toa-lib/models";
 
 const logger = log("socket");
 
@@ -21,7 +21,7 @@ export class SocketSupport {
 
   public async initSocket() {
     const token = await getToken();
-    SocketOptions.host = "10.0.100.5";
+    SocketOptions.host = getIPv4();
     SocketOptions.port = 8081;
     // @ts-ignore
     this._socket = createSocket(token);
@@ -30,7 +30,7 @@ export class SocketSupport {
     // Setup Socket Connect/Disconnect
     this.socket?.on("connect", () => {
       logger.info("✔ Connected to EMS through SocketIO.");
-      this.socket?.emit("rooms", ["match", "fcs"]);
+      this.socket?.emit("rooms", ["match", "fcs", "frc-fms"]);
     });
     this.socket?.on("disconnect", () => {
       logger.error("❌ Disconnected from SocketIO.");
@@ -38,8 +38,8 @@ export class SocketSupport {
     this.socket?.on("error", () => {
       logger.error("❌ Error With SocketIO, not connected to EMS");
     });
-    this.socket?.on("fms-ping", () => {
-      this.socket?.emit("fms-pong");
+    this.socket?.on("frc-fms:ping", () => {
+      this.socket?.emit("frc-fms:pong");
     });
 
     this.socket?.connect();
@@ -58,7 +58,7 @@ export class SocketSupport {
   }
 
   public settingsUpdateSuccess(settings: FMSSettings) {
-    this.socket?.emit("frc-fms:settings-update-success", JSON.stringify(settings.toJson()));
+    this.socket?.emit("frc-fms:settings-update-success", settings);
   }
 
   get socket(): Socket | null {

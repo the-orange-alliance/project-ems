@@ -6,7 +6,7 @@ import { EmsFrcFms } from "../server.js";
 import {
   PlcSupport
 } from "./plc.js";
-import { FINALS_LEVEL, Match, MatchMode, OCTOFINALS_LEVEL, PRACTICE_LEVEL, QUALIFICATION_LEVEL, QUARTERFINALS_LEVEL, RANKING_LEVEL, ROUND_ROBIN_LEVEL, SEMIFINALS_LEVEL, TEST_LEVEL, TournamentType, TournamentTypes } from "@toa-lib/models";
+import { DriverstationStatus, FINALS_LEVEL, Match, MatchMode, OCTOFINALS_LEVEL, PRACTICE_LEVEL, QUALIFICATION_LEVEL, QUARTERFINALS_LEVEL, RANKING_LEVEL, ROUND_ROBIN_LEVEL, SEMIFINALS_LEVEL, TEST_LEVEL, TournamentType, TournamentTypes } from "@toa-lib/models";
 import { convertEMSStationToFMS } from "../helpers/generic.js";
 import { EStop, RobotStatus } from "../models/PlcOutputCoils.js";
 import { SocketSupport } from "./socket.js";
@@ -56,7 +56,7 @@ export class DriverstationSupport {
 
     // Register socket to update twice a second
     this.updateSocketInterval = setInterval(() => {
-      SocketSupport.getInstance().socket?.emit("frc-fms:ds-update-all", this.dsToJsonObj());
+      SocketSupport.getInstance().socket?.emit("frc-fms:ds-update", this.dsToJsonObj());
     }, 500);
   }
 
@@ -456,7 +456,7 @@ export class DriverstationSupport {
     }
   }
 
-  private dsToJsonObj(): object[] {
+  private dsToJsonObj(): DriverstationStatus[] {
     return this.allDriverStations.map(ds => ds.toJson());
   }
 
