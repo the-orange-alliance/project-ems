@@ -21,16 +21,48 @@ import {
   reconcileMatchParticipants,
   ScheduleItem,
   Team,
-  Tournament
+  Tournament,
+  User
 } from '@toa-lib/models';
 import {
   atom,
+  AtomEffect,
   atomFamily,
   DefaultValue,
   selector,
   selectorFamily
 } from 'recoil';
 import { replaceAllInArray, replaceInArray } from './Util';
+
+const localStorageEffect: (key: string) => AtomEffect<any> =
+  (key: string) =>
+  ({ setSelf, onSet }) => {
+    const savedValue = localStorage.getItem(key);
+    if (savedValue != null) {
+      setSelf(JSON.parse(savedValue));
+    }
+
+    onSet((newValue, _, isReset) => {
+      isReset
+        ? localStorage.removeItem(key)
+        : localStorage.setItem(key, JSON.stringify(newValue));
+    });
+  };
+
+/**
+ * @section UI SETTINGS STATE
+ * Recoil state management for UI settings
+ */
+export const darkModeAtom = atom<boolean>({
+  key: 'darkModeAtom',
+  default: false,
+  effects: [localStorageEffect('darkMode')]
+});
+
+export const userAtom = atom<User | null>({
+  key: 'userAtom',
+  default: null
+});
 
 /**
  * @section UI STATE
@@ -49,13 +81,14 @@ export const snackbarMessageAtom = atom<string>({
  * @section AUDIENCE DISPLAY STATE
  * Recoil state management for audience display
  */
-export const displayID = atom({
+export const displayIdAtom = atom({
   key: 'displayIDAtom',
   default: 0
 });
-export const displayChromaKey = atom({
+export const displayChromaKeyAtom = atom({
   key: 'chromaKeyAtom',
-  default: '#ff00ff'
+  default: '#ff00ff',
+  effects: [localStorageEffect('chromaKey')]
 });
 
 /**
@@ -591,7 +624,7 @@ export const currentRankingsByTournamentSelector = selector<Ranking[] | null>({
 });
 
 export const currentRankingsByMatchSelector = selector<Ranking[] | null>({
-  key: 'currentRankingsByTournamentSelector',
+  key: 'currentRankingsByMatchSelector',
   get: async ({ get }) => {
     const match = get(currentMatchSelector);
     if (!match) return null;

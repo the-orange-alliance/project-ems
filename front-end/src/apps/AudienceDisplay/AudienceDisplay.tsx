@@ -7,8 +7,8 @@ import MatchStateListener from 'src/components/MatchStateListener/MatchStateList
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
 import ChromaLayout from 'src/layouts/ChromaLayout';
 import {
-  displayChromaKey,
-  displayID,
+  displayChromaKeyAtom,
+  displayIdAtom,
   matchResultAtom
 } from 'src/stores/NewRecoil';
 import MatchPreview from './displays/frc_2023/MatchPreview/MatchPreview';
@@ -18,8 +18,8 @@ import './AudienceDisplay.less';
 import MatchResults from './displays/frc_2023/MatchResults/MatchResults';
 
 const AudienceDisplay: FC = () => {
-  const [display, setDisplay] = useRecoilState(displayID);
-  const chromaKey = useRecoilValue(displayChromaKey);
+  const [display, setDisplay] = useRecoilState(displayIdAtom);
+  const chromaKey = useRecoilValue(displayChromaKeyAtom);
   const [socket, connected] = useSocket();
 
   useEffect(() => {

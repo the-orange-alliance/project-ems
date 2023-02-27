@@ -52,6 +52,11 @@ const HomeApp: FC = () => {
         <GridAppCard title='Referee App' to={`/${event?.eventKey}/referee`} />
         <GridAppCard title='Report App' to={`/${event?.eventKey}/reports`} />
         <GridAppCard title='Admin App' to={`/${event?.eventKey}/admin`} />
+        <GridAppCard
+          title='Settings'
+          imgSrc={settingsLogo}
+          to={`/${event?.eventKey}/settings`}
+        />
         {/* <GridAppCard title='Field Debugger' to='/fcs-debug' />
         <GridAppCard title='Account Manager' to='/accounts' />
         <GridAppCard
@@ -64,7 +69,6 @@ const HomeApp: FC = () => {
           imgSrc={audienceDisplayLogo}
           to='/queueing'
         />
-        <GridAppCard title='Settings' imgSrc={settingsLogo} to='/settings' />
         <GridAppCard title='JB App' imgSrc={revLogo} to='/jb' /> */}
       </Grid>
     </DefaultLayout>

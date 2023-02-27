@@ -13,7 +13,7 @@ import { useSetRecoilState } from 'recoil';
 import { login } from 'src/api/ApiProvider';
 import { useSocket } from 'src/api/SocketProvider';
 import useLocalStorage from 'src/stores/LocalStorage';
-import { userAtom } from 'src/stores/Recoil';
+import { userAtom } from 'src/stores/NewRecoil';
 
 interface Props {
   open: boolean;

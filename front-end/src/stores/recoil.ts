@@ -45,11 +45,11 @@ import { AppFlags, defaultFlags } from './AppFlags';
 
 /* Basic UI options */
 export const darkModeAtom = atom<boolean>({
-  key: 'darkModeAtom',
+  key: 'darkModeAtom2',
   default: false
 });
 export const userAtom = atom<User | null>({
-  key: 'userAtom',
+  key: 'userAtom2',
   default: null
 });
 export const hostIP = atom<string>({
@@ -301,7 +301,7 @@ export const loadedMatchKey = atom<string | null>({
 });
 
 export const matchResult = atom<Match<any> | null>({
-  key: 'matchResultAtom',
+  key: 'matchResultAtom2',
   default: null
 });
 
@@ -522,10 +522,10 @@ export const defaultMatches = selector<Match<any>[]>({
 
 /* AUDIENCE DISPLAY SECTION */
 export const displayID = atom({
-  key: 'displayIDAtom',
+  key: 'displayIDAtom2',
   default: 0
 });
 export const displayChromaKey = atom({
-  key: 'chromaKeyAtom',
+  key: 'chromaKeyAtom2',
   default: '#ff00ff'
 });

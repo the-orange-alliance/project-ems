@@ -126,6 +126,12 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: <AdminApp />,
     hidden: true
+  },
+  {
+    name: 'Settings',
+    path: '/:eventKey/settings',
+    group: 0,
+    element: <SettingsApp />
   }
   // {
   //   name: 'Account Manager',
@@ -153,12 +159,6 @@ const AppRoutes: AppRoute[] = [
   //   group: 0,
   //   element: <FieldDebugger />,
   //   hidden: true
-  // },
-  // {
-  //   name: 'Settings',
-  //   path: '/settings',
-  //   group: 0,
-  //   element: <SettingsApp />
   // },
   // {
   //   name: 'Streaming',

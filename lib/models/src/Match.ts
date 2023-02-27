@@ -248,18 +248,34 @@ export function reconcileMatchParticipants(
   matches: Match<any>[],
   participants: MatchParticipant[]
 ): Match<any>[] {
-  const map: Map<number, MatchParticipant[]> = new Map();
+  const map: Map<string, MatchParticipant[]> = new Map();
   for (const participant of participants) {
-    if (!map.get(participant.id)) {
-      map.set(participant.id, []);
+    if (
+      !map.get(
+        `${participant.eventKey}-${participant.tournamentKey}-${participant.id}`
+      )
+    ) {
+      map.set(
+        `${participant.eventKey}-${participant.tournamentKey}-${participant.id}`,
+        []
+      );
     }
-    map.get(participant.id)?.push(participant);
+    map
+      .get(
+        `${participant.eventKey}-${participant.tournamentKey}-${participant.id}`
+      )
+      ?.push(participant);
   }
 
   const newMatches: Match<any>[] = [];
 
   for (const match of matches) {
-    const newMatch = { ...match, participants: map.get(match.id) };
+    const newMatch = {
+      ...match,
+      participants: map.get(
+        `${match.eventKey}-${match.tournamentKey}-${match.id}`
+      )
+    };
     newMatches.push(newMatch);
   }
   return newMatches;
@@ -269,16 +285,29 @@ export function reconcileMatchDetails<T extends MatchDetailBase>(
   matches: Match<T>[],
   details: T[]
 ): Match<T>[] {
-  const map: Map<number, T> = new Map();
+  const map: Map<string, T> = new Map();
   for (const detail of details) {
-    map.set(detail.id, detail);
+    map.set(`${detail.eventKey}-${detail.tournamentKey}-${detail.id}`, detail);
   }
 
   const newMatches: Match<any>[] = [];
 
   for (const match of matches) {
-    newMatches.push({ ...match, details: map.get(match.id) });
+    newMatches.push({
+      ...match,
+      details: map.get(`${match.eventKey}-${match.tournamentKey}-${match.id}`)
+    });
   }
 
   return newMatches;
+}
+
+function getMatchKey(
+  key: Match<any> | MatchDetailBase | MatchParticipant
+): MatchKey {
+  return {
+    eventKey: key.eventKey,
+    tournamentKey: key.tournamentKey,
+    id: key.id
+  };
 }
