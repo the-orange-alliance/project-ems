@@ -1,30 +1,32 @@
 import { FC, ChangeEvent } from 'react';
-import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import Checkbox from '@mui/material/Checkbox';
 import { useRecoilState } from 'recoil';
-import { matchByMatchKey } from 'src/stores/Recoil';
 import { FormControlLabel } from '@mui/material';
-import { calculateScore, CarbonCaptureDetails, Match } from '@toa-lib/models';
+import {
+  getFunctionsBySeasonKey,
+  getSeasonKeyFromEventKey,
+  Match
+} from '@toa-lib/models';
+import { matchByCurrentIdSelectorFam } from 'src/stores/NewRecoil';
 
 interface Props {
-  matchKey: string;
+  id: number;
 }
 
-const MatchInfo: FC<Props> = ({ matchKey }) => {
-  const [match, setMatch] = useRecoilState(matchByMatchKey(matchKey));
+const MatchInfo: FC<Props> = ({ id }) => {
+  const [match, setMatch] = useRecoilState(matchByCurrentIdSelectorFam(id));
 
   const handleUpdates = (e: ChangeEvent<HTMLInputElement>) => {
     const { value, name, type } = e.target;
     if (!match) return;
     const typedValue = type === 'number' ? parseInt(value) : value;
     const newMatch = { ...match, [name]: typedValue };
-    const [redScore, blueScore] = calculateScore(
-      newMatch.redMinPen,
-      newMatch.blueMinPen,
-      newMatch.details as CarbonCaptureDetails
-    );
+    const seasonKey = getSeasonKeyFromEventKey(match.eventKey);
+    const functions = getFunctionsBySeasonKey(seasonKey);
+    if (!functions) return;
+    const [redScore, blueScore] = functions.calculateScore(match);
     if (match) {
       setMatch({ ...newMatch, redScore, blueScore });
     }
@@ -34,8 +36,8 @@ const MatchInfo: FC<Props> = ({ matchKey }) => {
     <Grid container spacing={3}>
       <Grid item xs={12} sm={6} md={6}>
         <TextField
-          label='Match Key'
-          value={match?.matchKey}
+          label='Tournament ID'
+          value={match?.tournamentKey}
           disabled
           fullWidth
           name='matchKey'
@@ -43,8 +45,8 @@ const MatchInfo: FC<Props> = ({ matchKey }) => {
       </Grid>
       <Grid item xs={12} sm={6} md={6}>
         <TextField
-          label='Match Detail Key'
-          value={match?.matchDetailKey}
+          label='Match ID'
+          value={match?.id}
           disabled
           fullWidth
           name='matchDetailKey'
@@ -53,29 +55,29 @@ const MatchInfo: FC<Props> = ({ matchKey }) => {
       <Grid item xs={12} sm={6} md={6}>
         <TextField
           label='Match Name'
-          value={match?.matchName}
+          value={match?.name}
           fullWidth
-          name='matchKey'
+          name='name'
           onChange={handleUpdates}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={3}>
         <TextField
-          label='Tourney Lvl'
-          value={match?.tournamentLevel}
+          label='Red Fouls'
+          value={match?.redMinPen}
           type='number'
           fullWidth
-          name='tournamentLevel'
+          name='redMinPen'
           onChange={handleUpdates}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={3}>
         <TextField
-          label='Field Number'
-          value={match?.fieldNumber}
+          label='Blue Fouls'
+          value={match?.blueMinPen}
           type='number'
           fullWidth
-          name='fieldNumber'
+          name='blueMinPen'
           onChange={handleUpdates}
         />
       </Grid>
@@ -101,25 +103,35 @@ const MatchInfo: FC<Props> = ({ matchKey }) => {
       </Grid>
       <Grid item xs={12} sm={6} md={3}>
         <TextField
-          label='Red Penalties'
-          value={match?.redMinPen}
+          label='Red Tech Fouls'
+          value={match?.redMajPen}
           type='number'
           fullWidth
-          name='redMinPen'
+          name='redMajPen'
           onChange={handleUpdates}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={3}>
         <TextField
-          label='Blue Penalties'
-          value={match?.blueMinPen}
+          label='Blue Tech Fouls'
+          value={match?.blueMajPen}
           type='number'
           fullWidth
-          name='blueMinPen'
+          name='blueMajPen'
           onChange={handleUpdates}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={6}>
+      <Grid item xs={12} sm={6} md={3}>
+        <TextField
+          label='Field Number'
+          value={match?.fieldNumber}
+          type='number'
+          fullWidth
+          name='fieldNumber'
+          onChange={handleUpdates}
+        />
+      </Grid>
+      <Grid item xs={12}>
         <FormControlLabel
           control={
             <Checkbox
@@ -128,7 +140,7 @@ const MatchInfo: FC<Props> = ({ matchKey }) => {
                 setMatch({
                   ...match,
                   result: e.target.checked ? 0 : -1
-                } as Match);
+                } as Match<any>);
               }}
             />
           }

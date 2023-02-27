@@ -3,28 +3,26 @@ import Box from '@mui/material/Box';
 import MatchResultsTable from 'src/features/components/MatchResultsTable/MatchResultsTable';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
-  selectedTournamentType,
-  matchesByTournamentType,
-  matchEditDialogOpen
-} from 'src/stores/Recoil';
+  matchesByTournamentSelector,
+  matchDialogOpenAtom
+} from 'src/stores/NewRecoil';
 import MatchEditDialog from 'src/components/MatchEditDialog/MatchEditDialg';
 
 const MatchEditor: FC = () => {
-  const type = useRecoilValue(selectedTournamentType);
-  const typeMatches = useRecoilValue(matchesByTournamentType(type));
-  const setDialogOpen = useSetRecoilState(matchEditDialogOpen);
+  const matches = useRecoilValue(matchesByTournamentSelector);
+  const setDialogOpen = useSetRecoilState(matchDialogOpenAtom);
 
-  const [matchKey, setMatchKey] = useState('');
+  const [matchId, setMatchId] = useState(-1);
 
-  const handleSelect = (newKey: string) => {
-    setMatchKey(newKey);
+  const handleSelect = (id: number) => {
+    setMatchId(id);
     setDialogOpen(true);
   };
 
   return (
     <Box>
-      <MatchEditDialog matchKey={matchKey} />
-      <MatchResultsTable matches={typeMatches} onSelect={handleSelect} />
+      <MatchEditDialog id={matchId} />
+      <MatchResultsTable matches={matches} onSelect={handleSelect} />
     </Box>
   );
 };

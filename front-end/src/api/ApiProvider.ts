@@ -220,10 +220,10 @@ export const useTeams = (): SWRResponse<Team[], ApiResponseError> =>
   });
 
 export const useMatchAll = (
-  matchKey?: string
-): SWRResponse<Match, ApiResponseError> =>
-  useSWR<Match>(
-    matchKey ? `match/all/${matchKey}` : '',
+  key?: MatchKey
+): SWRResponse<Match<any>, ApiResponseError> =>
+  useSWR<Match<any>>(
+    key ? `match/all/${key.eventKey}/${key.tournamentKey}/${key.id}` : '',
     (url) => clientFetcher(url, 'GET', undefined, isMatch),
     {
       revalidateOnFocus: false

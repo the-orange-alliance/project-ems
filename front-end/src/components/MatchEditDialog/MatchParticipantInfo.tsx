@@ -2,17 +2,17 @@ import { FC } from 'react';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import { useRecoilState } from 'recoil';
-import { matchByMatchKey } from 'src/stores/Recoil';
 import { replaceInArray } from 'src/stores/Util';
 import EditableParticipant from 'src/features/components/EditableParticipant/EditableParticipant';
 import { MatchParticipant } from '@toa-lib/models';
+import { matchByCurrentIdSelectorFam } from 'src/stores/NewRecoil';
 
 interface Props {
-  matchKey: string;
+  id: number;
 }
 
-const MatchParticipantInfo: FC<Props> = ({ matchKey }) => {
-  const [match, setMatch] = useRecoilState(matchByMatchKey(matchKey));
+const MatchParticipantInfo: FC<Props> = ({ id }) => {
+  const [match, setMatch] = useRecoilState(matchByCurrentIdSelectorFam(id));
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
@@ -21,8 +21,8 @@ const MatchParticipantInfo: FC<Props> = ({ matchKey }) => {
     if (!match || !match.participants) return;
     const participants = replaceInArray(
       match.participants,
-      'matchParticipantKey',
-      p.matchParticipantKey,
+      'station',
+      p.station,
       p
     );
     setMatch({ ...match, participants });
@@ -34,21 +34,13 @@ const MatchParticipantInfo: FC<Props> = ({ matchKey }) => {
         <Typography>Red Alliance</Typography>
       </Grid>
       {redAlliance?.map((p) => (
-        <EditableParticipant
-          key={p.matchParticipantKey}
-          p={p}
-          onUpdate={handleUpdate}
-        />
+        <EditableParticipant key={p.station} p={p} onUpdate={handleUpdate} />
       ))}
       <Grid item xs={12} sm={12} md={12}>
         <Typography>Blue Alliance</Typography>
       </Grid>
       {blueAlliance?.map((p) => (
-        <EditableParticipant
-          key={p.matchParticipantKey}
-          p={p}
-          onUpdate={handleUpdate}
-        />
+        <EditableParticipant key={p.station} p={p} onUpdate={handleUpdate} />
       ))}
     </Grid>
   );

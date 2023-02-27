@@ -1,6 +1,6 @@
 import { useRecoilState } from 'recoil';
 import { setApiStorage, setApiStorageKey } from 'src/api/ApiProvider';
-import { appFlagsAtom } from './Recoil';
+import { appFlagsAtom } from './NewRecoil';
 
 export interface AppFlags {
   createdEvents: string[];

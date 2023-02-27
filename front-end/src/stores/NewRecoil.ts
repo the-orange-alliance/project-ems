@@ -32,6 +32,8 @@ import {
   selector,
   selectorFamily
 } from 'recoil';
+import { setApiStorage } from 'src/api/ApiProvider';
+import { AppFlags, defaultFlags } from './AppFlags';
 import { replaceAllInArray, replaceInArray } from './Util';
 
 const localStorageEffect: (key: string) => AtomEffect<any> =
@@ -80,6 +82,10 @@ export const snackbarMessageAtom = atom<string>({
   key: 'snackbarMessageAtom',
   default: ''
 });
+export const matchDialogOpenAtom = atom<boolean>({
+  key: 'matchDialogOpenAtom',
+  default: false
+});
 
 /**
  * @section AUDIENCE DISPLAY STATE
@@ -102,6 +108,26 @@ export const displayChromaKeyAtom = atom({
 export const socketConnectedAtom = atom<boolean>({
   key: 'socketConnectedAtom',
   default: false
+});
+
+/**
+ * @section FLAGS STATE
+ * Recoil state management for application flags
+ */
+export const appFlagsAtom = atom<AppFlags>({
+  key: 'appFlagsAtom',
+  default: selector<AppFlags>({
+    key: 'appFlagsAtomSelector',
+    get: async (): Promise<AppFlags> => {
+      try {
+        return await clientFetcher('storage/flags.json', 'GET');
+      } catch (e) {
+        // If the above fails, try creating the file and returning default flags.
+        setApiStorage('flags.json', defaultFlags);
+        return defaultFlags;
+      }
+    }
+  })
 });
 
 /**

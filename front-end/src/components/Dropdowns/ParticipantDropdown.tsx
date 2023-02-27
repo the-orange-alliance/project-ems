@@ -3,7 +3,10 @@ import { useRecoilValue } from 'recoil';
 import Box from '@mui/material/Box';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
-import { teamsAtom } from 'src/stores/Recoil';
+import {
+  currentTeamsByEventSelector,
+  teamIdentifierAtom
+} from 'src/stores/NewRecoil';
 import { Team } from '@toa-lib/models';
 
 interface Props {
@@ -13,7 +16,8 @@ interface Props {
 }
 
 const ParticipantDropdown: FC<Props> = ({ teamKey, disabled, onChange }) => {
-  const teams = useRecoilValue(teamsAtom);
+  const identifier = useRecoilValue(teamIdentifierAtom);
+  const teams = useRecoilValue(currentTeamsByEventSelector);
   const team = teams.find((t) => t.teamKey === teamKey);
 
   const handleChange = (e: SyntheticEvent, team: Team | null) => onChange(team);
@@ -25,7 +29,7 @@ const ParticipantDropdown: FC<Props> = ({ teamKey, disabled, onChange }) => {
       disabled={disabled}
       value={team || null}
       options={teams}
-      getOptionLabel={(option) => option.teamKey + ''}
+      getOptionLabel={(option) => `${option[identifier]}`}
       renderOption={(props, option) => (
         <Box component='li' {...props}>
           <span
@@ -34,7 +38,7 @@ const ParticipantDropdown: FC<Props> = ({ teamKey, disabled, onChange }) => {
             }
           ></span>
           &nbsp;
-          <span>{option.teamKey}</span>
+          <span>{option[identifier]}</span>
         </Box>
       )}
       renderInput={(params) => (

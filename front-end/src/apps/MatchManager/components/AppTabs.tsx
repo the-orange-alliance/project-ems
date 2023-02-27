@@ -65,7 +65,7 @@ const AppTabs: FC = () => {
       </TabPanel>
       <TabPanel value={value} index={3}>
         <></>
-        {/* <MatchEditor /> */}
+        <MatchEditor />
       </TabPanel>
     </Box>
   );

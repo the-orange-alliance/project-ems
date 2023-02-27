@@ -15,7 +15,7 @@ import Paper from '@mui/material/Paper';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import LoginButton from '@features/components/LoginButton/LoginButton';
-import { userAtom } from '@stores/Recoil';
+import { userAtom } from '@stores/NewRecoil';
 import emsAvatar from '@assets/favicon.ico';
 import LogoutButton from '@features/components/LogoutButton/LogoutButton';
 

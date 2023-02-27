@@ -1,12 +1,11 @@
 import { FC, SyntheticEvent, useState, useEffect } from 'react';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import { matchByMatchKey, matchEditDialogOpen } from 'src/stores/Recoil';
 import { Tabs, Tab } from '@mui/material';
 import TabPanel from 'src/components/TabPanel/TabPanel';
 import MatchInfo from './MatchInfo';
@@ -14,15 +13,29 @@ import MatchParticipantInfo from './MatchParticipantInfo';
 import { patchWholeMatch, useMatchAll } from 'src/api/ApiProvider';
 import MatchDetailInfo from './MatchDetailInfo';
 import { sendCommitScores } from 'src/api/SocketProvider';
+import {
+  currentTournamentSelector,
+  matchByCurrentIdSelectorFam,
+  matchDialogOpenAtom
+} from 'src/stores/NewRecoil';
 
 interface Props {
-  matchKey: string;
+  id: number;
 }
 
-const MatchEditDialog: FC<Props> = ({ matchKey }) => {
-  const [open, setOpen] = useRecoilState(matchEditDialogOpen);
-  const [match, setMatch] = useRecoilState(matchByMatchKey(matchKey));
-  const { data: reqMatch } = useMatchAll(matchKey);
+const MatchEditDialog: FC<Props> = ({ id }) => {
+  const tournament = useRecoilValue(currentTournamentSelector);
+  const [open, setOpen] = useRecoilState(matchDialogOpenAtom);
+  const [match, setMatch] = useRecoilState(matchByCurrentIdSelectorFam(id));
+  const { data: reqMatch } = useMatchAll(
+    tournament
+      ? {
+          eventKey: tournament.eventKey,
+          tournamentKey: tournament.tournamentKey,
+          id
+        }
+      : undefined
+  );
 
   useEffect(() => {
     if (reqMatch) setMatch(reqMatch);
@@ -41,8 +54,9 @@ const MatchEditDialog: FC<Props> = ({ matchKey }) => {
   };
   const handleUpdatePost = async () => {
     if (match) {
+      const { eventKey, tournamentKey, id } = match;
       await patchWholeMatch(match);
-      await sendCommitScores(match.matchKey);
+      await sendCommitScores({ eventKey, tournamentKey, id });
     }
     setOpen(false);
   };
@@ -55,7 +69,7 @@ const MatchEditDialog: FC<Props> = ({ matchKey }) => {
           color: (theme) => theme.palette.common.white
         }}
       >
-        {match?.matchName}
+        {match?.name}
       </DialogTitle>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={value} onChange={handleChange}>
@@ -66,13 +80,13 @@ const MatchEditDialog: FC<Props> = ({ matchKey }) => {
       </Box>
       <DialogContent>
         <TabPanel value={value} index={0}>
-          <MatchInfo matchKey={matchKey} />
+          <MatchInfo id={id} />
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <MatchParticipantInfo matchKey={matchKey} />
+          <MatchParticipantInfo id={id} />
         </TabPanel>
         <TabPanel value={value} index={2}>
-          <MatchDetailInfo matchKey={matchKey} />
+          <MatchDetailInfo id={id} />
         </TabPanel>
       </DialogContent>
       <DialogActions>

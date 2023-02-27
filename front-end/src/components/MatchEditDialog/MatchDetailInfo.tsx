@@ -2,20 +2,22 @@ import { FC, ChangeEvent } from 'react';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import { useRecoilState } from 'recoil';
-import { matchByMatchKey } from 'src/stores/Recoil';
+import { matchByCurrentIdSelectorFam } from 'src/stores/NewRecoil';
 import {
-  calculateScore,
-  CarbonCaptureDetails,
   defaultCarbonCaptureDetails,
+  getFunctionsBySeasonKey,
+  getSeasonKeyFromEventKey,
   isCarbonCaptureDetails
 } from '@toa-lib/models';
 
 interface Props {
-  matchKey: string;
+  id: number;
 }
 
-const MatchDetailInfo: FC<Props> = ({ matchKey }) => {
-  const [match, setMatch] = useRecoilState(matchByMatchKey(matchKey));
+const MatchDetailInfo: FC<Props> = ({ id }) => {
+  const [match, setMatch] = useRecoilState(matchByCurrentIdSelectorFam(id));
+
+  // TODO - Get rid of this.
   const someDetails = match?.details;
   const isValidDetail = isCarbonCaptureDetails(someDetails);
   const details = isValidDetail ? someDetails : defaultCarbonCaptureDetails;
@@ -27,12 +29,11 @@ const MatchDetailInfo: FC<Props> = ({ matchKey }) => {
     const details = {
       ...match.details,
       [name]: typedValue
-    } as CarbonCaptureDetails;
-    const [redScore, blueScore] = calculateScore(
-      match.redMinPen,
-      match.blueMinPen,
-      details
-    );
+    };
+    const seasonKey = getSeasonKeyFromEventKey(match.eventKey);
+    const functions = getFunctionsBySeasonKey(seasonKey);
+    if (!functions) return;
+    const [redScore, blueScore] = functions.calculateScore(match);
     if (match) {
       setMatch({ ...match, details, redScore, blueScore });
     }
@@ -42,8 +43,8 @@ const MatchDetailInfo: FC<Props> = ({ matchKey }) => {
     <Grid container spacing={3}>
       <Grid item xs={12} sm={6} md={6}>
         <TextField
-          label='Match Key'
-          value={match?.matchKey}
+          label='Tournament ID'
+          value={match?.tournamentKey}
           disabled
           fullWidth
           name='matchKey'
@@ -51,22 +52,14 @@ const MatchDetailInfo: FC<Props> = ({ matchKey }) => {
       </Grid>
       <Grid item xs={12} sm={6} md={6}>
         <TextField
-          label='Match Detail Key'
-          value={match?.matchDetailKey}
+          label='Match ID'
+          value={match?.id}
           disabled
           fullWidth
           name='matchDetailKey'
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={6}>
-        <TextField
-          label='Match Name'
-          value={match?.matchName}
-          fullWidth
-          name='matchKey'
-          onChange={handleUpdates}
-        />
-      </Grid>
+      {/* TODO - Come up with dynamic way to change this. */}
       <Grid item xs={12} sm={6} md={3}>
         <TextField
           label='Carbon Points'
