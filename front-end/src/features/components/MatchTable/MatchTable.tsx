@@ -10,12 +10,14 @@ import { Match } from '@toa-lib/models';
 import { DateTime } from 'luxon';
 import { useRecoilValue } from 'recoil';
 import { teamsAtom } from 'src/stores/Recoil';
+import { teamIdentifierAtom } from 'src/stores/NewRecoil';
 
 interface Props {
   matches: Match<any>[];
 }
 
 const MatchTable: FC<Props> = ({ matches }) => {
+  const identifier = useRecoilValue(teamIdentifierAtom);
   const teams = useRecoilValue(teamsAtom);
   const allianceSize = matches?.[0]?.participants?.length
     ? matches[0].participants.length / 2
@@ -53,7 +55,7 @@ const MatchTable: FC<Props> = ({ matches }) => {
                     const team = teams.find((t) => t.teamKey === p.teamKey);
                     return (
                       <TableCell key={`${match.id}-${p.teamKey}`}>
-                        {team ? team.city : p.teamKey}
+                        {team ? team[identifier] : p.teamKey}
                       </TableCell>
                     );
                   })}

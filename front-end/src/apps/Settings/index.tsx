@@ -5,13 +5,21 @@ import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { useRecoilState } from 'recoil';
-import { darkModeAtom, displayChromaKeyAtom } from 'src/stores/NewRecoil';
+import {
+  darkModeAtom,
+  displayChromaKeyAtom,
+  teamIdentifierAtom
+} from 'src/stores/NewRecoil';
 import SwitchSetting from './components/SwitchSetting';
 import TextSetting from './components/TextSetting';
+import DropdownSetting from './components/DropdownSetting';
+import { TeamKeys } from '@toa-lib/models';
 
 const SettingsApp: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
   const [chromaKey, setChromaKey] = useRecoilState(displayChromaKeyAtom);
+  const [teamIdentifier, setTeamIdentifier] =
+    useRecoilState(teamIdentifierAtom);
 
   return (
     <DefaultLayout>
@@ -30,6 +38,12 @@ const SettingsApp: FC = () => {
             name='Audience Display Chroma'
             value={chromaKey}
             onChange={setChromaKey}
+          />
+          <DropdownSetting
+            name='Team Identifier'
+            value={teamIdentifier}
+            options={TeamKeys}
+            onChange={setTeamIdentifier}
           />
         </Box>
       </Paper>

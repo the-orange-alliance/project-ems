@@ -1,18 +1,19 @@
-import { FC, ChangeEvent } from 'react';
+import { FC } from 'react';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 
 interface Props {
   name: string;
-  value: string;
-  onChange: (value: string) => void;
+  value: any;
+  options: any[];
+  onChange: (value: any) => void;
 }
 
-const TextSetting: FC<Props> = ({ name, value, onChange }) => {
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
-    onChange(e.target.value);
+const DropdownSetting: FC<Props> = ({ name, value, options, onChange }) => {
+  const handleChange = (e: SelectChangeEvent) => onChange(e.target.value);
 
   return (
     <FormGroup
@@ -24,11 +25,17 @@ const TextSetting: FC<Props> = ({ name, value, onChange }) => {
     >
       <FormControlLabel
         control={
-          <TextField
+          <Select
             value={value}
             onChange={handleChange}
-            sx={{ m: 1, minWidth: 220 }}
-          />
+            sx={{ m: 1, minWidth: 223 }}
+          >
+            {options.map((o) => (
+              <MenuItem key={`${name}-${o}`} value={o}>
+                {o}
+              </MenuItem>
+            ))}
+          </Select>
         }
         label={
           <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
@@ -42,4 +49,4 @@ const TextSetting: FC<Props> = ({ name, value, onChange }) => {
   );
 };
 
-export default TextSetting;
+export default DropdownSetting;

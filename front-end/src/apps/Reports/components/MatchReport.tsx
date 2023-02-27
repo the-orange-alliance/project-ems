@@ -89,7 +89,9 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
                               key={`${p.eventKey}-${p.tournamentKey}-${p.id}-${p.teamKey}-${p.station}`}
                               size='small'
                             >
-                              {team?.teamKey}
+                              {identifier && team
+                                ? team[identifier]
+                                : team?.teamKey}
                               {p.surrogate ? '*' : ''}
                             </TableCell>
                           );

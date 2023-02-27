@@ -30,6 +30,18 @@ export const defaultTeam: Team = {
   cardStatus: 0
 };
 
+type TeamKey = keyof Team;
+export const TeamKeys: TeamKey[] = [
+  'city',
+  'country',
+  'countryCode',
+  'robotName',
+  'stateProv',
+  'teamKey',
+  'teamNameLong',
+  'teamNameShort'
+];
+
 export const isTeam = (obj: unknown): obj is Team =>
   isNonNullObject(obj) && isString(obj.eventKey) && isNumber(obj.teamKey);
 

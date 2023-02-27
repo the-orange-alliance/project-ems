@@ -11,7 +11,8 @@ import { DateTime } from 'luxon';
 import { useRecoilValue } from 'recoil';
 import {
   currentMatchIdAtom,
-  currentTeamsByEventSelector
+  currentTeamsByEventSelector,
+  teamIdentifierAtom
 } from 'src/stores/NewRecoil';
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
 }
 
 const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
+  const identifier = useRecoilValue(teamIdentifierAtom);
   const currentMatchId = useRecoilValue(currentMatchIdAtom);
   const teams = useRecoilValue(currentTeamsByEventSelector);
   const allianceSize = matches?.[0]?.participants?.length
@@ -83,7 +85,7 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                       <TableCell
                         key={`${match.eventKey}-${match.id}-T${p.teamKey}-${p.station}`}
                       >
-                        {team ? team.teamKey : p.teamKey}
+                        {team ? team[identifier] : p.teamKey}
                         {p.surrogate ? '*' : ''}
                       </TableCell>
                     );

@@ -8,23 +8,29 @@ import { ReportProps } from '.';
 import MatchByTeamReport from './components/MatchByTeamReport';
 import {
   matchesByTournamentSelector,
-  currentTeamsByEventSelector
+  currentTeamsByEventSelector,
+  teamIdentifierAtom
 } from 'src/stores/NewRecoil';
 
 const TournamentReports: FC<ReportProps> = ({ onGenerate }) => {
+  const identifier = useRecoilValue(teamIdentifierAtom);
   const matches = useRecoilValue(matchesByTournamentSelector);
   const teams = useRecoilValue(currentTeamsByEventSelector);
   // const levelRankings = useRecoilValue(rankings(level));
 
   const generateScheduleReport = () =>
-    onGenerate(<MatchReport matches={matches} identifier='city' />);
+    onGenerate(<MatchReport matches={matches} identifier={identifier} />);
 
   // const generateRankingReport = () =>
   //   onGenerate(<RankingReport rankings={levelRankings} identifier='city' />);
 
   const generateScheduleByTeamReport = () =>
     onGenerate(
-      <MatchByTeamReport teams={teams} matches={matches} identifier='city' />
+      <MatchByTeamReport
+        teams={teams}
+        matches={matches}
+        identifier={identifier}
+      />
     );
 
   return (
