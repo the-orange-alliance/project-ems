@@ -10,7 +10,6 @@ interface Props {
   onUpdate: (fields: string[]) => void;
 }
 
-/* TODO - Probably not the best way to just copy the array contents and send it. Who cares? */
 const Fields: FC<Props> = ({ tournament, onUpdate }) => {
   const handleAdd = () => {
     onUpdate([...tournament.fields, `Field ${tournament.fields.length + 1}`]);

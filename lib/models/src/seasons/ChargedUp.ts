@@ -1,14 +1,26 @@
 import { Match, MatchDetailBase, RESULT_NOT_PLAYED } from '../Match.js';
 import { Ranking } from '../Ranking.js';
+import { Season, SeasonFunctions } from './index.js';
 
-// TODO - I have an idea how to make this less ideal.
 /**
- * interface SeasonDetailFunctions {
-     calculateScore;
-     calculateRankings;
-     calculateRP;
-   }
+ * Main season function declaration for the whole file.
  */
+const functions: SeasonFunctions<ChargedUpDetails, ChargedUpRanking> = {
+  calculateRankings,
+  calculateRankingPoints,
+  calculateScore,
+  calculateAutoScore,
+  calculateTeleScore,
+  calculateEndScore
+};
+
+export const ChargedUpSeason: Season<ChargedUpDetails, ChargedUpRanking> = {
+  key: 'frc_2023',
+  program: 'frc',
+  name: 'Charged Up',
+  functions
+};
+
 export interface ChargedUpDetails extends MatchDetailBase {
   redAutoMobilityOne: number;
   redAutoMobilityTwo: number;
@@ -99,7 +111,7 @@ export interface ChargedUpRanking extends Ranking {
   avgAllianceAutoPoints: number;
 }
 
-export function calculateCUsRankings(
+function calculateRankings(
   matches: Match<ChargedUpDetails>[],
   prevRankings: ChargedUpRanking[]
 ): ChargedUpRanking[] {
@@ -168,7 +180,7 @@ export function calculateCUsRankings(
 
       const isRed = participant.station < 20;
 
-      const [redScore, blueScore] = calculateCUScore(match);
+      const [redScore, blueScore] = calculateScore(match);
       const redFouls = match.redMinPen * 5 + match.redMajPen * 12;
       const blueFouls = match.blueMinPen * 5 + match.blueMajPen * 12;
       const score = isRed ? redScore - blueFouls : blueScore - redFouls;
@@ -282,89 +294,17 @@ export function calculateCUsRankings(
   return rankings;
 }
 
-export function calculateCUScore(
-  match: Match<ChargedUpDetails>
-): [number, number] {
+function calculateScore(match: Match<ChargedUpDetails>): [number, number] {
   const { details } = match;
   if (!details) return [0, 0];
-  const redAutoMobility =
-    (details.redAutoMobilityOne +
-      details.redAutoMobilityTwo +
-      details.redAutoMobilityThree) *
-    3;
-  const redAutoPieces =
-    details.redAutoTopPieces * 6 +
-    details.redAutoMidPieces * 4 +
-    details.redAutoLowPieces * 3;
-  const redAutoCharge =
-    getAutoChargeStatus(details.redAutoChargeOne) +
-    getAutoChargeStatus(details.redAutoChargeTwo) +
-    getAutoChargeStatus(details.redAutoChargeThree);
-  const redTelePieces =
-    details.redTeleTopPieces * 5 +
-    details.redTeleMidPieces * 3 +
-    details.redTeleLowPieces * 2;
-  const redTeleCharge =
-    getTeleChargeStatus(details.redTeleChargeOne) +
-    getTeleChargeStatus(details.redTeleChargeTwo) +
-    getTeleChargeStatus(details.redTeleChargeThree);
-  const redPark =
-    getParkStatus(details.redTeleChargeOne) +
-    getParkStatus(details.redTeleChargeTwo) +
-    getParkStatus(details.redTeleChargeThree);
-  const redLinks = details.redLinks * 5;
-  const redScore =
-    redAutoMobility +
-    redAutoPieces +
-    redAutoCharge +
-    redTelePieces +
-    redTeleCharge +
-    redPark +
-    redLinks;
-
-  const blueAutoMobility =
-    (details.blueAutoMobilityOne +
-      details.blueAutoMobilityTwo +
-      details.blueAutoMobilityThree) *
-    3;
-  const blueAutoPieces =
-    details.blueAutoTopPieces * 6 +
-    details.blueAutoMidPieces * 4 +
-    details.blueAutoLowPieces * 3;
-  const blueAutoCharge =
-    getAutoChargeStatus(details.blueAutoChargeOne) +
-    getAutoChargeStatus(details.blueAutoChargeTwo) +
-    getAutoChargeStatus(details.blueAutoChargeThree);
-  const blueTelePieces =
-    details.blueTeleTopPieces * 5 +
-    details.blueTeleMidPieces * 3 +
-    details.blueTeleLowPieces * 2;
-  const blueTeleCharge =
-    getTeleChargeStatus(details.blueTeleChargeOne) +
-    getTeleChargeStatus(details.blueTeleChargeTwo) +
-    getTeleChargeStatus(details.blueTeleChargeThree);
-  const bluePark =
-    getParkStatus(details.blueTeleChargeOne) +
-    getParkStatus(details.blueTeleChargeTwo) +
-    getParkStatus(details.blueTeleChargeThree);
-  const blueLinks = details.blueLinks * 5;
-  const blueScore =
-    blueAutoMobility +
-    blueAutoPieces +
-    blueAutoCharge +
-    blueTelePieces +
-    blueTeleCharge +
-    bluePark +
-    blueLinks;
-
+  const redScore = getRedAutoPoints(details) + getRedTelePoints(details);
+  const blueScore = getBlueAutoPoints(details) + getBlueTelePoints(details);
   const redFouls = match.redMinPen * 5 + match.redMajPen * 12;
   const blueFouls = match.blueMinPen * 5 + match.blueMajPen * 12;
   return [redScore + blueFouls, blueScore + redFouls];
 }
 
-export function calculateCURankingPoints(
-  details: ChargedUpDetails
-): ChargedUpDetails {
+function calculateRankingPoints(details: ChargedUpDetails): ChargedUpDetails {
   const redGoalLinks = details.coopertitionBonus ? 4 : 5;
   const blueGoalLinks = details.coopertitionBonus ? 4 : 5;
   const redChargePoints =
@@ -393,6 +333,20 @@ function compareRankings(a: ChargedUpRanking, b: ChargedUpRanking): number {
   } else {
     return 0;
   }
+}
+
+function calculateAutoScore(match: Match<ChargedUpDetails>): [number, number] {
+  if (!match.details) return [0, 0];
+  return [getRedAutoPoints(match.details), getBlueAutoPoints(match.details)];
+}
+
+function calculateTeleScore(match: Match<ChargedUpDetails>): [number, number] {
+  if (!match.details) return [0, 0];
+  return [getRedTelePoints(match.details), getBlueAutoPoints(match.details)];
+}
+
+function calculateEndScore(match: Match<ChargedUpDetails>): [number, number] {
+  return [0, 0];
 }
 
 function getAutoChargeStatus(status: number): number {
@@ -455,6 +409,23 @@ function getRedAutoPoints(details: ChargedUpDetails): number {
   return redAutoMobility + redAutoPieces + getRedAutoChargePoints(details);
 }
 
+function getRedTelePoints(details: ChargedUpDetails): number {
+  const redTelePieces =
+    details.redTeleTopPieces * 5 +
+    details.redTeleMidPieces * 3 +
+    details.redTeleLowPieces * 2;
+  const redTeleCharge =
+    getTeleChargeStatus(details.redTeleChargeOne) +
+    getTeleChargeStatus(details.redTeleChargeTwo) +
+    getTeleChargeStatus(details.redTeleChargeThree);
+  const redPark =
+    getParkStatus(details.redTeleChargeOne) +
+    getParkStatus(details.redTeleChargeTwo) +
+    getParkStatus(details.redTeleChargeThree);
+  const redLinks = details.redLinks * 5;
+  return redTelePieces + redTeleCharge + redPark + redLinks;
+}
+
 function getBlueAutoChargePoints(details: ChargedUpDetails): number {
   const blueAutoCharge =
     getAutoChargeStatus(details.blueAutoChargeOne) +
@@ -483,4 +454,21 @@ function getBlueAutoPoints(details: ChargedUpDetails): number {
     details.blueAutoLowPieces * 3;
 
   return blueAutoMobility + blueAutoPieces + getBlueAutoChargePoints(details);
+}
+
+function getBlueTelePoints(details: ChargedUpDetails): number {
+  const blueTelePieces =
+    details.blueTeleTopPieces * 5 +
+    details.blueTeleMidPieces * 3 +
+    details.blueTeleLowPieces * 2;
+  const blueTeleCharge =
+    getTeleChargeStatus(details.blueTeleChargeOne) +
+    getTeleChargeStatus(details.blueTeleChargeTwo) +
+    getTeleChargeStatus(details.blueTeleChargeThree);
+  const bluePark =
+    getParkStatus(details.blueTeleChargeOne) +
+    getParkStatus(details.blueTeleChargeTwo) +
+    getParkStatus(details.blueTeleChargeThree);
+  const blueLinks = details.blueLinks * 5;
+  return blueTelePieces + blueTeleCharge + bluePark + blueLinks;
 }

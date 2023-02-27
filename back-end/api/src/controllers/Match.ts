@@ -4,16 +4,12 @@ import {
   MatchMakerParams,
   Match,
   MatchDetailBase,
-  getTournamentLevelFromType,
-  TournamentType,
   isMatch,
-  isMatchParticipantArray,
-  PRACTICE_LEVEL
+  isMatchParticipantArray
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import {
   insertValue,
-  selectAll,
   selectAllWhere,
   updateWhere,
   __dirname
@@ -61,7 +57,6 @@ router.get(
   }
 );
 
-// TODO - This might never function because it might just match /participants
 router.get(
   '/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {

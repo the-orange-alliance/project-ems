@@ -1,32 +1,39 @@
+import { Match, MatchDetailBase } from '../Match.js';
+import { Ranking } from '../Ranking.js';
+import { CarbonCaptureSeason } from './CarbonCapture.js';
+import { ChargedUpSeason } from './ChargedUp.js';
+
 export * from './CarbonCapture.js';
-export * from './PowerPlay.js';
 export * from './ChargedUp.js';
 
-export interface Season {
+export interface Season<T extends MatchDetailBase, J extends Ranking> {
   key: string;
   name: string;
   program: string;
+  functions?: SeasonFunctions<T, J>;
 }
 
-export const CarbonCaptureSeason: Season = {
-  key: 'fgc_2022',
-  program: 'fgc',
-  name: 'Carbon Capture'
-};
-export const PowerPlaySeason: Season = {
-  key: 'ftc_2223',
-  program: 'ftc',
-  name: 'Power Play'
-};
-
-export const ChargedUpSeason: Season = {
-  key: 'frc_2023',
-  program: 'frc',
-  name: 'Charged Up'
-};
-
-export const Seasons: Season[] = [
+export const Seasons: Season<any, any>[] = [
   CarbonCaptureSeason,
-  PowerPlaySeason,
   ChargedUpSeason
 ];
+
+export interface SeasonFunctions<T extends MatchDetailBase, J extends Ranking> {
+  calculateRankings: (matches: Match<T>[], prevRankings: J[]) => J[];
+  calculateScore: (match: Match<T>) => [number, number];
+  calculateRankingPoints?: (details: T) => T;
+  calculateAutoScore?: (match: Match<T>) => [number, number];
+  calculateTeleScore?: (match: Match<T>) => [number, number];
+  calculateEndScore?: (match: Match<T>) => [number, number];
+}
+
+export function getFunctionsBySeasonKey<
+  T extends MatchDetailBase,
+  J extends Ranking
+>(seasonKey: string): SeasonFunctions<T, J> | undefined {
+  return Seasons.find((s) => s.key === seasonKey)?.functions;
+}
+
+export function getSeasonKeyFromEventKey(eventKey: string): string {
+  return eventKey.split('-')[0].toLowerCase();
+}
