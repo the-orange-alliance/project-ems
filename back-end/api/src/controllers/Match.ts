@@ -57,7 +57,6 @@ router.get(
   }
 );
 
-// TODO - This might never function because it might just match /participants
 router.get(
   '/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {

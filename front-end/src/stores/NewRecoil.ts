@@ -331,7 +331,6 @@ export const currentScheduledTeamsSelector = selector<Team[]>({
   }
 });
 
-// TODO - Need day/daybreak mutable selector
 export const currentScheduleDaySelectorFam = selectorFamily<Day, number>({
   key: 'currentScheduleDaySelectorFam',
   get:

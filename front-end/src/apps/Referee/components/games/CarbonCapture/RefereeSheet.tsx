@@ -44,7 +44,6 @@ const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
     if (newStorageLevel !== null) {
       const newMatch = Object.assign({}, match);
       const details = match?.details as CarbonCaptureDetails;
-      // TODO(jan): find a better way to do this
       switch (participant?.station) {
         case 11:
           newMatch.details = {
