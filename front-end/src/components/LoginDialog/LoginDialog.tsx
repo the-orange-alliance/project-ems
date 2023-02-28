@@ -23,7 +23,7 @@ interface Props {
 
 const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
   const setUser = useSetRecoilState(userAtom);
-  const [, setValue] = useLocalStorage<User | null>('ems:user', null);
+  const [, setValue] = useLocalStorage<User | null>('currentUser', null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');

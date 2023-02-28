@@ -8,7 +8,7 @@ import { userAtom } from 'src/stores/NewRecoil';
 
 const LogoutButton: FC = () => {
   const setUser = useSetRecoilState(userAtom);
-  const [, setValue] = useLocalStorage<User | null>('ems:user', null);
+  const [, setValue] = useLocalStorage<User | null>('currentUser', null);
 
   const handle = async () => {
     try {

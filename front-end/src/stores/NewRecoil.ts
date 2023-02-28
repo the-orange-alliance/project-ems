@@ -62,7 +62,8 @@ export const darkModeAtom = atom<boolean>({
 });
 export const userAtom = atom<User | null>({
   key: 'userAtom',
-  default: null
+  default: null,
+  effects: [localStorageEffect('currentUser')]
 });
 export const teamIdentifierAtom = atom<keyof Team>({
   key: 'teamIdentifierAtom',
