@@ -14,6 +14,7 @@ export default defineConfig({
       '@components': resolve(__dirname, './src/components'),
       '@features': resolve(__dirname, './src/features'),
       '@layouts': resolve(__dirname, './src/layouts'),
+      '@seasons': resolve(__dirname, './src/seasons'),
       '@stores': resolve(__dirname, './src/stores')
     }
   },
