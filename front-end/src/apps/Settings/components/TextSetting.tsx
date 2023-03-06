@@ -6,11 +6,15 @@ import TextField from '@mui/material/TextField';
 
 interface Props {
   name: string;
-  value: string;
-  onChange: (value: string) => void;
+  value: string | number;
+  onChange: (value: string | number) => void;
+  inline?: boolean;
+  type?: 'text' | 'number' | 'password';
+  title?: string;
+  fullWidth?: boolean;
 }
 
-const TextSetting: FC<Props> = ({ name, value, onChange }) => {
+const TextSetting: FC<Props> = ({ name, value, onChange, inline, type = 'text', title, fullWidth }) => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
     onChange(e.target.value);
 
@@ -28,6 +32,8 @@ const TextSetting: FC<Props> = ({ name, value, onChange }) => {
             value={value}
             onChange={handleChange}
             sx={{ m: 1, minWidth: 220 }}
+            type={type}
+            fullWidth={fullWidth}
           />
         }
         label={
@@ -35,8 +41,9 @@ const TextSetting: FC<Props> = ({ name, value, onChange }) => {
             {name}
           </Typography>
         }
-        labelPlacement='start'
+        labelPlacement={inline ? 'start' : 'top'}
         sx={{ padding: (theme) => theme.spacing(2) }}
+        title={title}
       />
     </FormGroup>
   );

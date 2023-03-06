@@ -14,6 +14,7 @@ import { getMatch } from "./helpers/ems.js";
 import { environment } from "@toa-lib/server";
 import { SocketSupport } from "./devices/socket.js";
 import { SettingsSupport } from "./devices/settings.js";
+import { sleep } from "./helpers/generic.js";
 
 const logger = log("server");
 
@@ -47,9 +48,6 @@ export class EmsFrcFms {
         ["tele", 5],
     ]);
 
-    private delay = (ms: number) =>
-        new Promise((resolve) => setTimeout(resolve, ms));
-
     constructor() {
         this.activeMatch = {} as any;
         this.event = {} as any;
@@ -74,14 +72,9 @@ export class EmsFrcFms {
                     isInit = true;
                 })
                 .catch(async (err) => {
-                    logger.error(
-                        "❌ Failed to initialize FMS after " +
-                        initializeCount +
-                        " tries. Make sure API and Socket are running. Error: " +
-                        err
-                    );
+                    logger.error(`❌ Failed to initialize FMS after ${initializeCount} tries. Error: ${err}`);
                     initializeCount++;
-                    await this.delay(5000);
+                    await sleep(5000);
                 });
         }
     }

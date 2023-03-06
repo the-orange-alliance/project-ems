@@ -1,4 +1,4 @@
-import { isNonNullObject, isString, isBoolean, isNumber } from '../types.js';
+import { isNonNullObject, isString, isBoolean, isNumber, isArray } from '../types.js';
 
 export interface FMSSettings {
   eventKey: string;
@@ -11,6 +11,7 @@ export interface FMSSettings {
   apPassword: string;
   apTeamCh: string;
   apAdminCh: string;
+  apAdminSsid: string;
   apAdminWpa: string;
   switchIp: string;
   switchPassword: string;
@@ -30,6 +31,7 @@ export const getDefaultFMSSettings = (hwKey: string): FMSSettings => ({
   apPassword: "1234Five",
   apTeamCh: "157",
   apAdminCh: "-1",
+  apAdminSsid: "EMS",
   apAdminWpa: "1234Five",
   switchIp: "10.0.100.2",
   switchPassword: "1234Five",
@@ -37,6 +39,27 @@ export const getDefaultFMSSettings = (hwKey: string): FMSSettings => ({
   plcIp: "10.0.100.40",
   registeredAt: new Date().toISOString(),
 })
+
+// Avaliable 5Ghz channels
+export const TeamChannels = [
+  "36",
+  "40",
+  "44",
+  "48",
+  "149",
+  "153",
+  "157",
+  "161",
+]
+
+
+// Avaliable 2.4Ghz channels
+export const AdminChannels = [
+  "0", // Disabled
+  "1",
+  "6",
+  "11",
+]
 
 export const isFMSSettings = (obj: unknown): obj is FMSSettings =>
   isNonNullObject(obj) &&
@@ -50,9 +73,13 @@ export const isFMSSettings = (obj: unknown): obj is FMSSettings =>
   isString(obj.apPassword) &&
   isString(obj.apTeamCh) &&
   isString(obj.apAdminCh) &&
+  isString(obj.apAdminSsid) &&
   isString(obj.apAdminWpa) &&
   isString(obj.switchIp) &&
   isString(obj.switchPassword) &&
   isBoolean(obj.enablePlc) &&
   isString(obj.plcIp) &&
   isString(obj.registeredAt);
+
+export const isFMSSettingsArray = (obj: unknown): obj is FMSSettings[] =>
+  isArray(obj) && obj.every((o) => isFMSSettings(o));

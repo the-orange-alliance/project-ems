@@ -34,7 +34,7 @@ export const useSocket = (): [
       socket.on('connect', () => {
         setConnected(true);
         console.log('CONNECTED');
-        socket?.emit('rooms', ['match', 'fcs']);
+        socket?.emit('rooms', ['match', 'fcs', 'frc-fms']);
       });
       socket.on('disconnect', (reason) => {
         console.log('DISCONNECT', reason);
@@ -85,6 +85,10 @@ export async function sendCommitScores(key: MatchKey): Promise<void> {
 
 export async function sendPostResults(): Promise<void> {
   socket?.emit('match:display', 3);
+}
+
+export async function sendUpdateFrcFmsSettings(hwFingerprint: string): Promise<void> {
+  socket?.emit('frc-fms:settings-update', {hwFingerprint});
 }
 
 export default socket;

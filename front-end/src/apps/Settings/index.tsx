@@ -1,25 +1,17 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { useRecoilState } from 'recoil';
-import {
-  darkModeAtom,
-  displayChromaKeyAtom,
-  teamIdentifierAtom
-} from 'src/stores/NewRecoil';
-import SwitchSetting from './components/SwitchSetting';
-import TextSetting from './components/TextSetting';
-import DropdownSetting from './components/DropdownSetting';
-import { TeamKeys } from '@toa-lib/models';
+import { Tab } from '@mui/material';
+import {TabContext, TabList, TabPanel} from '@mui/lab';
+import AudienceDisplaySettingsTab from './tabs/audience';
+import MainSettingsTab from './tabs/main';
+import FrcFmsSettingsTab from './tabs/frc-fms';
 
 const SettingsApp: FC = () => {
-  const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
-  const [chromaKey, setChromaKey] = useRecoilState(displayChromaKeyAtom);
-  const [teamIdentifier, setTeamIdentifier] =
-    useRecoilState(teamIdentifierAtom);
+  const [tab, setTab] = useState<any>("0");
 
   return (
     <DefaultLayout>
@@ -28,24 +20,25 @@ const SettingsApp: FC = () => {
           <Typography variant='h4'>Settings</Typography>
         </Box>
         <Divider />
-        <Box>
-          <SwitchSetting
-            name='Dark Mode'
-            value={darkMode}
-            onChange={setDarkMode}
-          />
-          <TextSetting
-            name='Audience Display Chroma'
-            value={chromaKey}
-            onChange={setChromaKey}
-          />
-          <DropdownSetting
-            name='Team Identifier'
-            value={teamIdentifier}
-            options={TeamKeys}
-            onChange={setTeamIdentifier}
-          />
-        </Box>
+
+        {/* Tabs */}
+        <TabContext value={tab}>
+          <TabList onChange={(e, t) => setTab(t)}>
+            <Tab label="Main" value="0" />
+            <Tab label="Audience Display" value="1" />
+            <Tab label="FRC FMS" value="2" />
+          </TabList>
+          <TabPanel value="0">
+            <MainSettingsTab />
+          </TabPanel>
+          <TabPanel value="1">
+            <AudienceDisplaySettingsTab />
+          </TabPanel>
+          <TabPanel value="2">
+            <FrcFmsSettingsTab />
+          </TabPanel>
+        </TabContext>
+
       </Paper>
     </DefaultLayout>
   );

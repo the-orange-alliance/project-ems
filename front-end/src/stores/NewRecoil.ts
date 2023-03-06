@@ -5,7 +5,10 @@ import {
   defaultEventSchedule,
   Event,
   EventSchedule,
+  FMSSettings,
   isEventArray,
+  isFMSSettings,
+  isFMSSettingsArray,
   isMatch,
   isMatchArray,
   isMatchParticipantArray,
@@ -100,6 +103,28 @@ export const displayChromaKeyAtom = atom({
   key: 'chromaKeyAtom',
   default: '#ff00ff',
   effects: [localStorageEffect('chromaKey')]
+});
+
+/**
+ * @section FRC FMS STATE
+ * Recoil state management for frc-fms
+ */
+// Not public
+const frcFmsSelector = selector<FMSSettings[]>({
+  key: 'fms',
+  get: async () => {
+    try {
+      return await clientFetcher<FMSSettings[]>('frc/fms/advancedNetworkingConfig', 'GET', undefined, isFMSSettingsArray);
+    } catch (e) {
+      console.log(e);
+      return [];
+    }
+  }
+});
+
+export const allFrcFmsAtom = atom<FMSSettings[]>({
+  key: 'allFrcFmsAtom',
+  default: frcFmsSelector
 });
 
 /**

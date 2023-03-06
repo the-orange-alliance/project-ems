@@ -22,7 +22,7 @@ export class PlcSupport {
   private client = new ModbusRTU.default();
   private plc = new PlcStatus();
 
-  private firstConn = false;
+  private firstConnection = true;
   private firstRead = true;
   private lastSentHeartbeat = 0;
 
@@ -53,11 +53,13 @@ export class PlcSupport {
         this.client.setID(1);
         this.sendCoils();
         this.firstRead = true;
+        this.firstConnection = false;
       })
-      .catch((err: any) => {
+      .catch(async (err: any) => {
         logger.error(`❌ Failed to connect to PLC (${this.plc.address}:${this.modBusPort}) with error: ${err}`);
-        this.firstConn = true;
+        this.firstConnection = true;
         this.firstRead = true;
+        await sleep(5000);
       });
   }
 
@@ -86,11 +88,12 @@ export class PlcSupport {
     this.processLock = true;
 
     if (!this.client.isOpen) {
-      if (this.firstConn) {
+      // Print this only if this isn't the first connection
+      if (!this.firstConnection) {
         logger.error(`❌ Lost connection to PLC (${this.plc.address}:${this.modBusPort}), retrying`);
-        this.firstConn = false;
-        await this.initPlc(this.plc.address);
+        this.firstConnection = true;
       }
+      await this.initPlc(this.plc.address);
     } else {
       // Read Registers
       this.plc.registers = await this.client.readHoldingRegisters(0, 10)

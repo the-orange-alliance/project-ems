@@ -30,13 +30,13 @@ export class SettingsSupport {
   }
 
   public async initSettings() {
-    await this.updateSettings();
+    await this.updateSettings(true);
 
     // Listen for settings updates
     SocketSupport.getInstance().socket?.on("frc-fms:settings-update", (who: { hwFingerprint: string }) => {
       // If the settings update is for us, update our settings
       if (who.hwFingerprint === hwFingerprint) {
-        this.updateSettings(true);
+        this.updateSettings(false);
       }
     });
   }

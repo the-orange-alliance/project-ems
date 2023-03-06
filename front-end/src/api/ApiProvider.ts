@@ -22,7 +22,8 @@ import {
   isMatch,
   Tournament,
   MatchKey,
-  ChargedUpDetails
+  ChargedUpDetails,
+  FMSSettings
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -229,3 +230,6 @@ export const useMatchAll = (
       revalidateOnFocus: false
     }
   );
+
+  export const postFrcFmsSettings = (settings: FMSSettings): Promise<void> =>
+  clientFetcher(`frc/fms/advancedNetworkingConfig`, 'POST', settings);

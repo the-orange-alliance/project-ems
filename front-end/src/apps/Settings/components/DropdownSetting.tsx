@@ -10,9 +10,12 @@ interface Props {
   value: any;
   options: any[];
   onChange: (value: any) => void;
+  inline?: boolean;
+  title?: string;
+  fullWidth?: boolean;
 }
 
-const DropdownSetting: FC<Props> = ({ name, value, options, onChange }) => {
+const DropdownSetting: FC<Props> = ({ name, value, options, onChange, inline, title, fullWidth }) => {
   const handleChange = (e: SelectChangeEvent) => onChange(e.target.value);
 
   return (
@@ -29,6 +32,7 @@ const DropdownSetting: FC<Props> = ({ name, value, options, onChange }) => {
             value={value}
             onChange={handleChange}
             sx={{ m: 1, minWidth: 223 }}
+            fullWidth={fullWidth}
           >
             {options.map((o) => (
               <MenuItem key={`${name}-${o}`} value={o}>
@@ -42,8 +46,9 @@ const DropdownSetting: FC<Props> = ({ name, value, options, onChange }) => {
             {name}
           </Typography>
         }
-        labelPlacement='start'
+        labelPlacement={inline ? 'start' : 'top'}
         sx={{ padding: (theme) => theme.spacing(2) }}
+        title={title}
       />
     </FormGroup>
   );

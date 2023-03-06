@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS "fms_adv_net_cfg" (
     "apPassword" VARCHAR(255) NOT NULL,
     "apTeamCh" VARCHAR(255) NOT NULL,
     "apAdminCh" VARCHAR(255) NOT NULL,
+    "apAdminSsid" VARCHAR(255) NOT NULL,
     "apAdminWpa" VARCHAR(255) NOT NULL,
     "switchIp" VARCHAR(255) NOT NULL,
     "switchPassword" VARCHAR(255) NOT NULL,

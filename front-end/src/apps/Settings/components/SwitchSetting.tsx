@@ -8,9 +8,11 @@ interface Props {
   name: string;
   value: boolean;
   onChange: (value: boolean) => void;
+  inline?: boolean
+  title?: string;
 }
 
-const SwitchSetting: FC<Props> = ({ name, value, onChange }) => {
+const SwitchSetting: FC<Props> = ({ name, value, onChange, inline, title }) => {
   const handleChange = () => onChange(!value);
   return (
     <FormGroup
@@ -27,8 +29,9 @@ const SwitchSetting: FC<Props> = ({ name, value, onChange }) => {
             {name}
           </Typography>
         }
-        labelPlacement='start'
+        labelPlacement={inline ? 'start' : 'top'}
         sx={{ padding: (theme) => theme.spacing(2) }}
+        title={title}
       />
     </FormGroup>
   );
