@@ -21,7 +21,7 @@
     "@toa-lib/models": "file:../models",
     "dotenv": "^16.0.1",
     "ip": "^1.1.8",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0"
