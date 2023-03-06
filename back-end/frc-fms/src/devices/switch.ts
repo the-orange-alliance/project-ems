@@ -1,6 +1,6 @@
 import { Telnet as telnet_client } from "telnet-client"
 import log from "../logger.js";
-import { MatchParticipant } from "@toa-lib/models";
+import { Match, MatchParticipant } from "@toa-lib/models";
 import { convertEMSStationToFMS } from "../helpers/generic.js";
 import { SocketSupport } from "./socket.js";
 
@@ -34,7 +34,12 @@ export class SwitchSupport {
     this.switch.password = password;
   }
 
-  public async configTeamEthernet(participants: MatchParticipant[]) {
+  public async onPrestart(match: Match<any>) {
+    // Configure Switch for Match
+    await this.configTeamEthernet(match.participants ?? []);
+  }
+
+  private async configTeamEthernet(participants: MatchParticipant[]) {
     const oldConfig = await this.getTeamVlans();
     let infoString = 'ℹ Currently configured vlans |'
     for (const c of oldConfig) infoString += ` Vlan${c.vlan}: ${c.team} |`

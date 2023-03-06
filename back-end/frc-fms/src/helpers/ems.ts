@@ -1,4 +1,4 @@
-import { Event, Match, Tournament, WPAKey } from "@toa-lib/models";
+import { Event, FMSSettings, Match, Tournament, WPAKey } from "@toa-lib/models";
 import { MatchKey } from "@toa-lib/models";
 import { environment, getIPv4 } from "@toa-lib/server";
 import fetch from "node-fetch";
@@ -64,9 +64,43 @@ export const getMatch = async (matchKey: MatchKey): Promise<Match<any>> => {
 * @returns The Tournament Data
 */
 export const getTournaments = async (eventKey: string): Promise<Tournament[]> => {
- const resp = await fetch(
-   `http://${host}:${port}/tournament/${eventKey}`
- );
- const json = await resp.json();
- return json as Tournament[];
+  const resp = await fetch(
+    `http://${host}:${port}/tournament/${eventKey}`
+  );
+  const json = await resp.json();
+  return json as Tournament[];
 };
+
+/**
+ * Get advanced networking configurations
+ * @param hwFingerprint The HW Fingerprint
+ * @returns The Event Data
+ */
+export const getAdvNetCfg = async (hwFingerprint: string): Promise<FMSSettings[]> => {
+  const resp = await fetch(
+    `http://${host}:${port}/frc/fms/advancedNetworkingConfig?hwFingerprint=${encodeURIComponent(hwFingerprint)}`
+  );
+  const json = await resp.json();
+  return json as FMSSettings[];
+};
+
+/**
+ * Get advanced networking configurations
+ * @param hwFingerprint The HW Fingerprint
+ * @returns The Event Data
+ */
+export const postAdvNetCfg = async (cfg: FMSSettings): Promise<FMSSettings> => {
+  const resp = await fetch(
+    `http://${host}:${port}/frc/fms/advancedNetworkingConfig`,
+    {
+      method: "POST",
+      body: JSON.stringify(cfg),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  const json = await resp.json();
+  return json as FMSSettings;
+};
+

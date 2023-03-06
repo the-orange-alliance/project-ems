@@ -121,6 +121,12 @@ export const isMatchParticipant = (obj: unknown): obj is MatchParticipant =>
   isNumber(obj.teamKey) &&
   isNumber(obj.station);
 
+export const isMatchKey = (obj: unknown): obj is MatchKey =>
+  isNonNullObject(obj) &&
+  isString(obj.eventKey) &&
+  isString(obj.tournamentKey) &&
+  isNumber(obj.id);
+
 export const isMatchParticipantArray = (
   obj: unknown
 ): obj is MatchParticipant[] =>

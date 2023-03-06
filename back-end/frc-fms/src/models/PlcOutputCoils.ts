@@ -261,7 +261,7 @@ export default class PlcOutputCoils {
   }
 
   set stackLightBuzzer(status: StackLight) {
-    this._stackLightBlue = !!status;
+    this._stackLightBuzzer = !!status;
   }
 
   set redOneConn(status: RobotStatus) {

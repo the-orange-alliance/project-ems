@@ -21,6 +21,7 @@
     "appdata-path": "^1.0.0",
     "dgram": "^1.0.1",
     "dotenv": "^16.0.3",
+    "hw-fingerprint": "^3.0.1",
     "modbus-serial": "^8.0.9",
     "net": "^1.0.2",
     "node-fetch": "^3.3.0",

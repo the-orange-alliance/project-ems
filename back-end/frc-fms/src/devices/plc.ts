@@ -1,11 +1,11 @@
 import log from "../logger.js";
-import { ReadCoilResult, ReadRegisterResult } from "modbus-serial/ModbusRTU.js";
 import { PlcInputs } from "../models/PlcInputs.js";
 import PlcOutputCoils, { EStop, RobotStatus, StackLight } from "../models/PlcOutputCoils.js";
 import { EmsFrcFms } from "../server.js";
 import { MatchMode } from "@toa-lib/models";
 import ModbusRTU from "modbus-serial";
 import { Socket } from "socket.io-client";
+import { sleep } from "../helpers/generic.js";
 
 const logger = log("plc")
 
@@ -23,7 +23,13 @@ export class PlcSupport {
   private plc = new PlcStatus();
 
   private firstConn = false;
+  private firstRead = true;
   private lastSentHeartbeat = 0;
+
+  private noSettingsInterval: any = null
+  private noSettingsState: number = 0;
+
+  private processLock = false;
 
   private socket: Socket | null = null;
 
@@ -43,22 +49,15 @@ export class PlcSupport {
     await this.client
       .connectTCP(this.plc.address, { port: this.modBusPort })
       .then(() => {
-        logger.info(
-          "✔ Connected to PLC at " + this.plc.address + ":" + this.modBusPort
-        );
-        this.sendCoils();
+        logger.info(`✔ Connected to PLC at ${this.plc.address}:${this.modBusPort}`);
         this.client.setID(1);
+        this.sendCoils();
+        this.firstRead = true;
       })
       .catch((err: any) => {
-        logger.error(
-          "❌ Failed to connect to PLC (" +
-          this.plc.address +
-          ":" +
-          this.modBusPort +
-          "): " +
-          err
-        );
+        logger.error(`❌ Failed to connect to PLC (${this.plc.address}:${this.modBusPort}) with error: ${err}`);
         this.firstConn = true;
+        this.firstRead = true;
       });
   }
 
@@ -82,70 +81,142 @@ export class PlcSupport {
   }
 
   public async runPlc() {
+    // Process lock
+    if (this.processLock) return;
+    this.processLock = true;
+
     if (!this.client.isOpen) {
       if (this.firstConn) {
-        logger.error(
-          "❌ Lost connection to PLC (" +
-          this.plc.address +
-          ":" +
-          this.modBusPort +
-          "), retrying"
-        );
+        logger.error(`❌ Lost connection to PLC (${this.plc.address}:${this.modBusPort}), retrying`);
         this.firstConn = false;
         await this.initPlc(this.plc.address);
       }
     } else {
-      this.client
-        .readHoldingRegisters(0, 10)
-        .then((data: ReadRegisterResult) => {
-          this.plc.registers = data.data;
+      // Read Registers
+      this.plc.registers = await this.client.readHoldingRegisters(0, 10)
+        .then(d => d.data)
+        .catch(e => {
+          logger.error(`❌ Error reading registers from PLC: ${e}`);
+          return [];
         });
 
       const mState = EmsFrcFms.getInstance().matchState;
       this.plc.coils.matchStart =
-        (mState === MatchMode.AUTONOMOUS ||
-          mState === MatchMode.TRANSITION ||
-          mState === MatchMode.TELEOPERATED ||
-          mState === MatchMode.ENDGAME) &&
+        mState <= MatchMode.AUTONOMOUS &&
+        mState <= MatchMode.ENDED &&
         !this.plc.coils.matchStart;
 
-      this.client
+      // Read Inputs
+      const inputs = await this.client
         .readDiscreteInputs(0, this.plc.inputs.inputCount)
-        .then((data: ReadCoilResult) => {
-          this.plc.inputs.fromArray(data.data);
-          if (!this.plc.inputs.equals(this.plc.oldInputs)) {
-            // We have a new input, lets notify
-            this.socket?.emit("frc-fms:plc-update", this.plc.inputs.toJSON());
-            if (this.plc.inputs.fieldEstop) {
-              logger.info("🛑 Field E-STOP Pressed! This can't be good!");
-              this.socket?.emit("match:abort");
-            }
-            this.plc.oldInputs = new PlcInputs().fromArray(data.data);
-          }
+        .then(d => d.data)
+        .catch(e => {
+          logger.error(`❌ Error reading inputs from PLC: ${e}`);
+          return this.plc.inputs.toArray();
         });
 
+      // Update Inputs
+      this.plc.inputs.fromArray(inputs);
+
+      // If there was a change (and not first read)
+      if (!this.plc.inputs.equals(this.plc.oldInputs) && !this.firstRead) {
+        // We have a new input, lets notify
+        this.socket?.emit("frc-fms:plc-update", this.plc.inputs.toJSON());
+
+        // Field E-STOP
+        if (this.plc.inputs.fieldEstop) {
+          logger.info("🛑 Field E-STOP Pressed! This can't be good!");
+          this.socket?.emit("match:abort");
+        } else if (!this.plc.inputs.fieldEstop && this.plc.oldInputs.fieldEstop) {
+          logger.info("🟢 Field E-STOP Released!");
+        }
+
+        // Update "Old" Inputs
+        this.plc.oldInputs = new PlcInputs().fromArray(inputs);
+      }
+
+      // Set not first read anymore
+      this.firstRead = false;
+
+      // Send coils if they've changed
       if (!this.plc.oldCoils.equals(this.plc.coils)) {
+        // Send Coils
         this.plc.coils.heartbeat = true;
-        this.sendCoils();
+        await this.sendCoils();
       } else if (Date.now() - this.lastSentHeartbeat > 500) {
         // If there is no update to send, send heartbeat every 500ms to prevent the plc from going into 'warning' mode
-        this.client
-          .writeCoil(0, true)
-          .then(() => {
-            this.plc.oldCoils = new PlcOutputCoils().fromCoilsArray(
-              this.plc.coils.getCoilArray()
-            );
-            this.lastSentHeartbeat = Date.now();
-          })
-          .catch((err: any) => {
-            logger.info("Error sending heartbeat to PLC: " + err);
-          });
+        await this.sendHeartbeat();
       }
+    }
+
+    // Unlock process
+    this.processLock = false;
+  }
+
+  // Start a flash pattern on field stack indicating we have no configured settings yet
+  public startNoSettingsInterval() {
+    // Reset State
+    this.noSettingsState = 0;
+    this.noSettingsInterval = setInterval(() => {
+      switch (this.noSettingsState) {
+        case 0:
+          // Green
+          this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.Off, StackLight.On, StackLight.Off);
+          this.noSettingsState++;
+          break;
+        case 1:
+          // Green + Amber
+          this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.On, StackLight.On, StackLight.Off);
+          this.noSettingsState++;
+          break;
+        case 2:
+          // Amber
+          this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.On, StackLight.Off, StackLight.Off);
+          this.noSettingsState++;
+          break;
+        case 3:
+          // Off
+          this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off);
+          this.noSettingsState = 0;
+          break;
+      }
+    }, 500);
+  }
+
+  public stopNoSettingsInterval() {
+    clearInterval(this.noSettingsInterval);
+  }
+
+  public async flashUpdatedSettings() {
+    // Reset Stack
+    this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off);
+    // Start Flash
+    for (let i = 0; i < 4; i++) {
+      this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.On, StackLight.On, StackLight.On);
+      await this.sendCoils();
+      await sleep(150);
+      this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off);
+      await this.sendCoils();
+      await sleep(150);
     }
   }
 
-  private sendCoils() {
-    this.client
+  private sendHeartbeat(): Promise<void> {
+    return this.client
+      .writeCoil(0, true)
+      .then(() => {
+        this.plc.oldCoils = new PlcOutputCoils().fromCoilsArray(
+          this.plc.coils.getCoilArray()
+        );
+        this.lastSentHeartbeat = Date.now();
+      })
+      .catch((err: any) => {
+        logger.info(`❌ Error sending heartbeat to PLC: ${err}`);
+      });
+  }
+
+  private sendCoils(): Promise<void> {
+    return this.client
       .writeCoils(0, this.plc.coils.getCoilArray())
       .then(() => {
         this.plc.oldCoils = new PlcOutputCoils().fromCoilsArray(

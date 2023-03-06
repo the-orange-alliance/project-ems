@@ -8,14 +8,12 @@ import {
     MatchTimer,
     Event,
     MatchMode,
-    MatchKey,
-    Tournament,
-    FMSSettings,
-    getDefaultFMSSettings,
+    MatchKey
 } from "@toa-lib/models";
 import { getMatch } from "./helpers/ems.js";
 import { environment } from "@toa-lib/server";
 import { SocketSupport } from "./devices/socket.js";
+import { SettingsSupport } from "./devices/settings.js";
 
 const logger = log("server");
 
@@ -33,16 +31,12 @@ export class EmsFrcFms {
     private static _instance: EmsFrcFms;
     public _timer: MatchTimer = new MatchTimer();
     public activeMatch: Match<any> | null;
-    public selectedEvent: Event | null = null;
-    public allTournaments: Tournament[] | null = null;
-    public activeTournament: Tournament | null = null;
     public timeLeft: number = 0;
     public matchState: number = 0;
     public event: Event;
     private dsInterval: any;
     private apInterval: any;
     private plcInterval: any;
-    private settings: FMSSettings = getDefaultFMSSettings();
     public matchStateMap: Map<String, number> = new Map<String, number>([
         ["prestart", 0],
         ["timeout", 1],
@@ -107,51 +101,17 @@ export class EmsFrcFms {
         // Init DriverStation listeners
         DriverstationSupport.getInstance().dsInit(udpTcpListenerIp);
 
-        // If advanced networking is enabled
-        if (this.settings.enableAdvNet) {
-            // Init AccessPoint settings to default
-            AccesspointSupport.getInstance().setSettings(
-                this.settings.apIp,
-                this.settings.apUsername,
-                this.settings.apPassword,
-                this.settings.apTeamCh,
-                this.settings.apAdminCh,
-                this.settings.apAdminWpa,
-                this.settings.enableAdvNet,
-                [],
-                false
-            );
+        // Init settings
+        SettingsSupport.getInstance().initSettings();
 
-            // Start AP
-            clearInterval(this.apInterval);
-            this.startAPLoop();
-
-            // Init Switch Configuration Tools
-            // The Switch manager doesn't have a loop, it runs on prestart.
-            SwitchSupport.getInstance().setSettings(
-                this.settings.switchIp,
-                "cisco",
-                this.settings.switchPassword
-            );
-
-            // If PLC is enabled, configure and start it
-            if (this.settings.enablePlc) {
-                await PlcSupport.getInstance().initPlc(this.settings.plcIp);
-                clearInterval(this.plcInterval);
-                this.startPLC();
-            }
-        }
+        // Restart/Start loops
+        this.restartLoops();
 
         // Start FMS Services Updates
         this.startDriverStation();
     }
 
     private async setupSocketEvents() {
-        SocketSupport.getInstance().socket?.on("frc-fms:settings-update", (data: string) => {
-            this.updateSettings(JSON.parse(data));
-            SocketSupport.getInstance().settingsUpdateSuccess(this.settings);
-        });
-
         // Manage Socket Events
         SocketSupport.getInstance().socket?.on("match:prestart", (matchKey: MatchKey) => {
             logger.info("🔁 Prestart Command Issued");
@@ -160,42 +120,21 @@ export class EmsFrcFms {
         });
     }
 
-    private async updateSettings(newSettings: FMSSettings) {
-        this.settings = newSettings;
-        // Update AP Settings
-        if (this.settings.enableAdvNet) {
-            AccesspointSupport.getInstance().setSettings(
-                this.settings.apIp,
-                this.settings.apUsername,
-                this.settings.apPassword,
-                this.settings.apTeamCh,
-                this.settings.apAdminCh,
-                this.settings.apAdminWpa,
-                this.settings.enableAdvNet,
-                [],
-                false
-            );
+    public restartLoops() {
+        // Start advanced networking loops
+        if (SettingsSupport.getInstance().settings.enableAdvNet) {
+            // Start AP
             clearInterval(this.apInterval);
             this.startAPLoop();
+
+            if (SettingsSupport.getInstance().settings.enablePlc) {
+                clearInterval(this.plcInterval);
+                this.startPLC();
+            }
         } else {
             clearInterval(this.apInterval);
-        }
-        // Update Switch Settings
-        if (this.settings.enableAdvNet)
-            SwitchSupport.getInstance().setSettings(
-                this.settings.switchIp,
-                "cisco",
-                this.settings.switchPassword
-            );
-        // Update PLC Settings
-        if (this.settings.enableAdvNet && this.settings.enablePlc) {
-            await PlcSupport.getInstance().initPlc(this.settings.plcIp);
-            clearInterval(this.plcInterval);
-            this.startPLC();
-        } else {
             clearInterval(this.plcInterval);
         }
-        logger.info("✔ Updated Settings!");
     }
 
     private async fmsOnPrestart(matchKey: MatchKey) {
@@ -209,26 +148,45 @@ export class EmsFrcFms {
             return;
         }
 
+        if (this.activeMatch.fieldNumber !== SettingsSupport.getInstance().settings.fieldNumber) {
+            logger.error("ℹ Received prestart command, but not my field");
+            this.activeMatch = null;
+            return;
+        }
+
+        // Settings on prestart (this updates the tournament settings)
+        SettingsSupport.getInstance().onPrestart(matchKey);
+
         // Call DriverStation Prestart
         DriverstationSupport.getInstance().onPrestart(this.activeMatch);
-        if (this.settings.enableAdvNet) {
+
+        // If advanced networking is enabled, configure AP and Switch
+        if (SettingsSupport.getInstance().settings.enableAdvNet) {
             // Configure AP
-            AccesspointSupport.getInstance().handleTeamWifiConfig(
-                this.activeMatch.eventKey,
-                this.activeMatch.participants ?? []
-            );
+            AccesspointSupport.getInstance().onPrestart(this.activeMatch);
+
             // Configure Switch
-            SwitchSupport.getInstance().configTeamEthernet(this.activeMatch.participants ?? []);
-        }
-        if (this.settings.enableAdvNet && this.settings.enablePlc) {
-            // Set Field Lights
-            PlcSupport.getInstance().onPrestart();
+            SwitchSupport.getInstance().onPrestart(this.activeMatch);
+
+            // Configure PLC, if enabled
+            if (SettingsSupport.getInstance().settings.enablePlc) {
+                // Set Field Lights
+                PlcSupport.getInstance().onPrestart();
+            }
         }
     }
 
     private initTimer() {
         SocketSupport.getInstance().socket?.on("match:start", () => {
-            // this._timer.matchConfig = timerConfig;
+            // Check if we have a match
+            if (!this.activeMatch) {
+                logger.info("ℹ Match Started, but I have no active match");
+                return;
+            }
+
+            // TODO: Down the line, it may be possible to have multiple matches prestarted at the same time. 
+            // TODO: Make sure we check that the match that got started is our active match!
+
             // Signal DriverStation Start
             DriverstationSupport.getInstance().driverStationMatchStart();
             this._timer.on("timer:auto", () => {

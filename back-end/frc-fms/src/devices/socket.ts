@@ -3,7 +3,7 @@ import { Socket } from "socket.io-client";
 import { SocketOptions, createSocket } from "@toa-lib/client";
 import { getToken } from "../helpers/ems.js";
 import { getIPv4 } from "@toa-lib/server";
-import { FMSSettings } from "@toa-lib/models";
+import { FMSSettings, MatchKey, PrestartStatus } from "@toa-lib/models";
 
 const logger = log("socket");
 
@@ -11,6 +11,14 @@ export class SocketSupport {
   private static _instance: SocketSupport;
 
   private _socket: Socket | null = null;
+
+  private prestartStatus: PrestartStatus = {
+    apReady: false,
+    dsReady: false,
+    switchReady: false,
+    matchKey: {eventKey: "", id: -1, tournamentKey: ""},
+    prestartComplete: false
+  };
 
   public static getInstance(): SocketSupport {
     if (typeof SocketSupport._instance === "undefined") {
@@ -42,23 +50,46 @@ export class SocketSupport {
       this.socket?.emit("frc-fms:pong");
     });
 
+    // Get current prestart status
+    this.socket?.on("frc-fms:get-prestart-status", () => {
+      this.sendPrestartStatus();
+    });
+
+    // Setup Prestart
+    this.socket?.on("match:prestart", (matchKey: MatchKey) => {
+      this.prestartStatus = {
+        apReady: false,
+        dsReady: false,
+        switchReady: false,
+        matchKey: matchKey,
+        prestartComplete: false
+      }
+    });
+
     this.socket?.connect();
   }
 
   public switchReady() {
-    this.socket?.emit('frc-fms:switch-ready');
+    this.prestartStatus.switchReady = true;
+    this.sendPrestartStatus();
   }
 
   public dsReady() {
-    this.socket?.emit("frc-fms:ds-ready");
+    this.prestartStatus.dsReady = true;
+    this.sendPrestartStatus();
   }
 
   public apReady() {
-    this.socket?.emit('frc-fms:ap-ready')
+    this.prestartStatus.apReady = true;
+    this.sendPrestartStatus();
   }
 
-  public settingsUpdateSuccess(settings: FMSSettings) {
-    this.socket?.emit("frc-fms:settings-update-success", settings);
+  public sendPrestartStatus() {
+    this.socket?.emit('frc-fms:prestart-status', this.prestartStatus);
+  }
+
+  public settingsUpdateSuccess(who: {hwFingerprint: string}) {
+    this.socket?.emit("frc-fms:settings-update-success", who);
   }
 
   get socket(): Socket | null {

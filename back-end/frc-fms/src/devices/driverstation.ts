@@ -6,10 +6,11 @@ import { EmsFrcFms } from "../server.js";
 import {
   PlcSupport
 } from "./plc.js";
-import { DriverstationStatus, FINALS_LEVEL, Match, MatchMode, OCTOFINALS_LEVEL, PRACTICE_LEVEL, QUALIFICATION_LEVEL, QUARTERFINALS_LEVEL, RANKING_LEVEL, ROUND_ROBIN_LEVEL, SEMIFINALS_LEVEL, TEST_LEVEL, TournamentType, TournamentTypes } from "@toa-lib/models";
+import { DriverstationStatus, FINALS_LEVEL, Match, MatchMode, OCTOFINALS_LEVEL, PRACTICE_LEVEL, QUALIFICATION_LEVEL, QUARTERFINALS_LEVEL, RANKING_LEVEL, ROUND_ROBIN_LEVEL, SEMIFINALS_LEVEL, TEST_LEVEL } from "@toa-lib/models";
 import { convertEMSStationToFMS } from "../helpers/generic.js";
 import { EStop, RobotStatus } from "../models/PlcOutputCoils.js";
 import { SocketSupport } from "./socket.js";
+import { SettingsSupport } from "./settings.js";
 
 const udpDSListener = dgram.createSocket("udp4");
 let tcpListener = net.createServer();
@@ -28,6 +29,8 @@ export class DriverstationSupport {
 
   // TODO: Figure this out
   public colorToSend = 0;
+
+  private processLock = false;
 
   private allDriverStations: Array<DSConn> = new Array(6);
   private stationNames: string[] = [
@@ -367,6 +370,10 @@ export class DriverstationSupport {
 
   // Run all this stuff
   public runDriverStations() {
+    // Process lock
+    if (this.processLock) return;
+    this.processLock = true;
+
     // Field EStop Status
     const fieldEStop = PlcSupport.getInstance().getEstop(EStop.Field);
     const matchState = EmsFrcFms.getInstance().matchState;
@@ -454,6 +461,9 @@ export class DriverstationSupport {
         ds.secondsSinceLastRobotLink = Math.abs(diff / 1000);
       }
     }
+
+    // Unlock process
+    this.processLock = false;
   }
 
   private dsToJsonObj(): DriverstationStatus[] {
@@ -570,7 +580,7 @@ export class DriverstationSupport {
     // Match type
     // 0 = Test, 1 = Practice, 2 = Quals, 3 = Elims
     const match = "qual";
-    switch(EmsFrcFms.getInstance().activeTournament?.tournamentLevel ?? TEST_LEVEL) {
+    switch(SettingsSupport.getInstance().currentTournament?.tournamentLevel ?? TEST_LEVEL) {
       case TEST_LEVEL:
         packet[6] = 0;
       case PRACTICE_LEVEL:
@@ -591,7 +601,7 @@ export class DriverstationSupport {
 
     // Match number.
     const localMatchNum = activeMatch?.id || -1;
-    const activeTournamentLevel = EmsFrcFms.getInstance().activeTournament?.tournamentLevel ?? TEST_LEVEL;
+    const activeTournamentLevel = SettingsSupport.getInstance().currentTournament?.tournamentLevel ?? TEST_LEVEL;
     if (
       match.toLowerCase().indexOf("practice") > -1 ||
       match.toLowerCase().indexOf("qual") > -1

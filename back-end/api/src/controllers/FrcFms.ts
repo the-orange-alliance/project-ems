@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { deleteWhere, insertValue, selectAllWhere } from '../db/Database.js';
-import { Team, WPAKey } from '@toa-lib/models'
+import { deleteWhere, insertValue, selectAll, selectAllWhere, updateWhere } from '../db/Database.js';
+import { Team, WPAKey, isFMSSettings } from '@toa-lib/models'
+import { validateBody } from '../middleware/BodyValidator.js';
 
 // WPA Key Generator
 const wpaKey = () => {
@@ -16,6 +17,36 @@ const WPAKeyDatabase = 'fms_wpakeys';
 
 const router = Router();
 
+////////////////////// Advanced Networking Config //////////////////////
+
+// Get all advanced networking configs, unless a specific hardware fingerprint is specified
+router.get("/advancedNetworkingConfig", async (req, res) => {
+  // Get query param
+  const hwFingerprint = req.query.hwFingerprint;
+  let data;
+  if (typeof hwFingerprint === "string" && hwFingerprint.length > 0) {
+    data = await selectAllWhere("fms_adv_net_cfg", `hwFingerprint = '${hwFingerprint}'`);
+  } else {
+    data = await selectAll("fms_adv_net_cfg");
+  }
+  res.json(data);
+});
+
+// Update a specific config based on the hardware fingerprint
+router.post(
+  "/advancedNetworkingConfig",
+  validateBody(isFMSSettings),
+  async (req, res) => {
+    try {
+      await insertValue("fms_adv_net_cfg", [req.body]);
+    } catch (e) {
+      await updateWhere("fms_adv_net_cfg", req.body, `hwFingerprint = '${req.body.hwFingerprint}'`);
+    }
+    res.json({ success: true });
+  }
+);
+
+////////////////////// WPA Keys //////////////////////
 router.get(
   '/:event_key/wpakeys',
   async (req: Request, res: Response, next: NextFunction) => {
@@ -64,12 +95,12 @@ router.post(
 
     // Get event teams
     const teams: Team[] = await selectAllWhere('team', `eventKey = '${eventKey}'`);
-    
+
     // Get existing WPA keys
     const existing: WPAKey[] = await selectAllWhere(WPAKeyDatabase, `eventKey = '${eventKey}'`)
-    
+
     // Remove existing teams from teams array
-    for(const exists of existing) {
+    for (const exists of existing) {
       const existsIndex = teams.findIndex(t => t.teamKey = exists.teamKey);
       if (existsIndex > -1) {
         teams.splice(existsIndex, 1);
@@ -97,5 +128,6 @@ router.post(
     res.json(wpaKeys);
   }
 );
+
 
 export default router;
