@@ -32,7 +32,6 @@ const MatchDetailInfo: FC<Props> = ({ id }) => {
       ...match,
       details
     });
-    console.log(redScore, blueScore, { match });
     if (match) {
       setMatch({ ...match, details, redScore, blueScore });
     }
