@@ -91,17 +91,11 @@ export class EmsFrcFms {
         this.initTimer();
         this.timeLeft = this._timer.timeLeft;
 
-        // Init DriverStation listeners
-        DriverstationSupport.getInstance().dsInit(udpTcpListenerIp);
-
         // Init settings
         SettingsSupport.getInstance().initSettings();
 
         // Restart/Start loops
-        this.restartLoops();
-
-        // Start FMS Services Updates
-        this.startDriverStation();
+        this.restartServices();
     }
 
     private async setupSocketEvents() {
@@ -113,20 +107,36 @@ export class EmsFrcFms {
         });
     }
 
-    public restartLoops() {
-        // Start advanced networking loops
-        if (SettingsSupport.getInstance().settings.enableAdvNet) {
-            // Start AP
-            clearInterval(this.apInterval);
-            this.startAPLoop();
-
-            if (SettingsSupport.getInstance().settings.enablePlc) {
-                clearInterval(this.plcInterval);
-                this.startPLC();
-            }
-        } else {
+    public restartServices() {
+        // If FMS is disabled, stop all loops
+        if (!SettingsSupport.getInstance().settings.enableFms) {
+            clearInterval(this.dsInterval);
             clearInterval(this.apInterval);
             clearInterval(this.plcInterval);
+            DriverstationSupport.getInstance().kill();
+        } else {
+            // Initilize Driverstation
+            DriverstationSupport.getInstance().kill();
+            DriverstationSupport.getInstance().dsInit(udpTcpListenerIp);
+
+            // Start/Restart Driverstation Loop
+            clearInterval(this.dsInterval);
+            this.startDriverStation();
+
+            // Start advanced networking loops
+            if (SettingsSupport.getInstance().settings.enableAdvNet) {
+                // Start AP
+                clearInterval(this.apInterval);
+                this.startAPLoop();
+
+                if (SettingsSupport.getInstance().settings.enablePlc) {
+                    clearInterval(this.plcInterval);
+                    this.startPLC();
+                }
+            } else {
+                clearInterval(this.apInterval);
+                clearInterval(this.plcInterval);
+            }
         }
     }
 

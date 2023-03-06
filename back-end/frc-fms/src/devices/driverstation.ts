@@ -63,16 +63,18 @@ export class DriverstationSupport {
     }, 500);
   }
 
+  public kill(silent: boolean = true) {
+    clearInterval(this.updateSocketInterval);
+    tcpListener.close();
+    udpDSListener.close();
+    if(!silent) logger.info("🛑 Driverstation Listeners Killed");
+  }
+
   // Init the UDP Server: This listens for new drivers stations
   private udpInit(port: number, host: string) {
     udpDSListener.on("listening", function () {
       const address = udpDSListener.address();
-      logger.info(
-        "✔ Listening for DriverStations on UDP " +
-        address.address +
-        ":" +
-        address.port
-      );
+      logger.info(`✔ Listening for DriverStations on UDP ${address.address}:${address.port}`);
     });
 
     udpDSListener.on("error", function () {
@@ -140,7 +142,7 @@ export class DriverstationSupport {
 
     // Setup listen event
     tcpListener.on("listening", () => {
-      logger.info("✔ Listening for DriverStations on TCP " + host + ":" + port);
+      logger.info(`✔ Listening for DriverStations on TCP ${host}:${port}`);
     });
 
     // Host/Port to listen on
@@ -580,7 +582,7 @@ export class DriverstationSupport {
     // Match type
     // 0 = Test, 1 = Practice, 2 = Quals, 3 = Elims
     const match = "qual";
-    switch(SettingsSupport.getInstance().currentTournament?.tournamentLevel ?? TEST_LEVEL) {
+    switch (SettingsSupport.getInstance().currentTournament?.tournamentLevel ?? TEST_LEVEL) {
       case TEST_LEVEL:
         packet[6] = 0;
       case PRACTICE_LEVEL:
@@ -612,19 +614,19 @@ export class DriverstationSupport {
       // E.g. Quarter-final 3, match 1 will be numbered 431.
       let fmsMatchNum = 1;
       // TODO: Attempt to calculate current series
-      switch(activeTournamentLevel) {
-          case OCTOFINALS_LEVEL:
-              fmsMatchNum = (800) + ((1)*10) + localMatchNum;
-              break;
-          case QUARTERFINALS_LEVEL:
-              fmsMatchNum = (400) + ((1)*10) + localMatchNum;
-              break;
-          case SEMIFINALS_LEVEL:
-              fmsMatchNum = (200) + ((1)*10) + localMatchNum;
-              break;
-          case FINALS_LEVEL:
-              fmsMatchNum = (110) + localMatchNum;
-              break;
+      switch (activeTournamentLevel) {
+        case OCTOFINALS_LEVEL:
+          fmsMatchNum = (800) + ((1) * 10) + localMatchNum;
+          break;
+        case QUARTERFINALS_LEVEL:
+          fmsMatchNum = (400) + ((1) * 10) + localMatchNum;
+          break;
+        case SEMIFINALS_LEVEL:
+          fmsMatchNum = (200) + ((1) * 10) + localMatchNum;
+          break;
+        case FINALS_LEVEL:
+          fmsMatchNum = (110) + localMatchNum;
+          break;
       }
       packet[7] = fmsMatchNum >> 8;
       packet[8] = fmsMatchNum & 0xff;

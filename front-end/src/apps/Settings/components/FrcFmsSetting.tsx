@@ -27,7 +27,7 @@ const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
   return (
     <Dialog open={open}>
       <DialogTitle>
-        Field Set {value.hwFingerprint.substring(value.hwFingerprint.length - 8)}
+        Editing <i>Field Set {value.hwFingerprint.substring(value.hwFingerprint.length - 8)}</i>
       </DialogTitle>
       <DialogContent>
         {/* Event Key / Field Number */}

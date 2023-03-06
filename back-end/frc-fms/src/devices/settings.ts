@@ -36,7 +36,7 @@ export class SettingsSupport {
     SocketSupport.getInstance().socket?.on("frc-fms:settings-update", (who: { hwFingerprint: string }) => {
       // If the settings update is for us, update our settings
       if (who.hwFingerprint === hwFingerprint) {
-        this.updateSettings(false);
+        this.updateSettings();
       }
     });
   }
@@ -106,7 +106,7 @@ export class SettingsSupport {
     // If this isn't first boot
     if (!initial) {
       // Restart main loops
-      EmsFrcFms.getInstance().restartLoops();
+      EmsFrcFms.getInstance().restartServices();
 
       // Emit settings update success
       SocketSupport.getInstance().settingsUpdateSuccess(hwFingerprint);
