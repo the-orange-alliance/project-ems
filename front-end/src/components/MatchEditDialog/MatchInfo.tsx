@@ -26,7 +26,7 @@ const MatchInfo: FC<Props> = ({ id }) => {
     const seasonKey = getSeasonKeyFromEventKey(match.eventKey);
     const functions = getFunctionsBySeasonKey(seasonKey);
     if (!functions) return;
-    const [redScore, blueScore] = functions.calculateScore(match);
+    const [redScore, blueScore] = functions.calculateScore(newMatch);
     if (match) {
       setMatch({ ...newMatch, redScore, blueScore });
     }
