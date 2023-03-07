@@ -5,10 +5,16 @@ import ParticipantDropdown from 'src/components/Dropdowns/ParticipantDropdown';
 interface Props {
   teamKey: number | null;
   disabled?: boolean;
+  white?: boolean;
   onUpdate: (t: Team | null) => void;
 }
 
-const AutocompleteTeam: FC<Props> = ({ teamKey, disabled, onUpdate }) => {
+const AutocompleteTeam: FC<Props> = ({
+  teamKey,
+  disabled,
+  white,
+  onUpdate
+}) => {
   const onParticipantChange = (team: Team | null) => {
     onUpdate(team);
   };
@@ -19,6 +25,7 @@ const AutocompleteTeam: FC<Props> = ({ teamKey, disabled, onUpdate }) => {
         teamKey={teamKey}
         disabled={disabled}
         onChange={onParticipantChange}
+        white={white}
       />
     </>
   );

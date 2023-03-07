@@ -59,6 +59,7 @@ const TeamStatusRow: FC<Props> = ({ station }) => {
           teamKey={participant ? participant.teamKey : null}
           disabled={disabled}
           onUpdate={handleTeamChange}
+          white
         />
       </Grid>
       <Grid item xs={12} sm={6}>
