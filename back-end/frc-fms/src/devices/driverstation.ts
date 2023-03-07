@@ -12,7 +12,7 @@ import { EStop, RobotStatus } from "../models/PlcOutputCoils.js";
 import { SocketSupport } from "./socket.js";
 import { SettingsSupport } from "./settings.js";
 
-const udpDSListener = dgram.createSocket("udp4");
+let udpDSListener = dgram.createSocket("udp4");
 let tcpListener = net.createServer();
 
 const logger = log("driverstation");
@@ -32,7 +32,7 @@ export class DriverstationSupport {
 
   private processLock = false;
 
-  private allDriverStations: Array<DSConn> = new Array(6);
+  private allDriverStations: DSConn[] = [];
   private stationNames: string[] = [
     "Red 1",
     "Red 2",
@@ -63,21 +63,28 @@ export class DriverstationSupport {
     }, 500);
   }
 
+  public kill(silent: boolean = true) {
+    clearInterval(this.updateSocketInterval);
+    try {
+      tcpListener.close();
+      udpDSListener.close();
+      if (!silent) logger.info("🛑 Driverstation Listeners Killed");
+    } catch {
+      // Do nothing
+    }
+  }
+
   // Init the UDP Server: This listens for new drivers stations
   private udpInit(port: number, host: string) {
+    udpDSListener = dgram.createSocket("udp4");
     udpDSListener.on("listening", function () {
       const address = udpDSListener.address();
-      logger.info(
-        "✔ Listening for DriverStations on UDP " +
-        address.address +
-        ":" +
-        address.port
-      );
+      logger.info(`✔ Listening for DriverStations on UDP ${address.address}:${address.port}`);
     });
 
-    udpDSListener.on("error", function () {
+    udpDSListener.on("error", function (e) {
       logger.error(
-        "❌ Error Listening for DriverStations on UDP. Please make sure you IP Address is set correctly. Should be set to 10.0.100.5"
+        `❌ Error Listening for DriverStations on UDP. Please make sure your IP Address is set correctly (10.0.100.5). ${e}`
       );
     });
 
@@ -88,9 +95,9 @@ export class DriverstationSupport {
 
     try {
       udpDSListener.bind(port, host);
-    } catch {
+    } catch (e) {
       logger.error(
-        "❌ Error Listening for DriverStations UDP. Please make sure you IP Address is set correctly."
+        `❌ Error Listening for DriverStations UDP. Please make sure your IP Address is set correctly (10.0.100.5). ${e}`
       );
     }
   }
@@ -140,7 +147,7 @@ export class DriverstationSupport {
 
     // Setup listen event
     tcpListener.on("listening", () => {
-      logger.info("✔ Listening for DriverStations on TCP " + host + ":" + port);
+      logger.info(`✔ Listening for DriverStations on TCP ${host}:${port}`);
     });
 
     // Host/Port to listen on
@@ -161,10 +168,10 @@ export class DriverstationSupport {
   // On TCP Connection
   private onTCPConnection(socket: net.Socket) {
     // Set timeout
-    socket.setTimeout(this.dsTcpLinkTimeoutSec * 1000);
+    socket.setTimeout(5000);
 
     // Check if there is an active match
-    if (!this.allDriverStations[0]) {
+    if (!this.allDriverStations || !this.allDriverStations[0]) {
       socket.destroy();
       return;
     }
@@ -580,7 +587,7 @@ export class DriverstationSupport {
     // Match type
     // 0 = Test, 1 = Practice, 2 = Quals, 3 = Elims
     const match = "qual";
-    switch(SettingsSupport.getInstance().currentTournament?.tournamentLevel ?? TEST_LEVEL) {
+    switch (SettingsSupport.getInstance().currentTournament?.tournamentLevel ?? TEST_LEVEL) {
       case TEST_LEVEL:
         packet[6] = 0;
       case PRACTICE_LEVEL:
@@ -612,19 +619,19 @@ export class DriverstationSupport {
       // E.g. Quarter-final 3, match 1 will be numbered 431.
       let fmsMatchNum = 1;
       // TODO: Attempt to calculate current series
-      switch(activeTournamentLevel) {
-          case OCTOFINALS_LEVEL:
-              fmsMatchNum = (800) + ((1)*10) + localMatchNum;
-              break;
-          case QUARTERFINALS_LEVEL:
-              fmsMatchNum = (400) + ((1)*10) + localMatchNum;
-              break;
-          case SEMIFINALS_LEVEL:
-              fmsMatchNum = (200) + ((1)*10) + localMatchNum;
-              break;
-          case FINALS_LEVEL:
-              fmsMatchNum = (110) + localMatchNum;
-              break;
+      switch (activeTournamentLevel) {
+        case OCTOFINALS_LEVEL:
+          fmsMatchNum = (800) + ((1) * 10) + localMatchNum;
+          break;
+        case QUARTERFINALS_LEVEL:
+          fmsMatchNum = (400) + ((1) * 10) + localMatchNum;
+          break;
+        case SEMIFINALS_LEVEL:
+          fmsMatchNum = (200) + ((1) * 10) + localMatchNum;
+          break;
+        case FINALS_LEVEL:
+          fmsMatchNum = (110) + localMatchNum;
+          break;
       }
       packet[7] = fmsMatchNum >> 8;
       packet[8] = fmsMatchNum & 0xff;

@@ -7,7 +7,6 @@ import {
   EventSchedule,
   FMSSettings,
   isEventArray,
-  isFMSSettings,
   isFMSSettingsArray,
   isMatch,
   isMatchArray,

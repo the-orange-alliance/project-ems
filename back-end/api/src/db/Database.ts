@@ -184,7 +184,8 @@ async function getQueryFromFile(filePath: string): Promise<string> {
 
 function getUpdateString(value: Record<string, unknown>): string {
   return Object.keys(value)
-    .map((key: string) => `"${key}" = "${value[key]}"`)
+    // Prevent mapping all values to strings inside of SQL, if it's a string, wrap in quotes, if not, don't use quotes
+    .map((key: string) => `"${key}" = ${typeof value[key] === "string" ? `"${value[key]}"` : value[key]}`)
     .toString();
 }
 

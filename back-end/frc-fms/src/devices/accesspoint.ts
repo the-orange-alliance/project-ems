@@ -4,6 +4,7 @@ import SSH2Promise from 'ssh2-promise';
 import { Match, MatchParticipant } from "@toa-lib/models";
 import { getWpaKeys } from "../helpers/ems.js";
 import { SocketSupport } from "./socket.js";
+import { sleep } from "../helpers/generic.js";
 
 const logger = log("ap")
 
@@ -30,16 +31,18 @@ export class AccesspointSupport {
     return AccesspointSupport._instance;
   }
 
-  public setSettings(address: string, username: string, password: string, teamChannel: string, adminChannel: string, adminWpaKey: string, networkSecurityEnabled: boolean, TeamWifiStatuses: TeamWifiStatus[], initialStatusesFetched: boolean) {
+  public setSettings(address: string, username: string, password: string, teamChannel: string, adminChannel: string, adminSsid: string, adminWpaKey: string, networkSecurityEnabled: boolean, TeamWifiStatuses: TeamWifiStatus[], initialStatusesFetched: boolean) {
     this.ap.address = address;
     this.ap.username = username;
     this.ap.password = password;
     this.ap.teamChannel = teamChannel;
     this.ap.adminChannel = adminChannel;
     this.ap.adminWpaKey = adminWpaKey;
+    this.ap.adminSsid = adminSsid;
     this.ap.networkSecurityEnabled = networkSecurityEnabled;
     this.ap.TeamWifiStatuses = TeamWifiStatuses;
     this.ap.initialStatusesFetched = initialStatusesFetched;
+    logger.info("✏ Updated Settings")
   }
 
   // Run everything
@@ -55,25 +58,33 @@ export class AccesspointSupport {
     this.processLock = false;
   }
 
+  public kill() {
+
+  }
+
   // Configure the Admin Wifi
   public async configAdminWifi() {
     if (!this.ap.networkSecurityEnabled) return;
     const disabled = (parseInt(this.ap.adminChannel) < 1) ? 1 : 0;
     const commands = [
       `set wireless.radio0.channel='${this.ap.teamChannel}'`,
-      `set wireless.radio1.disabled'${disabled}'`,
+      `set wireless.radio1.disabled='${disabled}'`,
       `set wireless.radio1.channel='${this.ap.adminChannel}'`,
-      `set wireless.@wifi-iface[0].key=='${this.ap.adminWpaKey}'`,
+      `set wireless.@wifi-iface[0].ssid=${this.ap.adminSsid}`,
+      `set wireless.@wifi-iface[0].key='${this.ap.adminWpaKey}'`,
       `commit wireless`
     ];
     let configCommand = commands.join('\n');
     const fullCommand = `uci batch <<ENDCONFIG && wifi radio1\n${configCommand}\nENDCONFIG\n`;
-    await this.runCommand(fullCommand);
+    await this.runCommand(fullCommand)
+      .then(() => logger.info("✔ Updated admin wifi configuration"))
+      .catch(() => logger.error("❌ Failed to update admin wifi configuration"))
   }
 
   // Things to do on prestart
   public async onPrestart(match: Match<any>) {
     await this.handleTeamWifiConfig(match.eventKey, match.participants ?? []);
+    logger.info("✔ Prestarted")
   }
 
   // Setup team wifi confi
@@ -116,7 +127,7 @@ export class AccesspointSupport {
         error = true;
       });
       // Wait before reading the config back on write success as it doesn't take effect right away, or before retrying on failure.
-      await this.sleep(this.accessPointConfigRetryIntervalSec * 1000);
+      await sleep(this.accessPointConfigRetryIntervalSec * 1000);
       if (!error) {
         // Update Team Statuses
         await this.updateTeamWifiStatus().catch(() => { });
@@ -130,10 +141,6 @@ export class AccesspointSupport {
       logger.error("❌ WiFi configuration still incorrect after " + attemptCount + " attempt(s); trying again.");
       attemptCount++;
     }
-  }
-
-  private async sleep(milliseconds: number) {
-    return new Promise(res => setTimeout(res, milliseconds))
   }
 
   // Returns true if the configured networks as read from the access point match the given teams.
@@ -254,6 +261,7 @@ class AccessPoint {
   public password: string;
   public teamChannel: string;
   public adminChannel: string;
+  public adminSsid: string;
   public adminWpaKey: string;
   public networkSecurityEnabled: boolean;
   public TeamWifiStatuses: TeamWifiStatus[];
@@ -265,6 +273,7 @@ class AccessPoint {
     this.password = '';
     this.teamChannel = '157';
     this.adminChannel = '-1';
+    this.adminSsid = 'EMS'
     this.adminWpaKey = '';
     this.networkSecurityEnabled = true;
     this.TeamWifiStatuses = new Array<TeamWifiStatus>(6);

@@ -1,5 +1,5 @@
-import { Telnet as telnet_client } from "telnet-client"
 import log from "../logger.js";
+import SSH2Promise from 'ssh2-promise';
 import { Match, MatchParticipant } from "@toa-lib/models";
 import { convertEMSStationToFMS } from "../helpers/generic.js";
 import { SocketSupport } from "./socket.js";
@@ -9,9 +9,11 @@ const logger = log("switch")
 export class SwitchSupport {
   private static _instance: SwitchSupport;
 
-  private telnetPort = 23;
   private fmsIpAddress = "10.0.100.5";
   private switch: SwitchStatus = new SwitchStatus();
+
+  private sshConn = new SSH2Promise({});
+  private sshOpen = false;
 
   // Vlans
   private red1Vlan = 10;
@@ -32,11 +34,13 @@ export class SwitchSupport {
     this.switch.address = address;
     this.switch.username = username;
     this.switch.password = password;
+    logger.info("✏ Updated Settings");
   }
 
   public async onPrestart(match: Match<any>) {
     // Configure Switch for Match
     await this.configTeamEthernet(match.participants ?? []);
+    logger.info("✔ Prestarted")
   }
 
   private async configTeamEthernet(participants: MatchParticipant[]) {
@@ -46,6 +50,7 @@ export class SwitchSupport {
     logger.info(infoString);
     let commands = [];
     let vlans = [this.red1Vlan, this.red2Vlan, this.red3Vlan, this.blue1Vlan, this.blue2Vlan, this.blue3Vlan];
+
     // Build Command to configure VLANs
     for (const p of participants) {
       const vlan = vlans[convertEMSStationToFMS(p.station)];
@@ -92,7 +97,7 @@ export class SwitchSupport {
       }
     }
     const command = commands.join('\n')
-    this.runConfigCommand(command).then((res) => {
+    await this.runConfigCommand(command).then((res) => {
       SocketSupport.getInstance().switchReady();
       logger.info('✔ Updated field switch (' + this.switch.address + ') configuration')
       return this.getTeamVlans();
@@ -141,43 +146,35 @@ export class SwitchSupport {
 
   }
 
-  private runCommand(command: string): Promise<string> {
+  public runCommand(command: string, expectError: boolean = false): Promise<any> {
     return new Promise<any>(async (resolve, reject) => {
-      const client = new telnet_client();
-      const params = {
-        host: this.switch.address,
-        port: this.telnetPort,
-        negotiationMandatory: false,
-        timeout: 10000,
-        execTimeout: 10000,
-      };
-
-      const commands = [];
-      commands.push(this.switch.password); // Enter Password for Telnet Conn
-      commands.push('enable');             // Enable Cisco Console
-      commands.push(this.switch.password); // Password for Console
-      commands.push('terminal length 0');  // Set Terminal length to not have "more"
-      commands.push(command);              // Run Predefined commands
-      commands.push('');                   // Blank line. DON'T REMOVE!
-      commands.push('exit\n');             // Exit?
-
-      client.once("close", () => {
-        logger.info("🏁 Switch Connection Closed")
-      })
-
-      client.once("end", () => {
-        logger.info("🏁 Switch sent FIN (close-socket) packet. Reciprocating...")
-        client.end();
-      })
-
-      try {
-        await client.connect(params);
-        const res = await client.exec(commands.join('\n'), { execTimeout: 5000 })
-        resolve(res);
-      } catch (e) {
-        reject(e);
+      // Start new connection if needed
+      if (!this.sshConn || (this.sshConn && !this.sshOpen)) {
+        this.sshConn = new SSH2Promise({ host: this.switch.address, username: this.switch.username, password: this.switch.password, algorithms: algorithms as any, reconnect: true, timeout: 7500 });
+        await this.sshConn.connect().then(() => {
+          logger.info('✔ Connected to Field Switch via SSH');
+          this.sshOpen = true
+          this.sshConn.on("disconnect", () => {
+            logger.error(`❌ Lost connection to Field Switch (${this.switch.address}). Will retry connection when next command is sent.`);
+            this.sshOpen = false;
+          })
+        }).catch((reason: any) => {
+          logger.error('❌ Error SSHing into Field Switch (' + this.switch.address + '): ' + reason);
+          reject(reason);
+        });
       }
-    })
+      this.sshConn.exec(command).then((data) => {
+        resolve(data);
+      }).catch((error: any) => {
+        if (expectError) {
+          resolve("");
+        } else {
+          if (error instanceof Buffer) error = error.toString();
+          logger.error('❌ Error executing command on Field Switch: ' + error);
+          reject(error)
+        }
+      });
+    });
   }
 
   private runConfigCommand(command: string): Promise<string> {
@@ -187,12 +184,46 @@ export class SwitchSupport {
     commands.push('end');                                 // Exit Config Terminal
     commands.push('copy running-config startup-config');  // Copy to Startup config
     commands.push('');                                    // Blank line to agree to filename
-    return this.runCommand(commands.join('\n'));
+    commands.push('echo success');                        // Echo "success"
+    return this.runCommand(commands.join('\n'), true);
   }
 
   // TODO: Create Telnet Command Queue so we don't break things by trying to do multiple SSHs at once
   // Future soren says thats too much work and it probably will never be an issue ;) (famous last words)
+  // Even more future soren says we're using ssh now and this may still be but probably wont be an issue
 }
+
+const algorithms = {
+  kex: [
+    "diffie-hellman-group1-sha1",
+    "ecdh-sha2-nistp256",
+    "ecdh-sha2-nistp384",
+    "ecdh-sha2-nistp521",
+    "diffie-hellman-group-exchange-sha256",
+    "diffie-hellman-group14-sha1"
+  ],
+  cipher: [
+    "3des-cbc",
+    "aes128-ctr",
+    "aes192-ctr",
+    "aes256-ctr",
+    "aes128-gcm",
+    "aes128-gcm@openssh.com",
+    "aes256-gcm",
+    "aes256-gcm@openssh.com"
+  ],
+  serverHostKey: [
+    "ssh-rsa",
+    "ecdsa-sha2-nistp256",
+    "ecdsa-sha2-nistp384",
+    "ecdsa-sha2-nistp521"
+  ],
+  hmac: [
+    "hmac-sha2-256",
+    "hmac-sha2-512",
+    "hmac-sha1"
+  ]
+};
 
 class SwitchStatus {
   public address: string;

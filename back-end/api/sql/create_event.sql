@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS "fms_adv_net_cfg" (
     "apAdminSsid" VARCHAR(255) NOT NULL,
     "apAdminWpa" VARCHAR(255) NOT NULL,
     "switchIp" VARCHAR(255) NOT NULL,
+    "switchUsername" VARCHAR(255) NOT NULL,
     "switchPassword" VARCHAR(255) NOT NULL,
     "enablePlc" INT NOT NULL,
     "plcIp" VARCHAR(255) NOT NULL,
