@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import { useRecoilState } from 'recoil';
 import { allFrcFmsAtom } from 'src/stores/NewRecoil';
@@ -6,7 +6,7 @@ import { LinearProgress, List, ListItem, ListItemButton, Typography } from '@mui
 import FrcFmsSetting from '../components/FrcFmsSetting';
 import { FMSSettings } from '@toa-lib/models';
 import { postFrcFmsSettings } from 'src/api/ApiProvider';
-import { sendUpdateFrcFmsSettings } from 'src/api/SocketProvider';
+import { sendUpdateFrcFmsSettings, useSocket } from 'src/api/SocketProvider';
 
 const FrcFmsSettingsTab: FC = () => {
   const [allFms, setAllFms] = useRecoilState(allFrcFmsAtom);
@@ -14,6 +14,7 @@ const FrcFmsSettingsTab: FC = () => {
   const [currentSetting, setCurrentSetting] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [socket, connected] = useSocket();
 
   const openSetting = (i: number) => {
     setCurrentSetting(i);
@@ -45,6 +46,14 @@ const FrcFmsSettingsTab: FC = () => {
     }
   }
 
+  if(!connected) {
+    return (
+      <Box>
+        <Typography>Please login to edit FMS settings!</Typography>
+      </Box>
+    )
+  }
+
   return (
     <Box>
       {loading && <LinearProgress />}
@@ -52,7 +61,7 @@ const FrcFmsSettingsTab: FC = () => {
       <List>
         {
           allFms.map((fms, i) => (
-            <ListItemButton title={fms.hwFingerprint} sx={{ display: "block" }} onClick={() => openSetting(i)} disabled={loading}>
+            <ListItemButton title={fms.hwFingerprint} sx={{ display: "block" }} onClick={() => openSetting(i)} disabled={loading} key={fms.hwFingerprint}>
               <Typography><b>Field Set {fms.hwFingerprint.substring(fms.hwFingerprint.length - 8)}</b></Typography>
               <Typography sx={{ ml: 2 }}><b>Event:</b> {fms.eventKey && fms.eventKey !== "" ? fms.eventKey : "Unassigned"}</Typography>
               <Typography sx={{ ml: 2 }}><b>Field #:</b> {fms.fieldNumber < 0 ? "Unasigned" : fms.fieldNumber}</Typography>

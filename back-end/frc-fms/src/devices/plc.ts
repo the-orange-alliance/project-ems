@@ -6,6 +6,7 @@ import { MatchMode } from "@toa-lib/models";
 import ModbusRTU from "modbus-serial";
 import { Socket } from "socket.io-client";
 import { sleep } from "../helpers/generic.js";
+import Watchdog from "./watchdog.js";
 
 const logger = log("plc")
 
@@ -33,6 +34,13 @@ export class PlcSupport {
 
   private socket: Socket | null = null;
 
+  // Reset PLC if not fed in 3/4 of a second
+  private watchdog: Watchdog = new Watchdog(async () => {
+    logger.warn("⚠ PLC Watchdog not fed. Restarting process...");
+    this.kill();
+    await this.initPlc(this.plc.address);
+  }, 750);
+
   public static getInstance(): PlcSupport {
     if (typeof PlcSupport._instance === "undefined") {
       PlcSupport._instance = new PlcSupport();
@@ -46,6 +54,7 @@ export class PlcSupport {
 
   public async initPlc(address: string) {
     this.plc.address = address;
+    clearInterval(this.noSettingsInterval);
     await this.client
       .connectTCP(this.plc.address, { port: this.modBusPort })
       .then(() => {
@@ -54,13 +63,19 @@ export class PlcSupport {
         this.sendCoils();
         this.firstRead = true;
         this.firstConnection = false;
+        this.processLock = false;
       })
       .catch(async (err: any) => {
         logger.error(`❌ Failed to connect to PLC (${this.plc.address}:${this.modBusPort}) with error: ${err}`);
         this.firstConnection = true;
         this.firstRead = true;
+        this.processLock = false;
         await sleep(5000);
       });
+  }
+
+  public kill() {
+    this.client.close(() => {});
   }
 
   public getEstop(station: EStop) {
@@ -159,6 +174,7 @@ export class PlcSupport {
   // Start a flash pattern on field stack indicating we have no configured settings yet
   public startNoSettingsInterval() {
     // Reset State
+    clearInterval(this.noSettingsInterval);
     this.noSettingsState = 0;
     this.noSettingsInterval = setInterval(() => {
       switch (this.noSettingsState) {
@@ -195,12 +211,12 @@ export class PlcSupport {
     this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off);
     // Start Flash
     for (let i = 0; i < 4; i++) {
+      await sleep(150);
       this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.On, StackLight.On, StackLight.On);
       await this.sendCoils();
       await sleep(150);
       this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off);
       await this.sendCoils();
-      await sleep(150);
     }
   }
 
@@ -208,6 +224,7 @@ export class PlcSupport {
     return this.client
       .writeCoil(0, true)
       .then(() => {
+        this.watchdog.feed();
         this.plc.oldCoils = new PlcOutputCoils().fromCoilsArray(
           this.plc.coils.getCoilArray()
         );
@@ -222,6 +239,7 @@ export class PlcSupport {
     return this.client
       .writeCoils(0, this.plc.coils.getCoilArray())
       .then(() => {
+        this.watchdog.feed();
         this.plc.oldCoils = new PlcOutputCoils().fromCoilsArray(
           this.plc.coils.getCoilArray()
         );
@@ -340,6 +358,8 @@ export class PlcSupport {
       StackLight.Off,
       StackLight.Off
     );
+    
+    logger.info("✔ Prestarted")
   }
 }
 

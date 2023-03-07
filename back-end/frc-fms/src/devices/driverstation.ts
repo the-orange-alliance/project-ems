@@ -12,7 +12,7 @@ import { EStop, RobotStatus } from "../models/PlcOutputCoils.js";
 import { SocketSupport } from "./socket.js";
 import { SettingsSupport } from "./settings.js";
 
-const udpDSListener = dgram.createSocket("udp4");
+let udpDSListener = dgram.createSocket("udp4");
 let tcpListener = net.createServer();
 
 const logger = log("driverstation");
@@ -32,7 +32,7 @@ export class DriverstationSupport {
 
   private processLock = false;
 
-  private allDriverStations: Array<DSConn> = new Array(6);
+  private allDriverStations: DSConn[] = [];
   private stationNames: string[] = [
     "Red 1",
     "Red 2",
@@ -65,21 +65,26 @@ export class DriverstationSupport {
 
   public kill(silent: boolean = true) {
     clearInterval(this.updateSocketInterval);
-    tcpListener.close();
-    udpDSListener.close();
-    if(!silent) logger.info("🛑 Driverstation Listeners Killed");
+    try {
+      tcpListener.close();
+      udpDSListener.close();
+      if (!silent) logger.info("🛑 Driverstation Listeners Killed");
+    } catch {
+      // Do nothing
+    }
   }
 
   // Init the UDP Server: This listens for new drivers stations
   private udpInit(port: number, host: string) {
+    udpDSListener = dgram.createSocket("udp4");
     udpDSListener.on("listening", function () {
       const address = udpDSListener.address();
       logger.info(`✔ Listening for DriverStations on UDP ${address.address}:${address.port}`);
     });
 
-    udpDSListener.on("error", function () {
+    udpDSListener.on("error", function (e) {
       logger.error(
-        "❌ Error Listening for DriverStations on UDP. Please make sure you IP Address is set correctly. Should be set to 10.0.100.5"
+        `❌ Error Listening for DriverStations on UDP. Please make sure your IP Address is set correctly (10.0.100.5). ${e}`
       );
     });
 
@@ -90,9 +95,9 @@ export class DriverstationSupport {
 
     try {
       udpDSListener.bind(port, host);
-    } catch {
+    } catch (e) {
       logger.error(
-        "❌ Error Listening for DriverStations UDP. Please make sure you IP Address is set correctly."
+        `❌ Error Listening for DriverStations UDP. Please make sure your IP Address is set correctly (10.0.100.5). ${e}`
       );
     }
   }
@@ -163,10 +168,10 @@ export class DriverstationSupport {
   // On TCP Connection
   private onTCPConnection(socket: net.Socket) {
     // Set timeout
-    socket.setTimeout(this.dsTcpLinkTimeoutSec * 1000);
+    socket.setTimeout(5000);
 
     // Check if there is an active match
-    if (!this.allDriverStations[0]) {
+    if (!this.allDriverStations || !this.allDriverStations[0]) {
       socket.destroy();
       return;
     }

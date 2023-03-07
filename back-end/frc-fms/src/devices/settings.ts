@@ -36,6 +36,7 @@ export class SettingsSupport {
     SocketSupport.getInstance().socket?.on("frc-fms:settings-update", (who: { hwFingerprint: string }) => {
       // If the settings update is for us, update our settings
       if (who.hwFingerprint === hwFingerprint) {
+        logger.info("🛰 Recieved request to update settings")
         this.updateSettings();
       }
     });
@@ -51,10 +52,13 @@ export class SettingsSupport {
       !Array.isArray(remoteSettings) ||
       remoteSettings.length === 0 ||
       remoteSettings[0].hwFingerprint !== hwFingerprint) {
+      // Log
+      logger.info('✔ No Settings Found. Running with defaults.')
       // Post our settings
       await postAdvNetCfg(this.settings);
     } else {
       this._settings = remoteSettings[0];
+      logger.info(`✔ Fetched previous settings from EMS. FMS Enabled? ${!!this.settings.enableFms} Advanced Networking enabled? ${!!this.settings.enableAdvNet} PLC Enabled? ${!!this.settings.enablePlc}`)
       // Post back settings with updated timestamp
       this.settings.registeredAt = new Date().toISOString();
       await postAdvNetCfg(this.settings);
@@ -67,6 +71,10 @@ export class SettingsSupport {
     this._assignedEvent = await getEvent(this.settings.eventKey);
     this._tournaments = await getTournaments(this.settings.eventKey);
 
+    if(!initial) {
+      EmsFrcFms.getInstance().stopServices();
+    }
+
     // If Advanced networking is enabled
     if (this.settings.enableAdvNet) {
 
@@ -77,22 +85,32 @@ export class SettingsSupport {
         this.settings.apPassword,
         this.settings.apTeamCh,
         this.settings.apAdminCh,
+        this.settings.apAdminSsid,
         this.settings.apAdminWpa,
         this.settings.enableAdvNet,
         [],
         false
       );
 
+      // Update Admin Wifi configuration
+      await AccesspointSupport.getInstance().configAdminWifi();
+
       // Update Switch Settings
       SwitchSupport.getInstance().setSettings(
         this.settings.switchIp,
-        "cisco",
+        this.settings.switchUsername,
         this.settings.switchPassword
       );
 
       // Update PLC Settings
       if (this.settings.enablePlc) {
+        // Initilize
         await PlcSupport.getInstance().initPlc(this.settings.plcIp);
+
+        if (!initial) {
+          await PlcSupport.getInstance().flashUpdatedSettings();
+        }
+
         // If we have no event, start flash pattern on field stack
         if (!this.settings.eventKey || this.settings.eventKey === "") {
           PlcSupport.getInstance().startNoSettingsInterval();
@@ -106,7 +124,7 @@ export class SettingsSupport {
     // If this isn't first boot
     if (!initial) {
       // Restart main loops
-      EmsFrcFms.getInstance().restartServices();
+      EmsFrcFms.getInstance().startServices();
 
       // Emit settings update success
       SocketSupport.getInstance().settingsUpdateSuccess(hwFingerprint);

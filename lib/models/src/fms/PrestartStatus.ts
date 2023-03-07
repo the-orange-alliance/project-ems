@@ -1,5 +1,5 @@
 import { isMatchKey, MatchKey } from '../Match.js';
-import { isBoolean, isNonNullObject } from '../types.js';
+import { isNonNullObject, isNumber } from '../types.js';
 
 export interface PrestartStatus {
   prestartComplete: boolean;
@@ -13,7 +13,7 @@ export interface PrestartStatus {
 export const isPrestartStatus = (obj: unknown): obj is PrestartStatus =>
   isNonNullObject(obj) &&
   isMatchKey(obj.matchKey) &&
-  isBoolean(obj.prestartSuccess) &&
-  isBoolean(obj.apReady) &&
-  isBoolean(obj.dsReady) &&
-  isBoolean(obj.switchReady);
+  isNumber(obj.prestartSuccess) &&
+  isNumber(obj.apReady) &&
+  isNumber(obj.dsReady) &&
+  isNumber(obj.switchReady);

@@ -92,10 +92,10 @@ export class EmsFrcFms {
         this.timeLeft = this._timer.timeLeft;
 
         // Init settings
-        SettingsSupport.getInstance().initSettings();
+        await SettingsSupport.getInstance().initSettings();
 
-        // Restart/Start loops
-        this.restartServices();
+        // Start loops
+        this.startServices();
     }
 
     private async setupSocketEvents() {
@@ -108,36 +108,39 @@ export class EmsFrcFms {
     }
 
     public restartServices() {
+        this.stopServices();
+        this.startServices();
+    }
+
+    public stopServices() {
+        clearInterval(this.dsInterval);
+        clearInterval(this.apInterval);
+        clearInterval(this.plcInterval);
+        DriverstationSupport.getInstance().kill();
+        PlcSupport.getInstance().kill();
+    }
+
+    public startServices() {
         // If FMS is disabled, stop all loops
         if (!SettingsSupport.getInstance().settings.enableFms) {
-            clearInterval(this.dsInterval);
-            clearInterval(this.apInterval);
-            clearInterval(this.plcInterval);
-            DriverstationSupport.getInstance().kill();
-        } else {
-            // Initilize Driverstation
-            DriverstationSupport.getInstance().kill();
-            DriverstationSupport.getInstance().dsInit(udpTcpListenerIp);
+            return;
+        }
+        // Initilize Driverstation
+        DriverstationSupport.getInstance().dsInit(udpTcpListenerIp);
 
-            // Start/Restart Driverstation Loop
-            clearInterval(this.dsInterval);
-            this.startDriverStation();
+        // Start Driverstation Loop
+        this.startDriverStation();
 
-            // Start advanced networking loops
-            if (SettingsSupport.getInstance().settings.enableAdvNet) {
-                // Start AP
-                clearInterval(this.apInterval);
-                this.startAPLoop();
+        // Start advanced networking loops
+        if (SettingsSupport.getInstance().settings.enableAdvNet) {
+            // Start AP
+            this.startAPLoop();
 
-                if (SettingsSupport.getInstance().settings.enablePlc) {
-                    clearInterval(this.plcInterval);
-                    this.startPLC();
-                }
-            } else {
-                clearInterval(this.apInterval);
-                clearInterval(this.plcInterval);
+            if (SettingsSupport.getInstance().settings.enablePlc) {
+                this.startPLC();
             }
         }
+
     }
 
     private async fmsOnPrestart(matchKey: MatchKey) {
@@ -158,7 +161,7 @@ export class EmsFrcFms {
         }
 
         // Settings on prestart (this updates the tournament settings)
-        SettingsSupport.getInstance().onPrestart(matchKey);
+        await SettingsSupport.getInstance().onPrestart(matchKey);
 
         // Call DriverStation Prestart
         DriverstationSupport.getInstance().onPrestart(this.activeMatch);

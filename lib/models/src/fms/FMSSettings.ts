@@ -1,4 +1,4 @@
-import { isNonNullObject, isString, isBoolean, isNumber, isArray } from '../types.js';
+import { isNonNullObject, isString, isNumber, isArray } from '../types.js';
 
 export interface FMSSettings {
   eventKey: string;
@@ -14,6 +14,7 @@ export interface FMSSettings {
   apAdminSsid: string;
   apAdminWpa: string;
   switchIp: string;
+  switchUsername: string;
   switchPassword: string;
   enablePlc: boolean;
   plcIp: string;
@@ -34,6 +35,7 @@ export const getDefaultFMSSettings = (hwKey: string): FMSSettings => ({
   apAdminSsid: "EMS",
   apAdminWpa: "1234Five",
   switchIp: "10.0.100.2",
+  switchUsername: "cisco",
   switchPassword: "1234Five",
   enablePlc: true,
   plcIp: "10.0.100.40",
@@ -66,8 +68,8 @@ export const isFMSSettings = (obj: unknown): obj is FMSSettings =>
   isString(obj.eventKey) &&
   isNumber(obj.fieldNumber) &&
   isString(obj.hwFingerprint) &&
-  isBoolean(obj.enableFms) &&
-  isBoolean(obj.enableAdvNet) &&
+  isNumber(obj.enableFms) &&
+  isNumber(obj.enableAdvNet) &&
   isString(obj.apIp) &&
   isString(obj.apUsername) &&
   isString(obj.apPassword) &&
@@ -76,8 +78,9 @@ export const isFMSSettings = (obj: unknown): obj is FMSSettings =>
   isString(obj.apAdminSsid) &&
   isString(obj.apAdminWpa) &&
   isString(obj.switchIp) &&
+  isString(obj.switchUsername) &&
   isString(obj.switchPassword) &&
-  isBoolean(obj.enablePlc) &&
+  isNumber(obj.enablePlc) &&
   isString(obj.plcIp) &&
   isString(obj.registeredAt);
 

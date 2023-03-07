@@ -22,7 +22,12 @@ const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
   const cancel = () => onChange(settings, true);
 
   // Update a key inside the settings object
-  const updateState = (val: any, key: keyof FMSSettings) => setSettings({ ...settings, [key]: val });
+  const updateState = (val: any, key: keyof FMSSettings) => {
+    if (typeof val === "boolean") val = val ? 1 : 0;
+    setSettings({ ...settings, [key]: val });
+  }
+
+  if (!settings.hwFingerprint) return null;
 
   return (
     <Dialog open={open}>
@@ -38,19 +43,19 @@ const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
           </Grid>
           {/* Field Number */}
           <Grid item xs={6}>
-            <TextSetting name='Field Number' value={settings.fieldNumber} onChange={v => updateState(v, "fieldNumber")} type="number" />
+            <TextSetting name='Field Number' value={settings.fieldNumber} onChange={v => updateState(parseInt(String(v)), "fieldNumber")} type="number" />
           </Grid>
         </Grid>
 
         {/* Enable FMS / Enable Advanced Networking */}
         <Grid direction="row" container spacing={1}>
           {/* Enable FMS */}
-          <Grid xs={6}>
-            <SwitchSetting name='Enable Field Set' value={settings.enableFms} onChange={v => updateState(v, "enableFms")} inline />
+          <Grid item xs={6}>
+            <SwitchSetting name='Enable Field Set' value={!!settings.enableFms} onChange={v => updateState(v, "enableFms")} inline />
           </Grid>
           {/* Enable Advanced Networking */}
-          <Grid xs={6}>
-            <SwitchSetting name='Enable Advanced Networking' value={settings.enableAdvNet} onChange={v => updateState(v, "enableAdvNet")} inline title={"Enable Field Access Point and Switch support"} />
+          <Grid item xs={6}>
+            <SwitchSetting name='Enable Advanced Networking' value={!!settings.enableAdvNet} onChange={v => updateState(v, "enableAdvNet")} inline title={"Enable Field Access Point and Switch support"} />
           </Grid>
         </Grid>
 
@@ -64,11 +69,11 @@ const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* AP User / Password */}
         <Grid direction="row" container spacing={1}>
           {/* AP Username */}
-          <Grid xs={6}>
+          <Grid item xs={6}>
             <TextSetting name='AP Username' value={settings.apUsername} onChange={v => updateState(v, "apUsername")} />
           </Grid>
           {/* AP Password */}
-          <Grid xs={6}>
+          <Grid item xs={6}>
             <TextSetting name='AP Password' value={settings.apPassword} onChange={v => updateState(v, "apPassword")} />
           </Grid>
         </Grid>
@@ -76,11 +81,11 @@ const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* AP Admin SSID / Password */}
         <Grid direction="row" container spacing={1}>
           {/* AP Admin SSID */}
-          <Grid xs={6}>
+          <Grid item xs={6}>
             <TextSetting name='AP Admin Wifi SSID' value={settings.apAdminSsid} onChange={v => updateState(v, "apAdminSsid")} />
           </Grid>
           {/* AP Admin WPA Key */}
-          <Grid xs={6}>
+          <Grid item xs={6}>
             <TextSetting name='AP Admin Wifi WPA Key' value={settings.apAdminWpa} onChange={v => updateState(v, "apAdminWpa")} />
           </Grid>
         </Grid>
@@ -88,23 +93,32 @@ const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* AP Team Channel / Admin Channel */}
         <Grid direction="row" container spacing={1}>
           {/* AP Team Channel */}
-          <Grid xs={6}>
+          <Grid item xs={6}>
             <DropdownSetting name='AP Admin Wifi Channel' value={settings.apAdminCh} options={AdminChannels} onChange={v => updateState(v, "apAdminCh")} />
           </Grid>
           {/* AP Admin WPA Key */}
-          <Grid xs={6}>
+          <Grid item xs={6}>
             <DropdownSetting name='AP Team Wifi Channel' value={settings.apTeamCh} options={TeamChannels} onChange={v => updateState(v, "apTeamCh")} />
           </Grid>
         </Grid>
 
-        {/* Switch IP / Password */}
+        {/* Switch IP */}
         <Grid direction="row" container spacing={1}>
           {/* Switch IP */}
-          <Grid xs={6}>
-            <TextSetting name='Switch IP Address' value={settings.switchIp} onChange={v => updateState(v, "switchIp")} />
+          <Grid item xs={12}>
+            <TextSetting name='Switch IP Address' value={settings.switchIp} onChange={v => updateState(v, "switchIp")} fullWidth />
+          </Grid>
+        </Grid>
+
+
+        {/* Switch User / Password */}
+        <Grid direction="row" container spacing={1}>
+          {/* Switch Username */}
+          <Grid item xs={6}>
+            <TextSetting name='Switch Username' value={settings.switchUsername} onChange={v => updateState(v, "switchUsername")} />
           </Grid>
           {/* Switch Password */}
-          <Grid xs={6}>
+          <Grid item xs={6}>
             <TextSetting name='Switch Password' value={settings.switchPassword} onChange={v => updateState(v, "switchPassword")} />
           </Grid>
         </Grid>
@@ -112,11 +126,11 @@ const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* Enable PLC / IP */}
         <Grid direction="row" container spacing={1}>
           {/* Enable PLC */}
-          <Grid xs={6}>
-            <SwitchSetting name='Enable PLC' value={settings.enablePlc} onChange={v => updateState(v, "enablePlc")} inline />
+          <Grid item xs={6}>
+            <SwitchSetting name='Enable PLC' value={!!settings.enablePlc} onChange={v => updateState(v, "enablePlc")} inline />
           </Grid>
           {/* PLC IP */}
-          <Grid xs={6}>
+          <Grid item xs={6}>
             <TextSetting name='PLC IP Address' value={settings.plcIp} onChange={v => updateState(v, "switchPassword")} />
           </Grid>
         </Grid>
