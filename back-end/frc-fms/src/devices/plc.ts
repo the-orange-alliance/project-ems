@@ -120,9 +120,8 @@ export class PlcSupport {
 
       const mState = EmsFrcFms.getInstance().matchState;
       this.plc.coils.matchStart =
-        mState <= MatchMode.AUTONOMOUS &&
-        mState <= MatchMode.ENDED &&
-        !this.plc.coils.matchStart;
+        mState >= MatchMode.AUTONOMOUS &&
+        mState <= MatchMode.ENDED;
 
       // Read Inputs
       const inputs = await this.client
