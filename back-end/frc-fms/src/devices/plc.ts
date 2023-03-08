@@ -211,10 +211,10 @@ export class PlcSupport {
     this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off);
     // Start Flash
     for (let i = 0; i < 4; i++) {
-      await sleep(150);
+      await sleep(200);
       this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.On, StackLight.On, StackLight.On);
       await this.sendCoils();
-      await sleep(150);
+      await sleep(200);
       this.setFieldStack(StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off, StackLight.Off);
       await this.sendCoils();
     }

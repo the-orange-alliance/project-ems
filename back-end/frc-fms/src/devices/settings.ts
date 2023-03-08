@@ -51,7 +51,8 @@ export class SettingsSupport {
     if (
       !Array.isArray(remoteSettings) ||
       remoteSettings.length === 0 ||
-      remoteSettings[0].hwFingerprint !== hwFingerprint) {
+      remoteSettings[0].hwFingerprint !== hwFingerprint
+    ) {
       // Log
       logger.info('✔ No Settings Found. Running with defaults.')
       // Post our settings
@@ -71,7 +72,7 @@ export class SettingsSupport {
     this._assignedEvent = await getEvent(this.settings.eventKey);
     this._tournaments = await getTournaments(this.settings.eventKey);
 
-    if(!initial) {
+    if (!initial) {
       EmsFrcFms.getInstance().stopServices();
     }
 
@@ -92,9 +93,6 @@ export class SettingsSupport {
         false
       );
 
-      // Update Admin Wifi configuration
-      await AccesspointSupport.getInstance().configAdminWifi();
-
       // Update Switch Settings
       SwitchSupport.getInstance().setSettings(
         this.settings.switchIp,
@@ -102,21 +100,23 @@ export class SettingsSupport {
         this.settings.switchPassword
       );
 
+      // Update Admin Wifi configuration
+      await AccesspointSupport.getInstance().configAdminWifi();
+
       // Update PLC Settings
       if (this.settings.enablePlc) {
         // Initilize
         await PlcSupport.getInstance().initPlc(this.settings.plcIp);
 
+        // If this isn't initial startup, flash updated settings pattern
         if (!initial) {
+          PlcSupport.getInstance().stopNoSettingsInterval();
           await PlcSupport.getInstance().flashUpdatedSettings();
         }
 
         // If we have no event, start flash pattern on field stack
-        if (!this.settings.eventKey || this.settings.eventKey === "") {
+        if (!this.settings.eventKey || this.settings.eventKey === "" || this.settings.fieldNumber < 0) {
           PlcSupport.getInstance().startNoSettingsInterval();
-        } else {
-          PlcSupport.getInstance().stopNoSettingsInterval();
-          PlcSupport.getInstance().flashUpdatedSettings();
         }
       }
     }
@@ -130,7 +130,7 @@ export class SettingsSupport {
       SocketSupport.getInstance().settingsUpdateSuccess(hwFingerprint);
     }
 
-    logger.info("✔ Updated Settings!");
+    logger.info("✏ Finished Updating Settings");
   }
 
   // Things to do upon prestart
@@ -166,6 +166,10 @@ export class SettingsSupport {
 
   get allTournaments() {
     return this._tournaments;
+  }
+
+  get hwFingerprint() {
+    return hwFingerprint;
   }
 }
 

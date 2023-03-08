@@ -11,9 +11,7 @@ import { convertEMSStationToFMS } from "../helpers/generic.js";
 import { EStop, RobotStatus } from "../models/PlcOutputCoils.js";
 import { SocketSupport } from "./socket.js";
 import { SettingsSupport } from "./settings.js";
-
-let udpDSListener = dgram.createSocket("udp4");
-let tcpListener = net.createServer();
+import { AccesspointSupport } from "./accesspoint.js";
 
 const logger = log("driverstation");
 
@@ -32,7 +30,13 @@ export class DriverstationSupport {
 
   private processLock = false;
 
+  private closeMode = false;
+
   private allDriverStations: DSConn[] = [];
+
+  private udpDSListener = dgram.createSocket("udp4");
+  private tcpListener = net.createServer();
+
   private stationNames: string[] = [
     "Red 1",
     "Red 2",
@@ -53,48 +57,54 @@ export class DriverstationSupport {
     return DriverstationSupport._instance;
   }
 
-  dsInit(host: string): any {
+  public dsInit(host: string): any {
     this.udpInit(this.dsUdpReceivePort, host);
     this.tcpInit(this.dsTcpListenPort, host);
 
     // Register socket to update twice a second
     this.updateSocketInterval = setInterval(() => {
-      SocketSupport.getInstance().socket?.emit("frc-fms:ds-update", this.dsToJsonObj());
+      SocketSupport.getInstance().dsUpdate(this.dsToJsonObj());
     }, 500);
   }
 
   public kill(silent: boolean = true) {
+    this.closeMode = true;
     clearInterval(this.updateSocketInterval);
     try {
-      tcpListener.close();
-      udpDSListener.close();
-      if (!silent) logger.info("🛑 Driverstation Listeners Killed");
+      this.tcpListener.close();
+      this.udpDSListener.close();
+      if (!silent) logger.warn("🛑 Driverstation Listeners Killed");
     } catch {
       // Do nothing
     }
+    this.closeMode = false;
   }
 
   // Init the UDP Server: This listens for new drivers stations
   private udpInit(port: number, host: string) {
-    udpDSListener = dgram.createSocket("udp4");
-    udpDSListener.on("listening", function () {
-      const address = udpDSListener.address();
+    this.udpDSListener = dgram.createSocket("udp4");
+    this.udpDSListener.on("listening", () => {
+      const address = this.udpDSListener.address();
       logger.info(`✔ Listening for DriverStations on UDP ${address.address}:${address.port}`);
     });
 
-    udpDSListener.on("error", function (e) {
+    this.udpDSListener.on("error", (e) => {
       logger.error(
         `❌ Error Listening for DriverStations on UDP. Please make sure your IP Address is set correctly (10.0.100.5). ${e}`
       );
     });
 
     // Listen for New UDP Packets
-    udpDSListener.on("message", (data: Buffer, remote) => {
+    this.udpDSListener.on("message", (data: Buffer, remote) => {
       this.parseUDPPacket(data, remote);
     });
 
+    this.udpDSListener.on("close", () => {
+      if (!this.closeMode) logger.error("❌ DriverStation UDP Listener Closed");
+    })
+
     try {
-      udpDSListener.bind(port, host);
+      this.udpDSListener.bind(port, host);
     } catch (e) {
       logger.error(
         `❌ Error Listening for DriverStations UDP. Please make sure your IP Address is set correctly (10.0.100.5). ${e}`
@@ -143,24 +153,24 @@ export class DriverstationSupport {
   // Init the TCP server: This create connections to each Driver Station
   private tcpInit(port: number, host: string) {
     // Create a server
-    tcpListener = net.createServer();
+    this.tcpListener = net.createServer();
 
     // Setup listen event
-    tcpListener.on("listening", () => {
+    this.tcpListener.on("listening", () => {
       logger.info(`✔ Listening for DriverStations on TCP ${host}:${port}`);
     });
 
     // Host/Port to listen on
-    tcpListener.listen(port, host);
+    this.tcpListener.listen(port, host);
 
     // Things to do upon a new TCP connection
-    tcpListener.on("connection", this.onTCPConnection);
+    this.tcpListener.on("connection", s => this.onTCPConnection(s));
 
-    tcpListener.on("close", () =>
-      logger.error("❌ DriverStation TCP Listener Closed")
-    );
+    this.tcpListener.on("close", () => {
+      if (!this.closeMode) logger.error("❌ DriverStation TCP Listener Closed");
+    });
 
-    tcpListener.on("error", (chunk: Buffer) => {
+    this.tcpListener.on("error", (chunk: Buffer) => {
       logger.error("❌ Driver Station TCP listener error: " + chunk.toString());
     });
   }
@@ -172,6 +182,7 @@ export class DriverstationSupport {
 
     // Check if there is an active match
     if (!this.allDriverStations || !this.allDriverStations[0]) {
+      // Attempt to prestart if we have a match
       socket.destroy();
       return;
     }
@@ -474,6 +485,16 @@ export class DriverstationSupport {
   }
 
   private dsToJsonObj(): DriverstationStatus[] {
+    // Attepmpt to fetch and link Wifi statuses
+    if (SettingsSupport.getInstance().settings.enableAdvNet) {
+      const allStatuses = AccesspointSupport.getInstance().teamStatuses;
+      for (const ds of this.allDriverStations) {
+        const find = allStatuses.find(s => s.teamId === ds.teamId);
+        if (find) ds.apStatus = find;
+      }
+    }
+
+    // Return JSON
     return this.allDriverStations.map(ds => ds.toJson());
   }
 
@@ -541,17 +562,18 @@ export class DriverstationSupport {
   public onPrestart(match: Match<any>) {
     // Close all DS Connections before we overwrite them
     this.closeAllDSConns();
+
     // Init New DriverStation Objects
-    for (const p of match.participants ?? []) {
-      // run through list of match participants looking for a match
+    this.allDriverStations = match.participants?.map(p => {
       const ds = new DSConn();
       ds.teamId = p.teamKey;
       ds.allianceStation = p.station;
-      const fmsStation = convertEMSStationToFMS(p.station);
-      this.allDriverStations[fmsStation] = ds;
-    }
+      return ds;
+    }).sort((a, b) => a.fmsStation - b.fmsStation) ?? [];
+
+    // We're ready
     SocketSupport.getInstance().dsReady();
-    logger.info("✔ Driver Station Prestart Completed");
+    logger.info("✔ Prestarted");
   }
 
   // Construct a control packet for the Driver Station

@@ -8,7 +8,7 @@ import {
     MatchTimer,
     Event,
     MatchMode,
-    MatchKey
+    MatchKey,
 } from "@toa-lib/models";
 import { getMatch } from "./helpers/ems.js";
 import { environment } from "@toa-lib/server";
@@ -33,7 +33,7 @@ export class EmsFrcFms {
     public _timer: MatchTimer = new MatchTimer();
     public activeMatch: Match<any> | null;
     public timeLeft: number = 0;
-    public matchState: number = 0;
+    public matchState: MatchMode = 0;
     public event: Event;
     private dsInterval: any;
     private apInterval: any;
@@ -51,6 +51,13 @@ export class EmsFrcFms {
     constructor() {
         this.activeMatch = {} as any;
         this.event = {} as any;
+        // Init all the things
+        DriverstationSupport.getInstance();
+        AccesspointSupport.getInstance();
+        SwitchSupport.getInstance();
+        SettingsSupport.getInstance();
+        SocketSupport.getInstance();
+
         // Attempt to Authenticate to EMS and then init FMS
         this.attemptInit();
     }
@@ -112,12 +119,17 @@ export class EmsFrcFms {
         this.startServices();
     }
 
+    public stopAp() {
+        clearInterval(this.apInterval)
+    }
+
     public stopServices() {
         clearInterval(this.dsInterval);
         clearInterval(this.apInterval);
         clearInterval(this.plcInterval);
         DriverstationSupport.getInstance().kill();
         PlcSupport.getInstance().kill();
+        AccesspointSupport.getInstance().kill();
     }
 
     public startServices() {
@@ -257,21 +269,21 @@ export class EmsFrcFms {
         this.dsInterval = setInterval(() => {
             DriverstationSupport.getInstance().runDriverStations();
         }, 500);
-        logger.info("✔ Driver Station Manager Init Complete, Running Loop");
+        logger.info("✔ Running Driverstation");
     }
 
     private startPLC() {
         this.plcInterval = setInterval(() => {
             PlcSupport.getInstance().runPlc();
         }, 100);
-        logger.info("✔ PLC Manager Init Complete, Running Loop");
+        logger.info("✔ Running PLC");
     }
 
-    private startAPLoop() {
+    public startAPLoop() {
         this.apInterval = setInterval(async () => {
             await AccesspointSupport.getInstance().runAp();
         }, 3000);
-        logger.info("✔ Access Point Manager Init Complete, Running Loop");
+        logger.info("✔ Running Access Point");
     }
 
     private getMatch(prestartData: MatchKey): Promise<Match<any>> {

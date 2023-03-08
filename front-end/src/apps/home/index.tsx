@@ -57,6 +57,10 @@ const HomeApp: FC = () => {
           imgSrc={settingsLogo}
           to={`/${event?.eventKey}/settings`}
         />
+        <GridAppCard
+          title='FRC FMS Field Monitor'
+          to={`/frc/fms/fieldmonitor`}
+        />
         {/* <GridAppCard title='Field Debugger' to='/fcs-debug' />
         <GridAppCard title='Account Manager' to='/accounts' />
         <GridAppCard

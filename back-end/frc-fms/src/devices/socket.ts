@@ -3,7 +3,9 @@ import { Socket } from "socket.io-client";
 import { SocketOptions, createSocket } from "@toa-lib/client";
 import { getToken } from "../helpers/ems.js";
 import { getIPv4 } from "@toa-lib/server";
-import { FMSSettings, MatchKey, PrestartStatus } from "@toa-lib/models";
+import { DriverstationMonitor, DriverstationStatus, FMSSettings, MatchKey, PrestartStatus } from "@toa-lib/models";
+import { SettingsSupport } from "./settings.js";
+import { EmsFrcFms } from "../server.js";
 
 const logger = log("socket");
 
@@ -16,7 +18,7 @@ export class SocketSupport {
     apReady: false,
     dsReady: false,
     switchReady: false,
-    matchKey: {eventKey: "", id: -1, tournamentKey: ""},
+    matchKey: { eventKey: "", id: -1, tournamentKey: "" },
     prestartComplete: false
   };
 
@@ -69,6 +71,18 @@ export class SocketSupport {
     this.socket?.connect();
   }
 
+  public dsUpdate(dses: DriverstationStatus[]) {
+    // Update prestart statuses
+
+    const payload: DriverstationMonitor = {
+      dsStatuses: dses,
+      activeTournament: SettingsSupport.getInstance().currentTournament ?? undefined,
+      matchStatus: EmsFrcFms.getInstance().matchState,
+      prestartStatus: this.prestartStatus
+    }
+    this.socket?.emit("frc-fms:ds-update", payload);
+  }
+
   public switchReady() {
     this.prestartStatus.switchReady = true;
     this.sendPrestartStatus();
@@ -85,10 +99,17 @@ export class SocketSupport {
   }
 
   public sendPrestartStatus() {
+    // Set prestart complete if DS is ready, and either AP/Switch are ready or advanced networking is disabled
+    this.prestartStatus.prestartComplete =
+      this.prestartStatus.dsReady &&
+      (
+        !SettingsSupport.getInstance().settings.enableAdvNet ||
+        (this.prestartStatus.apReady && this.prestartStatus.switchReady)
+      );
     this.socket?.emit('frc-fms:prestart-status', this.prestartStatus);
   }
 
-  public settingsUpdateSuccess(who: {hwFingerprint: string}) {
+  public settingsUpdateSuccess(who: { hwFingerprint: string }) {
     this.socket?.emit("frc-fms:settings-update-success", who);
   }
 

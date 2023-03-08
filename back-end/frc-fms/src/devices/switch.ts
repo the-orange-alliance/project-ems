@@ -12,9 +12,6 @@ export class SwitchSupport {
   private fmsIpAddress = "10.0.100.5";
   private switch: SwitchStatus = new SwitchStatus();
 
-  private sshConn = new SSH2Promise({});
-  private sshOpen = false;
-
   // Vlans
   private red1Vlan = 10;
   private red2Vlan = 20;
@@ -40,6 +37,7 @@ export class SwitchSupport {
   public async onPrestart(match: Match<any>) {
     // Configure Switch for Match
     await this.configTeamEthernet(match.participants ?? []);
+    SocketSupport.getInstance().switchReady();
     logger.info("✔ Prestarted")
   }
 
@@ -96,10 +94,17 @@ export class SwitchSupport {
         commands.push(`exit`);                                                                             // Exit Vlan config
       }
     }
+
+    // If there are no commands, we don't need to run a blank and empty command
+    if (commands.length === 0) {
+      logger.info('✔ Current VLANs correct');
+      return;
+    }
+
+    // Otherwise, run command
     const command = commands.join('\n')
     await this.runConfigCommand(command).then((res) => {
-      SocketSupport.getInstance().switchReady();
-      logger.info('✔ Updated field switch (' + this.switch.address + ') configuration')
+      logger.info('✔ Updated field switch (' + this.switch.address + ') configuration');
       return this.getTeamVlans();
     }).then((newConf) => {
       // TODO: Use this info to ensure that switch config is correct
@@ -146,45 +151,44 @@ export class SwitchSupport {
 
   }
 
-  public runCommand(command: string, expectError: boolean = false): Promise<any> {
-    return new Promise<any>(async (resolve, reject) => {
-      // Start new connection if needed
-      if (!this.sshConn || (this.sshConn && !this.sshOpen)) {
-        this.sshConn = new SSH2Promise({ host: this.switch.address, username: this.switch.username, password: this.switch.password, algorithms: algorithms as any, reconnect: true, timeout: 7500 });
-        await this.sshConn.connect().then(() => {
-          logger.info('✔ Connected to Field Switch via SSH');
-          this.sshOpen = true
-          this.sshConn.on("disconnect", () => {
-            logger.error(`❌ Lost connection to Field Switch (${this.switch.address}). Will retry connection when next command is sent.`);
-            this.sshOpen = false;
-          })
-        }).catch((reason: any) => {
-          logger.error('❌ Error SSHing into Field Switch (' + this.switch.address + '): ' + reason);
-          reject(reason);
-        });
-      }
-      this.sshConn.exec(command).then((data) => {
-        resolve(data);
-      }).catch((error: any) => {
-        if (expectError) {
-          resolve("");
-        } else {
-          if (error instanceof Buffer) error = error.toString();
-          logger.error('❌ Error executing command on Field Switch: ' + error);
-          reject(error)
-        }
-      });
+  public async runCommand(command: string, oneWay: boolean = false): Promise<string> {
+    const ssh = new SSH2Promise({ host: this.switch.address, username: this.switch.username, password: this.switch.password, algorithms: algorithms as any, reconnect: true, timeout: 7500 });
+    // Attempt to connect
+    await ssh.connect().catch((reason: any) => {
+      throw new Error(`❌ Error SSHing into Field Switch (${this.switch.address}:22): ${reason}`);
     });
+
+    if (!oneWay) {
+      const out = await ssh.exec(command).catch(err => {
+        throw new Error('❌ Error executing command on Field Switch: ' + err);
+      });
+      await ssh.close();
+      return out;
+    } else {
+      // Open "interactive" terminal
+      const socket = await ssh.shell();
+      await new Promise<void>(async resolve => {
+        socket.on('data', (t: Buffer) => {
+          if (t.toString().indexOf("ems_success") > -1) {
+            resolve();
+          }
+        });
+        // Send commands, line-by-line
+        command.split("\n").forEach(c => socket.write(c + "\n"));
+      });
+      await ssh.close();
+      return "";
+    }
   }
 
   private runConfigCommand(command: string): Promise<string> {
     const commands = [];
-    commands.push('config terminal');                     // Open Config Terminal
+    commands.push('conf t');                              // Open Config Terminal
     commands.push(command);                               // Run Config Commands
     commands.push('end');                                 // Exit Config Terminal
     commands.push('copy running-config startup-config');  // Copy to Startup config
     commands.push('');                                    // Blank line to agree to filename
-    commands.push('echo success');                        // Echo "success"
+    commands.push('echo ems_success\n');                      // Echo "success"
     return this.runCommand(commands.join('\n'), true);
   }
 

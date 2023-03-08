@@ -1,12 +1,17 @@
 import log from "../logger.js";
 import { EmsFrcFms } from "../server.js";
 import SSH2Promise from 'ssh2-promise';
-import { Match, MatchParticipant } from "@toa-lib/models";
+import { Match, MatchMode, MatchParticipant, MatchState } from "@toa-lib/models";
 import { getWpaKeys } from "../helpers/ems.js";
 import { SocketSupport } from "./socket.js";
 import { sleep } from "../helpers/generic.js";
 
 const logger = log("ap")
+
+// Regexes
+const ssidRegEx = /ESSID: "([-\w ]*)"/;
+const linkQualityRegex = /Link Quality: ([-\w ]+)\/([-\w ]+)/;
+const signalRegex = /Signal: ([-\w ]+) /;
 
 export class AccesspointSupport {
   private static _instance: AccesspointSupport;
@@ -20,9 +25,10 @@ export class AccesspointSupport {
   private ap: AccessPoint = new AccessPoint();
   private sshConn = new SSH2Promise({});
   private sshOpen = false;
-  private teamWifiStatuses: TeamWifiStatus[] = new Array<TeamWifiStatus>(6);
+  private teamWifiStatuses: TeamWifiStatus[] = [];
 
   private processLock = false;
+  private inError = false;
 
   public static getInstance(): AccesspointSupport {
     if (typeof AccesspointSupport._instance === "undefined") {
@@ -40,8 +46,6 @@ export class AccesspointSupport {
     this.ap.adminWpaKey = adminWpaKey;
     this.ap.adminSsid = adminSsid;
     this.ap.networkSecurityEnabled = networkSecurityEnabled;
-    this.ap.TeamWifiStatuses = TeamWifiStatuses;
-    this.ap.initialStatusesFetched = initialStatusesFetched;
     logger.info("✏ Updated Settings")
   }
 
@@ -52,14 +56,18 @@ export class AccesspointSupport {
     this.processLock = true;
 
     await this.updateTeamWifiStatus()
-      .catch(e => logger.error(`❌ Routine AP (${this.ap.address}) status update failed: ${e}`));
+      .then(() => {
+        if (this.inError) {
+          logger.info(`✔ Routine Access Point status update succeeded after previous error`);
+          this.inError = false;
+        }
+      }).catch(e => {
+        logger.error(`❌ Routine AP (${this.ap.address}) status update failed: ${e}`);
+        this.inError = true;
+      });
 
     // Process unlock
     this.processLock = false;
-  }
-
-  public kill() {
-
   }
 
   // Configure the Admin Wifi
@@ -83,22 +91,43 @@ export class AccesspointSupport {
 
   // Things to do on prestart
   public async onPrestart(match: Match<any>) {
+    EmsFrcFms.getInstance().stopAp();
     await this.handleTeamWifiConfig(match.eventKey, match.participants ?? []);
+    SocketSupport.getInstance().apReady();
+    EmsFrcFms.getInstance().startAPLoop();
     logger.info("✔ Prestarted")
+  }
+
+  public kill() {
+    this.sshConn.close();
+    this.sshOpen = false;
   }
 
   // Setup team wifi confi
   private async handleTeamWifiConfig(eventKey: string, participants: MatchParticipant[]) {
+    // Check if this feature is enabled
     if (!this.ap.networkSecurityEnabled) return;
+
+    // Fetch config from radio
+    await this.updateTeamWifiStatus();
+
+    // Check AP config
+    if (await this.checkTeamConfig(participants)) {
+      logger.info('✔ Current radios correct');
+      return;
+    }
 
     // Get WPA Keys and init teamWifiStatuses
     // TODO: Cache these somewhere so we don't have to query the DB every time
     const wpaKeys = await getWpaKeys(eventKey);
     for (const p of participants) {
-      const tws = new TeamWifiStatus();
-      tws.teamId = p.teamKey;
-      const wpa = wpaKeys.find(e => e.teamKey === p.teamKey);
-      tws.wpaKey = (wpa) ? wpa.wpaKey : '';
+      const tws: TeamWifiStatus = {
+        teamId: p.teamKey,
+        wpaKey: wpaKeys.find(e => e.teamKey === p.teamKey)?.wpaKey ?? '99999999',
+        linked: false,
+        quality: ['unknown', '70'],
+        signal: 'unknown'
+      };
       if (p.station === 11) this.teamWifiStatuses[0] = tws;
       else if (p.station === 12) this.teamWifiStatuses[1] = tws;
       else if (p.station === 13) this.teamWifiStatuses[2] = tws;
@@ -106,9 +135,6 @@ export class AccesspointSupport {
       else if (p.station === 22) this.teamWifiStatuses[4] = tws;
       else if (p.station === 23) this.teamWifiStatuses[5] = tws;
     }
-
-    // Check AP config
-    if (this.checkTeamConfig(participants)) return;
 
     // Generate Config Command
     const configCommand = this.generateApConfigForMatch(participants);
@@ -119,7 +145,7 @@ export class AccesspointSupport {
     const fullCommand = `uci batch <<ENDCONFIG && wifi radio0\n${configCommand}\nENDCONFIG\n`;
 
     let attemptCount = 1;
-    while (true) {
+    while (attemptCount < 6) {
       let error = false;
       // Run command and wait for response
       await this.runCommand(fullCommand).catch(e => {
@@ -131,8 +157,9 @@ export class AccesspointSupport {
       if (!error) {
         // Update Team Statuses
         await this.updateTeamWifiStatus().catch(() => { });
-        if (this.checkTeamConfig(participants)) {
-          SocketSupport.getInstance().apReady();
+
+        // Check again
+        if (await this.checkTeamConfig(participants)) {
           logger.info('✔ Successfully configured Wifi after ' + attemptCount + ' attempt(s).');
           return;
         }
@@ -144,19 +171,45 @@ export class AccesspointSupport {
   }
 
   // Returns true if the configured networks as read from the access point match the given teams.
-  public checkTeamConfig(participants: MatchParticipant[]): boolean {
-    if (!this.ap.initialStatusesFetched || !EmsFrcFms.getInstance().activeMatch) return false;
+  public async checkTeamConfig(participants: MatchParticipant[]): Promise<boolean> {
+    // If there is no active match, this will fail. All of this will fail, actially
+    if (!EmsFrcFms.getInstance().activeMatch) return false;
+
+    // Fetch data from AP
+    const data = await this.runCommand("iwinfo").catch(() => "");
+
+    // Split it up
+    const split = data.split("wlan");
+    // Remove first and last
+    split.splice(0, 1);
+    split.pop();
+    // Attempt to extract SSID from AP
+    const ssids = split.map(r => parseInt((new RegExp(ssidRegEx, "g").exec(r) ?? ["", "-1"])[1]));
+
+    // Print
+    logger.info(`ℹ Currently configured radios: (${ssids.join(" | ")})`);
+    // Check each participant against what we have in the AP
     for (const i in participants) {
       const p = participants[i];
-      if (p && this.ap.TeamWifiStatuses[i] && this.ap.TeamWifiStatuses[i].teamId != p.teamKey) return false;
+      const w = ssids[i];
+      if (!w || !p) return false
+      if (p && w && w !== p.teamKey) return false;
     }
+    // If we get here, then the radios are all correct!
     return true;
   }
 
   // Fetches the current wifi network status from the access point and updates the status structure.
   public async updateTeamWifiStatus(): Promise<void> {
     return new Promise(async (resolve, reject) => {
-      if (!this.ap.networkSecurityEnabled) return;
+      if (!this.ap.networkSecurityEnabled) return resolve();
+
+      // Check that we're ready
+      if (!this.teamWifiStatuses || this.teamWifiStatuses.length < 1) return resolve();
+
+      // Don't worry about statuses if match isn't in progress
+      const state = EmsFrcFms.getInstance().matchState;
+      if (state < MatchMode.PRESTART || state >= MatchMode.ENDED) return;
 
       let error: any = false;
       const data = await this.runCommand("iwinfo").catch(e => { error = e });
@@ -165,30 +218,28 @@ export class AccesspointSupport {
         logger.error('❌ Couldn\'t get Wifi Status from AP (' + this.ap.address + '): ' + error);
         reject(error);
       } else if (this.decodeWifiConfig(data)) {
-        this.ap.initialStatusesFetched = true;
         resolve();
       } else {
-        logger.error('❌ Couldn\'t decode Wifi Status from AP (' + this.ap.address + ')');
-        reject();
+        reject(`Couldn't decode Wifi Status from AP (${this.ap.address})`);
       }
     })
   }
 
   // Logs into the access point via SSH and runs the given shell command.
-  public runCommand(command: string): Promise<any> {
+  public runCommand(command: string): Promise<string> {
     return new Promise<any>(async (resolve, reject) => {
       // Start new connection if needed
       if (!this.sshConn || (this.sshConn && !this.sshOpen)) {
         this.sshConn = new SSH2Promise({ host: this.ap.address, username: this.ap.username, password: this.ap.password });
         await this.sshConn.connect().then(() => {
-          logger.info('✔ Connected to Field AP via SSH');
+          logger.info(`✔ Connected to Access Point at ${this.ap.address}:22`);
           this.sshOpen = true
           this.sshConn.on("disconnect", () => {
-            logger.error(`❌ Lost connection to Field AP (${this.ap.address}). Will retry connection when next command is sent.`);
+            logger.error(`❌ Lost connection to Access Point (${this.ap.address}:22). Will retry connection when next command is sent.`);
             this.sshOpen = false;
           })
         }).catch((reason: any) => {
-          logger.error('❌ Error SSHing into Field AP (' + this.ap.address + '): ' + reason);
+          logger.error(`'❌ Error SSHing into Access Point (${this.ap.address}:22): ${reason}`);
           reject(reason);
         });
       }
@@ -213,7 +264,7 @@ export class AccesspointSupport {
         commands.push(`set wireless.@wifi-iface[${pos}].key='no-team-${pos}'`);
       } else {
         if (this.teamWifiStatuses[i].wpaKey.length < 8 || this.teamWifiStatuses[i].wpaKey.length > 63) {
-          logger.info(`❌ Invalid WPA key ${this.teamWifiStatuses[i].wpaKey}' configured for team ${pars[i].teamKey}.`);
+          logger.info(`❌ Invalid WPA key '${this.teamWifiStatuses[i].wpaKey}' configured for team ${pars[i].teamKey}.`);
           return '';
         }
         commands.push(`set wireless.@wifi-iface[${pos}].disabled='0'`);
@@ -227,31 +278,52 @@ export class AccesspointSupport {
 
   // Parses the given output from the "iwinfo" command on the AP and updates the given status structure with the result.
   public decodeWifiConfig(wifiInfo: string): boolean {
-    const ssidRegEx = /ESSID: "([-\w ]*)"/g;
-    const linkQualityRegex = /Link Quality: ([-\w ]+)\/([-\w ]+)/g;
-    const ssids = [];
-    const linkQualities = [];
-    let v;
-    do {
-      v = ssidRegEx.exec(wifiInfo);
-      if (v) ssids.push(v[1]);
-    } while (v);
-    do {
-      v = linkQualityRegex.exec(wifiInfo);
-      if (v) linkQualities.push([v[1], v[2]]);
-    } while (v);
+    // Exit if we have no Wifi Configs
+    if (!this.teamWifiStatuses || this.teamWifiStatuses.length < 1) return false;
 
-    if ((ssids.length < 6) || (linkQualities.length < 6)) {
+    // Split on interfaces
+    const interfaces = wifiInfo.split('wlan');
+
+    // Remove first (blank) interface
+    interfaces.splice(0, 1);
+
+    // Remove last (2.4ghz) interface
+    interfaces.pop();
+
+    for (let intf of interfaces) {
+      // Execute regexes
+      const parsedSsid = new RegExp(ssidRegEx, "g").exec(intf);
+      const parsedQuality = new RegExp(linkQualityRegex, "g").exec(intf);
+      const parsedSignal = new RegExp(signalRegex, "g").exec(intf);
+
+      // Team ID
+      const teamId = parsedSsid ? parseInt(parsedSsid[1]) : -1
+
+      // Find index
+      const index = this.teamWifiStatuses.findIndex(t => t.teamId === teamId);
+
+      if (index > -1 && !isNaN(teamId) && teamId > -1) {
+        this.teamWifiStatuses[index].quality = parsedQuality ? [parsedQuality[1], parsedQuality[2]] : ['unknown', '70'];
+        this.teamWifiStatuses[index].signal = parsedSignal ? parsedSignal[1] : 'unknown';
+        this.teamWifiStatuses[index].linked = !!(parsedQuality && parsedQuality[1] !== 'unknown');
+      } else if (index === -1 && !isNaN(teamId) && teamId > -1) {
+        logger.warn(`⚠ Fetched AP status from non-active team #${teamId}, ignoring`)
+      } else {
+        logger.warn(`⚠ Unable to deciper or locate status object for team #${teamId}. Ensure they're in the active match and try again`)
+      }
+    }
+
+    if (interfaces.length < 6) {
       // worlds longest log message
-      logger.error("❌ Could not parse wifi info; expected 6 team networks and 6 statuses, got " + ((ssids) ? ssids.length : '0') + " and " + ((linkQualities) ? linkQualities.length : 0));
+      logger.error(`❌ Could not parse wifi info; expected 6 interfaces, got ${interfaces.length}. Parsed what we could`);
       return false;
     }
-    for (let i = 0; i < this.teamWifiStatuses.length; i++) {
-      if (!this.teamWifiStatuses[i]) this.teamWifiStatuses[i] = new TeamWifiStatus();
-      if (ssids) this.teamWifiStatuses[i].teamId = parseInt(ssids[i]);
-      if (linkQualities) this.teamWifiStatuses[i].radioLinked = linkQualities[i][0] !== 'unknown';
-    }
+
     return true;
+  }
+
+  get teamStatuses(): TeamWifiStatus[] {
+    return this.teamWifiStatuses;
   }
 }
 
@@ -264,8 +336,6 @@ class AccessPoint {
   public adminSsid: string;
   public adminWpaKey: string;
   public networkSecurityEnabled: boolean;
-  public TeamWifiStatuses: TeamWifiStatus[];
-  public initialStatusesFetched: boolean;
 
   constructor() {
     this.address = '';
@@ -276,23 +346,16 @@ class AccessPoint {
     this.adminSsid = 'EMS'
     this.adminWpaKey = '';
     this.networkSecurityEnabled = true;
-    this.TeamWifiStatuses = new Array<TeamWifiStatus>(6);
-    this.initialStatusesFetched = false;
   }
 
 }
 
 
-class TeamWifiStatus {
-  public teamId: number;
-  public radioLinked: boolean;
-  public wpaKey: string;
-
-
-  constructor() {
-    this.teamId = -1;
-    this.radioLinked = false;
-    this.wpaKey = '';
-  }
+interface TeamWifiStatus {
+  teamId: number,
+  linked: boolean,
+  signal: string,
+  quality: string[],
+  wpaKey: string
 }
 export default AccesspointSupport.getInstance();

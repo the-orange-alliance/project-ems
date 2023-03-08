@@ -13,6 +13,7 @@ const RedReferee = lazy(() => import('./apps/Referee/RedReferee'));
 const BlueReferee = lazy(() => import('./apps/Referee/BlueReferee'));
 const Reports = lazy(() => import('./apps/Reports'));
 const AdminApp = lazy(() => import('./apps/Admin'));
+const FrcFmsFieldMonitorApp = lazy(() => import('./apps/FrcFmsFieldMonitor'));
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 // const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));
@@ -132,6 +133,12 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/settings',
     group: 0,
     element: <SettingsApp />
+  },
+  {
+    name: 'FRC FMS Field Monitor',
+    path: '/frc/fms/fieldmonitor',
+    group: 0,
+    element: <FrcFmsFieldMonitorApp />
   }
   // {
   //   name: 'Account Manager',

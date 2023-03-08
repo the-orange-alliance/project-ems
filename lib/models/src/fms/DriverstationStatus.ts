@@ -1,20 +1,40 @@
+import { Match } from "../Match.js"
+import { MatchMode } from "../MatchTimer.js"
+import { Tournament } from "../Tournament.js"
+import { PrestartStatus } from "./PrestartStatus.js"
+
 export interface DriverstationStatus {
+  fmsHwFingerprint: string, // This identifies which FMS this is coming from
   teamKey: number,
   allianceStation: number,
+  apStatus: APStatus
   enabled: boolean,
   bypassed: boolean,
   auto: boolean,
   estop: boolean,
-  ds_linked: boolean,
-  radio_linked: boolean,
-  robot_linked: boolean,
-  batt_voltage: number,
-  robot_trip_time_ms: number,
-  missed_packet_count: number,
-  sec_since_last_robot_link: number,
-  last_packet_time: number,
-  last_robot_linked_time: number,
-  packet_count: number,
-  ip_address: string,
-  missed_packet_offset: number
+  dsLinked: boolean,
+  radioLinked: boolean,
+  robotLinked: boolean,
+  batteryVoltage: number,
+  robotTripTimeMs: number,
+  missedPacketCount: number,
+  secSinceLastRobotLink: number,
+  lastPacketTime: number,
+  lastRobotLinkedTime: number,
+  packetCount: number,
+  ipAddress: string,
+  missedPacketOffset: number
+}
+
+export interface DriverstationMonitor {
+  dsStatuses: DriverstationStatus[],
+  activeTournament?: Tournament,
+  matchStatus: MatchMode,
+  prestartStatus: PrestartStatus
+}
+
+export interface APStatus {
+  linked: boolean,
+  signal: string,
+  quality: string[],
 }

@@ -1,243 +1,95 @@
-import { DriverstationStatus } from "@toa-lib/models";
+import { APStatus, DriverstationStatus } from "@toa-lib/models";
 import * as dgram from "dgram";
 import * as net from "net";
+import { SettingsSupport } from "../devices/settings.js";
+import { convertEMSStationToFMS } from "../helpers/generic.js";
 
 export default class DSConn {
-    private _teamId:                    number;
-    private _allianceStation:           number;
-    private _auto:                      boolean;
-    private _enabled:                   boolean;
-    private _estop:                     boolean;
-    private _bypassed:                  boolean;
-    private _dsLinked:                  boolean;
-    private _radioLinked:               boolean;
-    private _robotLinked:               boolean;
-    private _batteryVoltage:            number;
-    private _dsRobotTripTimeMs:         number;
-    private _missedPacketCount:         number;
-    private _secondsSinceLastRobotLink: number;
-    private _lastPacketTime:            number; // date
-    private _lastRobotLinkedTime:       number; // date
-    private _packetCount:               number;
-    private _ipAddress:                 string;
-    private _missedPacketOffset:        number;
-    private _recievedFirstPacket:       boolean;
-    private _tcpConn:                   net.Socket;
-    private _udpConn:                   dgram.Socket;
+    public teamId: number;
+    public allianceStation: number;
+    public auto: boolean;
+    public enabled: boolean;
+    public estop: boolean;
+    public bypassed: boolean;
+    public dsLinked: boolean;
+    public radioLinked: boolean;
+    public apStatus: APStatus;
+    public robotLinked: boolean;
+    public batteryVoltage: number;
+    public dsRobotTripTimeMs: number;
+    public missedPacketCount: number;
+    public secondsSinceLastRobotLink: number;
+    public lastPacketTime: number; // date
+    public lastRobotLinkedTime: number; // date
+    public packetCount: number;
+    public ipAddress: string;
+    public missedPacketOffset: number;
+    public recievedFirstPacket: boolean;
+    public tcpConn: net.Socket;
+    public udpConn: dgram.Socket;
     // TODO Add Logging functionality
 
     constructor() {
-        this._teamId = -1;
-        this._allianceStation = -1;
-        this._auto = false;
-        this._enabled = false;
-        this._bypassed = false;
-        this._estop = false;
-        this._dsLinked = false;
-        this._radioLinked = false;
-        this._robotLinked = false;
-        this._batteryVoltage = 0;
-        this._dsRobotTripTimeMs = 0;
-        this._missedPacketCount = 0;
-        this._secondsSinceLastRobotLink = 0;
-        this._lastPacketTime = 0;
-        this._lastRobotLinkedTime = 0;
-        this._packetCount = 0;
-        this._ipAddress = '';
-        this._missedPacketOffset = 0;
-        this._recievedFirstPacket = false;
-        this._tcpConn = new net.Socket();
-        this._udpConn = dgram.createSocket("udp4");
+        this.teamId = -1;
+        this.allianceStation = -1;
+        this.auto = false;
+        this.enabled = false;
+        this.bypassed = false;
+        this.estop = false;
+        this.dsLinked = false;
+        this.radioLinked = false;
+        this.robotLinked = false;
+        this.batteryVoltage = 0;
+        this.dsRobotTripTimeMs = 0;
+        this.missedPacketCount = 0;
+        this.secondsSinceLastRobotLink = 0;
+        this.lastPacketTime = 0;
+        this.lastRobotLinkedTime = 0;
+        this.packetCount = 0;
+        this.ipAddress = '';
+        this.missedPacketOffset = 0;
+        this.recievedFirstPacket = false;
+        this.apStatus = {
+            linked: false,
+            quality: ['unknown', '70'],
+            signal: 'unknown'
+        }
+        this.tcpConn = new net.Socket();
+        this.udpConn = dgram.createSocket("udp4");
     }
 
     toJson(): DriverstationStatus {
         return {
+            fmsHwFingerprint: SettingsSupport.getInstance().hwFingerprint,
             teamKey: this.teamId,
             allianceStation: this.allianceStation,
+            apStatus: { // because enevitably it will at some point be undefined so we must check
+                linked: this.apStatus?.linked ?? false,
+                quality: this.apStatus?.quality ?? ['unknown', '70'],
+                signal: this.apStatus?.signal ?? 'unknown',
+            },
             enabled: this.enabled,
             bypassed: this.bypassed,
             auto: this.auto,
             estop: this.estop,
-            ds_linked: this.dsLinked,
-            radio_linked: this.radioLinked,
-            robot_linked: this.robotLinked,
-            batt_voltage: this.batteryVoltage,
-            robot_trip_time_ms: this.dsRobotTripTimeMs,
-            missed_packet_count: this.missedPacketCount,
-            sec_since_last_robot_link: this.secondsSinceLastRobotLink,
-            last_packet_time: this.lastPacketTime,
-            last_robot_linked_time: this.lastRobotLinkedTime,
-            packet_count: this.packetCount,
-            ip_address: this.ipAddress,
-            missed_packet_offset: this.missedPacketOffset
+            dsLinked: this.dsLinked,
+            radioLinked: this.radioLinked,
+            robotLinked: this.robotLinked,
+            batteryVoltage: this.batteryVoltage,
+            robotTripTimeMs: this.dsRobotTripTimeMs,
+            missedPacketCount: this.missedPacketCount,
+            secSinceLastRobotLink: this.secondsSinceLastRobotLink,
+            lastPacketTime: this.lastPacketTime,
+            lastRobotLinkedTime: this.lastRobotLinkedTime,
+            packetCount: this.packetCount,
+            ipAddress: this.ipAddress,
+            missedPacketOffset: this.missedPacketOffset
         };
     }
 
-    get teamId(): number {
-        return this._teamId;
-    }
-
-    set teamId(value: number) {
-        this._teamId = value;
-    }
-
-    get allianceStation(): number {
-        return this._allianceStation;
-    }
-
-    set allianceStation(value: number) {
-        this._allianceStation = value;
-    }
-
-    get auto(): boolean {
-        return this._auto;
-    }
-
-    set auto(value: boolean) {
-        this._auto = value;
-    }
-
-    get enabled(): boolean {
-        return this._enabled;
-    }
-
-    set enabled(value: boolean) {
-        this._enabled = value;
-    }
-
-    get bypassed(): boolean {
-        return this._bypassed;
-    }
-
-    set bypassed(value: boolean) {
-        this._bypassed = value;
-    }
-
-    get estop(): boolean {
-        return this._estop;
-    }
-
-    set estop(value: boolean) {
-        this._estop = value;
-    }
-
-    get dsLinked(): boolean {
-        return this._dsLinked;
-    }
-
-    set dsLinked(value: boolean) {
-        this._dsLinked = value;
-    }
-
-    get radioLinked(): boolean {
-        return this._radioLinked;
-    }
-
-    set radioLinked(value: boolean) {
-        this._radioLinked = value;
-    }
-
-    get robotLinked(): boolean {
-        return this._robotLinked;
-    }
-
-    set robotLinked(value: boolean) {
-        this._robotLinked = value;
-    }
-
-    get batteryVoltage(): number {
-        return this._batteryVoltage;
-    }
-
-    set batteryVoltage(value: number) {
-        this._batteryVoltage = value;
-    }
-
-    get dsRobotTripTimeMs(): number {
-        return this._dsRobotTripTimeMs;
-    }
-
-    set dsRobotTripTimeMs(value: number) {
-        this._dsRobotTripTimeMs = value;
-    }
-
-    get missedPacketCount(): number {
-        return this._missedPacketCount;
-    }
-
-    set missedPacketCount(value: number) {
-        this._missedPacketCount = value;
-    }
-
-    get secondsSinceLastRobotLink(): number {
-        return this._secondsSinceLastRobotLink;
-    }
-
-    set secondsSinceLastRobotLink(value: number) {
-        this._secondsSinceLastRobotLink = value;
-    }
-
-    get lastPacketTime(): number {
-        return this._lastPacketTime;
-    }
-
-    set lastPacketTime(value: number) {
-        this._lastPacketTime = value;
-    }
-
-    get lastRobotLinkedTime(): number {
-        return this._lastRobotLinkedTime;
-    }
-
-    set lastRobotLinkedTime(value: number) {
-        this._lastRobotLinkedTime = value;
-    }
-
-    get packetCount(): number {
-        return this._packetCount;
-    }
-
-    set packetCount(value: number) {
-        this._packetCount = value;
-    }
-
-    get ipAddress(): string {
-        return this._ipAddress;
-    }
-
-    set ipAddress(value: string) {
-        this._ipAddress = value;
-    }
-
-    get missedPacketOffset(): number {
-        return this._missedPacketOffset;
-    }
-
-    set missedPacketOffset(value: number) {
-        this._missedPacketOffset = value;
-    }
-
-    get recievedFirstPacket(): boolean {
-        return this._recievedFirstPacket;
-    }
-
-    set recievedFirstPacket(value: boolean) {
-        this._recievedFirstPacket = value;
-    }
-
-    get tcpConn(): net.Socket {
-        return this._tcpConn;
-    }
-
-    set tcpConn(value: net.Socket) {
-        this._tcpConn = value;
-    }
-
-    get udpConn(): dgram.Socket {
-        return this._udpConn;
-    }
-
-    set udpConn(value: dgram.Socket) {
-        this._udpConn = value;
+    get fmsStation() {
+        return convertEMSStationToFMS(this.allianceStation);
     }
 }
+
+
