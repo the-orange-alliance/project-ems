@@ -12,10 +12,16 @@ import { Team } from '@toa-lib/models';
 interface Props {
   teamKey: number | null;
   disabled?: boolean;
+  white?: boolean;
   onChange: (team: Team | null) => void;
 }
 
-const ParticipantDropdown: FC<Props> = ({ teamKey, disabled, onChange }) => {
+const ParticipantDropdown: FC<Props> = ({
+  teamKey,
+  disabled,
+  white,
+  onChange
+}) => {
   const identifier = useRecoilValue(teamIdentifierAtom);
   const teams = useRecoilValue(currentTeamsByEventSelector);
   const team = teams.find((t) => t.teamKey === teamKey);
@@ -44,12 +50,22 @@ const ParticipantDropdown: FC<Props> = ({ teamKey, disabled, onChange }) => {
       renderInput={(params) => (
         <TextField
           {...params}
-          inputProps={{ ...params.inputProps }}
+          inputProps={{
+            ...params.inputProps,
+            style: {
+              color: white ? '#ffffff' : '#000000'
+            }
+          }}
           sx={{ padding: 0, margin: 0 }}
         />
       )}
       onChange={handleChange}
-      sx={{ padding: 0 }}
+      sx={{
+        padding: 0,
+        '& fieldset': {
+          borderColor: white ? '#ffffff' : '#000000 !important'
+        }
+      }}
     />
   );
 };
