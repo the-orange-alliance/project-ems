@@ -26,3 +26,20 @@ export function removeFromArray<T>(
 ): T[] {
   return [...items.filter((i) => i[key] !== value)];
 }
+
+export function getDifferences<T>(
+  items: T[],
+  prevItems: T[],
+  key: keyof T
+): { additions: T[]; deletions: T[]; edits: T[] } {
+  const additions = items.filter(
+    (i) => !prevItems.find((j) => i[key] === j[key])
+  );
+  const deletions = prevItems.filter(
+    (i) => !items.find((j) => i[key] === j[key])
+  );
+  const edits = items.filter(
+    (i) => !prevItems.includes(i) && !additions.includes(i)
+  );
+  return { additions, deletions, edits };
+}

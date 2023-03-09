@@ -14,16 +14,14 @@ import {
   MatchMakerParams,
   Match,
   isMatchArray,
-  MatchDetailBase,
   MatchParticipant,
   Ranking,
-  TournamentType,
   AllianceMember,
   isMatch,
   Tournament,
   MatchKey,
-  ChargedUpDetails,
-  FMSSettings
+  FMSSettings,
+  MatchDetailBase
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -77,8 +75,11 @@ export const patchEvent = async (
 export const postTeams = async (teams: Team[]): Promise<void> =>
   clientFetcher('teams', 'POST', teams);
 
-export const patchTeam = async (teamKey: string, team: Team): Promise<void> =>
+export const patchTeam = async (teamKey: number, team: Team): Promise<void> =>
   clientFetcher(`teams/${teamKey}`, 'PATCH', team);
+
+export const deleteTeam = async (team: Team): Promise<void> =>
+  clientFetcher(`teams/${team.eventKey}/${team.teamKey}`, `DELETE`, team);
 
 export const postTournaments = async (
   tournaments: Tournament[]
@@ -118,8 +119,8 @@ export const patchMatch = async (match: Match<any>): Promise<void> =>
     match
   );
 
-export const patchMatchDetails = async <T>(
-  match: Match<ChargedUpDetails>
+export const patchMatchDetails = async <T extends MatchDetailBase>(
+  match: Match<T>
 ): Promise<void> =>
   clientFetcher(
     `match/details/${match.eventKey}/${match.tournamentKey}/${match.id}`,
@@ -231,5 +232,5 @@ export const useMatchAll = (
     }
   );
 
-  export const postFrcFmsSettings = (settings: FMSSettings): Promise<void> =>
+export const postFrcFmsSettings = (settings: FMSSettings): Promise<void> =>
   clientFetcher(`frc/fms/advancedNetworkingConfig`, 'POST', settings);

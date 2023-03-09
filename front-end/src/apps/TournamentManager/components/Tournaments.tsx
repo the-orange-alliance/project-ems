@@ -16,10 +16,10 @@ import {
   tournamentsByEventSelectorFam
 } from 'src/stores/NewRecoil';
 import { defaultTournament, Tournament } from '@toa-lib/models';
-import { removeFromArray } from 'src/stores/Util';
+import { getDifferences, removeFromArray } from 'src/stores/Util';
 import { useModal } from '@ebay/nice-modal-react';
 import TournamentRemovalDialog from '@components/Dialogs/TournamentRemovalDialog';
-import { postTournaments } from 'src/api/ApiProvider';
+import { patchTournament, postTournaments } from 'src/api/ApiProvider';
 import { useSnackbar } from 'src/features/hooks/use-snackbar';
 import { useFlags } from 'src/stores/AppFlags';
 
@@ -51,17 +51,26 @@ const Tournaments: FC = () => {
       const prevTournaments = await snapshot.getPromise(
         tournamentsByEventSelectorFam(event.eventKey)
       );
-      const newTournaments = tournaments.filter(
-        (t) => !prevTournaments.includes(t)
+      const diffs = getDifferences(
+        tournaments,
+        prevTournaments,
+        'tournamentKey'
       );
       setLoading(true);
-      await postTournaments(newTournaments);
+      await Promise.all([
+        postTournaments(diffs.additions),
+        diffs.edits.map((t) => patchTournament(t))
+      ]);
       await setFlags('createdTournaments', [
         ...flags.createdTournaments,
         event.eventKey
       ]);
       setLoading(false);
-      showSnackbar('Tournaments successfully created');
+      showSnackbar(
+        `(${
+          diffs.additions.length + diffs.edits.length
+        }) Tournaments successfully created`
+      );
     } catch (e) {
       setLoading(false);
     }
