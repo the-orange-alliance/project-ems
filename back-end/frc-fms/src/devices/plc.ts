@@ -7,6 +7,7 @@ import ModbusRTU from "modbus-serial";
 import { Socket } from "socket.io-client";
 import { sleep } from "../helpers/generic.js";
 import Watchdog from "./watchdog.js";
+import { SocketSupport } from "./socket.js";
 
 const logger = log("plc")
 
@@ -32,8 +33,6 @@ export class PlcSupport {
 
   private processLock = false;
 
-  private socket: Socket | null = null;
-
   // Reset PLC if not fed in 3/4 of a second
   private watchdog: Watchdog = new Watchdog(async () => {
     logger.warn("⚠ PLC Watchdog not fed. Restarting process...");
@@ -46,10 +45,6 @@ export class PlcSupport {
       PlcSupport._instance = new PlcSupport();
     }
     return PlcSupport._instance;
-  }
-
-  public setSocket(socket: Socket | null) {
-    this.socket = socket;
   }
 
   public async initPlc(address: string) {
@@ -75,7 +70,7 @@ export class PlcSupport {
   }
 
   public kill() {
-    this.client.close(() => {});
+    this.client.close(() => { });
   }
 
   public getEstop(station: EStop) {
@@ -138,12 +133,12 @@ export class PlcSupport {
       // If there was a change (and not first read)
       if (!this.plc.inputs.equals(this.plc.oldInputs) && !this.firstRead) {
         // We have a new input, lets notify
-        this.socket?.emit("frc-fms:plc-update", this.plc.inputs.toJSON());
+        SocketSupport.getInstance().socket?.emit("frc-fms:plc-update", this.plc.inputs.toJSON());
 
         // Field E-STOP
         if (this.plc.inputs.fieldEstop) {
+          SocketSupport.getInstance().socket?.emit("match:abort");
           logger.info("🛑 Field E-STOP Pressed! This can't be good!");
-          this.socket?.emit("match:abort");
         } else if (!this.plc.inputs.fieldEstop && this.plc.oldInputs.fieldEstop) {
           logger.info("🟢 Field E-STOP Released!");
         }
@@ -357,8 +352,14 @@ export class PlcSupport {
       StackLight.Off,
       StackLight.Off
     );
-    
-    logger.info("✔ Prestarted")
+
+    if (this.client.isOpen) {
+      SocketSupport.getInstance().plcSuccess();
+      logger.info("✔ Prestarted");
+    } else {
+      SocketSupport.getInstance().plcFail('PLC not connected');
+      logger.info("❌ Prestart failed");
+    }
   }
 }
 

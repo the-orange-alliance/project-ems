@@ -572,7 +572,7 @@ export class DriverstationSupport {
     }).sort((a, b) => a.fmsStation - b.fmsStation) ?? [];
 
     // We're ready
-    SocketSupport.getInstance().dsReady();
+    SocketSupport.getInstance().dsSuccess();
     logger.info("✔ Prestarted");
   }
 

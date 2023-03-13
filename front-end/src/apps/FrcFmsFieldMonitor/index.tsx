@@ -1,12 +1,11 @@
 import { FC, useEffect, useState } from 'react';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import Paper from '@mui/material/Paper';
-import { CircularProgress, Grid, Typography } from '@mui/material';
+import { Grid, Typography } from '@mui/material';
 import { useSocket } from 'src/api/SocketProvider';
-import { DriverstationMonitor, DriverstationStatus, MatchMode, MatchState } from '@toa-lib/models';
+import { DriverstationMonitor, MatchMode, PrestartState, PrestartStatus } from '@toa-lib/models';
 import TeamRow from './components/TeamRow';
-import CheckCircleOutline from '@mui/icons-material/CheckCircleOutline';
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
+import PrestartStatusIcon from './components/PrestartStatus';
 
 const FrcFmsFieldMonitorApp: FC = () => {
 
@@ -16,6 +15,10 @@ const FrcFmsFieldMonitorApp: FC = () => {
   const setupSocket = () => {
     socket?.off("frc-fms:ds-update");
     socket?.on("frc-fms:ds-update", setMonitor);
+
+    socket?.off("frc-fms:prestart-status");
+    // @ts-ignore // Bad practice
+    socket?.on("frc-fms:prestart-status", (status: PrestartStatus) => setMonitor({...monitor, prestartStatus: status}));
   }
 
   useEffect(setupSocket, []);
@@ -58,40 +61,18 @@ const FrcFmsFieldMonitorApp: FC = () => {
               </Grid>
 
               {/* Match Mode */}
-              <Grid item xs={7}>
+              <Grid item xs={10 - (monitor?.prestartStatus.hardware.length ?? 0)}>
                 <Typography variant='h4'>
                   {friendlyMatchStatus()}
-                  {monitor?.matchStatus === MatchMode.PRESTART && !monitor?.prestartStatus.prestartComplete && " Initilized"}
-                  {monitor?.matchStatus === MatchMode.PRESTART && monitor?.prestartStatus.prestartComplete && " Complete"}
+                  {monitor?.matchStatus === MatchMode.PRESTART && monitor?.prestartStatus.state === PrestartState.Prestarting && " Initilized"}
+                  {monitor?.matchStatus === MatchMode.PRESTART && monitor?.prestartStatus.state === PrestartState.Fail && " Failed"}
+                  {monitor?.matchStatus === MatchMode.PRESTART && monitor?.prestartStatus.state === PrestartState.Success && " Complete"}
                 </Typography>
               </Grid>
 
-              {/* DS Prestart */}
-              <Grid item xs={1}>
-                {monitor?.prestartStatus.dsReady ? <CheckCircleOutline sx={{color: "green"}} /> : <CircularProgress size="23px" />}
-                <br />
-                <Typography variant='caption'>
-                  Driverstation
-                </Typography>
-              </Grid>
-
-              {/* AP Prestart */}
-              <Grid item xs={1}>
-                {monitor?.prestartStatus.apReady ? <CheckCircleOutline sx={{color: "green"}} /> : <CircularProgress size="23px" />}
-                <br />
-                <Typography variant='caption'>
-                  Access Point
-                </Typography>
-              </Grid>
-
-              {/* Switch/Networking Prestart */}
-              <Grid item xs={1}>
-                {monitor?.prestartStatus.switchReady ? <CheckCircleOutline sx={{color: "green"}} /> : <CircularProgress size="23px" />}
-                <br />
-                <Typography variant='caption'>
-                  Field Network
-                </Typography>
-              </Grid>
+              {/* HW Prestart Statuses */}
+              {monitor?.prestartStatus.hardware.map(hw => <PrestartStatusIcon hw={hw} key={hw.name} />)}
+              
             </Grid>
           </Grid>
 
@@ -115,7 +96,7 @@ const FrcFmsFieldMonitorApp: FC = () => {
 
           {/* One row per DS */}
           {
-            monitor?.dsStatuses.map(ds => <TeamRow ds={ds} key={ds.allianceStation} />)
+            monitor?.dsStatuses?.map(ds => <TeamRow ds={ds} key={ds.allianceStation} />)
           }
         </Grid>
       </Paper>

@@ -4,7 +4,12 @@ import { Match, MatchParticipant } from "@toa-lib/models";
 import { convertEMSStationToFMS } from "../helpers/generic.js";
 import { SocketSupport } from "./socket.js";
 
-const logger = log("switch")
+const logger = log("switch");
+
+const loggerError = (msg: any) => {
+  logger.error(msg);
+  SocketSupport.getInstance().switchMessage(msg);
+}
 
 export class SwitchSupport {
   private static _instance: SwitchSupport;
@@ -36,16 +41,19 @@ export class SwitchSupport {
 
   public async onPrestart(match: Match<any>) {
     // Configure Switch for Match
-    await this.configTeamEthernet(match.participants ?? []);
-    SocketSupport.getInstance().switchReady();
-    logger.info("✔ Prestarted")
+    const rsp = await this.configTeamEthernet(match.participants ?? []);
+    if (rsp.length === 0) {
+      SocketSupport.getInstance().switchSuccess();
+      logger.info("✔ Prestarted")
+    } else {
+      SocketSupport.getInstance().switchFail(rsp);
+      logger.error("❌ Failed to Prestart")
+    }
   }
 
-  private async configTeamEthernet(participants: MatchParticipant[]) {
+  private async configTeamEthernet(participants: MatchParticipant[]): Promise<string> {
     const oldConfig = await this.getTeamVlans();
-    let infoString = 'ℹ Currently configured vlans |'
-    for (const c of oldConfig) infoString += ` Vlan${c.vlan}: ${c.team} |`
-    logger.info(infoString);
+    logger.info(`ℹ Currently configured VLANS: ${oldConfig.join(' | ')}`);
     let commands = [];
     let vlans = [this.red1Vlan, this.red2Vlan, this.red3Vlan, this.blue1Vlan, this.blue2Vlan, this.blue3Vlan];
 
@@ -98,21 +106,20 @@ export class SwitchSupport {
     // If there are no commands, we don't need to run a blank and empty command
     if (commands.length === 0) {
       logger.info('✔ Current VLANs correct');
-      return;
+      return "";
     }
 
     // Otherwise, run command
     const command = commands.join('\n')
-    await this.runConfigCommand(command).then((res) => {
+    return await this.runConfigCommand(command).then((res) => {
       logger.info('✔ Updated field switch (' + this.switch.address + ') configuration');
       return this.getTeamVlans();
     }).then((newConf) => {
       // TODO: Use this info to ensure that switch config is correct
-      let infoString = 'ℹ Newly configured vlans |'
-      for (const c of newConf) infoString += ` Vlan${c.vlan}: ${c.team} |`
-      logger.info(infoString);
+      logger.info(`ℹ Newly configured VLANS: ${newConf.join(' | ')}`);
+      return "";
     }).catch(error => {
-      logger.error('❌ Failed to update field switch (' + this.switch.address + ') configuration')
+      return `❌ Failed to update field switch (${this.switch.address}) configuration: ${error}`;
     });
   }
 

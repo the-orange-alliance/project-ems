@@ -5,8 +5,14 @@ import { Match, MatchMode, MatchParticipant, MatchState } from "@toa-lib/models"
 import { getWpaKeys } from "../helpers/ems.js";
 import { SocketSupport } from "./socket.js";
 import { sleep } from "../helpers/generic.js";
+import { Socket } from "socket.io-client";
 
 const logger = log("ap")
+
+const loggerError = (msg: any) => {
+  logger.error(msg);
+  SocketSupport.getInstance().apMessage(msg);
+}
 
 // Regexes
 const ssidRegEx = /ESSID: "([-\w ]*)"/;
@@ -86,16 +92,21 @@ export class AccesspointSupport {
     const fullCommand = `uci batch <<ENDCONFIG && wifi radio1\n${configCommand}\nENDCONFIG\n`;
     await this.runCommand(fullCommand)
       .then(() => logger.info("✔ Updated admin wifi configuration"))
-      .catch(() => logger.error("❌ Failed to update admin wifi configuration"))
+      .catch(() => loggerError("❌ Failed to update admin wifi configuration"))
   }
 
   // Things to do on prestart
   public async onPrestart(match: Match<any>) {
     EmsFrcFms.getInstance().stopAp();
-    await this.handleTeamWifiConfig(match.eventKey, match.participants ?? []);
-    SocketSupport.getInstance().apReady();
-    EmsFrcFms.getInstance().startAPLoop();
-    logger.info("✔ Prestarted")
+    const rsp = await this.handleTeamWifiConfig(match.eventKey, match.participants ?? []);
+    if (rsp.length === 0) {
+      SocketSupport.getInstance().apSuccess();
+      EmsFrcFms.getInstance().startAPLoop();
+      logger.info("✔ Prestarted")
+    } else {
+      SocketSupport.getInstance().apFail(rsp);
+      logger.error("❌ Failed to Prestart")
+    }
   }
 
   public kill() {
@@ -103,10 +114,15 @@ export class AccesspointSupport {
     this.sshOpen = false;
   }
 
-  // Setup team wifi confi
-  private async handleTeamWifiConfig(eventKey: string, participants: MatchParticipant[]) {
+  /**
+   * Runs on prestart, attempt to configure field AP for a match
+   * @param eventKey Event key to program for
+   * @param participants Participants to program for
+   * @returns String if error, empty string if successful
+   */
+  private async handleTeamWifiConfig(eventKey: string, participants: MatchParticipant[]): Promise<string> {
     // Check if this feature is enabled
-    if (!this.ap.networkSecurityEnabled) return;
+    if (!this.ap.networkSecurityEnabled) return "";
 
     // Fetch config from radio
     await this.updateTeamWifiStatus();
@@ -114,7 +130,7 @@ export class AccesspointSupport {
     // Check AP config
     if (await this.checkTeamConfig(participants)) {
       logger.info('✔ Current radios correct');
-      return;
+      return "";
     }
 
     // Get WPA Keys and init teamWifiStatuses
@@ -139,8 +155,8 @@ export class AccesspointSupport {
     // Generate Config Command
     const configCommand = this.generateApConfigForMatch(participants);
     if (!configCommand || configCommand.length < 1) {
-      logger.info('❌ Failed to generate a config for the AP');
-      return;
+      loggerError('❌ Failed to generate a config for the AP');
+      return "Failed to generate a config for the AP";
     }
     const fullCommand = `uci batch <<ENDCONFIG && wifi radio0\n${configCommand}\nENDCONFIG\n`;
 
@@ -149,7 +165,7 @@ export class AccesspointSupport {
       let error = false;
       // Run command and wait for response
       await this.runCommand(fullCommand).catch(e => {
-        logger.error('❌ Error configuring wifi: ' + e);
+        loggerError(`❌ Error configuring wifi: ${e}`);
         error = true;
       });
       // Wait before reading the config back on write success as it doesn't take effect right away, or before retrying on failure.
@@ -161,13 +177,16 @@ export class AccesspointSupport {
         // Check again
         if (await this.checkTeamConfig(participants)) {
           logger.info('✔ Successfully configured Wifi after ' + attemptCount + ' attempt(s).');
-          return;
+          return "";
         }
       }
       // There was an error of some kind and the config is not correct
-      logger.error("❌ WiFi configuration still incorrect after " + attemptCount + " attempt(s); trying again.");
+      loggerError(`❌ WiFi configuration still incorrect after ${attemptCount} attempt(s); trying again.`);
+      SocketSupport.getInstance().apMessage(`WiFi configuration still incorrect after ${attemptCount} attempt(s); trying again.`);
       attemptCount++;
     }
+
+    return `❌ Failed to configure wifi after ${attemptCount} attempts.`;
   }
 
   // Returns true if the configured networks as read from the access point match the given teams.

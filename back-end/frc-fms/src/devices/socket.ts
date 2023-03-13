@@ -3,7 +3,7 @@ import { Socket } from "socket.io-client";
 import { SocketOptions, createSocket } from "@toa-lib/client";
 import { getToken } from "../helpers/ems.js";
 import { getIPv4 } from "@toa-lib/server";
-import { DriverstationMonitor, DriverstationStatus, FMSSettings, MatchKey, PrestartStatus } from "@toa-lib/models";
+import { AvaliableHardware, DriverstationMonitor, DriverstationStatus, MatchKey, PrestartState, PrestartStatus } from "@toa-lib/models";
 import { SettingsSupport } from "./settings.js";
 import { EmsFrcFms } from "../server.js";
 
@@ -15,11 +15,9 @@ export class SocketSupport {
   private _socket: Socket | null = null;
 
   private prestartStatus: PrestartStatus = {
-    apReady: false,
-    dsReady: false,
-    switchReady: false,
+    state: PrestartState.NotReady,
     matchKey: { eventKey: "", id: -1, tournamentKey: "" },
-    prestartComplete: false
+    hardware: []
   };
 
   public static getInstance(): SocketSupport {
@@ -60,11 +58,24 @@ export class SocketSupport {
     // Setup Prestart
     this.socket?.on("match:prestart", (matchKey: MatchKey) => {
       this.prestartStatus = {
-        apReady: false,
-        dsReady: false,
-        switchReady: false,
+        hardware: [],
         matchKey: matchKey,
-        prestartComplete: false
+        state: PrestartState.Prestarting
+      }
+
+      // Determine which hardware to add
+      const settings = SettingsSupport.getInstance().settings;
+      if (settings.enableFms) {
+        this.prestartStatus.hardware.push({name: "Driverstation", state: PrestartState.Prestarting, lastLog: ""});
+      }
+      if (settings.enableAdvNet) {
+        this.prestartStatus.hardware.push (
+          {name: "Access Point", state: PrestartState.Prestarting, lastLog: ""},
+          {name: "Field Switch", state: PrestartState.Prestarting, lastLog: ""},
+        );
+      }
+      if (settings.enablePlc) {
+        this.prestartStatus.hardware.push({name: "PLC", state: PrestartState.Prestarting, lastLog: ""});
       }
     });
 
@@ -83,34 +94,71 @@ export class SocketSupport {
     this.socket?.emit("frc-fms:ds-update", payload);
   }
 
-  public switchReady() {
-    this.prestartStatus.switchReady = true;
-    this.sendPrestartStatus();
-  }
-
-  public dsReady() {
-    this.prestartStatus.dsReady = true;
-    this.sendPrestartStatus();
-  }
-
-  public apReady() {
-    this.prestartStatus.apReady = true;
+  public updatePrestartState(name: AvaliableHardware, state: PrestartState, log?: string) {
+    const hwIndex = this.prestartStatus.hardware.findIndex(hw => hw.name === name);
+    // If we found the hardware
+    if (hwIndex > -1) {
+      this.prestartStatus.hardware[hwIndex].state = state;
+      this.prestartStatus.hardware[hwIndex].lastLog = log ?? "";
+    }
+    // Calculate Overall Prestart State
+    this.prestartStatus.state = this.prestartStatus.hardware.reduce((prev, curr) => (curr.state < prev.state ? curr : prev), {state: PrestartState.NotReady}).state;
     this.sendPrestartStatus();
   }
 
   public sendPrestartStatus() {
-    // Set prestart complete if DS is ready, and either AP/Switch are ready or advanced networking is disabled
-    this.prestartStatus.prestartComplete =
-      this.prestartStatus.dsReady &&
-      (
-        !SettingsSupport.getInstance().settings.enableAdvNet ||
-        (this.prestartStatus.apReady && this.prestartStatus.switchReady)
-      );
     this.socket?.emit('frc-fms:prestart-status', this.prestartStatus);
   }
 
   public settingsUpdateSuccess(who: { hwFingerprint: string }) {
     this.socket?.emit("frc-fms:settings-update-success", who);
+  }
+
+  // Methods to make this class easier to access
+  public apSuccess() {
+    this.updatePrestartState("Access Point", PrestartState.Success);
+  }
+
+  public apFail(reason: string) {
+    this.updatePrestartState("Access Point", PrestartState.Fail, reason);
+  }
+
+  public apMessage(reason: string) {
+    const currState = this.prestartStatus.hardware.find(hw => hw.name === "Access Point");
+    if (currState) {
+      this.updatePrestartState("Access Point", currState.state, reason);
+    }
+  }
+
+  public switchSuccess() {
+    this.updatePrestartState("Field Switch", PrestartState.Success);
+  }
+
+  public switchFail(reason: string) {
+    this.updatePrestartState("Field Switch", PrestartState.Fail, reason);
+  }  
+  
+  public switchMessage(reason: string) {
+    const currState = this.prestartStatus.hardware.find(hw => hw.name === "Field Switch");
+    if (currState) {
+      this.updatePrestartState("Field Switch", currState.state, reason);
+    }
+  }
+
+  public dsSuccess() {
+    this.updatePrestartState("Driverstation", PrestartState.Success);
+  }
+
+  public dsFail(reason: string) {
+    this.updatePrestartState("Driverstation", PrestartState.Fail, reason);
+  }
+
+  public plcSuccess() {
+    this.updatePrestartState("PLC", PrestartState.Success);
+  }
+
+  public plcFail(reason: string) {
+    this.updatePrestartState("PLC", PrestartState.Fail, reason);
   }
 
   get socket(): Socket | null {
