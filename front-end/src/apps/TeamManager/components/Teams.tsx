@@ -2,22 +2,28 @@ import { FC, ChangeEvent, useState } from 'react';
 import Box from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import LoadingButton from '@mui/lab/LoadingButton';
-import { useRecoilValue, useRecoilState, useSetRecoilState } from 'recoil';
+import {
+  useRecoilValue,
+  useRecoilState,
+  useSetRecoilState,
+  useRecoilCallback
+} from 'recoil';
 import {
   currentEventSelector,
   currentTeamKeyAtom,
-  teamsByEventAtomFam
+  teamsByEventAtomFam,
+  teamsByEventSelectorFam
 } from 'src/stores/NewRecoil';
 import { useFlags } from 'src/stores/AppFlags';
 import UploadButton from 'src/components/UploadButton/UploadButton';
 import UpgradedTable from 'src/components/UpgradedTable/UpgradedTable';
 import { parseTeamsFile } from '@features/util/FileParser';
 import { Team, defaultTeam } from '@toa-lib/models';
-import { removeFromArray } from 'src/stores/Util';
+import { getDifferences, removeFromArray } from 'src/stores/Util';
 import { useModal } from '@ebay/nice-modal-react';
 import { useSnackbar } from 'src/features/hooks/use-snackbar';
 import TeamRemovalDialog from 'src/components/Dialogs/TeamRemovalDialog';
-import { postTeams } from 'src/api/ApiProvider';
+import { deleteTeam, patchTeam, postTeams } from 'src/api/ApiProvider';
 
 import AddIcon from '@mui/icons-material/Add';
 
@@ -44,17 +50,28 @@ const Teams: FC = () => {
 
   if (!event) return null;
 
-  const handlePost = async () => {
+  const handlePost = useRecoilCallback(({ snapshot }) => async () => {
     try {
+      const prevTeams = await snapshot.getPromise(
+        teamsByEventSelectorFam(event.eventKey)
+      );
+      const diffs = getDifferences(teams, prevTeams, 'teamKey');
       setLoading(true);
-      await postTeams(teams);
+      await Promise.all([
+        postTeams(diffs.additions),
+        diffs.edits.map((e) => patchTeam(e.teamKey, e))
+      ]);
       await setFlags('createdTeams', [...flags.createdTeams, event.eventKey]);
       setLoading(false);
-      showSnackbar('Teams successfully created');
+      showSnackbar(
+        `(${
+          diffs.additions.length + diffs.edits.length
+        }) Teams successfully uploaded`
+      );
     } catch (e) {
       setLoading(false);
     }
-  };
+  });
 
   const handleUpload = async (
     e: ChangeEvent<HTMLInputElement>
@@ -69,7 +86,7 @@ const Teams: FC = () => {
   const handleCreate = () => {
     const { eventKey } = event;
     setTeams((prev) => [
-      { ...defaultTeam, eventKey, teamKey: teams.length },
+      { ...defaultTeam, eventKey, teamKey: teams.length + 1 },
       ...prev
     ]);
   };
@@ -95,25 +112,21 @@ const Teams: FC = () => {
           gap: (theme) => theme.spacing(2)
         }}
       >
-        {!createdTeams && (
-          <LoadingButton
-            loading={loading}
-            variant='contained'
-            disabled={teams.length <= 0}
-            onClick={handlePost}
-          >
-            Upload Teams
-          </LoadingButton>
-        )}
-        {!createdTeams && (
-          <Button
-            variant='contained'
-            sx={{ padding: '6px', minWidth: '24px' }}
-            onClick={handleCreate}
-          >
-            <AddIcon />
-          </Button>
-        )}
+        <LoadingButton
+          loading={loading}
+          variant='contained'
+          disabled={teams.length <= 0}
+          onClick={handlePost}
+        >
+          Upload Teams
+        </LoadingButton>
+        <Button
+          variant='contained'
+          sx={{ padding: '6px', minWidth: '24px' }}
+          onClick={handleCreate}
+        >
+          <AddIcon />
+        </Button>
         {!createdTeams && (
           <UploadButton title='Upload Teams' onUpload={handleUpload} />
         )}
@@ -153,7 +166,7 @@ const Teams: FC = () => {
           ];
         }}
         onModify={handleModify}
-        onDelete={handleDelete}
+        onDelete={!createdTeams ? handleDelete : undefined}
       />
     </>
   );

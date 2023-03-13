@@ -1,6 +1,7 @@
 import { isTeam, isTeamArray } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import {
+  deleteWhere,
   insertValue,
   selectAll,
   selectAllWhere,
@@ -58,6 +59,25 @@ router.patch(
     try {
       await updateWhere('team', req.body, `teamKey = "${req.params.teamKey}"`);
       res.status(200).send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.delete(
+  '/:eventKey/:teamKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventKey, teamKey } = req.params;
+      const data = await deleteWhere(
+        'team',
+        `eventKey = "${eventKey}" AND teamKey = ${teamKey}`
+      );
+      if (!data) {
+        return next(DataNotFoundError);
+      }
+      res.send(data);
     } catch (e) {
       return next(e);
     }

@@ -113,7 +113,12 @@ const frcFmsSelector = selector<FMSSettings[]>({
   key: 'fms',
   get: async () => {
     try {
-      return await clientFetcher<FMSSettings[]>('frc/fms/advancedNetworkingConfig', 'GET', undefined, isFMSSettingsArray);
+      return await clientFetcher<FMSSettings[]>(
+        'frc/fms/advancedNetworkingConfig',
+        'GET',
+        undefined,
+        isFMSSettingsArray
+      );
     } catch (e) {
       console.log(e);
       return [];
@@ -267,7 +272,7 @@ export const eventsAtom = atom<Event[]>({
  * @section TEAM STATE
  * Recoil state management for teams
  */
-const teamsByEventSelectorFam = selectorFamily<Team[], string>({
+export const teamsByEventSelectorFam = selectorFamily<Team[], string>({
   key: 'teamsByEventSelectorFam',
   get: (eventKey: string) => async (): Promise<Team[]> => {
     try {
