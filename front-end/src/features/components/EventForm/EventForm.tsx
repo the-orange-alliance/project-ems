@@ -12,6 +12,7 @@ import { patchEvent, postEvent, setupEventBase } from 'src/api/ApiProvider';
 import { useSnackbar } from '@features/hooks/use-snackbar';
 import { useFlags } from '@stores/AppFlags';
 import { Event } from '@toa-lib/models';
+import { Button, Link } from '@mui/material';
 
 const FormField: FC<{
   name: string;
@@ -90,7 +91,7 @@ const EventForm: FC<Props> = ({ event, onChange, onSubmit, onCancel }) => {
   };
 
   const onReturn = () => {
-    if(typeof onCancel !== 'undefined') onCancel();
+    if (typeof onCancel !== 'undefined') onCancel();
   }
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -225,6 +226,18 @@ const EventForm: FC<Props> = ({ event, onChange, onSubmit, onCancel }) => {
           >
             {createdEvent ? 'Modify Event' : 'Create Event'}
           </LoadingButton>
+          {createdEvent && (
+            <Link href={`/${event.eventKey}`}>
+              <Button
+                variant='contained'
+                onClick={onCancel}
+                sx={{ float: 'right', mr: 1 }}
+              >
+                Cancel
+              </Button>
+            </Link>
+          )
+          }
         </Grid>
         {error.length > 0 && (
           <Grid item xs={12}>
