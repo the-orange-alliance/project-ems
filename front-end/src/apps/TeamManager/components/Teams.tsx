@@ -1,7 +1,5 @@
 import { FC, ChangeEvent, useState } from 'react';
 import Box from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import LoadingButton from '@mui/lab/LoadingButton';
 import {
   useRecoilValue,
   useRecoilState,
@@ -24,9 +22,7 @@ import { useModal } from '@ebay/nice-modal-react';
 import { useSnackbar } from 'src/features/hooks/use-snackbar';
 import TeamRemovalDialog from 'src/components/Dialogs/TeamRemovalDialog';
 import { deleteTeam, patchTeam, postTeams } from 'src/api/ApiProvider';
-import AddIcon from '@mui/icons-material/Add';
-import SaveIcon from '@mui/icons-material/Save';
-import UploadIcon from '@mui/icons-material/Upload';
+import {Save, Upload, ExpandLess} from '@mui/icons-material';
 import { SpeedDial, SpeedDialAction, SpeedDialIcon } from '@mui/material';
 import ViewReturn from 'src/components/ViewReturn/ViewReturn';
 
@@ -116,24 +112,21 @@ const Teams: FC = () => {
           gap: (theme) => theme.spacing(2)
         }}
       >
-        {!createdTeams && (
-          <UploadButton title='Upload Teams' onUpload={handleUpload} />
-        )}
         <SpeedDial
           sx={{ position: 'fixed', bottom: 16, right: 16 }}
-          icon={<SpeedDialIcon />}
+          icon={<ExpandLess />}
           ariaLabel={'add event'}
         >
           <SpeedDialAction tooltipTitle={"Add Blank Team"} onClick={handleCreate} icon={<SpeedDialIcon />} />
           {!createdTeams && (
             <SpeedDialAction
               tooltipTitle={"Add Teams from File"}
-              icon={(<><UploadIcon /><input type="file" hidden onChange={handleUpload} /></>)}
+              icon={(<><Upload /><input type="file" hidden onChange={handleUpload} /></>)}
               // @ts-ignore - I don't know why this is complaining
               FabProps={{ component: "label" }}
             />
           )}
-          <SpeedDialAction tooltipTitle={"Save Teams"} onClick={handlePost} icon={<SaveIcon />} />
+          <SpeedDialAction tooltipTitle={"Save Teams"} onClick={handlePost} icon={<Save />} />
         </SpeedDial>
       </Box>
       <UpgradedTable

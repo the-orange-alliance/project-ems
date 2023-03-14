@@ -8,7 +8,8 @@ import { Event, EventTypes } from '@toa-lib/models';
 import UpgradedTable from 'src/components/UpgradedTable/UpgradedTable';
 import { DateTime } from 'luxon';
 import { useNavigate } from 'react-router-dom';
-import { SpeedDial, SpeedDialIcon, Tooltip } from '@mui/material';
+import { Fab, Tooltip } from '@mui/material';
+import Add from '@mui/icons-material/Add';
 
 interface Props {
   onCreateDefault: () => void;
@@ -35,12 +36,13 @@ const Events: FC<Props> = ({ onCreateDefault }) => {
           </Typography>
         )}
         <Tooltip title="Create Event">
-          <SpeedDial
+          <Fab
             sx={{ position: 'absolute', bottom: 16, right: 16 }}
-            icon={<SpeedDialIcon />}
-            ariaLabel={'add event'}
             onClick={createEvent}
-          />
+            color="primary"
+          >
+            <Add />
+          </Fab>
         </Tooltip>
       </Box>
       {events.length > 0 && (

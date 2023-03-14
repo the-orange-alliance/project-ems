@@ -5,19 +5,60 @@ service timestamps debug datetime msec
 service timestamps log datetime msec
 no service password-encryption
 !
-hostname EMSSwitch
+hostname FieldSwitch
 !
 boot-start-marker
 boot-end-marker
 !
 enable secret 5 $1$kKSW$fCMwnMdYvXui1TulfyYHN/
 !
+username cisco privilege 15 view cisco secret 5 $1$yBZn$Z1Ag59g3Lb9UrlPIPylgf/
 !
 !
 no aaa new-model
 system mtu routing 1500
 ip routing
+ip domain-name ketteringfirst.com
 ip dhcp excluded-address 10.0.100.1 10.0.100.150
+!
+ip dhcp pool dhcppool
+   network 10.0.100.0 255.255.255.0
+   domain-name ketteringfirst.com
+   dns-server 8.8.8.8 8.8.4.4
+   lease 7
+!
+ip dhcp pool dhcp10
+   network 10.1.67.0 255.255.255.0
+   default-router 10.1.67.61
+   lease 7
+!
+ip dhcp pool dhcp20
+   network 10.0.53.0 255.255.255.0
+   default-router 10.0.53.61
+   lease 7
+!
+ip dhcp pool dhcp30
+   network 10.0.17.0 255.255.255.0
+   default-router 10.0.17.61
+   lease 7
+!
+ip dhcp pool dhcp40
+   network 10.19.19.0 255.255.255.0
+   default-router 10.19.19.61
+   lease 7
+!
+ip dhcp pool dhcp50
+   network 10.0.3.0 255.255.255.0
+   default-router 10.0.3.61
+   lease 7
+!
+ip dhcp pool dhcp60
+   network 10.1.63.0 255.255.255.0
+   default-router 10.1.63.61
+   lease 7
+!
+!
+!
 !
 !
 !
@@ -29,6 +70,7 @@ spanning-tree extend system-id
 !
 vlan internal allocation policy ascending
 !
+ip ssh version 2
 !
 !
 !
@@ -240,27 +282,27 @@ interface Vlan1
  ip address 10.0.0.61 255.255.255.0
 !
 interface Vlan10
- ip address 10.15.17.61 255.255.255.0
+ ip address 10.0.10.61 255.255.255.0
  ip access-group 110 in
 !
 interface Vlan20
- ip address 10.15.7.61 255.255.255.0
+ ip address 10.0.20.61 255.255.255.0
  ip access-group 120 in
 !
 interface Vlan30
- ip address 10.15.8.61 255.255.255.0
+ ip address 10.0.30.61 255.255.255.0
  ip access-group 130 in
 !
 interface Vlan40
- ip address 10.0.3.61 255.255.255.0
+ ip address 10.0.40.61 255.255.255.0
  ip access-group 140 in
 !
 interface Vlan50
- ip address 10.15.10.61 255.255.255.0
+ ip address 10.0.50.61 255.255.255.0
  ip access-group 150 in
 !
 interface Vlan60
- ip address 10.15.11.61 255.255.255.0
+ ip address 10.1.60.61 255.255.255.0
  ip access-group 160 in
 !
 interface Vlan100
@@ -272,17 +314,17 @@ no ip http secure-server
 !
 !
 ip sla enable reaction-alerts
-access-list 110 permit ip 10.0.1.0 0.0.0.255 host 10.0.100.5
+access-list 110 permit ip 10.0.10.0 0.0.0.255 host 10.0.100.5
 access-list 110 permit udp any eq bootpc any eq bootps
-access-list 120 permit ip 10.0.2.0 0.0.0.255 host 10.0.100.5
+access-list 120 permit ip 10.0.20.0 0.0.0.255 host 10.0.100.5
 access-list 120 permit udp any eq bootpc any eq bootps
-access-list 130 permit ip 10.0.3.0 0.0.0.255 host 10.0.100.5
+access-list 130 permit ip 10.0.30.0 0.0.0.255 host 10.0.100.5
 access-list 130 permit udp any eq bootpc any eq bootps
-access-list 140 permit ip 10.0.4.0 0.0.0.255 host 10.0.100.5
+access-list 140 permit ip 10.0.40.0 0.0.0.255 host 10.0.100.5
 access-list 140 permit udp any eq bootpc any eq bootps
-access-list 150 permit ip 10.0.5.0 0.0.0.255 host 10.0.100.5
+access-list 150 permit ip 10.0.50.0 0.0.0.255 host 10.0.100.5
 access-list 150 permit udp any eq bootpc any eq bootps
-access-list 160 permit ip 10.0.6.0 0.0.0.255 host 10.0.100.5
+access-list 160 permit ip 10.1.60.0 0.0.0.255 host 10.0.100.5
 access-list 160 permit udp any eq bootpc any eq bootps
 !
 snmp-server community 1234Five RO
@@ -292,9 +334,9 @@ line con 0
  exec-timeout 0 0
 line vty 0 4
  password 1234Five
- login
+ login local
+ transport input ssh
 line vty 5 15
  password 1234Five
  login
 !
-end
