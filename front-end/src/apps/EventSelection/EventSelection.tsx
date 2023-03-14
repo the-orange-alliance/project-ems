@@ -39,6 +39,7 @@ const EventSelection: FC = () => {
             event={newEvent}
             onChange={setNewEvent}
             onSubmit={handleSubmitEvent}
+            onCancel={() => setCreatingEvent(false)}
           />
         )}
       </Box>

@@ -42,9 +42,10 @@ interface Props {
   event: Event | null;
   onChange: (event: Event) => void;
   onSubmit?: (event: Event) => void;
+  onCancel?: () => void;
 }
 
-const EventForm: FC<Props> = ({ event, onChange, onSubmit }) => {
+const EventForm: FC<Props> = ({ event, onChange, onSubmit, onCancel }) => {
   // Local State
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -58,6 +59,7 @@ const EventForm: FC<Props> = ({ event, onChange, onSubmit }) => {
 
   if (!event) return null;
 
+  // TODO: Input Validation
   const createEvent = async () => {
     try {
       setLoading(true);
@@ -88,8 +90,8 @@ const EventForm: FC<Props> = ({ event, onChange, onSubmit }) => {
   };
 
   const onReturn = () => {
-    // TODO?
-  };
+    if(typeof onCancel !== 'undefined') onCancel();
+  }
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { type, name, value } = e.target;
@@ -219,6 +221,7 @@ const EventForm: FC<Props> = ({ event, onChange, onSubmit }) => {
             loading={loading}
             variant='contained'
             onClick={createdEvent ? modifyEvent : createEvent}
+            sx={{ float: 'right' }}
           >
             {createdEvent ? 'Modify Event' : 'Create Event'}
           </LoadingButton>
