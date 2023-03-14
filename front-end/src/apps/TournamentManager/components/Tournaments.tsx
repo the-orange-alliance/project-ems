@@ -24,6 +24,8 @@ import { useSnackbar } from 'src/features/hooks/use-snackbar';
 import { useFlags } from 'src/stores/AppFlags';
 
 import AddIcon from '@mui/icons-material/Add';
+import SaveAddUploadLoadingFab from 'src/features/components/SaveAddUploadLoadingFab';
+import ViewReturn from 'src/components/ViewReturn/ViewReturn';
 
 const Tournaments: FC = () => {
   // Recoil State
@@ -67,8 +69,7 @@ const Tournaments: FC = () => {
       ]);
       setLoading(false);
       showSnackbar(
-        `(${
-          diffs.additions.length + diffs.edits.length
+        `(${diffs.additions.length + diffs.edits.length
         }) Tournaments successfully created`
       );
     } catch (e) {
@@ -103,30 +104,16 @@ const Tournaments: FC = () => {
 
   return (
     <>
-      <Box
-        sx={{
-          marginBottom: (theme) => theme.spacing(3),
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: (theme) => theme.spacing(2)
-        }}
-      >
-        <LoadingButton
-          loading={loading}
-          variant='contained'
-          disabled={tournaments.length <= 0}
-          onClick={handlePost}
-        >
-          Upload Tournaments
-        </LoadingButton>
-        <Button
-          variant='contained'
-          sx={{ padding: '6px', minWidth: '24px' }}
-          onClick={handleCreate}
-        >
-          <AddIcon />
-        </Button>
-      </Box>
+      <ViewReturn title='Event' onClick={() => { }} href={`/${event.eventKey}`} sx={{mb: 1}} />
+      <SaveAddUploadLoadingFab
+        loading={loading}
+        onAdd={handleCreate}
+        onSave={handlePost}
+        canAdd
+        canSave
+        addTooltip='Add Tournament'
+        saveTooltip='Save Tournaments'
+      />
       <UpgradedTable
         data={tournaments}
         headers={['Event', 'Tournament ID', 'Name', 'Tournament', 'Fields']}

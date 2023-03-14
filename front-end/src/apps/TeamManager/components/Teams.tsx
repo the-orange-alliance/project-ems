@@ -1,5 +1,4 @@
 import { FC, ChangeEvent, useState } from 'react';
-import Box from '@mui/material/Typography';
 import {
   useRecoilValue,
   useRecoilState,
@@ -13,7 +12,6 @@ import {
   teamsByEventSelectorFam
 } from 'src/stores/NewRecoil';
 import { useFlags } from 'src/stores/AppFlags';
-import UploadButton from 'src/components/UploadButton/UploadButton';
 import UpgradedTable from 'src/components/UpgradedTable/UpgradedTable';
 import { parseTeamsFile } from '@features/util/FileParser';
 import { Team, defaultTeam } from '@toa-lib/models';
@@ -21,10 +19,9 @@ import { getDifferences, removeFromArray } from 'src/stores/Util';
 import { useModal } from '@ebay/nice-modal-react';
 import { useSnackbar } from 'src/features/hooks/use-snackbar';
 import TeamRemovalDialog from 'src/components/Dialogs/TeamRemovalDialog';
-import { deleteTeam, patchTeam, postTeams } from 'src/api/ApiProvider';
-import {Save, Upload, ExpandLess} from '@mui/icons-material';
-import { SpeedDial, SpeedDialAction, SpeedDialIcon } from '@mui/material';
+import { patchTeam, postTeams } from 'src/api/ApiProvider';
 import ViewReturn from 'src/components/ViewReturn/ViewReturn';
+import SaveAddUploadLoadingFab from 'src/features/components/SaveAddUploadLoadingFab';
 
 const Teams: FC = () => {
   // Recoil State
@@ -103,32 +100,19 @@ const Teams: FC = () => {
 
   return (
     <>
-      <ViewReturn title='Event' onClick={() => { }} href={`/${event.eventKey}`} />
-      <Box
-        sx={{
-          marginBottom: (theme) => theme.spacing(3),
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: (theme) => theme.spacing(2)
-        }}
-      >
-        <SpeedDial
-          sx={{ position: 'fixed', bottom: 16, right: 16 }}
-          icon={<ExpandLess />}
-          ariaLabel={'add event'}
-        >
-          <SpeedDialAction tooltipTitle={"Add Blank Team"} onClick={handleCreate} icon={<SpeedDialIcon />} />
-          {!createdTeams && (
-            <SpeedDialAction
-              tooltipTitle={"Add Teams from File"}
-              icon={(<><Upload /><input type="file" hidden onChange={handleUpload} /></>)}
-              // @ts-ignore - I don't know why this is complaining
-              FabProps={{ component: "label" }}
-            />
-          )}
-          <SpeedDialAction tooltipTitle={"Save Teams"} onClick={handlePost} icon={<Save />} />
-        </SpeedDial>
-      </Box>
+      <ViewReturn title='Event' onClick={() => { }} href={`/${event.eventKey}`} sx={{mb: 1}} />
+      <SaveAddUploadLoadingFab
+        onSave={handlePost}
+        onAdd={handleCreate}
+        onUpload={handleUpload}
+        loading={loading}
+        canAdd
+        canUpload={!createdTeams}
+        canSave
+        addTooltip='Add Empty Team'
+        uploadTooltip='Upload Teams from File'
+        saveTooltip='Save Teams'
+      />
       <UpgradedTable
         data={teams}
         headers={[

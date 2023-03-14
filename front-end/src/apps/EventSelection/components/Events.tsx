@@ -1,7 +1,6 @@
 import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { eventsAtom } from 'src/stores/NewRecoil';
 import { Event, EventTypes } from '@toa-lib/models';
