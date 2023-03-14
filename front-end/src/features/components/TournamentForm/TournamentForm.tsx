@@ -79,7 +79,7 @@ const TournamentForm: FC<Props> = ({ onSubmit }) => {
 
   return (
     <>
-      <ViewReturn title='Teams' onClick={onReturn} />
+      <ViewReturn title='Tournaments' onClick={onReturn} sx={{mb: 1}} />
       <Grid container spacing={3}>
         <FormField
           name='tournamentKey'
