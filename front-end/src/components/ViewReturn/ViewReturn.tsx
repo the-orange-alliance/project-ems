@@ -6,11 +6,12 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 interface Props {
   title: string;
   onClick: () => void;
+  href?: string;
 }
 
-const ViewReturn: FC<Props> = ({ title, onClick }) => {
+const ViewReturn: FC<Props> = ({ title, onClick, href }) => {
   return (
-    <Button onClick={onClick}>
+    <Button onClick={onClick} href={href} >
       <ArrowBackIcon />
       &nbsp;
       <Typography>{title}</Typography>

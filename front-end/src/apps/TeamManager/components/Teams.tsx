@@ -24,8 +24,11 @@ import { useModal } from '@ebay/nice-modal-react';
 import { useSnackbar } from 'src/features/hooks/use-snackbar';
 import TeamRemovalDialog from 'src/components/Dialogs/TeamRemovalDialog';
 import { deleteTeam, patchTeam, postTeams } from 'src/api/ApiProvider';
-
 import AddIcon from '@mui/icons-material/Add';
+import SaveIcon from '@mui/icons-material/Save';
+import UploadIcon from '@mui/icons-material/Upload';
+import { SpeedDial, SpeedDialAction, SpeedDialIcon } from '@mui/material';
+import ViewReturn from 'src/components/ViewReturn/ViewReturn';
 
 const Teams: FC = () => {
   // Recoil State
@@ -64,8 +67,7 @@ const Teams: FC = () => {
       await setFlags('createdTeams', [...flags.createdTeams, event.eventKey]);
       setLoading(false);
       showSnackbar(
-        `(${
-          diffs.additions.length + diffs.edits.length
+        `(${diffs.additions.length + diffs.edits.length
         }) Teams successfully uploaded`
       );
     } catch (e) {
@@ -77,6 +79,7 @@ const Teams: FC = () => {
     e: ChangeEvent<HTMLInputElement>
   ): Promise<void> => {
     const { files } = e.target;
+    console.log("here", files)
     if (!files || files.length <= 0 || !event) return;
     e.preventDefault();
     const teams = await parseTeamsFile(files[0], event.eventKey);
@@ -104,6 +107,7 @@ const Teams: FC = () => {
 
   return (
     <>
+      <ViewReturn title='Event' onClick={() => { }} href={`/${event.eventKey}`} />
       <Box
         sx={{
           marginBottom: (theme) => theme.spacing(3),
@@ -112,24 +116,25 @@ const Teams: FC = () => {
           gap: (theme) => theme.spacing(2)
         }}
       >
-        <LoadingButton
-          loading={loading}
-          variant='contained'
-          disabled={teams.length <= 0}
-          onClick={handlePost}
-        >
-          Upload Teams
-        </LoadingButton>
-        <Button
-          variant='contained'
-          sx={{ padding: '6px', minWidth: '24px' }}
-          onClick={handleCreate}
-        >
-          <AddIcon />
-        </Button>
         {!createdTeams && (
           <UploadButton title='Upload Teams' onUpload={handleUpload} />
         )}
+        <SpeedDial
+          sx={{ position: 'fixed', bottom: 16, right: 16 }}
+          icon={<SpeedDialIcon />}
+          ariaLabel={'add event'}
+        >
+          <SpeedDialAction tooltipTitle={"Add Blank Team"} onClick={handleCreate} icon={<SpeedDialIcon />} />
+          {!createdTeams && (
+            <SpeedDialAction
+              tooltipTitle={"Add Teams from File"}
+              icon={(<><UploadIcon /><input type="file" hidden onChange={handleUpload} /></>)}
+              // @ts-ignore - I don't know why this is complaining
+              FabProps={{ component: "label" }}
+            />
+          )}
+          <SpeedDialAction tooltipTitle={"Save Teams"} onClick={handlePost} icon={<SaveIcon />} />
+        </SpeedDial>
       </Box>
       <UpgradedTable
         data={teams}
