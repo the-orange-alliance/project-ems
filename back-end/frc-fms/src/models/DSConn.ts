@@ -1,4 +1,4 @@
-import { APStatus, DriverstationStatus } from "@toa-lib/models";
+import { APStatus, DriverstationStatus, DSStatus, FMSStatus, RobotStatus } from "@toa-lib/models";
 import * as dgram from "dgram";
 import * as net from "net";
 import { SettingsSupport } from "../devices/settings.js";
@@ -7,55 +7,78 @@ import { convertEMSStationToFMS } from "../helpers/generic.js";
 export default class DSConn {
     public teamId: number;
     public allianceStation: number;
-    public auto: boolean;
-    public enabled: boolean;
-    public estop: boolean;
-    public bypassed: boolean;
-    public dsLinked: boolean;
-    public radioLinked: boolean;
-    public apStatus: APStatus;
-    public robotLinked: boolean;
-    public batteryVoltage: number;
-    public dsRobotTripTimeMs: number;
-    public missedPacketCount: number;
-    public secondsSinceLastRobotLink: number;
-    public lastPacketTime: number; // date
-    public lastRobotLinkedTime: number; // date
-    public packetCount: number;
-    public ipAddress: string;
-    public missedPacketOffset: number;
-    public recievedFirstPacket: boolean;
     public tcpConn: net.Socket;
     public udpConn: dgram.Socket;
+    // These are statuses that are extrapolated from the field AP
+    public apStatus: APStatus;
+    // Statuses that FMS sends to the DS
+    public fmsStatus: FMSStatus;
+    // Statuses that the DS sends to FMS
+    public robotStatus: RobotStatus;
+    // Other DS Statuses
+    public dsStatus: DSStatus;
     // TODO Add Logging functionality
 
     constructor() {
         this.teamId = -1;
         this.allianceStation = -1;
-        this.auto = false;
-        this.enabled = false;
-        this.bypassed = false;
-        this.estop = false;
-        this.dsLinked = false;
-        this.radioLinked = false;
-        this.robotLinked = false;
-        this.batteryVoltage = 0;
-        this.dsRobotTripTimeMs = 0;
-        this.missedPacketCount = 0;
-        this.secondsSinceLastRobotLink = 0;
-        this.lastPacketTime = 0;
-        this.lastRobotLinkedTime = 0;
-        this.packetCount = 0;
-        this.ipAddress = '';
-        this.missedPacketOffset = 0;
-        this.recievedFirstPacket = false;
+        this.tcpConn = new net.Socket();
+        this.udpConn = dgram.createSocket("udp4");
         this.apStatus = {
             linked: false,
             quality: ['unknown', '70'],
             signal: 'unknown'
         }
-        this.tcpConn = new net.Socket();
-        this.udpConn = dgram.createSocket("udp4");
+        this.robotStatus = {
+            enabled: false,
+            mode: 0,
+            estop: false,
+            radioPing: false,
+            rioPing: false,
+            lastLinkedTime: 0,
+            commsActive: false,
+            batteryVoltage: 0,
+            tripTimeMs: 0,
+            brownout: false,
+            bandwidth: 0,
+            additionalData: {
+                dsTele: false,
+                dsAuto: false,
+                dsDisable: false,
+                robotTele: false,
+                robotAuto: false,
+                robotDisable: false,
+                watchdog: false,
+            },
+            versionData: {
+                canJag: 'unknown',
+                canTalon: 'unknown',
+                ds: 'unknown',
+                pdp: 'unknown',
+                pcm: 'unknown',
+                rio: 'unknown',
+                wpilib: 'unknown',
+                thirdParty: 'unknown',
+                usageReport: 'unknown'
+            }
+        }
+        this.fmsStatus = {
+            bypassed: false,
+            auto: true,
+            enabled: false,
+            estop: false
+        }
+        this.dsStatus = {
+            linked: false,
+            missedPacketCount: 0,
+            lastPacketTime: 0,
+            packetCount: 0,
+            ipAddress: '',
+            missedPacketOffset: 0,
+            computerBatteryPercent: 0,
+            computerCpuPercent: 0,
+            lastLog: ""
+        }
     }
 
     toJson(): DriverstationStatus {
@@ -68,22 +91,9 @@ export default class DSConn {
                 quality: this.apStatus?.quality ?? ['unknown', '70'],
                 signal: this.apStatus?.signal ?? 'unknown',
             },
-            enabled: this.enabled,
-            bypassed: this.bypassed,
-            auto: this.auto,
-            estop: this.estop,
-            dsLinked: this.dsLinked,
-            radioLinked: this.radioLinked,
-            robotLinked: this.robotLinked,
-            batteryVoltage: this.batteryVoltage,
-            robotTripTimeMs: this.dsRobotTripTimeMs,
-            missedPacketCount: this.missedPacketCount,
-            secSinceLastRobotLink: this.secondsSinceLastRobotLink,
-            lastPacketTime: this.lastPacketTime,
-            lastRobotLinkedTime: this.lastRobotLinkedTime,
-            packetCount: this.packetCount,
-            ipAddress: this.ipAddress,
-            missedPacketOffset: this.missedPacketOffset
+            robotStatus: this.robotStatus,
+            fmsStatus: this.fmsStatus,
+            dsStatus: this.dsStatus
         };
     }
 

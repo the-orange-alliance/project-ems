@@ -31,6 +31,12 @@ export default class PlcOutputCoils {
   private _blueOneBypass: boolean;
   private _blueTwoBypass: boolean;
   private _blueThreeBypass: boolean;
+  public redOneSoftwareEstop: boolean;
+  public redTwoSoftwareEstop: boolean;
+  public redThreeSoftwareEstop: boolean;
+  public blueOneSoftwareEstop: boolean;
+  public blueTwoSoftwareEstop: boolean;
+  public blueThreeSoftwareEstop: boolean;
   public coilCount: number;
 
   constructor() {
@@ -66,7 +72,13 @@ export default class PlcOutputCoils {
     this._blueOneBypass = false;
     this._blueTwoBypass = false;
     this._blueThreeBypass = false;
-    this.coilCount = 32;
+    this.redOneSoftwareEstop = false;
+    this.redTwoSoftwareEstop = false;
+    this.redThreeSoftwareEstop = false;
+    this.blueOneSoftwareEstop = false;
+    this.blueTwoSoftwareEstop = false;
+    this.blueThreeSoftwareEstop = false;
+    this.coilCount = 38;
   }
 
   public getCoilArray(): boolean[] {
@@ -103,6 +115,12 @@ export default class PlcOutputCoils {
     allCoils.push(this._blueOneBypass);
     allCoils.push(this._blueTwoBypass);
     allCoils.push(this._blueThreeBypass);
+    allCoils.push(this.redOneSoftwareEstop);
+    allCoils.push(this.redTwoSoftwareEstop);
+    allCoils.push(this.redThreeSoftwareEstop);
+    allCoils.push(this.blueOneSoftwareEstop);
+    allCoils.push(this.blueTwoSoftwareEstop);
+    allCoils.push(this.blueThreeSoftwareEstop);
     return allCoils;
   }
 
@@ -139,6 +157,12 @@ export default class PlcOutputCoils {
    this._blueOneBypass = coils[29];
    this._blueTwoBypass = coils[30];
    this._blueThreeBypass = coils[31];
+   this.redOneSoftwareEstop = coils[32];
+   this.redTwoSoftwareEstop = coils[33];
+   this.redThreeSoftwareEstop = coils[34];
+   this.blueOneSoftwareEstop = coils[35];
+   this.blueTwoSoftwareEstop = coils[36];
+   this.blueThreeSoftwareEstop = coils[37];
    return this;
   }
 
@@ -173,7 +197,13 @@ export default class PlcOutputCoils {
       this.redThreeBypass === compare.redThreeBypass &&
       this.blueOneBypass === compare.blueOneBypass &&
       this.blueTwoBypass === compare.blueTwoBypass &&
-      this.blueThreeBypass === compare.blueThreeBypass);
+      this.blueThreeBypass === compare.blueThreeBypass &&
+      this.redOneSoftwareEstop === compare.redOneSoftwareEstop &&
+      this.redTwoSoftwareEstop === compare.redTwoSoftwareEstop &&
+      this.redThreeSoftwareEstop === compare.redThreeSoftwareEstop &&
+      this.blueOneSoftwareEstop === compare.blueOneSoftwareEstop &&
+      this.blueTwoSoftwareEstop === compare.blueTwoSoftwareEstop &&
+      this.blueThreeSoftwareEstop === compare.blueThreeSoftwareEstop);
   }
 
   get stackLightGreen(): StackLight {

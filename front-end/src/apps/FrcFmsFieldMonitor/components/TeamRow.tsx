@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Box, Grid, Typography } from '@mui/material';
+import { Box, Grid, Tooltip, Typography } from '@mui/material';
 import { DriverstationStatus } from '@toa-lib/models';
 import { SignalWifiOff, SignalWifi4Bar, SignalWifi3Bar, SignalWifi2Bar, SignalWifi1Bar, SignalWifi0Bar } from '@mui/icons-material'
 
@@ -10,6 +10,10 @@ interface IProps {
 const TeamRow: FC<IProps> = ({ ds }: IProps) => {
 
   const friendlyStation = ds.allianceStation < 20 ? `R${ds.allianceStation - 10}` : `B${ds.allianceStation - 20}`
+  const dsTextSplit = ds.robotStatus.versionData.ds.split(">");
+  const rioTextSplit = ds.robotStatus.versionData.rio.split(">");
+  const dsText = (dsTextSplit.length > 1 ? dsTextSplit[1] : ``);
+  const rioText = (rioTextSplit.length > 1 ? rioTextSplit[1].substring(12) : ``);
 
 
   return (
@@ -23,28 +27,37 @@ const TeamRow: FC<IProps> = ({ ds }: IProps) => {
         <Grid item xs={1} sx={{ fontSize: "30px" }}>{ds.teamKey}</Grid>
 
         {/* Driverstation */}
-        <Grid item xs={1}><Status status={ds.dsLinked} /></Grid>
+        <Grid item xs={1}>
+          <Status
+            status={ds.dsStatus.linked}
+            optionalText={dsText}
+            textSize="18px"
+            title={ds.dsStatus.lastLog.split("<message>")[1]}
+          />
+        </Grid>
 
         {/* Bandwidth Usage */}
         <Grid item xs={1}>Future</Grid>
 
         {/* Radio */}
-        <Grid item xs={1}><Status status={ds.radioLinked} /></Grid>
+        <Grid item xs={1}><Status status={ds.apStatus.linked} /></Grid>
 
         {/* Rio */}
-        <Grid item xs={1} alignContent={"center"}><Status status={ds.robotLinked} /></Grid>
+        <Grid item xs={1} alignContent={"center"}>
+          <Status status={ds.robotStatus.rioPing && ds.robotStatus.commsActive} optionalText={rioText} textSize={"18px"} />
+        </Grid>
 
         {/* Battery */}
-        <Grid item xs={1}>{ds.batteryVoltage.toFixed(2)}</Grid>
+        <Grid item xs={1}>{ds.robotStatus.batteryVoltage.toFixed(2)}</Grid>
 
         {/* Status */}
-        <Grid item xs={1} alignContent={"center"}><Status status={ds.enabled} optionalText={ds.auto ? "A" : "T"} estop={ds.estop} /></Grid>
+        <Grid item xs={1} alignContent={"center"}><Status status={ds.robotStatus.enabled} optionalText={ds.robotStatus.mode === 0 ? "T" : "A"} estop={ds.robotStatus.estop} /></Grid>
 
         {/* Trip Time */}
-        <Grid item xs={1}>{ds.robotTripTimeMs}</Grid>
+        <Grid item xs={1}>{ds.robotStatus.tripTimeMs}</Grid>
 
         {/* Missed Packets */}
-        <Grid item xs={1}>{ds.missedPacketCount}</Grid>
+        <Grid item xs={1}>{ds.dsStatus.missedPacketCount - ds.dsStatus.missedPacketOffset}</Grid>
 
         {/* Radio Quality */}
         <Grid item xs={1}>{ds.apStatus.quality[0]}/{ds.apStatus.quality[1]}</Grid>
@@ -56,7 +69,7 @@ const TeamRow: FC<IProps> = ({ ds }: IProps) => {
   );
 };
 
-const Status = ({ status, optionalText, estop }: { status: boolean, optionalText?: string, estop?: boolean }) => {
+const Status = ({ status, optionalText, estop, textSize, title }: { status: boolean, optionalText?: string, estop?: boolean, textSize?: string, title?: string }) => {
   if (estop) return (
     <Box
       sx={{
@@ -88,19 +101,22 @@ const Status = ({ status, optionalText, estop }: { status: boolean, optionalText
 
   // Otherwise show normal status
   return (
-    <Box
-      sx={{
-        backgroundColor: status ? "green" : "red",
-        width: "75px", height: "75px",
-        borderRadius: status ? "50px" : null,
-        border: "3px solid black",
-        fontSize: "50px",
-        textAlign: "center",
-        mx: "auto"
-      }}
-    >
-      {optionalText}
-    </Box>
+    <Tooltip title={title}>
+      <Box
+        sx={{
+          backgroundColor: status ? "green" : "red",
+          width: "75px", height: "75px",
+          borderRadius: status ? "50px" : null,
+          border: "3px solid black",
+          fontSize: textSize ?? "50px",
+          textAlign: "center",
+          mx: "auto",
+          wordBreak: 'break-all'
+        }}
+      >
+        {optionalText}
+      </Box>
+    </Tooltip>
   )
 }
 

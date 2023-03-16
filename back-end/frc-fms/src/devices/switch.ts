@@ -53,7 +53,7 @@ export class SwitchSupport {
 
   private async configTeamEthernet(participants: MatchParticipant[]): Promise<string> {
     const oldConfig = await this.getTeamVlans();
-    logger.info(`ℹ Currently configured VLANS: ${oldConfig.join(' | ')}`);
+    logger.info(`ℹ Currently configured VLANS: ${oldConfig.map(t => t.team).join(' | ')}`);
     let commands = [];
     let vlans = [this.red1Vlan, this.red2Vlan, this.red3Vlan, this.blue1Vlan, this.blue2Vlan, this.blue3Vlan];
 
@@ -116,7 +116,7 @@ export class SwitchSupport {
       return this.getTeamVlans();
     }).then((newConf) => {
       // TODO: Use this info to ensure that switch config is correct
-      logger.info(`ℹ Newly configured VLANS: ${newConf.join(' | ')}`);
+      logger.info(`ℹ Newly configured VLANS: ${newConf.map(t => t.team).join(' | ')}`);
       return "";
     }).catch(error => {
       return `❌ Failed to update field switch (${this.switch.address}) configuration: ${error}`;

@@ -113,6 +113,11 @@ export class DriverstationSupport {
   }
 
   // Parse a UDP packet from the Driver Station
+  // Important bytes:
+  // 3 - "Status" byte, see below
+  // 4/5 - Team Number
+  // 6/7 - Battery Voltage
+  // 8+ - "Tag", see below
   // see https://frcture.readthedocs.io/en/latest/driverstation/ds_to_fms.html#status
   private parseUDPPacket(data: Buffer, remote: any) {
     // Parse team number from packet
@@ -124,22 +129,54 @@ export class DriverstationSupport {
       const fmsStation = this.allDriverStations.findIndex(ds => ds.teamId === teamNum);
       // If we found driverstation, update its data
       if (fmsStation > -1) {
-        PlcSupport.getInstance().setStationStack(fmsStation, RobotStatus.Connected);
+        // For debugging
+        // console.log(`UDP Packet: team ${teamNum}, status: ${data[3]}, tag size: ${data[8]} tag type: ${data[9]}: ${data.subarray(10).join(", ")}`)
         // Mark as connected
-        this.allDriverStations[fmsStation].dsLinked = true;
+        this.allDriverStations[fmsStation].dsStatus.linked = true;
         // Update last packet time
-        this.allDriverStations[fmsStation].lastPacketTime = Date.now();
-        // Check if Radio is Linked
-        this.allDriverStations[fmsStation].radioLinked = (data[3] & 0x10) !== 0;
-        // Check if Robot is Linked
-        this.allDriverStations[fmsStation].robotLinked = (data[3] & 0x20) !== 0;
+        this.allDriverStations[fmsStation].dsStatus.lastPacketTime = Date.now();
+        // Byte 3 of packet is the status byte, each bit representing something different
+        // [Estop, <Reserved>, Comms, Radio Ping, Rio Ping, Enabled, Mode[1], Mode[0]]
+        // Check if Software ESTOP is set (Bit 7)
+        this.allDriverStations[fmsStation].robotStatus.estop = ((data[3] >> 7) & 0x1) !== 0;
+        // Chec if Robot Comms are active (Bit 5)
+        this.allDriverStations[fmsStation].robotStatus.commsActive = ((data[3] >> 5) & 0x1) !== 0;
+        // Check if Radio is Linked (Bit 4)
+        this.allDriverStations[fmsStation].robotStatus.radioPing = ((data[3] >> 3) & 0x1) !== 0;
+        // Check if Robot is Linked (Bit 3)
+        this.allDriverStations[fmsStation].robotStatus.rioPing = ((data[3] >> 3) & 0x1) !== 0;
+        // Check if Robot is Enabled (Bit 2)
+        this.allDriverStations[fmsStation].robotStatus.enabled = ((data[3] >> 2) & 0x1) !== 0;
+        // Check mode (Bits 1,0)
+        this.allDriverStations[fmsStation].robotStatus.mode = (((data[3] >> 1) & 0x1) * 2) + (data[3] & 0x1);
         // If Robot is Linked, check Voltage
-        if (this.allDriverStations[fmsStation].robotLinked) {
+        if (this.allDriverStations[fmsStation].robotStatus.rioPing) {
           // Update last robot linked time
-          this.allDriverStations[fmsStation].lastRobotLinkedTime = Date.now();
+          this.allDriverStations[fmsStation].robotStatus.lastLinkedTime = Date.now();
           // Robot battery voltage, stored as volts * 256.
-          this.allDriverStations[fmsStation].batteryVoltage = data[6] + data[7] / 256;
+          this.allDriverStations[fmsStation].robotStatus.batteryVoltage = data[6] + data[7] / 256;
         }
+        // Check various tags
+        // Tag 0x00: Field Radio Metrics [Signal Strength, Bandwidth]
+        // Tag 0x01: Comms Metrics [Lost Packet[1], Lost Packet[0] Sent Packets[1], Sent Packets[0] Average Trip Time]
+        // Tag 0x02: Laptop Metrics [Battery Percentage, CPU Percentage]
+        // Tag 0x03: Robot Radio Metrics [Signal Strength, Bandwidth]
+        // Tag 0x04: PD Metrics [] (Not used, for now?)
+        switch (data[9]) {
+          case 0x00:
+            break;
+          case 0x01:
+            break;
+          case 0x02:
+            this.allDriverStations[fmsStation].dsStatus.computerBatteryPercent = (data[10] / 255) * 100;
+            this.allDriverStations[fmsStation].dsStatus.computerCpuPercent = (data[11] / 255) * 100;
+            break;
+          case 0x03:
+            break;
+          case 0x04:
+            break;
+        }
+
       } else {
         // DS not in active match
         logger.info("❓ Couldn't find DS matched to UDP packet. Ignoring. ");
@@ -247,19 +284,15 @@ export class DriverstationSupport {
   private handleRegularTCP(chunk: Buffer, socket: net.Socket) {
     // Get team from IP to assume station
     const teamNum = this.getTeamFromIP(socket.remoteAddress);
-
-    for (const i in this.allDriverStations) {
-      // Find DS to match with
-      if (this.allDriverStations[i].teamId == teamNum) {
-        const packetType = chunk[2];
-        switch (packetType) {
-          case 28:
-            logger.info("DS KeepAlive");
-            break; // DS KeepAlive Packet, do nothing
-          case 22:
-            this.decodeStatusPacket(chunk.slice(2), parseInt(i));
-        }
-        break;
+    const station = this.allDriverStations.findIndex(ds => ds.teamId === teamNum);
+    // Find DS to match with
+    if (this.allDriverStations[station].teamId == teamNum) {
+      // For debugging
+      for (let i = 0; i < chunk.length;) {
+        // Size is stored at byte 0 and 1, doesn't include 2 bytes for size, so we add 2
+        const size = 2 + parseInt(chunk.subarray(i, i + 2).toString("hex"), 16);
+        if (size > 2) this.parseTcpData(chunk.subarray(i, i + size), station);
+        i += size;
       }
     }
     // TODO Log packet when match is in progress
@@ -282,6 +315,62 @@ export class DriverstationSupport {
     const td1 = parseInt(teamDigits[1]);
     const td2 = parseInt(teamDigits[2]);
     return td1 * 100 + td2;
+  }
+
+  private parseTcpData(chunk: Buffer, stationId: number) {
+    const packetType = chunk[2]
+    switch (packetType) {
+      case 0x00: // WPILib Version
+        this.allDriverStations[stationId].robotStatus.versionData.wpilib = chunk.subarray(3).toString();
+        break;
+      case 0x01: // RIO Version
+        this.allDriverStations[stationId].robotStatus.versionData.rio = chunk.subarray(3).toString();
+        break;
+      case 0x02: // DS Version
+        this.allDriverStations[stationId].robotStatus.versionData.ds = chunk.subarray(3).toString();
+        break;
+      case 0x03: // PDP Version
+        this.allDriverStations[stationId].robotStatus.versionData.pdp = chunk.subarray(3).toString();
+        break;
+      case 0x04: // PCM Version
+        this.allDriverStations[stationId].robotStatus.versionData.pcm = chunk.subarray(3).toString();
+        break;
+      case 0x05: // CANJag Version
+        this.allDriverStations[stationId].robotStatus.versionData.canJag = chunk.subarray(3).toString();
+        break;
+      case 0x06: // CANTalon Version
+        this.allDriverStations[stationId].robotStatus.versionData.canTalon = chunk.subarray(3).toString();
+        break;
+      case 0x07: // 3rd Party Version
+        this.allDriverStations[stationId].robotStatus.versionData.thirdParty = chunk.subarray(3).toString();
+        break;
+      case 0x15: // Usage Report
+        this.allDriverStations[stationId].robotStatus.versionData.usageReport = chunk.subarray(5).toString();
+        break;
+      case 0x16: // Log Data Packet
+        this.decodeStatusPacket(chunk.subarray(2), stationId);
+        break;
+      case 0x17: // Error/Event Data
+        // 0-3 # Messages to process
+        // 4-11 # seconds since 1904/01/01 00:00:00 GMT
+        // 12-19 Unknown
+        // Remaining: Unknown
+        // const numMessages = parseInt(chunk.subarray(3, 7).toString("hex"), 16);
+        // const timestamp = parseInt(chunk.subarray(7, 15).toString("hex"), 16);
+        const message = chunk.subarray(27).toString();
+        // TODO: Store last log
+        this.allDriverStations[stationId].dsStatus.lastLog = message;
+        break;
+      case 0x18: // Team number
+      case 0x1b: // Challenge response
+      case 0x1c: // Keepalive
+      case 0x1d: // Keepalive?
+        break; // Do nothing
+      default:
+        if (packetType !== 22 && chunk.length > 0)
+          // console.log(`Unknown TCP Packet Data: size: ${chunk.length} packet type: ${packetType}, packet string: ${chunk.subarray(2).toString()}, packet: ${chunk.join(", ")}`)
+        break;
+    }
   }
 
   // Parse the initial packet that the driver station sends
@@ -364,15 +453,13 @@ export class DriverstationSupport {
   ): DSConn {
     const newDs = new DSConn();
     newDs.teamId = teamId;
-    newDs.recievedFirstPacket = true;
+    newDs.dsStatus.packetCount = 1;
     newDs.tcpConn = socket;
     newDs.udpConn = dgram.createSocket("udp4"); // Dummy socket until we get the real one
-    if (remoteAddress) newDs.ipAddress = remoteAddress;
+    if (remoteAddress) newDs.dsStatus.ipAddress = remoteAddress;
     newDs.allianceStation = allianceStation;
-    newDs.dsLinked = true;
-    newDs.secondsSinceLastRobotLink = -1;
-    newDs.lastPacketTime = Date.now();
-    newDs.lastRobotLinkedTime = -1
+    newDs.dsStatus.linked = true;
+    newDs.dsStatus.lastPacketTime = Date.now();
 
     // Set socket events
     socket.on("timeout", (err: Error) =>
@@ -404,41 +491,41 @@ export class DriverstationSupport {
       if (ds) {
         // Update Driver Stations if E-STOP, Stop Match is Master E-STOP
         if (fieldEStop) { // Field EStop is Pressed
-          ds.estop = true;
+          ds.fmsStatus.estop = true;
         } else if (
           !PlcSupport.getInstance().getEstop(fmsStation) && // If EStop is pressed
           matchState !== MatchMode.PRESTART && // Ignore estops during prestart
-          !ds.estop // Ignore if already pressed
+          !ds.fmsStatus.estop // Ignore if already pressed
         ) {
           // Team station estop pressed
           logger.info(`❗ ${this.stationNames[fmsStation]} has E-STOPED their robot!`);
-          ds.estop = true;
+          ds.fmsStatus.estop = true;
         }
 
         // In match calculations
-        if (ds.estop) { // If EStop is triggered, always set status to disabled
-          ds.auto = false;
-          ds.enabled = false;
+        if (ds.fmsStatus.estop || ds.robotStatus.estop) { // If EStop is triggered, always set status to disabled
+          ds.fmsStatus.auto = false;
+          ds.fmsStatus.enabled = false;
         } else if (matchState === MatchMode.PRESTART) {
-          ds.auto = true;
+          ds.fmsStatus.auto = true;
         } else if (matchState === MatchMode.AUTONOMOUS) {
-          ds.auto = true;
-          ds.enabled = true;
+          ds.fmsStatus.auto = true;
+          ds.fmsStatus.enabled = true;
         } else if (matchState === MatchMode.TRANSITION) {
-          ds.auto = false;
-          ds.enabled = false;
+          ds.fmsStatus.auto = false;
+          ds.fmsStatus.enabled = false;
         } else if (
           matchState === MatchMode.TELEOPERATED ||
           matchState === MatchMode.ENDGAME
         ) {
-          ds.auto = false;
-          ds.enabled = true;
+          ds.fmsStatus.auto = false;
+          ds.fmsStatus.enabled = true;
         } else if (matchState === MatchMode.ABORTED) {
-          ds.auto = false;
-          ds.enabled = false;
+          ds.fmsStatus.auto = false;
+          ds.fmsStatus.enabled = false;
         } else {
-          ds.auto = false;
-          ds.enabled = false;
+          ds.fmsStatus.auto = false;
+          ds.fmsStatus.enabled = false;
         }
 
         // If we have an active UDP connection, send a UDP Packet
@@ -452,21 +539,24 @@ export class DriverstationSupport {
         let allIsGood = false;
 
         // Calculate time since last packet
-        const diff = Date.now() - ds.lastPacketTime;
+        const diff = Date.now() - ds.dsStatus.lastPacketTime;
 
         // Driverstaion Timeout
         if (diff > this.dsTcpLinkTimeoutSec) {
-          ds.dsLinked = false;
-          ds.radioLinked = false;
-          ds.robotLinked = false;
-          ds.batteryVoltage = 0;
+          ds.dsStatus.linked = false;
+          ds.robotStatus.radioPing = false;
+          ds.robotStatus.rioPing = false;
+          ds.robotStatus.commsActive = false;
+          ds.robotStatus.batteryVoltage = 0;
           allIsGood = false;
         } else { // Otherwise, check if all other statuses are good
           allIsGood =
-            ds.dsLinked &&
-            ds.radioLinked &&
-            ds.robotLinked &&
-            ds.batteryVoltage > 0;
+            ds.dsStatus.linked &&
+            ds.robotStatus.radioPing &&
+            ds.robotStatus.rioPing &&
+            !ds.robotStatus.estop &&
+            ds.robotStatus.commsActive &&
+            ds.robotStatus.batteryVoltage > 0;
         }
 
         // Update global stack tracker
@@ -476,7 +566,7 @@ export class DriverstationSupport {
         PlcSupport.getInstance().setStationStack(fmsStation, allIsGood ? RobotStatus.Connected : RobotStatus.Disconnected);
 
         // Update last link time
-        ds.secondsSinceLastRobotLink = Math.abs(diff / 1000);
+        ds.robotStatus.lastLinkedTime = ds.dsStatus.lastPacketTime;
       }
     }
 
@@ -505,7 +595,7 @@ export class DriverstationSupport {
       this.allDriverStations[dsNum].udpConn.send(
         packet,
         this.dsUdpSendPort,
-        this.allDriverStations[dsNum].ipAddress,
+        this.allDriverStations[dsNum].dsStatus.ipAddress,
         (err) => {
           if (err)
             logger.error(
@@ -519,8 +609,8 @@ export class DriverstationSupport {
   // Things to do on match start
   public driverStationMatchStart() {
     for (const ds in this.allDriverStations) {
-      this.allDriverStations[ds].missedPacketOffset =
-        this.allDriverStations[ds].missedPacketCount;
+      this.allDriverStations[ds].dsStatus.missedPacketOffset =
+        this.allDriverStations[ds].dsStatus.missedPacketCount;
     }
     // TODO: Init Packet Log
   }
@@ -582,21 +672,21 @@ export class DriverstationSupport {
     const activeMatch = EmsFrcFms.getInstance().activeMatch;
 
     // Packet number, stored big-endian in two bytes.
-    packet[0] = (this.allDriverStations[dsNum].packetCount >> 8) & 0xff;
-    packet[1] = this.allDriverStations[dsNum].packetCount & 0xff;
+    packet[0] = (this.allDriverStations[dsNum].dsStatus.packetCount >> 8) & 0xff;
+    packet[1] = this.allDriverStations[dsNum].dsStatus.packetCount & 0xff;
 
     // Protocol version.
     packet[2] = 0;
 
     // Robot status byte.
     packet[3] = 0;
-    if (this.allDriverStations[dsNum].auto) {
+    if (this.allDriverStations[dsNum].fmsStatus.auto) {
       packet[3] |= 0x02;
     }
-    if (this.allDriverStations[dsNum].enabled) {
+    if (this.allDriverStations[dsNum].fmsStatus.enabled) {
       packet[3] |= 0x04;
     }
-    if (this.allDriverStations[dsNum].estop) {
+    if (this.allDriverStations[dsNum].fmsStatus.estop) {
       packet[3] |= 0x80;
     }
 
@@ -685,19 +775,43 @@ export class DriverstationSupport {
     packet[21] = matchSecondsRemaining & 0xff;
 
     // Increment the packet count for next time.
-    this.allDriverStations[dsNum].packetCount++;
+    this.allDriverStations[dsNum].dsStatus.packetCount++;
 
     return packet;
   }
 
   // Decodes a Driver Station status packet
   private decodeStatusPacket(data: Buffer, dsNum: number) {
+    // Status Packet looks like:
+    // [???, Trip Time, Lost Packets, Voltage, Voltage, Robot Status, CAN, SignalDB, Bandwidth[1], Bandwidth[0] ]
+    // Parse out Robot Status Byte
+    // [Brownout, Watchdog, DS Tele, DS Auto, DS Disable, Robot Tele, Robot Auto, Robot Disable]
+    // Parse Brownout (Bit 7)
+    this.allDriverStations[dsNum].robotStatus.brownout = ((data[5] >> 7) & 0x1) !== 0;
+    // Parse Watchdog (Bit 6)
+    this.allDriverStations[dsNum].robotStatus.additionalData.watchdog = ((data[5] >> 6) & 0x1) !== 0;
+    // Parse DS Tele (Bit 5)
+    this.allDriverStations[dsNum].robotStatus.additionalData.dsTele = ((data[5] >> 5) & 0x1) !== 0;
+    // Parse DS Auto (Bit 4)
+    this.allDriverStations[dsNum].robotStatus.additionalData.dsAuto = ((data[5] >> 4) & 0x1) !== 0;
+    // Parse DS Disable (Bit 3)
+    this.allDriverStations[dsNum].robotStatus.additionalData.dsDisable = ((data[5] >> 3) & 0x1) !== 0;
+    // Parse Robot Tele (Bit 2)
+    this.allDriverStations[dsNum].robotStatus.additionalData.robotTele = ((data[5] >> 2) & 0x1) !== 0;
+    // Parse Robot Auto (Bit 1)
+    this.allDriverStations[dsNum].robotStatus.additionalData.robotAuto = ((data[5] >> 1) & 0x1) !== 0;
+    // Parse Robot Disable (Bit 0)
+    this.allDriverStations[dsNum].robotStatus.additionalData.robotDisable = (data[5] & 0x1) !== 0;
+
+    // Bandwidth: round(float(uint16) / 256, 2)
+    this.allDriverStations[dsNum].robotStatus.bandwidth = Math.round((data[9] << 8 | data[8]) / 256);
+
     // Average DS-robot trip time in milliseconds.
-    this.allDriverStations[dsNum].dsRobotTripTimeMs = data[1] / 2;
+    this.allDriverStations[dsNum].robotStatus.tripTimeMs = data[1] / 2;
 
     // Number of missed packets sent from the DS to the robot.
-    this.allDriverStations[dsNum].missedPacketCount =
-      data[2] - this.allDriverStations[dsNum].missedPacketOffset;
+    this.allDriverStations[dsNum].dsStatus.missedPacketCount =
+      data[2] - this.allDriverStations[dsNum].dsStatus.missedPacketOffset;
   }
 }
 
