@@ -269,6 +269,29 @@ export class PlcSupport {
     this.refreshFieldStack();
   }
 
+  public setStationEstop(station: number, estopped: boolean) {
+    switch (station) {
+      case 0:
+        this.plc.coils.redOneSoftwareEstop = estopped;
+        break;
+      case 1:
+        this.plc.coils.redTwoSoftwareEstop = estopped;
+        break;
+      case 2:
+        this.plc.coils.redThreeSoftwareEstop = estopped;
+        break;
+      case 3:
+        this.plc.coils.blueOneSoftwareEstop = estopped;
+        break;
+      case 4:
+        this.plc.coils.blueTwoSoftwareEstop = estopped;
+        break;
+      case 5:
+        this.plc.coils.blueThreeSoftwareEstop = estopped;
+        break;
+    }
+  }
+
   // We go green of all robots are either connected or bypassed
   private refreshFieldStack() {
     // Get Field Status
@@ -320,6 +343,15 @@ export class PlcSupport {
     this.plc.coils.blueThreeConn = status;
   }
 
+  public clearAllSoftwareEstops() {
+    this.plc.coils.redOneSoftwareEstop = false;
+    this.plc.coils.redTwoSoftwareEstop = false;
+    this.plc.coils.redThreeSoftwareEstop = false;
+    this.plc.coils.blueOneSoftwareEstop = false;
+    this.plc.coils.blueTwoSoftwareEstop = false;
+    this.plc.coils.blueThreeSoftwareEstop = false;
+  }
+
   public soundBuzzer() {
     // Sound buzzer for 1.5 seconds
     this.plc.coils.stackLightBuzzer = StackLight.On;
@@ -345,6 +377,7 @@ export class PlcSupport {
   // Actions to perform on prestart
   public onPrestart() {
     this.setAllStationStacks(RobotStatus.Disconnected);
+    this.clearAllSoftwareEstops();
     this.setFieldStack(
       StackLight.Off,
       StackLight.Off,
