@@ -53,11 +53,16 @@ router.post(
 );
 
 router.patch(
-  '/:teamKey',
+  '/:eventKey/:teamKey',
   validateBody(isTeam),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await updateWhere('team', req.body, `teamKey = "${req.params.teamKey}"`);
+      const { eventKey, teamKey } = req.params;
+      await updateWhere(
+        'team',
+        req.body,
+        `eventKey = "${eventKey}" AND teamKey = "${teamKey}"`
+      );
       res.status(200).send({});
     } catch (e) {
       return next(e);

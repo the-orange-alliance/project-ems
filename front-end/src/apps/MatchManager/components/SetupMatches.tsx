@@ -65,7 +65,8 @@ const SetupMatches: FC = () => {
       await postMatchSchedule(matches);
       showSnackbar('Match schedule successfully posted');
     } catch (e) {
-      console.log(e);
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      showSnackbar('Error while uploading matches.', error);
     }
   };
 

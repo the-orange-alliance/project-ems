@@ -75,8 +75,12 @@ export const patchEvent = async (
 export const postTeams = async (teams: Team[]): Promise<void> =>
   clientFetcher('teams', 'POST', teams);
 
-export const patchTeam = async (teamKey: number, team: Team): Promise<void> =>
-  clientFetcher(`teams/${teamKey}`, 'PATCH', team);
+export const patchTeam = async (
+  eventKey: string,
+  teamKey: number,
+  team: Team
+): Promise<void> =>
+  clientFetcher(`teams/${eventKey}/${teamKey}`, 'PATCH', team);
 
 export const deleteTeam = async (team: Team): Promise<void> =>
   clientFetcher(`teams/${team.eventKey}/${team.teamKey}`, `DELETE`, team);

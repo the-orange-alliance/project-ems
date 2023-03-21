@@ -6,14 +6,14 @@ import { SxProps, Theme } from '@mui/material';
 
 interface Props {
   title: string;
-  onClick: () => void;
+  onClick?: () => void;
   href?: string;
   sx?: SxProps<Theme>;
 }
 
 const ViewReturn: FC<Props> = ({ title, onClick, href, sx }) => {
   return (
-    <Button onClick={onClick} href={href} sx={sx} >
+    <Button onClick={onClick} href={href} sx={sx}>
       <ArrowBackIcon />
       &nbsp;
       <Typography>{title}</Typography>

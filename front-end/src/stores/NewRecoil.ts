@@ -85,6 +85,14 @@ export const snackbarMessageAtom = atom<string>({
   key: 'snackbarMessageAtom',
   default: ''
 });
+export const snackbarUseShowAtom = atom<boolean>({
+  key: 'snackbarUseShowAtom',
+  default: false
+});
+export const snackbarErrorAtom = atom<string>({
+  key: 'snackbarErrorAtom',
+  default: ''
+});
 export const matchDialogOpenAtom = atom<boolean>({
   key: 'matchDialogOpenAtom',
   default: false

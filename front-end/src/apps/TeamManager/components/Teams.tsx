@@ -53,18 +53,23 @@ const Teams: FC = () => {
       );
       const diffs = getDifferences(teams, prevTeams, 'teamKey');
       setLoading(true);
-      await Promise.all([
-        postTeams(diffs.additions),
-        diffs.edits.map((e) => patchTeam(e.teamKey, e))
-      ]);
+      if (diffs.additions.length > 0) {
+        postTeams(diffs.additions);
+      }
+      for (const team of diffs.edits) {
+        await patchTeam(team.eventKey, team.teamKey, team);
+      }
       await setFlags('createdTeams', [...flags.createdTeams, event.eventKey]);
       setLoading(false);
       showSnackbar(
-        `(${diffs.additions.length + diffs.edits.length
+        `(${
+          diffs.additions.length + diffs.edits.length
         }) Teams successfully uploaded`
       );
     } catch (e) {
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
       setLoading(false);
+      showSnackbar('Error while uploading team.', error);
     }
   });
 
@@ -72,7 +77,6 @@ const Teams: FC = () => {
     e: ChangeEvent<HTMLInputElement>
   ): Promise<void> => {
     const { files } = e.target;
-    console.log("here", files)
     if (!files || files.length <= 0 || !event) return;
     e.preventDefault();
     const teams = await parseTeamsFile(files[0], event.eventKey);
@@ -100,7 +104,7 @@ const Teams: FC = () => {
 
   return (
     <>
-      <ViewReturn title='Event' onClick={() => { }} href={`/${event.eventKey}`} sx={{mb: 1}} />
+      <ViewReturn title='Event' href={`/${event.eventKey}`} sx={{ mb: 1 }} />
       <SaveAddUploadLoadingFab
         onSave={handlePost}
         onAdd={handleCreate}

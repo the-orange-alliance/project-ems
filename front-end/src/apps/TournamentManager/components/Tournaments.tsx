@@ -1,7 +1,4 @@
 import { FC, useState } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import LoadingButton from '@mui/lab/LoadingButton';
 import UpgradedTable from '@components/UpgradedTable/UpgradedTable';
 import {
   useRecoilCallback,
@@ -22,8 +19,6 @@ import TournamentRemovalDialog from '@components/Dialogs/TournamentRemovalDialog
 import { patchTournament, postTournaments } from 'src/api/ApiProvider';
 import { useSnackbar } from 'src/features/hooks/use-snackbar';
 import { useFlags } from 'src/stores/AppFlags';
-
-import AddIcon from '@mui/icons-material/Add';
 import SaveAddUploadLoadingFab from 'src/features/components/SaveAddUploadLoadingFab';
 import ViewReturn from 'src/components/ViewReturn/ViewReturn';
 
@@ -59,21 +54,26 @@ const Tournaments: FC = () => {
         'tournamentKey'
       );
       setLoading(true);
-      await Promise.all([
-        postTournaments(diffs.additions),
-        diffs.edits.map((t) => patchTournament(t))
-      ]);
+      if (diffs.additions.length > 0) {
+        await postTournaments(diffs.additions);
+      }
+      for (const tournament of diffs.edits) {
+        await patchTournament(tournament);
+      }
       await setFlags('createdTournaments', [
         ...flags.createdTournaments,
         event.eventKey
       ]);
       setLoading(false);
       showSnackbar(
-        `(${diffs.additions.length + diffs.edits.length
+        `(${
+          diffs.additions.length + diffs.edits.length
         }) Tournaments successfully created`
       );
     } catch (e) {
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
       setLoading(false);
+      showSnackbar('Error while uploading tournaments.', error);
     }
   });
 
@@ -104,7 +104,7 @@ const Tournaments: FC = () => {
 
   return (
     <>
-      <ViewReturn title='Event' onClick={() => { }} href={`/${event.eventKey}`} sx={{mb: 1}} />
+      <ViewReturn title='Event' href={`/${event.eventKey}`} sx={{ mb: 1 }} />
       <SaveAddUploadLoadingFab
         loading={loading}
         onAdd={handleCreate}

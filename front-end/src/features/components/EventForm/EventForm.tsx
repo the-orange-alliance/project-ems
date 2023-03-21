@@ -1,7 +1,6 @@
 import { ChangeEvent, FC, useState } from 'react';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
 import FormControl from '@mui/material/FormControl';
 import LoadingButton from '@mui/lab/LoadingButton';
 import ViewReturn from '@components/ViewReturn/ViewReturn';
@@ -49,7 +48,6 @@ interface Props {
 const EventForm: FC<Props> = ({ event, onChange, onSubmit, onCancel }) => {
   // Local State
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   // Custom Hooks
   const { showSnackbar } = useSnackbar();
@@ -64,16 +62,18 @@ const EventForm: FC<Props> = ({ event, onChange, onSubmit, onCancel }) => {
   const createEvent = async () => {
     try {
       setLoading(true);
-      await setupEventBase(event.seasonKey);
+      if (flags.createdEvents.length <= 0) {
+        await setupEventBase(event.seasonKey);
+      }
       await postEvent(event);
       await setFlags('createdEvents', [...flags.createdEvents, event.eventKey]);
       setLoading(false);
-      setError('');
       showSnackbar('Event successfully created');
       onSubmit?.(event);
     } catch (e) {
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
       setLoading(false);
-      setError(e instanceof Error ? `${e.name} ${e.message}` : String(e));
+      showSnackbar('Erorr while creating event.', error);
     }
   };
 
@@ -82,17 +82,15 @@ const EventForm: FC<Props> = ({ event, onChange, onSubmit, onCancel }) => {
       setLoading(true);
       await patchEvent(event.eventKey, event);
       setLoading(false);
-      setError('');
       showSnackbar('Event successfully modified');
     } catch (e) {
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
       setLoading(false);
-      setError(e instanceof Error ? `${e.name} ${e.message}` : String(e));
+      showSnackbar('Error while modifying event.', error);
     }
   };
 
-  const onReturn = () => {
-    if (typeof onCancel !== 'undefined') onCancel();
-  }
+  const onReturn = () => onCancel?.();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { type, name, value } = e.target;
@@ -236,14 +234,8 @@ const EventForm: FC<Props> = ({ event, onChange, onSubmit, onCancel }) => {
                 Cancel
               </Button>
             </Link>
-          )
-          }
+          )}
         </Grid>
-        {error.length > 0 && (
-          <Grid item xs={12}>
-            <Typography color='error'>{error}</Typography>
-          </Grid>
-        )}
       </Grid>
     </div>
   );
