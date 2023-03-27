@@ -162,7 +162,6 @@ export async function updateWhere<T>(
   }
 }
 
-
 /**
  * Internal async function to get a query from the sql/ directory in the api folder.
  * @param filePath - String that is the file's name or path if sub-folders exist.
@@ -183,10 +182,17 @@ async function getQueryFromFile(filePath: string): Promise<string> {
 }
 
 function getUpdateString(value: Record<string, unknown>): string {
-  return Object.keys(value)
-    // Prevent mapping all values to strings inside of SQL, if it's a string, wrap in quotes, if not, don't use quotes
-    .map((key: string) => `"${key}" = ${typeof value[key] === "string" ? `"${value[key]}"` : value[key]}`)
-    .toString();
+  return (
+    Object.keys(value)
+      // Prevent mapping all values to strings inside of SQL, if it's a string, wrap in quotes, if not, don't use quotes
+      .map(
+        (key: string) =>
+          `"${key}" = ${
+            typeof value[key] === 'string' ? `"${value[key]}"` : value[key]
+          }`
+      )
+      .toString()
+  );
 }
 
 function getValuesString(

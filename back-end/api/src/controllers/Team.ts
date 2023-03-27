@@ -1,12 +1,6 @@
 import { isTeam, isTeamArray } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
-import {
-  deleteWhere,
-  insertValue,
-  selectAll,
-  selectAllWhere,
-  updateWhere
-} from '../db/Database.js';
+import { getDB } from '../db/EventDatabase.js';
 import { validateBody } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';
 
@@ -14,7 +8,8 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await selectAll('team');
+    const db = await getDB('global');
+    const data = await db.selectAll('team');
     res.send(data);
   } catch (e) {
     return next(e);
@@ -25,10 +20,9 @@ router.get(
   '/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await selectAllWhere(
-        'team',
-        `eventKey = "${req.params.eventKey}"`
-      );
+      const { eventKey } = req.params;
+      const db = await getDB(eventKey);
+      const data = await db.selectAllWhere('team', `eventKey = "${eventKey}"`);
       if (!data) {
         return next(DataNotFoundError);
       }
@@ -40,11 +34,13 @@ router.get(
 );
 
 router.post(
-  '/',
+  '/:eventKey',
   validateBody(isTeamArray),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await insertValue('team', req.body);
+      const { eventKey } = req.params;
+      const db = await getDB(eventKey);
+      await db.insertValue('team', req.body);
       res.status(200).send({});
     } catch (e) {
       return next(e);
@@ -58,7 +54,8 @@ router.patch(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, teamKey } = req.params;
-      await updateWhere(
+      const db = await getDB(eventKey);
+      await db.updateWhere(
         'team',
         req.body,
         `eventKey = "${eventKey}" AND teamKey = "${teamKey}"`
@@ -75,7 +72,8 @@ router.delete(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, teamKey } = req.params;
-      const data = await deleteWhere(
+      const db = await getDB(eventKey);
+      const data = await db.deleteWhere(
         'team',
         `eventKey = "${eventKey}" AND teamKey = ${teamKey}`
       );

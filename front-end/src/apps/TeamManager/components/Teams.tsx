@@ -54,7 +54,7 @@ const Teams: FC = () => {
       const diffs = getDifferences(teams, prevTeams, 'teamKey');
       setLoading(true);
       if (diffs.additions.length > 0) {
-        postTeams(diffs.additions);
+        await postTeams(event.eventKey, diffs.additions);
       }
       for (const team of diffs.edits) {
         await patchTeam(team.eventKey, team.teamKey, team);

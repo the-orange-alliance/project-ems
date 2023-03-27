@@ -6,33 +6,21 @@ import {
   isTournament
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
-import {
-  insertValue,
-  selectAll,
-  selectAllWhere,
-  updateWhere
-} from '../db/Database.js';
+import { getDB } from '../db/EventDatabase.js';
 import { validateBody } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const data = await selectAll('tournament');
-    res.send(data.map((t) => fromTournamentJSON(t)));
-  } catch (e) {
-    return next(e);
-  }
-});
-
 router.get(
   '/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await selectAllWhere(
+      const { eventKey } = req.params;
+      const db = await getDB(eventKey);
+      const data = await db.selectAllWhere(
         'tournament',
-        `eventKey = "${req.params.eventKey}"`
+        `eventKey = "${eventKey}"`
       );
       if (!data) {
         return next(DataNotFoundError);
@@ -49,7 +37,9 @@ router.post(
   validateBody(isTournamentArray),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await insertValue(
+      const { eventKey } = req.body[0];
+      const db = await getDB(eventKey);
+      await db.insertValue(
         'tournament',
         req.body.map((t: Tournament) => toTournamentJSON(t))
       );
@@ -66,7 +56,8 @@ router.patch(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, tournamentKey } = req.params;
-      await updateWhere(
+      const db = await getDB(eventKey);
+      await db.updateWhere(
         'tournament',
         toTournamentJSON(req.body),
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`

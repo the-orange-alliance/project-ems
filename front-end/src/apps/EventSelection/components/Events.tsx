@@ -34,11 +34,11 @@ const Events: FC<Props> = ({ onCreateDefault }) => {
             creating an event.
           </Typography>
         )}
-        <Tooltip title="Create Event">
+        <Tooltip title='Create Event'>
           <Fab
             sx={{ position: 'absolute', bottom: 16, right: 16 }}
             onClick={createEvent}
-            color="primary"
+            color='primary'
           >
             <Add />
           </Fab>

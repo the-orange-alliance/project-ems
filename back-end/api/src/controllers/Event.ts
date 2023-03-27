@@ -1,20 +1,14 @@
-import { isEvent } from '@toa-lib/models';
+import { getSeasonKeyFromEventKey, isEvent } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
-import {
-  createEventBase,
-  createEventGameSpecifics,
-  insertValue,
-  selectAll,
-  selectAllWhere,
-  updateWhere
-} from '../db/Database.js';
+import { getDB } from '../db/EventDatabase.js';
 import { validateBody } from '../middleware/BodyValidator.js';
 
 const router = Router();
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await selectAll('event');
+    const db = await getDB('global');
+    const data = await db.selectAll('event');
     res.send(data);
   } catch (e) {
     return next(e);
@@ -26,7 +20,8 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey } = req.params;
-      const data = await selectAllWhere('event', `eventKey = "${eventKey}"`);
+      const db = await getDB('global');
+      const data = await db.selectAllWhere('event', `eventKey = "${eventKey}"`);
       res.send(data);
     } catch (e) {
       return next(e);
@@ -39,7 +34,8 @@ router.post(
   validateBody(isEvent),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await insertValue('event', [req.body]);
+      const db = await getDB('global');
+      await db.insertValue('event', [req.body]);
       res.status(200).send({});
     } catch (e) {
       return next(e);
@@ -52,11 +48,9 @@ router.patch(
   validateBody(isEvent),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await updateWhere(
-        'event',
-        req.body,
-        `eventKey = "${req.params.eventKey}"`
-      );
+      const { eventKey } = req.params;
+      const db = await getDB('global');
+      await db.updateWhere('event', req.body, `eventKey = "${eventKey}"`);
       res.status(200).send({});
     } catch (e) {
       return next(e);
@@ -65,12 +59,13 @@ router.patch(
 );
 
 router.get(
-  '/setup/:seasonKey',
+  '/setup/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const seasonKey = req.params.seasonKey;
-      await createEventBase();
-      await createEventGameSpecifics(seasonKey);
+      const { eventKey } = req.params;
+      const db = await getDB(eventKey);
+      await db.createEventBase();
+      await db.createEventGameSpecifics(getSeasonKeyFromEventKey(eventKey));
       res.status(200).send({});
     } catch (e) {
       return next(e);

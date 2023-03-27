@@ -12,12 +12,7 @@ import {
   Team
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
-import {
-  deleteWhere,
-  insertValue,
-  selectAllJoinWhere,
-  selectAllWhere
-} from '../db/Database.js';
+import { getDB } from '../db/EventDatabase.js';
 import { validateBody } from '../middleware/BodyValidator.js';
 import { SeasonFunctionsMissing } from '../util/Errors.js';
 
@@ -27,14 +22,13 @@ router.get(
   '/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const rankings = await selectAllWhere(
+      const { eventKey } = req.params;
+      const db = await getDB(eventKey);
+      const rankings = await db.selectAllWhere(
         'ranking',
-        `eventKey = "${req.params.eventKey}"`
+        `eventKey = "${eventKey}"`
       );
-      const teams = await selectAllWhere(
-        'team',
-        `eventKey = "${req.params.eventKey}"`
-      );
+      const teams = await db.selectAllWhere('team', `eventKey = "${eventKey}"`);
       res.send(reconcileTeamRankings(teams, rankings));
     } catch (e) {
       return next(e);
@@ -46,13 +40,15 @@ router.get(
   '/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const rankings = await selectAllWhere(
+      const { eventKey, tournamentKey } = req.params;
+      const db = await getDB(eventKey);
+      const rankings = await db.selectAllWhere(
         'ranking',
-        `eventKey = "${req.params.eventKey}" AND tournamentKey = "${req.params.tournamentKey}"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
-      const teams = await selectAllWhere(
+      const teams = await db.selectAllWhere(
         'team',
-        `eventKey = "${req.params.eventKey}" AND tournamentKey = "${req.params.tournamentKey}"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
       res.send(reconcileTeamRankings(teams, rankings));
     } catch (e) {
@@ -66,7 +62,8 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, tournamentKey, id } = req.params;
-      const rankings = await selectAllJoinWhere(
+      const db = await getDB(eventKey);
+      const rankings = await db.selectAllJoinWhere(
         'ranking',
         'match_participant',
         'teamKey',
@@ -84,7 +81,9 @@ router.post(
   validateBody(isRankingArray),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await insertValue('ranking', req.body);
+      const eventKey = req.body[0].eventKey;
+      const db = await getDB(eventKey);
+      await db.insertValue('ranking', req.body);
       res.status(200).send({});
     } catch (e) {
       return next(e);
@@ -110,7 +109,8 @@ router.post(
         ties: 0,
         wins: 0
       }));
-      await insertValue('ranking', rankings);
+      const db = await getDB(teams[0].eventKey);
+      await db.insertValue('ranking', rankings);
       res.status(200).send({});
     } catch (e) {
       return next(e);
@@ -123,15 +123,16 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, tournamentKey } = req.params;
-      const matches = await selectAllWhere(
+      const db = await getDB(eventKey);
+      const matches = await db.selectAllWhere(
         'match',
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
-      const participants = await selectAllWhere(
+      const participants = await db.selectAllWhere(
         'match_participant',
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
-      const details = await selectAllWhere(
+      const details = await db.selectAllWhere(
         'match_detail',
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
@@ -143,7 +144,7 @@ router.post(
         matchesWithParticipants,
         details
       );
-      const prevRankings = await selectAllWhere(
+      const prevRankings = await db.selectAllWhere(
         'ranking',
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
@@ -162,11 +163,11 @@ router.post(
         matchesWithDetails,
         prevRankings
       );
-      await deleteWhere(
+      await db.deleteWhere(
         'ranking',
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
-      await insertValue('ranking', rankings);
+      await db.insertValue('ranking', rankings);
       res.send(rankings);
     } catch (e) {
       return next(e);

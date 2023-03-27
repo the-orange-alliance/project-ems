@@ -1,11 +1,6 @@
 import { isAllianceArray, isAllianceMember } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
-import {
-  insertValue,
-  selectAll,
-  selectAllWhere,
-  updateWhere
-} from '../db/Database.js';
+import { getDB } from '../db/EventDatabase.js';
 import { validateBody } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';
 
@@ -15,8 +10,12 @@ router.get(
   '/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const eventKey = req.params.eventKey;
-      const data = await selectAllWhere('alliance', `eventKey = "${eventKey}"`);
+      const { eventKey } = req.params;
+      const db = await getDB(eventKey);
+      const data = await db.selectAllWhere(
+        'alliance',
+        `eventKey = "${eventKey}"`
+      );
       res.send(data);
     } catch (e) {
       return next(e);
@@ -25,10 +24,12 @@ router.get(
 );
 
 router.get(
-  '/:rank',
+  '/:eventKey/:rank',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await selectAllWhere(
+      const { eventKey } = req.params;
+      const db = await getDB(eventKey);
+      const data = await db.selectAllWhere(
         'alliance',
         `allianceRank = ${req.params.rank}`
       );
@@ -43,11 +44,13 @@ router.get(
 );
 
 router.post(
-  '/',
+  '/:eventKey',
   validateBody(isAllianceArray),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await insertValue('alliance', req.body);
+      const { eventKey } = req.params;
+      const db = await getDB(eventKey);
+      await db.insertValue('alliance', req.body);
       res.status(200).send({});
     } catch (e) {
       return next(e);
@@ -56,11 +59,13 @@ router.post(
 );
 
 router.patch(
-  '/:allianceKey',
+  '/:eventKey/:allianceKey',
   validateBody(isAllianceMember),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await updateWhere(
+      const { evnetKey, allianceKey } = req.params;
+      const db = await getDB(evnetKey);
+      await db.updateWhere(
         'alliance',
         req.body,
         `allianceKey = "${req.params.allianceKey}"`

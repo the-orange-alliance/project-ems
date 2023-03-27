@@ -15,8 +15,7 @@ import {
 } from '../util/Errors.js';
 import { requireParams } from '../middleware/QueryParams.js';
 import { validateBody } from '../middleware/BodyValidator.js';
-import isLocal from '../util/Network.js';
-import { selectAll, setupUsers } from '../db/Database.js';
+import { getDB } from '../db/EventDatabase.js';
 
 const router = Router();
 
@@ -70,10 +69,12 @@ router.get('/logout', async (req: Request, res: Response) => {
 });
 
 router.get(
-  '/users',
+  '/users/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await selectAll('users');
+      const { eventKey } = req.params;
+      const db = await getDB(eventKey);
+      const data = await db.selectAll('users');
       res.send(data);
     } catch (e) {
       return next(e);
@@ -82,10 +83,12 @@ router.get(
 );
 
 router.get(
-  '/setup',
+  '/setup/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await setupUsers();
+      const { eventKey } = req.params;
+      const db = await getDB(eventKey);
+      await db.setupUsers();
       res.status(200).send({});
     } catch (e) {
       return next(e);

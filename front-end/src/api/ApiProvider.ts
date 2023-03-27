@@ -43,8 +43,8 @@ export const login = async (
 export const logout = async (): Promise<void> =>
   clientFetcher('auth/logout', 'GET');
 
-export const setupEventBase = async (seasonKey: string): Promise<void> =>
-  clientFetcher(`event/setup/${seasonKey}`, 'GET');
+export const setupEventBase = async (eventKey: string): Promise<void> =>
+  clientFetcher(`event/setup/${eventKey}`, 'GET');
 
 export const setupDefaultAccounts = async (): Promise<void> =>
   clientFetcher('auth/setup', 'GET');
@@ -72,8 +72,10 @@ export const patchEvent = async (
   event: Event
 ): Promise<void> => clientFetcher(`event/${eventKey}`, 'PATCH', event);
 
-export const postTeams = async (teams: Team[]): Promise<void> =>
-  clientFetcher('teams', 'POST', teams);
+export const postTeams = async (
+  eventKey: string,
+  teams: Team[]
+): Promise<void> => clientFetcher(`teams/${eventKey}`, 'POST', teams);
 
 export const patchTeam = async (
   eventKey: string,
@@ -113,8 +115,10 @@ export const createMatchSchedule = async (
 ): Promise<Match<any>[]> =>
   clientFetcher('match/create', 'POST', params, isMatchArray);
 
-export const postMatchSchedule = async (matches: Match<any>[]): Promise<void> =>
-  clientFetcher('match', 'POST', matches);
+export const postMatchSchedule = async (
+  eventKey: string,
+  matches: Match<any>[]
+): Promise<void> => clientFetcher(`match/${eventKey}`, 'POST', matches);
 
 export const patchMatch = async (match: Match<any>): Promise<void> =>
   clientFetcher(
@@ -172,8 +176,10 @@ export const createRankings = (
 ): Promise<void> =>
   clientFetcher(`ranking/create/${tournamentKey}`, 'POST', teams);
 
-export const postRankings = (rankings: Ranking[]): Promise<void> =>
-  clientFetcher(`ranking`, 'POST', rankings);
+export const postRankings = (
+  eventKey: string,
+  rankings: Ranking[]
+): Promise<void> => clientFetcher(`ranking/${eventKey}`, 'POST', rankings);
 
 export const recalculateRankings = (
   eventKey: string,
@@ -185,8 +191,10 @@ export const recalculateRankings = (
     isRankingArray
   );
 
-export const postAllianceMembers = (members: AllianceMember[]): Promise<void> =>
-  clientFetcher(`alliance`, 'POST', members);
+export const postAllianceMembers = (
+  eventKey: string,
+  members: AllianceMember[]
+): Promise<void> => clientFetcher(`alliance/${eventKey}`, 'POST', members);
 
 /** React hooks to use GET requests for data. */
 export const useLoginAttempt = (

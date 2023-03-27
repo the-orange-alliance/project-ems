@@ -1,21 +1,3 @@
-CREATE TABLE IF NOT EXISTS "event" (
-    "eventKey" VARCHAR(15) NOT NULL,
-    "seasonKey" VARCHAR(4) NOT NULL,
-    "regionKey" VARCHAR(4) NOT NULL,
-    "eventTypeKey" VARCHAR(8) NOT NULL,
-    "eventName" VARCHAR(255) NOT NULL,
-    "divisionName" VARCHAR(255) NULL,
-    "venue" VARCHAR(255),
-    "city" VARCHAR(255),
-    "stateProv" VARCHAR(255),
-    "startDate" VARCHAR(255),
-    "endDate" VARCHAR(255),
-    "country" VARCHAR(255),
-    "website" VARCHAR(255),
-    PRIMARY KEY (eventKey),
-    UNIQUE (eventKey)
-);
-
 CREATE TABLE IF NOT EXISTS "team" (
     "teamKey" INT NOT NULL,
     "eventKey" VARCHAR(25) NOT NULL,
@@ -30,8 +12,7 @@ CREATE TABLE IF NOT EXISTS "team" (
     "rookieYear" INT,
     "cardStatus" INT,
     PRIMARY KEY (eventKey, teamKey),
-    UNIQUE (eventKey, teamKey),
-    FOREIGN KEY (eventKey) REFERENCES "event"(eventKey)
+    UNIQUE (eventKey, teamKey)
 );
 
 CREATE TABLE IF NOT EXISTS "fms_wpakeys" (
@@ -39,8 +20,7 @@ CREATE TABLE IF NOT EXISTS "fms_wpakeys" (
     "eventKey" VARCHAR(25) NOT NULL,
     "wpaKey" VARCHAR(25),
     PRIMARY KEY (eventKey, teamKey),
-    UNIQUE (eventKey, teamKey),
-    FOREIGN KEY (eventKey) REFERENCES "event"(eventKey)
+    UNIQUE (eventKey, teamKey)
 );
 
 CREATE TABLE IF NOT EXISTS "fms_adv_net_cfg" (
@@ -62,8 +42,7 @@ CREATE TABLE IF NOT EXISTS "fms_adv_net_cfg" (
     "enablePlc" INT NOT NULL,
     "plcIp" VARCHAR(255) NOT NULL,
     "registeredAt" VARCHAR(255) NOT NULL,
-    PRIMARY KEY (hwFingerprint),
-    FOREIGN KEY (eventKey) REFERENCES "event"(eventKey)
+    PRIMARY KEY (hwFingerprint)
 );
 
 CREATE TABLE IF NOT EXISTS "tournament" (
@@ -74,8 +53,7 @@ CREATE TABLE IF NOT EXISTS "tournament" (
     "fields" VARCHAR(255),
     "name" VARCHAR(255),
     PRIMARY KEY (eventKey, tournamentKey),
-    UNIQUE (eventKey, tournamentKey),
-    FOREIGN KEY (eventKey) REFERENCES "event"(eventKey)
+    UNIQUE (eventKey, tournamentKey)
 );
 
 CREATE TABLE IF NOT EXISTS "alliance" (
@@ -89,7 +67,6 @@ CREATE TABLE IF NOT EXISTS "alliance" (
     "pickOrder" INT,
     PRIMARY KEY (eventKey, tournamentKey, teamKey),
     UNIQUE (eventKey, tournamentKey, teamKey),
-    FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
     FOREIGN KEY (teamKey) REFERENCES "team"(teamKey)
 );
@@ -106,7 +83,6 @@ CREATE TABLE IF NOT EXISTS "ranking" (
     "ties" INT,
     PRIMARY KEY (eventKey, tournamentKey, teamKey),
     UNIQUE (eventKey, tournamentKey, teamKey),
-    FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
     FOREIGN KEY (teamKey) REFERENCES "team"(teamKey)
 );
@@ -123,7 +99,6 @@ CREATE TABLE IF NOT EXISTS "schedule" (
     "isMatch" INT NOT NULL,
     PRIMARY KEY (eventKey, tournamentKey, id),
     UNIQUE (eventKey, tournamentKey, id),
-    FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey)
 );
 
@@ -148,7 +123,6 @@ CREATE TABLE IF NOT EXISTS "match" (
     "uploaded" INT,
     PRIMARY KEY (eventKey, tournamentKey, id),
     UNIQUE (eventKey, tournamentKey, id),
-    FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey)
 );
 
@@ -164,7 +138,6 @@ CREATE TABLE IF NOT EXISTS "match_participant" (
     "noShow" INT,
     PRIMARY KEY (eventKey, tournamentKey, id, station),
     UNIQUE (eventKey, tournamentKey, id, station),
-    FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
     FOREIGN KEY (id) REFERENCES "match"(id),
     FOREIGN KEY (teamKey) REFERENCES "team"(teamKey)
@@ -176,7 +149,6 @@ CREATE TABLE IF NOT EXISTS "match_detail" (
     "id" INT NOT NULL,
     PRIMARY KEY (eventKey, tournamentKey, id),
     UNIQUE (eventKey, tournamentKey, id),
-    FOREIGN KEY (eventKey) REFERENCES "event"(eventKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
     FOREIGN KEY (id) REFERENCES "match"(id)
 );

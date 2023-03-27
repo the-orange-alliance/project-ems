@@ -12,4 +12,4 @@ export const isBoolean = (bool: unknown): boolean =>
   typeof bool === 'boolean' || Boolean(Number(bool));
 
 export const isArray = (arr: unknown): arr is any[] =>
-  typeof arr !== 'undefined' && arr instanceof Array && Array.isArray(arr);
+  typeof arr !== 'undefined' && Array.isArray(arr);

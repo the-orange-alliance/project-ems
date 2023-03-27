@@ -69,6 +69,7 @@ const SetupMatchesPlayoffs: FC = () => {
       await snapshot.getPromise(allinaceMembers)
     ).filter((a) => a.tournamentLevel === level);
     await postRankings(
+      eventKey,
       members.map((m) => ({
         allianceKey: m.allianceKey,
         rankKey: `${eventKey}-${level}-${m.teamKey}`,

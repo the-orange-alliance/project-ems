@@ -24,14 +24,14 @@ import tournamentController from './controllers/Tournament.js';
 import frcFmsController from './controllers/FrcFms.js';
 import { handleCatchAll, handleErrors } from './middleware/ErrorHandler.js';
 import logger from './util/Logger.js';
-import { initDatabase } from './db/Database.js';
+import { initGlobal } from './db/EventDatabase.js';
 
 // Setup our environment
 env.loadAndSetDefaults(process.env);
 
 // App setup - if any of these fail the server should exit.
 try {
-  initDatabase();
+  await initGlobal();
 } catch (e) {
   logger.error(e);
   process.exit(1);

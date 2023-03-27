@@ -34,35 +34,41 @@ const SetupMatches: FC = () => {
   const updateQuality = (quality: string) => setQuality(quality);
 
   const createMatches = useRecoilCallback(({ snapshot }) => async () => {
-    setLoading(true);
-    const event = await snapshot.getPromise(currentEventSelector);
-    const items = await snapshot.getPromise(
-      currentScheduleItemsByTournamentSelector
-    );
-    if (!event || !tournament) return;
-    const { eventKey } = event;
-    const { tournamentKey, fieldCount: fields, name } = tournament;
-    const teamKeys = schedule.teams.map((t) => t.teamKey);
-    const matches = await createMatchSchedule({
-      eventKey,
-      tournamentKey: tournamentKey,
-      quality,
-      fields,
-      matchesPerTeam: schedule.matchesPerTeam,
-      teamsParticipating: schedule.teamsParticipating,
-      teamsPerAlliance: schedule.teamsPerAlliance,
-      teamKeys,
-      name
-    });
-    setMatches(assignMatchTimes(matches, items));
-    setLoading(false);
+    try {
+      setLoading(true);
+      const event = await snapshot.getPromise(currentEventSelector);
+      const items = await snapshot.getPromise(
+        currentScheduleItemsByTournamentSelector
+      );
+      if (!event || !tournament) return;
+      const { eventKey } = event;
+      const { tournamentKey, fieldCount: fields, name } = tournament;
+      const teamKeys = schedule.teams.map((t) => t.teamKey);
+      const matches = await createMatchSchedule({
+        eventKey,
+        tournamentKey: tournamentKey,
+        quality,
+        fields,
+        matchesPerTeam: schedule.matchesPerTeam,
+        teamsParticipating: schedule.teamsParticipating,
+        teamsPerAlliance: schedule.teamsPerAlliance,
+        teamKeys,
+        name
+      });
+      setMatches(assignMatchTimes(matches, items));
+      setLoading(false);
+    } catch (e) {
+      setLoading(false);
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      showSnackbar('Error while executing matchmaker.', error);
+    }
   });
 
   const postMatches = async () => {
     if (!tournament) return;
     try {
       await createRankings(tournament.tournamentKey, schedule.teams);
-      await postMatchSchedule(matches);
+      await postMatchSchedule(tournament.eventKey, matches);
       showSnackbar('Match schedule successfully posted');
     } catch (e) {
       const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);

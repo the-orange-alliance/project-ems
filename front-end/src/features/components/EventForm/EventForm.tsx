@@ -62,10 +62,8 @@ const EventForm: FC<Props> = ({ event, onChange, onSubmit, onCancel }) => {
   const createEvent = async () => {
     try {
       setLoading(true);
-      if (flags.createdEvents.length <= 0) {
-        await setupEventBase(event.seasonKey);
-      }
       await postEvent(event);
+      await setupEventBase(event.eventKey);
       await setFlags('createdEvents', [...flags.createdEvents, event.eventKey]);
       setLoading(false);
       showSnackbar('Event successfully created');

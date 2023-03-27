@@ -1,33 +1,20 @@
 import { isScheduleItemArray, isTeam, isTeamArray } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
-import {
-  deleteWhere,
-  insertValue,
-  selectAll,
-  selectAllWhere,
-  updateWhere
-} from '../db/Database.js';
+import { getDB } from '../db/EventDatabase.js';
 import { validateBody } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const data = await selectAll('schedule');
-    res.send(data);
-  } catch (e) {
-    return next(e);
-  }
-});
-
 router.get(
   '/:eventKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await selectAllWhere(
+      const { eventKey } = req.params;
+      const db = await getDB(eventKey);
+      const data = await db.selectAllWhere(
         'schedule',
-        `eventKey = '${req.params.eventKey}'`
+        `eventKey = '${eventKey}'`
       );
       if (!data) {
         return next(DataNotFoundError);
@@ -43,9 +30,11 @@ router.get(
   '/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = await selectAllWhere(
+      const { eventKey, tournamentKey } = req.params;
+      const db = await getDB(eventKey);
+      const data = await db.selectAllWhere(
         'schedule',
-        `eventKey = "${req.params.eventKey}" AND tournamentKey = "${req.params.tournamentKey}"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
       if (!data) {
         return next(DataNotFoundError);
@@ -62,7 +51,9 @@ router.post(
   validateBody(isScheduleItemArray),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await insertValue('schedule', req.body);
+      const { eventKey } = req.body[0];
+      const db = await getDB(eventKey);
+      await db.insertValue('schedule', req.body);
       res.status(200).send({});
     } catch (e) {
       return next(e);
@@ -74,9 +65,11 @@ router.delete(
   '/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await deleteWhere(
+      const { eventKey, tournamentKey } = req.params;
+      const db = await getDB(eventKey);
+      await db.deleteWhere(
         'schedule',
-        `eventKey = "${req.params.eventKey}" AND tournamentKey = "${req.params.tournamentKey}"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
       res.status(200).send({});
     } catch (e) {
@@ -90,10 +83,12 @@ router.patch(
   validateBody(isTeam),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await updateWhere(
+      const { eventKey, tournamentKey, id } = req.params;
+      const db = await getDB(eventKey);
+      await db.updateWhere(
         'schedule',
         req.body,
-        `eventKey = "${req.params.eventKey}" AND tournamentKey = "${req.params.eventKey}" AND id = "${req.params.id}"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${eventKey}" AND id = "${id}"`
       );
       res.status(200).send({});
     } catch (e) {
