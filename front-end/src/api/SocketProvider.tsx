@@ -87,8 +87,10 @@ export async function sendPostResults(): Promise<void> {
   socket?.emit('match:display', 3);
 }
 
-export async function sendUpdateFrcFmsSettings(hwFingerprint: string): Promise<void> {
-  socket?.emit('frc-fms:settings-update', {hwFingerprint});
+export async function sendUpdateFrcFmsSettings(
+  hwFingerprint: string
+): Promise<void> {
+  socket?.emit('frc-fms:settings-update', { hwFingerprint });
 }
 
 export default socket;

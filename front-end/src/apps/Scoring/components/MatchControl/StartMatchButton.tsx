@@ -4,11 +4,16 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { useButtonState } from '../../util/ButtonState';
 import { useRecoilState } from 'recoil';
 import { MatchState } from '@toa-lib/models';
-import { sendAbortMatch, sendStartMatch } from 'src/api/SocketProvider';
+import {
+  sendAbortMatch,
+  sendStartMatch,
+  useSocket
+} from 'src/api/SocketProvider';
 import { matchStateAtom } from 'src/stores/NewRecoil';
 
 const StartMatchButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
+  const [_, connected] = useSocket();
   const [loading, setLoading] = useState(false);
   const { startMatchEnabled } = useButtonState();
 
@@ -45,7 +50,7 @@ const StartMatchButton: FC = () => {
     </Button>
   ) : (
     <LoadingButton
-      disabled={!startMatchEnabled}
+      disabled={!startMatchEnabled || !connected}
       color='error'
       fullWidth
       variant='contained'
