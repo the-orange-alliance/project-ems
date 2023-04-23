@@ -1,15 +1,25 @@
 import { Routes, Route } from 'react-router-dom';
-import LocalStorageLoader from './components/LocalStorageLoader/LocalStorageLoader';
+import { useRecoilValue } from 'recoil';
 import routes from './AppRoutes';
 import './App.less';
 import { useSnackbar } from './features/hooks/use-snackbar';
+import { userAtom } from './stores/NewRecoil';
+import { useEffect } from 'react';
+import { useSocket } from './api/SocketProvider';
 
 function App() {
   const { AppSnackbar } = useSnackbar();
+  const user = useRecoilValue(userAtom);
+  const [, , setupSocket] = useSocket();
+
+  useEffect(() => {
+    if (user && (user as any).token) {
+      setupSocket((user as any).token);
+    }
+  }, [user]);
 
   return (
     <>
-      <LocalStorageLoader />
       <AppSnackbar />
       <Routes>
         {routes.map((route) => (
