@@ -1,6 +1,5 @@
 import { FC, useState } from 'react';
 import { DesktopDatePicker } from '@mui/x-date-pickers';
-import TextField from '@mui/material/TextField';
 import { DateTime } from 'luxon';
 
 interface Props {
@@ -15,17 +14,15 @@ const DatePicker: FC<Props> = ({ label, value, format, onChange }) => {
 
   const handleChange = (newValue: DateTime | null) => {
     setDate(newValue);
-    onChange(newValue ? newValue.toISO() : '');
+    onChange(newValue ? newValue.toISO() ?? '' : '');
   };
 
   return (
     <DesktopDatePicker
       label={label}
-      inputFormat={format ? format : 'DDDD'}
+      format={format ? format : 'DDDD'}
       value={date}
       onChange={handleChange}
-      renderInput={(params) => <TextField {...params} fullWidth />}
-      disableMaskedInput
     />
   );
 };

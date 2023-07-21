@@ -32,10 +32,9 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
         Math.ceil(newBreak.afterMatch / schedule.matchConcurrency) *
         schedule.cycleTime
     });
-    newBreak.startTime = newStartTime.toISO();
-    newBreak.endTime = newStartTime
-      .plus({ minutes: newBreak.duration })
-      .toISO();
+    newBreak.startTime = newStartTime.toISO() ?? '';
+    newBreak.endTime =
+      newStartTime.plus({ minutes: newBreak.duration }).toISO() ?? '';
     handleStartChange(newStartTime);
     handleEndChange(newStartTime.plus({ minutes: newBreak.duration }));
     const newBreaks = [
@@ -52,20 +51,21 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
     setDay({
       ...day,
       breaks: newBreaks,
-      endTime: DateTime.fromISO(day.endTime)
-        .plus({ minutes: breaksDuration })
-        .toISO()
+      endTime:
+        DateTime.fromISO(day.endTime)
+          .plus({ minutes: breaksDuration })
+          .toISO() ?? ''
     });
   };
 
   const handleStartChange = (newValue: DateTime | null) => {
-    const newTime = (newValue ? newValue : DateTime.now()).toISO();
+    const newTime = (newValue ? newValue : DateTime.now()).toISO() ?? '';
     setStartDate(newValue);
     setDay({ ...day, startTime: newTime });
   };
 
   const handleEndChange = (newValue: DateTime | null) => {
-    const newTime = (newValue ? newValue : DateTime.now()).toISO();
+    const newTime = (newValue ? newValue : DateTime.now()).toISO() ?? '';
     setEndDate(newValue);
     setDay({ ...day, endTime: newTime });
   };
@@ -112,23 +112,19 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
       <Grid item xs={12} sm={6} md={4} lg={4}>
         <DateTimePicker
           label='Start Date'
-          inputFormat='fff'
+          format='fff'
           value={startDate}
           onChange={handleStartChange}
-          disableMaskedInput
           disabled
-          renderInput={(params) => <TextField {...params} fullWidth />}
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={4}>
         <DateTimePicker
           label='End Date'
-          inputFormat='fff'
+          format='fff'
           value={endDate}
           onChange={handleEndChange}
-          disableMaskedInput
           disabled
-          renderInput={(params) => <TextField {...params} fullWidth />}
         />
       </Grid>
     </Grid>

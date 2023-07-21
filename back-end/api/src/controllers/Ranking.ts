@@ -159,6 +159,7 @@ router.post(
         return next(SeasonFunctionsMissing);
       }
 
+      // TODO [FGC2023] - Calculate rankings for playoffs matches
       const rankings = functions.calculateRankings(
         matchesWithDetails,
         prevRankings
