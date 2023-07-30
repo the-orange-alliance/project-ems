@@ -58,7 +58,7 @@ const SetupSchedule: FC = () => {
 
   const generateSchedule = async () => {
     if (!tournament) return;
-    const scheduleItems = generateScheduleItems(schedule, tournament.eventKey);
+    const scheduleItems = generateScheduleItems(schedule);
     setScheduleItems(scheduleItems);
     await deleteSchedule(tournament.eventKey, tournament.tournamentKey);
     await setFlag('createdSchedules', [

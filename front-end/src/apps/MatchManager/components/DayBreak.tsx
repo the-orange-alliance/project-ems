@@ -42,9 +42,15 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
       newBreak,
       ...day.breaks.slice(newBreak.id + 1)
     ];
-    const breaksDuration =
+    const oldBreaksDuration =
       day.breaks.length > 0
         ? day.breaks
+            .map((dayBreak) => dayBreak.duration)
+            .reduce((prev, curr) => prev + curr)
+        : 0;
+    const breaksDuration =
+      newBreaks.length > 0
+        ? newBreaks
             .map((dayBreak) => dayBreak.duration)
             .reduce((prev, curr) => prev + curr)
         : 0;
@@ -53,7 +59,7 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
       breaks: newBreaks,
       endTime:
         DateTime.fromISO(day.endTime)
-          .plus({ minutes: breaksDuration })
+          .plus({ minutes: breaksDuration - oldBreaksDuration })
           .toISO() ?? ''
     });
   };
@@ -112,7 +118,6 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
       <Grid item xs={12} sm={6} md={4} lg={4}>
         <DateTimePicker
           label='Start Date'
-          format='fff'
           value={startDate}
           onChange={handleStartChange}
           disabled
@@ -121,7 +126,6 @@ const Break: FC<Props> = ({ dayId, dayBreakId }) => {
       <Grid item xs={12} sm={6} md={4} lg={4}>
         <DateTimePicker
           label='End Date'
-          format='fff'
           value={endDate}
           onChange={handleEndChange}
           disabled
