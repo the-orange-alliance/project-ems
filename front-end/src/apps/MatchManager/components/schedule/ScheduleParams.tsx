@@ -70,7 +70,10 @@ const SetupSchedule: FC = () => {
       <Button
         variant='contained'
         onClick={generateSchedule}
-        sx={{ marginTop: (theme) => theme.spacing(2) }}
+        sx={{
+          marginTop: (theme) => theme.spacing(2),
+          marginBottom: (theme) => theme.spacing(2)
+        }}
         disabled={!valid}
       >
         Generate Schedule

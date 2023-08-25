@@ -93,7 +93,9 @@ const SetupMatches: FC = () => {
           marginBottom: (theme) => theme.spacing(2)
         }}
       />
-      {matches.length > 0 && <MatchTable matches={matches} />}
+      {matches.length > 0 && (
+        <MatchTable eventKey={tournament?.eventKey ?? ''} matches={matches} />
+      )}
       {matches.length > 0 && (
         <Button
           sx={{ marginTop: (theme) => theme.spacing(2) }}
