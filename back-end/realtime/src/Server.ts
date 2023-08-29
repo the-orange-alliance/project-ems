@@ -46,11 +46,17 @@ io.on("connection", (socket) => {
     `user '${user.username}' (${socket.handshake.address}) connected and verified`
   );
 
-  socket.on("rooms", (rooms: string[]) => {
-    logger.info(
-      `user ${user.username} (${socket.handshake.address}) joining rooms ${rooms}`
-    );
-    assignRooms(rooms, socket);
+  socket.on("rooms", (rooms: unknown) => {
+    if (Array.isArray(rooms) && rooms.every(room => typeof room === "string")) {
+      logger.info(
+        `user ${user.username} (${socket.handshake.address}) joining rooms ${rooms}`
+      );
+      assignRooms(rooms, socket);
+    } else {
+      logger.warn(
+        `user ${user.username} (${socket.handshake.address}) sent "rooms" event with invalid payload: ${rooms}`
+      );
+    }
   });
 
   socket.on("disconnect", (reason: string) => {
