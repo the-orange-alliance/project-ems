@@ -7,25 +7,19 @@ import { Season, SeasonFunctions } from './index.js';
 /**
  * Main season function declaration for the whole file.
  */
-const functions: SeasonFunctions<
-  HydrogenHorizonsDetails,
-  HydrogenHorizonsRanking
-> = {
+const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
   calculateRankings,
   calculateScore
 };
 
-export const HydrogenHorizonsSeason: Season<
-  HydrogenHorizonsDetails,
-  HydrogenHorizonsRanking
-> = {
+export const HydrogenHorizonsSeason: Season<MatchDetails, SeasonRanking> = {
   key: 'fgc_2023',
   program: 'fgc',
   name: 'Hydrogen Horizons',
   functions
 };
 
-export interface HydrogenHorizonsDetails extends MatchDetailBase {
+export interface MatchDetails extends MatchDetailBase {
   redHydrogenPoints: number;
   redOxygenPoints: number;
   redAlignment: number;
@@ -41,9 +35,26 @@ export interface HydrogenHorizonsDetails extends MatchDetailBase {
   coopertitionBonus: number;
 }
 
-export const isHydrogenHorizonsDetails = (
-  obj: unknown
-): obj is HydrogenHorizonsDetails =>
+export const defaultMatchDetails: MatchDetails = {
+  eventKey: '',
+  id: -1,
+  tournamentKey: '',
+  redHydrogenPoints: 0,
+  redOxygenPoints: 0,
+  redAlignment: 0,
+  redOneProficiency: 0,
+  redTwoProficiency: 0,
+  redThreeProficiency: 0,
+  blueHydrogenPoints: 0,
+  blueOxygenPoints: 0,
+  blueAlignment: 0,
+  blueOneProficiency: 0,
+  blueTwoProficiency: 0,
+  blueThreeProficiency: 0,
+  coopertitionBonus: 0
+};
+
+export const isHydrogenHorizonsDetails = (obj: unknown): obj is MatchDetails =>
   isNonNullObject(obj) &&
   isNumber(obj.redHydrogenPoints) &&
   isNumber(obj.redOxygenPoints) &&
@@ -51,25 +62,23 @@ export const isHydrogenHorizonsDetails = (
   isNumber(obj.blue1OxygenPoints) &&
   isNumber(obj.coopertitionBonus);
 
-export interface HydrogenHorizonsRanking extends Ranking {
+export interface SeasonRanking extends Ranking {
   rankingScore: number;
   highestScore: number;
   oxyHydroPoints: number;
 }
 
-export const isHydrogenHorizonsRanking = (
-  obj: unknown
-): obj is HydrogenHorizonsRanking =>
+export const isHydrogenHorizonsRanking = (obj: unknown): obj is SeasonRanking =>
   isNonNullObject(obj) &&
   isNumber(obj.rankingScore) &&
   isNumber(obj.carbonPoints);
 
 /* Functions for calculating ranks. */
 function calculateRankings(
-  matches: Match<HydrogenHorizonsDetails>[],
-  prevRankings: HydrogenHorizonsRanking[]
-): HydrogenHorizonsRanking[] {
-  const rankingMap: Map<number, HydrogenHorizonsRanking> = new Map();
+  matches: Match<MatchDetails>[],
+  prevRankings: SeasonRanking[]
+): SeasonRanking[] {
+  const rankingMap: Map<number, SeasonRanking> = new Map();
   const scoresMap: Map<number, number[]> = new Map();
 
   // In this loop calculate basic W-L-T, as well as basic game information
@@ -106,7 +115,7 @@ function calculateRankings(
       }
 
       const ranking = {
-        ...(rankingMap.get(participant.teamKey) as HydrogenHorizonsRanking)
+        ...(rankingMap.get(participant.teamKey) as SeasonRanking)
       };
       const scores = scoresMap.get(participant.teamKey) as number[];
       const redWin = match.redScore > match.blueScore;
@@ -163,7 +172,7 @@ function calculateRankings(
     if (!scores) continue;
     const ranking = {
       ...rankingMap.get(key)
-    } as HydrogenHorizonsRanking;
+    } as SeasonRanking;
 
     const lowestScore = ranking.played > 0 ? Math.min(...scores) : 0;
     const index = scores.findIndex((s) => s === lowestScore);
@@ -202,12 +211,12 @@ function calculateRankings(
 }
 
 export function calculatePlayoffsRank(
-  matches: Match<HydrogenHorizonsDetails>[],
-  prevRankings: HydrogenHorizonsRanking[],
+  matches: Match<MatchDetails>[],
+  prevRankings: SeasonRanking[],
   members: AllianceMember[]
 ) {
-  const alliances: Map<number, HydrogenHorizonsRanking> = new Map();
-  const rankingMap: Map<number, HydrogenHorizonsRanking> = new Map();
+  const alliances: Map<number, SeasonRanking> = new Map();
+  const rankingMap: Map<number, SeasonRanking> = new Map();
 
   for (const match of matches) {
     if (!match.participants) break;
@@ -232,7 +241,7 @@ export function calculatePlayoffsRank(
       if (!isHydrogenHorizonsDetails(match.details)) continue;
 
       const ranking = {
-        ...(rankingMap.get(participant.teamKey) as HydrogenHorizonsRanking)
+        ...(rankingMap.get(participant.teamKey) as SeasonRanking)
       };
 
       if (participant.cardStatus === 2) {
@@ -285,9 +294,7 @@ export function calculatePlayoffsRank(
 }
 
 /* Functions for calculating score. */
-export function calculateScore(
-  match: Match<HydrogenHorizonsDetails>
-): [number, number] {
+export function calculateScore(match: Match<MatchDetails>): [number, number] {
   const { details } = match;
   if (!details) return [0, 0];
   const redTelePoints =
@@ -313,7 +320,7 @@ export function calculateScore(
   ];
 }
 
-function getCoopertitionPoints(details: HydrogenHorizonsDetails): number {
+function getCoopertitionPoints(details: MatchDetails): number {
   const count =
     Number(details.redOneProficiency > 0) +
     Number(details.redTwoProficiency > 0) +
@@ -350,10 +357,7 @@ function getMultiplier(alignmentStatus: number): number {
   }
 }
 
-function compareRankings(
-  a: HydrogenHorizonsRanking,
-  b: HydrogenHorizonsRanking
-): number {
+function compareRankings(a: SeasonRanking, b: SeasonRanking): number {
   if (a.rankingScore !== b.rankingScore) {
     return b.rankingScore - a.rankingScore;
   } else if (a.highestScore !== b.highestScore) {

@@ -115,6 +115,10 @@ const MatchDetailInfo: FC<MatchDetailInfoProps<CarbonCaptureDetails>> = ({
   );
 };
 
+const EmptyComponent: FC = () => <div>Empty Component</div>;
+
 export const carbonCaptureComponents: SeasonComponents<CarbonCaptureDetails> = {
-  MatchDetailInfo
+  MatchDetailInfo,
+  RedScoreBreakdown: EmptyComponent,
+  BlueScoreBreakdown: EmptyComponent
 };

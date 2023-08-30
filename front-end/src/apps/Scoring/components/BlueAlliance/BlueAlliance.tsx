@@ -4,10 +4,14 @@ import Grid from '@mui/material/Grid';
 import TeamStatusRow from '../Status/TeamStatusRow';
 import { useRecoilValue } from 'recoil';
 import { currentMatchSelector } from 'src/stores/NewRecoil';
+import { getSeasonKeyFromEventKey } from '@toa-lib/models';
+import { useSeasonComponents } from 'src/seasons';
 
 const BlueAlliance: FC = () => {
   const match = useRecoilValue(currentMatchSelector);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
+  const seasonKey = getSeasonKeyFromEventKey(match ? match.eventKey : '');
+  const components = useSeasonComponents(seasonKey);
   return (
     <Paper
       className='blue-bg-imp'
@@ -19,9 +23,11 @@ const BlueAlliance: FC = () => {
             <TeamStatusRow key={p.teamKey} station={p.station} />
           ))}
         </Grid>
-        {/* <Grid item md={4}>
-          <BlueScoreBreakdown />
-        </Grid> */}
+        <Grid item md={4}>
+          {components && match && (
+            <components.BlueScoreBreakdown match={match} />
+          )}
+        </Grid>
       </Grid>
     </Paper>
   );

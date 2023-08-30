@@ -6,6 +6,7 @@ import { HydrogenHorizonsSeason } from './HydrogenHorizons.js';
 
 export * from './CarbonCapture.js';
 export * from './ChargedUp.js';
+export * as HydrogenHorizons from './HydrogenHorizons.js';
 
 export interface Season<T extends MatchDetailBase, J extends Ranking> {
   key: string;
