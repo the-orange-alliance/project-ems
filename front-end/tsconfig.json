@@ -24,7 +24,7 @@
       "@features/*": ["./src/features/*"],
       "@layouts/*": ["./src/layouts/*"],
       "@seasons/*": ["./src/seasons/*"],
-      "@stores/*": ["./src/stores/*"]
+      "@stores/*": ["./src/stores/*"],
     }
   },
   "include": ["src/"],

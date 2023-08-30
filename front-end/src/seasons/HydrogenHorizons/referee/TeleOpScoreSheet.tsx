@@ -7,10 +7,10 @@ import {
   Match,
   MatchParticipant
 } from '@toa-lib/models';
-import StateToggle from '../../StateToggle';
+import StateToggle from '@components/Referee/StateToggle';
 import { SetterOrUpdater, useRecoilState } from 'recoil';
-import { matchInProgressAtom } from 'src/stores/NewRecoil';
-import NumberInput from '../../NumberInput';
+import { matchInProgressAtom } from '@stores/NewRecoil';
+import NumberInput from '@components/Referee/NumberInput';
 
 interface Props {
   alliance: Alliance;

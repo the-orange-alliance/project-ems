@@ -1,14 +1,14 @@
 import { FC } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import NumberInput from '../../NumberInput';
-import { Alliance, HydrogenHorizons, Match } from '@toa-lib/models';
+import NumberInput from '@components/Referee/NumberInput';
+import { Alliance, ChargedUpDetails, Match } from '@toa-lib/models';
 import { useRecoilState } from 'recoil';
-import { matchInProgressAtom } from 'src/stores/NewRecoil';
+import { matchInProgressAtom } from '@stores/NewRecoil';
 
 interface Props {
   alliance: Alliance;
-  onUpdate?: (match: Match<HydrogenHorizons.MatchDetails>) => void;
+  onUpdate?: (match: Match<ChargedUpDetails>) => void;
 }
 
 const PenaltySheet: FC<Props> = ({ alliance, onUpdate }) => {

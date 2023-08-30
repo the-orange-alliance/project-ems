@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 import {
   matchInProgressAtom,
   matchInProgressParticipantsByStationSelectorFam
-} from 'src/stores/NewRecoil';
+} from '@stores/NewRecoil';
 import { useSocket } from 'src/api/SocketProvider';
 
 interface Props {

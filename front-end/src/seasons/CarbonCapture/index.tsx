@@ -3,6 +3,7 @@ import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import { MatchDetailInfoProps, SeasonComponents } from '..';
 import { CarbonCaptureDetails } from '@toa-lib/models';
+import ScoreSheet from '@seasons/CarbonCapture/referee/Scoresheet';
 
 const MatchDetailInfo: FC<MatchDetailInfoProps<CarbonCaptureDetails>> = ({
   match,
@@ -120,5 +121,6 @@ const EmptyComponent: FC = () => <div>Empty Component</div>;
 export const carbonCaptureComponents: SeasonComponents<CarbonCaptureDetails> = {
   MatchDetailInfo,
   RedScoreBreakdown: EmptyComponent,
-  BlueScoreBreakdown: EmptyComponent
+  BlueScoreBreakdown: EmptyComponent,
+  RefereeScoreSheet: EmptyComponent
 };
