@@ -59,7 +59,7 @@ export const isHydrogenHorizonsDetails = (obj: unknown): obj is MatchDetails =>
   isNumber(obj.redHydrogenPoints) &&
   isNumber(obj.redOxygenPoints) &&
   isNumber(obj.blueHydrogenPoints) &&
-  isNumber(obj.blue1OxygenPoints) &&
+  isNumber(obj.blueOxygenPoints) &&
   isNumber(obj.coopertitionBonus);
 
 export interface SeasonRanking extends Ranking {
