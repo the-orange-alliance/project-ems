@@ -12,13 +12,6 @@ const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
   calculateScore
 };
 
-export const HydrogenHorizonsSeason: Season<MatchDetails, SeasonRanking> = {
-  key: 'fgc_2023',
-  program: 'fgc',
-  name: 'Hydrogen Horizons',
-  functions
-};
-
 export interface MatchDetails extends MatchDetailBase {
   redHydrogenPoints: number;
   redOxygenPoints: number;
@@ -52,6 +45,14 @@ export const defaultMatchDetails: MatchDetails = {
   blueTwoProficiency: 0,
   blueThreeProficiency: 0,
   coopertitionBonus: 0
+};
+
+export const HydrogenHorizonsSeason: Season<MatchDetails, SeasonRanking> = {
+  key: 'fgc_2023',
+  program: 'fgc',
+  name: 'Hydrogen Horizons',
+  defaultMatchDetails,
+  functions
 };
 
 export const isHydrogenHorizonsDetails = (obj: unknown): obj is MatchDetails =>

@@ -12,16 +12,6 @@ const functions: SeasonFunctions<CarbonCaptureDetails, CarbonCaptureRanking> = {
   calculateScore
 };
 
-export const CarbonCaptureSeason: Season<
-  CarbonCaptureDetails,
-  CarbonCaptureRanking
-> = {
-  key: 'fgc_2022',
-  program: 'fgc',
-  name: 'Carbon Capture',
-  functions
-};
-
 export interface CarbonCaptureDetails extends MatchDetailBase {
   carbonPoints: number;
   redRobotOneStorage: number;
@@ -45,6 +35,17 @@ export const defaultCarbonCaptureDetails: CarbonCaptureDetails = {
   blueRobotTwoStorage: 0,
   blueRobotThreeStorage: 0,
   coopertitionBonusLevel: 0
+};
+
+export const CarbonCaptureSeason: Season<
+    CarbonCaptureDetails,
+    CarbonCaptureRanking
+> = {
+  key: 'fgc_2022',
+  program: 'fgc',
+  name: 'Carbon Capture',
+  defaultMatchDetails: defaultCarbonCaptureDetails,
+  functions
 };
 
 export const isCarbonCaptureDetails = (

@@ -4,7 +4,8 @@ import {
   Match,
   MatchDetailBase,
   MatchKey,
-  HydrogenHorizons
+  getSeasonKeyFromEventKey,
+  getDefaultMatchDetailsBySeasonKey
 } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilCallback } from 'recoil';
@@ -33,9 +34,16 @@ const PrestartListener: FC = () => {
       undefined,
       isMatch
     );
+    const seasonKey = getSeasonKeyFromEventKey(key.eventKey);
+
     const newMatch = { ...match };
     // TODO - Create a resetMatch() method that would help here.
-    newMatch.details = { ...HydrogenHorizons.defaultMatchDetails };
+    newMatch.details = {
+      ...getDefaultMatchDetailsBySeasonKey(seasonKey),
+      eventKey: match.eventKey,
+      tournamentKey: match.tournamentKey,
+      id: match.id
+    };
     newMatch.details.eventKey = match.eventKey;
     newMatch.details.tournamentKey = match.tournamentKey;
     newMatch.details.id = match.id;
