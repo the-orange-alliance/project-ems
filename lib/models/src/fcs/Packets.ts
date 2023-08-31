@@ -36,6 +36,7 @@ export enum BlinkinPattern {
   COLOR_WHITE = 1965,
   COLOR_YELLOW = 1845,
   COLOR_WAVES_RAINBOW = 1275,
+  COLOR_WAVES_PARTY = 1285,
 }
 
 export const LED_PRESTART: FieldControlPacket = {
@@ -129,7 +130,7 @@ export const LED_IDLE: FieldControlPacket = {
       function: 'servo',
       parameters: {
         port: RED_BLINKIN_CHANNEL,
-        pulsewidth: BlinkinPattern.COLOR_WAVES_RAINBOW
+        pulsewidth: BlinkinPattern.COLOR_WAVES_PARTY
       }
     },
     {
@@ -137,7 +138,7 @@ export const LED_IDLE: FieldControlPacket = {
       function: 'servo',
       parameters: {
         port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: BlinkinPattern.COLOR_WAVES_RAINBOW
+        pulsewidth: BlinkinPattern.COLOR_WAVES_PARTY
       }
     },
     {
@@ -145,7 +146,7 @@ export const LED_IDLE: FieldControlPacket = {
       function: 'servo',
       parameters: {
         port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: BlinkinPattern.COLOR_WAVES_RAINBOW
+        pulsewidth: BlinkinPattern.COLOR_WAVES_PARTY
       }
     }
   ]
