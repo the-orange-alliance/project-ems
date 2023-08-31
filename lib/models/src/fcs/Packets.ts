@@ -15,7 +15,6 @@ export const LED_COLOR_GREEN = 1885;
 export const LED_COLOR_RED = 1805;
 export const LED_COLOR_RAINBOW = 1275;
 export const LED_COLOR_FIRE = 1215;
-export const FULL_STRIP_PWM = 990;
 export const LED_COLOR_1_HB_SLOW = 1515;
 export const LED_COLOR_1_HB_MED = 1525;
 export const LED_COLOR_1_HB_FAST = 1535;
@@ -41,25 +40,6 @@ export const LED_COLOR_VIOLET = 1955;
 export const LED_COLOR_GRAY = 1975;
 export const LED_COLOR_DARK_GRAY = 1985;
 
-const calcPulseWidth = (ledLength: number): number => {
-  const maxPwm = 990;
-  const minPwm = 10;
-  const led1Pwm = 14;
-  const totalLedLength = 120;
-  return Math.min(
-    Math.floor((ledLength * (maxPwm - minPwm)) / totalLedLength + led1Pwm),
-    990
-  );
-};
-
-export const setLEDLength = (length: number): FieldControlPacket => {
-  const packet = LED_EMPTY;
-  const pulseWidth = calcPulseWidth(length);
-  packet.messages[0].parameters.pulsewidth = pulseWidth;
-  packet.messages[1].parameters.pulsewidth = pulseWidth;
-  packet.messages[2].parameters.pulsewidth = pulseWidth;
-  return packet;
-};
 export const setLEDPattern = (pulseWidth: number): FieldControlPacket => {
   const packet = LED_EMPTY;
   packet.messages[0].parameters.pulsewidth = pulseWidth;
@@ -155,30 +135,6 @@ export const LED_PRESTART: FieldControlPacket = {
         port: AUDIENCE_BLINKIN_CHANNEL,
         pulsewidth: LED_COLOR_YELLOW
       }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
     }
   ]
 };
@@ -206,30 +162,6 @@ export const LED_ALLCLEAR: FieldControlPacket = {
       parameters: {
         port: AUDIENCE_BLINKIN_CHANNEL,
         pulsewidth: LED_COLOR_GREEN
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
       }
     }
   ]
@@ -259,30 +191,6 @@ export const LED_FIELDFAULT: FieldControlPacket = {
         port: AUDIENCE_BLINKIN_CHANNEL,
         pulsewidth: LED_COLOR_RED
       }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
     }
   ]
 };
@@ -311,30 +219,6 @@ export const LED_IDLE: FieldControlPacket = {
         port: AUDIENCE_BLINKIN_CHANNEL,
         pulsewidth: LED_COLOR_RAINBOW
       }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
     }
   ]
 };
@@ -362,30 +246,6 @@ export const LED_COUNTDOWN: FieldControlPacket = {
       parameters: {
         port: AUDIENCE_BLINKIN_CHANNEL,
         pulsewidth: LED_COLOR_PURPLE
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
       }
     }
   ]
