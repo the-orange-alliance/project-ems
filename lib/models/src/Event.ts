@@ -59,8 +59,8 @@ export const defaultEvent: Event = {
   venue: '',
   city: '',
   stateProv: '',
-  startDate: DateTime.now().toISO(),
-  endDate: DateTime.now().plus({ days: 1 }).toISO(),
+  startDate: DateTime.now().toISO() ?? '',
+  endDate: DateTime.now().plus({ days: 1 }).toISO() ?? '',
   country: '',
   website: ''
 };

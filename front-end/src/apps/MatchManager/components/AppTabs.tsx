@@ -6,7 +6,7 @@ import TabPanel from 'src/components/TabPanel/TabPanel';
 import { useRecoilValue } from 'recoil';
 import { currentTournamentSelector } from 'src/stores/NewRecoil';
 import SetupTeams from './SetupTeams';
-import SetupSchedule from './SetupSchedule';
+import SetupSchedule from './schedule/ScheduleParams';
 import SetupMatches from './SetupMatches';
 import MatchEditor from './MatchEditor';
 import { FINALS_LEVEL, ROUND_ROBIN_LEVEL } from '@toa-lib/models';

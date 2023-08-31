@@ -72,8 +72,8 @@ export interface DayBreak {
 export const defaultBreak: DayBreak = {
   id: 0,
   name: 'Break',
-  startTime: DateTime.now().toISO(),
-  endTime: DateTime.now().toISO(),
+  startTime: DateTime.now().toISO() ?? '',
+  endTime: DateTime.now().toISO() ?? '',
   duration: 30,
   afterMatch: 1
 };
@@ -88,8 +88,8 @@ export interface Day {
 
 export const defaultDay: Day = {
   id: 0,
-  startTime: DateTime.now().toISO(),
-  endTime: DateTime.now().toISO(),
+  startTime: DateTime.now().toISO() ?? '',
+  endTime: DateTime.now().toISO() ?? '',
   scheduledMatches: 0,
   breaks: []
 };
@@ -113,7 +113,7 @@ export const defaultScheduleItem: ScheduleItem = {
   name: '',
   type: 'Test',
   day: 0,
-  startTime: DateTime.now().toISO(),
+  startTime: DateTime.now().toISO() ?? '',
   duration: 0,
   isMatch: false
 };
@@ -185,14 +185,15 @@ export function generateScheduleItems(schedule: EventSchedule): ScheduleItem[] {
       item.day = day.id;
       item.name = schedule.type + ' Match ' + (totalMatches + 1);
       item.duration = schedule.cycleTime;
-      item.startTime = DateTime.fromISO(day.startTime)
-        .plus({
-          minutes:
-            Math.ceil(matchIndex / schedule.matchConcurrency) *
-              schedule.cycleTime +
-            breakPadding
-        })
-        .toISO();
+      item.startTime =
+        DateTime.fromISO(day.startTime)
+          .plus({
+            minutes:
+              Math.ceil(matchIndex / schedule.matchConcurrency) *
+                schedule.cycleTime +
+              breakPadding
+          })
+          .toISO() ?? '';
       item.isMatch = true;
       item.tournamentKey = schedule.tournamentKey;
       scheduleItems.push(item);

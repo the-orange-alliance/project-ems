@@ -3,7 +3,7 @@ import MatchStateListener from 'src/components/MatchStateListener/MatchStateList
 import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
 import DefaultLayout from 'src/layouts/DefaultLayout';
-import BlueScoreSheet from './components/games/ChargedUp/BlueScoreSheet';
+import BlueScoreSheet from './components/games/HyodrogenHorizons/BlueScoreSheet';
 
 const BlueReferee: FC = () => {
   return (

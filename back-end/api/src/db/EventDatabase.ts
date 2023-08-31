@@ -1,5 +1,5 @@
 import { getAppData, environment as env } from '@toa-lib/server';
-import { PromisedDatabase } from 'promised-sqlite3';
+import { AsyncDatabase } from 'promised-sqlite3';
 import { sep, join, dirname } from 'path';
 import { mkdir, readFile } from 'node:fs/promises';
 import { ApiDatabaseError } from '@toa-lib/models';
@@ -30,11 +30,10 @@ export async function initGlobal(): Promise<void> {
 }
 
 export class EventDatabase {
-  public db: PromisedDatabase;
+  public db!: AsyncDatabase;
   private name: string;
 
   constructor(name: string) {
-    this.db = new PromisedDatabase();
     this.name = name;
   }
 
@@ -42,7 +41,7 @@ export class EventDatabase {
     // Make sure our appdata path is created
     try {
       await mkdir(getAppData('ems'), { recursive: true });
-      return await this.db.open(getAppData('ems') + sep + this.name + '.db');
+      this.db = await AsyncDatabase.open(getAppData('ems') + sep + this.name + '.db');
     } catch (e) {
       throw e;
     }

@@ -4,7 +4,7 @@ import {
   Match,
   MatchDetailBase,
   MatchKey,
-  defaultChargedUpDetails
+  HydrogenHorizons
 } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilCallback } from 'recoil';
@@ -35,7 +35,7 @@ const PrestartListener: FC = () => {
     );
     const newMatch = { ...match };
     // TODO - Create a resetMatch() method that would help here.
-    newMatch.details = { ...defaultChargedUpDetails };
+    newMatch.details = { ...HydrogenHorizons.defaultMatchDetails };
     newMatch.details.eventKey = match.eventKey;
     newMatch.details.tournamentKey = match.tournamentKey;
     newMatch.details.id = match.id;

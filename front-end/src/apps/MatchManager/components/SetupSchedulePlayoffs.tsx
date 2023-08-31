@@ -11,7 +11,7 @@ import {
   tournamentScheduleItemAtomFamily,
   tournamentScheduleSelector
 } from 'src/stores/Recoil';
-import Days from './Days';
+import Days from './time/Days';
 import {
   generateFGCRoundRobinSchedule,
   generateFinalsSchedule,

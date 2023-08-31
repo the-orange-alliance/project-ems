@@ -9,16 +9,17 @@ import TableBody from '@mui/material/TableBody';
 import { Match } from '@toa-lib/models';
 import { DateTime } from 'luxon';
 import { useRecoilValue } from 'recoil';
-import { teamsAtom } from 'src/stores/Recoil';
+import { teamsByEventSelectorFam } from 'src/stores/NewRecoil';
 import { teamIdentifierAtom } from 'src/stores/NewRecoil';
 
 interface Props {
+  eventKey: string;
   matches: Match<any>[];
 }
 
-const MatchTable: FC<Props> = ({ matches }) => {
+const MatchTable: FC<Props> = ({ matches, eventKey }) => {
   const identifier = useRecoilValue(teamIdentifierAtom);
-  const teams = useRecoilValue(teamsAtom);
+  const teams = useRecoilValue(teamsByEventSelectorFam(eventKey));
   const allianceSize = matches?.[0]?.participants?.length
     ? matches[0].participants.length / 2
     : 3;

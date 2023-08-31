@@ -94,6 +94,10 @@ const MatchDetailInfo: FC<MatchDetailInfoProps<ChargedUpDetails>> = ({
   );
 };
 
+const EmptyComponent: FC = () => <div>Empty Component</div>;
+
 export const chargedUpComponents: SeasonComponents<ChargedUpDetails> = {
-  MatchDetailInfo
+  MatchDetailInfo,
+  RedScoreBreakdown: EmptyComponent,
+  BlueScoreBreakdown: EmptyComponent
 };

@@ -1,8 +1,6 @@
-import { ChangeEvent, FC, useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
-import Grid from '@mui/material/Grid';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
@@ -15,14 +13,15 @@ import {
   useScheduleValidator,
   generateScheduleItems
 } from '@toa-lib/models';
-import Days from './Days';
-import ScheduleItemTable from './ScheduleItemTable';
+import Days from '../time/Days';
+import ScheduleItemTable from '../ScheduleItemTable';
 import { useFlags } from 'src/stores/AppFlags';
 import {
   deleteSchedule,
   postSchedule,
   setApiStorage
 } from 'src/api/ApiProvider';
+import { ScheduleOptions } from './ScheduleOptions';
 
 const SetupSchedule: FC = () => {
   const tournament = useRecoilValue(currentTournamentSelector);
@@ -47,18 +46,9 @@ const SetupSchedule: FC = () => {
     }));
   }, [schedule.matchesPerTeam, schedule.teamsPerAlliance]);
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(event.target.value);
-    const { name } = event.target;
-    setSchedule((prev) => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const generateSchedule = async () => {
     if (!tournament) return;
-    const scheduleItems = generateScheduleItems(schedule, tournament.eventKey);
+    const scheduleItems = generateScheduleItems(schedule);
     setScheduleItems(scheduleItems);
     await deleteSchedule(tournament.eventKey, tournament.tournamentKey);
     await setFlag('createdSchedules', [
@@ -74,56 +64,16 @@ const SetupSchedule: FC = () => {
 
   return (
     <>
-      <Grid
-        container
-        spacing={3}
-        sx={{ marginBottom: (theme) => theme.spacing(2) }}
-      >
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <TextField
-            label='Teams Scheduled'
-            value={schedule.teams.length}
-            disabled
-            fullWidth
-            type='number'
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <TextField
-            name='cycleTime'
-            label='Cycle Time'
-            value={schedule.cycleTime}
-            fullWidth
-            onChange={handleChange}
-            type='number'
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <TextField
-            name='matchesPerTeam'
-            label='Matches Per Team'
-            value={schedule.matchesPerTeam}
-            fullWidth
-            onChange={handleChange}
-            type='number'
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <TextField
-            label='Total Matches'
-            value={schedule.totalMatches}
-            disabled
-            fullWidth
-            type='number'
-          />
-        </Grid>
-      </Grid>
+      <ScheduleOptions />
       <Divider sx={{ marginBottom: (theme) => theme.spacing(2) }} />
       <Days />
       <Button
         variant='contained'
         onClick={generateSchedule}
-        sx={{ marginTop: (theme) => theme.spacing(2) }}
+        sx={{
+          marginTop: (theme) => theme.spacing(2),
+          marginBottom: (theme) => theme.spacing(2)
+        }}
         disabled={!valid}
       >
         Generate Schedule

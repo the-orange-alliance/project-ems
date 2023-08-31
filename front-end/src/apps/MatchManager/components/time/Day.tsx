@@ -28,6 +28,10 @@ const DayComponent: FC<Props> = ({ id }) => {
     handleEndChange(DateTime.fromISO(day.endTime));
   }, [day.breaks]);
 
+  useEffect(() => {
+    updateEndTime(day);
+  }, [schedule.cycleTime]);
+
   const changeMatches = (event: ChangeEvent<HTMLInputElement>) => {
     const newDay = { ...day, scheduledMatches: parseInt(event.target.value) };
     setDay(newDay);
@@ -36,7 +40,7 @@ const DayComponent: FC<Props> = ({ id }) => {
 
   const handleStartChange = (newValue: DateTime | null) => {
     const newTime = (newValue ? newValue : DateTime.now()).toISO();
-    const newDay = { ...day, startTime: newTime };
+    const newDay: Day = { ...day, startTime: newTime ?? '' };
     setStartDate(newValue);
     setDay(newDay);
     updateEndTime(newDay);
@@ -45,7 +49,7 @@ const DayComponent: FC<Props> = ({ id }) => {
   const handleEndChange = (newValue: DateTime | null) => {
     const newTime = (newValue ? newValue : DateTime.now()).toISO();
     setEndDate(newValue);
-    setDay((prev) => ({ ...prev, endTime: newTime }));
+    setDay((prev) => ({ ...prev, endTime: newTime ?? '' }));
   };
 
   const addBreak = () => {
@@ -77,7 +81,7 @@ const DayComponent: FC<Props> = ({ id }) => {
     setEndDate(newEndTime);
     setDay((prev) => ({
       ...prev,
-      endTime: newEndTime.toISO()
+      endTime: newEndTime.toISO() ?? ''
     }));
   };
 
@@ -113,21 +117,15 @@ const DayComponent: FC<Props> = ({ id }) => {
         <Grid item xs={12} sm={6} md={4} lg={4}>
           <DateTimePicker
             label='Start Date'
-            inputFormat='fff'
             value={startDate}
             onChange={handleStartChange}
-            disableMaskedInput
-            renderInput={(params) => <TextField {...params} fullWidth />}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={4}>
           <DateTimePicker
             label='End Date'
-            inputFormat='fff'
             value={endDate}
             onChange={handleEndChange}
-            disableMaskedInput
-            renderInput={(params) => <TextField {...params} fullWidth />}
             disabled
           />
         </Grid>

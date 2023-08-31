@@ -39,7 +39,7 @@ router.post(
     passport.authenticate(
       'local',
       { session: false },
-      (err, user: User, info) => {
+      (err: any, user: User, info: any) => {
         if (err || !user) {
           return next(AuthenticationInvalidError);
         } else {
