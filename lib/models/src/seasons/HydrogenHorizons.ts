@@ -1,7 +1,7 @@
 import { AllianceMember } from '../Alliance.js';
 import { Match, MatchDetailBase } from '../Match.js';
 import { Ranking } from '../Ranking.js';
-import { isNonNullObject, isNumber } from '../types.js';
+import {isNonNullObject, isNumber, UnreachableError} from '../types.js';
 import { Season, SeasonFunctions } from './index.js';
 
 /**
@@ -343,7 +343,7 @@ function getProficiencyPoints(proficiency: Proficiency): number {
     case Proficiency.EXPERT:
       return 10;
     default:
-      return 0;
+      throw new UnreachableError(proficiency);
   }
 }
 
@@ -356,7 +356,7 @@ function getMultiplier(alignmentStatus: AlignmentStatus): number {
     case AlignmentStatus.FULL:
       return 1.3;
     default:
-      return 1.0;
+      throw new UnreachableError(alignmentStatus);
   }
 }
 
