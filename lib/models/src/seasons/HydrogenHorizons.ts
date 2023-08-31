@@ -12,19 +12,23 @@ const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
   calculateScore
 };
 
+export enum AlignmentStatus { NONE, PARTIAL, FULL }
+
+export enum Proficiency { DEVELOPING, INTERMEDIATE, EXPERT }
+
 export interface MatchDetails extends MatchDetailBase {
   redHydrogenPoints: number;
   redOxygenPoints: number;
-  redAlignment: number;
-  redOneProficiency: number;
-  redTwoProficiency: number;
-  redThreeProficiency: number;
+  redAlignment: AlignmentStatus;
+  redOneProficiency: Proficiency;
+  redTwoProficiency: Proficiency;
+  redThreeProficiency: Proficiency;
   blueHydrogenPoints: number;
   blueOxygenPoints: number;
-  blueAlignment: number;
-  blueOneProficiency: number;
-  blueTwoProficiency: number;
-  blueThreeProficiency: number;
+  blueAlignment: AlignmentStatus;
+  blueOneProficiency: Proficiency;
+  blueTwoProficiency: Proficiency;
+  blueThreeProficiency: Proficiency;
   coopertitionBonus: number;
 }
 
@@ -34,16 +38,16 @@ export const defaultMatchDetails: MatchDetails = {
   tournamentKey: '',
   redHydrogenPoints: 0,
   redOxygenPoints: 0,
-  redAlignment: 0,
-  redOneProficiency: 0,
-  redTwoProficiency: 0,
-  redThreeProficiency: 0,
+  redAlignment: AlignmentStatus.NONE,
+  redOneProficiency: Proficiency.DEVELOPING,
+  redTwoProficiency: Proficiency.DEVELOPING,
+  redThreeProficiency: Proficiency.DEVELOPING,
   blueHydrogenPoints: 0,
   blueOxygenPoints: 0,
-  blueAlignment: 0,
-  blueOneProficiency: 0,
-  blueTwoProficiency: 0,
-  blueThreeProficiency: 0,
+  blueAlignment: AlignmentStatus.NONE,
+  blueOneProficiency: Proficiency.DEVELOPING,
+  blueTwoProficiency: Proficiency.DEVELOPING,
+  blueThreeProficiency: Proficiency.DEVELOPING,
   coopertitionBonus: 0
 };
 
@@ -323,35 +327,35 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
 
 function getCoopertitionPoints(details: MatchDetails): number {
   const count =
-    Number(details.redOneProficiency > 0) +
-    Number(details.redTwoProficiency > 0) +
-    Number(details.redThreeProficiency > 0) +
-    Number(details.blueOneProficiency > 0) +
-    Number(details.blueTwoProficiency > 0) +
-    Number(details.blueThreeProficiency > 0);
+    Number(details.redOneProficiency > Proficiency.DEVELOPING) +
+    Number(details.redTwoProficiency > Proficiency.DEVELOPING) +
+    Number(details.redThreeProficiency > Proficiency.DEVELOPING) +
+    Number(details.blueOneProficiency > Proficiency.DEVELOPING) +
+    Number(details.blueTwoProficiency > Proficiency.DEVELOPING) +
+    Number(details.blueThreeProficiency > Proficiency.DEVELOPING);
   return count === 5 ? 5 : count === 6 ? 10 : 0;
 }
 
-function getProficiencyPoints(proficiency: number): number {
+function getProficiencyPoints(proficiency: Proficiency): number {
   switch (proficiency) {
-    case 0:
+    case Proficiency.DEVELOPING:
       return 0;
-    case 1:
+    case Proficiency.INTERMEDIATE:
       return 5;
-    case 2:
+    case Proficiency.EXPERT:
       return 10;
     default:
       return 0;
   }
 }
 
-function getMultiplier(alignmentStatus: number): number {
+function getMultiplier(alignmentStatus: AlignmentStatus): number {
   switch (alignmentStatus) {
-    case 0:
+    case AlignmentStatus.NONE:
       return 1.0;
-    case 1:
+    case AlignmentStatus.PARTIAL:
       return 1.2;
-    case 2:
+    case AlignmentStatus.FULL:
       return 1.3;
     default:
       return 1.0;
