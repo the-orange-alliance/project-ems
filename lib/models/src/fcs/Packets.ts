@@ -38,14 +38,6 @@ export enum BlinkinPattern {
   COLOR_WAVES_RAINBOW = 1275,
 }
 
-export const setLEDPattern = (pulseWidth: number): FieldControlPacket => {
-  const packet = LED_EMPTY;
-  packet.messages[0].parameters.pulsewidth = pulseWidth;
-  packet.messages[1].parameters.pulsewidth = pulseWidth;
-  packet.messages[2].parameters.pulsewidth = pulseWidth;
-  return packet;
-};
-
 export const LED_PRESTART: FieldControlPacket = {
   messages: [
     {
@@ -436,31 +428,6 @@ export const LED_COLOR2_HB_FAST: FieldControlPacket = {
       parameters: {
         port: AUDIENCE_BLINKIN_CHANNEL,
         pulsewidth: BlinkinPattern.COLOR_2_HB_FAST
-      }
-    }
-  ]
-};
-export const LED_EMPTY: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL
       }
     }
   ]
