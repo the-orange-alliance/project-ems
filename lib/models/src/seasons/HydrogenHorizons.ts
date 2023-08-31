@@ -29,7 +29,6 @@ export interface MatchDetails extends MatchDetailBase {
   blueOneProficiency: Proficiency;
   blueTwoProficiency: Proficiency;
   blueThreeProficiency: Proficiency;
-  coopertitionBonus: number;
 }
 
 export const defaultMatchDetails: MatchDetails = {
@@ -48,7 +47,6 @@ export const defaultMatchDetails: MatchDetails = {
   blueOneProficiency: Proficiency.DEVELOPING,
   blueTwoProficiency: Proficiency.DEVELOPING,
   blueThreeProficiency: Proficiency.DEVELOPING,
-  coopertitionBonus: 0
 };
 
 export const HydrogenHorizonsSeason: Season<MatchDetails, SeasonRanking> = {

@@ -110,9 +110,6 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
     }
   };
 
-  const handleCoopertition = (newValue: number) => {
-    setMatch(setDetails('coopertitionBonus', newValue));
-  };
   console.log({ match });
   return (
     <Grid container spacing={3}>
@@ -170,15 +167,6 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
           </Grid>
         );
       })}
-      <Grid item xs={12} md={3} lg={3}>
-        <StateToggle
-          title={`Coopertition Bonus`}
-          states={['None', 'Cooperated']}
-          value={match.details.coopertitionBonus}
-          onChange={handleCoopertition}
-          fullWidth
-        />
-      </Grid>
     </Grid>
   );
 };
