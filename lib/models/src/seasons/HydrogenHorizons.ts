@@ -305,12 +305,12 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
     (details.blueHydrogenPoints + details.blueHydrogenPoints) *
     getMultiplier(details.blueAlignment);
   const proficiencyPoints =
-    getProficiencyPoiints(details.redOneProficiency) +
-    getProficiencyPoiints(details.redTwoProficiency) +
-    getProficiencyPoiints(details.redThreeProficiency) +
-    getProficiencyPoiints(details.blueOneProficiency) +
-    getProficiencyPoiints(details.blueTwoProficiency) +
-    getProficiencyPoiints(details.blueThreeProficiency);
+    getProficiencyPoints(details.redOneProficiency) +
+    getProficiencyPoints(details.redTwoProficiency) +
+    getProficiencyPoints(details.redThreeProficiency) +
+    getProficiencyPoints(details.blueOneProficiency) +
+    getProficiencyPoints(details.blueTwoProficiency) +
+    getProficiencyPoints(details.blueThreeProficiency);
   const redPoints =
     redTelePoints + proficiencyPoints + getCoopertitionPoints(details);
   const bluePoints =
@@ -332,7 +332,7 @@ function getCoopertitionPoints(details: MatchDetails): number {
   return count === 5 ? 5 : count === 6 ? 10 : 0;
 }
 
-function getProficiencyPoiints(proficiency: number): number {
+function getProficiencyPoints(proficiency: number): number {
   switch (proficiency) {
     case 0:
       return 0;
