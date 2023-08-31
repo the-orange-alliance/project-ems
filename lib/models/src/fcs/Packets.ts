@@ -1,8 +1,5 @@
 import { FieldControlPacket } from '../FieldControl.js';
 
-const LEFT_MOTOR_CHANNEL = 0;
-const RIGHT_MOTOR_CHANNEL = 1;
-
 const RED_BLINKIN_CHANNEL = 0;
 const BLUE_BLINKIN_CHANNEL = 1;
 const AUDIENCE_BLINKIN_CHANNEL = 2;
@@ -46,68 +43,6 @@ export const setLEDPattern = (pulseWidth: number): FieldControlPacket => {
   packet.messages[1].parameters.pulsewidth = pulseWidth;
   packet.messages[2].parameters.pulsewidth = pulseWidth;
   return packet;
-};
-export const MOTOR_FORWARD: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'motor',
-      parameters: {
-        port: LEFT_MOTOR_CHANNEL,
-        setpoint: 15000
-      }
-    },
-    {
-      hub: 0,
-      function: 'motor',
-      parameters: {
-        port: RIGHT_MOTOR_CHANNEL,
-        setpoint: -15000
-      }
-    }
-  ]
-};
-
-export const MOTOR_DISABLE: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'motor',
-      parameters: {
-        port: LEFT_MOTOR_CHANNEL,
-        setpoint: 0
-      }
-    },
-    {
-      hub: 0,
-      function: 'motor',
-      parameters: {
-        port: RIGHT_MOTOR_CHANNEL,
-        setpoint: 0
-      }
-    }
-  ]
-};
-
-export const MOTOR_REVERSE: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'motor',
-      parameters: {
-        port: LEFT_MOTOR_CHANNEL,
-        setpoint: -15000
-      }
-    },
-    {
-      hub: 0,
-      function: 'motor',
-      parameters: {
-        port: RIGHT_MOTOR_CHANNEL,
-        setpoint: 15000
-      }
-    }
-  ]
 };
 
 export const LED_PRESTART: FieldControlPacket = {
