@@ -78,7 +78,7 @@ const host = getIPv4();
 
 server.listen(
   {
-    host,
+    host: "0.0.0.0",
     port: env.get().servicePort,
   },
   () => {

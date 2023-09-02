@@ -94,7 +94,7 @@ const host = getIPv4();
 // Start the server
 server.listen(
   {
-    host,
+    host: '0.0.0.0',
     port: env.get().servicePort
   },
   () =>
