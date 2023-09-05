@@ -16,11 +16,13 @@ import MatchPlay from './displays/frc_2023/MatchPlay/MatchPlay';
 
 import './AudienceDisplay.less';
 import MatchResults from './displays/frc_2023/MatchResults/MatchResults';
+import { useHiddenMotionlessCursor } from '@features/hooks/use-hidden-motionless-cursor';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayIdAtom);
   const chromaKey = useRecoilValue(displayChromaKeyAtom);
   const [socket, connected] = useSocket();
+  useHiddenMotionlessCursor();
 
   useEffect(() => {
     if (connected) {
