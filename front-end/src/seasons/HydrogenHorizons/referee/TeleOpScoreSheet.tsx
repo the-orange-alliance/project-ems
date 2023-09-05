@@ -7,10 +7,14 @@ import {
   Match,
   MatchParticipant
 } from '@toa-lib/models';
-import StateToggle from '../../StateToggle';
+import StateToggle from '@components/Referee/StateToggle';
 import { SetterOrUpdater, useRecoilState } from 'recoil';
-import { matchInProgressAtom } from 'src/stores/NewRecoil';
-import NumberInput from '../../NumberInput';
+import { matchInProgressAtom } from '@stores/NewRecoil';
+import NumberInput from '@components/Referee/NumberInput';
+import {
+  AlignmentStatus,
+  Proficiency
+} from '@toa-lib/models/build/seasons/HydrogenHorizons';
 
 interface Props {
   alliance: Alliance;
@@ -26,9 +30,9 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
 
   if (!match || !match.details) return null;
 
-  const setDetails = (
-    key: keyof HydrogenHorizons.MatchDetails,
-    value: number
+  const setDetails = <K extends keyof HydrogenHorizons.MatchDetails>(
+    key: K,
+    value: HydrogenHorizons.MatchDetails[K]
   ): Match<HydrogenHorizons.MatchDetails> => {
     if (!match || !match.details) return match;
     const details = Object.assign({}, { ...match.details, [key]: value });
@@ -55,7 +59,7 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
     );
   };
 
-  const handleAlignmentUpdate = (newValue: number) => {
+  const handleAlignmentUpdate = (newValue: AlignmentStatus) => {
     setMatch(
       setDetails(
         alliance === 'red' ? 'redAlignment' : 'blueAlignment',
@@ -64,7 +68,7 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
     );
   };
 
-  const getProficiencyStatus = (station: number): number | undefined => {
+  const getProficiencyStatus = (station: number): Proficiency | undefined => {
     switch (station) {
       case 11:
         return match.details?.redOneProficiency;
@@ -79,11 +83,11 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
       case 23:
         return match.details?.blueThreeProficiency;
       default:
-        return 0;
+        return Proficiency.DEVELOPING;
     }
   };
 
-  const updateProficiency = (station: number, value: number) => {
+  const updateProficiency = (station: number, value: Proficiency) => {
     switch (station) {
       case 11:
         setMatch(setDetails('redOneProficiency', value));
@@ -106,9 +110,6 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
     }
   };
 
-  const handleCoopertition = (newValue: number) => {
-    setMatch(setDetails('coopertitionBonus', newValue));
-  };
   console.log({ match });
   return (
     <Grid container spacing={3}>
@@ -135,6 +136,7 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
         />
       </Grid>
       <Grid item xs={12} md={4} lg={4}>
+        {/* The states attribute MUST match the order of the AlignmentStatus enum */}
         <StateToggle
           title={`Alignment`}
           states={['No Alignment', 'Partial Alignment', 'Full Alignment']}
@@ -148,31 +150,23 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
         />
       </Grid>
       {participants?.map((p) => {
-        const update = (value: number) => {
+        const update = (value: Proficiency) => {
           updateProficiency(p.station, value);
         };
 
         return (
           <Grid item key={`${p.teamKey}-proficiency`} xs={12} md={3} lg={3}>
+            {/* The states attribute MUST match the order of the Proficiency enum */}
             <StateToggle
               title={`${p.teamKey} Proficiency`}
               states={['Developing', 'Intermediate', 'Expert']}
-              value={getProficiencyStatus(p.station) ?? 0}
+              value={getProficiencyStatus(p.station) ?? Proficiency.DEVELOPING}
               onChange={update}
               fullWidth
             />
           </Grid>
         );
       })}
-      <Grid item xs={12} md={3} lg={3}>
-        <StateToggle
-          title={`Coopertition Bonus`}
-          states={['None', 'Cooperated']}
-          value={match.details.coopertitionBonus}
-          onChange={handleCoopertition}
-          fullWidth
-        />
-      </Grid>
     </Grid>
   );
 };

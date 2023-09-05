@@ -7,10 +7,10 @@ import {
   Match,
   MatchParticipant
 } from '@toa-lib/models';
-import StateToggle from '../../StateToggle';
+import StateToggle from '@components/Referee/StateToggle';
 import { SetterOrUpdater, useRecoilState } from 'recoil';
-import { matchInProgressAtom } from 'src/stores/NewRecoil';
-import NumberInput from '../../NumberInput';
+import { matchInProgressAtom } from '@stores/NewRecoil';
+import NumberInput from '@components/Referee/NumberInput';
 
 interface Props {
   alliance: Alliance;
@@ -18,7 +18,7 @@ interface Props {
   onUpdate?: (match: Match<ChargedUpDetails>) => void;
 }
 
-const AutoScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
+const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   const [match, setMatch]: [
     Match<ChargedUpDetails> | null,
     SetterOrUpdater<Match<ChargedUpDetails> | null>
@@ -37,52 +37,10 @@ const AutoScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
     return newMatch;
   };
 
-  const getMobility = (station: number): number | undefined => {
-    switch (station) {
-      case 11:
-        return match.details?.redAutoMobilityOne;
-      case 12:
-        return match.details?.redAutoMobilityTwo;
-      case 13:
-        return match.details?.redAutoMobilityThree;
-      case 21:
-        return match.details?.blueAutoMobilityOne;
-      case 22:
-        return match.details?.blueAutoMobilityTwo;
-      case 23:
-        return match.details?.blueAutoMobilityThree;
-      default:
-        return 0;
-    }
-  };
-
-  const updateMobility = (station: number, value: number) => {
-    switch (station) {
-      case 11:
-        setMatch(setDetails('redAutoMobilityOne', value));
-        break;
-      case 12:
-        setMatch(setDetails('redAutoMobilityTwo', value));
-        break;
-      case 13:
-        setMatch(setDetails('redAutoMobilityThree', value));
-        break;
-      case 21:
-        setMatch(setDetails('blueAutoMobilityOne', value));
-        break;
-      case 22:
-        setMatch(setDetails('blueAutoMobilityTwo', value));
-        break;
-      case 23:
-        setMatch(setDetails('blueAutoMobilityThree', value));
-        break;
-    }
-  };
-
   const handleTopPieceChange = (newValue: number) => {
     setMatch(
       setDetails(
-        alliance === 'red' ? 'redAutoTopPieces' : 'blueAutoTopPieces',
+        alliance === 'red' ? 'redTeleTopPieces' : 'blueTeleTopPieces',
         newValue
       )
     );
@@ -91,7 +49,7 @@ const AutoScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   const handleMidPieceChange = (newValue: number) => {
     setMatch(
       setDetails(
-        alliance === 'red' ? 'redAutoMidPieces' : 'blueAutoMidPieces',
+        alliance === 'red' ? 'redTeleMidPieces' : 'blueTeleMidPieces',
         newValue
       )
     );
@@ -100,7 +58,7 @@ const AutoScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   const handleLowPieceChange = (newValue: number) => {
     setMatch(
       setDetails(
-        alliance === 'red' ? 'redAutoLowPieces' : 'blueAutoLowPieces',
+        alliance === 'red' ? 'redTeleLowPieces' : 'blueTeleLowPieces',
         newValue
       )
     );
@@ -109,71 +67,64 @@ const AutoScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   const getChargeStatus = (station: number): number | undefined => {
     switch (station) {
       case 11:
-        return match.details?.redAutoChargeOne;
+        return match.details?.redTeleChargeOne;
       case 12:
-        return match.details?.redAutoChargeTwo;
+        return match.details?.redTeleChargeTwo;
       case 13:
-        return match.details?.redAutoChargeThree;
+        return match.details?.redTeleChargeThree;
       case 21:
-        return match.details?.blueAutoChargeOne;
+        return match.details?.blueTeleChargeOne;
       case 22:
-        return match.details?.blueAutoChargeTwo;
+        return match.details?.blueTeleChargeTwo;
       case 23:
-        return match.details?.blueAutoChargeThree;
+        return match.details?.blueTeleChargeThree;
       default:
         return 0;
     }
   };
 
+  const handleLinksChange = (newValue: number) => {
+    setMatch(
+      setDetails(alliance === 'red' ? 'redLinks' : 'blueLinks', newValue)
+    );
+  };
+
   const updateChargeStatus = (station: number, value: number) => {
     switch (station) {
       case 11:
-        setMatch(setDetails('redAutoChargeOne', value));
+        setMatch(setDetails('redTeleChargeOne', value));
         break;
       case 12:
-        setMatch(setDetails('redAutoChargeTwo', value));
+        setMatch(setDetails('redTeleChargeTwo', value));
         break;
       case 13:
-        setMatch(setDetails('redAutoChargeThree', value));
+        setMatch(setDetails('redTeleChargeThree', value));
         break;
       case 21:
-        setMatch(setDetails('blueAutoChargeOne', value));
+        setMatch(setDetails('blueTeleChargeOne', value));
         break;
       case 22:
-        setMatch(setDetails('blueAutoChargeTwo', value));
+        setMatch(setDetails('blueTeleChargeTwo', value));
         break;
       case 23:
-        setMatch(setDetails('blueAutoChargeThree', value));
+        setMatch(setDetails('blueTeleChargeThree', value));
         break;
     }
   };
 
+  const handleCoopertition = (newValue: number) => {
+    setMatch(setDetails('coopertitionBonus', newValue));
+  };
+
   return (
     <Grid container spacing={3}>
-      {participants?.map((p) => {
-        const update = (value: number) => {
-          updateMobility(p.station, value);
-        };
-
-        return (
-          <Grid item key={`${p.teamKey}-mobility`} xs={12} md={3} lg={3}>
-            <StateToggle
-              title={`${p.teamKey} Mobility`}
-              states={['No Mobility', 'Mobility']}
-              value={getMobility(p.station) ?? 0}
-              onChange={update}
-              fullWidth
-            />
-          </Grid>
-        );
-      })}
       <Grid item xs={12} md={4} lg={4}>
         <Typography variant='h6'>Top Game Pieces</Typography>
         <NumberInput
           value={
             alliance === 'red'
-              ? match.details.redAutoTopPieces
-              : match.details.blueAutoTopPieces
+              ? match.details.redTeleTopPieces
+              : match.details.blueTeleTopPieces
           }
           onChange={handleTopPieceChange}
         />
@@ -183,8 +134,8 @@ const AutoScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
         <NumberInput
           value={
             alliance === 'red'
-              ? match.details.redAutoMidPieces
-              : match.details.blueAutoMidPieces
+              ? match.details.redTeleMidPieces
+              : match.details.blueTeleMidPieces
           }
           onChange={handleMidPieceChange}
         />
@@ -194,8 +145,8 @@ const AutoScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
         <NumberInput
           value={
             alliance === 'red'
-              ? match.details.redAutoLowPieces
-              : match.details.blueAutoLowPieces
+              ? match.details.redTeleLowPieces
+              : match.details.blueTeleLowPieces
           }
           onChange={handleLowPieceChange}
         />
@@ -217,8 +168,30 @@ const AutoScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
           </Grid>
         );
       })}
+      <Grid item xs={12} md={3} lg={3}>
+        <StateToggle
+          title={`Coopertition Bonus`}
+          states={['None', 'Cooperated']}
+          value={match.details.coopertitionBonus}
+          onChange={handleCoopertition}
+          fullWidth
+        />
+      </Grid>
+      <Grid item xs={12} md={4} lg={4}>
+        <Typography variant='h6'>
+          {alliance.toUpperCase()}&nbsp; Links
+        </Typography>
+        <NumberInput
+          value={
+            alliance === 'red'
+              ? match.details.redLinks
+              : match.details.blueLinks
+          }
+          onChange={handleLinksChange}
+        />
+      </Grid>
     </Grid>
   );
 };
 
-export default AutoScoreSheet;
+export default TeleScoreSheet;

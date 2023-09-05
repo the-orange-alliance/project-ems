@@ -1,16 +1,16 @@
 import { FC } from 'react';
 import { useRecoilValue } from 'recoil';
 import DefaultLayout from 'src/layouts/DefaultLayout';
-import { matchInProgress } from 'src/stores/Recoil';
+import { matchInProgressAtom } from '@stores/NewRecoil';
 import { Box } from '@mui/material';
-import RefereeSheet from './components/games/CarbonCapture/RefereeSheet';
-import ScoreSheetSmall from './components/games/CarbonCapture/ScoreSheetSmall';
+import RefereeSheet from '@seasons/CarbonCapture/referee/RefereeSheet';
+import ScoreSheetSmall from '@seasons/CarbonCapture/referee/ScoreSheetSmall';
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
 import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
 import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
 
 const HeadReferee: FC = () => {
-  const match = useRecoilValue(matchInProgress);
+  const match = useRecoilValue(matchInProgressAtom);
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 

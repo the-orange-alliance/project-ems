@@ -246,6 +246,8 @@ export function getTournamentLevelFromType(type: TournamentType) {
     case 'Finals':
       return FINALS_LEVEL;
     default:
+      // TODO: Handle "Eliminations" case
+      // throw new UnreachableError(type);
       return PRACTICE_LEVEL;
   }
 }

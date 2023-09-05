@@ -3,6 +3,7 @@ import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import { MatchDetailInfoProps, SeasonComponents } from '..';
 import { ChargedUpDetails } from '@toa-lib/models';
+import ScoreSheet from '@seasons/ChargedUp/referee/ScoreSheet';
 
 const MatchDetailInfo: FC<MatchDetailInfoProps<ChargedUpDetails>> = ({
   match,
@@ -99,5 +100,6 @@ const EmptyComponent: FC = () => <div>Empty Component</div>;
 export const chargedUpComponents: SeasonComponents<ChargedUpDetails> = {
   MatchDetailInfo,
   RedScoreBreakdown: EmptyComponent,
-  BlueScoreBreakdown: EmptyComponent
+  BlueScoreBreakdown: EmptyComponent,
+  RefereeScoreSheet: ScoreSheet
 };

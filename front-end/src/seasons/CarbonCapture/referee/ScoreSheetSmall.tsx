@@ -1,10 +1,10 @@
 import { FC } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { useRecoilState } from 'recoil';
-import { matchInProgress } from 'src/stores/Recoil';
+import { matchInProgress } from '@stores/recoil';
 import { CarbonCaptureDetails } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
-import NumberInput from '../../NumberInput';
+import NumberInput from '@components/Referee/NumberInput';
 
 const ScoreSheetSmall: FC<{ headRef?: boolean }> = () => {
   const [match, setMatch] = useRecoilState(matchInProgress);

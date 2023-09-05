@@ -14,13 +14,6 @@ const functions: SeasonFunctions<ChargedUpDetails, ChargedUpRanking> = {
   calculateEndScore
 };
 
-export const ChargedUpSeason: Season<ChargedUpDetails, ChargedUpRanking> = {
-  key: 'frc_2023',
-  program: 'frc',
-  name: 'Charged Up',
-  functions
-};
-
 export interface ChargedUpDetails extends MatchDetailBase {
   redAutoMobilityOne: number;
   redAutoMobilityTwo: number;
@@ -61,7 +54,7 @@ export interface ChargedUpDetails extends MatchDetailBase {
   coopertitionBonus: number;
 }
 
-export const defaultChargedUpDetails: ChargedUpDetails = {
+export const defaultMatchDetails: ChargedUpDetails = {
   eventKey: '',
   tournamentKey: '',
   id: -1,
@@ -102,6 +95,14 @@ export const defaultChargedUpDetails: ChargedUpDetails = {
   blueSustainBonus: 0,
   blueActivationBonus: 0,
   coopertitionBonus: 0
+};
+
+export const ChargedUpSeason: Season<ChargedUpDetails, ChargedUpRanking> = {
+  key: 'frc_2023',
+  program: 'frc',
+  name: 'Charged Up',
+  defaultMatchDetails,
+  functions
 };
 
 export interface ChargedUpRanking extends Ranking {

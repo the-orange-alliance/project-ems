@@ -12,6 +12,7 @@ export interface Season<T extends MatchDetailBase, J extends Ranking> {
   key: string;
   name: string;
   program: string;
+  defaultMatchDetails: T;
   functions?: SeasonFunctions<T, J>;
 }
 
@@ -35,6 +36,12 @@ export function getFunctionsBySeasonKey<
   J extends Ranking
 >(seasonKey: string): SeasonFunctions<T, J> | undefined {
   return Seasons.find((s) => s.key === seasonKey)?.functions;
+}
+
+export function getDefaultMatchDetailsBySeasonKey<
+    T extends MatchDetailBase
+>(seasonKey: string): T | undefined {
+  return Seasons.find((s) => s.key === seasonKey)?.defaultMatchDetails;
 }
 
 export function getSeasonKeyFromEventKey(eventKey: string): string {

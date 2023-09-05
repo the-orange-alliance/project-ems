@@ -1,4 +1,5 @@
 import {
+  Alliance,
   CarbonCaptureSeason,
   ChargedUpSeason,
   Match,
@@ -25,10 +26,15 @@ export interface ScoreBreakdownProps<T extends MatchDetailBase> {
   match?: Match<T>;
 }
 
+export interface RefereeScoreSheetProps {
+  alliance: Alliance;
+}
+
 export interface SeasonComponents<T extends MatchDetailBase> {
   MatchDetailInfo: FC<MatchDetailInfoProps<T>>;
   RedScoreBreakdown: FC<ScoreBreakdownProps<T>>;
   BlueScoreBreakdown: FC<ScoreBreakdownProps<T>>;
+  RefereeScoreSheet: FC<RefereeScoreSheetProps>;
 }
 
 export function getComponentsFromSeasonKey<T extends MatchDetailBase>(
