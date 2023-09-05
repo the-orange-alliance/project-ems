@@ -7,6 +7,7 @@ import {
   MatchState,
   MatchTimer,
 } from "@toa-lib/models";
+import { EventEmitter } from "node:events";
 import { Server, Socket } from "socket.io";
 import logger from "../util/Logger.js";
 import Room from "./Room.js";
@@ -17,6 +18,7 @@ export default class Match extends Room {
   private timer: MatchTimer;
   private state: MatchState;
   private displayID: number;
+  public readonly localEmitter: EventEmitter;
 
   public constructor(server: Server) {
     super(server, "match");
@@ -26,6 +28,7 @@ export default class Match extends Room {
     this.timer = new MatchTimer();
     this.state = MatchState.MATCH_NOT_SELECTED;
     this.displayID = 0;
+    this.localEmitter = new EventEmitter();
   }
 
   public initializeEvents(socket: Socket): void {
@@ -60,14 +63,14 @@ export default class Match extends Room {
 
     // Event listener to remove soon
     socket.on("match:alliance", (newAlliance: AllianceMember[]) => {
-      this.broadcast().emit("match:alliance", newAlliance);
+      this.emitToAll("match:alliance", newAlliance);
     });
 
     // Event listeners for matches
     socket.on("match:prestart", (key: MatchKey) => {
       this.key = key;
-      this.broadcast().emit("match:prestart", key);
-      this.broadcast().emit("match:display", 1);
+      this.emitToAll("match:prestart", key);
+      this.emitToAll("match:display", 1);
       this.displayID = 1;
       this.state = MatchState.PRESTART_COMPLETE;
       logger.info(`prestarting ${key.eventKey}-${key.tournamentKey}-${key.id}`);
@@ -80,30 +83,30 @@ export default class Match extends Room {
     socket.on("match:start", () => {
       if (this.timer.inProgress()) return;
       this.timer.once("timer:start", () => {
-        this.broadcast().emit("match:start", "start");
+        this.emitToAll("match:start", "start");
         this.state = MatchState.MATCH_IN_PROGRESS;
         logger.info("match in progress");
       });
       this.timer.once("timer:auto", () => {
-        this.broadcast().emit("match:auto");
+        this.emitToAll("match:auto");
         logger.info("match auto");
       });
       this.timer.once("timer:tele", () => {
-        this.broadcast().emit("match:tele");
+        this.emitToAll("match:tele");
         logger.info("match tele");
       });
       this.timer.once("timer:endgame", () => {
-        this.broadcast().emit("match:endgame");
+        this.emitToAll("match:endgame");
         logger.info("match endgame");
       });
       this.timer.once("timer:end", () => {
-        this.broadcast().emit("match:end");
+        this.emitToAll("match:end");
         this.timer.removeListeners();
         this.state = MatchState.MATCH_COMPLETE;
         logger.info("match completed");
       });
       this.timer.once("timer:abort", () => {
-        this.broadcast().emit("match:abort");
+        this.emitToAll("match:abort");
         this.timer.removeListeners();
         this.state = MatchState.PRESTART_READY;
         logger.info("match aborted");
@@ -116,7 +119,7 @@ export default class Match extends Room {
     });
     socket.on("match:display", (id: number) => {
       this.displayID = id;
-      this.broadcast().emit("match:display", id);
+      this.emitToAll("match:display", id);
     });
     socket.on("match:update", (match: MatchObj<any>) => {
       this.match = { ...match };
@@ -136,15 +139,20 @@ export default class Match extends Room {
           this.match.details
         );
       }
-      this.broadcast().emit("match:update", this.match);
+      this.emitToAll("match:update", this.match);
     });
     socket.on("match:commit", (key: MatchKey) => {
-      this.broadcast().emit("match:commit", key);
+      this.emitToAll("match:commit", key);
       this.match = null;
       this.state = MatchState.RESULTS_COMMITTED;
       logger.info(
         `committing scores for ${key.eventKey}-${key.tournamentKey}-${key.id}`
       );
     });
+  }
+
+  private emitToAll(eventName: string, ...args: any[]): void {
+    this.localEmitter.emit(eventName, args);
+    this.broadcast().emit(eventName, args);
   }
 }

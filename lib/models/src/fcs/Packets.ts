@@ -1,671 +1,188 @@
-import { FieldControlPacket } from '../FieldControl.js';
+import {FieldControlPacket, HubMessage} from '../FieldControl.js';
 
-const LEFT_MOTOR_CHANNEL = 0;
-const RIGHT_MOTOR_CHANNEL = 1;
+export enum RevHub {
+  TOTE = 0,
+  RED_HYDROGEN_TANK = 1,
+  BLUE_HYDROGEN_TANK = 2,
+}
 
-const RED_BLINKIN_CHANNEL = 0;
-const BLUE_BLINKIN_CHANNEL = 1;
-const AUDIENCE_BLINKIN_CHANNEL = 2;
+export type PwmDeviceFieldElement = "oxygenAccumulator" | "hydrogenTank" | "conversionButton" | "oxygenReleaser";
 
-export const LED_COLOR_BLACK = 1995;
-export const LED_COLOR_YELLOW = 1845;
-export const LED_COLOR_WHITE = 1965;
-export const LED_COLOR_PURPLE = 1955;
-export const LED_COLOR_GREEN = 1885;
-export const LED_COLOR_RED = 1805;
-export const LED_COLOR_RAINBOW = 1275;
-export const LED_COLOR_FIRE = 1215;
-export const FULL_STRIP_PWM = 990;
-export const LED_COLOR_1_HB_SLOW = 1515;
-export const LED_COLOR_1_HB_MED = 1525;
-export const LED_COLOR_1_HB_FAST = 1535;
-export const LED_COLOR_2_HB_SLOW = 1615;
-export const LED_COLOR_2_HB_MED = 1625;
-export const LED_COLOR_2_HB_FAST = 1635;
+export class PwmDevice {
+  public static readonly RED_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(RevHub.TOTE, 0, "oxygenAccumulator");
+  public static readonly RED_CONVERSION_BUTTON_BLINKIN = new PwmDevice(RevHub.TOTE, 1, "conversionButton");
+  public static readonly RED_OXYGEN_RELEASER_SERVO = new PwmDevice(RevHub.TOTE, 2, "oxygenReleaser");
+  public static readonly RED_HYDROGEN_TANK_BLINKIN = new PwmDevice(RevHub.RED_HYDROGEN_TANK, 0, "hydrogenTank");
+  public static readonly BLUE_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(RevHub.TOTE, 3, "oxygenAccumulator");
+  public static readonly BLUE_CONVERSION_BUTTON_BLINKIN = new PwmDevice(RevHub.TOTE, 4, "conversionButton");
+  public static readonly BLUE_OXYGEN_ACCUMULATOR_SERVO = new PwmDevice(RevHub.TOTE, 5, "oxygenReleaser");
+  public static readonly BLUE_HYDROGEN_TANK_BLINKIN = new PwmDevice(RevHub.BLUE_HYDROGEN_TANK, 0, "hydrogenTank");
 
-export const LED_COLOR_PINK = 1785;
-export const LED_COLOR_DARK_RED = 1795;
-export const LED_COLOR_RED_ORANGE = 1815;
-export const LED_COLOR_ORANGE = 1825;
-export const LED_COLOR_GOLD = 1835;
-export const LED_COLOR_LAWN_GREEN = 1855;
-export const LED_COLOR_LIME = 1865;
-export const LED_COLOR_DARK_GREEN = 1875;
-export const LED_COLOR_BLUE_GREEN = 1895;
-export const LED_COLOR_AQUA = 1905;
-export const LED_COLOR_SKY_BLUE = 1915;
-export const LED_COLOR_DARK_BLUE = 1925;
-export const LED_COLOR_BLUE = 1935;
-export const LED_COLOR_BLUE_VIOLET = 1945;
-export const LED_COLOR_VIOLET = 1955;
-export const LED_COLOR_GRAY = 1975;
-export const LED_COLOR_DARK_GRAY = 1985;
+  public readonly hub: RevHub;
+  public readonly port: number;
+  public readonly fieldElement: PwmDeviceFieldElement;
 
-const calcPulseWidth = (ledLength: number): number => {
-  const maxPwm = 990;
-  const minPwm = 10;
-  const led1Pwm = 14;
-  const totalLedLength = 120;
-  return Math.min(
-    Math.floor((ledLength * (maxPwm - minPwm)) / totalLedLength + led1Pwm),
-    990
-  );
-};
+  private constructor(hub: RevHub, port: number, fieldElement: PwmDeviceFieldElement) {
+    this.hub = hub;
+    this.port = port;
+    this.fieldElement = fieldElement;
+  }
+}
 
-export const setLEDLength = (length: number): FieldControlPacket => {
-  const packet = LED_EMPTY;
-  const pulseWidth = calcPulseWidth(length);
-  packet.messages[0].parameters.pulsewidth = pulseWidth;
-  packet.messages[1].parameters.pulsewidth = pulseWidth;
-  packet.messages[2].parameters.pulsewidth = pulseWidth;
-  return packet;
-};
-export const setLEDPattern = (pulseWidth: number): FieldControlPacket => {
-  const packet = LED_EMPTY;
-  packet.messages[0].parameters.pulsewidth = pulseWidth;
-  packet.messages[1].parameters.pulsewidth = pulseWidth;
-  packet.messages[2].parameters.pulsewidth = pulseWidth;
-  return packet;
-};
-export const MOTOR_FORWARD: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'motor',
-      parameters: {
-        port: LEFT_MOTOR_CHANNEL,
-        setpoint: 15000
-      }
-    },
-    {
-      hub: 0,
-      function: 'motor',
-      parameters: {
-        port: RIGHT_MOTOR_CHANNEL,
-        setpoint: -15000
-      }
+export interface PwmCommand {
+  device: PwmDevice;
+  pulseWidth_us: number | BlinkinPattern;
+}
+
+export function assemblePwmCommands(pwmCommands: PwmCommand[]): FieldControlPacket {
+  const hubMessages: HubMessage[] = [];
+
+  // Sort the commands for optimal visual synchronization.
+  // The most important thing is to have field elements of the same type grouped together.
+  pwmCommands.sort((a, b) => {
+    if (a.device.fieldElement == b.device.fieldElement) {
+      return 0; // Elements have the same priority
+    } else if (a.device.fieldElement == "hydrogenTank" || b.device.fieldElement == "hydrogenTank") {
+      // Hydrogen tanks are wireless, list them first
+      return a.device.fieldElement == "hydrogenTank" ? -1 : 1;
+    } else if (a.device.fieldElement == "oxygenAccumulator" || b.device.fieldElement == "oxygenAccumulator") {
+      // Oxygen accumulators are most prominent, list them next
+      return a.device.fieldElement == "oxygenAccumulator" ? -1 : 1;
+    } else if (a.device.fieldElement == "conversionButton" || b.device.fieldElement == "conversionButton") {
+      // Prioritize button visual feedback over moving the servo
+      return a.device.fieldElement == "conversionButton" ? -1 : 1;
+    } else {
+      /*
+       * We shouldn't be able to get to this point (though we can't convince the Typescript compiler of that),
+       * because the only way to get here is if both field elements are oxygenReleaser, and we've already covered
+       * the case where the field elements are the same.
+       */
+      return 0;
     }
-  ]
-};
+  });
 
-export const MOTOR_DISABLE: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'motor',
+  for (const command of pwmCommands) {
+    hubMessages.push({
+      hub: command.device.hub,
+      function: "servo",
       parameters: {
-        port: LEFT_MOTOR_CHANNEL,
-        setpoint: 0
+        port: command.device.port,
+        pulsewidth: command.pulseWidth_us,
       }
-    },
-    {
-      hub: 0,
-      function: 'motor',
-      parameters: {
-        port: RIGHT_MOTOR_CHANNEL,
-        setpoint: 0
-      }
-    }
-  ]
+    });
+  }
+
+  return {
+    messages: hubMessages
+  }
+}
+
+export function createPacketToSetPatternEverywhere(pattern: BlinkinPattern, additionalCommands: PwmCommand[] = []): FieldControlPacket {
+  return assemblePwmCommands([
+    ...additionalCommands,
+    { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: pattern },
+    { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: pattern },
+    { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: pattern },
+    { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: pattern },
+    { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: pattern },
+    { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: pattern },
+  ])
+}
+
+export const RED_OXYGEN_ACCUMULATOR_HOLDING: PwmCommand = {
+  device: PwmDevice.RED_OXYGEN_RELEASER_SERVO,
+  pulseWidth_us: 500,
 };
 
-export const MOTOR_REVERSE: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'motor',
-      parameters: {
-        port: LEFT_MOTOR_CHANNEL,
-        setpoint: -15000
-      }
-    },
-    {
-      hub: 0,
-      function: 'motor',
-      parameters: {
-        port: RIGHT_MOTOR_CHANNEL,
-        setpoint: 15000
-      }
-    }
-  ]
+export const RED_OXYGEN_ACCUMULATOR_RELEASED: PwmCommand = {
+  device: PwmDevice.RED_OXYGEN_RELEASER_SERVO,
+  pulseWidth_us: 2500,
 };
 
-export const LED_PRESTART: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_YELLOW
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_YELLOW
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_YELLOW
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    }
-  ]
-};
-export const LED_ALLCLEAR: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_GREEN
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_GREEN
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_GREEN
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    }
-  ]
-};
-export const LED_FIELDFAULT: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_RED
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_RED
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_RED
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    }
-  ]
-};
-export const LED_IDLE: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_RAINBOW
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_RAINBOW
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_RAINBOW
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    }
-  ]
-};
-export const LED_COUNTDOWN: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_PURPLE
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_PURPLE
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_PURPLE
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: FULL_STRIP_PWM
-      }
-    }
-  ]
-};
-export const LED_DISABLE: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: 1995
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: 1995
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: 1995
-      }
-    }
-  ]
+export const BLUE_OXYGEN_ACCUMULATOR_HOLDING: PwmCommand = {
+  device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_SERVO,
+  pulseWidth_us: 500,
 };
 
-export const LED_CARBON: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_WHITE
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_WHITE
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_WHITE
-      }
-    }
-  ]
+export const BLUE_OXYGEN_ACCUMULATOR_RELEASED: PwmCommand = {
+  device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_SERVO,
+  pulseWidth_us: 2500,
 };
 
-export const LED_COOPERTITION: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_PURPLE
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_PURPLE
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_PURPLE
-      }
-    }
-  ]
-};
-export const LED_COLOR1_HB_SLOW: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_1_HB_SLOW
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_1_HB_SLOW
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_1_HB_SLOW
-      }
-    }
-  ]
-};
-export const LED_COLOR2_HB_SLOW: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_2_HB_SLOW
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_2_HB_SLOW
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_2_HB_SLOW
-      }
-    }
-  ]
-};
-export const LED_COLOR1_HB_MED: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_1_HB_MED
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_1_HB_MED
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_1_HB_MED
-      }
-    }
-  ]
-};
-export const LED_COLOR2_HB_MED: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_2_HB_MED
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_2_HB_MED
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_2_HB_MED
-      }
-    }
-  ]
-};
-export const LED_COLOR1_HB_FAST: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_1_HB_FAST
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_1_HB_FAST
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_1_HB_FAST
-      }
-    }
-  ]
-};
-export const LED_COLOR2_HB_FAST: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_2_HB_FAST
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_2_HB_FAST
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL,
-        pulsewidth: LED_COLOR_2_HB_FAST
-      }
-    }
-  ]
-};
-export const LED_EMPTY: FieldControlPacket = {
-  messages: [
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: RED_BLINKIN_CHANNEL
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: BLUE_BLINKIN_CHANNEL
-      }
-    },
-    {
-      hub: 0,
-      function: 'servo',
-      parameters: {
-        port: AUDIENCE_BLINKIN_CHANNEL
-      }
-    }
-  ]
-};
+export enum BlinkinPattern {
+  COLOR_1_HB_FAST = 1535,
+  COLOR_1_HB_MED = 1525,
+  COLOR_1_HB_SLOW = 1515,
+  COLOR_2_HB_FAST = 1635,
+  COLOR_2_HB_MED = 1625,
+  COLOR_2_HB_SLOW = 1615,
+  COLOR_AQUA = 1905,
+  COLOR_BLACK = 1995,
+  COLOR_BLUE = 1935,
+  COLOR_BLUE_GREEN = 1895,
+  COLOR_BLUE_VIOLET = 1945,
+  COLOR_DARK_BLUE = 1925,
+  COLOR_DARK_GRAY = 1985,
+  COLOR_DARK_GREEN = 1875,
+  COLOR_DARK_RED = 1795,
+  COLOR_FIRE = 1215,
+  COLOR_GOLD = 1835,
+  COLOR_GRAY = 1975,
+  COLOR_GREEN = 1885,
+  COLOR_LAWN_GREEN = 1855,
+  COLOR_LIME = 1865,
+  COLOR_ORANGE = 1825,
+  COLOR_PINK = 1785,
+  COLOR_PURPLE = 1955,
+  COLOR_RED = 1805,
+  COLOR_RED_ORANGE = 1815,
+  COLOR_SKY_BLUE = 1915,
+  COLOR_VIOLET = 1955,
+  COLOR_WHITE = 1965,
+  COLOR_YELLOW = 1845,
+  COLOR_WAVES_RAINBOW = 1275,
+  COLOR_WAVES_PARTY = 1285,
+  OFF = 1995,
+  STROBE_BLUE = 1455,
+  STROBE_RED = 1445,
+}
+
+export const FCS_IDLE = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_WAVES_PARTY);
+export const FCS_TURN_OFF_LIGHTS = createPacketToSetPatternEverywhere(BlinkinPattern.OFF);
+export const FCS_FIELD_FAULT = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_GREEN);
+
+// TODO: Make the oxygen releaser pulse widths a setting
+export const FCS_PREPARE_FIELD = createPacketToSetPatternEverywhere(
+    BlinkinPattern.COLOR_YELLOW,
+    [
+      RED_OXYGEN_ACCUMULATOR_HOLDING,
+      BLUE_OXYGEN_ACCUMULATOR_HOLDING,
+    ]
+);
+// TODO(Noah): Add a countdown
+export const FCS_MATCH_START = assemblePwmCommands([
+  RED_OXYGEN_ACCUMULATOR_HOLDING,
+  BLUE_OXYGEN_ACCUMULATOR_HOLDING,
+  { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
+  { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
+  { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
+  { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
+  { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.OFF },
+  { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.OFF },
+]);
+export const FCS_ENDGAME = assemblePwmCommands([
+  RED_OXYGEN_ACCUMULATOR_HOLDING,
+  BLUE_OXYGEN_ACCUMULATOR_HOLDING,
+  { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_RED },
+  { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_RED },
+  { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_RED },
+  { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_BLUE },
+  { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_BLUE },
+  { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_BLUE },
+]);
+export const FCS_ALL_CLEAR = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_GREEN);
+
+// TODO(Noah): Add optional field to FieldControlPacket that tells the device to keep polling the REV Hub digital inputs,
+//             and what to do when it sees certain inputs. The field should allow specifying PWM commands to execute and
+//             FCS messages to send. The device will stop polling when it receives another update command.
+//             Use this to handle the red and blue combined states during endgame.

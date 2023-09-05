@@ -8,7 +8,7 @@ const roomsMap: Map<string, Room> = new Map();
 
 export function initRooms(server: Server) {
   const matchRoom = new Match(server);
-  const fcsRoom = new FCS(server);
+  const fcsRoom = new FCS(server, matchRoom);
   const frcFMSRoom = new FRCFMS(server);
 
   roomsMap.set(matchRoom.getName(), matchRoom);
