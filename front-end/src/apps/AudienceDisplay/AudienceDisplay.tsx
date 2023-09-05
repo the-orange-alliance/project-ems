@@ -54,7 +54,7 @@ const AudienceDisplay: FC = () => {
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
     };
-  });
+  }, []);
 
   const onDisplay = (id: number) => {
     setDisplay(id);
