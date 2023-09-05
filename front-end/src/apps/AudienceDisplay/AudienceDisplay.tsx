@@ -16,11 +16,13 @@ import MatchPlay from './displays/frc_2023/MatchPlay/MatchPlay';
 
 import './AudienceDisplay.less';
 import MatchResults from './displays/frc_2023/MatchResults/MatchResults';
+import { useHiddenMotionlessCursor } from '@features/hooks/use-hidden-motionless-cursor';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayIdAtom);
   const chromaKey = useRecoilValue(displayChromaKeyAtom);
   const [socket, connected] = useSocket();
+  useHiddenMotionlessCursor();
 
   useEffect(() => {
     if (connected) {
@@ -35,26 +37,6 @@ const AudienceDisplay: FC = () => {
       socket?.removeListener('match:commit', onCommit);
     };
   }, [display]);
-
-  useEffect(() => {
-    let mouseStoppedMovingTimeout: number = -1;
-    const hideCursor = (): void => {
-      document.body.style.cursor = 'none';
-    };
-    const onMouseMove = (): void => {
-      // The cursor is being moved, display it for the next 500ms
-      document.body.style.cursor = '';
-      clearTimeout(mouseStoppedMovingTimeout);
-      mouseStoppedMovingTimeout = window.setTimeout(() => hideCursor(), 500);
-    };
-
-    hideCursor();
-    window.addEventListener('mousemove', onMouseMove);
-
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-    };
-  }, []);
 
   const onDisplay = (id: number) => {
     setDisplay(id);
