@@ -1,5 +1,9 @@
 import { createSocket } from '@toa-lib/client';
-import { MatchKey } from '@toa-lib/models';
+import {
+  FCS_ALL_CLEAR,
+  FCS_PREPARE_FIELD,
+  MatchKey
+} from '@toa-lib/models';
 import { Socket } from 'socket.io-client';
 import { useRecoilState } from 'recoil';
 import { socketConnectedAtom } from 'src/stores/NewRecoil';
@@ -64,7 +68,7 @@ export function setDisplays(): void {
 }
 
 export function sendPrepareField(): void {
-  // socket?.emit('fcs:update', LED_PRESTART);
+  socket?.emit('fcs:update', FCS_PREPARE_FIELD);
 }
 
 export function sendStartMatch(): void {
@@ -76,7 +80,7 @@ export async function sendAbortMatch(): Promise<void> {
 }
 
 export async function sendAllClear(): Promise<void> {
-  // socket?.emit('fcs:update', LED_ALLCLEAR);
+  socket?.emit('fcs:update', FCS_ALL_CLEAR);
 }
 
 export async function sendCommitScores(key: MatchKey): Promise<void> {

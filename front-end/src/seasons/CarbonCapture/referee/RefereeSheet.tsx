@@ -10,17 +10,17 @@ import {
   matchInProgress,
   matchInProgressParticipantByKey,
   matchStateAtom
-} from 'src/stores/Recoil';
+} from '@stores/recoil';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   CarbonCaptureDetails,
   MatchParticipant,
   MatchState
 } from '@toa-lib/models';
-import NumberInput from '../../NumberInput';
+import NumberInput from '@components/Referee/NumberInput';
 import { useSocket } from 'src/api/SocketProvider';
-import MatchChip from 'src/components/MatchChip/MatchChip';
-import ConnectionChip from 'src/components/ConnectionChip/ConnectionChip';
+import MatchChip from '@components/MatchChip/MatchChip';
+import ConnectionChip from '@components/ConnectionChip/ConnectionChip';
 
 const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
   const [participant, setParticipant] = useRecoilState(

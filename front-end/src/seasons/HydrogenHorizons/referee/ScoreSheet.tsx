@@ -1,25 +1,22 @@
-import { FC, useState, SyntheticEvent } from 'react';
-import Box from '@mui/material/Box';
+import { FC, SyntheticEvent, useState } from 'react';
+import { RefereeScoreSheetProps } from '@seasons/index';
+import { useSocket } from 'src/api/SocketProvider';
+import { useRecoilValue } from 'recoil';
+import { matchInProgressAtom } from '@stores/NewRecoil';
+import { HydrogenHorizons, Match } from '@toa-lib/models';
 import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import { Typography } from '@mui/material';
+import ConnectionChip from '@components/ConnectionChip/ConnectionChip';
+import MatchChip from '@components/MatchChip/MatchChip';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import { Alliance, HydrogenHorizons, Match } from '@toa-lib/models';
-import ConnectionChip from 'src/components/ConnectionChip/ConnectionChip';
-import MatchChip from 'src/components/MatchChip/MatchChip';
-import { useRecoilValue } from 'recoil';
-import { matchInProgressAtom } from 'src/stores/NewRecoil';
+import TabPanel from '@components/TabPanel/TabPanel';
+import TeleScoreSheet from './TeleOpScoreSheet';
 import TeamSheet from './TeamSheet';
 import PenaltySheet from './PenaltySheet';
-import TabPanel from 'src/components/TabPanel/TabPanel';
-import TeleScoreSheet from './TeleOpScoreSheet';
-import { useSocket } from 'src/api/SocketProvider';
 
-interface Props {
-  alliance: Alliance;
-}
-
-const ScoreSheet: FC<Props> = ({ alliance }) => {
+const ScoreSheet: FC<RefereeScoreSheetProps> = ({ alliance }) => {
   const [socket] = useSocket();
   const match = useRecoilValue(matchInProgressAtom);
 

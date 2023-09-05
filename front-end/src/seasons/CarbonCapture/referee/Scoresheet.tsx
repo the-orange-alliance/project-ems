@@ -1,12 +1,12 @@
 import { FC } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { useRecoilState } from 'recoil';
-import { matchInProgress } from 'src/stores/Recoil';
+import { matchInProgress } from '@stores/recoil';
 import { CarbonCaptureDetails } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
 import CarbonLevelInput from './CarbonLevelInput';
-import MatchChip from 'src/components/MatchChip/MatchChip';
-import ConnectionChip from 'src/components/ConnectionChip/ConnectionChip';
+import MatchChip from '@components/MatchChip/MatchChip';
+import ConnectionChip from '@components/ConnectionChip/ConnectionChip';
 
 const ScoreSheet: FC = () => {
   const [match, setMatch] = useRecoilState(matchInProgress);

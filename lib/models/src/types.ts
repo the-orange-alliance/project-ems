@@ -13,3 +13,12 @@ export const isBoolean = (bool: unknown): boolean =>
 
 export const isArray = (arr: unknown): arr is any[] =>
   typeof arr !== 'undefined' && Array.isArray(arr);
+
+/**
+ * Throw an Error such that the Typescript compiler will consider it a compile-time error to be able to throw it
+ */
+export class UnreachableError extends Error {
+    constructor(value: never) {
+        super();
+    }
+}

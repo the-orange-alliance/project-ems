@@ -3,15 +3,26 @@ import MatchStateListener from 'src/components/MatchStateListener/MatchStateList
 import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
 import DefaultLayout from 'src/layouts/DefaultLayout';
-import RedScoreSheet from './components/games/HyodrogenHorizons/RedScoreSheet';
+import { useRecoilValue } from 'recoil';
+import { currentEventSelector } from '@stores/NewRecoil';
+import { useSeasonComponents } from '@seasons/index';
 
 const RedReferee: FC = () => {
+  const event = useRecoilValue(currentEventSelector);
+  if (!event) {
+    return 'No event selected';
+  }
+  const seasonComponents = useSeasonComponents(event.seasonKey);
+  if (!seasonComponents) {
+    return 'Unknown season';
+  }
+
   return (
     <DefaultLayout containerWidth='xl'>
       <PrestartListener />
       <MatchStateListener />
       <MatchUpdateListener />
-      <RedScoreSheet />
+      <seasonComponents.RefereeScoreSheet alliance='red' />
     </DefaultLayout>
   );
 };
