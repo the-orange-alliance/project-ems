@@ -152,7 +152,7 @@ export default class Match extends Room {
   }
 
   private emitToAll(eventName: string, ...args: any[]): void {
-    this.localEmitter.emit(eventName, args);
-    this.broadcast().emit(eventName, args);
+    this.localEmitter.emit(eventName, ...args);
+    this.broadcast().emit(eventName, ...args);
   }
 }
