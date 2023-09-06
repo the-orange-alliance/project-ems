@@ -1,29 +1,26 @@
-export type HubFunctions = 'motor' | 'servo';
-
-export interface HubParameters {
+export interface MotorUpdateParameters {
   port: number;
-  setpoint?: number;
-  pulsewidth?: number;
+  setpoint: number;
 }
 
-export interface HubMessage {
-  hub: number;
-  function: HubFunctions;
-  parameters: HubParameters;
-}
-
-export interface FieldControlPacket {
-  messages: HubMessage[];
-}
-
-export interface MotorInitParameters {
+export interface ServoUpdateParameters {
   port: number;
-}
-
-export interface ServoInitParameters {
-  port: number;
-  framePeriod: number;
   pulseWidth: number;
+}
+
+export interface HubUpdateParameters {
+  motors?: MotorUpdateParameters[];
+  servos?: ServoUpdateParameters[];
+}
+
+export interface FieldControlUpdatePacket {
+  hubs: Record<number, HubUpdateParameters>;
+}
+
+export interface MotorInitParameters extends MotorUpdateParameters {}
+
+export interface ServoInitParameters extends ServoUpdateParameters {
+  framePeriod: number;
 }
 
 export interface DigitalChannelInitParameters {

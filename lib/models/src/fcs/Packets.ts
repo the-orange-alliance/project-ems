@@ -1,7 +1,7 @@
 import {
   FieldControlInitPacket,
-  FieldControlPacket,
-  HubMessage,
+  FieldControlUpdatePacket,
+  HubUpdateParameters,
 } from '../FieldControl.js';
 import {UnreachableError} from "../types.js";
 
@@ -77,9 +77,7 @@ export interface PwmCommand {
   pulseWidth_us: number | BlinkinPattern;
 }
 
-export function assemblePwmCommands(pwmCommands: PwmCommand[]): FieldControlPacket {
-  const hubMessages: HubMessage[] = [];
-
+export function assemblePwmCommands(pwmCommands: PwmCommand[]): FieldControlUpdatePacket {
   // Sort the commands for optimal visual synchronization.
   // The most important thing is to have field elements of the same type grouped together.
   pwmCommands.sort((a, b) => {
@@ -104,23 +102,28 @@ export function assemblePwmCommands(pwmCommands: PwmCommand[]): FieldControlPack
     }
   });
 
+  // This type is the same as the hubs field in FieldControlUpdatePacket, but with
+  // only servo parameters, and the servo parameters are required instead of optional.
+  const hubs: Record<string, Required<Pick<HubUpdateParameters, "servos">>> = { };
+
+  const ensureHub = (hub: RevHub) => {
+    if (hubs[hub] == undefined) {
+      hubs[hub] = { servos: [] }
+    }
+  }
+
   for (const command of pwmCommands) {
-    hubMessages.push({
-      hub: command.device.hub,
-      function: "servo",
-      parameters: {
-        port: command.device.port,
-        pulsewidth: command.pulseWidth_us,
-      }
+    ensureHub(command.device.hub);
+    hubs[command.device.hub].servos.push({
+      port: command.device.port,
+      pulseWidth: command.pulseWidth_us,
     });
   }
 
-  return {
-    messages: hubMessages
-  }
+  return { hubs }
 }
 
-export function createPacketToSetPatternEverywhere(pattern: BlinkinPattern, additionalCommands: PwmCommand[] = []): FieldControlPacket {
+export function createPacketToSetPatternEverywhere(pattern: BlinkinPattern, additionalCommands: PwmCommand[] = []): FieldControlUpdatePacket {
   return assemblePwmCommands([
     ...additionalCommands,
     ...PwmDevice.ALL_BLINKIN_DEVICES.map(device => {
