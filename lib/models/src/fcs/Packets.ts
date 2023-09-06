@@ -207,7 +207,7 @@ export const FCS_INIT: FieldControlInitPacket = (() => {
 
   for (const device of PwmDevice.ALL_PWM_DEVICES) {
     ensureHub(device.hub);
-    result.hubs[device.hub].servos.push({ port: device.port, framePeriod: device.framePeriod_us, pulseWidth: device.initialPulseWidth_us });
+    result.hubs[device.hub]!.servos!.push({ port: device.port, framePeriod: device.framePeriod_us, pulseWidth: device.initialPulseWidth_us });
   }
 
   ensureHub(RevHub.TOTE); // The conversion buttons are in the tote
@@ -215,7 +215,7 @@ export const FCS_INIT: FieldControlInitPacket = (() => {
     const digitalChannelNumber = Number.parseInt(conversionButtonDigitalChannel);
     if (Number.isNaN(digitalChannelNumber)) { continue; } // Filter out the string entries on the enum
 
-    result.hubs[RevHub.TOTE].digitalInputs.push({
+    result.hubs[RevHub.TOTE]!.digitalInputs!.push({
       channel: digitalChannelNumber
     });
   }

@@ -1,41 +1,60 @@
+//-----------------------------------------------------------------------------
+// The use of generics in this file is primarily useful for enforcing that
+// Field Control System clients can safely share a lot of parsing logic between
+// init packets and update packets.
+//-----------------------------------------------------------------------------
+
+//-------------------------------------------
+// Motor parameters
+//-------------------------------------------
 export interface MotorUpdateParameters {
   port: number;
   setpoint: number;
 }
+export interface MotorInitParameters extends MotorUpdateParameters {}
 
+//-------------------------------------------
+// Servo parameters
+//-------------------------------------------
 export interface ServoUpdateParameters {
   port: number;
   pulseWidth: number;
 }
-
-export interface HubUpdateParameters {
-  motors?: MotorUpdateParameters[];
-  servos?: ServoUpdateParameters[];
-}
-
-export interface FieldControlUpdatePacket {
-  hubs: Record<number, HubUpdateParameters>;
-}
-
-export interface MotorInitParameters extends MotorUpdateParameters {}
-
 export interface ServoInitParameters extends ServoUpdateParameters {
   framePeriod: number;
 }
 
-export interface DigitalInputInitParameters {
+//-------------------------------------------
+// Digital input parameters
+//-------------------------------------------
+export interface DigitalInputUpdateParameters {
   channel: number;
 }
+export interface DigitalInputInitParameters extends DigitalInputUpdateParameters {}
 
-export interface HubInitParameters {
-  motors: MotorInitParameters[];
-  servos: ServoInitParameters[];
-  digitalInputs: DigitalInputInitParameters[];
+//-------------------------------------------
+// Hub parameters
+//-------------------------------------------
+export interface HubParameters<M extends MotorUpdateParameters, S extends ServoUpdateParameters, DI extends DigitalInputUpdateParameters> {
+  motors?: M[];
+  servos?: S[];
+  digitalInputs?: DI[];
 }
+export type HubInitParameters = HubParameters<MotorInitParameters, ServoInitParameters, DigitalInputInitParameters>;
+export type HubUpdateParameters = HubParameters<MotorUpdateParameters, ServoUpdateParameters, DigitalInputUpdateParameters>;
 
-export interface FieldControlInitPacket {
-  hubs: Record<number, HubInitParameters>;
+//-------------------------------------------
+// Field Control packets
+//-------------------------------------------
+export interface FieldControlPacket<HubParametersType extends HubParameters<any, any, any>> {
+  hubs: Record<number, HubParametersType>;
 }
+export type FieldControlInitPacket = FieldControlPacket<HubInitParameters>;
+export type FieldControlUpdatePacket = FieldControlPacket<HubUpdateParameters>;
+
+//-------------------------------------------
+// Field options
+//-------------------------------------------
 
 export interface FieldOptions {
   motorDuration: number;
