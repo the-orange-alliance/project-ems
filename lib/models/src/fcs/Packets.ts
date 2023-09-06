@@ -201,7 +201,7 @@ export const FCS_INIT: FieldControlInitPacket = (() => {
 
   const ensureHub = (hub: RevHub) => {
     if (result.hubs[hub] == undefined) {
-      result.hubs[hub] = { motors: [], servos: [], digitalChannels: [] }
+      result.hubs[hub] = { motors: [], servos: [], digitalInputs: [] }
     }
   }
 
@@ -215,9 +215,8 @@ export const FCS_INIT: FieldControlInitPacket = (() => {
     const digitalChannelNumber = Number.parseInt(conversionButtonDigitalChannel);
     if (Number.isNaN(digitalChannelNumber)) { continue; } // Filter out the string entries on the enum
 
-    result.hubs[RevHub.TOTE].digitalChannels.push({
-      channel: digitalChannelNumber,
-      isOutput: false,
+    result.hubs[RevHub.TOTE].digitalInputs.push({
+      channel: digitalChannelNumber
     });
   }
 

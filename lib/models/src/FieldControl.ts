@@ -23,19 +23,14 @@ export interface ServoInitParameters extends ServoUpdateParameters {
   framePeriod: number;
 }
 
-export interface DigitalChannelInitParameters {
+export interface DigitalInputInitParameters {
   channel: number;
-  isOutput: boolean;
-  /**
-   * Ignore / don't include when isOutput is false
-   */
-  high?: boolean;
 }
 
 export interface HubInitParameters {
   motors: MotorInitParameters[];
   servos: ServoInitParameters[];
-  digitalChannels: DigitalChannelInitParameters[];
+  digitalInputs: DigitalInputInitParameters[];
 }
 
 export interface FieldControlInitPacket {
