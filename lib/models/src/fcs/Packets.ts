@@ -1,4 +1,9 @@
-import {FieldControlPacket, HubMessage} from '../FieldControl.js';
+import {
+  FieldControlInitPacket,
+  FieldControlPacket,
+  HubMessage,
+} from '../FieldControl.js';
+import {UnreachableError} from "../types.js";
 
 export enum RevHub {
   TOTE = 0,
@@ -6,17 +11,29 @@ export enum RevHub {
   BLUE_HYDROGEN_TANK = 2,
 }
 
+export enum ConversionButtonDigitalChannel {
+  RED = 0,
+  BLUE = 2,
+}
+
+export const IDLE_BLINKIN_PATTERN = 1285; // COLOR_WAVES_PARTY (defined before BlinkinPattern for code organization purposes)
+
+// TODO: Make the oxygen releaser pulse widths a setting
+const OXYGEN_ACCUMULATOR_HOLDING_PULSE_WIDTH = 500;
+const OXYGEN_ACCUMULATOR_RELEASED_PULSE_WIDTH = 2500;
+
+export type PwmDeviceType = "blinkin" | "servo";
 export type PwmDeviceFieldElement = "oxygenAccumulator" | "hydrogenTank" | "conversionButton" | "oxygenReleaser";
 
 export class PwmDevice {
-  public static readonly RED_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(RevHub.TOTE, 0, "oxygenAccumulator");
-  public static readonly RED_CONVERSION_BUTTON_BLINKIN = new PwmDevice(RevHub.TOTE, 1, "conversionButton");
-  public static readonly RED_OXYGEN_RELEASER_SERVO = new PwmDevice(RevHub.TOTE, 2, "oxygenReleaser");
-  public static readonly RED_HYDROGEN_TANK_BLINKIN = new PwmDevice(RevHub.RED_HYDROGEN_TANK, 0, "hydrogenTank");
-  public static readonly BLUE_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(RevHub.TOTE, 3, "oxygenAccumulator");
-  public static readonly BLUE_CONVERSION_BUTTON_BLINKIN = new PwmDevice(RevHub.TOTE, 4, "conversionButton");
-  public static readonly BLUE_OXYGEN_ACCUMULATOR_SERVO = new PwmDevice(RevHub.TOTE, 5, "oxygenReleaser");
-  public static readonly BLUE_HYDROGEN_TANK_BLINKIN = new PwmDevice(RevHub.BLUE_HYDROGEN_TANK, 0, "hydrogenTank");
+  public static readonly RED_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(RevHub.TOTE, 0, "oxygenAccumulator", "blinkin");
+  public static readonly RED_CONVERSION_BUTTON_BLINKIN = new PwmDevice(RevHub.TOTE, 1, "conversionButton", "blinkin");
+  public static readonly RED_OXYGEN_RELEASER_SERVO = new PwmDevice(RevHub.TOTE, 2, "oxygenReleaser", "servo");
+  public static readonly RED_HYDROGEN_TANK_BLINKIN = new PwmDevice(RevHub.RED_HYDROGEN_TANK, 0, "hydrogenTank", "blinkin");
+  public static readonly BLUE_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(RevHub.TOTE, 3, "oxygenAccumulator", "blinkin");
+  public static readonly BLUE_CONVERSION_BUTTON_BLINKIN = new PwmDevice(RevHub.TOTE, 4, "conversionButton", "blinkin");
+  public static readonly BLUE_OXYGEN_ACCUMULATOR_SERVO = new PwmDevice(RevHub.TOTE, 5, "oxygenReleaser", "servo");
+  public static readonly BLUE_HYDROGEN_TANK_BLINKIN = new PwmDevice(RevHub.BLUE_HYDROGEN_TANK, 0, "hydrogenTank", "blinkin");
 
   public static readonly ALL_BLINKIN_DEVICES = [
     PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN,
@@ -35,12 +52,23 @@ export class PwmDevice {
 
   public readonly hub: RevHub;
   public readonly port: number;
+  public readonly framePeriod_us: number;
+  public readonly initialPulseWidth_us: number;
   public readonly fieldElement: PwmDeviceFieldElement;
 
-  private constructor(hub: RevHub, port: number, fieldElement: PwmDeviceFieldElement) {
+  private constructor(hub: RevHub, port: number, fieldElement: PwmDeviceFieldElement, deviceType: PwmDeviceType) {
     this.hub = hub;
     this.port = port;
     this.fieldElement = fieldElement;
+    if (deviceType == "servo") {
+      this.framePeriod_us = 20000; // Setting this high increases compatibility
+      this.initialPulseWidth_us = OXYGEN_ACCUMULATOR_HOLDING_PULSE_WIDTH;
+    } else if (deviceType == "blinkin") {
+      this.framePeriod_us = 4000; // Setting this low reduces the max latency
+      this.initialPulseWidth_us = IDLE_BLINKIN_PATTERN;
+    } else {
+      throw new UnreachableError(deviceType);
+    }
   }
 }
 
@@ -103,22 +131,22 @@ export function createPacketToSetPatternEverywhere(pattern: BlinkinPattern, addi
 
 export const RED_OXYGEN_ACCUMULATOR_HOLDING: PwmCommand = {
   device: PwmDevice.RED_OXYGEN_RELEASER_SERVO,
-  pulseWidth_us: 500,
+  pulseWidth_us: OXYGEN_ACCUMULATOR_HOLDING_PULSE_WIDTH,
 };
 
 export const RED_OXYGEN_ACCUMULATOR_RELEASED: PwmCommand = {
   device: PwmDevice.RED_OXYGEN_RELEASER_SERVO,
-  pulseWidth_us: 2500,
+  pulseWidth_us: OXYGEN_ACCUMULATOR_RELEASED_PULSE_WIDTH,
 };
 
 export const BLUE_OXYGEN_ACCUMULATOR_HOLDING: PwmCommand = {
   device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_SERVO,
-  pulseWidth_us: 500,
+  pulseWidth_us: OXYGEN_ACCUMULATOR_HOLDING_PULSE_WIDTH,
 };
 
 export const BLUE_OXYGEN_ACCUMULATOR_RELEASED: PwmCommand = {
   device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_SERVO,
-  pulseWidth_us: 2500,
+  pulseWidth_us: OXYGEN_ACCUMULATOR_RELEASED_PULSE_WIDTH,
 };
 
 export enum BlinkinPattern {
@@ -162,11 +190,41 @@ export enum BlinkinPattern {
   STROBE_RED = 1445,
 }
 
-export const FCS_IDLE = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_WAVES_PARTY);
+/**
+ * This packet must specify the initial state of EVERY port that will be used at any point.
+ */
+export const FCS_INIT: FieldControlInitPacket = (() => {
+  const result: FieldControlInitPacket = { hubs: {} };
+
+  const ensureHub = (hub: RevHub) => {
+    if (result.hubs[hub] == undefined) {
+      result.hubs[hub] = { motors: [], servos: [], digitalChannels: [] }
+    }
+  }
+
+  for (const device of PwmDevice.ALL_PWM_DEVICES) {
+    ensureHub(device.hub);
+    result.hubs[device.hub].servos.push({ port: device.port, framePeriod: device.framePeriod_us, pulseWidth: device.initialPulseWidth_us });
+  }
+
+  ensureHub(RevHub.TOTE); // The conversion buttons are in the tote
+  for (let conversionButtonDigitalChannel in ConversionButtonDigitalChannel) {
+    const digitalChannelNumber = Number.parseInt(conversionButtonDigitalChannel);
+    if (Number.isNaN(digitalChannelNumber)) { continue; } // Filter out the string entries on the enum
+
+    result.hubs[RevHub.TOTE].digitalChannels.push({
+      channel: digitalChannelNumber,
+      isOutput: false,
+    });
+  }
+
+  return result;
+})();
+
+export const FCS_IDLE = createPacketToSetPatternEverywhere(IDLE_BLINKIN_PATTERN);
 export const FCS_TURN_OFF_LIGHTS = createPacketToSetPatternEverywhere(BlinkinPattern.OFF);
 export const FCS_FIELD_FAULT = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_GREEN);
 
-// TODO: Make the oxygen releaser pulse widths a setting
 export const FCS_PREPARE_FIELD = createPacketToSetPatternEverywhere(
     BlinkinPattern.COLOR_YELLOW,
     [

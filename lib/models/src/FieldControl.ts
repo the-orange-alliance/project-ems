@@ -16,6 +16,35 @@ export interface FieldControlPacket {
   messages: HubMessage[];
 }
 
+export interface MotorInitParameters {
+  port: number;
+}
+
+export interface ServoInitParameters {
+  port: number;
+  framePeriod: number;
+  pulseWidth: number;
+}
+
+export interface DigitalChannelInitParameters {
+  channel: number;
+  isOutput: boolean;
+  /**
+   * Ignore / don't include when isOutput is false
+   */
+  high?: boolean;
+}
+
+export interface HubInitParameters {
+  motors: MotorInitParameters[];
+  servos: ServoInitParameters[];
+  digitalChannels: DigitalChannelInitParameters[];
+}
+
+export interface FieldControlInitPacket {
+  hubs: Record<number, HubInitParameters>;
+}
+
 export interface FieldOptions {
   motorDuration: number;
   endGameHB: number;

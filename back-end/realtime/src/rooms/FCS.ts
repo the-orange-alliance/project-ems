@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import {FCS_ENDGAME, FCS_FIELD_FAULT, FCS_IDLE, FCS_MATCH_START, FieldControlPacket} from "@toa-lib/models";
+import { FCS_ENDGAME, FCS_FIELD_FAULT, FCS_IDLE, FCS_INIT, FCS_MATCH_START, FieldControlPacket } from "@toa-lib/models";
 import Room from "./Room.js";
 import Match from "./Match.js";
 
@@ -26,6 +26,8 @@ export default class FCS extends Room {
   }
 
   public initializeEvents(socket: Socket): void {
+    socket.emit("fcs:init", FCS_INIT);
+
     socket.on("fcs:update", (update: FieldControlPacket) => {
       this.broadcast().emit("fcs:update", update);
     });
