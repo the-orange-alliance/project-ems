@@ -18,6 +18,21 @@ export class PwmDevice {
   public static readonly BLUE_OXYGEN_ACCUMULATOR_SERVO = new PwmDevice(RevHub.TOTE, 5, "oxygenReleaser");
   public static readonly BLUE_HYDROGEN_TANK_BLINKIN = new PwmDevice(RevHub.BLUE_HYDROGEN_TANK, 0, "hydrogenTank");
 
+  public static readonly ALL_BLINKIN_DEVICES = [
+    PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN,
+    PwmDevice.RED_CONVERSION_BUTTON_BLINKIN,
+    PwmDevice.RED_HYDROGEN_TANK_BLINKIN,
+    PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN,
+    PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN,
+    PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN,
+  ]
+
+  public static readonly ALL_PWM_DEVICES = [
+    ...PwmDevice.ALL_BLINKIN_DEVICES,
+    PwmDevice.RED_OXYGEN_RELEASER_SERVO,
+    PwmDevice.BLUE_OXYGEN_ACCUMULATOR_SERVO,
+  ]
+
   public readonly hub: RevHub;
   public readonly port: number;
   public readonly fieldElement: PwmDeviceFieldElement;
@@ -80,13 +95,10 @@ export function assemblePwmCommands(pwmCommands: PwmCommand[]): FieldControlPack
 export function createPacketToSetPatternEverywhere(pattern: BlinkinPattern, additionalCommands: PwmCommand[] = []): FieldControlPacket {
   return assemblePwmCommands([
     ...additionalCommands,
-    { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: pattern },
-    { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: pattern },
-    { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: pattern },
-    { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: pattern },
-    { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: pattern },
-    { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: pattern },
-  ])
+    ...PwmDevice.ALL_BLINKIN_DEVICES.map(device => {
+      return { device, pulseWidth_us: pattern}
+    }),
+  ]);
 }
 
 export const RED_OXYGEN_ACCUMULATOR_HOLDING: PwmCommand = {
