@@ -225,7 +225,7 @@ export const FCS_INIT: FieldControlInitPacket = (() => {
 
 export const FCS_IDLE = createPacketToSetPatternEverywhere(IDLE_BLINKIN_PATTERN);
 export const FCS_TURN_OFF_LIGHTS = createPacketToSetPatternEverywhere(BlinkinPattern.OFF);
-export const FCS_FIELD_FAULT = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_GREEN);
+export const FCS_FIELD_FAULT = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_YELLOW);
 
 export const FCS_PREPARE_FIELD = createPacketToSetPatternEverywhere(
     BlinkinPattern.COLOR_YELLOW,
