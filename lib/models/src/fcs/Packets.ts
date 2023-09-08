@@ -61,10 +61,12 @@ export class PwmDevice {
     this.port = port;
     this.fieldElement = fieldElement;
     /*
-     * Using multiple different frame periods can cause problems.
+     * Using multiple different frame periods can cause problems w/ Expansion Hub firmware version 1.8.2.
      * REV employees: see https://github.com/REVrobotics/ExpansionHubFW/issues/81
+     *
+     * Additionally, the shorter the frame period, the faster the Blinkin patterns are.
      */
-    this.framePeriod_us = 4500;
+    this.framePeriod_us = 20000;
     if (deviceType == "servo") {
       this.initialPulseWidth_us = OXYGEN_ACCUMULATOR_HOLDING_PULSE_WIDTH;
     } else if (deviceType == "blinkin") {
