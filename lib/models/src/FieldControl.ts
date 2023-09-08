@@ -27,8 +27,13 @@ export interface ServoInitParameters extends ServoUpdateParameters {
 //-------------------------------------------
 // Digital input parameters
 //-------------------------------------------
+export interface DigitalTriggerOptions {
+  triggerOnLow: boolean;
+  fcsUpdateToSend: FieldControlUpdatePacket;
+}
 export interface DigitalInputUpdateParameters {
   channel: number;
+  triggerOptions: DigitalTriggerOptions | null; // Will disable the trigger if null
 }
 export interface DigitalInputInitParameters extends DigitalInputUpdateParameters {}
 

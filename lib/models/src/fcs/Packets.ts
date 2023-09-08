@@ -156,6 +156,7 @@ export const BLUE_OXYGEN_ACCUMULATOR_RELEASED: PwmCommand = {
 };
 
 export enum BlinkinPattern {
+  COLOR_1_2_GRADIENT = 1705,
   COLOR_1_HB_FAST = 1535,
   COLOR_1_HB_MED = 1525,
   COLOR_1_HB_SLOW = 1515,
@@ -219,7 +220,8 @@ export const FCS_INIT: FieldControlInitPacket = (() => {
     if (Number.isNaN(digitalChannelNumber)) { continue; } // Filter out the string entries on the enum
 
     result.hubs[RevHub.TOTE]!.digitalInputs!.push({
-      channel: digitalChannelNumber
+      channel: digitalChannelNumber,
+      triggerOptions: null,
     });
   }
 
@@ -248,6 +250,21 @@ export const FCS_MATCH_START = assemblePwmCommands([
   { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.OFF },
   { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.OFF },
 ]);
+
+const FCS_RED_COMBINED = assemblePwmCommands([
+  RED_OXYGEN_ACCUMULATOR_RELEASED,
+  { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+  { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+  { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+]);
+
+const FCS_BLUE_COMBINED = assemblePwmCommands([
+  BLUE_OXYGEN_ACCUMULATOR_RELEASED,
+  { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+  { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+  { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+]);
+
 export const FCS_ENDGAME = assemblePwmCommands([
   RED_OXYGEN_ACCUMULATOR_HOLDING,
   BLUE_OXYGEN_ACCUMULATOR_HOLDING,
@@ -258,9 +275,21 @@ export const FCS_ENDGAME = assemblePwmCommands([
   { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.LIGHT_CHASE_BLUE },
   { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.LIGHT_CHASE_BLUE },
 ]);
-export const FCS_ALL_CLEAR = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_GREEN);
+FCS_ENDGAME.hubs[RevHub.TOTE]!.digitalInputs = [
+  {
+    channel: ConversionButtonDigitalChannel.RED,
+    triggerOptions: {
+      triggerOnLow: true,
+      fcsUpdateToSend: FCS_RED_COMBINED,
+    }
+  },
+  {
+    channel: ConversionButtonDigitalChannel.BLUE,
+    triggerOptions: {
+      triggerOnLow: true,
+      fcsUpdateToSend: FCS_BLUE_COMBINED,
+    }
+  }
+];
 
-// TODO(Noah): Add optional field to FieldControlPacket that tells the device to keep polling the REV Hub digital inputs,
-//             and what to do when it sees certain inputs. The field should allow specifying PWM commands to execute and
-//             FCS messages to send. The device will stop polling when it receives another update command.
-//             Use this to handle the red and blue combined states during endgame.
+export const FCS_ALL_CLEAR = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_GREEN);
