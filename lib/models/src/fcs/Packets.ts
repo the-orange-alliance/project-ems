@@ -60,11 +60,14 @@ export class PwmDevice {
     this.hub = hub;
     this.port = port;
     this.fieldElement = fieldElement;
+    /*
+     * Using multiple different frame periods can cause problems.
+     * REV employees: see https://github.com/REVrobotics/ExpansionHubFW/issues/81
+     */
+    this.framePeriod_us = 4500;
     if (deviceType == "servo") {
-      this.framePeriod_us = 20000; // Setting this high increases compatibility
       this.initialPulseWidth_us = OXYGEN_ACCUMULATOR_HOLDING_PULSE_WIDTH;
     } else if (deviceType == "blinkin") {
-      this.framePeriod_us = 4000; // Setting this low reduces the max latency
       this.initialPulseWidth_us = IDLE_BLINKIN_PATTERN;
     } else {
       throw new UnreachableError(deviceType);
