@@ -62,6 +62,16 @@ export const ScheduleOptions: FC = () => {
           type='number'
         />
       </Grid>
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <TextField
+          name='matchConcurrency'
+          label='Match Concurrency'
+          value={schedule.matchConcurrency}
+          fullWidth
+          onChange={handleChange}
+          type='number'
+        />
+      </Grid>
     </Grid>
   );
 };
