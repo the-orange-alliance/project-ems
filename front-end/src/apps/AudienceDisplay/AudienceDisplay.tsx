@@ -11,7 +11,7 @@ import {
   displayIdAtom,
   matchResultAtom
 } from 'src/stores/NewRecoil';
-import MatchPreview from './displays/frc_2023/MatchPreview/MatchPreview';
+import MatchPreview from './displays/fgc_2023/MatchPreview/MatchPreview';
 import MatchPlay from './displays/frc_2023/MatchPlay/MatchPlay';
 
 import './AudienceDisplay.less';
