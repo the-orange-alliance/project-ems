@@ -6,15 +6,15 @@ import TextField from '@mui/material/TextField';
 
 interface Props {
   name: string;
-  value: string | number;
-  onChange: (value: string | number) => void;
+  value: number;
+  onChange: (value: number) => void;
   inline?: boolean;
   type?: 'text' | 'number' | 'password';
   title?: string;
   fullWidth?: boolean;
 }
 
-const TextSetting: FC<Props> = ({
+const NumberSetting: FC<Props> = ({
   name,
   value,
   onChange,
@@ -24,7 +24,7 @@ const TextSetting: FC<Props> = ({
   fullWidth
 }) => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
-    onChange(e.target.value);
+    onChange(parseInt(e.target.value));
 
   return (
     <FormGroup
@@ -57,4 +57,4 @@ const TextSetting: FC<Props> = ({
   );
 };
 
-export default TextSetting;
+export default NumberSetting;

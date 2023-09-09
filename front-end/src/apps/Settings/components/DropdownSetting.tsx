@@ -15,7 +15,15 @@ interface Props {
   fullWidth?: boolean;
 }
 
-const DropdownSetting: FC<Props> = ({ name, value, options, onChange, inline, title, fullWidth }) => {
+const DropdownSetting: FC<Props> = ({
+  name,
+  value,
+  options,
+  onChange,
+  inline,
+  title,
+  fullWidth
+}) => {
   const handleChange = (e: SelectChangeEvent) => onChange(e.target.value);
 
   return (

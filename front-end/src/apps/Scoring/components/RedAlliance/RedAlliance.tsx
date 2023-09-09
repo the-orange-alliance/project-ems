@@ -5,13 +5,13 @@ import TeamStatusRow from '../Status/TeamStatusRow';
 import { useRecoilValue } from 'recoil';
 import { currentMatchSelector } from 'src/stores/NewRecoil';
 import { getSeasonKeyFromEventKey } from '@toa-lib/models';
-import { useSeasonComponents } from 'src/seasons';
+import { useComponents } from 'src/seasons';
 
 const RedAlliance: FC = () => {
   const match = useRecoilValue(currentMatchSelector);
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const seasonKey = getSeasonKeyFromEventKey(match ? match.eventKey : '');
-  const components = useSeasonComponents(seasonKey);
+  const components = useComponents(seasonKey);
   return (
     <Paper
       className='red-bg-imp'

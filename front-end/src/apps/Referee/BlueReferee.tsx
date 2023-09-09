@@ -3,7 +3,7 @@ import MatchStateListener from 'src/components/MatchStateListener/MatchStateList
 import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
 import DefaultLayout from 'src/layouts/DefaultLayout';
-import { useSeasonComponents } from '@seasons/index';
+import { useComponents } from '@seasons/index';
 import { useRecoilValue } from 'recoil';
 import { currentEventSelector } from '@stores/NewRecoil';
 
@@ -12,7 +12,7 @@ const BlueReferee: FC = () => {
   if (!event) {
     return 'No event selected';
   }
-  const seasonComponents = useSeasonComponents(event.seasonKey);
+  const seasonComponents = useComponents(event.seasonKey);
   if (!seasonComponents) {
     return 'Unknown season';
   }
