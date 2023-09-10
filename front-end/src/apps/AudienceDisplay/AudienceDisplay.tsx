@@ -12,11 +12,10 @@ import {
   matchResultAtom
 } from 'src/stores/NewRecoil';
 import MatchPreview from './displays/fgc_2023/MatchPreview/MatchPreview';
-import MatchPlay from './displays/frc_2023/MatchPlay/MatchPlay';
-
-import './AudienceDisplay.less';
-import MatchResults from './displays/frc_2023/MatchResults/MatchResults';
+import MatchPlay from './displays/fgc_2023/MatchPlay/MatchPlay';
+import MatchResults from './displays/fgc_2023/MatchResults/MatchResults';
 import { useHiddenMotionlessCursor } from '@features/hooks/use-hidden-motionless-cursor';
+import './AudienceDisplay.less';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayIdAtom);
