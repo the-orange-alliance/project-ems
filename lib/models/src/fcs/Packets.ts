@@ -232,7 +232,15 @@ export const FCS_INIT: FieldControlInitPacket = (() => {
 
 export const FCS_IDLE = createPacketToSetPatternEverywhere(IDLE_BLINKIN_PATTERN);
 export const FCS_TURN_OFF_LIGHTS = createPacketToSetPatternEverywhere(BlinkinPattern.OFF);
-export const FCS_FIELD_FAULT = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_YELLOW);
+
+export const FCS_FIELD_FAULT = createPacketToSetPatternEverywhere(
+  BlinkinPattern.COLOR_YELLOW,
+  [
+    // Return any accumulated oxygen to the field for field reset
+    RED_OXYGEN_ACCUMULATOR_RELEASED,
+    BLUE_OXYGEN_ACCUMULATOR_RELEASED,
+  ]
+  );
 
 export const FCS_PREPARE_FIELD = createPacketToSetPatternEverywhere(
     BlinkinPattern.COLOR_YELLOW,
@@ -295,4 +303,10 @@ FCS_ENDGAME.hubs[RevHub.TOTE]!.digitalInputs = [
   }
 ];
 
-export const FCS_ALL_CLEAR = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_GREEN);
+export const FCS_ALL_CLEAR = createPacketToSetPatternEverywhere(
+  BlinkinPattern.COLOR_GREEN,
+  [
+    // Make sure that the oxygen accumulators are empty during field reset
+    RED_OXYGEN_ACCUMULATOR_RELEASED,
+    BLUE_OXYGEN_ACCUMULATOR_RELEASED
+  ]);
