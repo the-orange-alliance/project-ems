@@ -241,7 +241,12 @@ export const FCS_PREPARE_FIELD = createPacketToSetPatternEverywhere(
       BLUE_OXYGEN_ACCUMULATOR_HOLDING,
     ]
 );
-// TODO(Noah): Add a countdown
+
+// TODO(Noah): Using these will require clock updates
+export const FCS_COUNTDOWN_3 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_ORANGE);
+export const FCS_COUNTDOWN_2 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_PINK);
+export const FCS_COUNTDOWN_1 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_AQUA);
+
 export const FCS_MATCH_START = assemblePwmCommands([
   RED_OXYGEN_ACCUMULATOR_HOLDING,
   BLUE_OXYGEN_ACCUMULATOR_HOLDING,
