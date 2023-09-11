@@ -4,7 +4,7 @@ import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { useRecoilCallback, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
 import { Match, MatchState } from '@toa-lib/models';
@@ -15,7 +15,6 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const MatchStatus: FC = () => {
   const selectedMatch = useRecoilValue(matchInProgressAtom);
-  const setState = useSetRecoilState(matchStateAtom);
 
   const [mode, setMode] = useState('NOT READY');
 
@@ -50,7 +49,6 @@ const MatchStatus: FC = () => {
   });
   const onMatchEnd = useRecoilCallback(() => async () => {
     setMode('MATCH END');
-    setState(MatchState.MATCH_COMPLETE);
   });
   const onMatchUpdate = useRecoilCallback(
     ({ set }) =>
