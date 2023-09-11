@@ -139,7 +139,8 @@
 }
 .res-team-flag > span {
   width: 2.5vw;
-  height: 1.875vw;
+  height: 2em;
+  border: 1px solid black;
 }
 .res-detail-row {
   width: 100%;
@@ -187,12 +188,12 @@
   align-items: center;
 }
 .res-alliance-total-right {
-  width: calc(25% + 4px) !important;
+  width: calc(25% - 2px) !important;
+  padding-right: 12px;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 7px;
 }
 .res-alliance-total.right > span {
   width: 100%;
@@ -216,4 +217,97 @@
 }
 
 @media only screen and (max-width: 1600px) {
+}
+
+/* MATCH OVERLAY STYLES */
+#fgc-results-overlay-container #res-header-container {
+  margin-top: 1vh;
+  margin-left: 2.5%;
+  margin-bottom: 1vh;
+  width: 15vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#fgc-results-overlay-container #res-header-container #res-header-left {
+  display: block;
+  text-align: left;
+  padding-left: 0;
+  font-size: 3rem;
+  width: 100%;
+  height: 100%;
+}
+
+#fgc-results-overlay-container #res-header-container #res-header-right {
+  width: 100%;
+  height: 100%;
+  gap: 20px;
+}
+
+#fgc-results-overlay-container
+  #res-header-container
+  #res-header-right
+  .res-header-item {
+  justify-content: center;
+  height: 80%;
+  width: 100%;
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+#fgc-results-overlay-container #res-header-container {
+  height: 8vh;
+}
+
+#fgc-results-overlay-container > #res-alliance-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.5rem;
+  height: 88vh;
+}
+
+#fgc-results-overlay-container > #res-alliance-container > .res-alliance-card {
+  height: 45vh;
+  width: 15vw;
+}
+
+#fgc-results-overlay-container
+  > #res-alliance-container
+  > .res-alliance-card
+  .res-card-teams {
+  height: 12vh;
+}
+
+#fgc-results-overlay-container
+  > #res-alliance-container
+  > .res-alliance-card
+  .res-card-teams
+  .res-team-row {
+  font-size: 0.8rem;
+  padding: 0;
+}
+
+#fgc-results-overlay-container
+  > #res-alliance-container
+  > .res-alliance-card
+  .res-card-details {
+  margin-top: 1vh;
+}
+
+#fgc-results-overlay-container
+  > #res-alliance-container
+  > .res-alliance-card
+  .res-card-details
+  .res-detail-row {
+  font-size: 0.8rem;
+}
+
+#fgc-results-overlay-container
+  > #res-alliance-container
+  > .res-alliance-card
+  .res-card-bottom {
+  font-size: 1rem;
 }
