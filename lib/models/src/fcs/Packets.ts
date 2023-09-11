@@ -248,8 +248,6 @@ export const FCS_COUNTDOWN_2 = createPacketToSetPatternEverywhere(BlinkinPattern
 export const FCS_COUNTDOWN_1 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_AQUA);
 
 export const FCS_MATCH_START = assemblePwmCommands([
-  RED_OXYGEN_ACCUMULATOR_HOLDING,
-  BLUE_OXYGEN_ACCUMULATOR_HOLDING,
   { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
   { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
   { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
@@ -273,8 +271,6 @@ const FCS_BLUE_COMBINED = assemblePwmCommands([
 ]);
 
 export const FCS_ENDGAME = assemblePwmCommands([
-  RED_OXYGEN_ACCUMULATOR_HOLDING,
-  BLUE_OXYGEN_ACCUMULATOR_HOLDING,
   { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.LIGHT_CHASE_RED },
   { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.LIGHT_CHASE_RED },
   { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.LIGHT_CHASE_RED },
