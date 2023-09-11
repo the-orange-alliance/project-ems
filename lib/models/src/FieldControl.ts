@@ -55,6 +55,7 @@ export interface FieldControlPacket<HubParametersType extends HubParameters<any,
   hubs: Record<number, HubParametersType>;
 }
 export type FieldControlInitPacket = FieldControlPacket<HubInitParameters>;
+// TODO(Noah): Set triggerOptions to null for most field packets
 export type FieldControlUpdatePacket = FieldControlPacket<HubUpdateParameters>;
 
 //-------------------------------------------

@@ -137,6 +137,28 @@ export function createPacketToSetPatternEverywhere(pattern: BlinkinPattern, addi
   ]);
 }
 
+export function cancelConversionButtonTriggers(packet: FieldControlUpdatePacket) {
+  let toteHub = packet.hubs[RevHub.TOTE];
+  if (toteHub == undefined) {
+    toteHub = {};
+    packet.hubs[RevHub.TOTE] = toteHub;
+  }
+
+  if (toteHub.digitalInputs === undefined) {
+    toteHub.digitalInputs = [];
+  }
+
+  for (let conversionButtonDigitalChannel in ConversionButtonDigitalChannel) {
+    const digitalChannelNumber = Number.parseInt(conversionButtonDigitalChannel);
+    if (Number.isNaN(digitalChannelNumber)) { continue; } // Filter out the string entries on the enum
+
+    toteHub.digitalInputs.push({
+      channel: digitalChannelNumber,
+      triggerOptions: null,
+    });
+  }
+}
+
 export const RED_OXYGEN_ACCUMULATOR_HOLDING: PwmCommand = {
   device: PwmDevice.RED_OXYGEN_RELEASER_SERVO,
   pulseWidth_us: OXYGEN_ACCUMULATOR_HOLDING_PULSE_WIDTH,
@@ -220,21 +242,14 @@ export const FCS_INIT: FieldControlInitPacket = (() => {
     result.hubs[device.hub]!.servos!.push({ port: device.port, framePeriod: device.framePeriod_us, pulseWidth: device.initialPulseWidth_us });
   }
 
-  ensureHub(RevHub.TOTE); // The conversion buttons are in the tote
-  for (let conversionButtonDigitalChannel in ConversionButtonDigitalChannel) {
-    const digitalChannelNumber = Number.parseInt(conversionButtonDigitalChannel);
-    if (Number.isNaN(digitalChannelNumber)) { continue; } // Filter out the string entries on the enum
-
-    result.hubs[RevHub.TOTE]!.digitalInputs!.push({
-      channel: digitalChannelNumber,
-      triggerOptions: null,
-    });
-  }
+  cancelConversionButtonTriggers(result);
 
   return result;
 })();
 
 export const FCS_IDLE = createPacketToSetPatternEverywhere(IDLE_BLINKIN_PATTERN);
+cancelConversionButtonTriggers(FCS_IDLE);
+
 export const FCS_TURN_OFF_LIGHTS = createPacketToSetPatternEverywhere(BlinkinPattern.OFF);
 
 export const FCS_FIELD_FAULT = createPacketToSetPatternEverywhere(
@@ -244,7 +259,8 @@ export const FCS_FIELD_FAULT = createPacketToSetPatternEverywhere(
     RED_OXYGEN_ACCUMULATOR_RELEASED,
     BLUE_OXYGEN_ACCUMULATOR_RELEASED,
   ]
-  );
+);
+cancelConversionButtonTriggers(FCS_FIELD_FAULT);
 
 export const FCS_PREPARE_FIELD = createPacketToSetPatternEverywhere(
     BlinkinPattern.COLOR_YELLOW,
@@ -253,6 +269,7 @@ export const FCS_PREPARE_FIELD = createPacketToSetPatternEverywhere(
       BLUE_OXYGEN_ACCUMULATOR_HOLDING,
     ]
 );
+cancelConversionButtonTriggers(FCS_PREPARE_FIELD);
 
 // TODO(Noah): Using these will require clock updates
 export const FCS_COUNTDOWN_3 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_ORANGE);
@@ -307,3 +324,4 @@ export const FCS_ALL_CLEAR = createPacketToSetPatternEverywhere(
     RED_OXYGEN_ACCUMULATOR_RELEASED,
     BLUE_OXYGEN_ACCUMULATOR_RELEASED
   ]);
+cancelConversionButtonTriggers(FCS_ALL_CLEAR);
