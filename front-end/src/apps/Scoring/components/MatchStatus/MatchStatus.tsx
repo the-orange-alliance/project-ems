@@ -15,8 +15,15 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const MatchStatus: FC = () => {
   const selectedMatch = useRecoilValue(matchInProgressAtom);
+  const matchState = useRecoilValue(matchStateAtom);
+  const [matchPhase, setMatchPhase] = useState(undefined as string | undefined);
 
-  const [mode, setMode] = useState('NOT READY');
+  let matchStatus: string;
+  if (matchState == MatchState.MATCH_IN_PROGRESS) {
+    matchStatus = matchPhase ?? 'MATCH STARTED';
+  } else {
+    matchStatus = MatchState[matchState].replaceAll('_', ' ');
+  }
 
   const [socket, connected] = useSocket();
 
@@ -27,7 +34,6 @@ const MatchStatus: FC = () => {
       socket?.on('match:auto', onMatchAuto);
       socket?.on('match:tele', onMatchTele);
       socket?.on('match:endgame', onMatchEndGame);
-      socket?.on('match:end', onMatchEnd);
       socket?.on('match:update', onMatchUpdate);
     }
   }, [connected, socket]);
@@ -37,18 +43,14 @@ const MatchStatus: FC = () => {
       socket?.removeListener('match:auto', onMatchAuto);
       socket?.removeListener('match:tele', onMatchTele);
       socket?.removeListener('match:endgame', onMatchEndGame);
-      socket?.removeListener('match:end', onMatchEnd);
       socket?.removeListener('match:update', onMatchUpdate);
     };
   }, []);
 
-  const onMatchAuto = () => setMode('AUTO');
-  const onMatchTele = () => setMode('TELEOP');
+  const onMatchAuto = () => setMatchPhase('AUTO');
+  const onMatchTele = () => setMatchPhase('TELEOP');
   const onMatchEndGame = useRecoilCallback(() => async () => {
-    setMode('ENDGAME');
-  });
-  const onMatchEnd = useRecoilCallback(() => async () => {
-    setMode('MATCH END');
+    setMatchPhase('ENDGAME');
   });
   const onMatchUpdate = useRecoilCallback(
     ({ set }) =>
@@ -77,7 +79,7 @@ const MatchStatus: FC = () => {
       <Divider />
       <Box sx={{ padding: (theme) => theme.spacing(2) }}>
         <Typography align='center' variant='h5'>
-          {mode}
+          {matchStatus}
         </Typography>
         <Typography align='center' variant='h5'>
           <MatchCountdown />
