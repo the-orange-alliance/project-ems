@@ -1,24 +1,12 @@
-import {
-  defaultCarbonCaptureDetails,
-  HydrogenHorizons,
-  isCarbonCaptureDetails,
-  Match,
-  MatchParticipant
-} from '@toa-lib/models';
+import { HydrogenHorizons, Match, MatchParticipant } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
 import { matchInProgressAtom, timer } from 'src/stores/NewRecoil';
 import './MatchPlay.less';
 import { useSocket } from 'src/api/SocketProvider';
-
-import FGC_LOGO from '../res/Global_Logo.png';
-import STORAGE_0_ICON from '../res/Storage_Level_0.png';
-import STORAGE_1_ICON from '../res/Storage_Level_1.png';
-import STORAGE_2_ICON from '../res/Storage_Level_2.png';
-import STORAGE_3_ICON from '../res/Storage_Level_3.png';
-import STORAGE_4_ICON from '../res/Storage_Level_4.png';
 import { useSearchParams } from 'react-router-dom';
+import FGC_LOGO from '../res/Global_Logo.png';
 
 function getName(name: string): string {
   const params = name.split(' ');
@@ -26,13 +14,11 @@ function getName(name: string): string {
   return params.length === 3 ? params[2] : `${name.charAt(0)}${params[3]}`;
 }
 
-const LeftParticipant: FC<{ participant: MatchParticipant; level: number }> = ({
-  participant,
-  level
+const LeftParticipant: FC<{ participant: MatchParticipant }> = ({
+  participant
 }) => {
   return (
     <div className='team'>
-      <StorageStatus level={level} />
       <div className='team-name-left-p'>
         <span>{participant.team?.country}</span>
       </div>
@@ -49,8 +35,7 @@ const LeftParticipant: FC<{ participant: MatchParticipant; level: number }> = ({
 
 const RightParticipant: FC<{
   participant: MatchParticipant;
-  level: number;
-}> = ({ participant, level }) => {
+}> = ({ participant }) => {
   return (
     <div className='team'>
       <div className='team-flag'>
@@ -64,34 +49,32 @@ const RightParticipant: FC<{
       <div className='team-name-right-p'>
         <span>{participant.team?.country}</span>
       </div>
-      <StorageStatus level={level} />
     </div>
   );
 };
 
-const StorageStatus: FC<{ level: number }> = ({ level }) => {
-  const getImg = () => {
-    switch (level) {
-      case 1:
-        return STORAGE_1_ICON;
-      case 2:
-        return STORAGE_2_ICON;
-      case 3:
-        return STORAGE_3_ICON;
-      case 4:
-        return STORAGE_4_ICON;
-      default:
-        return STORAGE_0_ICON;
-    }
-  };
+// const StorageStatus: FC<{ level: number }> = ({ level }) => {
+//   const getImg = () => {
+//     switch (level) {
+//       case 1:
+//         return STORAGE_1_ICON;
+//       case 2:
+//         return STORAGE_2_ICON;
+//       case 3:
+//         return STORAGE_3_ICON;
+//       case 4:
+//         return STORAGE_4_ICON;
+//       default:
+//         return STORAGE_0_ICON;
+//     }
+//   };
 
-  return <img src={getImg()} className='fit-h' />;
-};
+//   return <img src={getImg()} className='fit-h' />;
+// };
 
 const MatchPlay: FC = () => {
   const [match, setMatch] = useRecoilState(matchInProgressAtom);
   const [socket, connected] = useSocket();
-  const someDetails = match?.details;
   const [searchParams] = useSearchParams();
   const flip = searchParams.get('flip') === 'true';
 
@@ -103,20 +86,6 @@ const MatchPlay: FC = () => {
     .slice(0, 3);
 
   const name = getName(match ? match.name : '');
-
-  const details = isCarbonCaptureDetails(someDetails)
-    ? someDetails
-    : defaultCarbonCaptureDetails;
-  const redStorage = [
-    details.redRobotOneStorage,
-    details.redRobotTwoStorage,
-    details.redRobotTwoStorage
-  ];
-  const blueStorage = [
-    details.blueRobotOneStorage,
-    details.blueRobotTwoStorage,
-    details.blueRobotThreeStorage
-  ];
 
   useEffect(() => {
     if (connected) {
@@ -146,7 +115,6 @@ const MatchPlay: FC = () => {
                 <LeftParticipant
                   key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                   participant={p}
-                  level={redStorage[i]}
                 />
               ))}
             </div>
@@ -175,16 +143,6 @@ const MatchPlay: FC = () => {
                   </div>
                 </div>
               )}
-              <div id='score-container-sink'>
-                <div id='score-container-sink-fill' />
-                <div
-                  id='score-container-sink-complete'
-                  style={{ top: `${(1 - details.carbonPoints / 165) * 100}%` }}
-                  className={
-                    details.coopertitionBonusLevel > 0 ? 'coopertition' : ''
-                  }
-                />
-              </div>
               {flip && (
                 <div id='score-container-red'>
                   <div className='red-bg center'>
@@ -207,7 +165,6 @@ const MatchPlay: FC = () => {
                 <RightParticipant
                   key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                   participant={p}
-                  level={blueStorage[i]}
                 />
               ))}
             </div>

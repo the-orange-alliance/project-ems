@@ -164,7 +164,7 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={STORAGE_2_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>
-                    PROFICIENCY BONYS
+                    PROFICIENCY BONUS
                   </div>
                   <div className='res-detail-right'>{redProficiency}</div>
                 </div>
