@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { useRecoilState } from 'recoil';
 import { matchInProgress } from '@stores/recoil';
-import { CarbonCaptureDetails } from '@toa-lib/models';
+import { CarbonCaptureDetails, MatchSocketEvent } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
 import NumberInput from '@components/Referee/NumberInput';
 
@@ -16,7 +16,7 @@ const ScoreSheetSmall: FC<{ headRef?: boolean }> = () => {
         ...match,
         details: { ...match.details, carbonPoints: newScore }
       };
-      socket?.emit('match:update', newMatch);
+      socket?.emit(MatchSocketEvent.UPDATE, newMatch);
       setMatch(newMatch);
     }
   };

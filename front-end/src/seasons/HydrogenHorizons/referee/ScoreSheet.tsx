@@ -3,7 +3,7 @@ import { RefereeScoreSheetProps } from '@seasons/index';
 import { useSocket } from 'src/api/SocketProvider';
 import { useRecoilValue } from 'recoil';
 import { matchInProgressAtom } from '@stores/NewRecoil';
-import { HydrogenHorizons, Match } from '@toa-lib/models';
+import { HydrogenHorizons, Match, MatchSocketEvent } from '@toa-lib/models';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import { Typography } from '@mui/material';
@@ -33,7 +33,7 @@ const ScoreSheet: FC<RefereeScoreSheetProps> = ({ alliance }) => {
   const handleMatchUpdate = (
     newMatch: Match<HydrogenHorizons.MatchDetails>
   ) => {
-    socket?.emit('match:update', newMatch);
+    socket?.emit(MatchSocketEvent.UPDATE, newMatch);
   };
 
   return (

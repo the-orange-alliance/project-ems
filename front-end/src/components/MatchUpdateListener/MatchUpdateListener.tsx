@@ -1,4 +1,4 @@
-import { Match, MatchState } from '@toa-lib/models';
+import { Match, MatchSocketEvent, MatchState } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilCallback } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
@@ -13,13 +13,13 @@ const MatchUpdateListener: FC<Props> = ({ stopAfterMatchEnd }) => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('match:update', onUpdate);
+      socket?.on(MatchSocketEvent.UPDATE, onUpdate);
     }
   }, [connected]);
 
   useEffect(() => {
     return () => {
-      socket?.removeListener('match:update', onUpdate);
+      socket?.removeListener(MatchSocketEvent.UPDATE, onUpdate);
     };
   }, []);
 

@@ -17,7 +17,7 @@ import {
   teamsInScheduleSelectorFamily,
   tournamentScheduleSelector
 } from 'src/stores/Recoil';
-import { AllianceMember, defaultAllianceMember, Team } from '@toa-lib/models';
+import { AllianceMember, defaultAllianceMember, MatchSocketEvent, Team } from '@toa-lib/models';
 import AutocompleteTeam from 'src/features/components/AutocompleteTeam/AutoCompleteTeam';
 import { replaceInArray } from 'src/stores/Util';
 import { postAllianceMembers } from 'src/api/ApiProvider';
@@ -64,11 +64,11 @@ const SetupAlliances: FC = () => {
   });
 
   const setDisplay = () => {
-    socket?.emit('match:display', 6);
+    socket?.emit(MatchSocketEvent.DISPLAY, 6);
   };
 
   const updateDisplay = () => {
-    socket?.emit('match:alliance', allianceMembers);
+    socket?.emit(MatchSocketEvent.ALLIANCE, allianceMembers);
   };
 
   return (

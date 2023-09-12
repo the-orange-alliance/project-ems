@@ -4,7 +4,7 @@ import TeamCardStatus from './TeamCardStatus';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import AutocompleteTeam from 'src/features/components/AutocompleteTeam/AutoCompleteTeam';
-import { MatchState, Team } from '@toa-lib/models';
+import { MatchSocketEvent, MatchState, Team } from '@toa-lib/models';
 import {
   matchInProgressAtom,
   matchInProgressParticipantsByStationSelectorFam,
@@ -28,7 +28,7 @@ const TeamStatusRow: FC<Props> = ({ station }) => {
   useEffect(() => {
     if (updateReady) {
       setUpdateReady(false);
-      socket?.emit('match:update', match);
+      socket?.emit(MatchSocketEvent.UPDATE, match);
     }
   }, [updateReady]);
 

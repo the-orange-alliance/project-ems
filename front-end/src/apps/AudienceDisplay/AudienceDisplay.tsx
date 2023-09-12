@@ -1,5 +1,5 @@
 import { clientFetcher } from '@toa-lib/client';
-import { Displays, isMatch, Match, MatchKey } from '@toa-lib/models';
+import { Displays, isMatch, Match, MatchKey, MatchSocketEvent } from '@toa-lib/models';
 import { FC, ReactNode, useEffect } from 'react';
 import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
@@ -26,15 +26,15 @@ const AudienceDisplay: FC = () => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('match:display', onDisplay);
-      socket?.on('match:commit', onCommit);
+      socket?.on(MatchSocketEvent.DISPLAY, onDisplay);
+      socket?.on(MatchSocketEvent.COMMIT, onCommit);
     }
   }, [connected]);
 
   useEffect(() => {
     return () => {
-      socket?.removeListener('match:display', onDisplay);
-      socket?.removeListener('match:commit', onCommit);
+      socket?.removeListener(MatchSocketEvent.DISPLAY, onDisplay);
+      socket?.removeListener(MatchSocketEvent.COMMIT, onCommit);
     };
   }, [display]);
 

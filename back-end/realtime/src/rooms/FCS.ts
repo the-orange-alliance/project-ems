@@ -1,5 +1,13 @@
 import { Server, Socket } from "socket.io";
-import { FCS_ENDGAME, FCS_FIELD_FAULT, FCS_IDLE, FCS_INIT, FCS_MATCH_START, FieldControlUpdatePacket } from "@toa-lib/models";
+import {
+  FCS_ENDGAME,
+  FCS_FIELD_FAULT,
+  FCS_IDLE,
+  FCS_INIT,
+  FCS_MATCH_START,
+  FieldControlUpdatePacket,
+  MatchSocketEvent
+} from "@toa-lib/models";
 import Room from "./Room.js";
 import Match from "./Match.js";
 
@@ -9,20 +17,20 @@ export default class FCS extends Room {
   public constructor(server: Server, matchRoom: Match) {
     super(server, "fcs");
 
-    matchRoom.localEmitter.on("match:start", () => {
+    matchRoom.localEmitter.on(MatchSocketEvent.START, () => {
       this.broadcastFcsUpdate(FCS_MATCH_START);
     });
 
-    matchRoom.localEmitter.on("match:endgame", () => {
+    matchRoom.localEmitter.on(MatchSocketEvent.ENDGAME, () => {
       this.broadcastFcsUpdate(FCS_ENDGAME);
     });
 
-    matchRoom.localEmitter.on("match:end", () => {
+    matchRoom.localEmitter.on(MatchSocketEvent.END, () => {
       // TODO(Noah): Placeholder
       this.broadcastFcsUpdate(FCS_IDLE);
     });
 
-    matchRoom.localEmitter.on("match:abort", () => {
+    matchRoom.localEmitter.on(MatchSocketEvent.ABORT, () => {
       this.broadcastFcsUpdate(FCS_FIELD_FAULT);
     })
   }

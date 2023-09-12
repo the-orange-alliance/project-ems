@@ -2,7 +2,8 @@ import { createSocket } from '@toa-lib/client';
 import {
   FCS_ALL_CLEAR,
   FCS_PREPARE_FIELD,
-  MatchKey
+  MatchKey,
+  MatchSocketEvent
 } from '@toa-lib/models';
 import { Socket } from 'socket.io-client';
 import { useRecoilState } from 'recoil';
@@ -60,11 +61,11 @@ export const useSocket = (): [
 
 /* Utility/helper functions for socket state */
 export function sendPrestart(key: MatchKey): void {
-  socket?.emit('match:prestart', key);
+  socket?.emit(MatchSocketEvent.PRESTART, key);
 }
 
 export function setDisplays(): void {
-  socket?.emit('match:display', 2);
+  socket?.emit(MatchSocketEvent.DISPLAY, 2);
 }
 
 export function sendPrepareField(): void {
@@ -72,11 +73,11 @@ export function sendPrepareField(): void {
 }
 
 export function sendStartMatch(): void {
-  socket?.emit('match:start');
+  socket?.emit(MatchSocketEvent.START);
 }
 
 export async function sendAbortMatch(): Promise<void> {
-  socket?.emit('match:abort');
+  socket?.emit(MatchSocketEvent.ABORT);
 }
 
 export async function sendAllClear(): Promise<void> {
@@ -84,11 +85,11 @@ export async function sendAllClear(): Promise<void> {
 }
 
 export async function sendCommitScores(key: MatchKey): Promise<void> {
-  socket?.emit('match:commit', key);
+  socket?.emit(MatchSocketEvent.COMMIT, key);
 }
 
 export async function sendPostResults(): Promise<void> {
-  socket?.emit('match:display', 3);
+  socket?.emit(MatchSocketEvent.DISPLAY, 3);
 }
 
 export async function sendUpdateFrcFmsSettings(

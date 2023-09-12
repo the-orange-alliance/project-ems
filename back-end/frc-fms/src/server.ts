@@ -9,6 +9,7 @@ import {
     Event,
     MatchMode,
     MatchKey,
+    MatchSocketEvents,
 } from "@toa-lib/models";
 import { getMatch } from "./helpers/ems.js";
 import { environment } from "@toa-lib/server";
@@ -107,7 +108,7 @@ export class EmsFrcFms {
 
     private async setupSocketEvents() {
         // Manage Socket Events
-        SocketSupport.getInstance().socket?.on("match:prestart", (matchKey: MatchKey) => {
+        SocketSupport.getInstance().socket?.on(MatchSocketEvents.PRESTART, (matchKey: MatchKey) => {
             logger.info("🔁 Prestart Command Issued");
             this.matchState = MatchMode.PRESTART;
             this.fmsOnPrestart(matchKey);
@@ -195,14 +196,14 @@ export class EmsFrcFms {
     }
 
     private initTimer() {
-        SocketSupport.getInstance().socket?.on("match:start", () => {
+        SocketSupport.getInstance().socket?.on(MatchSocketEvents.START, () => {
             // Check if we have a match
             if (!this.activeMatch) {
                 logger.info("ℹ Match Started, but I have no active match");
                 return;
             }
 
-            // TODO: Down the line, it may be possible to have multiple matches prestarted at the same time. 
+            // TODO: Down the line, it may be possible to have multiple matches prestarted at the same time.
             // TODO: Make sure we check that the match that got started is our active match!
 
             // Signal DriverStation Start
@@ -241,14 +242,14 @@ export class EmsFrcFms {
                 }
             }, 1000);
         });
-        SocketSupport.getInstance().socket?.on("match:end", () => {
+        SocketSupport.getInstance().socket?.on(MatchSocketEvents.END, () => {
             this._timer.stop();
             this.timeLeft = this._timer.timeLeft;
             this.matchState = MatchMode.ENDED;
             this.removeMatchlisteners();
             logger.info("⏹ Remote Timer Ended");
         });
-        SocketSupport.getInstance().socket?.on("match:abort", () => {
+        SocketSupport.getInstance().socket?.on(MatchSocketEvents.ABORT, () => {
             this._timer.abort();
             this.timeLeft = this._timer.timeLeft;
             this.matchState = MatchMode.ABORTED;

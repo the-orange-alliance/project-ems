@@ -7,7 +7,7 @@ import Typography from '@mui/material/Typography';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
-import { Match, MatchState } from '@toa-lib/models';
+import { Match, MatchSocketEvent, MatchState } from '@toa-lib/models';
 import { matchInProgressAtom, matchStateAtom } from 'src/stores/NewRecoil';
 
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
@@ -31,19 +31,19 @@ const MatchStatus: FC = () => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('match:auto', onMatchAuto);
-      socket?.on('match:tele', onMatchTele);
-      socket?.on('match:endgame', onMatchEndGame);
-      socket?.on('match:update', onMatchUpdate);
+      socket?.on(MatchSocketEvent.AUTONOMOUS, onMatchAuto);
+      socket?.on(MatchSocketEvent.TELEOPERATED, onMatchTele);
+      socket?.on(MatchSocketEvent.ENDGAME, onMatchEndGame);
+      socket?.on(MatchSocketEvent.UPDATE, onMatchUpdate);
     }
   }, [connected, socket]);
 
   useEffect(() => {
     return () => {
-      socket?.removeListener('match:auto', onMatchAuto);
-      socket?.removeListener('match:tele', onMatchTele);
-      socket?.removeListener('match:endgame', onMatchEndGame);
-      socket?.removeListener('match:update', onMatchUpdate);
+      socket?.removeListener(MatchSocketEvent.AUTONOMOUS, onMatchAuto);
+      socket?.removeListener(MatchSocketEvent.TELEOPERATED, onMatchTele);
+      socket?.removeListener(MatchSocketEvent.ENDGAME, onMatchEndGame);
+      socket?.removeListener(MatchSocketEvent.UPDATE, onMatchUpdate);
     };
   }, []);
 

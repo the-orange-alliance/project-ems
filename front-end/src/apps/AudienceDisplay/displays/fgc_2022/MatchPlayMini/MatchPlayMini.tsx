@@ -5,7 +5,7 @@ import { useSocket } from 'src/api/SocketProvider';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
 import { matchInProgress, timer } from 'src/stores/Recoil';
 import './MatchPlayMini.css';
-import { Match } from '@toa-lib/models';
+import { Match, MatchSocketEvent } from '@toa-lib/models';
 import {
   initAudio,
   MATCH_START,
@@ -29,21 +29,21 @@ const MatchPlayMini: FC = () => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('match:start', matchStart);
-      socket?.on('match:abort', matchAbort);
-      socket?.on('match:endgame', matchEndGame);
-      socket?.on('match:end', matchEnd);
-      socket?.on('match:update', matchUpdate);
+      socket?.on(MatchSocketEvent.START, matchStart);
+      socket?.on(MatchSocketEvent.ABORT, matchAbort);
+      socket?.on(MatchSocketEvent.ENDGAME, matchEndGame);
+      socket?.on(MatchSocketEvent.END, matchEnd);
+      socket?.on(MatchSocketEvent.UPDATE, matchUpdate);
     }
   }, [connected]);
 
   useEffect(() => {
     return () => {
-      socket?.removeListener('match:start', matchStart);
-      socket?.removeListener('match:abort', matchAbort);
-      socket?.removeListener('match:endgame', matchEndGame);
-      socket?.removeListener('match:end', matchEnd);
-      socket?.removeListener('match:update', matchUpdate);
+      socket?.removeListener(MatchSocketEvent.START, matchStart);
+      socket?.removeListener(MatchSocketEvent.ABORT, matchAbort);
+      socket?.removeListener(MatchSocketEvent.ENDGAME, matchEndGame);
+      socket?.removeListener(MatchSocketEvent.END, matchEnd);
+      socket?.removeListener(MatchSocketEvent.UPDATE, matchUpdate);
     };
   }, []);
 
