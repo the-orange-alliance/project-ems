@@ -55,21 +55,27 @@ export class MatchTimer extends EventEmitter {
 
   public start() {
     if (!this.inProgress()) {
+      let matchPhaseEvent: string;
       if (this.matchConfig.delayTime > 0) {
         this._mode = MatchMode.PRESTART;
         this._modeTimeLeft = this.matchConfig.delayTime;
+        matchPhaseEvent = "timer:prestart";
       } else if (this.matchConfig.autoTime > 0) {
         this._mode = MatchMode.AUTONOMOUS;
         this._modeTimeLeft = this.matchConfig.autoTime;
+        matchPhaseEvent = "timer:auto";
       } else if (this.matchConfig.transitionTime > 0) {
         this._mode = MatchMode.TRANSITION;
         this._modeTimeLeft = this.matchConfig.transitionTime;
+        matchPhaseEvent = "timer:transition";
       } else {
         this._mode = MatchMode.TELEOPERATED;
         this._modeTimeLeft = this.matchConfig.teleTime;
+        matchPhaseEvent = "timer:tele";
       }
       this._timeLeft = getMatchTime(this._matchConfig);
       this.emit('timer:start', this._timeLeft);
+      this.emit(matchPhaseEvent);
       this._timerID = setInterval(() => {
         this.tick();
       }, 1000);
