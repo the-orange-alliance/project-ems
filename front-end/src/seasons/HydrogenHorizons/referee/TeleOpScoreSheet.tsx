@@ -15,6 +15,7 @@ import {
   AlignmentStatus,
   Proficiency
 } from '@toa-lib/models/build/seasons/HydrogenHorizons';
+import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 
 interface Props {
   alliance: Alliance;
@@ -27,6 +28,7 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
     Match<HydrogenHorizons.MatchDetails> | null,
     SetterOrUpdater<Match<HydrogenHorizons.MatchDetails> | null>
   ] = useRecoilState(matchInProgressAtom);
+  const identifiers = useTeamIdentifiers();
 
   if (!match || !match.details) return null;
 
@@ -113,8 +115,10 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   console.log({ match });
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} md={4} lg={4}>
-        <Typography variant='h6'>Oxygen Points</Typography>
+      <Grid item xs={12} md={6} lg={6}>
+        <Typography variant='h6' textAlign='center'>
+          Oxygen Points
+        </Typography>
         <NumberInput
           value={
             alliance === 'red'
@@ -124,8 +128,10 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
           onChange={handleOxygenChange}
         />
       </Grid>
-      <Grid item xs={12} md={4} lg={4}>
-        <Typography variant='h6'>Hydrogen Points</Typography>
+      <Grid item xs={12} md={6} lg={6}>
+        <Typography variant='h6' textAlign='center'>
+          Hydrogen Points
+        </Typography>
         <NumberInput
           value={
             alliance === 'red'
@@ -158,7 +164,7 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
           <Grid item key={`${p.teamKey}-proficiency`} xs={12} md={3} lg={3}>
             {/* The states attribute MUST match the order of the Proficiency enum */}
             <StateToggle
-              title={`${p.teamKey} Proficiency`}
+              title={`${identifiers[p.teamKey]} Proficiency`}
               states={['Developing', 'Intermediate', 'Expert']}
               value={getProficiencyStatus(p.station) ?? Proficiency.DEVELOPING}
               onChange={update}

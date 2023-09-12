@@ -8,6 +8,7 @@ import {
   matchInProgressParticipantsByStationSelectorFam
 } from '@stores/NewRecoil';
 import { useSocket } from 'src/api/SocketProvider';
+import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 
 interface Props {
   station: number;
@@ -21,6 +22,8 @@ const TeamSheet: FC<Props> = ({ station }) => {
   );
 
   const [updateReady, setUpdateReady] = useState(false);
+
+  const identifiers = useTeamIdentifiers();
 
   useEffect(() => {
     if (updateReady) {
@@ -53,7 +56,9 @@ const TeamSheet: FC<Props> = ({ station }) => {
         alignItems: 'center'
       }}
     >
-      <Typography variant='h6'>{participant?.teamKey}</Typography>
+      {participant && (
+        <Typography variant='h6'>{identifiers[participant.teamKey]}</Typography>
+      )}
 
       <Box
         sx={{

@@ -16,7 +16,14 @@ const NumberInput: FC<Props> = ({ value, onChange, disabled }) => {
   const decrement = () => onChange(value - 1);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        gap: '20px',
+        justifyContent: 'center'
+      }}
+    >
       <Button variant='contained' onClick={decrement} disabled={disabled}>
         -
       </Button>
