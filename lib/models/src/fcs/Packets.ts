@@ -1,4 +1,9 @@
-import {FieldControlPacket, HubMessage} from '../FieldControl.js';
+import {
+  FieldControlInitPacket,
+  FieldControlUpdatePacket,
+  HubUpdateParameters,
+} from '../FieldControl.js';
+import {UnreachableError} from "../types.js";
 
 export enum RevHub {
   TOTE = 0,
@@ -6,26 +11,69 @@ export enum RevHub {
   BLUE_HYDROGEN_TANK = 2,
 }
 
+export enum ConversionButtonDigitalChannel {
+  RED = 0,
+  BLUE = 2,
+}
+
+export const IDLE_BLINKIN_PATTERN = 1285; // COLOR_WAVES_PARTY (defined before BlinkinPattern for code organization purposes)
+
+// TODO: Make the oxygen releaser pulse widths a setting
+const OXYGEN_ACCUMULATOR_HOLDING_PULSE_WIDTH = 500;
+const OXYGEN_ACCUMULATOR_RELEASED_PULSE_WIDTH = 2500;
+
+export type PwmDeviceType = "blinkin" | "servo";
 export type PwmDeviceFieldElement = "oxygenAccumulator" | "hydrogenTank" | "conversionButton" | "oxygenReleaser";
 
 export class PwmDevice {
-  public static readonly RED_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(RevHub.TOTE, 0, "oxygenAccumulator");
-  public static readonly RED_CONVERSION_BUTTON_BLINKIN = new PwmDevice(RevHub.TOTE, 1, "conversionButton");
-  public static readonly RED_OXYGEN_RELEASER_SERVO = new PwmDevice(RevHub.TOTE, 2, "oxygenReleaser");
-  public static readonly RED_HYDROGEN_TANK_BLINKIN = new PwmDevice(RevHub.RED_HYDROGEN_TANK, 0, "hydrogenTank");
-  public static readonly BLUE_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(RevHub.TOTE, 3, "oxygenAccumulator");
-  public static readonly BLUE_CONVERSION_BUTTON_BLINKIN = new PwmDevice(RevHub.TOTE, 4, "conversionButton");
-  public static readonly BLUE_OXYGEN_ACCUMULATOR_SERVO = new PwmDevice(RevHub.TOTE, 5, "oxygenReleaser");
-  public static readonly BLUE_HYDROGEN_TANK_BLINKIN = new PwmDevice(RevHub.BLUE_HYDROGEN_TANK, 0, "hydrogenTank");
+  public static readonly RED_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(RevHub.TOTE, 0, "oxygenAccumulator", "blinkin");
+  public static readonly RED_CONVERSION_BUTTON_BLINKIN = new PwmDevice(RevHub.TOTE, 1, "conversionButton", "blinkin");
+  public static readonly RED_OXYGEN_RELEASER_SERVO = new PwmDevice(RevHub.TOTE, 2, "oxygenReleaser", "servo");
+  public static readonly RED_HYDROGEN_TANK_BLINKIN = new PwmDevice(RevHub.RED_HYDROGEN_TANK, 0, "hydrogenTank", "blinkin");
+  public static readonly BLUE_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(RevHub.TOTE, 3, "oxygenAccumulator", "blinkin");
+  public static readonly BLUE_CONVERSION_BUTTON_BLINKIN = new PwmDevice(RevHub.TOTE, 4, "conversionButton", "blinkin");
+  public static readonly BLUE_OXYGEN_ACCUMULATOR_SERVO = new PwmDevice(RevHub.TOTE, 5, "oxygenReleaser", "servo");
+  public static readonly BLUE_HYDROGEN_TANK_BLINKIN = new PwmDevice(RevHub.BLUE_HYDROGEN_TANK, 0, "hydrogenTank", "blinkin");
+
+  public static readonly ALL_BLINKIN_DEVICES = [
+    PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN,
+    PwmDevice.RED_CONVERSION_BUTTON_BLINKIN,
+    PwmDevice.RED_HYDROGEN_TANK_BLINKIN,
+    PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN,
+    PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN,
+    PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN,
+  ]
+
+  public static readonly ALL_PWM_DEVICES = [
+    ...PwmDevice.ALL_BLINKIN_DEVICES,
+    PwmDevice.RED_OXYGEN_RELEASER_SERVO,
+    PwmDevice.BLUE_OXYGEN_ACCUMULATOR_SERVO,
+  ]
 
   public readonly hub: RevHub;
   public readonly port: number;
+  public readonly framePeriod_us: number;
+  public readonly initialPulseWidth_us: number;
   public readonly fieldElement: PwmDeviceFieldElement;
 
-  private constructor(hub: RevHub, port: number, fieldElement: PwmDeviceFieldElement) {
+  private constructor(hub: RevHub, port: number, fieldElement: PwmDeviceFieldElement, deviceType: PwmDeviceType) {
     this.hub = hub;
     this.port = port;
     this.fieldElement = fieldElement;
+    /*
+     * Using multiple different frame periods can cause problems w/ Expansion Hub firmware version 1.8.2.
+     * REV employees: see https://github.com/REVrobotics/ExpansionHubFW/issues/81
+     *
+     * Additionally, the shorter the frame period, the faster the Blinkin patterns are.
+     */
+    this.framePeriod_us = 20000;
+    if (deviceType == "servo") {
+      this.initialPulseWidth_us = OXYGEN_ACCUMULATOR_HOLDING_PULSE_WIDTH;
+    } else if (deviceType == "blinkin") {
+      this.initialPulseWidth_us = IDLE_BLINKIN_PATTERN;
+    } else {
+      throw new UnreachableError(deviceType);
+    }
   }
 }
 
@@ -34,9 +82,7 @@ export interface PwmCommand {
   pulseWidth_us: number | BlinkinPattern;
 }
 
-export function assemblePwmCommands(pwmCommands: PwmCommand[]): FieldControlPacket {
-  const hubMessages: HubMessage[] = [];
-
+export function assemblePwmCommands(pwmCommands: PwmCommand[]): FieldControlUpdatePacket {
   // Sort the commands for optimal visual synchronization.
   // The most important thing is to have field elements of the same type grouped together.
   pwmCommands.sort((a, b) => {
@@ -61,61 +107,89 @@ export function assemblePwmCommands(pwmCommands: PwmCommand[]): FieldControlPack
     }
   });
 
+  // This type is the same as the hubs field in FieldControlUpdatePacket, but with
+  // only servo parameters, and the servo parameters are required instead of optional.
+  const hubs: Record<string, Required<Pick<HubUpdateParameters, "servos">>> = { };
+
+  const ensureHub = (hub: RevHub) => {
+    if (hubs[hub] == undefined) {
+      hubs[hub] = { servos: [] }
+    }
+  }
+
   for (const command of pwmCommands) {
-    hubMessages.push({
-      hub: command.device.hub,
-      function: "servo",
-      parameters: {
-        port: command.device.port,
-        pulsewidth: command.pulseWidth_us,
-      }
+    ensureHub(command.device.hub);
+    hubs[command.device.hub].servos.push({
+      port: command.device.port,
+      pulseWidth: command.pulseWidth_us,
     });
   }
 
-  return {
-    messages: hubMessages
-  }
+  return { hubs }
 }
 
-export function createPacketToSetPatternEverywhere(pattern: BlinkinPattern, additionalCommands: PwmCommand[] = []): FieldControlPacket {
+export function createPacketToSetPatternEverywhere(pattern: BlinkinPattern, additionalCommands: PwmCommand[] = []): FieldControlUpdatePacket {
   return assemblePwmCommands([
     ...additionalCommands,
-    { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: pattern },
-    { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: pattern },
-    { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: pattern },
-    { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: pattern },
-    { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: pattern },
-    { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: pattern },
-  ])
+    ...PwmDevice.ALL_BLINKIN_DEVICES.map(device => {
+      return { device, pulseWidth_us: pattern}
+    }),
+  ]);
+}
+
+export function cancelConversionButtonTriggers(packet: FieldControlUpdatePacket) {
+  let toteHub = packet.hubs[RevHub.TOTE];
+  if (toteHub == undefined) {
+    toteHub = {};
+    packet.hubs[RevHub.TOTE] = toteHub;
+  }
+
+  if (toteHub.digitalInputs === undefined) {
+    toteHub.digitalInputs = [];
+  }
+
+  for (let conversionButtonDigitalChannel in ConversionButtonDigitalChannel) {
+    const digitalChannelNumber = Number.parseInt(conversionButtonDigitalChannel);
+    if (Number.isNaN(digitalChannelNumber)) { continue; } // Filter out the string entries on the enum
+
+    toteHub.digitalInputs.push({
+      channel: digitalChannelNumber,
+      triggerOptions: null,
+    });
+  }
 }
 
 export const RED_OXYGEN_ACCUMULATOR_HOLDING: PwmCommand = {
   device: PwmDevice.RED_OXYGEN_RELEASER_SERVO,
-  pulseWidth_us: 500,
+  pulseWidth_us: OXYGEN_ACCUMULATOR_HOLDING_PULSE_WIDTH,
 };
 
 export const RED_OXYGEN_ACCUMULATOR_RELEASED: PwmCommand = {
   device: PwmDevice.RED_OXYGEN_RELEASER_SERVO,
-  pulseWidth_us: 2500,
+  pulseWidth_us: OXYGEN_ACCUMULATOR_RELEASED_PULSE_WIDTH,
 };
 
 export const BLUE_OXYGEN_ACCUMULATOR_HOLDING: PwmCommand = {
   device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_SERVO,
-  pulseWidth_us: 500,
+  pulseWidth_us: OXYGEN_ACCUMULATOR_HOLDING_PULSE_WIDTH,
 };
 
 export const BLUE_OXYGEN_ACCUMULATOR_RELEASED: PwmCommand = {
   device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_SERVO,
-  pulseWidth_us: 2500,
+  pulseWidth_us: OXYGEN_ACCUMULATOR_RELEASED_PULSE_WIDTH,
 };
 
 export enum BlinkinPattern {
+  COLOR_1_2_GRADIENT = 1705,
   COLOR_1_HB_FAST = 1535,
   COLOR_1_HB_MED = 1525,
   COLOR_1_HB_SLOW = 1515,
+  COLOR_1_LIGHT_CHASE = 1505,
+  COLOR_1_SHOT = 1565,
   COLOR_2_HB_FAST = 1635,
   COLOR_2_HB_MED = 1625,
   COLOR_2_HB_SLOW = 1615,
+  COLOR_2_SHOT = 1665,
   COLOR_AQUA = 1905,
   COLOR_BLACK = 1995,
   COLOR_BLUE = 1935,
@@ -142,16 +216,52 @@ export enum BlinkinPattern {
   COLOR_YELLOW = 1845,
   COLOR_WAVES_RAINBOW = 1275,
   COLOR_WAVES_PARTY = 1285,
+  LIGHT_CHASE_RED = 1345,
+  LIGHT_CHASE_BLUE = 1355,
   OFF = 1995,
+  SPARKLE_COLOR_1_ON_COLOR_2 = 1685,
+  SPARKLE_COLOR_2_ON_COLOR_1 = 1695,
   STROBE_BLUE = 1455,
   STROBE_RED = 1445,
 }
 
-export const FCS_IDLE = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_WAVES_PARTY);
-export const FCS_TURN_OFF_LIGHTS = createPacketToSetPatternEverywhere(BlinkinPattern.OFF);
-export const FCS_FIELD_FAULT = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_GREEN);
+/**
+ * This packet must specify the initial state of EVERY port that will be used at any point.
+ */
+export const FCS_INIT: FieldControlInitPacket = (() => {
+  const result: FieldControlInitPacket = { hubs: {} };
 
-// TODO: Make the oxygen releaser pulse widths a setting
+  const ensureHub = (hub: RevHub) => {
+    if (result.hubs[hub] == undefined) {
+      result.hubs[hub] = { motors: [], servos: [], digitalInputs: [] }
+    }
+  }
+
+  for (const device of PwmDevice.ALL_PWM_DEVICES) {
+    ensureHub(device.hub);
+    result.hubs[device.hub]!.servos!.push({ port: device.port, framePeriod: device.framePeriod_us, pulseWidth: device.initialPulseWidth_us });
+  }
+
+  cancelConversionButtonTriggers(result);
+
+  return result;
+})();
+
+export const FCS_IDLE = createPacketToSetPatternEverywhere(IDLE_BLINKIN_PATTERN);
+cancelConversionButtonTriggers(FCS_IDLE);
+
+export const FCS_TURN_OFF_LIGHTS = createPacketToSetPatternEverywhere(BlinkinPattern.OFF);
+
+export const FCS_FIELD_FAULT = createPacketToSetPatternEverywhere(
+  BlinkinPattern.COLOR_YELLOW,
+  [
+    // Return any accumulated oxygen to the field for field reset
+    RED_OXYGEN_ACCUMULATOR_RELEASED,
+    BLUE_OXYGEN_ACCUMULATOR_RELEASED,
+  ]
+);
+cancelConversionButtonTriggers(FCS_FIELD_FAULT);
+
 export const FCS_PREPARE_FIELD = createPacketToSetPatternEverywhere(
     BlinkinPattern.COLOR_YELLOW,
     [
@@ -159,10 +269,14 @@ export const FCS_PREPARE_FIELD = createPacketToSetPatternEverywhere(
       BLUE_OXYGEN_ACCUMULATOR_HOLDING,
     ]
 );
-// TODO(Noah): Add a countdown
+cancelConversionButtonTriggers(FCS_PREPARE_FIELD);
+
+// TODO(Noah): Using these will require clock updates
+export const FCS_COUNTDOWN_3 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_ORANGE);
+export const FCS_COUNTDOWN_2 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_PINK);
+export const FCS_COUNTDOWN_1 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_AQUA);
+
 export const FCS_MATCH_START = assemblePwmCommands([
-  RED_OXYGEN_ACCUMULATOR_HOLDING,
-  BLUE_OXYGEN_ACCUMULATOR_HOLDING,
   { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
   { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
   { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
@@ -170,19 +284,44 @@ export const FCS_MATCH_START = assemblePwmCommands([
   { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.OFF },
   { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.OFF },
 ]);
-export const FCS_ENDGAME = assemblePwmCommands([
-  RED_OXYGEN_ACCUMULATOR_HOLDING,
-  BLUE_OXYGEN_ACCUMULATOR_HOLDING,
-  { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_RED },
-  { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_RED },
-  { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_RED },
-  { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_BLUE },
-  { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_BLUE },
-  { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.STROBE_BLUE },
-]);
-export const FCS_ALL_CLEAR = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_GREEN);
 
-// TODO(Noah): Add optional field to FieldControlPacket that tells the device to keep polling the REV Hub digital inputs,
-//             and what to do when it sees certain inputs. The field should allow specifying PWM commands to execute and
-//             FCS messages to send. The device will stop polling when it receives another update command.
-//             Use this to handle the red and blue combined states during endgame.
+const FCS_RED_COMBINED = assemblePwmCommands([
+  RED_OXYGEN_ACCUMULATOR_RELEASED,
+  { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
+  { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
+  { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
+]);
+
+const FCS_BLUE_COMBINED = assemblePwmCommands([
+  BLUE_OXYGEN_ACCUMULATOR_RELEASED,
+  { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
+  { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
+  { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
+]);
+
+export const FCS_ENDGAME = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_1_2_GRADIENT);
+FCS_ENDGAME.hubs[RevHub.TOTE]!.digitalInputs = [
+  {
+    channel: ConversionButtonDigitalChannel.RED,
+    triggerOptions: {
+      triggerOnLow: true,
+      fcsUpdateToSend: FCS_RED_COMBINED,
+    }
+  },
+  {
+    channel: ConversionButtonDigitalChannel.BLUE,
+    triggerOptions: {
+      triggerOnLow: true,
+      fcsUpdateToSend: FCS_BLUE_COMBINED,
+    }
+  }
+];
+
+export const FCS_ALL_CLEAR = createPacketToSetPatternEverywhere(
+  BlinkinPattern.COLOR_GREEN,
+  [
+    // Make sure that the oxygen accumulators are empty during field reset
+    RED_OXYGEN_ACCUMULATOR_RELEASED,
+    BLUE_OXYGEN_ACCUMULATOR_RELEASED
+  ]);
+cancelConversionButtonTriggers(FCS_ALL_CLEAR);
