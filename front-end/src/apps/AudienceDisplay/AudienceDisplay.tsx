@@ -77,7 +77,7 @@ function getDisplay(id: number, mode: string): ReactNode {
     case Displays.MATCH_START:
       return getPlayDisplay(mode);
     case Displays.MATCH_RESULTS:
-      return <MatchResults />;
+      return getResultsDisplay(mode);
     default:
       return <div />;
   }
@@ -86,8 +86,17 @@ function getDisplay(id: number, mode: string): ReactNode {
 function getPlayDisplay(mode: string): ReactNode {
   switch (mode) {
     case 'stream':
-      return <MatchResultsOverlay />;
+      return <MatchPlay />;
     default:
       return <MatchPlay />;
+  }
+}
+
+function getResultsDisplay(mode: string): ReactNode {
+  switch (mode) {
+    case 'stream':
+      return <MatchResultsOverlay />;
+    default:
+      return <MatchResults />;
   }
 }
