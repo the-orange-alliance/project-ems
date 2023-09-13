@@ -74,7 +74,7 @@ export class MatchTimer extends EventEmitter {
         matchPhaseEvent = "timer:tele";
       }
       this._timeLeft = getMatchTime(this._matchConfig);
-      this.emit('timer:start', this._timeLeft);
+      this.emit('timer:start');
       this.emit(matchPhaseEvent);
       this._timerID = setInterval(() => {
         this.tick();
