@@ -29,7 +29,7 @@ const FieldPrepButton: FC = () => {
       onClick={loading ? undefined : updateField}
       loading={loading}
     >
-      Prep (Not Used)
+      Prep Field
     </LoadingButton>
   );
 };
