@@ -15,9 +15,10 @@ import {
 import MatchPreview from './displays/fgc_2023/MatchPreview/MatchPreview';
 import MatchPlay from './displays/fgc_2023/MatchPlay/MatchPlay';
 import MatchResults from './displays/fgc_2023/MatchResults/MatchResults';
+import MatchResultsOverlay from './displays/fgc_2023/MatchResults/MatchResultsOverlay';
+import MatchPlayMini from './displays/fgc_2023/MatchPlayMini/MatchPlayMini';
 import { useHiddenMotionlessCursor } from '@features/hooks/use-hidden-motionless-cursor';
 import './AudienceDisplay.less';
-import MatchResultsOverlay from './displays/fgc_2023/MatchResults/MatchResultsOverlay';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayIdAtom);
@@ -86,7 +87,7 @@ function getDisplay(id: number, mode: string): ReactNode {
 function getPlayDisplay(mode: string): ReactNode {
   switch (mode) {
     case 'stream':
-      return <MatchPlay />;
+      return <MatchPlayMini />;
     default:
       return <MatchPlay />;
   }

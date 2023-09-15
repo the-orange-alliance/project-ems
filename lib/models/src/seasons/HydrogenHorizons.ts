@@ -331,7 +331,7 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
   ];
 }
 
-function getCoopertitionPoints(details: MatchDetails): number {
+export function getCoopertitionPoints(details: MatchDetails): number {
   const count =
     Number(details.redOneProficiency > Proficiency.DEVELOPING) +
     Number(details.redTwoProficiency > Proficiency.DEVELOPING) +
@@ -342,7 +342,7 @@ function getCoopertitionPoints(details: MatchDetails): number {
   return count === 5 ? 5 : count === 6 ? 10 : 0;
 }
 
-function getProficiencyPoints(proficiency: Proficiency): number {
+export function getProficiencyPoints(proficiency: Proficiency): number {
   switch (proficiency) {
     case Proficiency.DEVELOPING:
       return 0;
@@ -355,7 +355,7 @@ function getProficiencyPoints(proficiency: Proficiency): number {
   }
 }
 
-function getMultiplier(alignmentStatus: AlignmentStatus): number {
+export function getMultiplier(alignmentStatus: AlignmentStatus): number {
   switch (alignmentStatus) {
     case AlignmentStatus.NONE:
       return 1.0;
