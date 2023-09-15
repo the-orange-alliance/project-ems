@@ -13,7 +13,7 @@ export const motorOneClosePositionAtom = atom({
   effects: [localStorageEffect('motorOneClosePosition')]
 });
 
-export const motorTwoServoPositionAtom = atom({
+export const motorTwoOpenPositionAtom = atom({
   key: 'fgc2023_motorTwoOpenPosition',
   default: 0,
   effects: [localStorageEffect('motorTwoOpenPosition')]

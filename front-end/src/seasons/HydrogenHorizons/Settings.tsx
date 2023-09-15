@@ -4,7 +4,9 @@ import Typography from '@mui/material/Typography';
 import { useRecoilState } from 'recoil';
 import {
   motorOneClosePositionAtom,
-  motorOneOpenPositionAtom
+  motorOneOpenPositionAtom,
+  motorTwoClosePositionAtom,
+  motorTwoOpenPositionAtom
 } from './stores/Recoil';
 import NumberSetting from 'src/apps/Settings/components/NumberSetting';
 
@@ -16,10 +18,10 @@ const SettingsTab: FC = () => {
     motorOneClosePositionAtom
   );
   const [motorTwoOpenPosition, setMotorTwoOpenPosition] = useRecoilState(
-    motorOneOpenPositionAtom
+    motorTwoOpenPositionAtom
   );
   const [motorTwoClosePosition, setMotorTwoClosePosition] = useRecoilState(
-    motorOneClosePositionAtom
+    motorTwoClosePositionAtom
   );
   return (
     <Box>
