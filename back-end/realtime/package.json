@@ -34,5 +34,9 @@
     "passport-local": "^1.0.0",
     "socket.io": "^4.7.1",
     "winston": "^3.10.0"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.7",
+    "utf-8-validate": "^5.0.10"
   }
 }
