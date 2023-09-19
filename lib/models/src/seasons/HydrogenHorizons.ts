@@ -317,9 +317,11 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
     redTelePoints + proficiencyPoints + getCoopertitionPoints(details);
   const bluePoints =
     blueTelePoints + proficiencyPoints + getCoopertitionPoints(details);
+  const redPenalty = (match.redMinPen * 0.1) * redPoints;
+  const bluePenalty = (match.blueMinPen * 0.1) * bluePoints;
   return [
-    Math.ceil(redPoints * (1 - match.redMinPen * 0.1)),
-    Math.ceil(bluePoints * (1 - match.blueMinPen * 0.1))
+    Math.ceil(redPoints + bluePenalty),
+    Math.ceil(bluePoints + redPenalty)
   ];
 }
 
