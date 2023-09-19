@@ -20,7 +20,9 @@ const StateToggle: FC<Props> = ({
   onChange
 }) => {
   const handleChange = (event: MouseEvent, newValue: number) => {
-    onChange(newValue);
+    if (newValue != null) {
+      onChange(newValue);
+    }
   };
 
   return (
