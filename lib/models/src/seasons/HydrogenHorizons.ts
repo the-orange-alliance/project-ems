@@ -304,7 +304,7 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
     (details.redHydrogenPoints + details.redOxygenPoints) *
     getMultiplier(details.redAlignment);
   const blueTelePoints =
-    (details.blueHydrogenPoints + details.blueHydrogenPoints) *
+    (details.blueHydrogenPoints + details.blueOxygenPoints) *
     getMultiplier(details.blueAlignment);
   const proficiencyPoints =
     getProficiencyPoints(details.redOneProficiency) +
