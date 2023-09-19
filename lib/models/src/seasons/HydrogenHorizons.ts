@@ -128,7 +128,7 @@ function calculateRankings(
       if (participant.station < 20) {
         // Red Alliance
         if (participant.cardStatus === 2) {
-          scoresMap.set(participant.teamKey, [...scores, match.redScore]);
+          scoresMap.set(participant.teamKey, [...scores, 0]);
           ranking.losses = ranking.losses + 1;
         } else {
           scoresMap.set(participant.teamKey, [...scores, match.redScore]);
@@ -148,7 +148,7 @@ function calculateRankings(
       if (participant.station >= 20) {
         // Blue Alliance
         if (participant.cardStatus === 2) {
-          scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
+          scoresMap.set(participant.teamKey, [...scores, 0]);
           ranking.losses = ranking.losses + 1;
         } else {
           scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
