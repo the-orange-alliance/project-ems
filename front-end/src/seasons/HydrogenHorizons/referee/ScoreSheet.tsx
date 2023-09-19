@@ -72,7 +72,7 @@ const ScoreSheet: FC<RefereeScoreSheetProps> = ({ alliance }) => {
               station={p.station}
             />
           ))}
-          <PenaltySheet alliance='red' onUpdate={handleMatchUpdate} />
+          <PenaltySheet alliance={alliance} onUpdate={handleMatchUpdate} />
         </TabPanel>
       </Box>
     </Paper>
