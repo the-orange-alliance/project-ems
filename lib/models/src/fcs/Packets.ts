@@ -276,7 +276,7 @@ export const FCS_COUNTDOWN_3 = createPacketToSetPatternEverywhere(BlinkinPattern
 export const FCS_COUNTDOWN_2 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_PINK);
 export const FCS_COUNTDOWN_1 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_AQUA);
 
-export const FCS_MATCH_START = assemblePwmCommands([
+export const FCS_SOLID_ALLIANCE_COLORS = assemblePwmCommands([
   { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
   { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
   { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
