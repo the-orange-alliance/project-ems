@@ -248,6 +248,7 @@ export function calculatePlayoffsRank(
       };
 
       if (participant.cardStatus === 2) {
+        ranking.played += 1;
         rankingMap.set(participant.teamKey, ranking);
         continue;
       }
@@ -258,7 +259,6 @@ export function calculatePlayoffsRank(
         ranking.rankingScore += match.blueScore;
       }
 
-      ranking.played += 1;
       rankingMap.set(participant.teamKey, ranking);
     }
   }
