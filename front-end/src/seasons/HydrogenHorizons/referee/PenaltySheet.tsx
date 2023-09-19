@@ -27,19 +27,6 @@ const PenaltySheet: FC<Props> = ({ alliance, onUpdate }) => {
     }
   };
 
-  const handleTechFoulChange = (majPen: number) => {
-    if (match) {
-      const newMatch = Object.assign({}, match);
-      if (alliance === 'red') {
-        newMatch.redMajPen = majPen;
-      } else {
-        newMatch.blueMinPen = majPen;
-      }
-      setMatch(newMatch);
-      onUpdate?.(newMatch);
-    }
-  };
-
   return (
     <Box
       sx={{
@@ -54,11 +41,6 @@ const PenaltySheet: FC<Props> = ({ alliance, onUpdate }) => {
       <NumberInput
         value={(alliance === 'red' ? match?.redMinPen : match?.blueMinPen) || 0}
         onChange={handleFoulChange}
-      />
-      <Typography variant='h6'>Tech Fouls</Typography>
-      <NumberInput
-        value={(alliance === 'red' ? match?.redMajPen : match?.blueMajPen) || 0}
-        onChange={handleTechFoulChange}
       />
     </Box>
   );
