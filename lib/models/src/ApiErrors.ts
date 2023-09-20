@@ -8,7 +8,9 @@ export class ApiResponseError extends Error {
   ) {
     super(err.message);
     this.name = `Invalid API Response from ${url} with code ${err.code}.`;
-    Error.captureStackTrace(this, ApiResponseError);
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ApiResponseError);
+    }
   }
 }
 
@@ -21,7 +23,9 @@ export class ApiDatabaseError extends Error {
     } else {
       this.name = `Error while executing query in table ${table}.`;
     }
-    Error.captureStackTrace(this, ApiDatabaseError);
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ApiDatabaseError);
+    }
   }
 }
 
