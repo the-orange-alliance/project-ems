@@ -7,6 +7,9 @@ import {
   MatchSocketEvent,
   MatchState,
   MatchTimer,
+  ItemUpdate,
+  CardStatusUpdate,
+  NumberAdjustment
 } from "@toa-lib/models";
 import { EventEmitter } from "node:events";
 import { Server, Socket } from "socket.io";
@@ -124,6 +127,39 @@ export default class Match extends Room {
     });
     socket.on(MatchSocketEvent.UPDATE, (match: MatchObj<any>) => {
       this.handlePartiallyUpdatedMatch(match);
+    });
+    socket.on(MatchSocketEvent.MATCH_UPDATE_ITEM, (itemUpdate: ItemUpdate) => {
+      const match: any = this.match;
+      if (match) {
+        match[itemUpdate.key] = itemUpdate.value;
+        this.handlePartiallyUpdatedMatch(match);
+      }
+    });
+    socket.on(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, (itemUpdate: ItemUpdate) => {
+      const matchDetails = this.match?.details;
+      if (matchDetails) {
+        matchDetails[itemUpdate.key] = itemUpdate.value;
+        this.handlePartiallyUpdatedMatch(this.match!);
+      }
+    });
+    socket.on(MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER, (numberAdjustment: NumberAdjustment) => {
+      const matchDetails = this.match?.details;
+      if (matchDetails) {
+        try {
+          matchDetails[numberAdjustment.key] += numberAdjustment.adjustment;
+          this.handlePartiallyUpdatedMatch(this.match!);
+        } catch (e) {
+          // Don't take down the server if a client tries to adjust a non-numeric value
+          logger.error(`Failed to adjust match details field ${numberAdjustment.key} (${matchDetails[numberAdjustment.key]})`);
+        }
+      }
+    });
+    socket.on(MatchSocketEvent.UPDATE_CARD_STATUS, (teamCard: CardStatusUpdate) => {
+      const participant = this.match?.participants?.find(participant => participant.teamKey == teamCard.teamKey);
+      if (participant) {
+        participant.cardStatus = teamCard.cardStatus;
+        this.handlePartiallyUpdatedMatch(this.match!);
+      }
     });
     socket.on(MatchSocketEvent.COMMIT, (key: MatchKey) => {
       this.emitToAll(MatchSocketEvent.COMMIT, key);

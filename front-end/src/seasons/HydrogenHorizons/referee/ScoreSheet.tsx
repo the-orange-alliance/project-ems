@@ -1,9 +1,15 @@
 import { FC, SyntheticEvent, useState } from 'react';
 import { RefereeScoreSheetProps } from '@seasons/index';
 import { useSocket } from 'src/api/SocketProvider';
-import { useRecoilValue } from 'recoil';
+import { SetterOrUpdater, useRecoilState } from 'recoil';
 import { matchInProgressAtom } from '@stores/NewRecoil';
-import { HydrogenHorizons, Match, MatchSocketEvent } from '@toa-lib/models';
+import {
+  HydrogenHorizons,
+  Match,
+  MatchSocketEvent,
+  ItemUpdate,
+  NumberAdjustment
+} from '@toa-lib/models';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import { Typography } from '@mui/material';
@@ -18,7 +24,10 @@ import PenaltySheet from './PenaltySheet';
 
 const ScoreSheet: FC<RefereeScoreSheetProps> = ({ alliance }) => {
   const [socket] = useSocket();
-  const match = useRecoilValue(matchInProgressAtom);
+  const [match, setMatch]: [
+    Match<HydrogenHorizons.MatchDetails> | null,
+    SetterOrUpdater<Match<HydrogenHorizons.MatchDetails> | null>
+  ] = useRecoilState(matchInProgressAtom);
 
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -30,10 +39,69 @@ const ScoreSheet: FC<RefereeScoreSheetProps> = ({ alliance }) => {
     setTabIndex(newValue);
   };
 
-  const handleMatchUpdate = (
-    newMatch: Match<HydrogenHorizons.MatchDetails>
+  const handleMatchItemUpdate = <
+    K extends keyof Match<HydrogenHorizons.MatchDetails>
+  >(
+    key: K,
+    value: Match<HydrogenHorizons.MatchDetails>[K]
   ) => {
-    socket?.emit(MatchSocketEvent.UPDATE, newMatch);
+    const updatePacket: ItemUpdate = { key, value };
+    socket?.emit(MatchSocketEvent.MATCH_UPDATE_ITEM, updatePacket);
+
+    // Reduce UI latency by updating our local match state in anticipation
+    // of the update that the server wil send soon
+    if (match) {
+      const newMatch = Object.assign({}, { ...match, [key]: value });
+      setMatch(newMatch);
+    }
+  };
+
+  const handleMatchDetailsUpdate = <
+    K extends keyof HydrogenHorizons.MatchDetails
+  >(
+    detailsKey: K,
+    value: HydrogenHorizons.MatchDetails[K]
+  ) => {
+    const updatePacket: ItemUpdate = { key: detailsKey, value };
+    socket?.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, updatePacket);
+
+    // Reduce UI latency by updating our local match state in anticipation
+    // of the update that the server wil send soon
+    if (match?.details) {
+      const details = Object.assign(
+        {},
+        { ...match.details, [detailsKey]: value }
+      );
+      const newMatch = Object.assign({}, { ...match, details });
+      setMatch(newMatch);
+    }
+  };
+
+  const handleMatchDetailsAdjustment = <
+    K extends keyof HydrogenHorizons.MatchDetails
+  >(
+    detailsKey: K,
+    adjustment: number
+  ) => {
+    const adjustmentPacket: NumberAdjustment = { key: detailsKey, adjustment };
+    socket?.emit(
+      MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
+      adjustmentPacket
+    );
+
+    // Reduce UI latency by updating our local match state in anticipation
+    // of the update that the server wil send soon
+    if (match?.details) {
+      const details = Object.assign(
+        {},
+        {
+          ...match.details,
+          [detailsKey]: (match.details[detailsKey] as number) + adjustment
+        }
+      );
+      const newMatch = Object.assign({}, { ...match, details });
+      setMatch(newMatch);
+    }
   };
 
   return (
@@ -62,7 +130,8 @@ const ScoreSheet: FC<RefereeScoreSheetProps> = ({ alliance }) => {
           <TeleScoreSheet
             alliance={alliance}
             participants={participants}
-            onUpdate={handleMatchUpdate}
+            onMatchDetailsAdjustment={handleMatchDetailsAdjustment}
+            onMatchDetailsUpdate={handleMatchDetailsUpdate}
           />
         </TabPanel>
         <TabPanel value={tabIndex} index={1}>
@@ -72,7 +141,10 @@ const ScoreSheet: FC<RefereeScoreSheetProps> = ({ alliance }) => {
               station={p.station}
             />
           ))}
-          <PenaltySheet alliance={alliance} onUpdate={handleMatchUpdate} />
+          <PenaltySheet
+            alliance={alliance}
+            onMatchItemUpdate={handleMatchItemUpdate}
+          />
         </TabPanel>
       </Box>
     </Paper>

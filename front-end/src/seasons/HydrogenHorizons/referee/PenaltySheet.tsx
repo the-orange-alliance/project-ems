@@ -3,28 +3,22 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import NumberInput from '@components/Referee/NumberInput';
 import { Alliance, HydrogenHorizons, Match } from '@toa-lib/models';
-import { useRecoilState } from 'recoil';
+import { useRecoilValue } from 'recoil';
 import { matchInProgressAtom } from '@stores/NewRecoil';
 
 interface Props {
   alliance: Alliance;
-  onUpdate?: (match: Match<HydrogenHorizons.MatchDetails>) => void;
+  onMatchItemUpdate: <K extends keyof Match<HydrogenHorizons.MatchDetails>>(
+    key: K,
+    value: Match<HydrogenHorizons.MatchDetails>[K]
+  ) => void;
 }
 
-const PenaltySheet: FC<Props> = ({ alliance, onUpdate }) => {
-  const [match, setMatch] = useRecoilState(matchInProgressAtom);
+const PenaltySheet: FC<Props> = ({ alliance, onMatchItemUpdate }) => {
+  const match = useRecoilValue(matchInProgressAtom);
 
   const handleFoulChange = (minPen: number) => {
-    if (match) {
-      const newMatch = Object.assign({}, match);
-      if (alliance === 'red') {
-        newMatch.redMinPen = minPen;
-      } else {
-        newMatch.blueMinPen = minPen;
-      }
-      setMatch(newMatch);
-      onUpdate?.(newMatch);
-    }
+    onMatchItemUpdate(alliance === 'red' ? 'redMinPen' : 'blueMinPen', minPen);
   };
 
   return (
