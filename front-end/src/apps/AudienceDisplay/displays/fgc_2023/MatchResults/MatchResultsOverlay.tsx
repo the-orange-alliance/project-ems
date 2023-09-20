@@ -16,9 +16,10 @@ import {
 } from 'src/stores/NewRecoil';
 
 // Icons
-import CARBON_ICON from '../res/Carbon_Points.png';
-import STORAGE_1_ICON from '../res/Storage_Level_1.png';
-import STORAGE_2_ICON from '../res/Storage_Level_2.png';
+import HYDROGEN_ICON from '../res/Hyodrogen.png';
+import OXYGEN_ICON from '../res/Oxygen.png';
+import HYDROGEN_TANK from '../res/Hydrogen_Tank.png';
+import PROF_ICON from '../res/Proficiency.png';
 import COOPERTITION_ICON from '../res/Coopertition_Points.png';
 import PENALTY_ICON from '../res/Penalty.png';
 
@@ -106,7 +107,7 @@ const MatchResultsOverlay: FC = () => {
               <div className='res-card-details'>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={CARBON_ICON} className='fit-h' />
+                    <img alt={'empty'} src={HYDROGEN_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>
                     HYDROGEN POINTS
@@ -117,7 +118,7 @@ const MatchResultsOverlay: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={CARBON_ICON} className='fit-h' />
+                    <img alt={'empty'} src={OXYGEN_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>OXYGEN POINTS</div>
                   <div className='res-detail-right'>
@@ -126,7 +127,7 @@ const MatchResultsOverlay: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={STORAGE_1_ICON} className='fit-h' />
+                    <img alt={'empty'} src={HYDROGEN_TANK} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>
                     ALIGNMENT MULTIPLIER
@@ -137,7 +138,7 @@ const MatchResultsOverlay: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={STORAGE_2_ICON} className='fit-h' />
+                    <img alt={'empty'} src={PROF_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>
                     PROFICIENCY BONUS
@@ -193,7 +194,7 @@ const MatchResultsOverlay: FC = () => {
               <div className='res-card-details'>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={CARBON_ICON} className='fit-h' />
+                    <img alt={'empty'} src={HYDROGEN_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
                     HYDROGEN POINTS
@@ -204,7 +205,7 @@ const MatchResultsOverlay: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={CARBON_ICON} className='fit-h' />
+                    <img alt={'empty'} src={OXYGEN_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
                     OXYGEN POINTS
@@ -215,7 +216,7 @@ const MatchResultsOverlay: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={STORAGE_1_ICON} className='fit-h' />
+                    <img alt={'empty'} src={HYDROGEN_TANK} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
                     ALIGNMENT MULTIPLIER
@@ -226,7 +227,7 @@ const MatchResultsOverlay: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={STORAGE_2_ICON} className='fit-h' />
+                    <img alt={'empty'} src={PROF_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
                     PROFICIENCY BONUS

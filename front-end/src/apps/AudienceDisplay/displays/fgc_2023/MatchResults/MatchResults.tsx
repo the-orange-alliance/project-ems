@@ -5,7 +5,12 @@ import {
   currentRankingsByMatchSelector
 } from 'src/stores/NewRecoil';
 import { HydrogenHorizons, MatchParticipant, Ranking } from '@toa-lib/models';
-import { isHydrogenHorizonsDetails } from '@toa-lib/models/build/seasons/HydrogenHorizons';
+import {
+  getCoopertitionPoints,
+  getMultiplier,
+  getProficiencyPoints,
+  isHydrogenHorizonsDetails
+} from '@toa-lib/models/build/seasons/HydrogenHorizons';
 import './MatchResults.css';
 
 import NorthIcon from '@mui/icons-material/North';
@@ -16,9 +21,10 @@ import RED_LOSE from '../res/Red_Lose_Top.png';
 import BLUE_LOSE from '../res/Blue_Lose_Top.png';
 
 // Icons
-import CARBON_ICON from '../res/Carbon_Points.png';
-import STORAGE_1_ICON from '../res/Storage_Level_1.png';
-import STORAGE_2_ICON from '../res/Storage_Level_2.png';
+import HYDROGEN_ICON from '../res/Hyodrogen.png';
+import OXYGEN_ICON from '../res/Oxygen.png';
+import HYDROGEN_TANK from '../res/Hydrogen_Tank.png';
+import PROF_ICON from '../res/Proficiency.png';
 import COOPERTITION_ICON from '../res/Coopertition_Points.png';
 import PENALTY_ICON from '../res/Penalty.png';
 
@@ -86,16 +92,16 @@ const MatchResults: FC = () => {
 
   const redTop = RED_LOSE;
   const blueTop = BLUE_LOSE;
-
+  console.log({ someDetails, details });
   const redProficiency =
-    details.redOneProficiency +
-    details.redTwoProficiency +
-    details.redThreeProficiency;
+    getProficiencyPoints(details.redOneProficiency) +
+    getProficiencyPoints(details.redTwoProficiency) +
+    getProficiencyPoints(details.redThreeProficiency);
   const blueProficiency =
-    details.blueOneProficiency +
-    details.blueTwoProficiency +
-    details.blueThreeProficiency;
-  const coopertitionBonus = 0; // TODO - Calculate
+    getProficiencyPoints(details.blueOneProficiency) +
+    getProficiencyPoints(details.blueTwoProficiency) +
+    getProficiencyPoints(details.blueThreeProficiency);
+  const coopertitionBonus = getCoopertitionPoints(details); // TODO - Calculate
   useEffect(() => {
     rankingsRefresh();
   }, [match]);
@@ -130,7 +136,7 @@ const MatchResults: FC = () => {
               <div className='res-card-details'>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={CARBON_ICON} className='fit-h' />
+                    <img alt={'empty'} src={HYDROGEN_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>
                     HYDROGEN POINTS
@@ -141,7 +147,7 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={CARBON_ICON} className='fit-h' />
+                    <img alt={'empty'} src={OXYGEN_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>OXYGEN POINTS</div>
                   <div className='res-detail-right'>
@@ -150,18 +156,18 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={STORAGE_1_ICON} className='fit-h' />
+                    <img alt={'empty'} src={HYDROGEN_TANK} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>
                     ALIGNMENT MULTIPLIER
                   </div>
                   <div className='res-detail-right'>
-                    x{details.redAlignment}
+                    x{getMultiplier(details.redAlignment)}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={STORAGE_2_ICON} className='fit-h' />
+                    <img alt={'empty'} src={PROF_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-red'>
                     PROFICIENCY BONUS
@@ -220,7 +226,7 @@ const MatchResults: FC = () => {
               <div className='res-card-details'>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={CARBON_ICON} className='fit-h' />
+                    <img alt={'empty'} src={HYDROGEN_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
                     HYDROGEN POINTS
@@ -231,7 +237,7 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={CARBON_ICON} className='fit-h' />
+                    <img alt={'empty'} src={OXYGEN_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
                     OXYGEN POINTS
@@ -242,18 +248,18 @@ const MatchResults: FC = () => {
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={STORAGE_1_ICON} className='fit-h' />
+                    <img alt={'empty'} src={HYDROGEN_TANK} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
                     ALIGNMENT MULTIPLIER
                   </div>
                   <div className='res-detail-right'>
-                    {details.blueAlignment}
+                    x{getMultiplier(details.blueAlignment)}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
-                    <img alt={'empty'} src={STORAGE_2_ICON} className='fit-h' />
+                    <img alt={'empty'} src={PROF_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left right-blue'>
                     PROFICIENCY BONUS

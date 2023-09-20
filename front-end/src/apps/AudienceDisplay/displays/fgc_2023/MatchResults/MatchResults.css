@@ -140,7 +140,6 @@
 .res-team-flag > span {
   width: 2.5vw;
   height: 2em;
-  border: 1px solid black;
 }
 .res-detail-row {
   width: 100%;
@@ -278,7 +277,7 @@
   > #res-alliance-container
   > .res-alliance-card
   .res-card-teams {
-  height: 12vh;
+  height: 10.5vh;
 }
 
 #fgc-results-overlay-container
@@ -302,7 +301,7 @@
   > .res-alliance-card
   .res-card-details
   .res-detail-row {
-  font-size: 0.8rem;
+  font-size: 1vh;
 }
 
 #fgc-results-overlay-container
@@ -310,4 +309,11 @@
   > .res-alliance-card
   .res-card-bottom {
   font-size: 1rem;
+}
+
+#fgc-results-overlay-container
+  > #res-alliance-container
+  > .res-alliance-card
+  .res-detail-icon {
+  max-height: 3.5em;
 }
