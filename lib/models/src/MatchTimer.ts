@@ -48,7 +48,7 @@ export class MatchTimer extends EventEmitter {
 
     this._mode = MatchMode.RESET;
     this._timerID = null;
-    this._matchConfig = FRC_MATCH_CONFIG;
+    this._matchConfig = FGC_MATCH_CONFIG;
     this._timeLeft = getMatchTime(this._matchConfig);
     this._modeTimeLeft = this._matchConfig.delayTime;
   }

@@ -276,7 +276,7 @@ export const FCS_COUNTDOWN_3 = createPacketToSetPatternEverywhere(BlinkinPattern
 export const FCS_COUNTDOWN_2 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_PINK);
 export const FCS_COUNTDOWN_1 = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_AQUA);
 
-export const FCS_MATCH_START = assemblePwmCommands([
+export const FCS_SOLID_ALLIANCE_COLORS = assemblePwmCommands([
   { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
   { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
   { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
@@ -287,19 +287,19 @@ export const FCS_MATCH_START = assemblePwmCommands([
 
 const FCS_RED_COMBINED = assemblePwmCommands([
   RED_OXYGEN_ACCUMULATOR_RELEASED,
-  { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
-  { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
-  { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
+  { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+  { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+  { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
 ]);
 
 const FCS_BLUE_COMBINED = assemblePwmCommands([
   BLUE_OXYGEN_ACCUMULATOR_RELEASED,
-  { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
-  { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
-  { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.SPARKLE_COLOR_1_ON_COLOR_2 },
+  { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+  { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+  { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
 ]);
 
-export const FCS_ENDGAME = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_1_2_GRADIENT);
+export const FCS_ENDGAME = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_1_HB_MED);
 FCS_ENDGAME.hubs[RevHub.TOTE]!.digitalInputs = [
   {
     channel: ConversionButtonDigitalChannel.RED,

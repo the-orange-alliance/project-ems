@@ -128,7 +128,7 @@ function calculateRankings(
       if (participant.station < 20) {
         // Red Alliance
         if (participant.cardStatus === 2) {
-          scoresMap.set(participant.teamKey, [...scores, match.redScore]);
+          scoresMap.set(participant.teamKey, [...scores, 0]);
           ranking.losses = ranking.losses + 1;
         } else {
           scoresMap.set(participant.teamKey, [...scores, match.redScore]);
@@ -148,7 +148,7 @@ function calculateRankings(
       if (participant.station >= 20) {
         // Blue Alliance
         if (participant.cardStatus === 2) {
-          scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
+          scoresMap.set(participant.teamKey, [...scores, 0]);
           ranking.losses = ranking.losses + 1;
         } else {
           scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
@@ -248,6 +248,7 @@ export function calculatePlayoffsRank(
       };
 
       if (participant.cardStatus === 2) {
+        ranking.played += 1;
         rankingMap.set(participant.teamKey, ranking);
         continue;
       }
@@ -258,7 +259,6 @@ export function calculatePlayoffsRank(
         ranking.rankingScore += match.blueScore;
       }
 
-      ranking.played += 1;
       rankingMap.set(participant.teamKey, ranking);
     }
   }
@@ -304,7 +304,7 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
     (details.redHydrogenPoints + details.redOxygenPoints) *
     getMultiplier(details.redAlignment);
   const blueTelePoints =
-    (details.blueHydrogenPoints + details.blueHydrogenPoints) *
+    (details.blueHydrogenPoints + details.blueOxygenPoints) *
     getMultiplier(details.blueAlignment);
   const proficiencyPoints =
     getProficiencyPoints(details.redOneProficiency) +
@@ -317,9 +317,11 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
     redTelePoints + proficiencyPoints + getCoopertitionPoints(details);
   const bluePoints =
     blueTelePoints + proficiencyPoints + getCoopertitionPoints(details);
+  const redPenalty = (match.redMinPen * 0.1) * redPoints;
+  const bluePenalty = (match.blueMinPen * 0.1) * bluePoints;
   return [
-    Math.ceil(redPoints * (1 - match.redMinPen * 0.1)),
-    Math.ceil(bluePoints * (1 - match.blueMinPen * 0.1))
+    Math.ceil(redPoints + bluePenalty),
+    Math.ceil(bluePoints + redPenalty)
   ];
 }
 
