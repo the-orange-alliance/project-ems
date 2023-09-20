@@ -1,5 +1,12 @@
 import { Server, Socket } from "socket.io";
-import { FCS_ENDGAME, FCS_FIELD_FAULT, FCS_IDLE, FCS_INIT, FCS_MATCH_START, FieldControlUpdatePacket } from "@toa-lib/models";
+import {
+  FCS_ENDGAME,
+  FCS_FIELD_FAULT,
+  FCS_INIT,
+  FCS_SOLID_ALLIANCE_COLORS,
+  FCS_TURN_OFF_LIGHTS,
+  FieldControlUpdatePacket
+} from "@toa-lib/models";
 import Room from "./Room.js";
 import Match from "./Match.js";
 
@@ -10,7 +17,11 @@ export default class FCS extends Room {
     super(server, "fcs");
 
     matchRoom.localEmitter.on("match:start", () => {
-      this.broadcastFcsUpdate(FCS_MATCH_START);
+      this.broadcastFcsUpdate(FCS_TURN_OFF_LIGHTS);
+    });
+
+    matchRoom.localEmitter.on("match:tele", () => {
+      this.broadcastFcsUpdate(FCS_SOLID_ALLIANCE_COLORS);
     });
 
     matchRoom.localEmitter.on("match:endgame", () => {
@@ -18,8 +29,7 @@ export default class FCS extends Room {
     });
 
     matchRoom.localEmitter.on("match:end", () => {
-      // TODO(Noah): Placeholder
-      this.broadcastFcsUpdate(FCS_IDLE);
+      this.broadcastFcsUpdate(FCS_SOLID_ALLIANCE_COLORS);
     });
 
     matchRoom.localEmitter.on("match:abort", () => {
