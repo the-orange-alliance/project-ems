@@ -1,4 +1,4 @@
-import { MatchState } from '@toa-lib/models';
+import { MatchState, TimerEventPayload } from '@toa-lib/models';
 import { Duration } from 'luxon';
 import { FC, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
@@ -94,23 +94,22 @@ const MatchCountdown: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
     if (audio) startAudio.play();
     timer.start();
   };
-  const onTransition = () => {
-    if (audio) transitionAudio.play();
+  const onTransition = (payload: TimerEventPayload) => {
+    if (audio && payload.allowAudio) transitionAudio.play();
   };
-  const onTele = () => {
-    if (audio) teleAudio.play();
+  const onTele = (payload: TimerEventPayload) => {
+    if (audio && payload.allowAudio) teleAudio.play();
   };
   const onAbort = () => {
     if (audio) abortAudio.play();
     timer.abort();
   };
-  const onEnd = () => {
-    if (audio) endAudio.play();
+  const onEnd = (payload: TimerEventPayload) => {
+    if (audio && payload.allowAudio) endAudio.play();
     timer.stop();
   };
-
-  const onEndgame = () => {
-    if (audio) endgameAudio.play();
+  const onEndgame = (payload: TimerEventPayload) => {
+    if (audio && payload.allowAudio) endgameAudio.play();
   };
 
   return (

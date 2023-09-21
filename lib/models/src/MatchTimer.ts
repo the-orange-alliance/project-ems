@@ -35,6 +35,12 @@ export enum MatchMode {
   RESET = 6
 }
 
+export interface TimerEventPayload {
+  readonly allowAudio: boolean;
+}
+const allowAudioPayload: TimerEventPayload = { allowAudio: true };
+const denyAudioPayload: TimerEventPayload = { allowAudio: false };
+
 export class MatchTimer extends EventEmitter {
   private _matchConfig: MatchConfiguration;
 
@@ -74,8 +80,9 @@ export class MatchTimer extends EventEmitter {
         matchPhaseEvent = "timer:tele";
       }
       this._timeLeft = getMatchTime(this._matchConfig);
-      this.emit('timer:start');
-      this.emit(matchPhaseEvent);
+
+      this.emit('timer:start', allowAudioPayload);
+      this.emit(matchPhaseEvent, denyAudioPayload);
       this._timerID = setInterval(() => {
         this.tick();
       }, 1000);
@@ -88,7 +95,7 @@ export class MatchTimer extends EventEmitter {
       this._timerID = null;
       this._mode = MatchMode.ENDED;
       this._timeLeft = 0;
-      this.emit('timer:end');
+      this.emit('timer:end', allowAudioPayload);
     }
   }
 
@@ -98,7 +105,7 @@ export class MatchTimer extends EventEmitter {
       this._timerID = null;
       this._mode = MatchMode.ABORTED;
       this._timeLeft = 0;
-      this.emit('timer:abort');
+      this.emit('timer:abort', allowAudioPayload);
     }
   }
 
@@ -139,22 +146,22 @@ export class MatchTimer extends EventEmitter {
           if (this.matchConfig.autoTime > 0) {
             this._mode = MatchMode.AUTONOMOUS;
             this._modeTimeLeft = this.matchConfig.autoTime;
-            this.emit('timer:auto');
+            this.emit('timer:auto', allowAudioPayload);
           } else {
             this._mode = MatchMode.TELEOPERATED;
             this._modeTimeLeft = this.matchConfig.teleTime;
-            this.emit('timer:tele');
+            this.emit('timer:tele', allowAudioPayload);
           }
           break;
         case MatchMode.AUTONOMOUS:
           if (this.matchConfig.transitionTime > 0) {
             this._mode = MatchMode.TRANSITION;
             this._modeTimeLeft = this.matchConfig.transitionTime;
-            this.emit('timer:transition');
+            this.emit('timer:transition', allowAudioPayload);
           } else if (this.matchConfig.teleTime > 0) {
             this._mode = MatchMode.TELEOPERATED;
             this._modeTimeLeft = this.matchConfig.teleTime;
-            this.emit('timer:tele');
+            this.emit('timer:tele', allowAudioPayload);
           } else {
             this.stop();
           }
@@ -163,7 +170,7 @@ export class MatchTimer extends EventEmitter {
           if (this.matchConfig.teleTime > 0) {
             this._mode = MatchMode.TELEOPERATED;
             this._modeTimeLeft = this.matchConfig.teleTime;
-            this.emit('timer:tele');
+            this.emit('timer:tele', allowAudioPayload);
           } else {
             this.stop();
           }
@@ -174,7 +181,7 @@ export class MatchTimer extends EventEmitter {
         this._timeLeft === this.matchConfig.endTime
       ) {
         this._mode = MatchMode.ENDGAME;
-        this.emit('timer:endgame');
+        this.emit('timer:endgame', allowAudioPayload);
       }
     }
   }
