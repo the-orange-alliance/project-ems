@@ -306,17 +306,18 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
   const blueTelePoints =
     (details.blueHydrogenPoints + details.blueOxygenPoints) *
     getMultiplier(details.blueAlignment);
-  const proficiencyPoints =
+  const redProficiencyPoints =
     getProficiencyPoints(details.redOneProficiency) +
     getProficiencyPoints(details.redTwoProficiency) +
-    getProficiencyPoints(details.redThreeProficiency) +
+    getProficiencyPoints(details.redThreeProficiency);
+  const blueProficiencyPoints =
     getProficiencyPoints(details.blueOneProficiency) +
     getProficiencyPoints(details.blueTwoProficiency) +
     getProficiencyPoints(details.blueThreeProficiency);
   const redPoints =
-    redTelePoints + proficiencyPoints + getCoopertitionPoints(details);
+    redTelePoints + redProficiencyPoints + getCoopertitionPoints(details);
   const bluePoints =
-    blueTelePoints + proficiencyPoints + getCoopertitionPoints(details);
+    blueTelePoints + blueProficiencyPoints + getCoopertitionPoints(details);
   const redPenalty = (match.redMinPen * 0.1) * redPoints;
   const bluePenalty = (match.blueMinPen * 0.1) * bluePoints;
   return [
