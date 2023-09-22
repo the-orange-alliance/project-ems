@@ -1,7 +1,7 @@
 import { AllianceMember } from '../Alliance.js';
 import { Match, MatchDetailBase } from '../Match.js';
 import { Ranking } from '../Ranking.js';
-import {isNonNullObject, isNumber, UnreachableError} from '../types.js';
+import { isNonNullObject, isNumber, UnreachableError } from '../types.js';
 import { Season, SeasonFunctions } from './index.js';
 
 /**
@@ -12,9 +12,17 @@ const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
   calculateScore
 };
 
-export enum AlignmentStatus { NONE, PARTIAL, FULL }
+export enum AlignmentStatus {
+  NONE = 0,
+  PARTIAL = 1,
+  FULL = 2
+}
 
-export enum Proficiency { DEVELOPING, INTERMEDIATE, EXPERT }
+export enum Proficiency {
+  DEVELOPING = 0,
+  INTERMEDIATE = 1,
+  EXPERT = 2
+}
 
 export interface MatchDetails extends MatchDetailBase {
   redHydrogenPoints: number;
@@ -46,7 +54,7 @@ export const defaultMatchDetails: MatchDetails = {
   blueAlignment: AlignmentStatus.NONE,
   blueOneProficiency: Proficiency.DEVELOPING,
   blueTwoProficiency: Proficiency.DEVELOPING,
-  blueThreeProficiency: Proficiency.DEVELOPING,
+  blueThreeProficiency: Proficiency.DEVELOPING
 };
 
 export const HydrogenHorizonsSeason: Season<MatchDetails, SeasonRanking> = {
@@ -62,8 +70,7 @@ export const isHydrogenHorizonsDetails = (obj: unknown): obj is MatchDetails =>
   isNumber(obj.redHydrogenPoints) &&
   isNumber(obj.redOxygenPoints) &&
   isNumber(obj.blueHydrogenPoints) &&
-  isNumber(obj.blueOxygenPoints) &&
-  isNumber(obj.coopertitionBonus);
+  isNumber(obj.blueOxygenPoints);
 
 export interface SeasonRanking extends Ranking {
   rankingScore: number;
@@ -326,7 +333,7 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
   ];
 }
 
-function getCoopertitionPoints(details: MatchDetails): number {
+export function getCoopertitionPoints(details: MatchDetails): number {
   const count =
     Number(details.redOneProficiency > Proficiency.DEVELOPING) +
     Number(details.redTwoProficiency > Proficiency.DEVELOPING) +
@@ -337,7 +344,7 @@ function getCoopertitionPoints(details: MatchDetails): number {
   return count === 5 ? 5 : count === 6 ? 10 : 0;
 }
 
-function getProficiencyPoints(proficiency: Proficiency): number {
+export function getProficiencyPoints(proficiency: Proficiency): number {
   switch (proficiency) {
     case Proficiency.DEVELOPING:
       return 0;
@@ -350,7 +357,7 @@ function getProficiencyPoints(proficiency: Proficiency): number {
   }
 }
 
-function getMultiplier(alignmentStatus: AlignmentStatus): number {
+export function getMultiplier(alignmentStatus: AlignmentStatus): number {
   switch (alignmentStatus) {
     case AlignmentStatus.NONE:
       return 1.0;
