@@ -31,6 +31,7 @@ export interface RefereeScoreSheetProps {
 }
 
 export interface SeasonComponents<T extends MatchDetailBase> {
+  Settings?: FC;
   MatchDetailInfo: FC<MatchDetailInfoProps<T>>;
   RedScoreBreakdown: FC<ScoreBreakdownProps<T>>;
   BlueScoreBreakdown: FC<ScoreBreakdownProps<T>>;
@@ -43,7 +44,7 @@ export function getComponentsFromSeasonKey<T extends MatchDetailBase>(
   return seasonComponents.get(seasonKey);
 }
 
-export function useSeasonComponents<T extends MatchDetailBase>(
+export function useComponents<T extends MatchDetailBase>(
   seasonKey: string
 ): SeasonComponents<T> | undefined {
   return getComponentsFromSeasonKey(seasonKey);

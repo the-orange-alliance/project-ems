@@ -14,7 +14,15 @@ interface Props {
   fullWidth?: boolean;
 }
 
-const TextSetting: FC<Props> = ({ name, value, onChange, inline, type = 'text', title, fullWidth }) => {
+const TextSetting: FC<Props> = ({
+  name,
+  value,
+  onChange,
+  inline,
+  type = 'text',
+  title,
+  fullWidth
+}) => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
     onChange(e.target.value);
 

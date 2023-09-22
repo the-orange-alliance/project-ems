@@ -8,9 +8,11 @@ import { Tab } from '@mui/material';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import AudienceDisplaySettingsTab from './tabs/audience';
 import MainSettingsTab from './tabs/main';
+import { useSeasonComponents } from 'src/hooks/use-season-components';
 // import FrcFmsSettingsTab from './tabs/frc-fms';
 
 const SettingsApp: FC = () => {
+  const seasonComponents = useSeasonComponents();
   const [tab, setTab] = useState<any>('0');
 
   return (
@@ -26,6 +28,7 @@ const SettingsApp: FC = () => {
           <TabList onChange={(e, t) => setTab(t)}>
             <Tab label='Main' value='0' />
             <Tab label='Audience Display' value='1' />
+            <Tab label='Season' value='2' />
             {/* <Tab label='FRC FMS' value='2' /> */}
           </TabList>
           <TabPanel value='0'>
@@ -33,6 +36,11 @@ const SettingsApp: FC = () => {
           </TabPanel>
           <TabPanel value='1'>
             <AudienceDisplaySettingsTab />
+          </TabPanel>
+          <TabPanel value='2'>
+            {seasonComponents && seasonComponents.Settings && (
+              <seasonComponents.Settings />
+            )}
           </TabPanel>
           {/* <TabPanel value='2'>
             <FrcFmsSettingsTab />

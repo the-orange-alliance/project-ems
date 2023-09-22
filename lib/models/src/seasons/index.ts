@@ -38,9 +38,9 @@ export function getFunctionsBySeasonKey<
   return Seasons.find((s) => s.key === seasonKey)?.functions;
 }
 
-export function getDefaultMatchDetailsBySeasonKey<
-    T extends MatchDetailBase
->(seasonKey: string): T | undefined {
+export function getDefaultMatchDetailsBySeasonKey<T extends MatchDetailBase>(
+  seasonKey: string
+): T | undefined {
   return Seasons.find((s) => s.key === seasonKey)?.defaultMatchDetails;
 }
 

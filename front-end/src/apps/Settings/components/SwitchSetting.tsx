@@ -8,7 +8,7 @@ interface Props {
   name: string;
   value: boolean;
   onChange: (value: boolean) => void;
-  inline?: boolean
+  inline?: boolean;
   title?: string;
 }
 
