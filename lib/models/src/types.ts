@@ -19,6 +19,6 @@ export const isArray = (arr: unknown): arr is any[] =>
  */
 export class UnreachableError extends Error {
     constructor(value: never) {
-        super();
+        super(`Unexpected value: ${JSON.stringify(value, null, 4)}`);
     }
 }

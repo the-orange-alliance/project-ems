@@ -5,7 +5,7 @@ import {
   getFunctionsBySeasonKey,
   getSeasonKeyFromEventKey
 } from '@toa-lib/models';
-import { useSeasonComponents } from 'src/seasons';
+import { useComponents } from 'src/seasons';
 
 interface Props {
   id: number;
@@ -17,7 +17,7 @@ const MatchDetailInfo: FC<Props> = ({ id }) => {
   if (!match) return null;
 
   const seasonKey = getSeasonKeyFromEventKey(match.eventKey);
-  const components = useSeasonComponents(seasonKey);
+  const components = useComponents(seasonKey);
 
   const handleUpdates = (e: ChangeEvent<HTMLInputElement>) => {
     const { value, name, type } = e.target;

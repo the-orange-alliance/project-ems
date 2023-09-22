@@ -28,7 +28,6 @@ import {
 } from '@toa-lib/models';
 import {
   atom,
-  AtomEffect,
   atomFamily,
   DefaultValue,
   selector,
@@ -37,21 +36,7 @@ import {
 import { setApiStorage } from 'src/api/ApiProvider';
 import { AppFlags, defaultFlags } from './AppFlags';
 import { replaceAllInArray, replaceInArray } from './Util';
-
-const localStorageEffect: (key: string) => AtomEffect<any> =
-  (key: string) =>
-  ({ setSelf, onSet }) => {
-    const savedValue = localStorage.getItem(key);
-    if (savedValue != null) {
-      setSelf(JSON.parse(savedValue));
-    }
-
-    onSet((newValue, _, isReset) => {
-      isReset
-        ? localStorage.removeItem(key)
-        : localStorage.setItem(key, JSON.stringify(newValue));
-    });
-  };
+import { localStorageEffect } from './Effects';
 
 /**
  * @section UI SETTINGS STATE

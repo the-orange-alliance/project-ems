@@ -1,0 +1,396 @@
+#play-display-base {
+  background-color: #141414;
+  position: absolute;
+  bottom: 0;
+  left: 32vw;
+  height: 18vh;
+  width: 36vw;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+#play-display-base-top {
+  position: relative;
+  height: 85%;
+  z-index: 2;
+  display: flex;
+  flex-direction: row;
+}
+
+#play-display-base-bottom {
+  position: relative;
+  height: 15%;
+  background-color: #d5ff8b;
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  font-family: 'Roboto', sans-serif;
+  font-weight: bold;
+}
+
+#play-display-left-details {
+  position: relative;
+  /*width: 17.5%;*/
+  height: 100%;
+  padding: 10px 0 10px 10px;
+}
+
+#play-display-left-score {
+  position: relative;
+  width: 12.5vw;
+  height: 100%;
+  padding: 10px 0 10px 10px;
+  display: flex;
+}
+
+#play-display-center {
+  position: relative;
+  width: 15vw;
+  height: 175%;
+  bottom: 9.5vh;
+  background-color: #141414;
+  border-top-left-radius: 40px;
+  border-top-right-radius: 40px;
+  padding: 0 10px 10px 10px;
+}
+
+#play-display-right-details {
+  position: relative;
+  /*width: 17.5%;*/
+  height: 100%;
+  padding: 10px 10px 10px 0;
+}
+
+#play-display-right-score {
+  position: relative;
+  width: 12.5vw;
+  height: 100%;
+  padding: 10px 10px 10px 0;
+  display: flex;
+}
+
+#score-container-header {
+  position: relative;
+  width: 100%;
+  height: 30%;
+  text-align: center;
+  padding: 16px;
+}
+
+#score-container-timer {
+  font-family: 'Roboto', sans-serif;
+  font-weight: bold;
+  background-color: #f9ae3b;
+  position: relative;
+  width: 100%;
+  height: 36%;
+  color: #000000;
+  font-size: 5vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#score-container-scores {
+  position: relative;
+  width: 100%;
+  height: 35%;
+  display: flex;
+  flex-direction: row;
+  font-family: 'Roboto', sans-serif;
+  font-weight: bold;
+  font-size: 3vw;
+}
+
+#score-container-red {
+  height: 100%;
+  width: 50%;
+  padding-top: 5px;
+  padding-right: 5px;
+  display: flex;
+  color: #ffffff;
+}
+
+#score-container-blue {
+  height: 100%;
+  width: 50%;
+  padding-top: 5px;
+  padding-left: 5px;
+  display: flex;
+  color: #ffffff;
+}
+
+.red-bg {
+  background-color: #ce2000;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.blue-bg {
+  background-color: #5c88ff;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.left-score {
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  padding: 5px 5px 5px 10px;
+}
+
+.right-score {
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  padding: 5px 10px 5px 5px;
+}
+
+.top-details {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  padding: 8px 5px 0 5px;
+}
+
+.bottom-details {
+  position: relative;
+  width: 100%;
+  height: 35%;
+  padding-bottom: 3px;
+}
+
+.fit {
+  width: 100%;
+  height: 100%;
+}
+
+.scoring-icon-container {
+  width: 100%;
+  padding: 0 4% 6px 4%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.scoring-capsule-container {
+  width: 100%;
+}
+
+.teams {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.team {
+  width: 100%;
+  height: 33%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.team-card {
+  height: 100%;
+  width: 30%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+}
+
+.card-container {
+  height: 100%;
+  max-width: 100%;
+  text-align: center;
+}
+
+.team-card-status {
+  width: 30%;
+  height: 100%;
+  padding: 4px;
+  text-align: center;
+}
+
+.team-name-left-p {
+  width: 40%;
+  height: 100%;
+  color: #ffffff;
+  text-align: right;
+  font-size: 1.5vw;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  font-family: 'Roboto', sans-serif;
+  font-weight: bold;
+}
+
+.team-name-right-p {
+  width: 40%;
+  height: 100%;
+  color: #ffffff;
+  text-align: left;
+  font-size: 1.5vw;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  font-family: 'Roboto', sans-serif;
+  font-weight: bold;
+}
+
+.team-flag {
+  width: 30%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.team-flag > span {
+  height: 1.5vw; /* 4:3 */
+  width: 2vw; /* 4:3 */
+  background-color: #000000;
+  border-left: 2px solid black;
+  border-right: 2px solid black;
+}
+
+.info-col {
+  width: 36%;
+  height: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  font-size: 0.8vw;
+}
+
+/* FGC 2019 GAME SPECIFIC CLASSES */
+.vertical-bar-container {
+  width: 100%;
+  height: 85%;
+  margin: 5% 7.5%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.vertical-bar-label {
+  height: 20%;
+  text-align: center;
+  color: #ffffff;
+}
+
+.vertical-bar {
+  height: 80%;
+  border-radius: 100px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.vertical-bar-fill {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  bottom: 0;
+  background-color: #ffffff;
+  -webkit-transition: 0.3s ease-in;
+  -moz-transition: 0.3s ease-in;
+  -ms-transition: 0.3s ease-in;
+  -o-transition: 0.3s ease-in;
+  transition: 0.3s ease-in;
+}
+
+.coopertition-bar-container {
+  position: absolute;
+  width: calc(100% - 10px);
+  height: 2vh;
+  top: -2vh;
+}
+
+.coopertition-bar-container.left-bar {
+  right: 0;
+  border-top-left-radius: 500px;
+  overflow: hidden;
+}
+
+.coopertition-bar-container.right-bar {
+  left: 0;
+  border-top-right-radius: 500px;
+  overflow: hidden;
+}
+
+.coopertition-bar {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  -webkit-transition: 0.3s ease-in;
+  -moz-transition: 0.3s ease-in;
+  -ms-transition: 0.3s ease-in;
+  -o-transition: 0.3s ease-in;
+  transition: 0.3s ease-in;
+}
+
+.left-bar > .coopertition-bar {
+  border-top-left-radius: 500px;
+  background-color: #ce2000;
+}
+
+.right-bar > div > .coopertition-bar {
+  position: absolute;
+  background-color: #5c88ff;
+  z-index: 999;
+}
+
+.coopertition-bar-fill {
+  position: absolute;
+  height: 100%;
+  background-color: #d5ff8b;
+  -webkit-transition: 0.3s ease-in;
+  -moz-transition: 0.3s ease-in;
+  -ms-transition: 0.3s ease-in;
+  -o-transition: 0.3s ease-in;
+  transition: 0.3s ease-in;
+}
+
+.right-bar > div > .coopertition-bar-fill {
+  width: 100%;
+}
+
+/* game-specific */
+#score-container-sink {
+  background-color: #141414;
+  position: absolute;
+  height: 96%;
+  width: 1rem;
+  top: 4px;
+  left: calc((14vw - 46px) / 2);
+  z-index: 999;
+  padding-left: 4px;
+  padding-right: 4px;
+  overflow: hidden;
+}
+
+#score-container-sink-fill {
+  background-color: #ffffff;
+  height: 100%;
+  height: 100%;
+}
+
+#score-container-sink-complete {
+  top: 100%;
+  width: 0.5rem;
+  height: 100%;
+  position: absolute;
+  background-color: blue;
+}
+
+.coopertition {
+  background-color: #d5ff8b !important;
+}
