@@ -7,6 +7,8 @@ import './MatchPlay.less';
 import { useSocket } from 'src/api/SocketProvider';
 import { useSearchParams } from 'react-router-dom';
 import FGC_LOGO from '../res/Global_Logo.png';
+import RED_CARD from '../res/Penalty_Red_Dot.png';
+import YELLOW_CARD from '../res/Penalty_Yellow_Dot.png';
 
 function getName(name: string): string {
   const params = name.split(' ');
@@ -19,6 +21,7 @@ const LeftParticipant: FC<{ participant: MatchParticipant }> = ({
 }) => {
   return (
     <div className='team'>
+      <CardStatus cardStatus={participant.cardStatus} />
       <div className='team-name-left-p'>
         <span>{participant.team?.country}</span>
       </div>
@@ -49,28 +52,31 @@ const RightParticipant: FC<{
       <div className='team-name-right-p'>
         <span>{participant.team?.country}</span>
       </div>
+      <CardStatus cardStatus={participant.cardStatus} />
     </div>
   );
 };
 
-// const StorageStatus: FC<{ level: number }> = ({ level }) => {
-//   const getImg = () => {
-//     switch (level) {
-//       case 1:
-//         return STORAGE_1_ICON;
-//       case 2:
-//         return STORAGE_2_ICON;
-//       case 3:
-//         return STORAGE_3_ICON;
-//       case 4:
-//         return STORAGE_4_ICON;
-//       default:
-//         return STORAGE_0_ICON;
-//     }
-//   };
-
-//   return <img src={getImg()} className='fit-h' />;
-// };
+const CardStatus: FC<{ cardStatus: number }> = ({ cardStatus }) => {
+  console.log({ cardStatus });
+  const getImg = () => {
+    switch (cardStatus) {
+      case 0:
+        return '';
+      case 1:
+        return YELLOW_CARD;
+      case 2:
+        return RED_CARD;
+      default:
+        return '';
+    }
+  };
+  return (
+    <div className='team-card-status'>
+      <img src={getImg()} className='fit-h' />
+    </div>
+  );
+};
 
 const MatchPlay: FC = () => {
   const [match, setMatch] = useRecoilState(matchInProgressAtom);
@@ -111,7 +117,7 @@ const MatchPlay: FC = () => {
         <div id='play-display-base-top'>
           <div id='play-display-left-score'>
             <div className={`teams left-score ${flip ? 'blue-bg' : 'red-bg'}`}>
-              {(flip ? blueAlliance : redAlliance)?.map((p, i) => (
+              {(flip ? blueAlliance : redAlliance)?.map((p) => (
                 <LeftParticipant
                   key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                   participant={p}
@@ -161,7 +167,7 @@ const MatchPlay: FC = () => {
           </div>
           <div id='play-display-right-score'>
             <div className={`teams right-score ${flip ? 'red-bg' : 'blue-bg'}`}>
-              {(flip ? redAlliance : blueAlliance)?.map((p, i) => (
+              {(flip ? redAlliance : blueAlliance)?.map((p) => (
                 <RightParticipant
                   key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                   participant={p}
