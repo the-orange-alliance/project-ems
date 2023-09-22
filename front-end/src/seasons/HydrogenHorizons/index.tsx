@@ -8,6 +8,7 @@ import {
 import { Grid, Typography } from '@mui/material';
 import { isHydrogenHorizonsDetails } from '@toa-lib/models/build/seasons/HydrogenHorizons';
 import RefereeScoreSheet from '@seasons/HydrogenHorizons/referee/ScoreSheet';
+import Settings from './Settings';
 
 const MatchDetailInfo: FC<
   MatchDetailInfoProps<HydrogenHorizons.MatchDetails>
@@ -88,5 +89,6 @@ export const hydrogenHorizonComponents: SeasonComponents<HydrogenHorizons.MatchD
     MatchDetailInfo,
     RedScoreBreakdown,
     BlueScoreBreakdown,
-    RefereeScoreSheet
+    RefereeScoreSheet,
+    Settings
   };
