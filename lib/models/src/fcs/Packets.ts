@@ -132,7 +132,7 @@ function assemblePwmCommands(pwmCommands: PwmCommand[]): FieldControlUpdatePacke
   return { hubs }
 }
 
-function createPacketToSetPatternEverywhere(pattern: BlinkinPattern, additionalCommands: PwmCommand[] = []): FieldControlUpdatePacket {
+function createPacketToSetPatternEverywhere(pattern: BlinkinPattern | number, additionalCommands: PwmCommand[] = []): FieldControlUpdatePacket {
   return assemblePwmCommands([
     ...additionalCommands,
     ...PwmDevice.ALL_BLINKIN_DEVICES.map(device => {
@@ -191,7 +191,7 @@ function createBlueOxygenAccumulatorReleasedPwmCommand(fieldOptions: FieldOption
   };
 }
 
-enum BlinkinPattern {
+export enum BlinkinPattern {
   COLOR_1_2_GRADIENT = 1705,
   COLOR_1_HB_FAST = 1535,
   COLOR_1_HB_MED = 1525,
@@ -273,7 +273,7 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
 
 function buildFieldFaultPacket(fieldOptions: FieldOptions): FieldControlUpdatePacket {
   const result = createPacketToSetPatternEverywhere(
-    BlinkinPattern.COLOR_YELLOW,
+    fieldOptions.fieldFaultBlinkinPulseWidth,
     [
       // Return any accumulated oxygen to the field for field reset
       createRedOxygenAccumulatorReleasedPwmCommand(fieldOptions),
@@ -286,7 +286,7 @@ function buildFieldFaultPacket(fieldOptions: FieldOptions): FieldControlUpdatePa
 
 function buildPrepareFieldPacket(fieldOptions: FieldOptions): FieldControlUpdatePacket {
   const result = createPacketToSetPatternEverywhere(
-    BlinkinPattern.COLOR_YELLOW,
+    fieldOptions.prepareFieldBlinkinPulseWidth,
     [
       createRedOxygenAccumulatorHoldingPwmCommand(fieldOptions),
       createBlueOxygenAccumulatorHoldingPwmCommand(fieldOptions),
@@ -296,12 +296,12 @@ function buildPrepareFieldPacket(fieldOptions: FieldOptions): FieldControlUpdate
   return result;
 }
 
-function buildMatchStartPacket(): FieldControlUpdatePacket {
+function buildMatchStartPacket(fieldOptions: FieldOptions): FieldControlUpdatePacket {
   return assemblePwmCommands([
-    { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
-    { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
-    { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
-    { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
+    { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth },
+    { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth },
+    { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth },
+    { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth },
     { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.OFF },
     { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.OFF },
   ]);
@@ -310,23 +310,30 @@ function buildMatchStartPacket(): FieldControlUpdatePacket {
 function buildRedCombinedPacket(fieldOptions: FieldOptions): FieldControlUpdatePacket {
   return assemblePwmCommands([
     createRedOxygenAccumulatorReleasedPwmCommand(fieldOptions),
-    { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
-    { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
-    { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+    { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: fieldOptions.redCombinedOxygenGoalBlinkinPulseWidth },
+    { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: fieldOptions.redCombinedHydrogenGoalBlinkinPulseWidth },
+    { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: fieldOptions.redCombinedButtonBlinkinPulseWidth },
   ]);
 }
 
 function buildBlueCombinedPacket(fieldOptions: FieldOptions): FieldControlUpdatePacket {
   return assemblePwmCommands([
     createBlueOxygenAccumulatorReleasedPwmCommand(fieldOptions),
-    { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
-    { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
-    { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_1_2_GRADIENT },
+    { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: fieldOptions.blueCombinedOxygenGoalBlinkinPulseWidth },
+    { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: fieldOptions.blueCombinedHydrogenGoalBlinkinPulseWidth },
+    { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: fieldOptions.blueCombinedButtonBlinkinPulseWidth },
   ]);
 }
 
 function buildEndgamePacket(fieldOptions: FieldOptions): FieldControlUpdatePacket {
-  const result = createPacketToSetPatternEverywhere(BlinkinPattern.COLOR_1_HB_MED);
+  const result = assemblePwmCommands([
+    { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: fieldOptions.redEndgameOxygenGoalBlinkinPulseWidth },
+    { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: fieldOptions.redEndgameHydrogenGoalBlinkinPulseWidth },
+    { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: fieldOptions.redEndgameButtonBlinkinPulseWidth },
+    { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: fieldOptions.blueEndgameOxygenGoalBlinkinPulseWidth },
+    { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: fieldOptions.blueEndgameHydrogenGoalBlinkinPulseWidth },
+    { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: fieldOptions.blueEndgameButtonBlinkinPulseWidth },
+  ]);
   result.hubs[RevHub.TOTE]!.digitalInputs = [
     {
       channel: ConversionButtonDigitalChannel.RED,
@@ -346,20 +353,20 @@ function buildEndgamePacket(fieldOptions: FieldOptions): FieldControlUpdatePacke
   return result;
 }
 
-function buildMatchEndPacket(): FieldControlUpdatePacket {
+function buildMatchEndPacket(fieldOptions: FieldOptions): FieldControlUpdatePacket {
   return assemblePwmCommands([
-    { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
-    { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
-    { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
-    { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
-    { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
-    { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
+    { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth },
+    { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth },
+    { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth },
+    { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth },
+    { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth },
+    { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth },
   ]);
 }
 
 function buildAllClearPacket(fieldOptions: FieldOptions): FieldControlUpdatePacket {
   const result = createPacketToSetPatternEverywhere(
-    BlinkinPattern.COLOR_GREEN,
+    fieldOptions.allClearBlinkinPulseWidth,
     [
       // Make sure that the oxygen accumulators are empty during field reset
       createRedOxygenAccumulatorReleasedPwmCommand(fieldOptions),
@@ -374,9 +381,9 @@ export function getFcsPackets(fieldOptions: FieldOptions): FcsPackets {
     init: buildInitPacket(fieldOptions),
     fieldFault: buildFieldFaultPacket(fieldOptions),
     prepareField: buildPrepareFieldPacket(fieldOptions),
-    matchStart: buildMatchStartPacket(),
+    matchStart: buildMatchStartPacket(fieldOptions),
     endgame: buildEndgamePacket(fieldOptions),
-    matchEnd: buildMatchEndPacket(),
+    matchEnd: buildMatchEndPacket(fieldOptions),
     allClear: buildAllClearPacket(fieldOptions),
   };
 }
