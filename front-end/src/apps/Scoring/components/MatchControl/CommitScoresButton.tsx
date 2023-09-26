@@ -2,18 +2,20 @@ import { FC, useState, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { useButtonState } from '../../util/ButtonState';
-import { useRecoilCallback, useRecoilState } from 'recoil';
+import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import {
   matchByCurrentIdSelectorFam,
   matchInProgressAtom,
   matchStateAtom
 } from 'src/stores/NewRecoil';
-import { Match, MatchState } from '@toa-lib/models';
+import { FcsPackets, Match, MatchState } from '@toa-lib/models';
 import { sendAllClear, sendCommitScores } from 'src/api/SocketProvider';
 import { patchWholeMatch, recalculateRankings } from 'src/api/ApiProvider';
+import { fcsPacketsSelector } from '@seasons/HydrogenHorizons/stores/Recoil';
 
 const CommitScoresButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
+  const fcsPackets: FcsPackets = useRecoilValue(fcsPacketsSelector);
   const { commitEnabled } = useButtonState();
   const [cleared, setCleared] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,7 +28,7 @@ const CommitScoresButton: FC = () => {
 
   const onClear = () => {
     setCleared(true);
-    sendAllClear();
+    sendAllClear(fcsPackets);
   };
 
   const commitScores = useRecoilCallback(({ snapshot, set }) => async () => {

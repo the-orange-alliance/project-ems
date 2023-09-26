@@ -6,12 +6,8 @@ import {
   MatchSocketEvent
 } from '@toa-lib/models';
 import { Socket } from 'socket.io-client';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState } from 'recoil';
 import { socketConnectedAtom } from 'src/stores/NewRecoil';
-import {
-  fcsPacketsSelector,
-  fieldOptionsSelector
-} from '@seasons/HydrogenHorizons/stores/Recoil';
 
 let socket: Socket | null = null;
 
@@ -72,9 +68,10 @@ export function setDisplays(): void {
   socket?.emit(MatchSocketEvent.DISPLAY, 2);
 }
 
-export function sendPrepareField(): void {
-  const fieldOptions: FieldOptions = useRecoilValue(fieldOptionsSelector);
-  const fcsPackets: FcsPackets = useRecoilValue(fcsPacketsSelector);
+export function sendPrepareField(
+  fieldOptions: FieldOptions,
+  fcsPackets: FcsPackets
+): void {
   socket?.emit('fcs:setFieldOptions', fieldOptions);
   socket?.emit('fcs:update', fcsPackets.prepareField);
 }
@@ -87,8 +84,7 @@ export async function sendAbortMatch(): Promise<void> {
   socket?.emit(MatchSocketEvent.ABORT);
 }
 
-export async function sendAllClear(): Promise<void> {
-  const fcsPackets: FcsPackets = useRecoilValue(fcsPacketsSelector);
+export async function sendAllClear(fcsPackets: FcsPackets): Promise<void> {
   socket?.emit('fcs:update', fcsPackets.allClear);
 }
 
