@@ -23,7 +23,7 @@ const LeftParticipant: FC<{ participant: MatchParticipant }> = ({
     <div className='team'>
       <CardStatus cardStatus={participant.cardStatus} />
       <div className='team-name-left-p'>
-        <span>{participant.team?.country}</span>
+        <span>{participant.team?.countryCode}</span>
       </div>
       <div className='team-flag'>
         <span
