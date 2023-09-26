@@ -354,7 +354,7 @@ function buildEndgamePacket(fieldOptions: FieldOptions): FieldControlUpdatePacke
 }
 
 function buildMatchEndPacket(fieldOptions: FieldOptions): FieldControlUpdatePacket {
-  return assemblePwmCommands([
+  const result = assemblePwmCommands([
     { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth },
     { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth },
     { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth },
@@ -362,6 +362,8 @@ function buildMatchEndPacket(fieldOptions: FieldOptions): FieldControlUpdatePack
     { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth },
     { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth },
   ]);
+  cancelConversionButtonTriggers(result);
+  return result;
 }
 
 function buildAllClearPacket(fieldOptions: FieldOptions): FieldControlUpdatePacket {
