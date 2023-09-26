@@ -4,7 +4,6 @@ import {
   FCS_FIELD_FAULT,
   FCS_INIT,
   FCS_SOLID_ALLIANCE_COLORS,
-  FCS_TURN_OFF_LIGHTS,
   FieldControlUpdatePacket,
   MatchSocketEvent
 } from "@toa-lib/models";
@@ -16,10 +15,6 @@ export default class FCS extends Room {
 
   public constructor(server: Server, matchRoom: Match) {
     super(server, "fcs");
-
-    matchRoom.localEmitter.on(MatchSocketEvent.START, () => {
-      this.broadcastFcsUpdate(FCS_TURN_OFF_LIGHTS);
-    });
 
     matchRoom.localEmitter.on(MatchSocketEvent.TELEOPERATED, () => {
       this.broadcastFcsUpdate(FCS_SOLID_ALLIANCE_COLORS);
