@@ -11,8 +11,9 @@ export interface FcsPackets {
   init: FieldControlInitPacket;
   fieldFault: FieldControlUpdatePacket;
   prepareField: FieldControlUpdatePacket;
-  solidAllianceColors: FieldControlUpdatePacket;
+  matchStart: FieldControlUpdatePacket;
   endgame: FieldControlUpdatePacket;
+  matchEnd: FieldControlUpdatePacket;
   allClear: FieldControlUpdatePacket;
 }
 
@@ -295,7 +296,7 @@ function buildPrepareFieldPacket(fieldOptions: FieldOptions): FieldControlUpdate
   return result;
 }
 
-function buildSolidAllianceColorsPacket(): FieldControlUpdatePacket {
+function buildMatchStartPacket(): FieldControlUpdatePacket {
   return assemblePwmCommands([
     { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
     { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
@@ -345,6 +346,17 @@ function buildEndgamePacket(fieldOptions: FieldOptions): FieldControlUpdatePacke
   return result;
 }
 
+function buildMatchEndPacket(): FieldControlUpdatePacket {
+  return assemblePwmCommands([
+    { device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
+    { device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
+    { device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
+    { device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
+    { device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_RED },
+    { device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN, pulseWidth_us: BlinkinPattern.COLOR_BLUE },
+  ]);
+}
+
 function buildAllClearPacket(fieldOptions: FieldOptions): FieldControlUpdatePacket {
   const result = createPacketToSetPatternEverywhere(
     BlinkinPattern.COLOR_GREEN,
@@ -362,8 +374,9 @@ export function getFcsPackets(fieldOptions: FieldOptions): FcsPackets {
     init: buildInitPacket(fieldOptions),
     fieldFault: buildFieldFaultPacket(fieldOptions),
     prepareField: buildPrepareFieldPacket(fieldOptions),
-    solidAllianceColors: buildSolidAllianceColorsPacket(),
+    matchStart: buildMatchStartPacket(),
     endgame: buildEndgamePacket(fieldOptions),
+    matchEnd: buildMatchEndPacket(),
     allClear: buildAllClearPacket(fieldOptions),
   };
 }

@@ -18,7 +18,7 @@ export default class FCS extends Room {
     super(server, "fcs");
 
     matchRoom.localEmitter.on(MatchSocketEvent.TELEOPERATED, () => {
-      this.broadcastFcsUpdate(this.fcsPackets.solidAllianceColors);
+      this.broadcastFcsUpdate(this.fcsPackets.matchStart);
     });
 
     matchRoom.localEmitter.on(MatchSocketEvent.ENDGAME, () => {
@@ -26,7 +26,7 @@ export default class FCS extends Room {
     });
 
     matchRoom.localEmitter.on(MatchSocketEvent.END, () => {
-      this.broadcastFcsUpdate(this.fcsPackets.solidAllianceColors);
+      this.broadcastFcsUpdate(this.fcsPackets.matchEnd);
     });
 
     matchRoom.localEmitter.on(MatchSocketEvent.ABORT, () => {
