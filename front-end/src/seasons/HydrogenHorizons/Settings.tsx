@@ -3,51 +3,52 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { useRecoilState } from 'recoil';
 import {
-  motorOneClosePositionAtom,
-  motorOneOpenPositionAtom,
-  motorTwoClosePositionAtom,
-  motorTwoOpenPositionAtom
+  redServoReleasedPositionPulseWidthAtom,
+  redServoHoldPositionPulseWidthAtom,
+  blueServoReleasedPositionPulseWidthAtom,
+  blueServoHoldPositionPulseWidthAtom
 } from './stores/Recoil';
 import NumberSetting from 'src/apps/Settings/components/NumberSetting';
 
 const SettingsTab: FC = () => {
-  const [motorOneOpenPosition, setMotorOneOpenPosition] = useRecoilState(
-    motorOneOpenPositionAtom
+  const [redServoHoldPositionPulseWidth, setRedServoHoldPositionPulseWidth] =
+    useRecoilState(redServoHoldPositionPulseWidthAtom);
+  const [
+    redServoReleasedPositionPulseWidth,
+    setRedServoReleasedPositionPulseWidth
+  ] = useRecoilState(redServoReleasedPositionPulseWidthAtom);
+  const [blueServoOpenPosition, setBlueServoOpenPosition] = useRecoilState(
+    blueServoHoldPositionPulseWidthAtom
   );
-  const [motorOneClosePosition, setMotorOneClosePosition] = useRecoilState(
-    motorOneClosePositionAtom
-  );
-  const [motorTwoOpenPosition, setMotorTwoOpenPosition] = useRecoilState(
-    motorTwoOpenPositionAtom
-  );
-  const [motorTwoClosePosition, setMotorTwoClosePosition] = useRecoilState(
-    motorTwoClosePositionAtom
-  );
+  const [
+    blueServoReleasedPositionPulseWidth,
+    setBlueServoReleasedPositionPulseWidth
+  ] = useRecoilState(blueServoReleasedPositionPulseWidthAtom);
   return (
     <Box>
       <Typography variant='h6'>Hydrogen Horizons Season Options</Typography>
       <NumberSetting
-        name='Motor One Open Position'
-        value={motorOneOpenPosition}
-        onChange={setMotorOneOpenPosition}
+        name='Red servo hold position pulse width'
+        value={redServoHoldPositionPulseWidth}
+        onChange={setRedServoHoldPositionPulseWidth}
         inline
       />
       <NumberSetting
-        name='Motor One Close Position'
-        value={motorOneClosePosition}
-        onChange={setMotorOneClosePosition}
+        name='Red servo released position pulse width'
+        value={redServoReleasedPositionPulseWidth}
+        onChange={setRedServoReleasedPositionPulseWidth}
         inline
       />
       <NumberSetting
-        name='Motor Two Open Position'
-        value={motorTwoOpenPosition}
-        onChange={setMotorTwoOpenPosition}
+        name='Blue servo hold position pulse width'
+        value={blueServoOpenPosition}
+        onChange={setBlueServoOpenPosition}
         inline
       />
       <NumberSetting
-        name='Motor Two Close Position'
-        value={motorTwoClosePosition}
-        onChange={setMotorTwoClosePosition}
+        name='Blue servo released position pulse width'
+        value={blueServoReleasedPositionPulseWidth}
+        onChange={setBlueServoReleasedPositionPulseWidth}
         inline
       />
     </Box>

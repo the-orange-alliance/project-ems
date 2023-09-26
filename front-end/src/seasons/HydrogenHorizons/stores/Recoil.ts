@@ -1,26 +1,26 @@
 import { atom } from 'recoil';
 import { localStorageEffect } from 'src/stores/Effects';
 
-export const motorOneOpenPositionAtom = atom({
-  key: 'fgc2023_motorOneOpenPosition',
+export const redServoHoldPositionPulseWidthAtom = atom({
+  key: 'fgc2023_redServoHoldPositionPulseWidth',
   default: 0,
-  effects: [localStorageEffect('motorOneOpenPosition')]
+  effects: [localStorageEffect('redServoHoldPositionPulseWidth')]
 });
 
-export const motorOneClosePositionAtom = atom({
-  key: 'fgc2023_motorOneClosePosition',
+export const redServoReleasedPositionPulseWidthAtom = atom({
+  key: 'fgc2023_redServoReleasedPositionPulseWidth',
   default: 0,
-  effects: [localStorageEffect('motorOneClosePosition')]
+  effects: [localStorageEffect('redServoReleasedPositionPulseWidth')]
 });
 
-export const motorTwoOpenPositionAtom = atom({
-  key: 'fgc2023_motorTwoOpenPosition',
+export const blueServoHoldPositionPulseWidthAtom = atom({
+  key: 'fgc2023_blueServoHoldPositionPulseWidth',
   default: 0,
-  effects: [localStorageEffect('motorTwoOpenPosition')]
+  effects: [localStorageEffect('blueServoHoldPositionPulseWidth')]
 });
 
-export const motorTwoClosePositionAtom = atom({
-  key: 'fgc2023_motorTwoClosePosition',
+export const blueServoReleasedPositionPulseWidthAtom = atom({
+  key: 'fgc2023_blueServoReleasedPositionPulseWidth',
   default: 0,
-  effects: [localStorageEffect('motorTwoClosePosition')]
+  effects: [localStorageEffect('blueServoReleasedPositionPulseWidth')]
 });
