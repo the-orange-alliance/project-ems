@@ -50,7 +50,7 @@ const RightParticipant: FC<{
         />
       </div>
       <div className='team-name-right-p'>
-        <span>{participant.team?.country}</span>
+        <span>{participant.team?.countryCode}</span>
       </div>
       <CardStatus cardStatus={participant.cardStatus} />
     </div>
