@@ -1,13 +1,17 @@
 import { createSocket } from '@toa-lib/client';
 import {
-  FCS_ALL_CLEAR,
-  FCS_PREPARE_FIELD,
+  FcsPackets,
+  FieldOptions,
   MatchKey,
   MatchSocketEvent
 } from '@toa-lib/models';
 import { Socket } from 'socket.io-client';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { socketConnectedAtom } from 'src/stores/NewRecoil';
+import {
+  fcsPacketsSelector,
+  fieldOptionsSelector
+} from '@seasons/HydrogenHorizons/stores/Recoil';
 
 let socket: Socket | null = null;
 
@@ -69,7 +73,10 @@ export function setDisplays(): void {
 }
 
 export function sendPrepareField(): void {
-  socket?.emit('fcs:update', FCS_PREPARE_FIELD);
+  const fieldOptions: FieldOptions = useRecoilValue(fieldOptionsSelector);
+  const fcsPackets: FcsPackets = useRecoilValue(fcsPacketsSelector);
+  socket?.emit('fcs:setFieldOptions', fieldOptions);
+  socket?.emit('fcs:update', fcsPackets.prepareField);
 }
 
 export function sendStartMatch(): void {
@@ -81,7 +88,8 @@ export async function sendAbortMatch(): Promise<void> {
 }
 
 export async function sendAllClear(): Promise<void> {
-  socket?.emit('fcs:update', FCS_ALL_CLEAR);
+  const fcsPackets: FcsPackets = useRecoilValue(fcsPacketsSelector);
+  socket?.emit('fcs:update', fcsPackets.allClear);
 }
 
 export async function sendCommitScores(key: MatchKey): Promise<void> {
