@@ -1,28 +1,33 @@
 import { atom, RecoilValueReadOnly, selector } from 'recoil';
 import { localStorageEffect } from 'src/stores/Effects';
-import { FcsPackets, FieldOptions, getFcsPackets } from '@toa-lib/models';
+import {
+  defaultFieldOptions,
+  FcsPackets,
+  FieldOptions,
+  getFcsPackets
+} from '@toa-lib/models';
 
 export const redServoHoldPositionPulseWidthAtom = atom({
   key: 'fgc2023_redServoHoldPositionPulseWidth',
-  default: 0,
+  default: defaultFieldOptions.redServoHoldPositionPulseWidth,
   effects: [localStorageEffect('redServoHoldPositionPulseWidth')]
 });
 
 export const redServoReleasedPositionPulseWidthAtom = atom({
   key: 'fgc2023_redServoReleasedPositionPulseWidth',
-  default: 0,
+  default: defaultFieldOptions.redServoReleasedPositionPulseWidth,
   effects: [localStorageEffect('redServoReleasedPositionPulseWidth')]
 });
 
 export const blueServoHoldPositionPulseWidthAtom = atom({
   key: 'fgc2023_blueServoHoldPositionPulseWidth',
-  default: 0,
+  default: defaultFieldOptions.blueServoHoldPositionPulseWidth,
   effects: [localStorageEffect('blueServoHoldPositionPulseWidth')]
 });
 
 export const blueServoReleasedPositionPulseWidthAtom = atom({
   key: 'fgc2023_blueServoReleasedPositionPulseWidth',
-  default: 0,
+  default: defaultFieldOptions.blueServoReleasedPositionPulseWidth,
   effects: [localStorageEffect('blueServoReleasedPositionPulseWidth')]
 });
 
