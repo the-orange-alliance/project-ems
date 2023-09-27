@@ -327,9 +327,39 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
     blueTelePoints + blueProficiencyPoints + getCoopertitionPoints(details);
   const redPenalty = (match.redMinPen * 0.1) * redPoints;
   const bluePenalty = (match.blueMinPen * 0.1) * bluePoints;
+
+  const redUnrounded = redPoints + bluePenalty;
+  const blueUnrounded = bluePoints + redPenalty;
+
+  const redRoundedUp = Math.ceil(redUnrounded);
+  const redRoundedDown = Math.floor(redUnrounded);
+  const blueRoundedUp = Math.ceil(blueUnrounded);
+  const blueRoundedDown = Math.floor(blueUnrounded);
+
+
+  let redRoundedScore: number;
+  if (redUnrounded - redRoundedDown < Number.EPSILON * 1000) {
+    // This is almost certainly a floating-point precision error, and not
+    // something that we should round up like we normally do. Epsilon * 1000 is
+    // about 2.2 x 10^-14.
+    redRoundedScore = redRoundedDown;
+  } else {
+    redRoundedScore = redRoundedUp;
+  }
+
+  let blueRoundedScore: number;
+  if (blueUnrounded - blueRoundedDown < Number.EPSILON * 1000) {
+    // This is almost certainly a floating-point precision error, and not
+    // something that we should round up like we normally do. Epsilon * 1000 is
+    // about 2.2 x 10^-14.
+    blueRoundedScore = blueRoundedDown;
+  } else {
+    blueRoundedScore = blueRoundedUp;
+  }
+
   return [
-    Math.ceil(redPoints + bluePenalty),
-    Math.ceil(bluePoints + redPenalty)
+    redRoundedScore,
+    blueRoundedScore
   ];
 }
 
