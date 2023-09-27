@@ -1,5 +1,5 @@
 import { FC, useEffect } from 'react';
-import { AllianceMember, ROUND_ROBIN_LEVEL } from '@toa-lib/models';
+import { AllianceMember, MatchSocketEvent, ROUND_ROBIN_LEVEL } from '@toa-lib/models';
 import './Alliances.less';
 
 import FGC_BG from '../res/global-bg.png';
@@ -19,13 +19,13 @@ const Alliances: FC = () => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('match:alliance', onUpdate);
+      socket?.on(MatchSocketEvent.ALLIANCE, onUpdate);
     }
   }, [connected]);
 
   useEffect(() => {
     return () => {
-      socket?.removeListener('match:alliance', onUpdate);
+      socket?.removeListener(MatchSocketEvent.ALLIANCE, onUpdate);
     };
   }, []);
 

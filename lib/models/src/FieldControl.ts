@@ -7,6 +7,8 @@
 //-------------------------------------------
 // Motor parameters
 //-------------------------------------------
+import { BlinkinPattern } from "./fcs/index.js";
+
 export interface MotorUpdateParameters {
   port: number;
   setpoint: number;
@@ -62,27 +64,49 @@ export type FieldControlUpdatePacket = FieldControlPacket<HubUpdateParameters>;
 //-------------------------------------------
 
 export interface FieldOptions {
-  motorDuration: number;
-  endGameHB: number;
-  countdownStyle: string;
-  countdownDuration: number;
-  matchEndStyle: string;
-  matchEndPattern: number;
-  primaryColor: number;
-  secondaryColor: number;
-  setupDuration: number;
-  motorReverseDuration: number;
+  redServoHoldPositionPulseWidth: number;
+  redServoReleasedPositionPulseWidth: number;
+  blueServoHoldPositionPulseWidth: number;
+  blueServoReleasedPositionPulseWidth: number;
+  prepareFieldBlinkinPulseWidth: number;
+  fieldFaultBlinkinPulseWidth: number;
+  solidRedBlinkinPulseWidth: number;
+  solidBlueBlinkinPulseWidth: number;
+  allClearBlinkinPulseWidth: number;
+  redEndgameOxygenGoalBlinkinPulseWidth: number;
+  blueEndgameOxygenGoalBlinkinPulseWidth: number;
+  redEndgameHydrogenGoalBlinkinPulseWidth: number;
+  blueEndgameHydrogenGoalBlinkinPulseWidth: number;
+  redEndgameButtonBlinkinPulseWidth: number;
+  blueEndgameButtonBlinkinPulseWidth: number;
+  redCombinedOxygenGoalBlinkinPulseWidth: number;
+  blueCombinedOxygenGoalBlinkinPulseWidth: number;
+  redCombinedHydrogenGoalBlinkinPulseWidth: number;
+  blueCombinedHydrogenGoalBlinkinPulseWidth: number;
+  redCombinedButtonBlinkinPulseWidth: number;
+  blueCombinedButtonBlinkinPulseWidth: number;
 }
 
 export const defaultFieldOptions: FieldOptions = {
-  motorDuration: 3000,
-  endGameHB: 15,
-  countdownStyle: 'style1',
-  countdownDuration: 3000,
-  matchEndStyle: 'carbon',
-  matchEndPattern: 1,
-  primaryColor: 1965,
-  secondaryColor: 1955,
-  setupDuration: 10000,
-  motorReverseDuration:3000,
+  redServoHoldPositionPulseWidth: 500,
+  redServoReleasedPositionPulseWidth: 2500,
+  blueServoHoldPositionPulseWidth: 500,
+  blueServoReleasedPositionPulseWidth: 2500,
+  prepareFieldBlinkinPulseWidth: BlinkinPattern.COLOR_YELLOW,
+  fieldFaultBlinkinPulseWidth: BlinkinPattern.COLOR_YELLOW,
+  solidRedBlinkinPulseWidth: BlinkinPattern.COLOR_RED,
+  solidBlueBlinkinPulseWidth: BlinkinPattern.COLOR_BLUE,
+  allClearBlinkinPulseWidth: BlinkinPattern.COLOR_GREEN,
+  redEndgameOxygenGoalBlinkinPulseWidth: BlinkinPattern.COLOR_1_HB_MED,
+  blueEndgameOxygenGoalBlinkinPulseWidth: BlinkinPattern.COLOR_1_HB_MED,
+  redEndgameHydrogenGoalBlinkinPulseWidth: BlinkinPattern.COLOR_1_HB_MED,
+  blueEndgameHydrogenGoalBlinkinPulseWidth: BlinkinPattern.COLOR_1_HB_MED,
+  redEndgameButtonBlinkinPulseWidth: BlinkinPattern.COLOR_1_HB_MED,
+  blueEndgameButtonBlinkinPulseWidth: BlinkinPattern.COLOR_1_HB_MED,
+  redCombinedOxygenGoalBlinkinPulseWidth: BlinkinPattern.COLOR_1_2_GRADIENT,
+  blueCombinedOxygenGoalBlinkinPulseWidth: BlinkinPattern.COLOR_1_2_GRADIENT,
+  redCombinedHydrogenGoalBlinkinPulseWidth: BlinkinPattern.COLOR_1_2_GRADIENT,
+  blueCombinedHydrogenGoalBlinkinPulseWidth: BlinkinPattern.COLOR_1_2_GRADIENT,
+  redCombinedButtonBlinkinPulseWidth: BlinkinPattern.COLOR_1_2_GRADIENT,
+  blueCombinedButtonBlinkinPulseWidth: BlinkinPattern.COLOR_1_2_GRADIENT,
 };

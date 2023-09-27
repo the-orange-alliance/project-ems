@@ -4,6 +4,7 @@ import {
   Match,
   MatchDetailBase,
   MatchKey,
+  MatchSocketEvent,
   getSeasonKeyFromEventKey,
   getDefaultMatchDetailsBySeasonKey
 } from '@toa-lib/models';
@@ -17,13 +18,13 @@ const PrestartListener: FC = () => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('match:prestart', onPrestart);
+      socket?.on(MatchSocketEvent.PRESTART, onPrestart);
     }
   }, [connected]);
 
   useEffect(() => {
     return () => {
-      socket?.removeListener('match:prestart', onPrestart);
+      socket?.removeListener(MatchSocketEvent.PRESTART, onPrestart);
     };
   }, []);
 

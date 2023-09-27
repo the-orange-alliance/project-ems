@@ -1,4 +1,4 @@
-import { MatchState, TimerEventPayload } from '@toa-lib/models';
+import { MatchSocketEvent, MatchState, TimerEventPayload } from '@toa-lib/models';
 import { Duration } from 'luxon';
 import { FC, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
@@ -39,9 +39,9 @@ const MatchCountdown: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('match:prestart', onPrestart);
-      socket?.on('match:start', onStart);
-      socket?.on('match:abort', onAbort);
+      socket?.on(MatchSocketEvent.PRESTART, onPrestart);
+      socket?.on(MatchSocketEvent.START, onStart);
+      socket?.on(MatchSocketEvent.ABORT, onAbort);
 
       timer.on('timer:transition', onTransition);
       timer.on('timer:tele', onTele);
@@ -63,9 +63,9 @@ const MatchCountdown: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
     }, 500);
 
     return () => {
-      socket?.off('match:prestart', onPrestart);
-      socket?.off('match:start', onStart);
-      socket?.off('match:abort', onAbort);
+      socket?.off(MatchSocketEvent.PRESTART, onPrestart);
+      socket?.off(MatchSocketEvent.START, onStart);
+      socket?.off(MatchSocketEvent.ABORT, onAbort);
 
       timer.off('timer:transition', onTransition);
       timer.off('timer:tele', onTele);

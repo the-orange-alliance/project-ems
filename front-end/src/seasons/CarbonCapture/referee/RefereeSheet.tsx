@@ -15,6 +15,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   CarbonCaptureDetails,
   MatchParticipant,
+  MatchSocketEvent,
   MatchState
 } from '@toa-lib/models';
 import NumberInput from '@components/Referee/NumberInput';
@@ -33,7 +34,7 @@ const TeamSection: FC<{ participantKey: string }> = ({ participantKey }) => {
   useEffect(() => {
     if (updateReady) {
       setUpdateReady(false);
-      socket?.emit('match:update', match);
+      socket?.emit(MatchSocketEvent.UPDATE, match);
     }
   }, [updateReady]);
 
@@ -213,7 +214,7 @@ const Fouls: FC<{ alliance: MatchParticipant[]; disabled?: boolean }> = ({
   useEffect(() => {
     if (updateReady) {
       setUpdateReady(false);
-      socket?.emit('match:update', match);
+      socket?.emit(MatchSocketEvent.UPDATE, match);
     }
   }, [updateReady]);
 

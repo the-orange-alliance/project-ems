@@ -2,7 +2,7 @@ import log from "../logger.js";
 import { PlcInputs } from "../models/PlcInputs.js";
 import PlcOutputCoils, { EStop, RobotStatus, StackLight } from "../models/PlcOutputCoils.js";
 import { EmsFrcFms } from "../server.js";
-import { MatchMode } from "@toa-lib/models";
+import { MatchMode, MatchSocketEvents } from "@toa-lib/models";
 import ModbusRTU from "modbus-serial";
 import { Socket } from "socket.io-client";
 import { sleep } from "../helpers/generic.js";
@@ -137,7 +137,7 @@ export class PlcSupport {
 
         // Field E-STOP
         if (this.plc.inputs.fieldEstop) {
-          SocketSupport.getInstance().socket?.emit("match:abort");
+          SocketSupport.getInstance().socket?.emit(MatchSocketEvents.ABORT);
           logger.info("🛑 Field E-STOP Pressed! This can't be good!");
         } else if (!this.plc.inputs.fieldEstop && this.plc.oldInputs.fieldEstop) {
           logger.info("🟢 Field E-STOP Released!");

@@ -7,6 +7,7 @@ import {
   matchInProgressAtom,
   matchInProgressParticipantsByStationSelectorFam
 } from '@stores/NewRecoil';
+import { MatchSocketEvent } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 
@@ -27,7 +28,7 @@ const TeamSheet: FC<Props> = ({ station }) => {
 
   useEffect(() => {
     if (updateReady) {
-      socket?.emit('match:update', match);
+      socket?.emit(MatchSocketEvent.UPDATE, match);
       setUpdateReady(false);
     }
   }, [updateReady]);

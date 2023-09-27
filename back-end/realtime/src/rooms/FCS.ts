@@ -1,44 +1,45 @@
 import { Server, Socket } from "socket.io";
 import {
-  FCS_ENDGAME,
-  FCS_FIELD_FAULT,
-  FCS_INIT,
-  FCS_SOLID_ALLIANCE_COLORS,
-  FCS_TURN_OFF_LIGHTS,
-  FieldControlUpdatePacket
+  defaultFieldOptions,
+  FcsPackets,
+  FieldControlUpdatePacket,
+  FieldOptions,
+  getFcsPackets,
+  MatchSocketEvent
 } from "@toa-lib/models";
 import Room from "./Room.js";
 import Match from "./Match.js";
 
 export default class FCS extends Room {
   private readonly latestFcsStatus: FieldControlUpdatePacket = { hubs: {} };
+  private fcsPackets: FcsPackets = getFcsPackets(defaultFieldOptions);
 
   public constructor(server: Server, matchRoom: Match) {
     super(server, "fcs");
 
-    matchRoom.localEmitter.on("match:start", () => {
-      this.broadcastFcsUpdate(FCS_TURN_OFF_LIGHTS);
+    matchRoom.localEmitter.on(MatchSocketEvent.TELEOPERATED, () => {
+      this.broadcastFcsUpdate(this.fcsPackets.matchStart);
     });
 
-    matchRoom.localEmitter.on("match:tele", () => {
-      this.broadcastFcsUpdate(FCS_SOLID_ALLIANCE_COLORS);
+    matchRoom.localEmitter.on(MatchSocketEvent.ENDGAME, () => {
+      this.broadcastFcsUpdate(this.fcsPackets.endgame);
     });
 
-    matchRoom.localEmitter.on("match:endgame", () => {
-      this.broadcastFcsUpdate(FCS_ENDGAME);
+    matchRoom.localEmitter.on(MatchSocketEvent.END, () => {
+      this.broadcastFcsUpdate(this.fcsPackets.matchEnd);
     });
 
-    matchRoom.localEmitter.on("match:end", () => {
-      this.broadcastFcsUpdate(FCS_SOLID_ALLIANCE_COLORS);
-    });
-
-    matchRoom.localEmitter.on("match:abort", () => {
-      this.broadcastFcsUpdate(FCS_FIELD_FAULT);
+    matchRoom.localEmitter.on(MatchSocketEvent.ABORT, () => {
+      this.broadcastFcsUpdate(this.fcsPackets.fieldFault);
     })
   }
 
   public initializeEvents(socket: Socket): void {
-    socket.emit("fcs:init", FCS_INIT);
+    socket.emit("fcs:init", this.fcsPackets.init);
+
+    socket.on("fcs:setFieldOptions", (fieldOptions: FieldOptions) => {
+      this.fcsPackets = getFcsPackets(fieldOptions);
+    });
 
     socket.on("fcs:update", (update: FieldControlUpdatePacket) => {
       this.broadcastFcsUpdate(update);

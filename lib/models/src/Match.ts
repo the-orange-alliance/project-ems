@@ -38,6 +38,21 @@ export enum MatchState {
   RESULTS_POSTED = 11
 }
 
+export enum MatchSocketEvent {
+  ALLIANCE = "match:alliance",
+  COMMIT = "match:commit",
+  DISPLAY = "match:display",
+  UPDATE = "match:update",
+
+  PRESTART = "match:prestart",
+  START = "match:start",
+  AUTONOMOUS = "match:auto",
+  TELEOPERATED = "match:tele",
+  ENDGAME = "match:endgame",
+  END = "match:end",
+  ABORT = "match:abort",
+}
+
 export interface MatchMakerParams {
   teamsParticipating: number;
   teamsPerAlliance: number;

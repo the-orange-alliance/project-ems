@@ -4,7 +4,7 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import { Alliance, ChargedUpDetails, Match } from '@toa-lib/models';
+import { Alliance, ChargedUpDetails, Match, MatchSocketEvent } from '@toa-lib/models';
 import ConnectionChip from '@components/ConnectionChip/ConnectionChip';
 import MatchChip from '@components/MatchChip/MatchChip';
 import { useRecoilValue } from 'recoil';
@@ -35,7 +35,7 @@ const ScoreSheet: FC<Props> = ({ alliance }) => {
   };
 
   const handleMatchUpdate = (newMatch: Match<ChargedUpDetails>) => {
-    socket?.emit('match:update', newMatch);
+    socket?.emit(MatchSocketEvent.UPDATE, newMatch);
   };
 
   return (

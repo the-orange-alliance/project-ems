@@ -1,4 +1,9 @@
-import { HydrogenHorizons, Match, MatchParticipant } from '@toa-lib/models';
+import {
+  HydrogenHorizons,
+  Match,
+  MatchParticipant,
+  MatchSocketEvent
+} from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
@@ -95,13 +100,13 @@ const MatchPlay: FC = () => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('match:update', matchUpdate);
+      socket?.on(MatchSocketEvent.UPDATE, matchUpdate);
     }
   }, [connected]);
 
   useEffect(() => {
     return () => {
-      socket?.removeListener('match:update', matchUpdate);
+      socket?.removeListener(MatchSocketEvent.UPDATE, matchUpdate);
     };
   }, []);
 
