@@ -43,6 +43,10 @@ export enum MatchSocketEvent {
   COMMIT = "match:commit",
   DISPLAY = "match:display",
   UPDATE = "match:update",
+  MATCH_UPDATE_ITEM = "match:updateItem",
+  MATCH_UPDATE_DETAILS_ITEM = "match:updateDetailsItem",
+  MATCH_ADJUST_DETAILS_NUMBER = "match:adjustDetailsNumber",
+  UPDATE_CARD_STATUS = "match:updateCardStatus",
 
   PRESTART = "match:prestart",
   START = "match:start",
@@ -114,6 +118,24 @@ export const isMatch = (obj: unknown): obj is Match<any> =>
 
 export const isMatchArray = (obj: unknown): obj is Match<any>[] =>
   isArray(obj) && obj.every((o) => isMatch(o));
+
+export interface ItemUpdate {
+  /** The name of the field to update */
+  key: string;
+  value: any;
+}
+
+export interface NumberAdjustment {
+  /** The name of the field to update */
+  key: string;
+  /** The amount to add to the field (use negative numbers to subtract) */
+  adjustment: number;
+}
+
+export interface CardStatusUpdate {
+  teamKey: number;
+  cardStatus: number;
+}
 
 export interface MatchParticipant {
   eventKey: string;

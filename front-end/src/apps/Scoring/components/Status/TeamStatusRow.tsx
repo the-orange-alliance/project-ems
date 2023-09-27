@@ -1,12 +1,16 @@
-import { FC, useEffect, useState } from 'react';
+import { FC } from 'react';
 import Grid from '@mui/material/Grid';
 import TeamCardStatus from './TeamCardStatus';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import AutocompleteTeam from 'src/features/components/AutocompleteTeam/AutoCompleteTeam';
-import { MatchSocketEvent, MatchState, Team } from '@toa-lib/models';
 import {
-  matchInProgressAtom,
+  CardStatusUpdate,
+  MatchSocketEvent,
+  MatchState,
+  Team
+} from '@toa-lib/models';
+import {
   matchInProgressParticipantsByStationSelectorFam,
   matchStateAtom
 } from 'src/stores/NewRecoil';
@@ -19,25 +23,20 @@ const TeamStatusRow: FC<Props> = ({ station }) => {
   const [participant, setParticipant] = useRecoilState(
     matchInProgressParticipantsByStationSelectorFam(station)
   );
-  const match = useRecoilValue(matchInProgressAtom);
   const state = useRecoilValue(matchStateAtom);
 
-  const [updateReady, setUpdateReady] = useState(false);
   const [socket] = useSocket();
 
-  useEffect(() => {
-    if (updateReady) {
-      setUpdateReady(false);
-      socket?.emit(MatchSocketEvent.UPDATE, match);
-    }
-  }, [updateReady]);
-
-  const handleChange = (newValue: number) => {
+  const handleCardStatusChange = (cardStatus: number) => {
     if (participant) {
       const newParticipant = Object.assign({}, participant);
-      newParticipant.cardStatus = newValue;
+      newParticipant.cardStatus = cardStatus;
       setParticipant(newParticipant);
-      setUpdateReady(true);
+      const updateCardPacket: CardStatusUpdate = {
+        teamKey: participant.teamKey,
+        cardStatus
+      };
+      socket?.emit(MatchSocketEvent.UPDATE_CARD_STATUS, updateCardPacket);
     }
   };
 
@@ -65,7 +64,7 @@ const TeamStatusRow: FC<Props> = ({ station }) => {
       <Grid item xs={12} sm={6}>
         <TeamCardStatus
           cardStatus={participant?.cardStatus || 0}
-          onChange={handleChange}
+          onChange={handleCardStatusChange}
         />
       </Grid>
     </Grid>

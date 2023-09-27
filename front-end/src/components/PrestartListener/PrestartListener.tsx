@@ -63,6 +63,11 @@ const PrestartListener: FC = () => {
     }
     set(currentMatchIdAtom, key.id);
     set(matchInProgressAtom, newMatch);
+
+    // It's inefficient to have every client inform the socket.io server of the
+    // new match object when it announces the prestart, but prestart is not a
+    // performance-sensitive moment.
+    socket?.emit(MatchSocketEvent.UPDATE, newMatch);
   });
 
   return null;

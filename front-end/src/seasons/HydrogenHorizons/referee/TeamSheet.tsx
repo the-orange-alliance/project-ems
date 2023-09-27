@@ -1,13 +1,10 @@
-import { FC, useState, useEffect } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { FC } from 'react';
+import { useRecoilState } from 'recoil';
 import Box from '@mui/material/Box';
 import ToggleButton from '@mui/material/ToggleButton';
 import Typography from '@mui/material/Typography';
-import {
-  matchInProgressAtom,
-  matchInProgressParticipantsByStationSelectorFam
-} from '@stores/NewRecoil';
-import { MatchSocketEvent } from '@toa-lib/models';
+import { matchInProgressParticipantsByStationSelectorFam } from '@stores/NewRecoil';
+import { CardStatusUpdate, MatchSocketEvent } from '@toa-lib/models';
 import { useSocket } from 'src/api/SocketProvider';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 
@@ -17,26 +14,20 @@ interface Props {
 
 const TeamSheet: FC<Props> = ({ station }) => {
   const [socket] = useSocket();
-  const match = useRecoilValue(matchInProgressAtom);
   const [participant, setParticipant] = useRecoilState(
     matchInProgressParticipantsByStationSelectorFam(station)
   );
 
-  const [updateReady, setUpdateReady] = useState(false);
-
   const identifiers = useTeamIdentifiers();
-
-  useEffect(() => {
-    if (updateReady) {
-      socket?.emit(MatchSocketEvent.UPDATE, match);
-      setUpdateReady(false);
-    }
-  }, [updateReady]);
 
   const handleCardChange = (cardStatus: number) => {
     if (participant) {
       setParticipant(Object.assign({}, { ...participant, cardStatus }));
-      setUpdateReady(true);
+      const updateCardPacket: CardStatusUpdate = {
+        teamKey: participant.teamKey,
+        cardStatus
+      };
+      socket?.emit(MatchSocketEvent.UPDATE_CARD_STATUS, updateCardPacket);
     }
   };
 
