@@ -34,7 +34,8 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
         />
       </div>
       <div className={'pre-match-team'}>
-        ({participant?.team?.country})&nbsp;{participant?.team?.teamNameLong}
+        ({participant?.team?.countryCode})&nbsp;
+        {participant?.team?.teamNameLong}
       </div>
       <div className='pre-match-rank'>
         {ranking &&
