@@ -9,7 +9,10 @@ import {
 } from '@toa-lib/models';
 import StateToggle from '@components/Referee/StateToggle';
 import { useRecoilValue } from 'recoil';
-import { matchInProgressAtom } from '@stores/NewRecoil';
+import {
+  currentTeamsByEventSelector,
+  matchInProgressAtom
+} from '@stores/NewRecoil';
 import NumberInput from '@components/Referee/NumberInput';
 import {
   AlignmentStatus,
@@ -38,6 +41,7 @@ const TeleScoreSheet: FC<Props> = ({
 }) => {
   const match: Match<HydrogenHorizons.MatchDetails> | null =
     useRecoilValue(matchInProgressAtom);
+  const teams = useRecoilValue(currentTeamsByEventSelector);
   const identifiers = useTeamIdentifiers();
 
   if (!match || !match.details) return null;
@@ -172,7 +176,7 @@ const TeleScoreSheet: FC<Props> = ({
           onDecrement={handleHydrogenDecrement}
         />
       </Grid>
-      <Grid item xs={12} md={4} lg={4}>
+      <Grid item xs={12} sm={6} md={6} lg={12}>
         {/* The states attribute MUST match the order of the AlignmentStatus enum */}
         <StateToggle
           title={`Alignment`}
@@ -187,15 +191,25 @@ const TeleScoreSheet: FC<Props> = ({
         />
       </Grid>
       {participants?.map((p) => {
+        const team = teams.find((t) => t.teamKey === p.teamKey);
         const update = (value: Proficiency) => {
           updateProficiency(p.station, value);
         };
 
         return (
-          <Grid item key={`${p.teamKey}-proficiency`} xs={12} md={3} lg={3}>
+          <Grid item key={`${p.teamKey}-proficiency`} xs={12} md={6} lg={6}>
             {/* The states attribute MUST match the order of the Proficiency enum */}
             <StateToggle
-              title={`${identifiers[p.teamKey]} Proficiency`}
+              title={
+                <span>
+                  {team && (
+                    <span
+                      className={`flag-icon flag-icon-${team.countryCode}`}
+                    />
+                  )}
+                  {identifiers[p.teamKey]}&nbsp;Proficiency
+                </span>
+              }
               states={['Developing', 'Intermediate', 'Expert']}
               value={getProficiencyStatus(p.station) ?? Proficiency.DEVELOPING}
               onChange={update}

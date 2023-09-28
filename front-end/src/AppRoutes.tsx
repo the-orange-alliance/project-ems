@@ -11,6 +11,7 @@ const AudienceDisplay = lazy(() => import('./apps/AudienceDisplay'));
 const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 const RedReferee = lazy(() => import('./apps/Referee/RedReferee'));
 const BlueReferee = lazy(() => import('./apps/Referee/BlueReferee'));
+const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
 const Reports = lazy(() => import('./apps/Reports'));
 const AdminApp = lazy(() => import('./apps/Admin'));
 const FrcFmsFieldMonitorApp = lazy(() => import('./apps/FrcFmsFieldMonitor'));
@@ -113,6 +114,12 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/referee/blue',
     group: 0,
     element: <BlueReferee />
+  },
+  {
+    name: 'Head Referee Page',
+    path: '/:eventKey/referee/head',
+    group: 0,
+    element: <HeadReferee />
   },
   {
     name: 'Reports App',

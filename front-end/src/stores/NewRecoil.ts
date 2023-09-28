@@ -138,9 +138,9 @@ export const socketConnectedAtom = atom<boolean>({
  * Recoil state management for application flags
  */
 export const appFlagsAtom = atom<AppFlags>({
-  key: 'appFlagsAtom',
+  key: 'appFlagsAtom_UNSTABLE',
   default: selector<AppFlags>({
-    key: 'appFlagsAtomSelector',
+    key: 'appFlagsAtomSelector_UNSTABLE',
     get: async (): Promise<AppFlags> => {
       try {
         return await clientFetcher('storage/flags.json', 'GET');
@@ -220,6 +220,7 @@ export const currentTournamentFieldsSelector = selector<
 >({
   key: 'currentTournamentFieldsSelector',
   get: ({ get }) => {
+    console.log(get(currentTournamentSelector));
     return (
       get(currentTournamentSelector)?.fields.map((f, i) => ({
         name: f,
@@ -236,7 +237,8 @@ export const currentTournamentFieldsAtom = atom<
   }[]
 >({
   key: 'currentTournamentFieldsAtom',
-  default: currentTournamentFieldsSelector
+  default: currentTournamentFieldsSelector,
+  effects: [localStorageEffect('tournamentFieldControl')]
 });
 
 /**
@@ -353,7 +355,7 @@ export const schedulesByEventSelectorFam = selectorFamily<
   string
 >({
   key: 'schedulesByEventSelectorFam',
-  get: (eventKey: string) => async (): Promise<EventSchedule[]> => {
+  get: () => async (): Promise<EventSchedule[]> => {
     try {
       // TODO - Need a better way to find all schedules.
       return [];

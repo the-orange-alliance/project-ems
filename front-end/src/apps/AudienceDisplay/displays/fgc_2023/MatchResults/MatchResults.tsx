@@ -5,12 +5,6 @@ import {
   currentRankingsByMatchSelector
 } from 'src/stores/NewRecoil';
 import { HydrogenHorizons, MatchParticipant, Ranking } from '@toa-lib/models';
-import {
-  getCoopertitionPoints,
-  getMultiplier,
-  getProficiencyPoints,
-  isHydrogenHorizonsDetails
-} from '@toa-lib/models/build/seasons/HydrogenHorizons';
 import './MatchResults.css';
 
 import NorthIcon from '@mui/icons-material/North';
@@ -86,22 +80,22 @@ const MatchResults: FC = () => {
 
   const name = getName(match ? match.name : '');
 
-  const details = isHydrogenHorizonsDetails(someDetails)
+  const details = HydrogenHorizons.isHydrogenHorizonsDetails(someDetails)
     ? someDetails
     : HydrogenHorizons.defaultMatchDetails;
 
   const redTop = RED_LOSE;
   const blueTop = BLUE_LOSE;
-  console.log({ someDetails, details });
+
   const redProficiency =
-    getProficiencyPoints(details.redOneProficiency) +
-    getProficiencyPoints(details.redTwoProficiency) +
-    getProficiencyPoints(details.redThreeProficiency);
+    HydrogenHorizons.getProficiencyPoints(details.redOneProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.redTwoProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.redThreeProficiency);
   const blueProficiency =
-    getProficiencyPoints(details.blueOneProficiency) +
-    getProficiencyPoints(details.blueTwoProficiency) +
-    getProficiencyPoints(details.blueThreeProficiency);
-  const coopertitionBonus = getCoopertitionPoints(details); // TODO - Calculate
+    HydrogenHorizons.getProficiencyPoints(details.blueOneProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.blueTwoProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.blueThreeProficiency);
+  const coopertitionBonus = HydrogenHorizons.getCoopertitionPoints(details); // TODO - Calculate
   useEffect(() => {
     rankingsRefresh();
   }, [match]);
@@ -162,7 +156,7 @@ const MatchResults: FC = () => {
                     ALIGNMENT MULTIPLIER
                   </div>
                   <div className='res-detail-right'>
-                    x{getMultiplier(details.redAlignment)}
+                    x{HydrogenHorizons.getMultiplier(details.redAlignment)}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
@@ -192,10 +186,12 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={PENALTY_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left penalty right-red'>
-                    PENALTY
+                    BLUE PENALTY
                   </div>
                   <div className='res-detail-right penalty'>
-                    {match?.redMinPen ? `-${match.redMinPen * 10}%` : 0}
+                    {match?.blueMinPen
+                      ? `-${match.blueMinPen * 0.1 * match.blueScore}%`
+                      : 0}
                   </div>
                 </div>
               </div>
@@ -254,7 +250,7 @@ const MatchResults: FC = () => {
                     ALIGNMENT MULTIPLIER
                   </div>
                   <div className='res-detail-right'>
-                    x{getMultiplier(details.blueAlignment)}
+                    x{HydrogenHorizons.getMultiplier(details.blueAlignment)}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
@@ -284,10 +280,12 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={PENALTY_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left penalty right-blue'>
-                    PENALTY
+                    RED PENALTY
                   </div>
                   <div className='res-detail-right penalty'>
-                    {match?.blueMinPen ? `-${match.blueMinPen * 10}%` : 0}
+                    {match?.redMinPen
+                      ? `+${match.redMinPen * 0.1 * match.redScore}%`
+                      : 0}
                   </div>
                 </div>
               </div>

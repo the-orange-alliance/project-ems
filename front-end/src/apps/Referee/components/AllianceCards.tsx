@@ -8,6 +8,7 @@ const AllianceCards: FC = () => {
 
   const openRed = () => navigate('red', { relative: 'route' });
   const openBlue = () => navigate('blue', { relative: 'route' });
+  const openHead = () => navigate('head', { relative: 'route' });
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -31,6 +32,15 @@ const AllianceCards: FC = () => {
           Blue Alliance
         </Button>
       </Box>
+      <Button
+        fullWidth
+        variant='contained'
+        className='yellow-bg-imp'
+        sx={{ height: '30em' }}
+        onClick={openHead}
+      >
+        Head Referee
+      </Button>
     </Box>
   );
 };

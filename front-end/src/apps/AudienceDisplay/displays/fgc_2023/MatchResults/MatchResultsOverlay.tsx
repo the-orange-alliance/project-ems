@@ -74,9 +74,25 @@ const MatchResultsOverlay: FC = () => {
   const rankingsRefresh = useRecoilRefresher_UNSTABLE(
     currentRankingsByMatchSelector
   );
+  const someDetails = match?.details;
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
+
   const name = getName(match?.name ?? '');
+
+  const details = HydrogenHorizons.isHydrogenHorizonsDetails(someDetails)
+    ? someDetails
+    : HydrogenHorizons.defaultMatchDetails;
+
+  const redProficiency =
+    HydrogenHorizons.getProficiencyPoints(details.redOneProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.redTwoProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.redThreeProficiency);
+  const blueProficiency =
+    HydrogenHorizons.getProficiencyPoints(details.blueOneProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.blueTwoProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.blueThreeProficiency);
+  const coopertitionBonus = HydrogenHorizons.getCoopertitionPoints(details); // TODO - Calculate
   useEffect(() => {
     rankingsRefresh();
   }, [match]);
@@ -133,7 +149,7 @@ const MatchResultsOverlay: FC = () => {
                     ALIGNMENT MULTIPLIER
                   </div>
                   <div className='res-detail-right'>
-                    x{match?.details?.redAlignment}
+                    x{HydrogenHorizons.getMultiplier(details.redAlignment)}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
@@ -143,7 +159,7 @@ const MatchResultsOverlay: FC = () => {
                   <div className='res-detail-left right-red'>
                     PROFICIENCY BONUS
                   </div>
-                  <div className='res-detail-right'>{0}</div>
+                  <div className='res-detail-right'>{redProficiency}</div>
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
@@ -156,17 +172,19 @@ const MatchResultsOverlay: FC = () => {
                   <div className='res-detail-left right-red'>
                     COOPERTITION BONUS
                   </div>
-                  <div className='res-detail-right'>+{0}</div>
+                  <div className='res-detail-right'>+{coopertitionBonus}</div>
                 </div>
                 <div className='res-detail-row'>
                   <div className='res-detail-icon'>
                     <img alt={'empty'} src={PENALTY_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left penalty right-red'>
-                    PENALTY
+                    BLUE PENALTY
                   </div>
                   <div className='res-detail-right penalty'>
-                    {match?.redMinPen ? `-${match.redMinPen * 10}%` : 0}
+                    {match?.blueMinPen
+                      ? `-${match.blueMinPen * 0.1 * match.blueScore}%`
+                      : 0}
                   </div>
                 </div>
               </div>
@@ -222,7 +240,7 @@ const MatchResultsOverlay: FC = () => {
                     ALIGNMENT MULTIPLIER
                   </div>
                   <div className='res-detail-right'>
-                    {match?.details?.blueAlignment}
+                    x{HydrogenHorizons.getMultiplier(details.blueAlignment)}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
@@ -232,7 +250,7 @@ const MatchResultsOverlay: FC = () => {
                   <div className='res-detail-left right-blue'>
                     PROFICIENCY BONUS
                   </div>
-                  <div className='res-detail-right'>{0}</div>
+                  <div className='res-detail-right'>{blueProficiency}</div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
@@ -245,17 +263,19 @@ const MatchResultsOverlay: FC = () => {
                   <div className='res-detail-left right-blue'>
                     COOPERTITION BONUS
                   </div>
-                  <div className='res-detail-right'>+{0}</div>
+                  <div className='res-detail-right'>+{coopertitionBonus}</div>
                 </div>
                 <div className='res-detail-row'>
                   <div className='res-detail-icon'>
                     <img alt={'empty'} src={PENALTY_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left penalty right-blue'>
-                    PENALTY
+                    RED PENALTY
                   </div>
                   <div className='res-detail-right penalty'>
-                    {match?.blueMinPen ? `-${match.blueMinPen * 10}%` : 0}
+                    {match?.redMinPen
+                      ? `+${match.redMinPen * 0.1 * match.redScore}%`
+                      : 0}
                   </div>
                 </div>
               </div>
