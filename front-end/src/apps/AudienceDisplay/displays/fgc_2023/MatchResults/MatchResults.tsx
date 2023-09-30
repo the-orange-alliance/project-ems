@@ -21,6 +21,8 @@ import HYDROGEN_TANK from '../res/Hydrogen_Tank.png';
 import PROF_ICON from '../res/Proficiency.png';
 import COOPERTITION_ICON from '../res/Coopertition_Points.png';
 import PENALTY_ICON from '../res/Penalty.png';
+import RED_CARD from '../res/Penalty_Red_Dot.png';
+import YELLOW_CARD from '../res/Penalty_Yellow_Dot.png';
 
 function getName(name: string): string {
   const params = name.split(' ');
@@ -28,12 +30,31 @@ function getName(name: string): string {
   return params.length === 3 ? params[2] : `${name.charAt(0)}${params[3]}`;
 }
 
+const CardStatus: FC<{ cardStatus: number }> = ({ cardStatus }) => {
+  const getImg = () => {
+    switch (cardStatus) {
+      case 0:
+        return '';
+      case 1:
+        return YELLOW_CARD;
+      case 2:
+        return RED_CARD;
+      default:
+        return '';
+    }
+  };
+  return <img src={getImg()} className='fit-w' />;
+};
+
 const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
   participant,
   ranking
 }) => {
   return (
     <div className='res-team-row bottom-red'>
+      <div className='res-team-cardstatus'>
+        <CardStatus cardStatus={participant.cardStatus} />
+      </div>
       <div className='res-team-name'>{participant?.team?.teamNameLong}</div>
       <div className='res-team-rank'>
         {ranking &&

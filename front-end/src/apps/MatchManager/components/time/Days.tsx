@@ -7,6 +7,7 @@ import { useRecoilState } from 'recoil';
 import { currentScheduleByTournamentSelector } from 'src/stores/NewRecoil';
 import { defaultDay } from '@toa-lib/models';
 import Day from './Day';
+import { DateTime } from 'luxon';
 
 const Days: FC = () => {
   const [schedule, setSchedule] = useRecoilState(
@@ -14,7 +15,13 @@ const Days: FC = () => {
   );
 
   const addDay = () => {
-    const newDay = { ...defaultDay, id: schedule.days.length };
+    const startTime =
+      schedule.days.length > 0
+        ? DateTime.fromISO(schedule.days[schedule.days.length - 1].startTime)
+            .plus({ days: 1 })
+            .toISO() ?? defaultDay.startTime
+        : defaultDay.startTime;
+    const newDay = { ...defaultDay, id: schedule.days.length, startTime };
     setSchedule((prev) => ({ ...prev, days: [...prev.days, newDay] }));
   };
 
