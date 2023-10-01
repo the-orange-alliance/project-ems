@@ -17,12 +17,12 @@ const AdminApp = lazy(() => import('./apps/Admin'));
 const FrcFmsFieldMonitorApp = lazy(() => import('./apps/FrcFmsFieldMonitor'));
 const QueueingDisplay = lazy(() => import('./apps/QueueingDisplay'));
 const JBApp = lazy(() => import('./apps/JBApp'));
+const Streaming = lazy(() => import('./apps/Streaming/Streaming'));
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 // const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));
 // const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
 // const FieldDebugger = lazy(() => import('./apps/FieldDebugger'));
-// const Streaming = lazy(() => import('./apps/Streaming/Streaming'));
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
@@ -158,6 +158,12 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/jb',
     group: 0,
     element: <JBApp />
+  },
+  {
+    name: 'Streaming',
+    path: '/:eventKey/streaming',
+    group: 0,
+    element: <Streaming />
   }
   // {
   //   name: 'Account Manager',
@@ -167,31 +173,12 @@ const AppRoutes: AppRoute[] = [
   //   hidden: false
   // },
   // {
-  // {
-  //   name: 'Score Keeper Page',
-  //   path: '/referee/scorekeeper',
-  //   group: 0,
-  //   element: <ScoreKeeper />
-  // },
-  // {
-  //   name: 'Head Referee Page',
-  //   path: '/referee/head',
-  //   group: 0,
-  //   element: <HeadReferee />
-  // },
-  // {
   //   name: 'Field Debugger',
   //   path: '/fcs-debug',
   //   group: 0,
   //   element: <FieldDebugger />,
   //   hidden: true
   // },
-  // {
-  //   name: 'Streaming',
-  //   path: '/streaming',
-  //   group: 0,
-  //   element: <Streaming />
-  // }
 ];
 
 export default AppRoutes;

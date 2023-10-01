@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import PaperLayout from 'src/layouts/PaperLayout';
-import { MatchSocketEvent } from '@toa-lib/models';
+import { Displays, MatchSocketEvent } from '@toa-lib/models';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -9,13 +9,20 @@ import { useSocket } from 'src/api/SocketProvider';
 const Streaming: FC = () => {
   const [socket] = useSocket();
 
-  const sendBlank = () => socket?.emit(MatchSocketEvent.DISPLAY, 0);
-  const sendChroma = () => socket?.emit(MatchSocketEvent.DISPLAY, -1);
-  const sendPreview = () => socket?.emit(MatchSocketEvent.DISPLAY, 1);
-  const sendPlay = () => socket?.emit(MatchSocketEvent.DISPLAY, 2);
-  const sendResults = () => socket?.emit(MatchSocketEvent.DISPLAY, 3);
-  const sendRankingsRR = () => socket?.emit(MatchSocketEvent.DISPLAY, 4);
-  const sendRankingsF = () => socket?.emit(MatchSocketEvent.DISPLAY, 5);
+  const sendBlank = () =>
+    socket?.emit(MatchSocketEvent.DISPLAY, Displays.BLANK);
+  const sendChroma = () =>
+    socket?.emit(MatchSocketEvent.DISPLAY, Displays.BLANK);
+  const sendPreview = () =>
+    socket?.emit(MatchSocketEvent.DISPLAY, Displays.MATCH_PREVIEW);
+  const sendPlay = () =>
+    socket?.emit(MatchSocketEvent.DISPLAY, Displays.MATCH_START);
+  const sendResults = () =>
+    socket?.emit(MatchSocketEvent.DISPLAY, Displays.MATCH_RESULTS);
+  const sendRankingsRR = () =>
+    socket?.emit(MatchSocketEvent.DISPLAY, Displays.RANKINGS);
+  const sendRankingsF = () =>
+    socket?.emit(MatchSocketEvent.DISPLAY, Displays.BLANK);
 
   return (
     <PaperLayout

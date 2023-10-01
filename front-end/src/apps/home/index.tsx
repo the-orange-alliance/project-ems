@@ -65,13 +65,12 @@ const HomeApp: FC = () => {
           imgSrc={revLogo}
           to={`/${event?.eventKey}/jb`}
         />
-        {/* <GridAppCard title='Field Debugger' to='/fcs-debug' />
-        <GridAppCard title='Account Manager' to='/accounts' />
         <GridAppCard
           title='Streaming App'
-          to='/streaming'
-          imgSrc={twitchLogo}
+          to={`/${event?.eventKey}/streaming`}
         />
+        {/* <GridAppCard title='Field Debugger' to='/fcs-debug' />
+        <GridAppCard title='Account Manager' to='/accounts' />
 */}
       </Grid>
     </DefaultLayout>
