@@ -9,58 +9,63 @@ import {
   useSetRecoilState
 } from 'recoil';
 import {
-  allinaceMembers,
-  eventKeySelector,
-  selectedTournamentLevel,
-  selectedTournamentType,
-  teamsAtom,
-  teamsInScheduleSelectorFamily,
-  tournamentScheduleSelector
-} from 'src/stores/Recoil';
-import { AllianceMember, defaultAllianceMember, MatchSocketEvent, Team } from '@toa-lib/models';
+  AllianceMember,
+  defaultAllianceMember,
+  MatchSocketEvent,
+  Team
+} from '@toa-lib/models';
 import AutocompleteTeam from 'src/features/components/AutocompleteTeam/AutoCompleteTeam';
 import { replaceInArray } from 'src/stores/Util';
 import { postAllianceMembers } from 'src/api/ApiProvider';
 import { useSocket } from 'src/api/SocketProvider';
+import {
+  allianceMembersByTournamentSelector,
+  currentEventKeySelector,
+  currentScheduleByTournamentSelector,
+  currentScheduledTeamsSelector,
+  currentTeamsByEventSelector,
+  currentTournamentKeyAtom
+} from 'src/stores/NewRecoil';
 
 const SetupAlliances: FC = () => {
-  const [allAllianceMembers, setAllianceMembers] =
-    useRecoilState(allinaceMembers);
-  const setSchedule = useSetRecoilState(tournamentScheduleSelector);
-  const eventKey = useRecoilValue(eventKeySelector);
-  const level = useRecoilValue(selectedTournamentLevel);
-  const [socket] = useSocket();
-  const allianceMembers = allAllianceMembers.filter(
-    (a) => a.tournamentLevel === level
+  const setSchedule = useSetRecoilState(currentScheduleByTournamentSelector);
+  const eventKey = useRecoilValue(currentEventKeySelector);
+  const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
+  const [allianceMembers, setAllianceMembers] = useRecoilState(
+    allianceMembersByTournamentSelector
   );
+  const [socket] = useSocket();
 
   const generateSlots = () => {
+    if (!tournamentKey) return;
     const newMembers: AllianceMember[] = [];
     for (let i = 0; i < 4; i++) {
       newMembers.push({
         ...defaultAllianceMember,
-        allianceKey: `${eventKey}-${level}-A${allianceMembers.length + i}`,
+        eventKey,
         allianceRank: allianceMembers.length / 4 + 1,
         isCaptain: i === 0,
         pickOrder: i + 1,
-        tournamentLevel: level
+        tournamentKey
       });
     }
     setAllianceMembers((prev) => [...prev, ...newMembers]);
   };
 
   const postAlliances = useRecoilCallback(({ snapshot, set }) => async () => {
-    const teams = await snapshot.getPromise(teamsAtom);
-    const type = await snapshot.getPromise(selectedTournamentType);
+    const teams = await snapshot.getPromise(currentTeamsByEventSelector);
     setSchedule((prev) => ({
       ...prev,
-      teamsParticipating: allianceMembers.length
+      teamsParticipating: allianceMembers.length,
+      playoffsOptions: {
+        allianceCount: allianceMembers.filter((a) => a.isCaptain).length
+      }
     }));
     set(
-      teamsInScheduleSelectorFamily(type),
+      currentScheduledTeamsSelector,
       teams.filter((t) => allianceMembers.find((a) => a.teamKey === t.teamKey))
     );
-    await postAllianceMembers(allianceMembers);
+    await postAllianceMembers(eventKey, allianceMembers);
   });
 
   const setDisplay = () => {
@@ -90,13 +95,13 @@ const SetupAlliances: FC = () => {
           </Button>
         </Grid>
         <Grid item xs={12} sm={12} md={3} />
-        {allianceMembers.map((a) => {
+        {allianceMembers.map((a, i) => {
           const onUpdate = (team: Team | null) => {
             if (team) {
               const newMembers = replaceInArray<AllianceMember>(
                 allianceMembers,
-                'allianceKey',
-                a.allianceKey,
+                'teamKey',
+                a.teamKey,
                 { ...a, teamKey: team.teamKey }
               );
               setAllianceMembers(newMembers ? newMembers : []);
@@ -104,7 +109,13 @@ const SetupAlliances: FC = () => {
           };
 
           return (
-            <Grid key={a.allianceKey} item xs={12} sm={6} md={3}>
+            <Grid
+              key={`${a.eventKey}-${a.tournamentKey}-${a.allianceRank}-${a.teamKey}-${i}`}
+              item
+              xs={12}
+              sm={6}
+              md={3}
+            >
               <AutocompleteTeam
                 teamKey={a.teamKey === -1 ? null : a.teamKey}
                 onUpdate={onUpdate}

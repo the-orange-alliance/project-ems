@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
-import MatchMakerQuality from './MatchMakerQuality';
+import MatchMakerQuality from './match/MatchMakerQuality';
 import {
   createMatchSchedule,
   createRankings,
@@ -22,6 +22,17 @@ import { assignMatchTimes } from '@toa-lib/models';
 import { useSnackbar } from 'src/features/hooks/use-snackbar';
 
 const SetupMatches: FC = () => {
+  const schedule = useRecoilValue(currentScheduleByTournamentSelector);
+
+  switch (schedule.type) {
+    case 'Ranking':
+      return <SetupRandomMatches />;
+    default:
+      return <SetupRandomMatches />;
+  }
+};
+
+const SetupRandomMatches: FC = () => {
   const tournament = useRecoilValue(currentTournamentSelector);
   const schedule = useRecoilValue(currentScheduleByTournamentSelector);
   const [matches, setMatches] = useRecoilState(matchesByTournamentSelector);

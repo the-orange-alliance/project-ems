@@ -1,11 +1,13 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
+  AllianceMember,
   Day,
   defaultDay,
   defaultEventSchedule,
   Event,
   EventSchedule,
   FMSSettings,
+  isAllianceArray,
   isEventArray,
   isFMSSettingsArray,
   isMatch,
@@ -689,6 +691,71 @@ export const currentRankingsByMatchSelector = selector<Ranking[] | null>({
       'GET',
       undefined,
       isRankingArray
+    );
+  }
+});
+
+/**
+ * @section ALLIANCE MEMBER STATE
+ * Recoil stae management for alliance members of a tournament level
+ */
+
+const defaultAllianceMembersByEventSelectorFam = selectorFamily<
+  AllianceMember[],
+  string
+>({
+  key: 'allianceMembersByEventSelectorFam',
+  get: (eventKey: string) => async (): Promise<AllianceMember[]> => {
+    try {
+      return await clientFetcher<AllianceMember[]>(
+        `alliance/${eventKey}`,
+        'GET',
+        undefined,
+        isAllianceArray
+      );
+    } catch (e) {
+      return [];
+    }
+  }
+});
+
+export const allianceMembersByEventAtomFam = atomFamily<
+  AllianceMember[],
+  string
+>({
+  key: 'allianceMembersByEventAtomFam',
+  default: defaultAllianceMembersByEventSelectorFam
+});
+
+export const allianceMembersByTournamentSelector = selector<AllianceMember[]>({
+  key: 'allianceMembersByTournamentSelector',
+  get: ({ get }) => {
+    const eventKey = get(currentEventKeySelector);
+    const tournamentKey = get(currentTournamentKeyAtom);
+    return get(allianceMembersByEventAtomFam(eventKey)).filter(
+      (a) => a.tournamentKey === tournamentKey
+    );
+  },
+  set: ({ get, set }, newValue) => {
+    const eventKey = get(currentEventKeySelector);
+    const tournamentKey = get(currentTournamentKeyAtom);
+    if (
+      !eventKey ||
+      !tournamentKey ||
+      newValue instanceof DefaultValue ||
+      !newValue
+    ) {
+      return;
+    }
+    const allianceMembers = get(allianceMembersByEventAtomFam(eventKey));
+    set(
+      allianceMembersByEventAtomFam(eventKey),
+      replaceAllInArray(
+        allianceMembers,
+        'tournamentKey',
+        tournamentKey,
+        newValue
+      )
     );
   }
 });

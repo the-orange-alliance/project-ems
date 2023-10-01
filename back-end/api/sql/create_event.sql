@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS "alliance" (
     PRIMARY KEY (eventKey, tournamentKey, teamKey),
     UNIQUE (eventKey, tournamentKey, teamKey),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
-    FOREIGN KEY (teamKey) REFERENCES "team"(teamKey)
+    FOREIGN KEY (teamKey, eventKey) REFERENCES "team"(teamKey, eventKey)
 );
 
 CREATE TABLE IF NOT EXISTS "ranking" (

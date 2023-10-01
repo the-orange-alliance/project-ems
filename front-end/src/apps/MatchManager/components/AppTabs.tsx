@@ -6,6 +6,7 @@ import TabPanel from 'src/components/TabPanel/TabPanel';
 import { useRecoilValue } from 'recoil';
 import { currentTournamentSelector } from 'src/stores/NewRecoil';
 import SetupTeams from './SetupTeams';
+import SetupAlliances from './SetupAlliances';
 import SetupSchedule from './schedule/ScheduleParams';
 import SetupMatches from './SetupMatches';
 import MatchEditor from './MatchEditor';
@@ -36,29 +37,16 @@ const AppTabs: FC = () => {
       <TabPanel value={value} index={0}>
         {tournament?.tournamentLevel === ROUND_ROBIN_LEVEL ||
         tournament?.tournamentLevel === FINALS_LEVEL ? (
-          // <SetupAlliances />
-          <></>
+          <SetupAlliances />
         ) : (
           <SetupTeams />
         )}
       </TabPanel>
       <TabPanel value={value} index={1}>
-        {tournament?.tournamentLevel === ROUND_ROBIN_LEVEL ||
-        tournament?.tournamentLevel === FINALS_LEVEL ? (
-          // <SetupSchedulePlayoffs />
-          <></>
-        ) : (
-          <SetupSchedule />
-        )}
+        <SetupSchedule />
       </TabPanel>
       <TabPanel value={value} index={2}>
-        {tournament?.tournamentLevel === ROUND_ROBIN_LEVEL ||
-        tournament?.tournamentLevel === FINALS_LEVEL ? (
-          // <SetupMatchesPlayoffs />
-          <></>
-        ) : (
-          <SetupMatches />
-        )}
+        <SetupMatches />
       </TabPanel>
       <TabPanel value={value} index={3}>
         <></>
