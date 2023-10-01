@@ -15,14 +15,14 @@ const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
 const Reports = lazy(() => import('./apps/Reports'));
 const AdminApp = lazy(() => import('./apps/Admin'));
 const FrcFmsFieldMonitorApp = lazy(() => import('./apps/FrcFmsFieldMonitor'));
+const QueueingDisplay = lazy(() => import('./apps/QueueingDisplay'));
+const JBApp = lazy(() => import('./apps/JBApp'));
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 // const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));
 // const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
 // const FieldDebugger = lazy(() => import('./apps/FieldDebugger'));
 // const Streaming = lazy(() => import('./apps/Streaming/Streaming'));
-// const QueueingDisplay = lazy(() => import('./apps/QueueingDisplay'));
-// const JBApp = lazy(() => import('./apps/JBApp'));
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
@@ -146,6 +146,18 @@ const AppRoutes: AppRoute[] = [
     path: '/frc/fms/fieldmonitor',
     group: 0,
     element: <FrcFmsFieldMonitorApp />
+  },
+  {
+    name: 'Queueing Display',
+    path: '/:eventKey/queueing',
+    group: 0,
+    element: <QueueingDisplay />
+  },
+  {
+    name: 'JB App',
+    path: '/:eventKey/jb',
+    group: 0,
+    element: <JBApp />
   }
   // {
   //   name: 'Account Manager',
@@ -179,18 +191,6 @@ const AppRoutes: AppRoute[] = [
   //   path: '/streaming',
   //   group: 0,
   //   element: <Streaming />
-  // },
-  // {
-  //   name: 'Queueing Display',
-  //   path: '/queueing',
-  //   group: 0,
-  //   element: <QueueingDisplay />
-  // },
-  // {
-  //   name: 'JB App',
-  //   path: '/jb',
-  //   group: 0,
-  //   element: <JBApp />
   // }
 ];
 
