@@ -116,8 +116,17 @@
   font-size: 1.25vw;
   color: #ffffff;
 }
+.res-team-cardstatus {
+  width: 5%;
+  height: 100%;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 6px;
+}
 .res-team-name {
-  width: 60%;
+  width: 55%;
   height: 100%;
   display: flex;
   align-items: center;
@@ -253,7 +262,7 @@
   height: 80%;
   width: 100%;
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1rem;
 }
 
 #fgc-results-overlay-container #res-header-container {
@@ -265,6 +274,7 @@
   flex-direction: column;
   justify-content: space-between;
   font-size: 0.5rem;
+  margin-top: 3vh;
   height: 88vh;
 }
 
@@ -293,7 +303,7 @@
   > #res-alliance-container
   > .res-alliance-card
   .res-card-details {
-  margin-top: 1vh;
+  margin-top: 1.5vh;
 }
 
 #fgc-results-overlay-container

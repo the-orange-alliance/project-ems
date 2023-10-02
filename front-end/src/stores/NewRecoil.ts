@@ -1,11 +1,13 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
+  AllianceMember,
   Day,
   defaultDay,
   defaultEventSchedule,
   Event,
   EventSchedule,
   FMSSettings,
+  isAllianceArray,
   isEventArray,
   isFMSSettingsArray,
   isMatch,
@@ -138,9 +140,9 @@ export const socketConnectedAtom = atom<boolean>({
  * Recoil state management for application flags
  */
 export const appFlagsAtom = atom<AppFlags>({
-  key: 'appFlagsAtom',
+  key: 'appFlagsAtom_UNSTABLE',
   default: selector<AppFlags>({
-    key: 'appFlagsAtomSelector',
+    key: 'appFlagsAtomSelector_UNSTABLE',
     get: async (): Promise<AppFlags> => {
       try {
         return await clientFetcher('storage/flags.json', 'GET');
@@ -220,6 +222,7 @@ export const currentTournamentFieldsSelector = selector<
 >({
   key: 'currentTournamentFieldsSelector',
   get: ({ get }) => {
+    console.log(get(currentTournamentSelector));
     return (
       get(currentTournamentSelector)?.fields.map((f, i) => ({
         name: f,
@@ -236,7 +239,8 @@ export const currentTournamentFieldsAtom = atom<
   }[]
 >({
   key: 'currentTournamentFieldsAtom',
-  default: currentTournamentFieldsSelector
+  default: currentTournamentFieldsSelector,
+  effects: [localStorageEffect('tournamentFieldControl')]
 });
 
 /**
@@ -353,7 +357,7 @@ export const schedulesByEventSelectorFam = selectorFamily<
   string
 >({
   key: 'schedulesByEventSelectorFam',
-  get: (eventKey: string) => async (): Promise<EventSchedule[]> => {
+  get: () => async (): Promise<EventSchedule[]> => {
     try {
       // TODO - Need a better way to find all schedules.
       return [];
@@ -687,6 +691,71 @@ export const currentRankingsByMatchSelector = selector<Ranking[] | null>({
       'GET',
       undefined,
       isRankingArray
+    );
+  }
+});
+
+/**
+ * @section ALLIANCE MEMBER STATE
+ * Recoil stae management for alliance members of a tournament level
+ */
+
+const defaultAllianceMembersByEventSelectorFam = selectorFamily<
+  AllianceMember[],
+  string
+>({
+  key: 'allianceMembersByEventSelectorFam',
+  get: (eventKey: string) => async (): Promise<AllianceMember[]> => {
+    try {
+      return await clientFetcher<AllianceMember[]>(
+        `alliance/${eventKey}`,
+        'GET',
+        undefined,
+        isAllianceArray
+      );
+    } catch (e) {
+      return [];
+    }
+  }
+});
+
+export const allianceMembersByEventAtomFam = atomFamily<
+  AllianceMember[],
+  string
+>({
+  key: 'allianceMembersByEventAtomFam',
+  default: defaultAllianceMembersByEventSelectorFam
+});
+
+export const allianceMembersByTournamentSelector = selector<AllianceMember[]>({
+  key: 'allianceMembersByTournamentSelector',
+  get: ({ get }) => {
+    const eventKey = get(currentEventKeySelector);
+    const tournamentKey = get(currentTournamentKeyAtom);
+    return get(allianceMembersByEventAtomFam(eventKey)).filter(
+      (a) => a.tournamentKey === tournamentKey
+    );
+  },
+  set: ({ get, set }, newValue) => {
+    const eventKey = get(currentEventKeySelector);
+    const tournamentKey = get(currentTournamentKeyAtom);
+    if (
+      !eventKey ||
+      !tournamentKey ||
+      newValue instanceof DefaultValue ||
+      !newValue
+    ) {
+      return;
+    }
+    const allianceMembers = get(allianceMembersByEventAtomFam(eventKey));
+    set(
+      allianceMembersByEventAtomFam(eventKey),
+      replaceAllInArray(
+        allianceMembers,
+        'tournamentKey',
+        tournamentKey,
+        newValue
+      )
     );
   }
 });

@@ -1,5 +1,11 @@
 import { clientFetcher } from '@toa-lib/client';
-import { Displays, isMatch, Match, MatchKey, MatchSocketEvent } from '@toa-lib/models';
+import {
+  Displays,
+  isMatch,
+  Match,
+  MatchKey,
+  MatchSocketEvent
+} from '@toa-lib/models';
 import { useSearchParams } from 'react-router-dom';
 import { FC, ReactNode, useEffect } from 'react';
 import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
@@ -17,6 +23,7 @@ import MatchPlay from './displays/fgc_2023/MatchPlay/MatchPlay';
 import MatchResults from './displays/fgc_2023/MatchResults/MatchResults';
 import MatchResultsOverlay from './displays/fgc_2023/MatchResults/MatchResultsOverlay';
 import MatchPlayMini from './displays/fgc_2023/MatchPlayMini/MatchPlayMini';
+import Rankings from './displays/fgc_2023/Rankings/Rankings';
 import { useHiddenMotionlessCursor } from '@features/hooks/use-hidden-motionless-cursor';
 import './AudienceDisplay.less';
 
@@ -71,14 +78,14 @@ export default AudienceDisplay;
 
 function getDisplay(id: number, mode: string): ReactNode {
   switch (id) {
-    case -1:
-      return <div />;
     case Displays.MATCH_PREVIEW:
       return <MatchPreview />;
     case Displays.MATCH_START:
       return getPlayDisplay(mode);
     case Displays.MATCH_RESULTS:
       return getResultsDisplay(mode);
+    case Displays.RANKINGS:
+      return <Rankings />;
     default:
       return <div />;
   }

@@ -46,10 +46,7 @@ router.get(
         'ranking',
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
-      const teams = await db.selectAllWhere(
-        'team',
-        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
-      );
+      const teams = await db.selectAllWhere('team', `eventKey = "${eventKey}"`);
       res.send(reconcileTeamRankings(teams, rankings));
     } catch (e) {
       return next(e);

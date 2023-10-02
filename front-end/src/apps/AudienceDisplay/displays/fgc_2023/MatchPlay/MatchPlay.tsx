@@ -63,7 +63,6 @@ const RightParticipant: FC<{
 };
 
 const CardStatus: FC<{ cardStatus: number }> = ({ cardStatus }) => {
-  console.log({ cardStatus });
   const getImg = () => {
     switch (cardStatus) {
       case 0:

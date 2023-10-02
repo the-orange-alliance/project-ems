@@ -38,13 +38,13 @@ const SetupSchedule: FC = () => {
   useEffect(() => {
     setSchedule((prev) => ({
       ...prev,
-      totalMatches: calculateTotalMatches(
-        prev.teamsParticipating,
-        prev.matchesPerTeam,
-        prev.teamsPerAlliance
-      )
+      totalMatches: calculateTotalMatches(prev)
     }));
-  }, [schedule.matchesPerTeam, schedule.teamsPerAlliance]);
+  }, [
+    schedule.matchesPerTeam,
+    schedule.teamsPerAlliance,
+    schedule.playoffsOptions
+  ]);
 
   const generateSchedule = async () => {
     if (!tournament) return;

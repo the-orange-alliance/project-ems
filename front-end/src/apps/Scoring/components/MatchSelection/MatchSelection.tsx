@@ -12,6 +12,7 @@ import { MatchState, Tournament } from '@toa-lib/models';
 import {
   currentEventKeySelector,
   currentMatchIdAtom,
+  currentTournamentFieldsAtom,
   currentTournamentKeyAtom,
   matchesByTournamentSelector,
   matchInProgressAtom,
@@ -25,9 +26,10 @@ const MatchSelection: FC = () => {
   );
   const eventKey = useRecoilValue(currentEventKeySelector);
   const state = useRecoilValue(matchStateAtom);
-  const matches = useRecoilValue(matchesByTournamentSelector);
-
-  // const fields = useRecoilValue(fieldControl);
+  const fields = useRecoilValue(currentTournamentFieldsAtom);
+  const matches = useRecoilValue(matchesByTournamentSelector).filter((m) =>
+    fields.find((f) => f.field === m.fieldNumber)
+  );
   const setSelectedMatchId = useSetRecoilState(currentMatchIdAtom);
   const resetMatch = useResetRecoilState(matchInProgressAtom);
 

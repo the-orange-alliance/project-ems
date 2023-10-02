@@ -3,7 +3,8 @@ import {
   CarbonCaptureSeason,
   ChargedUpSeason,
   Match,
-  MatchDetailBase
+  MatchDetailBase,
+  Ranking
 } from '@toa-lib/models';
 import { FC, ChangeEvent } from 'react';
 import { carbonCaptureComponents } from './CarbonCapture';
@@ -12,7 +13,7 @@ import { HydrogenHorizonsSeason } from '@toa-lib/models/build/seasons/HydrogenHo
 import { hydrogenHorizonComponents } from './HydrogenHorizons';
 
 // Add season components map here to be used in the function for later.
-const seasonComponents = new Map<string, SeasonComponents<any>>();
+const seasonComponents = new Map<string, SeasonComponents<any, any>>();
 seasonComponents.set(CarbonCaptureSeason.key, carbonCaptureComponents);
 seasonComponents.set(ChargedUpSeason.key, chargedUpComponents);
 seasonComponents.set(HydrogenHorizonsSeason.key, hydrogenHorizonComponents);
@@ -30,22 +31,30 @@ export interface RefereeScoreSheetProps {
   alliance: Alliance;
 }
 
-export interface SeasonComponents<T extends MatchDetailBase> {
+export interface RankingsReportProps<T extends Ranking> {
+  rankings: T[];
+}
+export interface SeasonComponents<
+  T extends MatchDetailBase,
+  U extends Ranking
+> {
   Settings?: FC;
   MatchDetailInfo: FC<MatchDetailInfoProps<T>>;
   RedScoreBreakdown: FC<ScoreBreakdownProps<T>>;
   BlueScoreBreakdown: FC<ScoreBreakdownProps<T>>;
   RefereeScoreSheet: FC<RefereeScoreSheetProps>;
+  RankingsReport?: FC<RankingsReportProps<U>>;
 }
 
-export function getComponentsFromSeasonKey<T extends MatchDetailBase>(
-  seasonKey: string
-): SeasonComponents<T> | undefined {
+export function getComponentsFromSeasonKey<
+  T extends MatchDetailBase,
+  U extends Ranking
+>(seasonKey: string): SeasonComponents<T, U> | undefined {
   return seasonComponents.get(seasonKey);
 }
 
-export function useComponents<T extends MatchDetailBase>(
+export function useComponents<T extends MatchDetailBase, U extends Ranking>(
   seasonKey: string
-): SeasonComponents<T> | undefined {
+): SeasonComponents<T, U> | undefined {
   return getComponentsFromSeasonKey(seasonKey);
 }

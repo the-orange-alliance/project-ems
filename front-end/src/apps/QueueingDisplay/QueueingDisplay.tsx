@@ -4,16 +4,21 @@ import { DateTime } from 'luxon';
 import './Display.less';
 
 import { useRecoilRefresher_UNSTABLE, useRecoilValue } from 'recoil';
-import { defaultMatches } from 'src/stores/Recoil';
+import {
+  currentEventKeySelector,
+  matchesByEventAtomFam,
+  matchesByTournamentSelector
+} from 'src/stores/NewRecoil';
 import { isNumber } from '@toa-lib/models';
 
-import FGC_BG from '../AudienceDisplay/displays/fgc_2022/res/global-bg.png';
-import FGC_LOGO from '../AudienceDisplay/displays/fgc_2022/res/Global_Logo.png';
+import FGC_BG from '../AudienceDisplay/displays/fgc_2023/res/global-bg.png';
+import FGC_LOGO from '../AudienceDisplay/displays/fgc_2023/res/Global_Logo.png';
 
 const REFRESH_RATE_S = 60;
 
 const FieldColumn: FC<{ field: number }> = ({ field }) => {
-  const fieldMatches = useRecoilValue(defaultMatches)
+  const eventKey = useRecoilValue(currentEventKeySelector);
+  const fieldMatches = useRecoilValue(matchesByEventAtomFam(eventKey))
     .filter((m) => m.fieldNumber === field && m.result === -1)
     .slice(0, 6);
 
@@ -21,13 +26,13 @@ const FieldColumn: FC<{ field: number }> = ({ field }) => {
     <div id='q-field'>
       <h2>Field {field}</h2>
       {fieldMatches.map((m) => {
-        const params = m.matchName.split(' ');
+        const params = m.name.split(' ');
         const matchNumber = isNumber(parseInt(params[2]))
           ? params[2]
           : params[3];
 
         return (
-          <div key={m.matchKey} id='q-match'>
+          <div key={`${m.eventKey}-${m.tournamentKey}-${m.id}`} id='q-match'>
             <span className='q-match-name center'>Match {matchNumber}</span>
             <span className='q-match-number center'>
               {DateTime.fromISO(m.startTime).toFormat('t')}
@@ -40,7 +45,9 @@ const FieldColumn: FC<{ field: number }> = ({ field }) => {
 };
 
 const QueueingDisplay: FC = () => {
-  const refreshMatches = useRecoilRefresher_UNSTABLE(defaultMatches);
+  const refreshMatches = useRecoilRefresher_UNSTABLE(
+    matchesByTournamentSelector
+  );
 
   useEffect(() => {
     const intervalID = setInterval(() => {
