@@ -59,6 +59,16 @@ export const teamIdentifierAtom = atom<keyof Team>({
   default: 'teamKey',
   effects: [localStorageEffect('teamIdentifier')]
 });
+export const followerModeEnabledAtom = atom<boolean>({
+  key: 'followerModeEnabledAtom',
+  default: false,
+  effects: [localStorageEffect('followerMode')]
+});
+export const leaderApiHostAtom = atom<string>({
+  key: 'leaderApiHostAtom',
+  default: '',
+  effects: [localStorageEffect('leaderApiHost')]
+});
 
 /**
  * @section UI STATE

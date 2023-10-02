@@ -11,14 +11,14 @@ import TwoColumnHeader from 'src/components/Headers/TwoColumnHeader';
 import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
-  currentEventKeySelector,
+  currentEventSelector,
   currentTournamentKeyAtom
 } from 'src/stores/NewRecoil';
 import { Tournament } from '@toa-lib/models';
 // import FrcFmsSettingsTab from './tabs/frc-fms';
 
 const SettingsApp: FC = () => {
-  const eventKey = useRecoilValue(currentEventKeySelector);
+  const event = useRecoilValue(currentEventSelector);
   const [tournamentKey, setTournamentKey] = useRecoilState(
     currentTournamentKeyAtom
   );
@@ -31,14 +31,17 @@ const SettingsApp: FC = () => {
     setTournamentKey(tournament.tournamentKey);
   };
 
+  if (!event) return null;
+
   return (
     <PaperLayout
+      title={event.eventName}
       header={
         <TwoColumnHeader
           left={<Typography variant='h4'>Settings</Typography>}
           right={
             <EventTournamentsDropdown
-              eventKey={eventKey}
+              eventKey={event.eventKey}
               value={tournamentKey}
               onChange={handleTournamentChange}
             />
