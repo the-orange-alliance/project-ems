@@ -343,15 +343,3 @@ export function calculateTotalMatches(schedule: EventSchedule): number {
       );
   }
 }
-
-//////////////////////////////////////////////////////////////////
-// FIRST GLOBAL FUNCTIONS
-// THESE FUNCTIONS ARE SPECIFICALLY FOR FIRST GLOBAL
-// THEY DON'T MAKE SENSE IN MOST, "NORMAL" USE CASES FOR EMS
-//////////////////////////////////////////////////////////////////
-export namespace FGC2023 {
-  // This hard-codes 16 generated matches for the first round robin of FGC2023
-  export function generateRRSchedule1(schedule: EventSchedule) {
-    console.log('test');
-  }
-}
