@@ -26,7 +26,7 @@ export const parseTeamsFile = async (
               city: t[4],
               stateProv: t[5],
               country: t[6],
-              countryCode: t[7],
+              countryCode: t[7].toLowerCase(),
               cardStatus: 0,
               hasCard: false,
               rookieYear: parseInt(t[8])

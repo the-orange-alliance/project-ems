@@ -24,8 +24,7 @@ export const isRanking = (obj: unknown): obj is Ranking =>
   isNumber(obj.played) &&
   isNumber(obj.wins) &&
   isNumber(obj.losses) &&
-  isNumber(obj.ties) &&
-  isString(obj.allianceKey);
+  isNumber(obj.ties);
 
 export const isRankingArray = (obj: unknown): obj is Ranking[] =>
   isArray(obj) && obj.every((o) => isRanking(o));

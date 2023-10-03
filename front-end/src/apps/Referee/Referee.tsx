@@ -1,12 +1,12 @@
 import { FC } from 'react';
-import DefaultLayout from 'src/layouts/DefaultLayout';
 import AllianceCards from './components/AllianceCards';
+import RefereeLayout from 'src/layouts/RefereeLayout';
 
 const RefereeApp: FC = () => {
   return (
-    <DefaultLayout containerWidth='xl'>
+    <RefereeLayout containerWidth='xl'>
       <AllianceCards />
-    </DefaultLayout>
+    </RefereeLayout>
   );
 };
 

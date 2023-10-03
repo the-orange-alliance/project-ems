@@ -81,7 +81,8 @@ export interface SeasonRanking extends Ranking {
 export const isHydrogenHorizonsRanking = (obj: unknown): obj is SeasonRanking =>
   isNonNullObject(obj) &&
   isNumber(obj.rankingScore) &&
-  isNumber(obj.carbonPoints);
+  isNumber(obj.highestScore) &&
+  isNumber(obj.oxyHydroPoints);
 
 /* Functions for calculating ranks. */
 function calculateRankings(
@@ -325,8 +326,8 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
     redTelePoints + redProficiencyPoints + getCoopertitionPoints(details);
   const bluePoints =
     blueTelePoints + blueProficiencyPoints + getCoopertitionPoints(details);
-  const redPenalty = (match.redMinPen * 0.1) * redPoints;
-  const bluePenalty = (match.blueMinPen * 0.1) * bluePoints;
+  const redPenalty = match.redMinPen * 0.1 * redPoints;
+  const bluePenalty = match.blueMinPen * 0.1 * bluePoints;
 
   const redUnrounded = redPoints + bluePenalty;
   const blueUnrounded = bluePoints + redPenalty;

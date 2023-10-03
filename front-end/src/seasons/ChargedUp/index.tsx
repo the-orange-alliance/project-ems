@@ -2,7 +2,7 @@ import { FC } from 'react';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import { MatchDetailInfoProps, SeasonComponents } from '..';
-import { ChargedUpDetails } from '@toa-lib/models';
+import { ChargedUpDetails, ChargedUpRanking } from '@toa-lib/models';
 import ScoreSheet from '@seasons/ChargedUp/referee/ScoreSheet';
 
 const MatchDetailInfo: FC<MatchDetailInfoProps<ChargedUpDetails>> = ({
@@ -97,7 +97,10 @@ const MatchDetailInfo: FC<MatchDetailInfoProps<ChargedUpDetails>> = ({
 
 const EmptyComponent: FC = () => <div>Empty Component</div>;
 
-export const chargedUpComponents: SeasonComponents<ChargedUpDetails> = {
+export const chargedUpComponents: SeasonComponents<
+  ChargedUpDetails,
+  ChargedUpRanking
+> = {
   MatchDetailInfo,
   RedScoreBreakdown: EmptyComponent,
   BlueScoreBreakdown: EmptyComponent,

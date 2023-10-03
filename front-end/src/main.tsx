@@ -17,10 +17,18 @@ if (!container) throw new Error('Error while trying to find document root.');
 const root = createRoot(container);
 
 // Configure lib-ems
-APIOptions.host = `http://${getFromLocalStorage(
-  'ems:host',
-  window.location.hostname
-)}`;
+if (getFromLocalStorage('followerMode', false)) {
+  APIOptions.host = getFromLocalStorage(
+    'leaderApiHost',
+    `http://${window.location.hostname}`
+  );
+  console.warn('FOLLOWER MODE DETECTED: SETTING API HOST FROM LOCAL STORAGE');
+} else {
+  APIOptions.host = `http://${getFromLocalStorage(
+    'ems:host',
+    window.location.hostname
+  )}`;
+}
 APIOptions.port = 8080;
 SocketOptions.host = window.location.hostname;
 SocketOptions.port = 8081;

@@ -144,6 +144,13 @@ export interface EventSchedule {
   totalMatches: number;
   cycleTime: number;
   hasPremiereField: boolean;
+  playoffsOptions?: PlayoffsOptions;
+}
+
+export interface PlayoffsOptions {
+  rounds?: number;
+  seriesType?: 1 | 3 | 5;
+  allianceCount?: number;
 }
 
 export const defaultEventSchedule: EventSchedule = {
@@ -228,10 +235,7 @@ interface ScheduleValidator {
 export function useScheduleValidator(
   schedule: EventSchedule
 ): ScheduleValidator {
-  const maxTotalMatches = Math.ceil(
-    (schedule.teamsParticipating * schedule.matchesPerTeam) /
-      (schedule.teamsPerAlliance * 2)
-  );
+  const maxTotalMatches = calculateTotalMatches(schedule);
 
   if (schedule.days.length <= 0)
     return {
@@ -300,12 +304,42 @@ export function useScheduleValidator(
   return { maxTotalMatches, remainingMatches, valid, validationMessage };
 }
 
-export function calculateTotalMatches(
-  teamsParticipating: number,
-  matchesPerTeam: number,
-  teamsPerAlliance: number
-): number {
-  return Math.ceil(
-    (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
-  );
+export function calculateTotalMatches(schedule: EventSchedule): number {
+  const {
+    teamsParticipating,
+    matchesPerTeam,
+    teamsPerAlliance,
+    type,
+    playoffsOptions
+  } = schedule;
+  switch (type) {
+    case 'Practice':
+      return Math.ceil(
+        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
+      );
+    case 'Qualification':
+      return Math.ceil(
+        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
+      );
+    case 'Ranking':
+      return Math.ceil(
+        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
+      );
+    case 'Round Robin':
+      if (!playoffsOptions?.allianceCount) return 0;
+      if (playoffsOptions?.rounds) {
+        return (playoffsOptions.allianceCount / 2) * playoffsOptions.rounds;
+      } else {
+        return (
+          (playoffsOptions.allianceCount / 2) *
+          (playoffsOptions.allianceCount - 1)
+        );
+      }
+    case 'Finals':
+      return playoffsOptions?.seriesType ?? 3; // Default to Bo3
+    default:
+      return Math.ceil(
+        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
+      );
+  }
 }

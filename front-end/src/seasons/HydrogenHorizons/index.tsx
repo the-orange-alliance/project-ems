@@ -1,27 +1,12 @@
 import { FC } from 'react';
 import { HydrogenHorizons } from '@toa-lib/models';
-import {
-  MatchDetailInfoProps,
-  ScoreBreakdownProps,
-  SeasonComponents
-} from '..';
+import { ScoreBreakdownProps, SeasonComponents } from '..';
 import { Grid, Typography } from '@mui/material';
 import { isHydrogenHorizonsDetails } from '@toa-lib/models/build/seasons/HydrogenHorizons';
 import RefereeScoreSheet from '@seasons/HydrogenHorizons/referee/ScoreSheet';
+import { MatchDetailInfo } from './MatchDetailInfo';
+import { RankingsReport } from './reports/RankingsReport';
 import Settings from './Settings';
-
-const MatchDetailInfo: FC<
-  MatchDetailInfoProps<HydrogenHorizons.MatchDetails>
-> = ({ match }) => {
-  if (!match || !match.details) return null;
-  return (
-    <Grid container spacing={3}>
-      <Grid item xs={12} sm={6} md={6}>
-        <span>WIP</span>
-      </Grid>
-    </Grid>
-  );
-};
 
 const RedScoreBreakdown: FC<
   ScoreBreakdownProps<HydrogenHorizons.MatchDetails>
@@ -84,11 +69,14 @@ const BlueScoreBreakdown: FC<
     </Grid>
   );
 };
-export const hydrogenHorizonComponents: SeasonComponents<HydrogenHorizons.MatchDetails> =
-  {
-    MatchDetailInfo,
-    RedScoreBreakdown,
-    BlueScoreBreakdown,
-    RefereeScoreSheet,
-    Settings
-  };
+export const hydrogenHorizonComponents: SeasonComponents<
+  HydrogenHorizons.MatchDetails,
+  HydrogenHorizons.SeasonRanking
+> = {
+  MatchDetailInfo,
+  RedScoreBreakdown,
+  BlueScoreBreakdown,
+  RefereeScoreSheet,
+  Settings,
+  RankingsReport
+};

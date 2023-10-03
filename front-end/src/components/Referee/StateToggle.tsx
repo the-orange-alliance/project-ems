@@ -1,11 +1,11 @@
-import { FC, MouseEvent } from 'react';
+import { FC, MouseEvent, ReactNode } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ToggleButton from '@mui/material/ToggleButton';
 
 interface Props {
-  title: string;
+  title: ReactNode | string;
   states: string[];
   value: number;
   fullWidth?: boolean;

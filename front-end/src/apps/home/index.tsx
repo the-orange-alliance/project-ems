@@ -5,7 +5,6 @@ import AppCard, { AppCardProps } from '@components/AppCard/AppCard';
 import { useRecoilValue } from 'recoil';
 import { currentEventSelector } from '@stores/NewRecoil';
 
-import twitchLogo from 'src/assets/images/twitch-logo.png';
 import audienceDisplayLogo from 'src/assets/images/audience-display-logo.png';
 import settingsLogo from 'src/assets/images/settings-logo.png';
 import revLogo from 'src/assets/images/rev.png';
@@ -58,22 +57,21 @@ const HomeApp: FC = () => {
           to={`/${event?.eventKey}/settings`}
         />
         <GridAppCard
-          title='FRC FMS Field Monitor'
-          to={`/frc/fms/fieldmonitor`}
+          title='Queueing Display'
+          to={`/${event?.eventKey}/queueing`}
+        />
+        <GridAppCard
+          title='JB App'
+          imgSrc={revLogo}
+          to={`/${event?.eventKey}/jb`}
+        />
+        <GridAppCard
+          title='Streaming App'
+          to={`/${event?.eventKey}/streaming`}
         />
         {/* <GridAppCard title='Field Debugger' to='/fcs-debug' />
         <GridAppCard title='Account Manager' to='/accounts' />
-        <GridAppCard
-          title='Streaming App'
-          to='/streaming'
-          imgSrc={twitchLogo}
-        />
-        <GridAppCard
-          title='Queueing Display'
-          imgSrc={audienceDisplayLogo}
-          to='/queueing'
-        />
-        <GridAppCard title='JB App' imgSrc={revLogo} to='/jb' /> */}
+*/}
       </Grid>
     </DefaultLayout>
   );

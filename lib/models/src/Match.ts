@@ -39,22 +39,22 @@ export enum MatchState {
 }
 
 export enum MatchSocketEvent {
-  ALLIANCE = "match:alliance",
-  COMMIT = "match:commit",
-  DISPLAY = "match:display",
-  UPDATE = "match:update",
-  MATCH_UPDATE_ITEM = "match:updateItem",
-  MATCH_UPDATE_DETAILS_ITEM = "match:updateDetailsItem",
-  MATCH_ADJUST_DETAILS_NUMBER = "match:adjustDetailsNumber",
-  UPDATE_CARD_STATUS = "match:updateCardStatus",
+  ALLIANCE = 'match:alliance',
+  COMMIT = 'match:commit',
+  DISPLAY = 'match:display',
+  UPDATE = 'match:update',
+  MATCH_UPDATE_ITEM = 'match:updateItem',
+  MATCH_UPDATE_DETAILS_ITEM = 'match:updateDetailsItem',
+  MATCH_ADJUST_DETAILS_NUMBER = 'match:adjustDetailsNumber',
+  UPDATE_CARD_STATUS = 'match:updateCardStatus',
 
-  PRESTART = "match:prestart",
-  START = "match:start",
-  AUTONOMOUS = "match:auto",
-  TELEOPERATED = "match:tele",
-  ENDGAME = "match:endgame",
-  END = "match:end",
-  ABORT = "match:abort",
+  PRESTART = 'match:prestart',
+  START = 'match:start',
+  AUTONOMOUS = 'match:auto',
+  TELEOPERATED = 'match:tele',
+  ENDGAME = 'match:endgame',
+  END = 'match:end',
+  ABORT = 'match:abort'
 }
 
 export interface MatchMakerParams {
@@ -211,7 +211,7 @@ export function createFixedMatches(
       tournamentKey,
       id: matchNumber,
       fieldNumber: 1,
-      name: `${item.type} ${item.name}`,
+      name: item.name,
       result: -1,
       active: 0,
       blueMajPen: 0,

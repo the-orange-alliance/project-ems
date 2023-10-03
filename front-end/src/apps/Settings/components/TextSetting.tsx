@@ -12,6 +12,7 @@ interface Props {
   type?: 'text' | 'number' | 'password';
   title?: string;
   fullWidth?: boolean;
+  disabled?: boolean;
 }
 
 const TextSetting: FC<Props> = ({
@@ -21,7 +22,8 @@ const TextSetting: FC<Props> = ({
   inline,
   type = 'text',
   title,
-  fullWidth
+  fullWidth,
+  disabled
 }) => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
     onChange(e.target.value);
@@ -52,6 +54,7 @@ const TextSetting: FC<Props> = ({
         labelPlacement={inline ? 'start' : 'top'}
         sx={{ padding: (theme) => theme.spacing(2) }}
         title={title}
+        disabled={disabled}
       />
     </FormGroup>
   );

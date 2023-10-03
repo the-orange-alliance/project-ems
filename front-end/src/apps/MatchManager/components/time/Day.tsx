@@ -21,7 +21,9 @@ const DayComponent: FC<Props> = ({ id }) => {
   const schedule = useRecoilValue(currentScheduleByTournamentSelector);
   const [day, setDay] = useRecoilState(currentScheduleDaySelectorFam(id));
 
-  const [startDate, setStartDate] = useState<DateTime | null>(DateTime.now());
+  const [startDate, setStartDate] = useState<DateTime | null>(
+    DateTime.fromISO(day.startTime)
+  );
   const [endDate, setEndDate] = useState<DateTime | null>(DateTime.now());
 
   useEffect(() => {

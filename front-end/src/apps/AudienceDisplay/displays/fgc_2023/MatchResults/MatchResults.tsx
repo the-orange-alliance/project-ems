@@ -5,12 +5,6 @@ import {
   currentRankingsByMatchSelector
 } from 'src/stores/NewRecoil';
 import { HydrogenHorizons, MatchParticipant, Ranking } from '@toa-lib/models';
-import {
-  getCoopertitionPoints,
-  getMultiplier,
-  getProficiencyPoints,
-  isHydrogenHorizonsDetails
-} from '@toa-lib/models/build/seasons/HydrogenHorizons';
 import './MatchResults.css';
 
 import NorthIcon from '@mui/icons-material/North';
@@ -27,6 +21,8 @@ import HYDROGEN_TANK from '../res/Hydrogen_Tank.png';
 import PROF_ICON from '../res/Proficiency.png';
 import COOPERTITION_ICON from '../res/Coopertition_Points.png';
 import PENALTY_ICON from '../res/Penalty.png';
+import RED_CARD from '../res/Penalty_Red_Dot.png';
+import YELLOW_CARD from '../res/Penalty_Yellow_Dot.png';
 
 function getName(name: string): string {
   const params = name.split(' ');
@@ -34,12 +30,31 @@ function getName(name: string): string {
   return params.length === 3 ? params[2] : `${name.charAt(0)}${params[3]}`;
 }
 
+const CardStatus: FC<{ cardStatus: number }> = ({ cardStatus }) => {
+  const getImg = () => {
+    switch (cardStatus) {
+      case 0:
+        return '';
+      case 1:
+        return YELLOW_CARD;
+      case 2:
+        return RED_CARD;
+      default:
+        return '';
+    }
+  };
+  return <img src={getImg()} className='fit-w' />;
+};
+
 const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
   participant,
   ranking
 }) => {
   return (
     <div className='res-team-row bottom-red'>
+      <div className='res-team-cardstatus'>
+        <CardStatus cardStatus={participant.cardStatus} />
+      </div>
       <div className='res-team-name'>{participant?.team?.teamNameLong}</div>
       <div className='res-team-rank'>
         {ranking &&
@@ -86,22 +101,22 @@ const MatchResults: FC = () => {
 
   const name = getName(match ? match.name : '');
 
-  const details = isHydrogenHorizonsDetails(someDetails)
+  const details = HydrogenHorizons.isHydrogenHorizonsDetails(someDetails)
     ? someDetails
     : HydrogenHorizons.defaultMatchDetails;
 
   const redTop = RED_LOSE;
   const blueTop = BLUE_LOSE;
-  console.log({ someDetails, details });
+
   const redProficiency =
-    getProficiencyPoints(details.redOneProficiency) +
-    getProficiencyPoints(details.redTwoProficiency) +
-    getProficiencyPoints(details.redThreeProficiency);
+    HydrogenHorizons.getProficiencyPoints(details.redOneProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.redTwoProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.redThreeProficiency);
   const blueProficiency =
-    getProficiencyPoints(details.blueOneProficiency) +
-    getProficiencyPoints(details.blueTwoProficiency) +
-    getProficiencyPoints(details.blueThreeProficiency);
-  const coopertitionBonus = getCoopertitionPoints(details); // TODO - Calculate
+    HydrogenHorizons.getProficiencyPoints(details.blueOneProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.blueTwoProficiency) +
+    HydrogenHorizons.getProficiencyPoints(details.blueThreeProficiency);
+  const coopertitionBonus = HydrogenHorizons.getCoopertitionPoints(details); // TODO - Calculate
   useEffect(() => {
     rankingsRefresh();
   }, [match]);
@@ -162,7 +177,7 @@ const MatchResults: FC = () => {
                     ALIGNMENT MULTIPLIER
                   </div>
                   <div className='res-detail-right'>
-                    x{getMultiplier(details.redAlignment)}
+                    x{HydrogenHorizons.getMultiplier(details.redAlignment)}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
@@ -192,10 +207,12 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={PENALTY_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left penalty right-red'>
-                    PENALTY
+                    BLUE PENALTY
                   </div>
                   <div className='res-detail-right penalty'>
-                    {match?.redMinPen ? `-${match.redMinPen * 10}%` : 0}
+                    {match?.blueMinPen
+                      ? `-${match.blueMinPen * 0.1 * match.blueScore}%`
+                      : 0}
                   </div>
                 </div>
               </div>
@@ -254,7 +271,7 @@ const MatchResults: FC = () => {
                     ALIGNMENT MULTIPLIER
                   </div>
                   <div className='res-detail-right'>
-                    x{getMultiplier(details.blueAlignment)}
+                    x{HydrogenHorizons.getMultiplier(details.blueAlignment)}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
@@ -284,10 +301,12 @@ const MatchResults: FC = () => {
                     <img alt={'empty'} src={PENALTY_ICON} className='fit-h' />
                   </div>
                   <div className='res-detail-left penalty right-blue'>
-                    PENALTY
+                    RED PENALTY
                   </div>
                   <div className='res-detail-right penalty'>
-                    {match?.blueMinPen ? `-${match.blueMinPen * 10}%` : 0}
+                    {match?.redMinPen
+                      ? `+${match.redMinPen * 0.1 * match.redScore}%`
+                      : 0}
                   </div>
                 </div>
               </div>
