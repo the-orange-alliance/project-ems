@@ -84,7 +84,7 @@ const MatchPlayTimer: FC = () => {
   return (
     <div id='fgc-body' style={{ backgroundImage: `url(${FGC_BG})` }}>
       <div id='timer-info'>
-        <div id='timer-info-left'>
+        {/* <div id='timer-info-left'>
           <div className='timer-info-left center'>
             <span>MATCH</span>
           </div>
@@ -99,7 +99,9 @@ const MatchPlayTimer: FC = () => {
           <div className='timer-info-right center'>
             <span>{match?.fieldNumber}</span>
           </div>
-        </div>
+        </div> */}
+        <div className='timer-info-left'>{match?.name}</div>
+        <div className='timer-info-right'>Field {match?.fieldNumber}</div>
       </div>
 
       <div id={'fgc-timer-container'}>
