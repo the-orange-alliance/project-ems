@@ -246,3 +246,26 @@ export const useMatchAll = (
 
 export const postFrcFmsSettings = (settings: FMSSettings): Promise<void> =>
   clientFetcher(`frc/fms/advancedNetworkingConfig`, 'POST', settings);
+
+// Results Syncing
+export const resultsSyncMatches = (
+  eventKey: string,
+  tournamentKey: string
+): Promise<void> =>
+  clientFetcher(`results/sync/matches/${eventKey}/${tournamentKey}`, 'POST');
+
+export const resultsSyncMatch = (
+  eventKey: string,
+  tournamentKey: string,
+  id: number
+): Promise<void> =>
+  clientFetcher(
+    `results/sync/matches/${eventKey}/${tournamentKey}/${id}`,
+    'POST'
+  );
+
+export const resultsSyncRankings = (
+  eventKey: string,
+  tournamentKey: string
+): Promise<void> =>
+  clientFetcher(`results/sync/rankings/${eventKey}/${tournamentKey}`, 'POST');

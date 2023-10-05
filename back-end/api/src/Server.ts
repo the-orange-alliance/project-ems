@@ -21,6 +21,7 @@ import rankingController from './controllers/Ranking.js';
 import allianceController from './controllers/Alliance.js';
 import tournamentController from './controllers/Tournament.js';
 import frcFmsController from './controllers/FrcFms.js';
+import resultsController from './controllers/Results.js';
 import { handleCatchAll, handleErrors } from './middleware/ErrorHandler.js';
 import logger from './util/Logger.js';
 import { initGlobal } from './db/EventDatabase.js';
@@ -67,6 +68,7 @@ app.use('/ranking', rankingController);
 app.use('/alliance', allianceController);
 app.use('/tournament', tournamentController);
 app.use('/frc/fms', frcFmsController);
+app.use('/results', resultsController);
 
 // Define root/testing paths
 app.get('/', requireAuth, (req, res) => {

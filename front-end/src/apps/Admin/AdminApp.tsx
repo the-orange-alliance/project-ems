@@ -4,7 +4,9 @@ import { Box, Button, Divider, Typography } from '@mui/material';
 import {
   createRankings,
   purgeAll,
-  recalculateRankings
+  recalculateRankings,
+  resultsSyncMatches,
+  resultsSyncRankings
 } from 'src/api/ApiProvider';
 import { useFlags } from 'src/stores/AppFlags';
 import {
@@ -29,6 +31,16 @@ const AdminApp: FC = () => {
   const handleTournamentChange = (tournament: Tournament | null) => {
     if (!tournament) return;
     setTournamentKey(tournament.tournamentKey);
+  };
+
+  const syncMatches = async (): Promise<void> => {
+    if (!tournamentKey) return;
+    return resultsSyncMatches(eventKey, tournamentKey);
+  };
+
+  const syncRankings = async (): Promise<void> => {
+    if (!tournamentKey) return;
+    return resultsSyncRankings(eventKey, tournamentKey);
   };
 
   const handlePurge = async (): Promise<void> => {
@@ -76,8 +88,11 @@ const AdminApp: FC = () => {
           gap: '16px'
         }}
       >
-        <Button variant='contained' color='error' onClick={handlePurge}>
-          Purge Event Data
+        <Button variant='contained' color='error' onClick={syncMatches}>
+          Sync Matches
+        </Button>
+        <Button variant='contained' color='error' onClick={syncRankings}>
+          Sync Rankings
         </Button>
         <Button
           variant='contained'
@@ -88,6 +103,9 @@ const AdminApp: FC = () => {
         </Button>
         <Button variant='contained' color='error' onClick={handleRankings}>
           Re-Calculate Rankings
+        </Button>
+        <Button variant='contained' color='error' onClick={handlePurge}>
+          Purge Event Data
         </Button>
       </Box>
     </PaperLayout>
