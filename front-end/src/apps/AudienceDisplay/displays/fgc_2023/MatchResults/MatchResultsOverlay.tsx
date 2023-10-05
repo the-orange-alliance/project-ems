@@ -113,15 +113,29 @@ const MatchResultsOverlay: FC = () => {
     HydrogenHorizons.getProficiencyPoints(details.blueOneProficiency) +
     HydrogenHorizons.getProficiencyPoints(details.blueTwoProficiency) +
     HydrogenHorizons.getProficiencyPoints(details.blueThreeProficiency);
-  const redAlignmentDiff =
+  const redTelePoints = Math.round(
     (details.redHydrogenPoints + details.redOxygenPoints) *
-      HydrogenHorizons.getMultiplier(details.redAlignment) -
-    (details.redHydrogenPoints + details.redOxygenPoints);
+      HydrogenHorizons.getMultiplier(details.redAlignment)
+  );
+  const blueTelePoints = Math.round(
+    (details.blueHydrogenPoints + details.blueOxygenPoints) *
+      HydrogenHorizons.getMultiplier(details.blueAlignment)
+  );
+  const redAlignmentDiff =
+    redTelePoints - (details.redHydrogenPoints + details.redOxygenPoints);
   const blueAlignmentDiff =
-    (details.blueHydrogenPoints + details.blueHydrogenPoints) *
-      HydrogenHorizons.getMultiplier(details.blueAlignment) -
-    (details.blueHydrogenPoints + details.blueOxygenPoints);
+    blueTelePoints - (details.blueHydrogenPoints + details.blueOxygenPoints);
   const coopertitionBonus = HydrogenHorizons.getCoopertitionPoints(details); // TODO - Calculate
+  const redPoints =
+    redTelePoints +
+    redProficiency +
+    HydrogenHorizons.getCoopertitionPoints(details);
+  const bluePoints =
+    blueTelePoints +
+    blueProficiency +
+    HydrogenHorizons.getCoopertitionPoints(details);
+  const redPenalty = Math.round((match?.redMinPen ?? 0) * 0.1 * redPoints);
+  const bluePenalty = Math.round((match?.blueMinPen ?? 0) * 0.1 * bluePoints);
   useEffect(() => {
     rankingsRefresh();
   }, [match]);
@@ -212,9 +226,7 @@ const MatchResultsOverlay: FC = () => {
                     BLUE PENALTY
                   </div>
                   <div className='res-detail-right penalty'>
-                    {match?.blueMinPen
-                      ? `-${match.blueMinPen * 0.1 * match.blueScore}`
-                      : 0}
+                    {match?.blueMinPen ? `+${bluePenalty.toFixed(0)}` : 0}
                   </div>
                 </div>
               </div>
@@ -271,7 +283,7 @@ const MatchResultsOverlay: FC = () => {
                   </div>
                   <div className='res-detail-right'>
                     x{HydrogenHorizons.getMultiplier(details.blueAlignment)}
-                    &nbsp;+({blueAlignmentDiff})
+                    &nbsp;(+{blueAlignmentDiff})
                   </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
@@ -304,9 +316,7 @@ const MatchResultsOverlay: FC = () => {
                     RED PENALTY
                   </div>
                   <div className='res-detail-right penalty'>
-                    {match?.redMinPen
-                      ? `+${match.redMinPen * 0.1 * match.redScore}`
-                      : 0}
+                    {match?.redMinPen ? `+${redPenalty.toFixed(0)}` : 0}
                   </div>
                 </div>
               </div>
