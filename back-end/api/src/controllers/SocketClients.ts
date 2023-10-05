@@ -49,6 +49,25 @@ router.post(
   }
 );
 
+// Client Disconnected
+router.post(
+  '/update/:persistantClientId',
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { persistantClientId } = req.params;
+    try {
+      const db = await getDB('global');
+      await db.updateWhere(
+        'socket_clients',
+        req.body,
+        `persistantClientId = "${persistantClientId}"`
+      );
+      res.json({ success: true });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
 // Client Deleted
 router.post(
   '/disconnect/:lastSocketId',

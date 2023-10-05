@@ -15,6 +15,7 @@ import { TeamKeys } from '@toa-lib/models';
 import { MultiSelectSetting } from '../components/MultiSelectSetting';
 import TextSetting from '../components/TextSetting';
 import { APIOptions } from '@toa-lib/client';
+import { updateSocketClient } from 'src/api/ApiProvider';
 
 const MainSettingsTab: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
@@ -47,6 +48,49 @@ const MainSettingsTab: FC = () => {
     APIOptions.host = value.toString();
   };
 
+  let followTimeout: any = null;
+  const updateFollowerMode = (value: boolean) => {
+    handleFollowerModeChange(value);
+
+    // Don't hammer the server with requests
+    if (followTimeout !== null) clearTimeout(followTimeout);
+    followTimeout = setTimeout(() => {
+      updateSocketClient(localStorage.getItem('persistantClientId') ?? '', {
+        followerMode: value ? 1 : 0
+      });
+    }, 1000);
+  };
+
+  let leaderApiHostTimeout: any = null;
+  const updateFollowerApiHost = (value: string | number) => {
+    handleLeaderAddressChange(value);
+
+    // Don't hammer the server with requests
+    if (leaderApiHostTimeout !== null) clearTimeout(leaderApiHostTimeout);
+    leaderApiHostTimeout = setTimeout(() => {
+      updateSocketClient(localStorage.getItem('persistantClientId') ?? '', {
+        followerApiHost: value
+      });
+    }, 1000);
+  };
+
+  let fieldIdTimeout: any = null;
+  const updateFieldControl = (value: any[]) => {
+    handleFieldChange(value);
+
+    // Don't hammer the server with requests
+    const fields = allFields
+      .filter((f) => value.includes(f.name))
+      .map((f) => f.field)
+      .join(',');
+    if (fieldIdTimeout !== null) clearTimeout(fieldIdTimeout);
+    fieldIdTimeout = setTimeout(() => {
+      updateSocketClient(localStorage.getItem('persistantClientId') ?? '', {
+        fieldNumbers: fields
+      });
+    }, 1000);
+  };
+
   return (
     <Box>
       <SwitchSetting
@@ -66,19 +110,19 @@ const MainSettingsTab: FC = () => {
         name='Field Control'
         value={fieldControl.map((f) => f.name)}
         options={allFields.map((f) => f.name)}
-        onChange={handleFieldChange}
+        onChange={updateFieldControl}
         inline
       />
       <SwitchSetting
         name='Follower Mode'
         value={followerMode}
-        onChange={handleFollowerModeChange}
+        onChange={updateFollowerMode}
         inline
       />
       <TextSetting
         name='Leader Api Host'
         value={leaderApiHost}
-        onChange={handleLeaderAddressChange}
+        onChange={updateFollowerApiHost}
         inline
         disabled={!followerMode}
       />

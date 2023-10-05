@@ -250,6 +250,9 @@ export const postFrcFmsSettings = (settings: FMSSettings): Promise<void> =>
 export const deleteSocketClient = (uuid: string): Promise<void> =>
   clientFetcher(`socketClients/remove/${uuid}`, 'DELETE');
 
+export const updateSocketClient = (uuid: string, data: any): Promise<void> =>
+  clientFetcher(`socketClients/update/${uuid}`, 'POST', data);
+
 // Results Syncing
 export const resultsSyncMatches = (
   eventKey: string,

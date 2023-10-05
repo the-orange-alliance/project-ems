@@ -73,7 +73,8 @@ export const useSocket = (): [
             .map((d: any) => ({ field: parseInt(d), name: `Field ${d}` }))
         );
         set(followerModeEnabledAtom, data.followerMode === 1);
-        set(leaderApiHostAtom, data.followerApiHost);
+        // TODO: Setter for this may be broken, investigate this later
+        // set(leaderApiHostAtom, data.followerApiHost);
         set(displayChromaKeyAtom, data.audienceDisplayChroma);
         localStorage.setItem('persistantClientId', data.persistantClientId);
       });
