@@ -26,6 +26,7 @@ import MatchPlayMini from './displays/fgc_2023/MatchPlayMini/MatchPlayMini';
 import Rankings from './displays/fgc_2023/Rankings/Rankings';
 import { useHiddenMotionlessCursor } from '@features/hooks/use-hidden-motionless-cursor';
 import './AudienceDisplay.less';
+import MatchPlayTimer from './displays/fgc_2023/MatchPlayTimer/MatchPlayTimer';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayIdAtom);
@@ -95,6 +96,8 @@ function getPlayDisplay(mode: string): ReactNode {
   switch (mode) {
     case 'stream':
       return <MatchPlayMini />;
+    case 'field':
+      return <MatchPlayTimer />;
     default:
       return <MatchPlay />;
   }
