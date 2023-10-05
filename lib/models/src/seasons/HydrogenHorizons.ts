@@ -2,7 +2,7 @@ import { AllianceMember } from '../Alliance.js';
 import { Match, MatchDetailBase } from '../Match.js';
 import { Ranking } from '../Ranking.js';
 import { isNonNullObject, isNumber, UnreachableError } from '../types.js';
-import { Season, SeasonFunctions } from './index.js';
+import { HydrogenHorizons, Season, SeasonFunctions } from './index.js';
 
 /**
  * Main season function declaration for the whole file.
@@ -308,12 +308,14 @@ export function calculatePlayoffsRank(
 export function calculateScore(match: Match<MatchDetails>): [number, number] {
   const { details } = match;
   if (!details) return [0, 0];
-  const redTelePoints =
+  const redTelePoints = Math.round(
     (details.redHydrogenPoints + details.redOxygenPoints) *
-    getMultiplier(details.redAlignment);
-  const blueTelePoints =
+      getMultiplier(details.redAlignment)
+  );
+  const blueTelePoints = Math.round(
     (details.blueHydrogenPoints + details.blueOxygenPoints) *
-    getMultiplier(details.blueAlignment);
+      getMultiplier(details.blueAlignment)
+  );
   const redProficiencyPoints =
     getProficiencyPoints(details.redOneProficiency) +
     getProficiencyPoints(details.redTwoProficiency) +
@@ -326,42 +328,13 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
     redTelePoints + redProficiencyPoints + getCoopertitionPoints(details);
   const bluePoints =
     blueTelePoints + blueProficiencyPoints + getCoopertitionPoints(details);
-  const redPenalty = match.redMinPen * 0.1 * redPoints;
-  const bluePenalty = match.blueMinPen * 0.1 * bluePoints;
+  const redPenalty = Math.round(match.redMinPen * 0.1 * redPoints);
+  const bluePenalty = Math.round(match.blueMinPen * 0.1 * bluePoints);
 
-  const redUnrounded = redPoints + bluePenalty;
-  const blueUnrounded = bluePoints + redPenalty;
+  const redScore = redPoints + bluePenalty;
+  const blueScore = bluePoints + redPenalty;
 
-  const redRoundedUp = Math.ceil(redUnrounded);
-  const redRoundedDown = Math.floor(redUnrounded);
-  const blueRoundedUp = Math.ceil(blueUnrounded);
-  const blueRoundedDown = Math.floor(blueUnrounded);
-
-
-  let redRoundedScore: number;
-  if (redUnrounded - redRoundedDown < Number.EPSILON * 1000) {
-    // This is almost certainly a floating-point precision error, and not
-    // something that we should round up like we normally do. Epsilon * 1000 is
-    // about 2.2 x 10^-14.
-    redRoundedScore = redRoundedDown;
-  } else {
-    redRoundedScore = redRoundedUp;
-  }
-
-  let blueRoundedScore: number;
-  if (blueUnrounded - blueRoundedDown < Number.EPSILON * 1000) {
-    // This is almost certainly a floating-point precision error, and not
-    // something that we should round up like we normally do. Epsilon * 1000 is
-    // about 2.2 x 10^-14.
-    blueRoundedScore = blueRoundedDown;
-  } else {
-    blueRoundedScore = blueRoundedUp;
-  }
-
-  return [
-    redRoundedScore,
-    blueRoundedScore
-  ];
+  return [redScore, blueScore];
 }
 
 export function getCoopertitionPoints(details: MatchDetails): number {

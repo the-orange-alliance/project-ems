@@ -116,6 +116,14 @@ const MatchResults: FC = () => {
     HydrogenHorizons.getProficiencyPoints(details.blueOneProficiency) +
     HydrogenHorizons.getProficiencyPoints(details.blueTwoProficiency) +
     HydrogenHorizons.getProficiencyPoints(details.blueThreeProficiency);
+  const redAlignmentDiff =
+    (details.redHydrogenPoints + details.redOxygenPoints) *
+      HydrogenHorizons.getMultiplier(details.redAlignment) -
+    (details.redHydrogenPoints + details.redOxygenPoints);
+  const blueAlignmentDiff =
+    (details.blueHydrogenPoints + details.blueOxygenPoints) *
+      HydrogenHorizons.getMultiplier(details.blueAlignment) -
+    (details.blueHydrogenPoints + details.blueOxygenPoints);
   const coopertitionBonus = HydrogenHorizons.getCoopertitionPoints(details); // TODO - Calculate
   useEffect(() => {
     rankingsRefresh();
@@ -178,6 +186,7 @@ const MatchResults: FC = () => {
                   </div>
                   <div className='res-detail-right'>
                     x{HydrogenHorizons.getMultiplier(details.redAlignment)}
+                    &nbsp;+({redAlignmentDiff})
                   </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
@@ -211,7 +220,7 @@ const MatchResults: FC = () => {
                   </div>
                   <div className='res-detail-right penalty'>
                     {match?.blueMinPen
-                      ? `-${match.blueMinPen * 0.1 * match.blueScore}%`
+                      ? `+${match.blueMinPen * 0.1 * match.blueScore}`
                       : 0}
                   </div>
                 </div>
@@ -272,6 +281,7 @@ const MatchResults: FC = () => {
                   </div>
                   <div className='res-detail-right'>
                     x{HydrogenHorizons.getMultiplier(details.blueAlignment)}
+                    &nbsp;+({blueAlignmentDiff})
                   </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
@@ -305,7 +315,7 @@ const MatchResults: FC = () => {
                   </div>
                   <div className='res-detail-right penalty'>
                     {match?.redMinPen
-                      ? `+${match.redMinPen * 0.1 * match.redScore}%`
+                      ? `+${match.redMinPen * 0.1 * match.redScore}`
                       : 0}
                   </div>
                 </div>

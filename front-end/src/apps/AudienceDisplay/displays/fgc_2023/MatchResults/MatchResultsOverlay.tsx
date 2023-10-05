@@ -113,6 +113,14 @@ const MatchResultsOverlay: FC = () => {
     HydrogenHorizons.getProficiencyPoints(details.blueOneProficiency) +
     HydrogenHorizons.getProficiencyPoints(details.blueTwoProficiency) +
     HydrogenHorizons.getProficiencyPoints(details.blueThreeProficiency);
+  const redAlignmentDiff =
+    (details.redHydrogenPoints + details.redOxygenPoints) *
+      HydrogenHorizons.getMultiplier(details.redAlignment) -
+    (details.redHydrogenPoints + details.redOxygenPoints);
+  const blueAlignmentDiff =
+    (details.blueHydrogenPoints + details.blueHydrogenPoints) *
+      HydrogenHorizons.getMultiplier(details.blueAlignment) -
+    (details.blueHydrogenPoints + details.blueOxygenPoints);
   const coopertitionBonus = HydrogenHorizons.getCoopertitionPoints(details); // TODO - Calculate
   useEffect(() => {
     rankingsRefresh();
@@ -171,6 +179,7 @@ const MatchResultsOverlay: FC = () => {
                   </div>
                   <div className='res-detail-right'>
                     x{HydrogenHorizons.getMultiplier(details.redAlignment)}
+                    &nbsp;(+{redAlignmentDiff})
                   </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
@@ -204,7 +213,7 @@ const MatchResultsOverlay: FC = () => {
                   </div>
                   <div className='res-detail-right penalty'>
                     {match?.blueMinPen
-                      ? `-${match.blueMinPen * 0.1 * match.blueScore}%`
+                      ? `-${match.blueMinPen * 0.1 * match.blueScore}`
                       : 0}
                   </div>
                 </div>
@@ -262,6 +271,7 @@ const MatchResultsOverlay: FC = () => {
                   </div>
                   <div className='res-detail-right'>
                     x{HydrogenHorizons.getMultiplier(details.blueAlignment)}
+                    &nbsp;+({blueAlignmentDiff})
                   </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
@@ -295,7 +305,7 @@ const MatchResultsOverlay: FC = () => {
                   </div>
                   <div className='res-detail-right penalty'>
                     {match?.redMinPen
-                      ? `+${match.redMinPen * 0.1 * match.redScore}%`
+                      ? `+${match.redMinPen * 0.1 * match.redScore}`
                       : 0}
                   </div>
                 </div>
