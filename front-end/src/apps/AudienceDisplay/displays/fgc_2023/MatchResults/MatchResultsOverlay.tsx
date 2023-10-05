@@ -125,8 +125,10 @@ const MatchResultsOverlay: FC = () => {
             <span>RESULTS</span>
           </div>
           <div id='res-header-right'>
-            <div className='res-header-item'>MATCH: {name}</div>
-            <div className='res-header-item'>FIELD: {match?.fieldNumber}</div>
+            <div className='res-header-item'>
+              <div className='overlay'>{match?.name}</div>
+              <div className='overlay'>Field {match?.fieldNumber}</div>
+            </div>
           </div>
         </div>
         <div id='res-alliance-container'>
