@@ -14,7 +14,7 @@
 
 #fgc-pre-match-info {
   width: 100%;
-  height: 7%;
+  height: 9%;
   display: flex;
   justify-content: center;
   align-content: center;
@@ -23,6 +23,8 @@
 #fgc-pre-match-info-box {
   height: 100%;
   display: flex;
+  padding-top: 3vh;
+  padding-bottom: 3vh;
   padding-left: 10%;
   padding-right: 10%;
   justify-content: center;
@@ -30,8 +32,9 @@
   flex-direction: column;
   background-color: #ffffff;
   border-radius: 15px;
-  font-size: 3rem;
+  font-size: 2vw;
   font-weight: bold;
+  gap: 10%;
 }
 
 #fgc-pre-side-logo-left {
