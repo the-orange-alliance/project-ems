@@ -114,6 +114,34 @@ export const displayChromaKeyAtom = atom({
  * Recoil state management for frc-fms
  */
 // Not public
+const socketClients = selector<any[]>({
+  key: 'socketClients',
+  get: async () => {
+    try {
+      return await clientFetcher<any[]>(
+        'socketClients',
+        'GET',
+        undefined // , // TODO: Add typeguard
+        // isFMSSettingsArray
+      );
+    } catch (e) {
+      console.log(e);
+      return [];
+    }
+  }
+});
+
+// TODO: Make a model for this
+export const socketClientsAtom = atom<any[]>({
+  key: 'allSocketClients',
+  default: socketClients
+});
+
+/**
+ * @section Socket Client States
+ * Recoil state management for frc-fms
+ */
+// Not public
 const frcFmsSelector = selector<FMSSettings[]>({
   key: 'fms',
   get: async () => {

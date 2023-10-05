@@ -6,8 +6,15 @@ import {
   MatchSocketEvent
 } from '@toa-lib/models';
 import { Socket } from 'socket.io-client';
-import { useRecoilState } from 'recoil';
-import { socketConnectedAtom } from 'src/stores/NewRecoil';
+import { useRecoilCallback, useRecoilState } from 'recoil';
+import {
+  currentTournamentFieldsAtom,
+  followerModeEnabledAtom,
+  leaderApiHostAtom,
+  socketConnectedAtom,
+  displayChromaKeyAtom
+} from 'src/stores/NewRecoil';
+import { useSnackbar } from 'src/features/hooks/use-snackbar';
 
 let socket: Socket | null = null;
 
@@ -25,14 +32,65 @@ export const useSocket = (): [
   (token: string) => void
 ] => {
   const [connected, setConnected] = useRecoilState(socketConnectedAtom);
+  const { showSnackbar } = useSnackbar();
 
   const setupSocket = (token: string) => {
     if (socket) return;
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     /* @ts-ignore */
     socket = createSocket(token);
+    identify();
     initEvents();
   };
+
+  const identify = useRecoilCallback(({ snapshot, set }) => async () => {
+    if (socket) {
+      const fields = await snapshot.getPromise(currentTournamentFieldsAtom);
+      const followerModeEnabled = await snapshot.getPromise(
+        followerModeEnabledAtom
+      );
+      const leaderApiHost = await snapshot.getPromise(leaderApiHostAtom);
+      const chromaKey = await snapshot.getPromise(displayChromaKeyAtom);
+
+      // ID Message
+      const persistantClientId = localStorage.getItem('persistantClientId');
+
+      const idMsg = {
+        currentUrl: window.location.href,
+        fieldNumbers: fields.map((d: any) => d.field).join(','),
+        followerMode: followerModeEnabled ? 1 : 0,
+        followerApiHost: leaderApiHost,
+        audienceDisplayChroma: chromaKey.replaceAll('"', ''),
+        persistantClientId
+      };
+
+      socket.on('settings', (data) => {
+        // TODO: Make this get the field names properly
+        set(
+          currentTournamentFieldsAtom,
+          data.fieldNumbers
+            .split(',')
+            .map((d: any) => ({ field: parseInt(d), name: `Field ${d}` }))
+        );
+        set(followerModeEnabledAtom, data.followerMode === 1);
+        set(leaderApiHostAtom, data.followerApiHost);
+        set(displayChromaKeyAtom, data.audienceDisplayChroma);
+        localStorage.setItem('persistantClientId', data.persistantClientId);
+      });
+
+      socket.on('identify-client', () => {
+        showSnackbar(
+          `My unique ID is ${localStorage.getItem(
+            'persistantClientId'
+          )}, talking on socket ${socket?.id}`,
+          'success'
+        );
+      });
+
+      socket.emit('identify', idMsg);
+    }
+    // set(currentTournamentFieldsAtom, [])
+  });
 
   const initEvents = () => {
     if (socket) {
@@ -94,6 +152,21 @@ export async function sendCommitScores(key: MatchKey): Promise<void> {
 
 export async function sendPostResults(): Promise<void> {
   socket?.emit(MatchSocketEvent.DISPLAY, 3);
+}
+
+// TODO: Use model for this
+export async function sendUpdateSocketClient(
+  displaySettings: any
+): Promise<void> {
+  socket?.emit('update-socket-client', displaySettings);
+}
+
+export async function requestClientIdentification(data: any): Promise<void> {
+  socket?.emit('identify-client', data);
+}
+
+export async function requestAllClientsIdentification(): Promise<void> {
+  socket?.emit('identify-all-clients');
 }
 
 export async function sendUpdateFrcFmsSettings(

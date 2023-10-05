@@ -247,6 +247,9 @@ export const useMatchAll = (
 export const postFrcFmsSettings = (settings: FMSSettings): Promise<void> =>
   clientFetcher(`frc/fms/advancedNetworkingConfig`, 'POST', settings);
 
+export const deleteSocketClient = (uuid: string): Promise<void> =>
+  clientFetcher(`socketClients/remove/${uuid}`, 'DELETE');
+
 // Results Syncing
 export const resultsSyncMatches = (
   eventKey: string,

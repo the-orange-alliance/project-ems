@@ -15,3 +15,17 @@ CREATE TABLE IF NOT EXISTS "event" (
     PRIMARY KEY (eventKey),
     UNIQUE (eventKey)
 );
+
+CREATE TABLE IF NOT EXISTS "socket_clients" (
+    "currentUrl" VARCHAR(255),
+    "ipAddress" VARCHAR(64) NOT NULL,
+    "fieldNumbers" VARCHAR(255),
+    "audienceDisplayChroma" VARCHAR(255),
+    "followerMode" INT NOT NULL,
+    "followerApiHost" VARCHAR(64),
+    "lastSocketId" VARCHAR(64),
+    "connected" INT NOT NULL,
+    "persistantClientId" VARCHAR(64) NOT NULL,
+    PRIMARY KEY (ipAddress, lastSocketId),
+    UNIQUE (ipAddress, lastSocketId)
+);

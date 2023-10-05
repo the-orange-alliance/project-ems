@@ -26,6 +26,7 @@ const Streaming = lazy(() => import('./apps/Streaming/Streaming'));
 
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
+import AudienceDisplayManager from './apps/AudienceDisplayManager';
 export interface AppRoute {
   name: string;
   path: string;
@@ -164,6 +165,12 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/streaming',
     group: 0,
     element: <Streaming />
+  },
+  {
+    name: 'Audience Display Manager',
+    path: '/:eventKey/audienceDisplayManager',
+    group: 0,
+    element: <AudienceDisplayManager />
   }
   // {
   //   name: 'Account Manager',
