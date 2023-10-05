@@ -60,7 +60,7 @@ const MatchStatus: FC = () => {
   );
 
   return (
-    <Paper sx={{ paddingBottom: (theme) => theme.spacing(2), height: '100%' }}>
+    <Paper sx={{ height: '100%' }}>
       <Box
         sx={{
           padding: (theme) => theme.spacing(2),
@@ -78,10 +78,10 @@ const MatchStatus: FC = () => {
       </Box>
       <Divider />
       <Box sx={{ padding: (theme) => theme.spacing(2) }}>
-        <Typography align='center' variant='h5'>
+        <Typography gutterBottom align='center' variant='body1'>
           {matchStatus}
         </Typography>
-        <Typography align='center' variant='h5'>
+        <Typography align='center' variant='h4'>
           <MatchCountdown audio />
         </Typography>
       </Box>

@@ -5,8 +5,8 @@ import {
   MatchParticipant,
   Ranking
 } from '@toa-lib/models';
-import NorthIcon from '@mui/icons-material/North';
-import SouthIcon from '@mui/icons-material/South';
+import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
+import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import '../Styles.css';
 import './MatchResults.css';
 import { useRecoilRefresher_UNSTABLE, useRecoilValue } from 'recoil';
@@ -57,12 +57,12 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
           <span>
             {ranking.rankChange > 0 ? (
               <div className='center'>
-                #{ranking.rank} (<NorthIcon />
+                #{ranking.rank} (<KeyboardDoubleArrowUpIcon />
                 {ranking.rankChange})
               </div>
             ) : (
               <div className='center'>
-                #{ranking.rank} (<SouthIcon />
+                #{ranking.rank} (<KeyboardDoubleArrowDownIcon />
                 {Math.abs(ranking.rankChange)})
               </div>
             )}

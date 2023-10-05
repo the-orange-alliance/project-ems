@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, Suspense } from 'react';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import Grid from '@mui/material/Grid';
 import MatchControl from './components/MatchControl/MatchControl';
@@ -17,24 +17,26 @@ const ScoringApp: FC = () => {
       <MatchStateListener />
       <UnloadListener />
       <MatchControl />
-      <Grid
-        sx={{ marginTop: (theme) => theme.spacing(2) }}
-        container
-        spacing={3}
-      >
-        <Grid item xs={12} sm={6} md={5}>
-          <RedAlliance />
+      <Suspense fallback={null}>
+        <Grid
+          sx={{ marginTop: (theme) => theme.spacing(2) }}
+          container
+          spacing={3}
+        >
+          <Grid item xs={12} sm={6} md={5}>
+            <RedAlliance />
+          </Grid>
+          <Grid item xs={12} sm={6} md={2} sx={{ paddingTop: '0 !important' }}>
+            <MatchStatus />
+          </Grid>
+          <Grid item xs={12} sm={6} md={5}>
+            <BlueAlliance />
+          </Grid>
+          <Grid item xs={12}>
+            <MatchSelection />
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6} md={2} sx={{ paddingTop: '0 !important' }}>
-          <MatchStatus />
-        </Grid>
-        <Grid item xs={12} sm={6} md={5}>
-          <BlueAlliance />
-        </Grid>
-        <Grid item xs={12}>
-          <MatchSelection />
-        </Grid>
-      </Grid>
+      </Suspense>
     </DefaultLayout>
   );
 };

@@ -64,6 +64,13 @@ const ParticipantDropdown: FC<Props> = ({
         padding: 0,
         '& fieldset': {
           borderColor: white ? '#ffffff' : '#000000 !important'
+        },
+        '& input': {
+          padding: '0 !important'
+        },
+        '& .MuiOutlinedInput-root': {
+          paddingTop: '7px',
+          paddingBottom: '7px'
         }
       }}
     />

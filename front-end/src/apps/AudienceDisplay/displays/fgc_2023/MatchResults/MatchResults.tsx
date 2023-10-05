@@ -7,8 +7,8 @@ import {
 import { HydrogenHorizons, MatchParticipant, Ranking } from '@toa-lib/models';
 import './MatchResults.css';
 
-import NorthIcon from '@mui/icons-material/North';
-import SouthIcon from '@mui/icons-material/South';
+import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
+import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 
 import FGC_BG from '../res/global-bg.png';
 import RED_LOSE from '../res/Red_Lose_Top.png';
@@ -55,12 +55,12 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
           <span>
             {ranking.rankChange > 0 ? (
               <div className='center'>
-                #{ranking.rank} (<NorthIcon />
+                #{ranking.rank} (<KeyboardDoubleArrowUpIcon />
                 {ranking.rankChange})
               </div>
             ) : (
               <div className='center'>
-                #{ranking.rank} (<SouthIcon />
+                #{ranking.rank} (<KeyboardDoubleArrowDownIcon />
                 {Math.abs(ranking.rankChange)})
               </div>
             )}
