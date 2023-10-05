@@ -16,7 +16,7 @@ import {
 } from 'src/stores/NewRecoil';
 import { MatchState } from '@toa-lib/models';
 import { sendPostResults } from 'src/api/SocketProvider';
-import { resultsSyncMatch, resultsSyncRankings } from 'src/api/ApiProvider';
+import { resultsSyncMatches, resultsSyncRankings } from 'src/api/ApiProvider';
 
 const PostResultsButton: FC = () => {
   const [matchId, setMatchId] = useRecoilState(currentMatchIdAtom);
@@ -34,7 +34,7 @@ const PostResultsButton: FC = () => {
     const index = matches.findIndex((m) => m.id === matchId);
     const match = matches[index];
     // Post results
-    await resultsSyncMatch(match.eventKey, match.tournamentKey, match.id);
+    await resultsSyncMatches(match.eventKey, match.tournamentKey);
     await resultsSyncRankings(match.eventKey, match.tournamentKey);
 
     if (matches[index + 1]) {
