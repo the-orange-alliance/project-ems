@@ -1,20 +1,17 @@
 import {
   Alliance,
-  CarbonCaptureSeason,
   ChargedUpSeason,
   Match,
   MatchDetailBase,
   Ranking
 } from '@toa-lib/models';
 import { FC, ChangeEvent } from 'react';
-import { carbonCaptureComponents } from './CarbonCapture';
 import { chargedUpComponents } from './ChargedUp';
 import { HydrogenHorizonsSeason } from '@toa-lib/models/build/seasons/HydrogenHorizons';
 import { hydrogenHorizonComponents } from './HydrogenHorizons';
 
 // Add season components map here to be used in the function for later.
 const seasonComponents = new Map<string, SeasonComponents<any, any>>();
-seasonComponents.set(CarbonCaptureSeason.key, carbonCaptureComponents);
 seasonComponents.set(ChargedUpSeason.key, chargedUpComponents);
 seasonComponents.set(HydrogenHorizonsSeason.key, hydrogenHorizonComponents);
 

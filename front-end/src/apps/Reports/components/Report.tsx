@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import { useRecoilValue } from 'recoil';
-import { eventAtom } from 'src/stores/Recoil';
+import { currentEventSelector } from 'src/stores/NewRecoil';
 
 interface Props {
   name: string;
@@ -12,7 +12,7 @@ interface Props {
 }
 
 const Report: FC<Props> = ({ name, children, pagebreak }) => {
-  const eventName = useRecoilValue(eventAtom)?.eventName;
+  const eventName = useRecoilValue(currentEventSelector)?.eventName;
 
   return (
     <Box

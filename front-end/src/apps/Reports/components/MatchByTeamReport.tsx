@@ -8,8 +8,6 @@ import TableBody from '@mui/material/TableBody';
 import { Match, Team } from '@toa-lib/models';
 import Report from './Report';
 import { DateTime } from 'luxon';
-import { useRecoilValue } from 'recoil';
-import { teamByTeamKey } from 'src/stores/Recoil';
 
 interface Props {
   teams: Team[];
@@ -73,7 +71,7 @@ const MatchByTeamReport: FC<Props> = ({ teams, matches, identifier }) => {
                         )}
                       </TableCell>
                       {m.participants?.map((p) => {
-                        const team = useRecoilValue(teamByTeamKey(p.teamKey));
+                        const team = teams.find((t) => t.teamKey === p.teamKey);
                         return (
                           <TableCell key={`${p.id}-${p.station}`} size='small'>
                             {identifier && team ? team[identifier] : p.teamKey}
