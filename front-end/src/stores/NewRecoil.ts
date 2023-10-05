@@ -693,7 +693,7 @@ export const currentRankingsByTournamentSelector = selector<Ranking[] | null>({
 export const currentRankingsByMatchSelector = selector<Ranking[] | null>({
   key: 'currentRankingsByMatchSelector',
   get: async ({ get }) => {
-    const match = get(currentMatchSelector);
+    const match = get(matchInProgressAtom);
     if (!match) return null;
     const { eventKey, tournamentKey, id } = match;
     return await clientFetcher(

@@ -60,11 +60,11 @@ router.get(
     try {
       const { eventKey, tournamentKey, id } = req.params;
       const db = await getDB(eventKey);
-      const rankings = await db.selectAllJoinWhere(
+      const rankings = await db.selectAllJoinWhereAdvanced(
         'ranking',
         'match_participant',
-        'teamKey',
-        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
+        '"ranking".teamKey = "match_participant".teamKey AND "match_participant".tournamentKey = "ranking".tournamentKey',
+        `match_participant.eventKey = "${eventKey}" AND match_participant.tournamentKey = "${tournamentKey}" AND match_participant.id = ${id}`
       );
       res.send(rankings);
     } catch (e) {

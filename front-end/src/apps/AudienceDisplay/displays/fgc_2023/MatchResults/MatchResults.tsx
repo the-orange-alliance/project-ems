@@ -51,22 +51,21 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
       </div>
       <div className='res-team-name'>{participant?.team?.teamNameLong}</div>
       <div className='res-team-rank'>
-        {ranking &&
-          (participant.station === 11 || participant.station === 21) && (
-            <span>
-              {ranking.rankChange > 0 ? (
-                <div className='center'>
-                  #{ranking.rank} (<NorthIcon />
-                  {ranking.rankChange})
-                </div>
-              ) : (
-                <div className='center'>
-                  #{ranking.rank} (<SouthIcon />
-                  {Math.abs(ranking.rankChange)})
-                </div>
-              )}
-            </span>
-          )}
+        {ranking && (
+          <span>
+            {ranking.rankChange > 0 ? (
+              <div className='center'>
+                #{ranking.rank} (<NorthIcon />
+                {ranking.rankChange})
+              </div>
+            ) : (
+              <div className='center'>
+                #{ranking.rank} (<SouthIcon />
+                {Math.abs(ranking.rankChange)})
+              </div>
+            )}
+          </span>
+        )}
       </div>
       <div className='res-team-flag'>
         <span
@@ -87,7 +86,6 @@ const MatchResults: FC = () => {
   const rankingsRefresh = useRecoilRefresher_UNSTABLE(
     currentRankingsByMatchSelector
   );
-
   const someDetails = match?.details;
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);

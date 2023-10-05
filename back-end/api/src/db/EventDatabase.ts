@@ -41,7 +41,9 @@ export class EventDatabase {
     // Make sure our appdata path is created
     try {
       await mkdir(getAppData('ems'), { recursive: true });
-      this.db = await AsyncDatabase.open(getAppData('ems') + sep + this.name + '.db');
+      this.db = await AsyncDatabase.open(
+        getAppData('ems') + sep + this.name + '.db'
+      );
     } catch (e) {
       throw e;
     }
@@ -139,6 +141,21 @@ export class EventDatabase {
     try {
       return await this.db.all(
         `SELECT * FROM "${table1}" INNER JOIN "${table2}" ON "${table1}".${column} = "${table2}".${column} WHERE ${where};`
+      );
+    } catch (e) {
+      throw new ApiDatabaseError(`[${table1} ${table2}]`, e);
+    }
+  }
+
+  public async selectAllJoinWhereAdvanced(
+    table1: string,
+    table2: string,
+    join: string,
+    where: string
+  ): Promise<any[]> {
+    try {
+      return await this.db.all(
+        `SELECT * FROM "${table1}" INNER JOIN "${table2}" ON ${join} WHERE ${where};`
       );
     } catch (e) {
       throw new ApiDatabaseError(`[${table1} ${table2}]`, e);
