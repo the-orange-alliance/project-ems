@@ -65,16 +65,27 @@ export const postMatchResults = async (info: MatchKey) => {
     body: JSON.stringify([match])
   });
 
-  await postRankings(info.eventKey, info.tournamentKey);
+  return await postRankings(info.eventKey, info.tournamentKey);
 };
 
 router.post(
   '/sync/rankings/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
-    if (!environment.isProd()) return res.send({ success: false });
+    // if (!environment.isProd()) return res.send({ success: false });
     const { eventKey, tournamentKey } = req.params;
     const rankingsReq = await postRankings(eventKey, tournamentKey);
     res.send({ success: rankingsReq.ok });
+  }
+);
+
+router.post(
+  '/sync/matches/:eventKey/:tournamentKey/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    // if (!environment.isProd()) return res.send({ succuess: false });
+    const { eventKey, tournamentKey, id: idStr } = req.params;
+    const id = parseInt(idStr);
+    const matchesReq = await postMatchResults({ eventKey, tournamentKey, id });
+    res.send({ succuess: matchesReq.ok });
   }
 );
 

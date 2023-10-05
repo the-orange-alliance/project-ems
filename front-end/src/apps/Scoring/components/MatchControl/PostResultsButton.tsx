@@ -9,32 +9,34 @@ import {
 } from 'recoil';
 import {
   currentMatchIdAtom,
+  currentTournamentFieldsAtom,
   matchesByTournamentSelector,
   matchInProgressAtom,
   matchStateAtom
 } from 'src/stores/NewRecoil';
 import { MatchState } from '@toa-lib/models';
 import { sendPostResults } from 'src/api/SocketProvider';
+import { resultsSyncMatch, resultsSyncRankings } from 'src/api/ApiProvider';
 
 const PostResultsButton: FC = () => {
   const [matchId, setMatchId] = useRecoilState(currentMatchIdAtom);
-  const matches = useRecoilValue(matchesByTournamentSelector);
+  const fields = useRecoilValue(currentTournamentFieldsAtom);
+  const matches = useRecoilValue(matchesByTournamentSelector).filter((m) =>
+    fields.find((f) => f.field === m.fieldNumber)
+  );
   const setState = useSetRecoilState(matchStateAtom);
   const resetMatch = useResetRecoilState(matchInProgressAtom);
-
   const { postResultsEnabled } = useButtonState();
 
-  const postResults = () => {
+  const postResults = async () => {
     sendPostResults();
     setState(MatchState.RESULTS_POSTED);
-    // const filteredMatches = matches.filter(
-    //   (m) => fields.indexOf(m.fieldNumber) > -1
-    // );
     const index = matches.findIndex((m) => m.id === matchId);
-    // if (filteredMatches[index + 1]) {
-    //   setMatchId(filteredMatches[index + 1].matchKey);
-    //   resetMatch();
-    // }
+    const match = matches[index];
+    // Post results
+    await resultsSyncMatch(match.eventKey, match.tournamentKey, match.id);
+    await resultsSyncRankings(match.eventKey, match.tournamentKey);
+
     if (matches[index + 1]) {
       setMatchId(matches[index + 1].id);
       resetMatch();

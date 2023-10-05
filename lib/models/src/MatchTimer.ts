@@ -12,8 +12,10 @@ export const FGC_MATCH_CONFIG: MatchConfiguration = {
   transitionTime: 0,
   delayTime: 0,
   autoTime: 0,
-  teleTime: 150,
-  endTime: 30
+  // teleTime: 150,
+  teleTime: 30,
+  // endTime: 30
+  endTime: 15
 };
 
 export const FRC_MATCH_CONFIG: MatchConfiguration = {
@@ -65,19 +67,19 @@ export class MatchTimer extends EventEmitter {
       if (this.matchConfig.delayTime > 0) {
         this._mode = MatchMode.PRESTART;
         this._modeTimeLeft = this.matchConfig.delayTime;
-        matchPhaseEvent = "timer:prestart";
+        matchPhaseEvent = 'timer:prestart';
       } else if (this.matchConfig.autoTime > 0) {
         this._mode = MatchMode.AUTONOMOUS;
         this._modeTimeLeft = this.matchConfig.autoTime;
-        matchPhaseEvent = "timer:auto";
+        matchPhaseEvent = 'timer:auto';
       } else if (this.matchConfig.transitionTime > 0) {
         this._mode = MatchMode.TRANSITION;
         this._modeTimeLeft = this.matchConfig.transitionTime;
-        matchPhaseEvent = "timer:transition";
+        matchPhaseEvent = 'timer:transition';
       } else {
         this._mode = MatchMode.TELEOPERATED;
         this._modeTimeLeft = this.matchConfig.teleTime;
-        matchPhaseEvent = "timer:tele";
+        matchPhaseEvent = 'timer:tele';
       }
       this._timeLeft = getMatchTime(this._matchConfig);
 
