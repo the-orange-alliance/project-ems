@@ -25,12 +25,6 @@ import PENALTY_ICON from '../res/Penalty.png';
 import RED_CARD from '../res/Penalty_Red_Dot.png';
 import YELLOW_CARD from '../res/Penalty_Yellow_Dot.png';
 
-function getName(name: string): string {
-  const params = name.split(' ');
-  if (params.length <= 1) return name;
-  return params.length === 3 ? params[2] : `${name.charAt(0)}${params[3]}`;
-}
-
 const CardStatus: FC<{ cardStatus: number }> = ({ cardStatus }) => {
   const getImg = () => {
     switch (cardStatus) {
@@ -98,8 +92,6 @@ const MatchResultsOverlay: FC = () => {
   const someDetails = match?.details;
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
-
-  const name = getName(match?.name ?? '');
 
   const details = HydrogenHorizons.isHydrogenHorizonsDetails(someDetails)
     ? someDetails
@@ -174,7 +166,7 @@ const MatchResultsOverlay: FC = () => {
                     HYDROGEN POINTS
                   </div>
                   <div className='res-detail-right'>
-                    {match?.details?.redHydrogenPoints}
+                    +{match?.details?.redHydrogenPoints}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
@@ -183,7 +175,7 @@ const MatchResultsOverlay: FC = () => {
                   </div>
                   <div className='res-detail-left right-red'>OXYGEN POINTS</div>
                   <div className='res-detail-right'>
-                    {match?.details?.redOxygenPoints}
+                    +{match?.details?.redOxygenPoints}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-red'>
@@ -205,7 +197,7 @@ const MatchResultsOverlay: FC = () => {
                   <div className='res-detail-left right-red'>
                     PROFICIENCY BONUS
                   </div>
-                  <div className='res-detail-right'>{redProficiency}</div>
+                  <div className='res-detail-right'>+{redProficiency}</div>
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
@@ -262,7 +254,7 @@ const MatchResultsOverlay: FC = () => {
                     HYDROGEN POINTS
                   </div>
                   <div className='res-detail-right'>
-                    {match?.details?.blueHydrogenPoints}
+                    +{match?.details?.blueHydrogenPoints}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
@@ -273,7 +265,7 @@ const MatchResultsOverlay: FC = () => {
                     OXYGEN POINTS
                   </div>
                   <div className='res-detail-right'>
-                    {match?.details?.blueOxygenPoints}
+                    +{match?.details?.blueOxygenPoints}
                   </div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
@@ -295,7 +287,7 @@ const MatchResultsOverlay: FC = () => {
                   <div className='res-detail-left right-blue'>
                     PROFICIENCY BONUS
                   </div>
-                  <div className='res-detail-right'>{blueProficiency}</div>
+                  <div className='res-detail-right'>+{blueProficiency}</div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>
