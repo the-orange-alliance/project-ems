@@ -71,7 +71,7 @@ export const postMatchResults = async (info: MatchKey) => {
 router.post(
   '/sync/rankings/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
-    // if (!environment.isProd()) return res.send({ success: false });
+    if (!environment.isProd()) return res.send({ success: false });
     const { eventKey, tournamentKey } = req.params;
     const rankingsReq = await postRankings(eventKey, tournamentKey);
     res.send({ success: rankingsReq.ok });
@@ -81,7 +81,7 @@ router.post(
 router.post(
   '/sync/matches/:eventKey/:tournamentKey/:id',
   async (req: Request, res: Response, next: NextFunction) => {
-    // if (!environment.isProd()) return res.send({ succuess: false });
+    if (!environment.isProd()) return res.send({ succuess: false });
     const { eventKey, tournamentKey, id: idStr } = req.params;
     const id = parseInt(idStr);
     const matchesReq = await postMatchResults({ eventKey, tournamentKey, id });
@@ -92,7 +92,7 @@ router.post(
 router.post(
   '/sync/matches/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
-    // if (!environment.isProd()) return res.send({ success: false });
+    if (!environment.isProd()) return res.send({ success: false });
     const { eventKey, tournamentKey } = req.params;
     const db = await getDB(eventKey);
     const matches = await db.selectAllWhere(
