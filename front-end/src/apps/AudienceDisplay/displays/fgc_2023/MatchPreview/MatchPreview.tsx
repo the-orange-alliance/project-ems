@@ -73,21 +73,9 @@ const MatchPreview: FC = () => {
           />
         </div>
         <div id='fgc-pre-match-info'>
-          <div id='fgc-pre-match-info-left'>
-            <div className='pre-match-info-left center'>
-              <span>MATCH</span>
-            </div>
-            <div className='pre-match-info-right center'>
-              <span>{name}</span>
-            </div>
-          </div>
-          <div id='fgc-pre-match-info-left'>
-            <div className='pre-match-info-left center'>
-              <span>FIELD</span>
-            </div>
-            <div className='pre-match-info-right center'>
-              <span>{match?.fieldNumber}</span>
-            </div>
+          <div id='fgc-pre-match-info-box'>
+              <div>{match?.name}</div>
+              <div>Field {match?.fieldNumber}</div>
           </div>
         </div>
         <div className='pre-match-alliance'>
