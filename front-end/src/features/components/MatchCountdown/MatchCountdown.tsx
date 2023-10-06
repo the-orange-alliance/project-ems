@@ -1,4 +1,8 @@
-import { MatchSocketEvent, MatchState, TimerEventPayload } from '@toa-lib/models';
+import {
+  MatchSocketEvent,
+  MatchState,
+  TimerEventPayload
+} from '@toa-lib/models';
 import { Duration } from 'luxon';
 import { FC, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';

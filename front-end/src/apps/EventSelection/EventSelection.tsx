@@ -31,6 +31,7 @@ const EventSelection: FC = () => {
       containerWidth='lg'
       header={<Typography variant='h4'>Event Selection</Typography>}
       padding
+      showSettings
     >
       <Box sx={{ marginBottom: (theme) => theme.spacing(2) }}>
         {!creatingEvent && <Events onCreateDefault={handleCreateDefault} />}

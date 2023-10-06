@@ -1,10 +1,9 @@
 import { FC, ReactNode, Suspense } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { Breakpoint } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
-import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
@@ -19,7 +18,7 @@ import { userAtom } from '@stores/NewRecoil';
 import emsAvatar from '@assets/favicon.ico';
 import LogoutButton from '@features/components/LogoutButton/LogoutButton';
 
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 interface Props {
   title?: string;
@@ -28,6 +27,7 @@ interface Props {
   containerWidth?: Breakpoint | false;
   children?: ReactNode;
   padding?: boolean;
+  showSettings?: boolean;
 }
 
 const PaperLayout: FC<Props> = ({
@@ -36,9 +36,14 @@ const PaperLayout: FC<Props> = ({
   header,
   containerWidth,
   children,
-  padding
+  padding,
+  showSettings
 }: Props) => {
   const user = useRecoilValue(userAtom);
+  const navigate = useNavigate();
+  const openSettings = () => {
+    navigate('/global-settings');
+  };
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -76,17 +81,18 @@ const PaperLayout: FC<Props> = ({
             <>
               <Button color='inherit'>Docs</Button>
               <LogoutButton />
-              <IconButton
-                size='large'
-                edge='start'
-                color='inherit'
-                aria-label='open drawer'
-                sx={{ ml: 1, mr: 1 }}
-              >
-                <Badge badgeContent={2} color='error'>
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
+              {showSettings && (
+                <IconButton
+                  size='large'
+                  edge='start'
+                  color='inherit'
+                  aria-label='open drawer'
+                  sx={{ ml: 1, mr: 1 }}
+                  onClick={openSettings}
+                >
+                  <SettingsIcon />
+                </IconButton>
+              )}
             </>
           ) : (
             <>

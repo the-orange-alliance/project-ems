@@ -260,7 +260,6 @@ export const currentTournamentFieldsSelector = selector<
 >({
   key: 'currentTournamentFieldsSelector',
   get: ({ get }) => {
-    console.log(get(currentTournamentSelector));
     return (
       get(currentTournamentSelector)?.fields.map((f, i) => ({
         name: f,

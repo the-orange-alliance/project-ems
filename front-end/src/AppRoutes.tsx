@@ -2,6 +2,7 @@ import React, { ReactNode, lazy } from 'react';
 const HomeApp = lazy(() => import('./apps/Home/index'));
 const EventManagerApp = lazy(() => import('./apps/EventManager'));
 const SettingsApp = lazy(() => import('./apps/Settings'));
+const GlobalSettingsApp = lazy(() => import('./apps/Settings/GlobalSettings'));
 const EventSelection = lazy(() => import('./apps/EventSelection'));
 const TeamManager = lazy(() => import('./apps/TeamManager'));
 const TournamentManager = lazy(() => import('./apps/TournamentManager'));
@@ -141,6 +142,12 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/settings',
     group: 0,
     element: <SettingsApp />
+  },
+  {
+    name: 'Settings',
+    path: '/global-settings',
+    group: 0,
+    element: <GlobalSettingsApp />
   },
   {
     name: 'FRC FMS Field Monitor',
