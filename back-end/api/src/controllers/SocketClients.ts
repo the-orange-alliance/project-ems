@@ -28,14 +28,25 @@ router.post(
       // Check if client already exists
       const db = await getDB('global');
       if (req.body.persistantClientId) {
-        req.body.connected = 1;
         // Update
+        req.body.connected = 1;
         req.body.audienceDisplayChroma = req.body.audienceDisplayChroma.replaceAll('"', '')
-        await db.updateWhere(
+        // Check if client already exists
+        const client = await db.selectAllWhere(
           'socket_clients',
-          req.body,
           `persistantClientId = "${req.body.persistantClientId}"`
         );
+        // If client exists, update
+        if (client.length > 0) {
+          await db.updateWhere(
+            'socket_clients',
+            req.body,
+            `persistantClientId = "${req.body.persistantClientId}"`
+          );
+        } else {
+          await db.insertValue('socket_clients', [req.body]);
+        }
+
       } else {
         // Brand new client, create new UUID
         req.body.persistantClientId = uuidv4();

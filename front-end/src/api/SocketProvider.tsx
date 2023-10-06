@@ -15,6 +15,7 @@ import {
   displayChromaKeyAtom
 } from 'src/stores/NewRecoil';
 import { useSnackbar } from 'src/features/hooks/use-snackbar';
+import { connectSocketClient } from './ApiProvider';
 
 let socket: Socket | null = null;
 
@@ -77,6 +78,10 @@ export const useSocket = (): [
         // set(leaderApiHostAtom, data.followerApiHost);
         set(displayChromaKeyAtom, data.audienceDisplayChroma);
         localStorage.setItem('persistantClientId', data.persistantClientId);
+      });
+
+      socket.on('identify-response', (data) => {
+        connectSocketClient(data);
       });
 
       socket.on('identify-client', () => {
@@ -166,8 +171,10 @@ export async function requestClientIdentification(data: any): Promise<void> {
   socket?.emit('identify-client', data);
 }
 
-export async function requestAllClientsIdentification(): Promise<void> {
-  socket?.emit('identify-all-clients');
+export async function requestAllClientsIdentification(data: {
+  clients: any[];
+}): Promise<void> {
+  socket?.emit('identify-all-clients', data);
 }
 
 export async function sendUpdateFrcFmsSettings(

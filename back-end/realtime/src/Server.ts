@@ -7,7 +7,6 @@ import jwt from "jsonwebtoken";
 import { environment as env, getIPv4 } from "@toa-lib/server";
 import logger from "./util/Logger.js";
 import { assignRooms, initRooms, leaveRooms } from "./rooms/Rooms.js";
-import { clientFetcher } from '@toa-lib/client';
 
 // Setup our environment
 env.loadAndSetDefaults(process.env);
@@ -56,14 +55,10 @@ io.on("connection", (socket) => {
     try {
       // Add things
       data.lastSocketId = socket.id;
-      data.connected = 1;
       data.ipAddress = socket.handshake.address;
 
-      // Register socket to Database // TODO: Create model for this
-      const settings: any = await clientFetcher(`socketClients/connect`, 'POST', data);
-
-      // Send back the user's data
-      socket.emit("settings", settings);
+      // Send back IP and socket id
+      socket.emit("identify-response", data);
     } catch (e) {
       console.log('Failed to negotiate sockets settings', e);
     }
@@ -72,8 +67,6 @@ io.on("connection", (socket) => {
   socket.on("update-socket-client", async (data: any) => {
     // Update socket client
     try {
-      // Update Server
-      await clientFetcher(`socketClients/connect`, 'POST', data);
       // Locate socket by lastSocketId
       const socketToUpdate = io.sockets.sockets.get(data.lastSocketId);
       // Update socket
@@ -91,16 +84,20 @@ io.on("connection", (socket) => {
     socketToIdentify?.emit("identify-client", data);
   });
 
-  socket.on("identify-all-clients", async () => {
-    // Get all devices from api
-    const clients: any = await clientFetcher(`socketClients`, 'GET');
-    // Iterate over devices
-    clients.forEach((client: any) => {
-      // Find socket
-      const socketToIdentify = io.sockets.sockets.get(client.lastSocketId);
-      // Emit message
-      socketToIdentify?.emit("identify-client", client);
-    });
+  socket.on("identify-all-clients", async (data) => {
+    try {
+      // Get all devices from api
+      const { clients } = data;
+      // Iterate over devices
+      clients.forEach((client: any) => {
+        // Find socket
+        const socketToIdentify = io.sockets.sockets.get(client.lastSocketId);
+        // Emit message
+        socketToIdentify?.emit("identify-client", client);
+      });
+    } catch (e) {
+      console.log('Failed to identify all clients', e);
+    }
   })
 
   socket.on("rooms", (rooms: unknown) => {
@@ -120,11 +117,6 @@ io.on("connection", (socket) => {
     logger.info(
       `user ${user.username} (${socket.handshake.address}) disconnected: ${reason}`
     );
-    try {
-      clientFetcher(`socketClients/disconnect/${socket.id}`, 'POST');
-    } catch (e) {
-      console.log('Failed update socket db info', e);
-    }
     leaveRooms(socket);
   });
 
