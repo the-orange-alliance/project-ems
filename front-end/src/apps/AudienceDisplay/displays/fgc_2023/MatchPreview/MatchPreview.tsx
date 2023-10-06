@@ -36,11 +36,7 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
       <div className={'pre-match-team'}>
         ({participant?.team?.country})&nbsp;{participant?.team?.teamNameLong}
       </div>
-      <div className='pre-match-rank'>
-        {ranking &&
-          (participant.station === 11 || participant.station === 21) &&
-          `#${ranking.rank}`}
-      </div>
+      <div className='pre-match-rank'>{ranking && `#${ranking.rank}`}</div>
     </div>
   );
 };
@@ -74,8 +70,8 @@ const MatchPreview: FC = () => {
         </div>
         <div id='fgc-pre-match-info'>
           <div id='fgc-pre-match-info-box'>
-              <div>{match?.name}</div>
-              <div>Field {match?.fieldNumber}</div>
+            <div>{match?.name}</div>
+            <div>Field {match?.fieldNumber}</div>
           </div>
         </div>
         <div className='pre-match-alliance'>
