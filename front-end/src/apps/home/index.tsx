@@ -71,7 +71,7 @@ const HomeApp: FC = () => {
         />
         <GridAppCard
           title='Audience Display Settings'
-          to={`/${event?.eventKey}/audienceDisplayManager`}
+          to={`/audience-display-manager`}
         />
         {/* <GridAppCard title='Field Debugger' to='/fcs-debug' />
         <GridAppCard title='Account Manager' to='/accounts' />

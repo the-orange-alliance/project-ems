@@ -168,7 +168,7 @@ const AppRoutes: AppRoute[] = [
   },
   {
     name: 'Audience Display Manager',
-    path: '/:eventKey/audienceDisplayManager',
+    path: '/audience-display-manager',
     group: 0,
     element: <AudienceDisplayManager />
   }
