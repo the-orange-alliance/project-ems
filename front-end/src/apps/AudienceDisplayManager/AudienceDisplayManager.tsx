@@ -25,7 +25,7 @@ import {
   sendUpdateSocketClient
 } from 'src/api/SocketProvider';
 import { Delete, RemoveRedEye } from '@mui/icons-material';
-import { deleteSocketClient } from 'src/api/ApiProvider';
+import { deleteSocketClient, updateSocketClient } from 'src/api/ApiProvider';
 
 const AudienceDisplayManager: FC = () => {
   const [clients, setClients] = useRecoilState(socketClientsAtom);
@@ -50,6 +50,7 @@ const AudienceDisplayManager: FC = () => {
     if (!dialogContext) return;
     setDialogOpen(false);
     sendUpdateSocketClient(dialogContext);
+    updateSocketClient(dialogContext.persistantClientId, dialogContext);
     const cpy = [...clients];
     const id = cpy.findIndex(
       (e) => e.persistantClientId === dialogContext.persistantClientId
@@ -70,13 +71,17 @@ const AudienceDisplayManager: FC = () => {
     setClients(cpy);
   };
 
+  const idAll = () => {
+    requestAllClientsIdentification({ clients });
+  };
+
   return (
     <PaperLayout
       containerWidth='xl'
       header={<Typography variant='h4'>Audience Display Manager</Typography>}
       padding
     >
-      <Button variant='contained' onClick={requestAllClientsIdentification}>
+      <Button variant='contained' onClick={idAll}>
         Identify All Devices
       </Button>
       <TableContainer>

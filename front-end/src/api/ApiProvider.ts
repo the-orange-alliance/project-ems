@@ -253,6 +253,9 @@ export const deleteSocketClient = (uuid: string): Promise<void> =>
 export const updateSocketClient = (uuid: string, data: any): Promise<void> =>
   clientFetcher(`socketClients/update/${uuid}`, 'POST', data);
 
+export const connectSocketClient = (data: any): Promise<void> =>
+  clientFetcher(`socketClients/connect`, 'POST', data);
+
 // Results Syncing
 export const resultsSyncMatches = (
   eventKey: string,
