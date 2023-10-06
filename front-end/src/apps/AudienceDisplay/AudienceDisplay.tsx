@@ -27,14 +27,26 @@ import Rankings from './displays/fgc_2023/Rankings/Rankings';
 import { useHiddenMotionlessCursor } from '@features/hooks/use-hidden-motionless-cursor';
 import './AudienceDisplay.less';
 import MatchPlayTimer from './displays/fgc_2023/MatchPlayTimer/MatchPlayTimer';
+import { updateSocketClient } from 'src/api/ApiProvider';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayIdAtom);
-  const chromaKey = useRecoilValue(displayChromaKeyAtom);
+  const [chromaKey, setChromaKey] = useRecoilState(displayChromaKeyAtom);
   const [socket, connected] = useSocket();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') ?? '';
+  let paramChroma = searchParams.get('chroma');
   useHiddenMotionlessCursor();
+
+  useEffect(() => {
+    if (paramChroma && paramChroma !== chromaKey) {
+      if (paramChroma.length === 6) paramChroma = '#' + paramChroma;
+      setChromaKey(paramChroma);
+      updateSocketClient(localStorage.getItem('persistantClientId') ?? '', {
+        audienceDisplayChroma: paramChroma
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (connected) {

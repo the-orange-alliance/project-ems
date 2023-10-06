@@ -51,7 +51,7 @@ export const darkModeAtom = atom<boolean>({
 });
 export const userAtom = atom<User | null>({
   key: 'userAtom',
-  default: null,
+  default: { id: 0, username: 'Bypassed', permissions: '*' },
   effects: [localStorageEffect('currentUser')]
 });
 export const teamIdentifierAtom = atom<keyof Team>({
@@ -463,18 +463,18 @@ export const currentScheduleDaySelectorFam = selectorFamily<Day, number>({
   key: 'currentScheduleDaySelectorFam',
   get:
     (id: number) =>
-    ({ get }) => {
-      return get(currentScheduleByTournamentSelector).days[id];
-    },
+      ({ get }) => {
+        return get(currentScheduleByTournamentSelector).days[id];
+      },
   set:
     (id: number) =>
-    ({ set }, newValue) => {
-      const newDay = newValue instanceof DefaultValue ? defaultDay : newValue;
-      set(currentScheduleByTournamentSelector, (prev) => ({
-        ...prev,
-        days: replaceInArray(prev.days, 'id', id, newDay) ?? prev.days
-      }));
-    }
+      ({ set }, newValue) => {
+        const newDay = newValue instanceof DefaultValue ? defaultDay : newValue;
+        set(currentScheduleByTournamentSelector, (prev) => ({
+          ...prev,
+          days: replaceInArray(prev.days, 'id', id, newDay) ?? prev.days
+        }));
+      }
 });
 
 /**
@@ -648,18 +648,18 @@ export const matchByCurrentIdSelectorFam = selectorFamily<
   key: 'matchByCurrentIdSelectorFam',
   get:
     (id: number) =>
-    ({ get }) =>
-      get(matchesByTournamentSelector).find((m) => m.id === id),
+      ({ get }) =>
+        get(matchesByTournamentSelector).find((m) => m.id === id),
   set:
     (id: number) =>
-    ({ get, set }, newValue) => {
-      const matches = get(matchesByTournamentSelector);
-      if (!newValue || newValue instanceof DefaultValue) return;
-      set(
-        matchesByTournamentSelector,
-        replaceInArray(matches, 'id', id, newValue) ?? matches
-      );
-    }
+      ({ get, set }, newValue) => {
+        const matches = get(matchesByTournamentSelector);
+        if (!newValue || newValue instanceof DefaultValue) return;
+        set(
+          matchesByTournamentSelector,
+          replaceInArray(matches, 'id', id, newValue) ?? matches
+        );
+      }
 });
 
 export const matchInProgressParticipantsSelector = selector<MatchParticipant[]>(
@@ -682,21 +682,21 @@ export const matchInProgressParticipantsByStationSelectorFam = selectorFamily<
   key: 'matchInProgressParticipantsByAllianceSelector',
   get:
     (station: number) =>
-    ({ get }) =>
-      get(matchInProgressParticipantsSelector).find(
-        (p) => p.station === station
-      ),
+      ({ get }) =>
+        get(matchInProgressParticipantsSelector).find(
+          (p) => p.station === station
+        ),
   set:
     (station: number) =>
-    ({ get, set }, newValue) => {
-      const participants = get(matchInProgressParticipantsSelector);
-      if (!newValue || newValue instanceof DefaultValue) return;
-      set(
-        matchInProgressParticipantsSelector,
-        replaceInArray(participants, 'station', station, newValue) ??
+      ({ get, set }, newValue) => {
+        const participants = get(matchInProgressParticipantsSelector);
+        if (!newValue || newValue instanceof DefaultValue) return;
+        set(
+          matchInProgressParticipantsSelector,
+          replaceInArray(participants, 'station', station, newValue) ??
           participants
-      );
-    }
+        );
+      }
 });
 
 /**

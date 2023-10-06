@@ -13,9 +13,11 @@ function App() {
   const [, , setupSocket] = useSocket();
 
   useEffect(() => {
-    if (user && (user as any).token) {
-      setupSocket((user as any).token);
-    }
+    // TODO: Reenable for auth
+    // if (user && (user as any).token) {
+    //  setupSocket((user as any).token);
+    // }
+    setupSocket('kyle is cool');
   }, [user]);
 
   return (
