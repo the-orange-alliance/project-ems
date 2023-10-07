@@ -110,6 +110,8 @@ function getPreviewDisplay(mode: string): ReactNode {
       return <MatchPlay />;
     case 'stream4':
       return <MatchResultsOverlay />;
+    case 'stream5':
+      return <MatchResults />;
     default:
       return <MatchPreview />;
   }
@@ -123,6 +125,8 @@ function getPlayDisplay(mode: string): ReactNode {
       return <MatchPlay />;
     case 'stream4':
       return <MatchResultsOverlay />;
+    case 'stream5':
+      return <MatchResults />;
     case 'field':
       return <MatchPlayTimer />;
     default:
