@@ -3,12 +3,16 @@ import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import TeamStatusRow from '../Status/TeamStatusRow';
 import { useRecoilValue } from 'recoil';
-import { currentMatchSelector } from 'src/stores/NewRecoil';
+import {
+  currentMatchSelector,
+  matchInProgressAtom
+} from 'src/stores/NewRecoil';
 import { getSeasonKeyFromEventKey } from '@toa-lib/models';
 import { useComponents } from 'src/seasons';
 
 const RedAlliance: FC = () => {
   const match = useRecoilValue(currentMatchSelector);
+  const matchInProgress = useRecoilValue(matchInProgressAtom);
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const seasonKey = getSeasonKeyFromEventKey(match ? match.eventKey : '');
   const components = useComponents(seasonKey);
@@ -25,7 +29,9 @@ const RedAlliance: FC = () => {
         </Grid>
         <Grid item md={4}>
           {components && match && (
-            <components.RedScoreBreakdown match={match} />
+            <components.RedScoreBreakdown
+              match={matchInProgress ?? undefined}
+            />
           )}
         </Grid>
       </Grid>

@@ -35,6 +35,12 @@ const RedScoreBreakdown: FC<
       <Grid item xs={12} sm={6}>
         <Typography>{details.redAlignment}</Typography>
       </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography>SCORE: </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography>{match?.redScore}</Typography>
+      </Grid>
     </Grid>
   );
 };
@@ -65,6 +71,12 @@ const BlueScoreBreakdown: FC<
       </Grid>
       <Grid item xs={12} sm={6}>
         <Typography>{details.blueAlignment}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography>SCORE: </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography>{match?.blueScore}</Typography>
       </Grid>
     </Grid>
   );
