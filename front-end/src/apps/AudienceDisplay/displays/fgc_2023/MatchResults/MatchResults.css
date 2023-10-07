@@ -48,7 +48,7 @@
   font-size: 2vw;
 }
 .res-header-item > .overlay {
-  font-size: .75vw;
+  font-size: 0.75vw;
 }
 #res-alliance-container {
   width: 100%;
@@ -152,7 +152,7 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  font-size: 1vw;
+  font-size: 1.5vh;
 }
 .res-team-flag {
   width: 12%;
@@ -247,7 +247,7 @@
   margin-top: 1vh;
   margin-left: 2.5%;
   margin-bottom: 1vh;
-  width: 15vw;
+  width: 18vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -289,13 +289,13 @@
   flex-direction: column;
   justify-content: space-between;
   font-size: 0.5rem;
-  margin-top: 3vh;
-  height: 88vh;
+  margin-top: 1.5vh;
+  height: 90vh;
 }
 
 #fgc-results-overlay-container > #res-alliance-container > .res-alliance-card {
-  height: 45vh;
-  width: 15vw;
+  height: 47vh;
+  width: 18vw;
 }
 
 #fgc-results-overlay-container
@@ -317,6 +317,16 @@
 #fgc-results-overlay-container
   > #res-alliance-container
   > .res-alliance-card
+  .res-card-teams
+  .res-team-row
+  .res-team-rank {
+  font-size: 1.5vh;
+  padding-right: 0.5vh;
+}
+
+#fgc-results-overlay-container
+  > #res-alliance-container
+  > .res-alliance-card
   .res-card-details {
   margin-top: 1.5vh;
 }
@@ -326,14 +336,23 @@
   > .res-alliance-card
   .res-card-details
   .res-detail-row {
-  font-size: 1vh;
+  font-size: 1.2vh;
+}
+
+#fgc-results-overlay-container
+  > #res-alliance-container
+  > .res-alliance-card
+  .res-card-details
+  .res-detail-row
+  .res-detail-right {
+  font-size: 1.75vh;
 }
 
 #fgc-results-overlay-container
   > #res-alliance-container
   > .res-alliance-card
   .res-card-bottom {
-  font-size: 1rem;
+  font-size: 2.5vh;
 }
 
 #fgc-results-overlay-container

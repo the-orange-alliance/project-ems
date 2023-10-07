@@ -45,7 +45,11 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
   ranking
 }) => {
   return (
-    <div className='res-team-row bottom-red'>
+    <div
+      className={`res-team-row bottom-${
+        participant.station < 20 ? 'red' : 'blue'
+      }`}
+    >
       <div className='res-team-cardstatus'>
         <CardStatus cardStatus={participant.cardStatus} />
       </div>
