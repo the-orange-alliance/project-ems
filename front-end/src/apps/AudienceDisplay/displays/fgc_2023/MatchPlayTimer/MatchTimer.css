@@ -81,7 +81,7 @@
   justify-content: center;
   align-items: center;
   font-size: 20vw;
-  background-color: #141414;
+  background-color: #000000;
   padding: 10px;
 }
 
@@ -112,7 +112,7 @@
   width: 35%;
   display: flex;
   justify-content: center;
-  background-color: #141414;
+  background-color: #000000;
   padding: 0 5px 10px 5px;
 }
 
@@ -141,7 +141,7 @@
 }
 
 .teams-container {
-  background-color: #141414;
+  background-color: #000000;
 }
 
 .teams-container-left {
