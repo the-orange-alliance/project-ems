@@ -6,3 +6,4 @@ bin/logs
 bin/realtime
 bin/webapp
 *.zip
+*.env

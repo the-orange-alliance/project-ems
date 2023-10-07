@@ -16,6 +16,8 @@ import { MultiSelectSetting } from '../components/MultiSelectSetting';
 import TextSetting from '../components/TextSetting';
 import { APIOptions } from '@toa-lib/client';
 import { updateSocketClient } from 'src/api/ApiProvider';
+import ButtonSetting from '../components/ButtonSetting';
+import { useGitHubDownload } from '../util/use-github-download';
 
 const MainSettingsTab: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
@@ -30,6 +32,8 @@ const MainSettingsTab: FC = () => {
   const [fieldControl, setFieldControl] = useRecoilState(
     currentTournamentFieldsAtom
   );
+
+  const downloadRelease = useGitHubDownload();
 
   const handleFieldChange = (value: string[]) => {
     setFieldControl(allFields.filter((f) => value.includes(f.name)));
@@ -91,6 +95,18 @@ const MainSettingsTab: FC = () => {
     }, 1000);
   };
 
+  const download = async () => {
+    try {
+      const releaseUrl = await downloadRelease();
+      const link = document.createElement('a');
+      link.download = 'ems-latest';
+      link.href = releaseUrl;
+      link.click();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
     <Box>
       <SwitchSetting
@@ -125,6 +141,12 @@ const MainSettingsTab: FC = () => {
         onChange={updateFollowerApiHost}
         inline
         disabled={!followerMode}
+      />
+      <ButtonSetting
+        name='Check For Updates'
+        buttonText='Check Now'
+        onClick={download}
+        inline
       />
     </Box>
   );

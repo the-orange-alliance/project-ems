@@ -17,6 +17,7 @@
     "@mui/lab": "^5.0.0-alpha.137",
     "@mui/material": "^5.14.1",
     "@mui/x-date-pickers": "^6.10.1",
+    "@octokit/core": "^5.0.1",
     "@toa-lib/client": "file:../lib/client",
     "@toa-lib/models": "file:../lib/models",
     "@vitejs/plugin-react": "^4.0.3",

@@ -56,14 +56,17 @@ export const useSocket = (): [
       // ID Message
       const persistantClientId = localStorage.getItem('persistantClientId');
 
-      const idMsg = {
+      const idMsg: any = {
         currentUrl: window.location.href,
         fieldNumbers: fields.map((d: any) => d.field).join(','),
         followerMode: followerModeEnabled ? 1 : 0,
         followerApiHost: leaderApiHost,
-        audienceDisplayChroma: chromaKey.replaceAll('"', ''),
-        persistantClientId
+        audienceDisplayChroma: chromaKey.replaceAll('"', '')
       };
+
+      if (persistantClientId) {
+        idMsg.persistantClientId = persistantClientId;
+      }
 
       socket.on('settings', (data) => {
         // TODO: Make this get the field names properly
@@ -82,6 +85,7 @@ export const useSocket = (): [
 
       socket.on('identify-response', (data) => {
         connectSocketClient(data);
+        localStorage.setItem('persistantClientId', data.persistantClientId);
       });
 
       socket.on('identify-client', () => {

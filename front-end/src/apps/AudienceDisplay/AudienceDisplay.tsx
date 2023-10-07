@@ -8,7 +8,7 @@ import {
 } from '@toa-lib/models';
 import { useSearchParams } from 'react-router-dom';
 import { FC, ReactNode, useEffect } from 'react';
-import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilCallback, useRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
@@ -92,7 +92,7 @@ export default AudienceDisplay;
 function getDisplay(id: number, mode: string): ReactNode {
   switch (id) {
     case Displays.MATCH_PREVIEW:
-      return <MatchPreview />;
+      return getPreviewDisplay(mode);
     case Displays.MATCH_START:
       return getPlayDisplay(mode);
     case Displays.MATCH_RESULTS:
@@ -104,10 +104,25 @@ function getDisplay(id: number, mode: string): ReactNode {
   }
 }
 
+function getPreviewDisplay(mode: string): ReactNode {
+  switch (mode) {
+    case 'stream3':
+      return <MatchPlay />;
+    case 'stream4':
+      return <MatchResultsOverlay />;
+    default:
+      return <MatchPreview />;
+  }
+}
+
 function getPlayDisplay(mode: string): ReactNode {
   switch (mode) {
     case 'stream':
       return <MatchPlayMini />;
+    case 'stream3':
+      return <MatchPlay />;
+    case 'stream4':
+      return <MatchResultsOverlay />;
     case 'field':
       return <MatchPlayTimer />;
     default:
@@ -118,6 +133,12 @@ function getPlayDisplay(mode: string): ReactNode {
 function getResultsDisplay(mode: string): ReactNode {
   switch (mode) {
     case 'stream':
+      return <MatchResultsOverlay />;
+    case 'stream2':
+      return <MatchResultsOverlay />;
+    case 'stream3':
+      return <MatchPlay />;
+    case 'stream4':
       return <MatchResultsOverlay />;
     default:
       return <MatchResults />;
