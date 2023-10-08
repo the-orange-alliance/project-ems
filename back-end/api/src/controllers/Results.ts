@@ -8,6 +8,7 @@ import { environment } from '@toa-lib/server';
 import { NextFunction, Request, Response, Router } from 'express';
 import fetch, { RequestInit } from 'node-fetch';
 import { getDB } from '../db/EventDatabase.js';
+import logger from '../util/Logger.js';
 
 const router = Router();
 
@@ -71,6 +72,11 @@ export const postMatchResults = async (info: MatchKey) => {
 router.post(
   '/sync/rankings/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
+    logger.info(
+      environment.isProd()
+        ? 'attempting to sync rankings'
+        : 'not syncing ranking'
+    );
     if (!environment.isProd()) return res.send({ success: false });
     const { eventKey, tournamentKey } = req.params;
     const rankingsReq = await postRankings(eventKey, tournamentKey);
@@ -92,6 +98,11 @@ router.post(
 router.post(
   '/sync/matches/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
+    logger.info(
+      environment.isProd()
+        ? 'attempting to sync results'
+        : 'not syncing results'
+    );
     if (!environment.isProd()) return res.send({ success: false });
     const { eventKey, tournamentKey } = req.params;
     const db = await getDB(eventKey);

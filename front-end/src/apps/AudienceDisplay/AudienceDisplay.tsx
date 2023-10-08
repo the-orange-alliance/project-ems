@@ -7,7 +7,7 @@ import {
   MatchSocketEvent
 } from '@toa-lib/models';
 import { useSearchParams } from 'react-router-dom';
-import { FC, ReactNode, useEffect } from 'react';
+import { FC, ReactNode, Suspense, useEffect } from 'react';
 import { useRecoilCallback, useRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
@@ -77,13 +77,26 @@ const AudienceDisplay: FC = () => {
   });
 
   return (
-    <ChromaLayout>
-      <MatchStateListener />
-      <PrestartListener />
-      <div id='aud-base' style={{ backgroundColor: chromaKey }}>
-        {getDisplay(display, mode)}
-      </div>
-    </ChromaLayout>
+    <Suspense
+      fallback={
+        <div
+          style={{
+            position: 'absolute',
+            height: '100vh',
+            width: '100vw',
+            backgroundColor: 'rgba(0,0,0,0)'
+          }}
+        />
+      }
+    >
+      <ChromaLayout>
+        <MatchStateListener />
+        <PrestartListener />
+        <div id='aud-base' style={{ backgroundColor: chromaKey }}>
+          {getDisplay(display, mode)}
+        </div>
+      </ChromaLayout>
+    </Suspense>
   );
 };
 
@@ -124,9 +137,8 @@ function getPlayDisplay(mode: string): ReactNode {
     case 'stream3':
       return <MatchPlay />;
     case 'stream4':
-      return <MatchResultsOverlay />;
     case 'stream5':
-      return <MatchResults />;
+      return null;
     case 'field':
       return <MatchPlayTimer />;
     default:
