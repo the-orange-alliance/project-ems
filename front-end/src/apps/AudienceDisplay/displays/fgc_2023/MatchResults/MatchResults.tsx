@@ -110,6 +110,7 @@ const MatchResults: FC = () => {
     HydrogenHorizons.getProficiencyPoints(details.blueOneProficiency) +
     HydrogenHorizons.getProficiencyPoints(details.blueTwoProficiency) +
     HydrogenHorizons.getProficiencyPoints(details.blueThreeProficiency);
+  const proficiency = redProficiency + blueProficiency;
   const redTelePoints = Math.round(
     (details.redHydrogenPoints + details.redOxygenPoints) *
       HydrogenHorizons.getMultiplier(details.redAlignment)
@@ -125,11 +126,11 @@ const MatchResults: FC = () => {
   const coopertitionBonus = HydrogenHorizons.getCoopertitionPoints(details); // TODO - Calculate
   const redPoints =
     redTelePoints +
-    redProficiency +
+    proficiency +
     HydrogenHorizons.getCoopertitionPoints(details);
   const bluePoints =
     blueTelePoints +
-    blueProficiency +
+    proficiency +
     HydrogenHorizons.getCoopertitionPoints(details);
   const redPenalty = Math.round((match?.redMinPen ?? 0) * 0.1 * redPoints);
   const bluePenalty = Math.round((match?.blueMinPen ?? 0) * 0.1 * bluePoints);
@@ -206,7 +207,7 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-red'>
                     PROFICIENCY BONUS
                   </div>
-                  <div className='res-detail-right'>+{redProficiency}</div>
+                  <div className='res-detail-right'>+{proficiency}</div>
                 </div>
                 <div className='res-detail-row bottom-red'>
                   <div className='res-detail-icon'>
@@ -299,7 +300,7 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-blue'>
                     PROFICIENCY BONUS
                   </div>
-                  <div className='res-detail-right'>+{blueProficiency}</div>
+                  <div className='res-detail-right'>+{proficiency}</div>
                 </div>
                 <div className='res-detail-row bottom-blue'>
                   <div className='res-detail-icon'>

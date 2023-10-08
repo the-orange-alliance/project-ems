@@ -10,9 +10,14 @@ import { Tabs, Tab } from '@mui/material';
 import TabPanel from 'src/components/TabPanel/TabPanel';
 import MatchInfo from './MatchInfo';
 import MatchParticipantInfo from './MatchParticipantInfo';
-import { patchWholeMatch, useMatchAll } from 'src/api/ApiProvider';
+import {
+  patchWholeMatch,
+  resultsSyncMatches,
+  resultsSyncRankings,
+  useMatchAll
+} from 'src/api/ApiProvider';
 import MatchDetailInfo from './MatchDetailInfo';
-import { sendCommitScores } from 'src/api/SocketProvider';
+import { sendCommitScores, sendPostResults } from 'src/api/SocketProvider';
 import {
   currentTournamentSelector,
   matchByCurrentIdSelectorFam,
@@ -57,6 +62,9 @@ const MatchEditDialog: FC<Props> = ({ id }) => {
       const { eventKey, tournamentKey, id } = match;
       await patchWholeMatch(match);
       await sendCommitScores({ eventKey, tournamentKey, id });
+      await sendPostResults();
+      await resultsSyncMatches(match.eventKey, match.tournamentKey);
+      await resultsSyncRankings(match.eventKey, match.tournamentKey);
     }
     setOpen(false);
   };

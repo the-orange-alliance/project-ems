@@ -87,6 +87,11 @@ router.post(
 router.post(
   '/sync/matches/:eventKey/:tournamentKey/:id',
   async (req: Request, res: Response, next: NextFunction) => {
+    logger.info(
+      environment.isProd()
+        ? 'attempting to sync results'
+        : 'not syncing results'
+    );
     if (!environment.isProd()) return res.send({ succuess: false });
     const { eventKey, tournamentKey, id: idStr } = req.params;
     const id = parseInt(idStr);

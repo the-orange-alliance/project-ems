@@ -324,10 +324,11 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
     getProficiencyPoints(details.blueOneProficiency) +
     getProficiencyPoints(details.blueTwoProficiency) +
     getProficiencyPoints(details.blueThreeProficiency);
+  const proficiencyPoints = redProficiencyPoints + blueProficiencyPoints;
   const redPoints =
-    redTelePoints + redProficiencyPoints + getCoopertitionPoints(details);
+    redTelePoints + proficiencyPoints + getCoopertitionPoints(details);
   const bluePoints =
-    blueTelePoints + blueProficiencyPoints + getCoopertitionPoints(details);
+    blueTelePoints + proficiencyPoints + getCoopertitionPoints(details);
   const redPenalty = Math.round(match.redMinPen * 0.1 * redPoints);
   const bluePenalty = Math.round(match.blueMinPen * 0.1 * bluePoints);
 
@@ -339,13 +340,13 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
 
 export function getCoopertitionPoints(details: MatchDetails): number {
   const count =
-    Number(details.redOneProficiency > Proficiency.DEVELOPING) +
-    Number(details.redTwoProficiency > Proficiency.DEVELOPING) +
-    Number(details.redThreeProficiency > Proficiency.DEVELOPING) +
-    Number(details.blueOneProficiency > Proficiency.DEVELOPING) +
-    Number(details.blueTwoProficiency > Proficiency.DEVELOPING) +
-    Number(details.blueThreeProficiency > Proficiency.DEVELOPING);
-  return count === 5 ? 5 : count === 6 ? 10 : 0;
+    Number(details.redOneProficiency > Proficiency.INTERMEDIATE) +
+    Number(details.redTwoProficiency > Proficiency.INTERMEDIATE) +
+    Number(details.redThreeProficiency > Proficiency.INTERMEDIATE) +
+    Number(details.blueOneProficiency > Proficiency.INTERMEDIATE) +
+    Number(details.blueTwoProficiency > Proficiency.INTERMEDIATE) +
+    Number(details.blueThreeProficiency > Proficiency.INTERMEDIATE);
+  return count === 5 ? 15 : count === 6 ? 30 : 0;
 }
 
 export function getProficiencyPoints(proficiency: Proficiency): number {
