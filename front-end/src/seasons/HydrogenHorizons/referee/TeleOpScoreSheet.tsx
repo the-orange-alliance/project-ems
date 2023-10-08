@@ -156,6 +156,7 @@ const TeleScoreSheet: FC<Props> = ({
               ? match.details.redOxygenPoints
               : match.details.blueOxygenPoints
           }
+          textFieldDisabled
           onChange={handleOxygenChange}
           onIncrement={handleOxygenIncrement}
           onDecrement={handleOxygenDecrement}
@@ -171,6 +172,7 @@ const TeleScoreSheet: FC<Props> = ({
               ? match.details.redHydrogenPoints
               : match.details.blueHydrogenPoints
           }
+          textFieldDisabled
           onChange={handleHydrogenChange}
           onIncrement={handleHydrogenIncrement}
           onDecrement={handleHydrogenDecrement}
