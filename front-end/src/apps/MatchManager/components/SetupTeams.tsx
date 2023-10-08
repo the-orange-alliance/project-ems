@@ -4,13 +4,13 @@ import TeamSelectionTable from './TeamSelectionTable';
 import { Button } from '@mui/material';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
-  currentEventKeySelector,
+  currentEventKeyAtom,
   currentScheduledTeamsSelector,
   teamsByEventAtomFam
 } from 'src/stores/NewRecoil';
 
 const SetupTeams: FC = () => {
-  const eventKey = useRecoilValue(currentEventKeySelector);
+  const eventKey = useRecoilValue(currentEventKeyAtom);
   const eventTeams = useRecoilValue(teamsByEventAtomFam(eventKey));
   const setScheduledTeams = useSetRecoilState(currentScheduledTeamsSelector);
 

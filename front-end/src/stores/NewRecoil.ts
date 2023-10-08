@@ -197,23 +197,20 @@ export const appFlagsAtom = atom<AppFlags>({
  * @section SELECTION STATE
  * Recoil state management for selecting data
  */
-export const currentEventKeySelector = selector<string>({
+export const currentEventKeyAtom = atom<string>({
   key: 'currentEventKeySelector',
-  get: () => {
-    const [, eventKey] = window.location.pathname.split('/');
-    return eventKey;
-  }
+  default: ''
 });
 
 export const currentEventSelector = selector<Event | null>({
   key: 'currentEventSelector',
   get: ({ get }) =>
-    get(eventsAtom).find((e) => e.eventKey === get(currentEventKeySelector)) ??
+    get(eventsAtom).find((e) => e.eventKey === get(currentEventKeyAtom)) ??
     null,
   set: ({ get, set }, newValue) => {
     if (newValue instanceof DefaultValue || !newValue) return;
     const events = get(eventsAtom);
-    const eventKey = get(currentEventKeySelector);
+    const eventKey = get(currentEventKeyAtom);
     const newEvents = replaceInArray(events, 'eventKey', eventKey, newValue);
     set(eventsAtom, newEvents ?? events);
   }
@@ -228,7 +225,7 @@ export const currentTeamSelector = selector<Team | null>({
   key: 'currentTeamSelector',
   get: ({ get }) => {
     const teamKey = get(currentTeamKeyAtom);
-    const eventKey = get(currentEventKeySelector);
+    const eventKey = get(currentEventKeyAtom);
     const team = get(teamsByEventAtomFam(eventKey));
     return (
       team.find((t) => t.teamKey === teamKey && t.eventKey === eventKey) ?? null
@@ -249,7 +246,7 @@ export const currentTeamSelector = selector<Team | null>({
 
 export const currentTeamsByEventSelector = selector<Team[]>({
   key: `currentTeamsByEventSelector`,
-  get: ({ get }) => get(teamsByEventAtomFam(get(currentEventKeySelector)))
+  get: ({ get }) => get(teamsByEventAtomFam(get(currentEventKeyAtom)))
 });
 
 export const currentTournamentFieldsSelector = selector<
@@ -364,7 +361,7 @@ export const currentTournamentSelector = selector<Tournament | null>({
   key: 'currentTournamentSelector',
   get: ({ get }) => {
     const tournamentKey = get(currentTournamentKeyAtom);
-    const eventKey = get(currentEventKeySelector);
+    const eventKey = get(currentEventKeyAtom);
     const tournaments = get(tournamentsByEventAtomFam(eventKey));
     return (
       tournaments.find(
@@ -462,18 +459,18 @@ export const currentScheduleDaySelectorFam = selectorFamily<Day, number>({
   key: 'currentScheduleDaySelectorFam',
   get:
     (id: number) =>
-      ({ get }) => {
-        return get(currentScheduleByTournamentSelector).days[id];
-      },
+    ({ get }) => {
+      return get(currentScheduleByTournamentSelector).days[id];
+    },
   set:
     (id: number) =>
-      ({ set }, newValue) => {
-        const newDay = newValue instanceof DefaultValue ? defaultDay : newValue;
-        set(currentScheduleByTournamentSelector, (prev) => ({
-          ...prev,
-          days: replaceInArray(prev.days, 'id', id, newDay) ?? prev.days
-        }));
-      }
+    ({ set }, newValue) => {
+      const newDay = newValue instanceof DefaultValue ? defaultDay : newValue;
+      set(currentScheduleByTournamentSelector, (prev) => ({
+        ...prev,
+        days: replaceInArray(prev.days, 'id', id, newDay) ?? prev.days
+      }));
+    }
 });
 
 /**
@@ -509,14 +506,14 @@ export const currentScheduleItemsByTournamentSelector = selector<
 >({
   key: 'currentScheduleItemsByTournamentSelector',
   get: ({ get }) => {
-    const eventKey = get(currentEventKeySelector);
+    const eventKey = get(currentEventKeyAtom);
     const tournamentKey = get(currentTournamentKeyAtom);
     return get(scheduleItemsByEventAtomFam(eventKey)).filter(
       (i) => i.tournamentKey === tournamentKey
     );
   },
   set: ({ set, get }, newValue) => {
-    const eventKey = get(currentEventKeySelector);
+    const eventKey = get(currentEventKeyAtom);
     const tournamentKey = get(currentTournamentKeyAtom);
     if (!eventKey || !tournamentKey || newValue instanceof DefaultValue) {
       return [];
@@ -551,7 +548,7 @@ export const currentMatchIdAtom = atom<number | null>({
 export const currentMatchSelector = selector<Match<any> | null>({
   key: 'currentMatchSelector',
   get: async ({ get }) => {
-    const eventKey = get(currentEventKeySelector);
+    const eventKey = get(currentEventKeyAtom);
     const tournamentKey = get(currentTournamentKeyAtom);
     const id = get(currentMatchIdAtom);
     if (!eventKey || !tournamentKey || !id) return null;
@@ -647,18 +644,18 @@ export const matchByCurrentIdSelectorFam = selectorFamily<
   key: 'matchByCurrentIdSelectorFam',
   get:
     (id: number) =>
-      ({ get }) =>
-        get(matchesByTournamentSelector).find((m) => m.id === id),
+    ({ get }) =>
+      get(matchesByTournamentSelector).find((m) => m.id === id),
   set:
     (id: number) =>
-      ({ get, set }, newValue) => {
-        const matches = get(matchesByTournamentSelector);
-        if (!newValue || newValue instanceof DefaultValue) return;
-        set(
-          matchesByTournamentSelector,
-          replaceInArray(matches, 'id', id, newValue) ?? matches
-        );
-      }
+    ({ get, set }, newValue) => {
+      const matches = get(matchesByTournamentSelector);
+      if (!newValue || newValue instanceof DefaultValue) return;
+      set(
+        matchesByTournamentSelector,
+        replaceInArray(matches, 'id', id, newValue) ?? matches
+      );
+    }
 });
 
 export const matchInProgressParticipantsSelector = selector<MatchParticipant[]>(
@@ -681,21 +678,21 @@ export const matchInProgressParticipantsByStationSelectorFam = selectorFamily<
   key: 'matchInProgressParticipantsByAllianceSelector',
   get:
     (station: number) =>
-      ({ get }) =>
-        get(matchInProgressParticipantsSelector).find(
-          (p) => p.station === station
-        ),
+    ({ get }) =>
+      get(matchInProgressParticipantsSelector).find(
+        (p) => p.station === station
+      ),
   set:
     (station: number) =>
-      ({ get, set }, newValue) => {
-        const participants = get(matchInProgressParticipantsSelector);
-        if (!newValue || newValue instanceof DefaultValue) return;
-        set(
-          matchInProgressParticipantsSelector,
-          replaceInArray(participants, 'station', station, newValue) ??
+    ({ get, set }, newValue) => {
+      const participants = get(matchInProgressParticipantsSelector);
+      if (!newValue || newValue instanceof DefaultValue) return;
+      set(
+        matchInProgressParticipantsSelector,
+        replaceInArray(participants, 'station', station, newValue) ??
           participants
-        );
-      }
+      );
+    }
 });
 
 /**
@@ -767,14 +764,14 @@ export const allianceMembersByEventAtomFam = atomFamily<
 export const allianceMembersByTournamentSelector = selector<AllianceMember[]>({
   key: 'allianceMembersByTournamentSelector',
   get: ({ get }) => {
-    const eventKey = get(currentEventKeySelector);
+    const eventKey = get(currentEventKeyAtom);
     const tournamentKey = get(currentTournamentKeyAtom);
     return get(allianceMembersByEventAtomFam(eventKey)).filter(
       (a) => a.tournamentKey === tournamentKey
     );
   },
   set: ({ get, set }, newValue) => {
-    const eventKey = get(currentEventKeySelector);
+    const eventKey = get(currentEventKeyAtom);
     const tournamentKey = get(currentTournamentKeyAtom);
     if (
       !eventKey ||

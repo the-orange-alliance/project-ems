@@ -6,13 +6,14 @@ import Events from './components/Events';
 import EventForm from '@features/components/EventForm/EventForm';
 import { defaultEvent } from '@toa-lib/models';
 import { useSetRecoilState } from 'recoil';
-import { eventsAtom } from '@stores/NewRecoil';
+import { currentEventKeyAtom, eventsAtom } from '@stores/NewRecoil';
 import { useNavigate } from 'react-router-dom';
 
 const EventSelection: FC = () => {
   const [newEvent, setNewEvent] = useState({ ...defaultEvent });
   const [creatingEvent, setCreatingEvent] = useState(false);
   const setEvents = useSetRecoilState(eventsAtom);
+  const setEventKey = useSetRecoilState(currentEventKeyAtom);
 
   const navigate = useNavigate();
 
@@ -23,6 +24,7 @@ const EventSelection: FC = () => {
 
   const handleSubmitEvent = () => {
     setEvents((prev) => [...prev, newEvent]);
+    setEventKey(newEvent.eventKey);
     navigate(`/${newEvent.eventKey}`);
   };
 

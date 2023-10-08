@@ -6,6 +6,7 @@ import { useSnackbar } from './features/hooks/use-snackbar';
 import { userAtom } from './stores/NewRecoil';
 import { useEffect } from 'react';
 import { useSocket } from './api/SocketProvider';
+import SyncEffects from './components/SyncEffects/SyncEffects';
 
 function App() {
   const { AppSnackbar } = useSnackbar();
@@ -22,6 +23,7 @@ function App() {
 
   return (
     <>
+      <SyncEffects />
       <AppSnackbar />
       <Routes>
         {routes.map((route) => (

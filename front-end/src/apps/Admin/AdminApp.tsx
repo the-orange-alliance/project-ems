@@ -10,7 +10,7 @@ import {
 } from 'src/api/ApiProvider';
 import { useFlags } from 'src/stores/AppFlags';
 import {
-  currentEventKeySelector,
+  currentEventKeyAtom,
   currentTeamsByEventSelector,
   currentTournamentKeyAtom,
   currentTournamentSelector
@@ -24,7 +24,7 @@ const AdminApp: FC = () => {
   const [tournamentKey, setTournamentKey] = useRecoilState(
     currentTournamentKeyAtom
   );
-  const eventKey = useRecoilValue(currentEventKeySelector);
+  const eventKey = useRecoilValue(currentEventKeyAtom);
 
   const [, , purgeFlags] = useFlags();
 

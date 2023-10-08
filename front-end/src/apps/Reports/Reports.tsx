@@ -9,14 +9,14 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import TournamentReports from './TournamentReports';
 import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
 import {
-  currentEventKeySelector,
+  currentEventKeyAtom,
   currentTournamentKeyAtom,
   currentTournamentSelector
 } from 'src/stores/NewRecoil';
 import { Tournament } from '@toa-lib/models';
 
 const Reports: FC = () => {
-  const eventKey = useRecoilValue(currentEventKeySelector);
+  const eventKey = useRecoilValue(currentEventKeyAtom);
   const [tournamentKey, setTournamentKey] = useRecoilState(
     currentTournamentKeyAtom
   );

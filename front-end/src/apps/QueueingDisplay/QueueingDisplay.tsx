@@ -5,7 +5,7 @@ import './Display.less';
 
 import { useRecoilRefresher_UNSTABLE, useRecoilValue } from 'recoil';
 import {
-  currentEventKeySelector,
+  currentEventKeyAtom,
   matchesByEventAtomFam,
   matchesByTournamentSelector
 } from 'src/stores/NewRecoil';
@@ -17,7 +17,7 @@ import FGC_LOGO from '../AudienceDisplay/displays/fgc_2023/res/Global_Logo.png';
 const REFRESH_RATE_S = 60;
 
 const FieldColumn: FC<{ field: number }> = ({ field }) => {
-  const eventKey = useRecoilValue(currentEventKeySelector);
+  const eventKey = useRecoilValue(currentEventKeyAtom);
   const fieldMatches = useRecoilValue(matchesByEventAtomFam(eventKey))
     .filter((m) => m.fieldNumber === field && m.result === -1)
     .slice(0, 6);

@@ -11,14 +11,14 @@ import TwoColumnHeader from 'src/components/Headers/TwoColumnHeader';
 import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
-  currentEventKeySelector,
+  currentEventKeyAtom,
   currentTournamentKeyAtom
 } from 'src/stores/NewRecoil';
 import { Tournament } from '@toa-lib/models';
 // import FrcFmsSettingsTab from './tabs/frc-fms';
 
 const SettingsApp: FC = () => {
-  const eventKey = useRecoilValue(currentEventKeySelector);
+  const eventKey = useRecoilValue(currentEventKeyAtom);
   const [tournamentKey, setTournamentKey] = useRecoilState(
     currentTournamentKeyAtom
   );

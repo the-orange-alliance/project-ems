@@ -20,7 +20,7 @@ import { postAllianceMembers } from 'src/api/ApiProvider';
 import { useSocket } from 'src/api/SocketProvider';
 import {
   allianceMembersByTournamentSelector,
-  currentEventKeySelector,
+  currentEventKeyAtom,
   currentScheduleByTournamentSelector,
   currentScheduledTeamsSelector,
   currentTeamsByEventSelector,
@@ -29,7 +29,7 @@ import {
 
 const SetupAlliances: FC = () => {
   const setSchedule = useSetRecoilState(currentScheduleByTournamentSelector);
-  const eventKey = useRecoilValue(currentEventKeySelector);
+  const eventKey = useRecoilValue(currentEventKeyAtom);
   const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
   const [allianceMembers, setAllianceMembers] = useRecoilState(
     allianceMembersByTournamentSelector

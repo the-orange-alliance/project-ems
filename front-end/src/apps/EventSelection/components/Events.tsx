@@ -1,8 +1,8 @@
 import { FC } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { eventsAtom } from 'src/stores/NewRecoil';
+import { currentEventKeyAtom, eventsAtom } from 'src/stores/NewRecoil';
 import { Event, EventTypes } from '@toa-lib/models';
 import UpgradedTable from 'src/components/UpgradedTable/UpgradedTable';
 import { DateTime } from 'luxon';
@@ -15,6 +15,7 @@ interface Props {
 }
 
 const Events: FC<Props> = ({ onCreateDefault }) => {
+  const setEventKey = useSetRecoilState(currentEventKeyAtom);
   const events = useRecoilValue(eventsAtom);
 
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const Events: FC<Props> = ({ onCreateDefault }) => {
   const createEvent = () => onCreateDefault();
 
   const selectEvent = (e: Event) => {
+    setEventKey(e.eventKey);
     navigate(`/${e.eventKey}`);
   };
 
@@ -49,9 +51,8 @@ const Events: FC<Props> = ({ onCreateDefault }) => {
           data={events}
           headers={['Key', 'Name', 'Type', 'Location', 'Date', 'Website']}
           renderRow={(e) => {
-            const eventType = EventTypes.find(
-              (t) => t.key === e.eventTypeKey
-            )?.name;
+            const eventType = EventTypes.find((t) => t.key === e.eventTypeKey)
+              ?.name;
             const location = [e.city, e.stateProv, e.country]
               .filter((str) => str.length > 0)
               .toString();

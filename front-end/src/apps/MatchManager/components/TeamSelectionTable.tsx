@@ -9,14 +9,14 @@ import TableBody from '@mui/material/TableBody';
 import Tooltip from '@mui/material/Tooltip';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
-  currentEventKeySelector,
+  currentEventKeyAtom,
   teamsByEventAtomFam,
   currentScheduledTeamsSelector
 } from 'src/stores/NewRecoil';
 import { Checkbox } from '@mui/material';
 
 const TeamSelectionTable: FC = () => {
-  const eventKey = useRecoilValue(currentEventKeySelector);
+  const eventKey = useRecoilValue(currentEventKeyAtom);
   const teams = useRecoilValue(teamsByEventAtomFam(eventKey));
   const [scheduledTeams, setScheduledTeams] = useRecoilState(
     currentScheduledTeamsSelector

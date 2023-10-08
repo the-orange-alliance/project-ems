@@ -5,7 +5,7 @@ import PaperLayout from 'src/layouts/PaperLayout';
 import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import {
-  currentEventKeySelector,
+  currentEventKeyAtom,
   currentTournamentKeyAtom,
   schedulesByEventAtomFam
 } from 'src/stores/NewRecoil';
@@ -19,7 +19,7 @@ import {
 import { clientFetcher } from '@toa-lib/client';
 
 const MatchManager: FC = () => {
-  const eventKey = useRecoilValue(currentEventKeySelector);
+  const eventKey = useRecoilValue(currentEventKeyAtom);
   const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
 
   const handleTournamentChange = useRecoilCallback(
