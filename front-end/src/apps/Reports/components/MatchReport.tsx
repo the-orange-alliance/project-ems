@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import TableContainer from '@mui/material/TableContainer';
 import Table from '@mui/material/Table';
 import TableHead from '@mui/material/TableHead';
@@ -9,12 +9,12 @@ import { Match, Team } from '@toa-lib/models';
 import Report from './Report';
 import { DateTime } from 'luxon';
 import { useRecoilValue } from 'recoil';
-// import FieldsDropdown from 'src/components/Dropdowns/FieldsDropdown';
 import {
   currentScheduleItemsByTournamentSelector,
   currentTeamsByEventSelector,
   currentTournamentSelector
 } from 'src/stores/NewRecoil';
+import FieldsDropdown from 'src/components/Dropdowns/FieldsDropdown';
 
 interface Props {
   matches: Match<any>[];
@@ -28,22 +28,22 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
 
   if (!tournament) return null;
 
-  // const allFields = tournament.fields;
-  // const [fields, setFields] = useState(allFields);
+  const allFields = tournament.fields.map((_, i) => i + 1);
+  const [fields, setFields] = useState(allFields);
 
-  // const fieldMatches = matches.filter(
-  //   (m) => fields.indexOf(m.fieldNumber) > -1
-  // );
-  // const allianceSize = matches?.[0]?.participants?.length
-  //   ? matches[0].participants.length / 2
-  //   : 3;
-  const allianceSize = 3;
-  // const changeFields = (newFields: number[]) => setFields(newFields);
+  const fieldMatches = matches.filter(
+    (m) => fields.indexOf(m.fieldNumber) > -1
+  );
+  const allianceSize = matches?.[0]?.participants?.length
+    ? matches[0].participants.length / 2
+    : 3;
+
+  const changeFields = (newFields: number[]) => setFields(newFields);
   return (
     <>
-      {/* <div className='no-print'>
+      <div className='no-print'>
         <FieldsDropdown fields={fields} onChange={changeFields} />
-      </div> */}
+      </div>
       <Report name={`${tournament.name} Match Schedule`}>
         <TableContainer>
           <Table size='small'>
@@ -64,10 +64,11 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
             <TableBody>
               {items
                 .filter(
-                  (i) => !i.isMatch || matches.find((m) => m.name === i.name)
+                  (i) =>
+                    !i.isMatch || fieldMatches.find((m) => m.name === i.name)
                 )
                 .map((i) => {
-                  const m = matches.find((m) => m.name === i.name);
+                  const m = fieldMatches.find((m) => m.name === i.name);
                   if (i.isMatch) {
                     return (
                       <TableRow

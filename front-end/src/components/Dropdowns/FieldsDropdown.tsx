@@ -38,7 +38,7 @@ const FieldsDropdown: FC<Props> = ({ fields, onChange }) => {
       {allFields.map((field) => (
         <MenuItem key={field.name} value={field.field}>
           <Checkbox checked={fields.indexOf(field.field) > -1} />
-          <ListItemText primary={`Field ${field}`} />
+          <ListItemText primary={field.name} />
         </MenuItem>
       ))}
     </Select>
