@@ -10,12 +10,15 @@ import {
   useSocket
 } from 'src/api/SocketProvider';
 import { matchStateAtom } from 'src/stores/NewRecoil';
+import { useModal } from '@ebay/nice-modal-react';
+import AbortDialog from 'src/components/Dialogs/AbortDialog';
 
 const StartMatchButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);
-  const [_, connected] = useSocket();
+  const [, connected] = useSocket();
   const [loading, setLoading] = useState(false);
   const { startMatchEnabled } = useButtonState();
+  const abortModal = useModal(AbortDialog);
 
   const startMatch = async () => {
     setLoading(true);
@@ -25,10 +28,13 @@ const StartMatchButton: FC = () => {
     setLoading(false);
   };
 
-  const abortMatch = () => {
-    sendAbortMatch();
-    setState(MatchState.MATCH_ABORTED);
-    setState(MatchState.PRESTART_READY);
+  const abortMatch = async () => {
+    const canAbort = await abortModal.show();
+    if (canAbort) {
+      sendAbortMatch();
+      setState(MatchState.MATCH_ABORTED);
+      setState(MatchState.PRESTART_READY);
+    }
   };
 
   const updateField = async () => {
