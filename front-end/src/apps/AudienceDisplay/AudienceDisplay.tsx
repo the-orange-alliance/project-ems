@@ -7,7 +7,7 @@ import {
   MatchSocketEvent
 } from '@toa-lib/models';
 import { useSearchParams } from 'react-router-dom';
-import { FC, ReactNode, Suspense, useEffect } from 'react';
+import { FC, ReactNode, Suspense, useEffect, useRef } from 'react';
 import { useRecoilCallback, useRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
@@ -36,6 +36,7 @@ const AudienceDisplay: FC = () => {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') ?? '';
   let paramChroma = searchParams.get('chroma');
+
   useHiddenMotionlessCursor();
 
   useEffect(() => {
@@ -61,6 +62,27 @@ const AudienceDisplay: FC = () => {
       socket?.removeListener(MatchSocketEvent.COMMIT, onCommit);
     };
   }, [display]);
+
+  const timerId = useRef<NodeJS.Timer | null>(null);
+
+  useEffect(() => {
+    if (display === Displays.MATCH_START && timerId.current) {
+      clearTimeout(timerId.current);
+      timerId.current = null;
+    } else {
+      if (timerId.current) return;
+      timerId.current = setTimeout(() => {
+        console.log({ display });
+        if (display !== Displays.MATCH_START) {
+          setDisplay(Displays.BLANK);
+        }
+        if (timerId.current) {
+          clearTimeout(timerId.current);
+          timerId.current = null;
+        }
+      }, 5000);
+    }
+  }, [display, setDisplay]);
 
   const onDisplay = (id: number) => {
     setDisplay(id);
@@ -149,7 +171,7 @@ function getPlayDisplay(mode: string): ReactNode {
 function getResultsDisplay(mode: string): ReactNode {
   switch (mode) {
     case 'stream':
-      return <MatchResultsOverlay />;
+      return <MatchResults />;
     case 'stream2':
       return <MatchResultsOverlay />;
     case 'stream3':

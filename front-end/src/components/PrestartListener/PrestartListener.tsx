@@ -58,7 +58,6 @@ const PrestartListener: FC = () => {
       for (const participant of newMatch.participants) {
         participant.cardStatus = 0;
         participant.disqualified = 0;
-        participant.noShow = 0;
       }
     }
     set(currentMatchIdAtom, key.id);
