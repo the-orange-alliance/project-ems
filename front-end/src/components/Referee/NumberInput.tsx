@@ -2,6 +2,7 @@ import { FC, ChangeEvent } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import { text } from 'stream/consumers';
 
 interface Props {
   value: number;
@@ -9,6 +10,7 @@ interface Props {
   onIncrement?: (newValue: number) => void;
   onDecrement?: (newValue: number) => void;
   disabled?: boolean;
+  textFieldDisabled?: boolean;
 }
 
 const NumberInput: FC<Props> = ({
@@ -16,7 +18,8 @@ const NumberInput: FC<Props> = ({
   onChange,
   onIncrement,
   onDecrement,
-  disabled
+  disabled,
+  textFieldDisabled
 }) => {
   const handleTypedChange = (event: ChangeEvent<HTMLInputElement>) =>
     onChange(parseInt(event.target.value), true);
@@ -47,7 +50,7 @@ const NumberInput: FC<Props> = ({
         onChange={handleTypedChange}
         value={value}
         type='number'
-        disabled={disabled}
+        disabled={disabled || textFieldDisabled}
       />
       <Button variant='contained' onClick={increment} disabled={disabled}>
         +
