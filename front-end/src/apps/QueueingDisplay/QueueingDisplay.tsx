@@ -13,15 +13,23 @@ import { isNumber } from '@toa-lib/models';
 
 import FGC_BG from '../AudienceDisplay/displays/fgc_2023/res/global-bg.png';
 import FGC_LOGO from '../AudienceDisplay/displays/fgc_2023/res/Global_Logo.png';
+import { useSearchParams } from 'react-router-dom';
 
 const REFRESH_RATE_S = 60;
 
-const FieldColumn: FC<{ field: number }> = ({ field }) => {
+const FieldColumn: FC<{ field: number; tournamentKey: string | null }> = ({
+  field,
+  tournamentKey
+}) => {
   const eventKey = useRecoilValue(currentEventKeyAtom);
   const fieldMatches = useRecoilValue(matchesByEventAtomFam(eventKey))
-    .filter((m) => m.fieldNumber === field && m.result === -1)
+    .filter(
+      (m) =>
+        m.fieldNumber === field &&
+        m.result === -1 &&
+        (tournamentKey ? m.tournamentKey === tournamentKey : true)
+    )
     .slice(0, 6);
-
   return (
     <div id='q-field'>
       <h2>Field {field}</h2>
@@ -48,6 +56,8 @@ const QueueingDisplay: FC = () => {
   const refreshMatches = useRecoilRefresher_UNSTABLE(
     matchesByTournamentSelector
   );
+  const [searchParams] = useSearchParams();
+  const tournamentKey = searchParams.get('tournamentKey') ?? null;
 
   useEffect(() => {
     const intervalID = setInterval(() => {
@@ -67,11 +77,11 @@ const QueueingDisplay: FC = () => {
           <img id='q-head-right' className='fit-w' src={FGC_LOGO} />
         </div>
         <div id='q-field-base'>
-          <FieldColumn field={1} />
-          <FieldColumn field={2} />
-          <FieldColumn field={3} />
-          <FieldColumn field={4} />
-          <FieldColumn field={5} />
+          <FieldColumn field={1} tournamentKey={tournamentKey} />
+          <FieldColumn field={2} tournamentKey={tournamentKey} />
+          <FieldColumn field={3} tournamentKey={tournamentKey} />
+          <FieldColumn field={4} tournamentKey={tournamentKey} />
+          <FieldColumn field={5} tournamentKey={tournamentKey} />
         </div>
       </div>
     </ChromaLayout>

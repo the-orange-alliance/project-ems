@@ -35,6 +35,7 @@ const AudienceDisplay: FC = () => {
   const [socket, connected] = useSocket();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') ?? '';
+  const delay = searchParams.get('delay') ?? '15000';
   let paramChroma = searchParams.get('chroma');
 
   useHiddenMotionlessCursor();
@@ -80,7 +81,7 @@ const AudienceDisplay: FC = () => {
           clearTimeout(timerId.current);
           timerId.current = null;
         }
-      }, 5000);
+      }, parseInt(delay));
     }
   }, [display, setDisplay]);
 

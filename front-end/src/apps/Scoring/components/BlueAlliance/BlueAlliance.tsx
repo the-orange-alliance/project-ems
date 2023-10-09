@@ -9,6 +9,7 @@ import {
 } from 'src/stores/NewRecoil';
 import { getSeasonKeyFromEventKey } from '@toa-lib/models';
 import { useComponents } from 'src/seasons';
+import NoShowStatus from '../Status/NoShowStatus';
 
 const BlueAlliance: FC = () => {
   const match = useRecoilValue(currentMatchSelector);
@@ -27,7 +28,12 @@ const BlueAlliance: FC = () => {
             <TeamStatusRow key={p.teamKey} station={p.station} />
           ))}
         </Grid>
-        <Grid item md={4}>
+        <Grid item md={1}>
+          {blueAlliance?.map((p) => (
+            <NoShowStatus key={`no-show-${p.teamKey}`} station={p.station} />
+          ))}
+        </Grid>
+        <Grid item md={3}>
           {components && match && (
             <components.BlueScoreBreakdown
               match={matchInProgress ?? undefined}
