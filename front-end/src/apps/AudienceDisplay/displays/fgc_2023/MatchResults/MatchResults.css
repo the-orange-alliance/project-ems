@@ -148,11 +148,12 @@
 }
 .res-team-rank {
   width: 28%;
+  max-width: 28%;
   height: 100%;
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  font-size: 1.5vh;
+  /* font-size: 1.5vh; */
 }
 .res-team-flag {
   width: 12%;
@@ -312,6 +313,7 @@
   .res-team-row {
   font-size: 1rem;
   padding: 0;
+  height: 3.5vh
 }
 
 #fgc-results-overlay-container

@@ -23,6 +23,7 @@ import COOPERTITION_ICON from '../res/Coopertition_Points.png';
 import PENALTY_ICON from '../res/Penalty.png';
 import RED_CARD from '../res/Penalty_Red_Dot.png';
 import YELLOW_CARD from '../res/Penalty_Yellow_Dot.png';
+import useFitText from 'use-fit-text';
 
 const CardStatus: FC<{ cardStatus: number }> = ({ cardStatus }) => {
   const getImg = () => {
@@ -44,6 +45,9 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
   participant,
   ranking
 }) => {
+  const { fontSize: teamNameFontSize, ref: teamNameRef } = useFitText();
+  const { fontSize: teamRankFontSize, ref: teamRankRef } = useFitText();
+
   return (
     <div
       className={`res-team-row bottom-${
@@ -53,17 +57,31 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
       <div className='res-team-cardstatus'>
         <CardStatus cardStatus={participant.cardStatus} />
       </div>
-      <div className='res-team-name'>{participant?.team?.teamNameLong}</div>
+      <div
+        className='res-team-name'
+        style={{ fontSize: teamNameFontSize }}
+        ref={teamNameRef}
+      >
+        {participant?.team?.teamNameLong}
+      </div>
       <div className='res-team-rank'>
         {ranking && (
           <span>
             {ranking.rankChange > 0 ? (
-              <div className='center'>
+              <div
+                className='center'
+                style={{ fontSize: teamRankFontSize, whiteSpace: 'nowrap' }}
+                ref={teamRankRef}
+              >
                 #{ranking.rank} (<KeyboardDoubleArrowUpIcon />
                 {ranking.rankChange})
               </div>
             ) : (
-              <div className='center'>
+              <div
+                className='center'
+                style={{ fontSize: teamRankFontSize, whiteSpace: 'nowrap' }}
+                ref={teamRankRef}
+              >
                 #{ranking.rank} (<KeyboardDoubleArrowDownIcon />
                 {Math.abs(ranking.rankChange)})
               </div>
@@ -91,6 +109,9 @@ const MatchResults: FC = () => {
     currentRankingsByMatchSelector
   );
   const someDetails = match?.details;
+
+  const { fontSize: blueAliFontSize, ref: blueAliRef } = useFitText();
+  const { fontSize: redAliFontSize, ref: redAliRef } = useFitText();
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
@@ -195,7 +216,11 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-red'>
                     ALIGNMENT MULTIPLIER
                   </div>
-                  <div className='res-detail-right'>
+                  <div
+                    className='res-detail-right'
+                    style={{ fontSize: redAliFontSize }}
+                    ref={redAliRef}
+                  >
                     x{HydrogenHorizons.getMultiplier(details.redAlignment)}
                     &nbsp;(+{redAlignmentDiff})
                   </div>
@@ -288,7 +313,11 @@ const MatchResults: FC = () => {
                   <div className='res-detail-left right-blue'>
                     ALIGNMENT MULTIPLIER
                   </div>
-                  <div className='res-detail-right'>
+                  <div
+                    className='res-detail-right'
+                    style={{ fontSize: blueAliFontSize }}
+                    ref={blueAliRef}
+                  >
                     x{HydrogenHorizons.getMultiplier(details.blueAlignment)}
                     &nbsp;(+{blueAlignmentDiff})
                   </div>

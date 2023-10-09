@@ -28,7 +28,8 @@
     "react-to-print": "^2.14.13",
     "recoil": "^0.7.7",
     "socket.io-client": "^4.7.1",
-    "swr": "^2.2.0"
+    "swr": "^2.2.0",
+    "use-fit-text": "^2.4.0"
   },
   "devDependencies": {
     "@types/luxon": "^3.3.1",

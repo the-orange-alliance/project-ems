@@ -12,6 +12,7 @@ import FGC_BG from '../res/global-bg.png';
 import FGC_LOGO from '../res/Global_Logo.png';
 import RED_FLAG from '../res/Red_Team_Tag.png';
 import BLUE_FLAG from '../res/Blue_Team_Tag.png';
+import useFitText from 'use-fit-text';
 
 function getName(name: string): string {
   const params = name.split(' ');
@@ -19,10 +20,12 @@ function getName(name: string): string {
   return params.length === 3 ? params[2] : `${name.charAt(0)}${params[3]}`;
 }
 
-const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
-  participant,
-  ranking
-}) => {
+const Participant: FC<{
+  participant: MatchParticipant;
+  ranking?: Ranking;
+  participantCount?: number;
+}> = ({ participant, ranking, participantCount }) => {
+  const { fontSize: teamNameFontSize, ref: teamNameRef } = useFitText();
   return (
     <div className='pre-match-alliance-row pre-match-border'>
       <div className={'pre-match-flag'}>
@@ -33,7 +36,14 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
           }
         />
       </div>
-      <div className={'pre-match-team'}>
+      <div
+        className={'pre-match-team'}
+        style={{
+          fontSize: teamNameFontSize,
+          height: participantCount === 3 ? '7vh' : '5vh'
+        }}
+        ref={teamNameRef}
+      >
         ({participant?.team?.country})&nbsp;{participant?.team?.teamNameLong}
       </div>
       <div className='pre-match-rank'>{ranking && `#${ranking.rank}`}</div>
@@ -50,8 +60,6 @@ const MatchPreview: FC = () => {
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
-
-  const name = getName(match ? match.name : '');
 
   useEffect(() => {
     rankingsRefresh();
@@ -84,6 +92,7 @@ const MatchPreview: FC = () => {
                 key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                 participant={p}
                 ranking={rankings?.find((r) => r.teamKey === p.teamKey)}
+                participantCount={redAlliance.length}
               />
             ))}
           </div>
@@ -98,6 +107,7 @@ const MatchPreview: FC = () => {
                 key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                 participant={p}
                 ranking={rankings?.find((r) => r.teamKey === p.teamKey)}
+                participantCount={blueAlliance.length}
               />
             ))}
           </div>
