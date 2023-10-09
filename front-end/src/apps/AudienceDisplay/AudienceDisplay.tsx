@@ -66,21 +66,22 @@ const AudienceDisplay: FC = () => {
   const timerId = useRef<NodeJS.Timer | null>(null);
 
   useEffect(() => {
-    if (display === Displays.MATCH_START && timerId.current) {
-      clearTimeout(timerId.current);
-      timerId.current = null;
-    } else {
-      if (timerId.current) return;
-      timerId.current = setTimeout(() => {
-        console.log({ display });
-        if (display !== Displays.MATCH_START) {
-          setDisplay(Displays.BLANK);
-        }
-        if (timerId.current) {
-          clearTimeout(timerId.current);
-          timerId.current = null;
-        }
-      }, parseInt(delay));
+    if (mode === 'stream') {
+      if (display === Displays.MATCH_START && timerId.current) {
+        clearTimeout(timerId.current);
+        timerId.current = null;
+      } else {
+        if (timerId.current) return;
+        timerId.current = setTimeout(() => {
+          if (display !== Displays.MATCH_START) {
+            setDisplay(Displays.BLANK);
+          }
+          if (timerId.current) {
+            clearTimeout(timerId.current);
+            timerId.current = null;
+          }
+        }, parseInt(delay));
+      }
     }
   }, [display, setDisplay]);
 
