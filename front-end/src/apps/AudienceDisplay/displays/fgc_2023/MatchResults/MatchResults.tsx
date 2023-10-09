@@ -41,10 +41,11 @@ const CardStatus: FC<{ cardStatus: number }> = ({ cardStatus }) => {
   return <img src={getImg()} className='fit-w' />;
 };
 
-const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
-  participant,
-  ranking
-}) => {
+const Participant: FC<{
+  participant: MatchParticipant;
+  ranking?: Ranking;
+  participantCount?: number;
+}> = ({ participant, ranking, participantCount }) => {
   const { fontSize: teamNameFontSize, ref: teamNameRef } = useFitText();
   const { fontSize: teamRankFontSize, ref: teamRankRef } = useFitText();
 
@@ -53,13 +54,18 @@ const Participant: FC<{ participant: MatchParticipant; ranking?: Ranking }> = ({
       className={`res-team-row bottom-${
         participant.station < 20 ? 'red' : 'blue'
       }`}
+      style={{
+        height: participantCount === 3 ? '7vh' : '5.5vh'
+      }}
     >
       <div className='res-team-cardstatus'>
         <CardStatus cardStatus={participant.cardStatus} />
       </div>
       <div
         className='res-team-name'
-        style={{ fontSize: teamNameFontSize }}
+        style={{
+          fontSize: teamNameFontSize
+        }}
         ref={teamNameRef}
       >
         {participant?.team?.teamNameLong}
@@ -185,6 +191,7 @@ const MatchResults: FC = () => {
                     key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                     participant={p}
                     ranking={rankings?.find((r) => r.teamKey === p.teamKey)}
+                    participantCount={redAlliance.length}
                   />
                 ))}
               </div>
@@ -280,6 +287,7 @@ const MatchResults: FC = () => {
                     key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                     participant={p}
                     ranking={rankings?.find((r) => r.teamKey === p.teamKey)}
+                    participantCount={blueAlliance.length}
                   />
                 ))}
               </div>

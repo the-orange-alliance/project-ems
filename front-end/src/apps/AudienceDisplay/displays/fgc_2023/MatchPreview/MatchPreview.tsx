@@ -14,12 +14,6 @@ import RED_FLAG from '../res/Red_Team_Tag.png';
 import BLUE_FLAG from '../res/Blue_Team_Tag.png';
 import useFitText from 'use-fit-text';
 
-function getName(name: string): string {
-  const params = name.split(' ');
-  if (params.length <= 1) return name;
-  return params.length === 3 ? params[2] : `${name.charAt(0)}${params[3]}`;
-}
-
 const Participant: FC<{
   participant: MatchParticipant;
   ranking?: Ranking;
