@@ -22,7 +22,6 @@ import MatchPreview from './displays/fgc_2023/MatchPreview/MatchPreview';
 import MatchPlay from './displays/fgc_2023/MatchPlay/MatchPlay';
 import MatchResults from './displays/fgc_2023/MatchResults/MatchResults';
 import MatchResultsOverlay from './displays/fgc_2023/MatchResults/MatchResultsOverlay';
-import MatchPlayMini from './displays/fgc_2023/MatchPlayMini/MatchPlayMini';
 import Rankings from './displays/fgc_2023/Rankings/Rankings';
 import { useHiddenMotionlessCursor } from '@features/hooks/use-hidden-motionless-cursor';
 import './AudienceDisplay.less';
@@ -156,7 +155,7 @@ function getPreviewDisplay(mode: string): ReactNode {
 function getPlayDisplay(mode: string): ReactNode {
   switch (mode) {
     case 'stream':
-      return <MatchPlayMini />;
+      return <MatchPlay />;
     case 'stream3':
       return <MatchPlay />;
     case 'stream4':
