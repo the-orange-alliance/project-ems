@@ -132,7 +132,7 @@ router.post(
       details
     );
     const matchesReq = await request('/upload/matches', {
-      method: 'POST',
+      method: 'PUT',
       body: JSON.stringify(matchesWithDetails)
     });
 
