@@ -9,6 +9,7 @@ import { HydrogenHorizons, Season, SeasonFunctions } from './index.js';
  */
 const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
   calculateRankings,
+  calculatePlayoffsRankings,
   calculateScore
 };
 
@@ -192,8 +193,10 @@ function calculateRankings(
         ? [...scores.slice(0, index), ...scores.slice(index + 1)]
         : scores;
     if (newScores.length > 0) {
-      ranking.rankingScore = Math.ceil(
-        newScores.reduce((prev, curr) => prev + curr) / newScores.length
+      ranking.rankingScore = Number(
+        (
+          newScores.reduce((prev, curr) => prev + curr) / newScores.length
+        ).toFixed(2)
       );
     } else {
       ranking.rankingScore = 0;
@@ -221,12 +224,11 @@ function calculateRankings(
   return rankings;
 }
 
-export function calculatePlayoffsRank(
+export function calculatePlayoffsRankings(
   matches: Match<MatchDetails>[],
   prevRankings: SeasonRanking[],
   members: AllianceMember[]
 ) {
-  const alliances: Map<number, SeasonRanking> = new Map();
   const rankingMap: Map<number, SeasonRanking> = new Map();
 
   for (const match of matches) {
@@ -280,7 +282,7 @@ export function calculatePlayoffsRank(
 
   const allianceRankMap: Map<number, number> = new Map();
   let allianceRank = 1;
-  rankedMembers.forEach((m, i) => {
+  rankedMembers.forEach((m) => {
     if (m?.isCaptain) {
       allianceRankMap.set(m.allianceRank, allianceRank);
       allianceRank += 1;

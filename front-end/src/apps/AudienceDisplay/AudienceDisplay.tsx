@@ -27,6 +27,7 @@ import { useHiddenMotionlessCursor } from '@features/hooks/use-hidden-motionless
 import './AudienceDisplay.less';
 import MatchPlayTimer from './displays/fgc_2023/MatchPlayTimer/MatchPlayTimer';
 import { updateSocketClient } from 'src/api/ApiProvider';
+import RankingsPlayoffs from './displays/fgc_2023/RankingsPlayoffs/RankingsPlayoff';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayIdAtom);
@@ -116,7 +117,7 @@ const AudienceDisplay: FC = () => {
         <MatchStateListener />
         <PrestartListener />
         <div id='aud-base' style={{ backgroundColor: chromaKey }}>
-          {getDisplay(display, mode)}
+          {mode === 'pit' ? <RankingsPlayoffs /> : getDisplay(display, mode)}
         </div>
       </ChromaLayout>
     </Suspense>

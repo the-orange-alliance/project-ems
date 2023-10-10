@@ -1,3 +1,4 @@
+import { AllianceMember } from '../Alliance.js';
 import { Match, MatchDetailBase } from '../Match.js';
 import { Ranking } from '../Ranking.js';
 import { CarbonCaptureSeason } from './CarbonCapture.js';
@@ -24,6 +25,11 @@ export const Seasons: Season<any, any>[] = [
 
 export interface SeasonFunctions<T extends MatchDetailBase, J extends Ranking> {
   calculateRankings: (matches: Match<T>[], prevRankings: J[]) => J[];
+  calculatePlayoffsRankings?: (
+    matches: Match<T>[],
+    prevRankings: J[],
+    members: AllianceMember[]
+  ) => J[];
   calculateScore: (match: Match<T>) => [number, number];
   calculateRankingPoints?: (details: T) => T;
   calculateAutoScore?: (match: Match<T>) => [number, number];

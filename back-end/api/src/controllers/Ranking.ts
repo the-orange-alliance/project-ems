@@ -95,10 +95,10 @@ router.post(
     try {
       const { tournamentKey } = req.params;
       const teams: Team[] = req.body;
-      const rankings: Ranking[] = teams.map((t) => ({
+      const rankings: Ranking[] = teams.map((t, i) => ({
         eventKey: t.eventKey,
         tournamentKey,
-        rank: 0,
+        rank: i + 1,
         losses: 0,
         played: 0,
         rankChange: 0,
@@ -120,6 +120,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, tournamentKey } = req.params;
+      const { playoffs } = req.query;
       const db = await getDB(eventKey);
       const matches = await db.selectAllWhere(
         'match',
@@ -157,16 +158,38 @@ router.post(
       }
 
       // TODO [FGC2023] - Calculate rankings for playoffs matches
-      const rankings = functions.calculateRankings(
-        matchesWithDetails,
-        prevRankings
-      );
-      await db.deleteWhere(
-        'ranking',
-        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
-      );
-      await db.insertValue('ranking', rankings);
-      res.send(rankings);
+      if (playoffs) {
+        const allianceMembers = await db.selectAllWhere(
+          'alliance',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+        );
+        const rankings = functions.calculatePlayoffsRankings?.(
+          matchesWithDetails,
+          prevRankings,
+          allianceMembers
+        );
+        if (rankings) {
+          await db.deleteWhere(
+            'ranking',
+            `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+          );
+          await db.insertValue('ranking', rankings);
+          res.send(rankings);
+        } else {
+          res.send([]);
+        }
+      } else {
+        const rankings = functions.calculateRankings(
+          matchesWithDetails,
+          prevRankings
+        );
+        await db.deleteWhere(
+          'ranking',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+        );
+        await db.insertValue('ranking', rankings);
+        res.send(rankings);
+      }
     } catch (e) {
       return next(e);
     }

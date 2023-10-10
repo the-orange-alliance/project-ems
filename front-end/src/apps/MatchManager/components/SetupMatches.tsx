@@ -151,6 +151,7 @@ export const SetupFixedMatches: FC = () => {
         allianceMembersByTournamentSelector
       );
       if (!event || !tournament) return;
+      console.log(getAllianceMap());
       const matches = createFixedMatches(items, alliances, getAllianceMap());
       set(matchesByTournamentSelector, matches);
       setLoading(false);
@@ -185,6 +186,8 @@ export const SetupFixedMatches: FC = () => {
         return [];
       case 'fgc_2023':
         return FGCMatches.FGC2023.RoundRobinMap;
+      case 'fgc_2023_2':
+        return FGCMatches.FGC2023.FinalsMap;
       default:
         return [];
     }
@@ -194,7 +197,7 @@ export const SetupFixedMatches: FC = () => {
     <Box>
       <MatchSchedulerDropdown value={scheduler} onChange={setScheduler} />
       <Button
-        sx={{ display: 'Block' }}
+        sx={{ display: 'block', marginTop: '24px' }}
         variant='contained'
         onClick={createMatches}
         disabled={loading}

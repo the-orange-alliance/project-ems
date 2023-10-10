@@ -209,7 +209,7 @@ export function createFixedMatches(
     const match: Match<any> = {
       eventKey,
       tournamentKey,
-      id: matchNumber,
+      id: matchNumber + 1,
       fieldNumber: 1,
       name: item.name,
       result: -1,
@@ -238,7 +238,7 @@ export function createFixedMatches(
       participants.push({
         eventKey,
         tournamentKey,
-        id: matchNumber,
+        id: matchNumber + 1,
         teamKey: participant.teamKey,
         station: 10 + participants.length + 1,
         cardStatus: 0,
@@ -252,7 +252,7 @@ export function createFixedMatches(
       participants.push({
         eventKey,
         tournamentKey,
-        id: matchNumber,
+        id: matchNumber + 1,
         teamKey: participant.teamKey,
         station: 20 + participants.filter((p) => p.station >= 20).length + 1,
         cardStatus: 0,

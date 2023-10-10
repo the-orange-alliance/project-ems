@@ -560,6 +560,7 @@ export const currentMatchSelector = selector<Match<any> | null>({
         isMatch
       );
     } catch (e) {
+      console.error(e);
       return null;
     }
   }
@@ -699,6 +700,27 @@ export const matchInProgressParticipantsByStationSelectorFam = selectorFamily<
  * @section RANKINGS STATE
  * Recoil state management for rankings.
  */
+export const rankingsByEventSelectorFam = selectorFamily<Ranking[], string>({
+  key: 'rankingsByEventSelectorFam',
+  get: (eventKey: string) => async (): Promise<Ranking[]> => {
+    try {
+      return await clientFetcher(
+        `ranking/${eventKey}`,
+        'GET',
+        undefined,
+        isRankingArray
+      );
+    } catch (e) {
+      return [];
+    }
+  }
+});
+
+export const rankingsByEventAtomFam = atomFamily<Ranking[], string>({
+  key: 'rankingsByEventAtomFam',
+  default: rankingsByEventSelectorFam
+});
+
 export const currentRankingsByTournamentSelector = selector<Ranking[] | null>({
   key: 'currentRankingsByTournamentSelector',
   get: async ({ get }) => {

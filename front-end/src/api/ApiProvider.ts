@@ -191,6 +191,16 @@ export const recalculateRankings = (
     isRankingArray
   );
 
+export const recalculatePlayoffsRankings = (
+  eventKey: string,
+  tournamentKey: string
+): Promise<Ranking[]> =>
+  clientFetcher(
+    `ranking/calculate/${eventKey}/${tournamentKey}?playoffs=true`,
+    'POST',
+    isRankingArray
+  );
+
 export const postAllianceMembers = (
   eventKey: string,
   members: AllianceMember[]

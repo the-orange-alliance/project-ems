@@ -1,0 +1,48 @@
+.fgc-rank-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding: 24px;
+
+  h2 {
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 3vw;
+  }
+}
+
+.fgc-rank-img {
+  width: 33%;
+}
+
+#fgc-rank-table {
+  width: 85%;
+  font-size: 1.25vw;
+  border-collapse: collapse;
+
+  thead {
+    background-color: black;
+    color: #ffffff;
+    th {
+      padding: 8px;
+    }
+  }
+
+  tbody {
+    tr {
+      color: #000000;
+      td {
+        text-align: center;
+        padding: 8px;
+      }
+    }
+    tr:nth-child(even) {
+      background-color: white;
+    }
+    tr:nth-child(odd) {
+      background-color: #eeeeee;
+    }
+  }
+}

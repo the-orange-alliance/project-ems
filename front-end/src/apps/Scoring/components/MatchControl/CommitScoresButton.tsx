@@ -10,7 +10,11 @@ import {
 } from 'src/stores/NewRecoil';
 import { FcsPackets, Match, MatchState } from '@toa-lib/models';
 import { sendAllClear, sendCommitScores } from 'src/api/SocketProvider';
-import { patchWholeMatch, recalculateRankings } from 'src/api/ApiProvider';
+import {
+  patchWholeMatch,
+  recalculatePlayoffsRankings,
+  recalculateRankings
+} from 'src/api/ApiProvider';
 import { fcsPacketsSelector } from '@seasons/HydrogenHorizons/stores/Recoil';
 
 const CommitScoresButton: FC = () => {
@@ -38,7 +42,12 @@ const CommitScoresButton: FC = () => {
     setLoading(true);
     await patchWholeMatch(match);
     set(matchByCurrentIdSelectorFam(match.id), match);
-    await recalculateRankings(match.eventKey, match.tournamentKey);
+    // FGC2023 SPECIFIC
+    if (match.tournamentKey === '2' || match.tournamentKey === '3') {
+      await recalculatePlayoffsRankings(match.eventKey, match.tournamentKey);
+    } else {
+      await recalculateRankings(match.eventKey, match.tournamentKey);
+    }
     setLoading(false);
     sendCommitScores({
       eventKey: match.eventKey,

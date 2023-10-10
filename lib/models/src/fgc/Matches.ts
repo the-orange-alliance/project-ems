@@ -17,4 +17,9 @@ export namespace FGC2023 {
     [5, 8],
     [6, 7]
   ];
+  export const FinalsMap: number[][] = [
+    [1, 3],
+    [3, 2],
+    [2, 1]
+  ];
 }

@@ -1,5 +1,4 @@
 import { Match } from '../Match.js';
-import { EventSchedule, ScheduleItem } from '../Schedule.js';
 
 export namespace FGC2023 {
   // We can safely assume for FGC2023 there will be 5 fields.

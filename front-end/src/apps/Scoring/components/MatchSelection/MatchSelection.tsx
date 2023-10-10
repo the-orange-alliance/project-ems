@@ -61,7 +61,6 @@ const MatchSelection: FC = () => {
           state <= MatchState.MATCH_COMPLETE
         }
         matches={matches}
-        // matches={matches.filter((m) => fields.indexOf(m.fieldNumber) > -1)}
         onSelect={handleSelect}
       />
     </Paper>

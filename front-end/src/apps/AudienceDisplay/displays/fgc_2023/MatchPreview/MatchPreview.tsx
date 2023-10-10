@@ -55,6 +55,15 @@ const MatchPreview: FC = () => {
   const redAlliance = match?.participants?.filter((p) => p.station < 20);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
 
+  // FGC2023 SPECIFIC
+  const getShownRanking = (participant: MatchParticipant) => {
+    const ranking = rankings?.find((r) => r.teamKey === participant.teamKey);
+    const isPlayoffs =
+      participant.tournamentKey === '2' || participant.tournamentKey === '3';
+    const isCaptain = participant.station === 11 || participant.station === 21;
+    return isPlayoffs ? (isCaptain ? ranking : undefined) : ranking;
+  };
+
   useEffect(() => {
     rankingsRefresh();
   }, [match]);
@@ -85,7 +94,7 @@ const MatchPreview: FC = () => {
               <Participant
                 key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                 participant={p}
-                ranking={rankings?.find((r) => r.teamKey === p.teamKey)}
+                ranking={getShownRanking(p)}
                 participantCount={redAlliance.length}
               />
             ))}
@@ -100,7 +109,7 @@ const MatchPreview: FC = () => {
               <Participant
                 key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                 participant={p}
-                ranking={rankings?.find((r) => r.teamKey === p.teamKey)}
+                ranking={getShownRanking(p)}
                 participantCount={blueAlliance.length}
               />
             ))}

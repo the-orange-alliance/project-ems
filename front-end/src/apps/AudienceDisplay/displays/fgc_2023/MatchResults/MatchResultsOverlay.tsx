@@ -154,9 +154,20 @@ const MatchResultsOverlay: FC = () => {
     HydrogenHorizons.getCoopertitionPoints(details);
   const redPenalty = Math.round((match?.redMinPen ?? 0) * 0.1 * redPoints);
   const bluePenalty = Math.round((match?.blueMinPen ?? 0) * 0.1 * bluePoints);
+
   useEffect(() => {
     rankingsRefresh();
   }, [match]);
+
+  // FGC2023 SPECIFIC
+  const getShownRanking = (participant: MatchParticipant) => {
+    const ranking = rankings?.find((r) => r.teamKey === participant.teamKey);
+    const isPlayoffs =
+      participant.tournamentKey === '2' || participant.tournamentKey === '3';
+    const isCaptain = participant.station === 11 || participant.station === 21;
+    return isPlayoffs ? (isCaptain ? ranking : undefined) : ranking;
+  };
+
   return (
     <div id='fgc-body' style={{ backgroundImage: 'none' }}>
       <div id='fgc-results-overlay-container'>
@@ -179,7 +190,7 @@ const MatchResultsOverlay: FC = () => {
                   <Participant
                     key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                     participant={p}
-                    ranking={rankings?.find((r) => r.teamKey === p.teamKey)}
+                    ranking={getShownRanking(p)}
                     participantCount={redAlliance.length}
                   />
                 ))}
@@ -272,7 +283,7 @@ const MatchResultsOverlay: FC = () => {
                   <Participant
                     key={`${p.eventKey}-${p.tournamentKey}-${p.teamKey}`}
                     participant={p}
-                    ranking={rankings?.find((r) => r.teamKey === p.teamKey)}
+                    ranking={getShownRanking(p)}
                     participantCount={blueAlliance.length}
                   />
                 ))}

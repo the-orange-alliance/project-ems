@@ -31,9 +31,9 @@ const ScoreSheet: FC<RefereeScoreSheetProps> = ({ alliance }) => {
 
   const [tabIndex, setTabIndex] = useState(0);
 
-  const participants = match?.participants?.filter((p) =>
-    alliance === 'red' ? p.station < 20 : p.station >= 20
-  );
+  const participants = match?.participants
+    ?.filter((p) => (alliance === 'red' ? p.station < 20 : p.station >= 20))
+    .slice(0, 3);
 
   const handleChange = (event: SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);

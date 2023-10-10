@@ -5,6 +5,7 @@ import {
   createRankings,
   purgeAll,
   recalculateRankings,
+  recalculatePlayoffsRankings,
   resultsSyncMatches,
   resultsSyncRankings
 } from 'src/api/ApiProvider';
@@ -62,7 +63,15 @@ const AdminApp: FC = () => {
   const handleRankings = useRecoilCallback(({ snapshot }) => async () => {
     const tournament = await snapshot.getPromise(currentTournamentSelector);
     if (!tournament) return;
-    await recalculateRankings(tournament.eventKey, tournament.tournamentKey);
+    // FGC2023 SPECIFIC
+    if (tournamentKey === '2' || tournamentKey === '3') {
+      await recalculatePlayoffsRankings(
+        tournament.eventKey,
+        tournament.tournamentKey
+      );
+    } else {
+      await recalculateRankings(tournament.eventKey, tournament.tournamentKey);
+    }
   });
 
   return (
