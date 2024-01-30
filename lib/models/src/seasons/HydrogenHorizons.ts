@@ -2,7 +2,7 @@ import { AllianceMember } from '../Alliance.js';
 import { Match, MatchDetailBase } from '../Match.js';
 import { Ranking } from '../Ranking.js';
 import { isNonNullObject, isNumber, UnreachableError } from '../types.js';
-import { HydrogenHorizons, Season, SeasonFunctions } from './index.js';
+import { Season, SeasonFunctions } from './index.js';
 
 /**
  * Main season function declaration for the whole file.

@@ -1,6 +1,7 @@
 ALTER TABLE "ranking" ADD COLUMN rankingScore INT;
 ALTER TABLE "ranking" ADD COLUMN avgCoopertitionPoints INT;
 ALTER TABLE "ranking" ADD COLUMN avgAllianceMatchPoints INT;
+ALTER TABLE "ranking" ADD COLUMN avgAllianceAutoPoints INT;
 ALTER TABLE "ranking" ADD COLUMN avgAllianceStagePoints INT;
 
 ALTER TABLE "match_detail" add COLUMN redAutoMobilityOne INT;

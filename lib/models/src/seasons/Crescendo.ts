@@ -1,5 +1,8 @@
-import { MatchDetailBase } from '../Match.js';
+import { randomInt } from 'crypto';
+import { AllianceMember } from '../Alliance.js';
+import { Match, MatchDetailBase } from '../Match.js';
 import { Ranking } from '../Ranking.js';
+import { isNonNullObject, isNumber, UnreachableError } from '../types.js';
 import { Season, SeasonFunctions } from './index.js';
 
 /**
@@ -10,6 +13,13 @@ const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
   calculatePlayoffsRankings,
   calculateScore
 };
+
+export enum StageStatus {
+  NONE = 0,
+  PARK = 1,
+  ONSTAGE = 2,
+  ONSTAGE_SPOTLIT = 3
+}
 
 export interface MatchDetails extends MatchDetailBase {
   redAutoMobilityOne: number;
@@ -86,6 +96,7 @@ export interface SeasonRanking extends Ranking {
   rankingScore: number;
   avgCoopertitionPoints: number;
   avgAllianceMatchPoints: number;
+  avgAllianceAutoPoints: number;
   avgAllianceStagePoints: number;
 }
 
@@ -96,3 +107,52 @@ export const CrescendoSeason: Season<MatchDetails, SeasonRanking> = {
   defaultMatchDetails,
   functions
 };
+
+export const isCrescendoDetails = (obj: unknown): obj is MatchDetails =>
+  isNonNullObject(obj) &&
+  isNumber(obj.redTeleAmpNotes) &&
+  isNumber(obj.blueTeleAmpNotes);
+
+export const isCrescendoRankig = (obj: unknown): obj is SeasonRanking =>
+  isNonNullObject(obj) &&
+  isNumber(obj.rankingScore) &&
+  isNumber(obj.avgCoopertitionPoints) &&
+  isNumber(obj.avgAllianceMatchPoints) &&
+  isNumber(obj.avgAllianceAutoPoints) &&
+  isNumber(obj.avgAllianceStagePoints);
+
+/* Functions for calculating ranks. */
+function calculateRankings(
+  matches: Match<MatchDetails>[],
+  prevRankings: SeasonRanking[]
+): SeasonRanking[] {
+  return [];
+}
+
+function calculatePlayoffsRankings(
+  matches: Match<MatchDetails>[],
+  prevRankings: SeasonRanking[],
+  members: AllianceMember[]
+): SeasonRanking[] {
+  return [];
+}
+
+function calculateScore(match: Match<MatchDetails>): [number, number] {
+  return [0, 0];
+}
+
+function compareRankings(a: SeasonRanking, b: SeasonRanking): number {
+  if (a.rankingScore !== b.rankingScore) {
+    return b.rankingScore - a.rankingScore;
+  } else if (a.avgCoopertitionPoints !== b.avgCoopertitionPoints) {
+    return b.avgCoopertitionPoints - a.avgCoopertitionPoints;
+  } else if (a.avgAllianceMatchPoints !== b.avgAllianceMatchPoints) {
+    return b.avgAllianceMatchPoints - a.avgCoopertitionPoints;
+  } else if (a.avgAllianceAutoPoints !== b.avgAllianceAutoPoints) {
+    return b.avgAllianceAutoPoints - a.avgAllianceAutoPoints;
+  } else if (a.avgAllianceStagePoints !== b.avgAllianceStagePoints) {
+    return b.avgAllianceStagePoints - a.avgAllianceStagePoints;
+  } else {
+    return randomInt(10) - randomInt(10);
+  }
+}
