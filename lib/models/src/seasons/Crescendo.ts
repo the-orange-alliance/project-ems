@@ -31,9 +31,9 @@ export interface MatchDetails extends MatchDetailBase {
   redTeleSpeakerNotes: number;
   redTeleSpeakerNotesAmped: number;
   redTeleTrapNotes: number;
-  redEndStageStatusOne: number;
-  redEndStageStatusTwo: number;
-  redEndStageStatusThree: number;
+  redEndStageStatusOne: StageStatus;
+  redEndStageStatusTwo: StageStatus;
+  redEndStageStatusThree: StageStatus;
   redHarmonyStatus: number;
   redMelodyStatus: number;
   redEnsembleStatus: number;
@@ -46,9 +46,9 @@ export interface MatchDetails extends MatchDetailBase {
   blueTeleSpeakerNotes: number;
   blueTeleSpeakerNotesAmped: number;
   blueTeleTrapNotes: number;
-  blueEndStageStatusOne: number;
-  blueEndStageStatusTwo: number;
-  blueEndStageStatusThree: number;
+  blueEndStageStatusOne: StageStatus;
+  blueEndStageStatusTwo: StageStatus;
+  blueEndStageStatusThree: StageStatus;
   blueHarmonyStatus: number;
   blueMelodyStatus: number;
   blueEnsembleStatus: number;
@@ -126,6 +126,84 @@ function calculateRankings(
   matches: Match<MatchDetails>[],
   prevRankings: SeasonRanking[]
 ): SeasonRanking[] {
+  const rankingMap: Map<number, SeasonRanking> = new Map();
+  const rankingScoresMap: Map<number, number[]> = new Map();
+  const coopertitionPointsMap: Map<number, number[]> = new Map();
+  const matchPointsMap: Map<number, number[]> = new Map();
+  const autoPointsMap: Map<number, number[]> = new Map();
+  const stagePointsMap: Map<number, number[]> = new Map();
+
+  for (const match of matches) {
+    if (!match.participants) break;
+    for (const participant of match.participants) {
+      const { eventKey, tournamentKey, teamKey } = participant;
+      if (!rankingMap.get(teamKey)) {
+        rankingMap.set(teamKey, {
+          eventKey,
+          tournamentKey,
+          teamKey,
+          wins: 0,
+          losses: 0,
+          played: 0,
+          ties: 0,
+          rank: 0,
+          rankChange: 0,
+          rankingScore: 0,
+          avgAllianceAutoPoints: 0,
+          avgAllianceMatchPoints: 0,
+          avgAllianceStagePoints: 0,
+          avgCoopertitionPoints: 0
+        });
+      }
+
+      if (!rankingScoresMap.get(teamKey)) {
+        rankingScoresMap.set(teamKey, []);
+      }
+
+      if (!coopertitionPointsMap.get(teamKey)) {
+        coopertitionPointsMap.set(teamKey, []);
+      }
+
+      if (!matchPointsMap.get(teamKey)) {
+        matchPointsMap.set(teamKey, []);
+      }
+
+      if (!autoPointsMap.get(teamKey)) {
+        autoPointsMap.set(teamKey, []);
+      }
+
+      if (!stagePointsMap.get(teamKey)) {
+        stagePointsMap.set(teamKey, []);
+      }
+
+      if (
+        !isCrescendoDetails(match.details) ||
+        participant.disqualified === 1 ||
+        participant.surrogate > 0
+      ) {
+        continue;
+      }
+
+      const ranking = {
+        ...(rankingMap.get(participant.teamKey) as SeasonRanking)
+      };
+      const coopertitionPoints = coopertitionPointsMap.get(
+        participant.teamKey
+      ) as number[];
+      const matchPoints = matchPointsMap.get(participant.teamKey) as number[];
+      const autoPoints = autoPointsMap.get(participant.teamKey) as number[];
+      const stagePoints = stagePointsMap.get(participant.teamKey) as number[];
+      const redWin = match.redScore > match.blueScore;
+      const blueWin = match.blueScore > match.redScore;
+      const isTie = match.redScore === match.blueScore;
+
+      if (participant.station < 20) {
+        // Red Alliance
+        if (participant.cardStatus === 2 || participant.noShow === 1) {
+        }
+      }
+    }
+  }
   return [];
 }
 
