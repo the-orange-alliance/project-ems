@@ -1,0 +1,64 @@
+name: Test building EMS
+
+on:
+  push:
+    branches: 
+      - "*"
+  workflow_dispatch:
+
+jobs:
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        
+    - name: Install lib dependencies
+      run: |
+        npm run install:lib
+
+    - name: Build libs
+      run: |
+        npm run build:lib
+
+    - name: Install frontend dependencies
+      run: |
+        npm run install:frontend
+
+    - name: Build frontend
+      run: |
+        npm run build:frontend
+
+  build-backend:
+    name: Build Backend
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        
+    - name: Install lib dependencies
+      run: |
+        npm run install:lib
+
+    - name: Build libs
+      run: |
+        npm run build:lib
+
+    - name: Install backend dependencies
+      run: |
+        npm run install:backend
+
+    - name: Build backend
+      run: |
+        npm run build:backend

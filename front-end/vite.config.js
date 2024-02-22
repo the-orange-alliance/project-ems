@@ -1,10 +1,20 @@
 // vite.config.js
 import { defineConfig } from 'vite';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    nodePolyfills({
+      // Buffer borks the vite build, so exclude it and don't polyfill the global of it
+      exclude: ['buffer'],
+      globals: {
+        Buffer: false
+      }
+    })
+  ],
   root: './',
   publicDir: './public',
   resolve: {

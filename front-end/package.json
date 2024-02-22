@@ -20,7 +20,7 @@
     "@octokit/core": "^5.0.1",
     "@toa-lib/client": "file:../lib/client",
     "@toa-lib/models": "file:../lib/models",
-    "@vitejs/plugin-react": "^4.0.3",
+    "@vitejs/plugin-react": "^4.2.1",
     "luxon": "^3.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -47,6 +47,7 @@
     "lint-staged": "^13.2.3",
     "prettier": "^3.0.0",
     "typescript": "^5.1",
-    "vite": "^4.4.5"
+    "vite": "^5.1.4",
+    "vite-plugin-node-polyfills": "^0.21.0"
   }
 }
