@@ -13,25 +13,40 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+
+    - name: Detect changes
+      id: changed
+      uses: tj-actions/changed-files@v34
+      with:
+        files: |
+          front-end/**
+          lib/**
 
     - name: Use Node.js 18.x
+      if: steps.changed.outputs.any_changed == 'true'
       uses: actions/setup-node@v3
       with:
         node-version: 18.x
         
     - name: Install lib dependencies
+      if: steps.changed.outputs.any_changed == 'true'
       run: |
         npm run install:lib
 
     - name: Build libs
+      if: steps.changed.outputs.any_changed == 'true'
       run: |
         npm run build:lib
 
     - name: Install frontend dependencies
+      if: steps.changed.outputs.any_changed == 'true'
       run: |
         npm run install:frontend
 
     - name: Build frontend
+      if: steps.changed.outputs.any_changed == 'true'
       run: |
         npm run build:frontend
 
@@ -41,24 +56,39 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+
+    - name: Detect changes
+      id: changed
+      uses: tj-actions/changed-files@v34
+      with:
+        files: |
+          front-end/**
+          lib/**
 
     - name: Use Node.js 18.x
+      if: steps.changed.outputs.any_changed == 'true'
       uses: actions/setup-node@v3
       with:
         node-version: 18.x
         
     - name: Install lib dependencies
+      if: steps.changed.outputs.any_changed == 'true'
       run: |
         npm run install:lib
 
     - name: Build libs
+      if: steps.changed.outputs.any_changed == 'true'
       run: |
         npm run build:lib
 
     - name: Install backend dependencies
+      if: steps.changed.outputs.any_changed == 'true'
       run: |
         npm run install:backend
 
     - name: Build backend
+      if: steps.changed.outputs.any_changed == 'true'
       run: |
         npm run build:backend
