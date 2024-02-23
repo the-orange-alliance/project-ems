@@ -9,11 +9,14 @@ import { FC, ChangeEvent } from 'react';
 import { chargedUpComponents } from './ChargedUp';
 import { HydrogenHorizonsSeason } from '@toa-lib/models/build/seasons/HydrogenHorizons';
 import { hydrogenHorizonComponents } from './HydrogenHorizons';
+import { crescendoComponents } from './Crescendo';
+import { CrescendoSeason } from '@toa-lib/models/build/seasons/Crescendo';
 
 // Add season components map here to be used in the function for later.
 const seasonComponents = new Map<string, SeasonComponents<any, any>>();
 seasonComponents.set(ChargedUpSeason.key, chargedUpComponents);
 seasonComponents.set(HydrogenHorizonsSeason.key, hydrogenHorizonComponents);
+seasonComponents.set(CrescendoSeason.key, crescendoComponents);
 
 export interface MatchDetailInfoProps<T extends MatchDetailBase> {
   match?: Match<T>;

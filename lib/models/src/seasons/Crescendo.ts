@@ -270,7 +270,8 @@ function calculateRankings(
       if (
         participant.cardStatus < 2 &&
         participant.disqualified < 1 &&
-        participant.noShow < 1
+        participant.noShow < 1 &&
+        participant.surrogate < 1
       ) {
         coopertitionPointsMap.set(
           teamKey,
