@@ -37,6 +37,7 @@ export interface MatchDetails extends MatchDetailBase {
   redHarmonyStatus: number;
   redMelodyStatus: number;
   redEnsembleStatus: number;
+  redActivatedCoop: boolean;
   blueAutoMobilityOne: number;
   blueAutoMobilityTwo: number;
   blueAutoMobilityThree: number;
@@ -52,6 +53,7 @@ export interface MatchDetails extends MatchDetailBase {
   blueHarmonyStatus: number;
   blueMelodyStatus: number;
   blueEnsembleStatus: number;
+  blueActivatedCoop: boolean;
   coopertitionBonus: number;
 }
 
@@ -74,6 +76,7 @@ export const defaultMatchDetails: MatchDetails = {
   redHarmonyStatus: 0,
   redMelodyStatus: 0,
   redEnsembleStatus: 0,
+  redActivatedCoop: false,
   blueAutoMobilityOne: 0,
   blueAutoMobilityTwo: 0,
   blueAutoMobilityThree: 0,
@@ -89,6 +92,7 @@ export const defaultMatchDetails: MatchDetails = {
   blueHarmonyStatus: 0,
   blueMelodyStatus: 0,
   blueEnsembleStatus: 0,
+  blueActivatedCoop: false,
   coopertitionBonus: 0
 };
 

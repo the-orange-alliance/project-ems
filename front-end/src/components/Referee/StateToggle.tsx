@@ -9,6 +9,7 @@ interface Props {
   states: string[];
   value: number;
   fullWidth?: boolean;
+  disabled?: boolean;
   onChange: (value: number) => void;
 }
 
@@ -17,6 +18,7 @@ const StateToggle: FC<Props> = ({
   states,
   value,
   fullWidth,
+  disabled,
   onChange
 }) => {
   const handleChange = (event: MouseEvent, newValue: number) => {
@@ -41,6 +43,7 @@ const StateToggle: FC<Props> = ({
         value={value}
         onChange={handleChange}
         fullWidth={fullWidth}
+        disabled={disabled}
         exclusive
       >
         {states.map((s, i) => (

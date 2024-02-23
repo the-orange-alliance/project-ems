@@ -8,6 +8,7 @@ import { currentEventSelector } from '@stores/NewRecoil';
 import audienceDisplayLogo from 'src/assets/images/audience-display-logo.png';
 import settingsLogo from 'src/assets/images/settings-logo.png';
 import revLogo from 'src/assets/images/rev.png';
+import { getSeasonKeyFromEventKey } from '@toa-lib/models';
 
 const GridAppCard = (props: AppCardProps) => (
   <Grid item xs={5} md={3}>
@@ -84,6 +85,12 @@ const HomeApp: FC = () => {
             title='Audience Display Settings'
             to={`/audience-display-manager`}
           />
+          {getSeasonKeyFromEventKey(event?.eventKey) === 'frc_2024' && (
+            <GridAppCard
+              title='Cresendo Human Player'
+              to={`/${event?.eventKey}/human-player`}
+            />
+          )}
           {/* <GridAppCard title='Field Debugger' to='/fcs-debug' />
         <GridAppCard title='Account Manager' to='/accounts' />
 */}

@@ -25,6 +25,11 @@ const Streaming = lazy(() => import('./apps/Streaming/Streaming'));
 // const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
 // const FieldDebugger = lazy(() => import('./apps/FieldDebugger'));
 
+// Season specific apps
+const FRC2024_HumanPlayer = lazy(
+  () => import('./apps/SeasonSpecific/frc_2024/HumanPlayer')
+);
+
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
 import AudienceDisplayManager from './apps/AudienceDisplayManager';
@@ -178,6 +183,12 @@ const AppRoutes: AppRoute[] = [
     path: '/audience-display-manager',
     group: 0,
     element: <AudienceDisplayManager />
+  },
+  {
+    name: 'FRC 2024 Human Player',
+    path: '/:eventKey/human-player',
+    group: 0,
+    element: <FRC2024_HumanPlayer />
   }
   // {
   //   name: 'Account Manager',
