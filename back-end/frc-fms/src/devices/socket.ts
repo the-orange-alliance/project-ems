@@ -3,7 +3,7 @@ import { Socket } from "socket.io-client";
 import { SocketOptions, createSocket } from "@toa-lib/client";
 import { getToken } from "../helpers/ems.js";
 import { getIPv4 } from "@toa-lib/server";
-import { AvaliableHardware, DriverstationMonitor, DriverstationStatus, MatchKey, MatchSocketEvents, PrestartState, PrestartStatus } from "@toa-lib/models";
+import { AvaliableHardware, DriverstationMonitor, DriverstationStatus, MatchKey, MatchSocketEvent, PrestartState, PrestartStatus } from "@toa-lib/models";
 import { SettingsSupport } from "./settings.js";
 import { EmsFrcFms } from "../server.js";
 
@@ -56,7 +56,7 @@ export class SocketSupport {
     });
 
     // Setup Prestart
-    this.socket?.on(MatchSocketEvents.PRESTART, (matchKey: MatchKey) => {
+    this.socket?.on(MatchSocketEvent.PRESTART, (matchKey: MatchKey) => {
       this.prestartStatus = {
         hardware: [],
         matchKey: matchKey,
