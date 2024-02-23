@@ -9,7 +9,9 @@ import {
   MatchTimer,
   ItemUpdate,
   CardStatusUpdate,
-  NumberAdjustment
+  NumberAdjustment,
+  FRC_MATCH_CONFIG,
+  FGC_MATCH_CONFIG,
 } from "@toa-lib/models";
 import { EventEmitter } from "node:events";
 import { Server, Socket } from "socket.io";
@@ -116,6 +118,17 @@ export default class Match extends Room {
         logger.info("match aborted");
       });
       this.displayID = 2;
+
+      // Get season key frome event key
+      const seasonKey = getSeasonKeyFromEventKey(this.key!.eventKey);
+
+      // Set match config based on season key
+      const matchConfig = seasonKey.includes("frc")
+        ? FRC_MATCH_CONFIG
+        : FGC_MATCH_CONFIG;
+      this.timer.matchConfig = matchConfig;
+
+      // Start timer
       this.timer.start();
       logger.info(
         `match started: ${this.key?.eventKey}-${this.key?.tournamentKey}-${this.key?.id}`
@@ -135,32 +148,47 @@ export default class Match extends Room {
         this.handlePartiallyUpdatedMatch(match);
       }
     });
-    socket.on(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, (itemUpdate: ItemUpdate) => {
-      const matchDetails = this.match?.details;
-      if (matchDetails) {
-        matchDetails[itemUpdate.key] = itemUpdate.value;
-        this.handlePartiallyUpdatedMatch(this.match!);
-      }
-    });
-    socket.on(MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER, (numberAdjustment: NumberAdjustment) => {
-      const matchDetails = this.match?.details;
-      if (matchDetails) {
-        try {
-          matchDetails[numberAdjustment.key] += numberAdjustment.adjustment;
+    socket.on(
+      MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
+      (itemUpdate: ItemUpdate) => {
+        const matchDetails = this.match?.details;
+        if (matchDetails) {
+          matchDetails[itemUpdate.key] = itemUpdate.value;
           this.handlePartiallyUpdatedMatch(this.match!);
-        } catch (e) {
-          // Don't take down the server if a client tries to adjust a non-numeric value
-          logger.error(`Failed to adjust match details field ${numberAdjustment.key} (${matchDetails[numberAdjustment.key]})`);
         }
       }
-    });
-    socket.on(MatchSocketEvent.UPDATE_CARD_STATUS, (teamCard: CardStatusUpdate) => {
-      const participant = this.match?.participants?.find(participant => participant.teamKey == teamCard.teamKey);
-      if (participant) {
-        participant.cardStatus = teamCard.cardStatus;
-        this.handlePartiallyUpdatedMatch(this.match!);
+    );
+    socket.on(
+      MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
+      (numberAdjustment: NumberAdjustment) => {
+        const matchDetails = this.match?.details;
+        if (matchDetails) {
+          try {
+            matchDetails[numberAdjustment.key] += numberAdjustment.adjustment;
+            this.handlePartiallyUpdatedMatch(this.match!);
+          } catch (e) {
+            // Don't take down the server if a client tries to adjust a non-numeric value
+            logger.error(
+              `Failed to adjust match details field ${numberAdjustment.key} (${
+                matchDetails[numberAdjustment.key]
+              })`
+            );
+          }
+        }
       }
-    });
+    );
+    socket.on(
+      MatchSocketEvent.UPDATE_CARD_STATUS,
+      (teamCard: CardStatusUpdate) => {
+        const participant = this.match?.participants?.find(
+          (participant) => participant.teamKey == teamCard.teamKey
+        );
+        if (participant) {
+          participant.cardStatus = teamCard.cardStatus;
+          this.handlePartiallyUpdatedMatch(this.match!);
+        }
+      }
+    );
     socket.on(MatchSocketEvent.COMMIT, (key: MatchKey) => {
       this.emitToAll(MatchSocketEvent.COMMIT, key);
       this.match = null;
@@ -171,7 +199,9 @@ export default class Match extends Room {
     });
   }
 
-  private handlePartiallyUpdatedMatch(partiallyUpdatedMatch: MatchObj<any>): void {
+  private handlePartiallyUpdatedMatch(
+    partiallyUpdatedMatch: MatchObj<any>
+  ): void {
     this.match = { ...partiallyUpdatedMatch };
     const seasonKey = getSeasonKeyFromEventKey(partiallyUpdatedMatch.eventKey);
     const functions = getFunctionsBySeasonKey(seasonKey);
@@ -185,9 +215,7 @@ export default class Match extends Room {
     this.match.redScore = redScore;
     this.match.blueScore = blueScore;
     if (functions.calculateRankingPoints) {
-      this.match.details = functions.calculateRankingPoints(
-        this.match.details
-      );
+      this.match.details = functions.calculateRankingPoints(this.match.details);
     }
     this.emitToAll(MatchSocketEvent.UPDATE, this.match);
   }

@@ -1,14 +1,15 @@
 import { clientFetcher } from '@toa-lib/client';
 import {
   Displays,
+  getSeasonKeyFromEventKey,
   isMatch,
   Match,
   MatchKey,
   MatchSocketEvent
 } from '@toa-lib/models';
-import { useSearchParams } from 'react-router-dom';
-import { FC, ReactNode, Suspense, useEffect, useRef } from 'react';
-import { useRecoilCallback, useRecoilState } from 'recoil';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { FC, Fragment, ReactNode, Suspense, useEffect, useRef } from 'react';
+import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
@@ -18,16 +19,18 @@ import {
   displayIdAtom,
   matchResultAtom
 } from 'src/stores/NewRecoil';
-import MatchPreview from './displays/fgc_2023/MatchPreview/MatchPreview';
-import MatchPlay from './displays/fgc_2023/MatchPlay/MatchPlay';
-import MatchResults from './displays/fgc_2023/MatchResults/MatchResults';
-import MatchResultsOverlay from './displays/fgc_2023/MatchResults/MatchResultsOverlay';
+
 import Rankings from './displays/fgc_2023/Rankings/Rankings';
 import { useHiddenMotionlessCursor } from '@features/hooks/use-hidden-motionless-cursor';
 import './AudienceDisplay.less';
-import MatchPlayTimer from './displays/fgc_2023/MatchPlayTimer/MatchPlayTimer';
 import { updateSocketClient } from 'src/api/ApiProvider';
 import RankingsPlayoffs from './displays/fgc_2023/RankingsPlayoffs/RankingsPlayoff';
+import AudienceDisplayProvider from './displays/AudienceDisplayProvider';
+
+// Seasons
+import FRC2023 from './displays/frc_2023';
+import FRC2024 from './displays/frc_2024';
+import FGC2023 from './displays/fgc_2023';
 
 const AudienceDisplay: FC = () => {
   const [display, setDisplay] = useRecoilState(displayIdAtom);
@@ -37,6 +40,9 @@ const AudienceDisplay: FC = () => {
   const mode = searchParams.get('mode') ?? '';
   const delay = searchParams.get('delay') ?? '15000';
   let paramChroma = searchParams.get('chroma');
+
+  const { eventKey } = useParams();
+  const seasonKey = getSeasonKeyFromEventKey(eventKey ?? '');
 
   useHiddenMotionlessCursor();
 
@@ -117,7 +123,11 @@ const AudienceDisplay: FC = () => {
         <MatchStateListener />
         <PrestartListener />
         <div id='aud-base' style={{ backgroundColor: chromaKey }}>
-          {mode === 'pit' ? <RankingsPlayoffs /> : getDisplay(display, mode)}
+          {mode === 'pit' ? (
+            <RankingsPlayoffs />
+          ) : (
+            <DisplaySwitcher id={display} mode={mode} seasonKey={seasonKey} />
+          )}
         </div>
       </ChromaLayout>
     </Suspense>
@@ -126,61 +136,87 @@ const AudienceDisplay: FC = () => {
 
 export default AudienceDisplay;
 
-function getDisplay(id: number, mode: string): ReactNode {
-  switch (id) {
-    case Displays.MATCH_PREVIEW:
-      return getPreviewDisplay(mode);
-    case Displays.MATCH_START:
-      return getPlayDisplay(mode);
-    case Displays.MATCH_RESULTS:
-      return getResultsDisplay(mode);
-    case Displays.RANKINGS:
-      return <Rankings />;
-    default:
-      return <div />;
-  }
+interface IProps {
+  id: number;
+  mode: string;
+  seasonKey: string;
 }
 
-function getPreviewDisplay(mode: string): ReactNode {
+// This switcher renders all the different displays for the audience display
+// It triggers the 'visible' prop on the correct display which allows each display to
+// animate itself in and out of view
+const DisplaySwitcher: FC<IProps> = ({ id, mode, seasonKey }: IProps) => {
+  const PreviewDisplay: FC<any> = getPreviewDisplay(mode, seasonKey);
+  const PlayDisplay: FC<any> = getPlayDisplay(mode, seasonKey);
+  const ResultsDisplay: FC<any> = getResultsDisplay(mode, seasonKey);
+  const RankingsDisplay = Rankings;
+
+  return (
+    <>
+      <PreviewDisplay visible={id === Displays.MATCH_PREVIEW} />
+      <PlayDisplay visible={id === Displays.MATCH_START} />
+      <ResultsDisplay visible={id === Displays.MATCH_RESULTS} />
+      {id === Displays.RANKINGS && <RankingsDisplay />}
+    </>
+  );
+};
+
+function getPreviewDisplay(mode: string, seasonKey: string): FC {
+  const Season = getSeason(seasonKey);
   switch (mode) {
     case 'stream3':
-      return <MatchPlay />;
+      return Season.MatchPlay;
     case 'stream4':
-      return <MatchResultsOverlay />;
+      return Season.MatchResultsOverlay;
     case 'stream5':
-      return <MatchResults />;
+      return Season.MatchResults;
     default:
-      return <MatchPreview />;
+      return Season.MatchPreview;
   }
 }
 
-function getPlayDisplay(mode: string): ReactNode {
+function getPlayDisplay(mode: string, seasonKey: string): FC {
+  const Season = getSeason(seasonKey);
   switch (mode) {
     case 'stream':
-      return <MatchPlay />;
+      return Season.MatchPlay;
     case 'stream3':
-      return <MatchPlay />;
+      return Season.MatchPlay;
     case 'stream4':
     case 'stream5':
-      return null;
+      return Fragment;
     case 'field':
-      return <MatchPlayTimer />;
+      return Season.MatchPlayTimer;
     default:
-      return <MatchPlay />;
+      return Season.MatchPlay;
   }
 }
 
-function getResultsDisplay(mode: string): ReactNode {
+function getResultsDisplay(mode: string, seasonKey: string): FC {
+  const Season = getSeason(seasonKey);
   switch (mode) {
     case 'stream':
-      return <MatchResults />;
+      return Season.MatchResults;
     case 'stream2':
-      return <MatchResultsOverlay />;
+      return Season.MatchResultsOverlay;
     case 'stream3':
-      return <MatchPlay />;
+      return Season.MatchPlay;
     case 'stream4':
-      return <MatchResultsOverlay />;
+      return Season.MatchResultsOverlay;
     default:
-      return <MatchResults />;
+      return Season.MatchResults;
   }
 }
+
+const getSeason = (seasonKey: string): AudienceDisplayProvider => {
+  switch (seasonKey.toLowerCase()) {
+    case 'frc_2023':
+      return FRC2023;
+    case 'frc_2024':
+      return FRC2024;
+    case 'fgc_2023':
+      return FGC2023;
+    default:
+      return FRC2023;
+  }
+};

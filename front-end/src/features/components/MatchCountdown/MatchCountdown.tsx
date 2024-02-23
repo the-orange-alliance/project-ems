@@ -1,7 +1,11 @@
 import {
+  FGC_MATCH_CONFIG,
+  FRC_MATCH_CONFIG,
+  MatchKey,
   MatchSocketEvent,
   MatchState,
-  TimerEventPayload
+  TimerEventPayload,
+  getSeasonKeyFromEventKey
 } from '@toa-lib/models';
 import { Duration } from 'luxon';
 import { FC, useEffect } from 'react';
@@ -17,6 +21,7 @@ import {
   MATCH_END
 } from 'src/apps/AudienceDisplay/Audio';
 import {
+  matchInProgressAtom,
   matchStateAtom,
   matchTimeAtom,
   matchTimeModeAtom,
@@ -39,6 +44,7 @@ const MatchCountdown: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
   const matchState = useRecoilValue(matchStateAtom);
   const [time, setTime] = useRecoilState(matchTimeAtom);
   const [modeTime, setModeTime] = useRecoilState(matchTimeModeAtom);
+  const currentMatch = useRecoilValue(matchInProgressAtom);
   const [socket, connected] = useSocket();
 
   useEffect(() => {
@@ -90,12 +96,17 @@ const MatchCountdown: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
     seconds: mode === 'timeLeft' ? time : modeTime
   });
 
-  const onPrestart = () => {
+  const onPrestart = (e: MatchKey) => {
     timer.reset();
+
+    determineTimerConfig(e.eventKey);
+
     setTime(timer.timeLeft);
   };
+
   const onStart = () => {
     if (audio) startAudio.play();
+    if (currentMatch) determineTimerConfig(currentMatch.eventKey);
     timer.start();
   };
   const onTransition = (payload: TimerEventPayload) => {
@@ -114,6 +125,17 @@ const MatchCountdown: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
   };
   const onEndgame = (payload: TimerEventPayload) => {
     if (audio && payload.allowAudio) endgameAudio.play();
+  };
+
+  const determineTimerConfig = (eventKeyLike: string) => {
+    // Get season key frome event key
+    const seasonKey = getSeasonKeyFromEventKey(eventKeyLike).toLowerCase();
+
+    // Set match config based on season key
+    const matchConfig = seasonKey.includes('frc')
+      ? FRC_MATCH_CONFIG
+      : FGC_MATCH_CONFIG;
+    timer.matchConfig = matchConfig;
   };
 
   return (
