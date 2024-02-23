@@ -18,7 +18,7 @@ jobs:
 
     - name: Detect changes
       id: changed
-      uses: tj-actions/changed-files@v34
+      uses: tj-actions/changed-files@v41
       with:
         files: |
           front-end/**
@@ -61,7 +61,7 @@ jobs:
 
     - name: Detect changes
       id: changed
-      uses: tj-actions/changed-files@v34
+      uses: tj-actions/changed-files@v41
       with:
         files: |
           back-end/api/**
@@ -105,7 +105,7 @@ jobs:
 
     - name: Detect changes
       id: changed
-      uses: tj-actions/changed-files@v34
+      uses: tj-actions/changed-files@v41
       with:
         files: |
           back-end/frc-fms/**
