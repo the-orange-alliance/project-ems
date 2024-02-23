@@ -1,5 +1,5 @@
 import React, { ReactNode, lazy } from 'react';
-const HomeApp = lazy(() => import('./apps/home/index'));
+const HomeApp = lazy(() => import('./apps/Home/index'));
 const EventManagerApp = lazy(() => import('./apps/EventManager'));
 const SettingsApp = lazy(() => import('./apps/Settings'));
 const GlobalSettingsApp = lazy(() => import('./apps/Settings/GlobalSettings'));
