@@ -22,7 +22,6 @@ import {
 } from 'src/stores/NewRecoil';
 import {
   FGCMatches,
-  FGCSchedule,
   assignMatchTimes,
   createFixedMatches
 } from '@toa-lib/models';
@@ -76,9 +75,7 @@ const SetupRandomMatches: FC = () => {
         teamKeys,
         name
       });
-      setMatches(
-        FGCSchedule.FGC2023.assignFields(assignMatchTimes(matches, items))
-      );
+      setMatches(assignMatchTimes(matches, items));
       setLoading(false);
     } catch (e) {
       setLoading(false);

@@ -1,6 +1,8 @@
 import { Team } from './Team.js';
 import { isArray, isNonNullObject, isNumber, isString } from './types.js';
 
+export type CompareFn = (a: Ranking, b: Ranking) => number;
+
 export interface Ranking {
   eventKey: string;
   tournamentKey: string;
@@ -44,4 +46,11 @@ export function reconcileTeamRankings(
   }
 
   return newRankings;
+}
+
+export function sortRankings(
+  rankings: Ranking[],
+  compareFn: CompareFn
+): Ranking[] {
+  return rankings.slice().sort(compareFn);
 }
