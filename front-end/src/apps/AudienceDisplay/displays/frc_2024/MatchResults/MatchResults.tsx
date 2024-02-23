@@ -166,9 +166,11 @@ const MatchResults: FC<AudienceDisplayProps> = ({
               <div className={'c-score-label'}>Red</div>
               <div className={'c-score-score'}>{match.redScore}</div>
             </div>
-            <div className='c-coop-bonus'>
-              <Handshake fontSize='inherit' />
-            </div>
+            {match.details.coopertitionBonus && (
+              <div className='c-coop-bonus'>
+                <Handshake fontSize='inherit' />
+              </div>
+            )}
           </div>
 
           {/* Score Breakdown */}
