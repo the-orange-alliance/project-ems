@@ -3,6 +3,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { SxProps, Theme } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
   title: string;
@@ -12,8 +13,19 @@ interface Props {
 }
 
 const ViewReturn: FC<Props> = ({ title, onClick, href, sx }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    }
+    if (href) {
+      navigate(href);
+    }
+  };
+
   return (
-    <Button onClick={onClick} href={href} sx={sx}>
+    <Button onClick={handleClick} sx={sx}>
       <ArrowBackIcon />
       &nbsp;
       <Typography>{title}</Typography>
