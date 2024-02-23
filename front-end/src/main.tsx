@@ -7,7 +7,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { Provider as ModalProvider } from '@ebay/nice-modal-react';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import App from './App';
-import { fgcTheme } from './AppTheme';
+import { frcTheme } from './AppTheme';
 import { darkModeAtom } from './stores/NewRecoil';
 import { APIOptions, SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/LocalStorage';
@@ -36,7 +36,7 @@ SocketOptions.port = 8081;
 function Main() {
   const darkMode = useRecoilValue(darkModeAtom);
   return (
-    <ThemeProvider theme={useMemo(() => fgcTheme(darkMode), [darkMode])}>
+    <ThemeProvider theme={useMemo(() => frcTheme(darkMode), [darkMode])}>
       <ModalProvider>
         <App />
       </ModalProvider>
