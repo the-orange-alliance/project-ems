@@ -12,6 +12,8 @@ import {
   NumberAdjustment,
   FRC_MATCH_CONFIG,
   FGC_MATCH_CONFIG,
+  BonusPeriodConfig,
+  BonusPeriodSettings,
 } from "@toa-lib/models";
 import { EventEmitter } from "node:events";
 import { Server, Socket } from "socket.io";
@@ -24,6 +26,7 @@ export default class Match extends Room {
   private timer: MatchTimer;
   private state: MatchState;
   private displayID: number;
+  private bonuses: Map<BonusPeriodConfig, { matchAtStartState: MatchObj<any>, timeout: any }> = new Map();
   public readonly localEmitter: EventEmitter;
 
   public constructor(server: Server) {
@@ -197,6 +200,21 @@ export default class Match extends Room {
         `committing scores for ${key.eventKey}-${key.tournamentKey}-${key.id}`
       );
     });
+
+    socket.on(MatchSocketEvent.BONUS_START, (bonusType: BonusPeriodConfig) => {
+      // If a bonus period exists for this match, clear it
+      if (this.bonuses.has(bonusType)) {
+        clearTimeout(this.bonuses.get(bonusType)?.timeout);
+      }
+
+      // Set new timeout for bonus period
+      const bonusTimeout = setTimeout(() => {
+        this.emitToAll(MatchSocketEvent.BONUS_END, bonusType);
+      }, BonusPeriodSettings[bonusType].duration * 1000);
+      this.bonuses.set(bonusType, { timeout: bonusTimeout, matchAtStartState: { ...this.match!, details: { ...this.match!.details! } } });
+
+      this.broadcast().emit(MatchSocketEvent.BONUS_START, bonusType);
+    });
   }
 
   private handlePartiallyUpdatedMatch(
@@ -217,7 +235,18 @@ export default class Match extends Room {
     if (functions.calculateRankingPoints) {
       this.match.details = functions.calculateRankingPoints(this.match.details);
     }
+
+    // Emit the updated match to all clients
     this.emitToAll(MatchSocketEvent.UPDATE, this.match);
+
+    // Handle bonus shenanigans (Must happen AFTER the match data is updates, so that clients can see the updated match data when the bonus is ended)
+    for (const [bonusType, bonus] of this.bonuses) {
+      if (BonusPeriodSettings[bonusType].autoEnd(bonus.matchAtStartState, this.match)) {
+        clearTimeout(bonus.timeout);
+        this.bonuses.delete(bonusType);
+        this.emitToAll(MatchSocketEvent.BONUS_END, bonusType);
+      }
+    }
   }
 
   private emitToAll(eventName: string, ...args: any[]): void {

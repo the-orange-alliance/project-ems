@@ -1,8 +1,8 @@
 /* eslint-disable prettier/prettier */
 import { Button, Grid, Typography } from '@mui/material';
-import { MatchSocketEvent, MatchState } from '@toa-lib/models';
+import { BonusPeriodConfig, Crescendo, MatchSocketEvent, MatchState } from '@toa-lib/models';
 import { FC, useEffect, useRef, useState } from 'react';
-import { useRecoilCallback, useRecoilValue, } from 'recoil';
+import { atom, useRecoilCallback, useRecoilState, useRecoilValue, } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import ConnectionChip from 'src/components/ConnectionChip/ConnectionChip';
 import MatchChip from 'src/components/MatchChip/MatchChip';
@@ -17,6 +17,29 @@ import {
   timer
 } from 'src/stores/NewRecoil';
 
+// Amplify token offset
+const AmplifyTokenOffsetAtom = atom<number>({
+  key: 'AmplifyTokenOffset',
+  default: 0,
+});
+
+const AmplifyActiveAtom = atom<boolean>({
+  key: 'AmplifyActive',
+  default: false,
+});
+
+const calcTotalAmpTokens = (details: Crescendo.MatchDetails, alliance: 'red' | 'blue') => {
+  let allAmpTokens = 0;
+  if (alliance === 'red') {
+    // Add all auto and teleop amp notes.  If co-op is activated, subtract 1 (co-op costs 1 amp token)
+    allAmpTokens += details.redAutoAmpNotes + details.redTeleAmpNotes - (details.redActivatedCoop ? 1 : 0);
+  } else {
+    allAmpTokens += details.blueAutoAmpNotes + details.blueTeleAmpNotes - (details.blueActivatedCoop ? 1 : 0);
+  }
+
+  return allAmpTokens;
+}
+
 const HumanPlayer: FC = () => {
   const matchMode = useRecoilValue(matchStatusAtom); // "TELEOPERATED" or "ENDGAME"
   const matchState = useRecoilValue(matchStateAtom);
@@ -27,18 +50,18 @@ const HumanPlayer: FC = () => {
   const socketRef = useRef<any>(null);
   const [socket, connected] = useSocket();
   const match = useRecoilValue(matchInProgressAtom);
+  const amplifyTokenOffset = useRecoilValue(AmplifyTokenOffsetAtom);
+  const [amplifyActive, setAmplifyActive] = useRecoilState(AmplifyActiveAtom);
 
   useEffect(() => {
     socketRef.current = socket;
     if (connected) {
-      socket?.on('game:amplify', (state: { state: boolean }) => {
-        setCanAmp(state.state);
-      });
+      socket?.on(MatchSocketEvent.BONUS_END, onBonusEnd);
+      socket?.on(MatchSocketEvent.BONUS_START, onBonusStart);
     }
   }, [connected]);
 
   useEffect(() => {
-
     const tick = setInterval(() => {
       // Can't co-op after first 45 seconds in match
       if (timer.timeLeft <= 90) {
@@ -47,21 +70,24 @@ const HumanPlayer: FC = () => {
     }, 500);
 
     return () => {
-      socket?.removeListener('game:amplify', setAmp);
       clearInterval(tick);
+      socket?.off(MatchSocketEvent.BONUS_END, onBonusEnd);
+      socket?.off(MatchSocketEvent.BONUS_START, onBonusStart);
     };
   }, []);
 
 
-  // We subscribe to match details updates and calculate if we can co-op when the score updates
+  // We subscribe to match details updates and calculate if we can co-op/amplify when the score updates
   useEffect(() => {
+    if (!match || !match.details) return;
+
     // Determine if we're within co-oping range
     // Must be in progress and in teleop
     const matchStateCorrect = matchState === MatchState.MATCH_IN_PROGRESS;
     const matchModeCorrect = matchMode === 'TELEOPERATED';
     // Must have at least 1 amp point
-    const has1AmpPointRed = (match?.details?.redTeleAmpNotes ?? 0) + (match?.details?.redAutoAmpNotes ?? 0) > 0;
-    const has1AmpPointBlue = (match?.details?.blueTeleAmpNotes ?? 0) + (match?.details?.blueAutoAmpNotes ?? 0) > 0;
+    const has1AmpPointRed = (match.details.redTeleAmpNotes) + (match.details.redAutoAmpNotes) > 0;
+    const has1AmpPointBlue = (match.details.blueTeleAmpNotes) + (match.details?.blueAutoAmpNotes) > 0;
     const allianceHasAmpPoint =
       alliance === 'red' ? has1AmpPointRed : has1AmpPointBlue;
     // Co-op can only be activated in first 45 seconds of match
@@ -76,11 +102,18 @@ const HumanPlayer: FC = () => {
     } else {
       setCanCoop(false);
     }
-  }, [match, matchState, matchMode]);
 
-  const setAmp = (state: { state: boolean }) => {
-    setCanAmp(state.state);
-  };
+    // Determine if we're within amplifying range
+    const allAmpTokens = calcTotalAmpTokens(match.details, allianceRef.current ?? 'red');
+    console.log("Amp Delta: ", allAmpTokens - amplifyTokenOffset);
+    console.log("All Amp Tokens: ", allAmpTokens);
+    console.log("Amplify Token Offset: ", amplifyTokenOffset);
+    if (allAmpTokens - amplifyTokenOffset > 1 && !amplifyActive) {
+      setCanAmp(true);
+    } else {
+      setCanAmp(false);
+    }
+  }, [match, matchState, matchMode]);
 
   const onCoop = useRecoilCallback(
     ({ snapshot, set }) =>
@@ -103,6 +136,53 @@ const HumanPlayer: FC = () => {
         set(matchInProgressAtom, newMatch);
       }, []
   );
+
+  const onAmp = useRecoilCallback(
+    ({ snapshot, set }) =>
+      async () => {
+        // Fetch current state
+        const currMatch = await snapshot.getPromise(matchInProgressAtom);
+        const currOffset = await snapshot.getPromise(AmplifyTokenOffsetAtom);
+        const currAmpActive = await snapshot.getPromise(AmplifyActiveAtom);
+
+        // Return if we can't amplify
+        if (!currMatch || !currMatch.details || typeof currOffset !== 'number' || currAmpActive) return;
+
+        // Update token offset
+        const totalAmpTokens = calcTotalAmpTokens(currMatch?.details ?? {}, allianceRef.current ?? 'red');
+        set(AmplifyTokenOffsetAtom, totalAmpTokens);
+
+        socketRef.current?.emit(MatchSocketEvent.BONUS_START, allianceRef.current === 'red' ? 'FRC_2024_AMPLIFY_RED' : 'FRC_2024_AMPLIFY_BLUE');
+        setCanAmp(false);
+      }, []
+  );
+
+  const onBonusEnd = useRecoilCallback(
+    ({ snapshot, set }) =>
+      async () => {
+        // Fetch current state
+        const currMatch = await snapshot.getPromise(matchInProgressAtom);
+
+        // Return if we can't amplify
+        if (!currMatch || !currMatch.details) return;
+
+        // Update token offset
+        const totalAmpTokens = calcTotalAmpTokens(currMatch?.details ?? {}, allianceRef.current ?? 'red');
+        set(AmplifyTokenOffsetAtom, totalAmpTokens);
+        set(AmplifyActiveAtom, false);
+        setCanAmp(false);
+        console.log("Bonus Over!")
+      }, []
+  );
+
+  const onBonusStart = (bonusType: BonusPeriodConfig) => {
+    const red = bonusType === BonusPeriodConfig.FRC_2024_AMPLIFY_RED && allianceRef.current === 'red'
+    const blue = bonusType === BonusPeriodConfig.FRC_2024_AMPLIFY_BLUE && allianceRef.current === 'blue';
+    if (red || blue) {
+      setAmplifyActive(true);
+    }
+  }
+
 
   // Standard button disable logic
   const stdBtnDisable = matchState !== MatchState.MATCH_IN_PROGRESS;
@@ -164,15 +244,18 @@ const HumanPlayer: FC = () => {
       {/* Amplify and Co-op buttons */}
       <Grid container direction='row' sx={{ height: '90%', width: '100vw' }}>
         <Grid item xs={6}>
-          <Button
-            variant='contained'
-            color='info'
-            fullWidth
-            disabled={stdBtnDisable}
-            sx={{ height: '100%', fontSize: '10vw' }}
-          >
-            AMPLIFY
-          </Button>
+          {!amplifyActive ?
+            <Button
+              variant='contained'
+              color='info'
+              fullWidth
+              disabled={stdBtnDisable || !canAmp}
+              onClick={onAmp}
+              sx={{ height: '100%', fontSize: '10vw' }}
+            >
+              AMPLIFY
+            </Button> : <Typography variant='h1' sx={{ textAlign: 'center' }}>AMPLIFYING</Typography>
+          }
         </Grid>
         <Grid item xs={6}>
           {/* Red alliance has pressed button */}

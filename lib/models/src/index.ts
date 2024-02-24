@@ -13,6 +13,7 @@ export * from './FieldControl.js';
 export * from './Ranking.js';
 export * from './Alliance.js';
 export * from './Tournament.js';
+export * from './BonusPeriod.js';
 
 export * from './fcs/index.js';
 export * from './seasons/index.js';

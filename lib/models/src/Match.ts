@@ -54,7 +54,10 @@ export enum MatchSocketEvent {
   TELEOPERATED = 'match:tele',
   ENDGAME = 'match:endgame',
   END = 'match:end',
-  ABORT = 'match:abort'
+  ABORT = 'match:abort',
+
+  BONUS_START = 'match:bonusStart',
+  BONUS_END = 'match:bonusEnd',
 }
 
 export interface MatchMakerParams {
