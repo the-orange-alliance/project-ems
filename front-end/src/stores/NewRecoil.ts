@@ -831,3 +831,13 @@ export const matchTimeModeAtom = atom({
   key: 'matchTimeModeAtom',
   default: timer.modeTimeLeft
 });
+
+export const redBonusActiveAtom = atom({
+  key: 'redBonusActiveAtom',
+  default: false
+});
+
+export const blueBonusActiveAtom = atom({
+  key: 'blueBonusActiveAtom',
+  default: false
+});

@@ -105,9 +105,6 @@ const HumanPlayer: FC = () => {
 
     // Determine if we're within amplifying range
     const allAmpTokens = calcTotalAmpTokens(match.details, allianceRef.current ?? 'red');
-    console.log("Amp Delta: ", allAmpTokens - amplifyTokenOffset);
-    console.log("All Amp Tokens: ", allAmpTokens);
-    console.log("Amplify Token Offset: ", amplifyTokenOffset);
     if (allAmpTokens - amplifyTokenOffset > 1 && !amplifyActive) {
       setCanAmp(true);
     } else {
@@ -171,7 +168,6 @@ const HumanPlayer: FC = () => {
         set(AmplifyTokenOffsetAtom, totalAmpTokens);
         set(AmplifyActiveAtom, false);
         setCanAmp(false);
-        console.log("Bonus Over!")
       }, []
   );
 
@@ -270,7 +266,7 @@ const HumanPlayer: FC = () => {
               variant='contained'
               color='primary'
               fullWidth
-              disabled={stdBtnDisable || !canCoop}
+              disabled={stdBtnDisable || !canCoop || amplifyActive}
               sx={{ height: '100%', fontSize: '10vw' }}
               onClick={onCoop}
             >

@@ -21,11 +21,11 @@ export const FRC_2024_AMPLIFY_RED: BonusPeriodSettings = {
     autoEnd: (matchAtStartState: Match<Crescendo.MatchDetails>, currentMatchState: Match<Crescendo.MatchDetails>) => {
         if (!matchAtStartState.details || !currentMatchState.details) return false;
 
-        const totalAmpNotesAtStart = matchAtStartState.details.redAutoAmpNotes + matchAtStartState.details.redTeleAmpNotes;
-        const totalAmpNotesNow = currentMatchState.details.redAutoAmpNotes + currentMatchState.details.redTeleAmpNotes;
-
+        const totalSpeakerNotesAtStart = matchAtStartState.details.redTeleSpeakerNotesAmped;
+        const totalSpeakersNotesNow = currentMatchState.details.redTeleSpeakerNotesAmped;
+        
         // 4 notes scored ends the period
-        return totalAmpNotesNow - totalAmpNotesAtStart > 3;
+        return totalSpeakersNotesNow - totalSpeakerNotesAtStart > 3;
     }
 }
 
@@ -34,11 +34,11 @@ export const FRC_2024_AMPLIFY_BLUE: BonusPeriodSettings = {
     autoEnd: (matchAtStartState: Match<Crescendo.MatchDetails>, currentMatchState: Match<Crescendo.MatchDetails>) => {
         if (!matchAtStartState.details || !currentMatchState.details) return false;
 
-        const totalAmpNotesAtStart = matchAtStartState.details.blueAutoAmpNotes + matchAtStartState.details.blueTeleAmpNotes;
-        const totalAmpNotesNow = currentMatchState.details.blueAutoAmpNotes + currentMatchState.details.blueTeleAmpNotes;
+        const totalSpeakerNotesAtStart = matchAtStartState.details.blueTeleSpeakerNotesAmped;
+        const totalSpeakersNotesNow = currentMatchState.details.blueTeleSpeakerNotesAmped;
 
         // 4 notes scored ends the period
-        return totalAmpNotesNow - totalAmpNotesAtStart > 3;
+        return totalSpeakersNotesNow - totalSpeakerNotesAtStart > 3;
     }
 }
 
