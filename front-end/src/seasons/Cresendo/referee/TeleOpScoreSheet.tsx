@@ -4,7 +4,6 @@ import Typography from '@mui/material/Typography';
 import {
   Alliance,
   BonusPeriodConfig,
-  BonusPeriodSettings,
   Crescendo,
   Match,
   MatchParticipant,
@@ -44,8 +43,6 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   const bonusActive = useRecoilValue(
     alliance === 'red' ? redBonusActiveAtom : blueBonusActiveAtom
   );
-
-  if (!match || !match.details) return null;
 
   useEffect(() => {
     if (connected) {
@@ -97,6 +94,8 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
       },
     []
   );
+
+  if (!match || !match.details) return null;
 
   const setDetails = (
     key: keyof Crescendo.MatchDetails,
@@ -223,7 +222,7 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
             value={
               alliance === 'red'
                 ? match.details.redTeleSpeakerNotes
-                : match.details.blueTeleAmpNotes
+                : match.details.blueTeleSpeakerNotes
             }
             onChange={handleSpeakerNotes}
           />

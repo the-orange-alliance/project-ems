@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
@@ -23,6 +23,8 @@ const MatchPlay: FC<AudienceDisplayProps> = ({
   const blueAlliance =
     match?.participants?.filter((p) => p.station >= 20) ?? [];
 
+  console.log(match);
+
   useEffect(() => {
     timer.on('timer:start', onTimerStart);
     timer.on('timer:tele', onTimerTele);
@@ -40,6 +42,26 @@ const MatchPlay: FC<AudienceDisplayProps> = ({
   const onTimerStart = () => setIsRunning(true);
   const onTimerTele = () => setIsAuto(false);
   const onTimerStop = () => setIsRunning(false);
+
+  const blueNumNotesScored =
+    match?.details?.blueAutoAmpNotes +
+    match?.details?.blueAutoSpeakerNotes +
+    match?.details?.blueTeleAmpNotes +
+    match?.details?.blueTeleSpeakerNotes +
+    match?.details?.blueTeleSpeakerNotesAmped +
+    match?.details?.blueTeleTrapNotes;
+
+  const redNumNotesScored =
+    match?.details?.redAutoAmpNotes +
+    match?.details?.redAutoSpeakerNotes +
+    match?.details?.redTeleAmpNotes +
+    match?.details?.redTeleSpeakerNotes +
+    match?.details?.redTeleSpeakerNotesAmped +
+    match?.details?.redTeleTrapNotes;
+
+  const coopBonusEarned = !!match?.details?.coopertitionBonus;
+
+  const targetNotes = coopBonusEarned ? 15 : 18;
 
   return (
     <div>
@@ -73,17 +95,15 @@ const MatchPlay: FC<AudienceDisplayProps> = ({
                     <MusicNote fontSize={'inherit'} />
                   </div>
                   <div className='c-dtl-content'>
-                    {match?.details?.blueNotes ?? '0' + ' / 24'}
+                    {(blueNumNotesScored ?? '0') + ' / ' + targetNotes}
                   </div>
                 </div>
 
                 {/* Co-op Bonus */}
                 <div
-                  className={`c-dtl-coop ${
-                    match?.details?.coopertition ? 'blue-bg' : ''
-                  }`}
+                  className={`c-dtl-coop ${coopBonusEarned ? 'blue-bg' : ''}`}
                 >
-                  {match?.details?.coopertition && (
+                  {coopBonusEarned && (
                     <div className='c-dtl-coop-text'>
                       <Handshake fontSize='inherit' />
                     </div>
@@ -148,11 +168,9 @@ const MatchPlay: FC<AudienceDisplayProps> = ({
               <div className='c-dtl-row'>
                 {/* Co-op Bonus */}
                 <div
-                  className={`c-dtl-coop ${
-                    match?.details?.coopertition ? 'red-bg' : ''
-                  }`}
+                  className={`c-dtl-coop ${coopBonusEarned ? 'red-bg' : ''}`}
                 >
-                  {match?.details?.coopertition && (
+                  {coopBonusEarned && (
                     <div className='c-dtl-coop-text'>
                       <Handshake fontSize='inherit' />
                     </div>
@@ -162,7 +180,7 @@ const MatchPlay: FC<AudienceDisplayProps> = ({
                 {/* Red Notes */}
                 <div className='c-dtl-notes'>
                   <div className='c-dtl-content'>
-                    {match?.details?.blueNotes ?? '0' + ' / 24'}
+                    {(redNumNotesScored ?? '0') + ' / ' + targetNotes}
                   </div>
                   <div className='c-dtl-title red-bg'>
                     <MusicNote fontSize={'inherit'} />
