@@ -1,3 +1,4 @@
+import './AmpCountdown.less';
 import { CircularProgress } from '@mui/material';
 import { FC, useEffect, useRef, useState } from 'react';
 import { timer } from 'src/stores/NewRecoil';
@@ -8,14 +9,16 @@ interface IProps {
 }
 
 const AmpCountdown: FC<IProps> = ({ amped, color }: IProps) => {
-  const [time, setTime] = useState(10);
+  const [time, setTime] = useState(1);
   const isAmped = useRef(amped);
   const startTime = useRef(0);
 
   useEffect(() => {
     const tick = setInterval(() => {
       if (isAmped.current) {
-        setTime((10 - (startTime.current - timer.timeLeft)) / 10);
+        setTime((10 - (startTime.current - timer.timeLeft)) / 10.0);
+      } else {
+        setTime(1);
       }
     }, 500);
 
@@ -38,6 +41,7 @@ const AmpCountdown: FC<IProps> = ({ amped, color }: IProps) => {
         color={color === 'red' ? 'error' : 'primary'}
         variant='determinate'
         value={80 * time}
+        sx={{ transition: 'transform 1s ease !important' }}
       />
     </div>
   );
