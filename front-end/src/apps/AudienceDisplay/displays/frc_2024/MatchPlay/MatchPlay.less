@@ -24,7 +24,6 @@
   width: 100vw;
   height: 100%;
   display: flex;
-
   flex-direction: row;
 }
 
@@ -185,4 +184,42 @@
   text-align: center;
   font-size: 4vh;
   padding-top: 0.5vh;
+}
+
+.c-dtl-amplified {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  z-index: 2;
+  transition: all 0.5s ease;
+  margin-top: 17vh;
+}
+
+.c-dtl-amplified.red {
+  right: 5vw;
+}
+
+.c-dtl-amplified.blue {
+  left: 5vw;
+}
+
+.c-dtl-amplified.in {
+  margin-top: 0vh;
+}
+
+.c-ampd-content {
+  background-color: #ffffff;
+  width: 5vw;
+  height: 5vh;
+  text-align: center;
+  font-size: 4vh;
+  font-weight: bold;
+}
+
+.c-ampd-title {
+  height: 5vh !important; // intentionally vh to make a square
+  width: 20vw !important;
+  font-size: 4vh;
+  padding-top: 0.5vh;
+  text-align: center;
 }

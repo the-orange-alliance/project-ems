@@ -2,7 +2,11 @@ import { FC, useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
 import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
-import { matchInProgressAtom, timer } from 'src/stores/NewRecoil';
+import {
+  matchInProgressAtom,
+  matchStatusAtom,
+  timer
+} from 'src/stores/NewRecoil';
 import './MatchPlay.less';
 import {
   Handshake,
@@ -12,34 +16,63 @@ import {
 } from '@mui/icons-material';
 import MatchBar from '../common/MatchBar';
 import { AudienceDisplayProps } from '../../AudienceDisplayProvider';
+import { useSocket } from 'src/api/SocketProvider';
+import { BonusPeriodConfig, MatchSocketEvent } from '@toa-lib/models';
+import AmpCountdown from '../common/AmpCountdown';
 
 const MatchPlay: FC<AudienceDisplayProps> = ({
   visible
 }: AudienceDisplayProps) => {
   const match = useRecoilValue(matchInProgressAtom);
-  const [isAuto, setIsAuto] = useState(true);
+  const matchStatus = useRecoilValue(matchStatusAtom);
   const [isRunning, setIsRunning] = useState(false);
+  const [redAmped, setRedAmped] = useState(false);
+  const [blueAmped, setBlueAmped] = useState(false);
   const redAlliance = match?.participants?.filter((p) => p.station < 20) ?? [];
   const blueAlliance =
     match?.participants?.filter((p) => p.station >= 20) ?? [];
 
+  const [socket, connected] = useSocket();
+
+  useEffect(() => {
+    if (connected) {
+      socket?.on(MatchSocketEvent.BONUS_START, onBonusStart);
+      socket?.on(MatchSocketEvent.BONUS_END, onBonusStop);
+    }
+  }, [connected]);
+
   useEffect(() => {
     timer.on('timer:start', onTimerStart);
-    timer.on('timer:tele', onTimerTele);
     timer.on('timer:end', onTimerStop);
     timer.on('timer:abort', onTimerStop);
 
     return () => {
       timer.off('timer:start', onTimerStart);
-      timer.off('timer:tele', onTimerTele);
       timer.off('timer:end', onTimerStop);
       timer.off('timer:abort', onTimerStop);
+      socket?.off('bonus:start', onBonusStart);
+      socket?.off('bonus:end', onBonusStop);
     };
   });
 
   const onTimerStart = () => setIsRunning(true);
-  const onTimerTele = () => setIsAuto(false);
   const onTimerStop = () => setIsRunning(false);
+
+  const onBonusStart = (type: BonusPeriodConfig) => {
+    if (type === BonusPeriodConfig.FRC_2024_AMPLIFY_RED) {
+      setRedAmped(true);
+    } else if (type === BonusPeriodConfig.FRC_2024_AMPLIFY_BLUE) {
+      setBlueAmped(true);
+    }
+  };
+
+  const onBonusStop = (type: BonusPeriodConfig) => {
+    if (type === BonusPeriodConfig.FRC_2024_AMPLIFY_RED) {
+      setRedAmped(false);
+    } else if (type === BonusPeriodConfig.FRC_2024_AMPLIFY_BLUE) {
+      setBlueAmped(false);
+    }
+  };
 
   const blueNumNotesScored =
     match?.details?.blueAutoAmpNotes +
@@ -60,6 +93,9 @@ const MatchPlay: FC<AudienceDisplayProps> = ({
   const coopBonusEarned = !!match?.details?.coopertitionBonus;
 
   const targetNotes = coopBonusEarned ? 15 : 18;
+
+  const isAuto =
+    matchStatus === 'MATCH STARTED' || matchStatus === 'PRESTART COMPLETE';
 
   return (
     <div>
@@ -95,6 +131,16 @@ const MatchPlay: FC<AudienceDisplayProps> = ({
                   <div className='c-dtl-content'>
                     {(blueNumNotesScored ?? '0') + ' / ' + targetNotes}
                   </div>
+                </div>
+
+                {/* Blue Amplified */}
+                <div
+                  className={`c-dtl-amplified blue  ${blueAmped ? 'in' : ''}`}
+                >
+                  <div className='c-ampd-content'>
+                    <AmpCountdown amped={blueAmped} color='blue' />
+                  </div>
+                  <div className='c-ampd-title blue-bg'>Amplified!</div>
                 </div>
 
                 {/* Co-op Bonus */}
@@ -173,6 +219,14 @@ const MatchPlay: FC<AudienceDisplayProps> = ({
                       <Handshake fontSize='inherit' />
                     </div>
                   )}
+                </div>
+
+                {/* Red Amplified */}
+                <div className={`c-dtl-amplified red ${redAmped ? 'in' : ''}`}>
+                  <div className='c-ampd-title red-bg'>Amplified!</div>
+                  <div className='c-ampd-content'>
+                    <AmpCountdown amped={redAmped} color='red' />
+                  </div>
                 </div>
 
                 {/* Red Notes */}
