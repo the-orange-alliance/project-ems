@@ -40,11 +40,7 @@ const MatchResults: FC<AudienceDisplayProps> = ({
   const match: Match<Crescendo.MatchDetails> | null =
     useRecoilValue(matchResultAtom);
 
-  console.log(match);
-
   if (!match || !match.details) return null;
-
-  console.log('here');
 
   const redAlliance = match?.participants?.filter((p) => p.station < 20) ?? [];
   const blueAlliance =
@@ -129,7 +125,7 @@ const MatchResults: FC<AudienceDisplayProps> = ({
   } else if (isTie) {
     blueRp.push(EmojiEvents);
   }
-  console.log('what?');
+
   return (
     <div className='c-results-container'>
       {/* Top Match Bar */}
@@ -166,7 +162,7 @@ const MatchResults: FC<AudienceDisplayProps> = ({
               <div className={'c-score-label'}>Red</div>
               <div className={'c-score-score'}>{match.redScore}</div>
             </div>
-            {match.details.coopertitionBonus && (
+            {!!match.details.coopertitionBonus && (
               <div className='c-coop-bonus'>
                 <Handshake fontSize='inherit' />
               </div>

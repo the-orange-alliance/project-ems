@@ -23,8 +23,6 @@ const MatchPlay: FC<AudienceDisplayProps> = ({
   const blueAlliance =
     match?.participants?.filter((p) => p.station >= 20) ?? [];
 
-  console.log(match);
-
   useEffect(() => {
     timer.on('timer:start', onTimerStart);
     timer.on('timer:tele', onTimerTele);
