@@ -24,7 +24,7 @@ const SeasonDropdown: FC<Props> = ({ value, disabled, onChange }) => {
       <Select value={value ?? ''} onChange={handleChange} variant='standard'>
         {Seasons.map((s) => (
           <MenuItem key={s.key} value={s.key}>
-            [{s.program.toUpperCase()}]&nbsp;{s.name}
+            [{s.key.toUpperCase().replaceAll('_', ' ')}]&nbsp;{s.name}
           </MenuItem>
         ))}
       </Select>

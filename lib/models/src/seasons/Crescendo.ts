@@ -476,15 +476,11 @@ export function getPenaltyPoints(
 export function getRankingPoints(details: MatchDetails): MatchDetails {
   // Calculate melody statuses
   const redNotes =
-    details.redAutoAmpNotes +
     details.redAutoSpeakerNotes +
-    details.redTeleAmpNotes +
     details.redTeleSpeakerNotes +
     details.redTeleSpeakerNotesAmped;
   const blueNotes =
-    details.blueAutoAmpNotes +
     details.blueAutoSpeakerNotes +
-    details.blueTeleAmpNotes +
     details.blueTeleSpeakerNotes +
     details.blueTeleSpeakerNotesAmped;
   const redMelodyStatus = ScoreTable.RankingPoints.Melody(

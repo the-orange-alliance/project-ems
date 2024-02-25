@@ -307,6 +307,7 @@ export const teamsByEventSelectorFam = selectorFamily<Team[], string>({
   key: 'teamsByEventSelectorFam',
   get: (eventKey: string) => async (): Promise<Team[]> => {
     try {
+      if (eventKey.length <= 0) throw new Error('Event key not initialized.');
       return await clientFetcher(
         `teams/${eventKey}`,
         'GET',
