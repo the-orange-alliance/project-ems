@@ -7,7 +7,7 @@ import {
 } from '..';
 import { Grid, TextField, Typography } from '@mui/material';
 import { RankingsReport } from './reports/RankingsReport';
-import ScoreSheet from '@seasons/Cresendo/referee/ScoreSheet';
+import ScoreSheet from '@seasons/Crescendo/referee/ScoreSheet';
 
 const MatchDetailInfo: FC<MatchDetailInfoProps<Crescendo.MatchDetails>> = ({
   match,

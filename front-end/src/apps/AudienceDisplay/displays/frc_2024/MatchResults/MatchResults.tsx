@@ -65,7 +65,8 @@ const MatchResults: FC<AudienceDisplayProps> = ({
   const blueStagePts =
     calcStagePts(match.details.blueEndStageStatusOne) +
     calcStagePts(match.details.blueEndStageStatusTwo) +
-    calcStagePts(match.details.blueEndStageStatusThree);
+    calcStagePts(match.details.blueEndStageStatusThree) +
+    match.details.blueTeleTrapNotes * 5;
 
   // Red score breakdown
   const redAutoMobility =
@@ -86,7 +87,8 @@ const MatchResults: FC<AudienceDisplayProps> = ({
   const redStagePts =
     calcStagePts(match.details.redEndStageStatusOne) +
     calcStagePts(match.details.redEndStageStatusTwo) +
-    calcStagePts(match.details.redEndStageStatusThree);
+    calcStagePts(match.details.redEndStageStatusThree) +
+    match.details.redTeleTrapNotes * 5;
 
   const redFouls = match.redMinPen * 5 + match.redMajPen * 12;
   const blueFouls = match.blueMinPen * 5 + match.blueMajPen * 12;

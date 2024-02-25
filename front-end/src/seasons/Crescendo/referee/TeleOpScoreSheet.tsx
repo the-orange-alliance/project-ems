@@ -1,17 +1,30 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import {
   Alliance,
+  BonusPeriodConfig,
   Crescendo,
   Match,
   MatchParticipant,
+  MatchSocketEvent,
   MatchState
 } from '@toa-lib/models';
 import StateToggle from '@components/Referee/StateToggle';
-import { SetterOrUpdater, useRecoilState, useRecoilValue } from 'recoil';
-import { matchInProgressAtom, matchStateAtom } from '@stores/NewRecoil';
+import {
+  SetterOrUpdater,
+  useRecoilCallback,
+  useRecoilState,
+  useRecoilValue
+} from 'recoil';
+import {
+  blueBonusActiveAtom,
+  matchInProgressAtom,
+  matchStateAtom,
+  redBonusActiveAtom
+} from '@stores/NewRecoil';
 import NumberInput from '@components/Referee/NumberInput';
+import { useSocket } from 'src/api/SocketProvider';
 
 interface Props {
   alliance: Alliance;
@@ -26,7 +39,63 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   ] = useRecoilState(matchInProgressAtom);
   const matchState = useRecoilValue(matchStateAtom);
 
+  const [socket, connected] = useSocket();
+  const bonusActive = useRecoilValue(
+    alliance === 'red' ? redBonusActiveAtom : blueBonusActiveAtom
+  );
+
   if (!match || !match.details) return null;
+
+  useEffect(() => {
+    if (connected) {
+      socket?.on(MatchSocketEvent.BONUS_START, onBonusStart);
+      socket?.on(MatchSocketEvent.BONUS_END, onBonusEnd);
+    }
+  }, [connected]);
+
+  useEffect(() => {
+    return () => {
+      socket?.off(MatchSocketEvent.BONUS_START, onBonusStart);
+      socket?.off(MatchSocketEvent.BONUS_END, onBonusEnd);
+    };
+  }, []);
+
+  const onBonusStart = useRecoilCallback(
+    ({ set }) =>
+      async (bonusType: BonusPeriodConfig) => {
+        if (
+          bonusType === BonusPeriodConfig.FRC_2024_AMPLIFY_RED &&
+          alliance === 'red'
+        ) {
+          set(redBonusActiveAtom, true);
+        } else if (
+          bonusType === BonusPeriodConfig.FRC_2024_AMPLIFY_BLUE &&
+          alliance === 'blue'
+        ) {
+          set(blueBonusActiveAtom, true);
+        }
+      },
+    []
+  );
+
+  const onBonusEnd = useRecoilCallback(
+    ({ set }) =>
+      async (bonusType: BonusPeriodConfig) => {
+        console.log('bonus end', bonusType, alliance);
+        if (
+          bonusType === BonusPeriodConfig.FRC_2024_AMPLIFY_RED &&
+          alliance === 'red'
+        ) {
+          set(redBonusActiveAtom, false);
+        } else if (
+          bonusType === BonusPeriodConfig.FRC_2024_AMPLIFY_BLUE &&
+          alliance === 'blue'
+        ) {
+          set(blueBonusActiveAtom, false);
+        }
+      },
+    []
+  );
 
   const setDetails = (
     key: keyof Crescendo.MatchDetails,
@@ -40,6 +109,7 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   };
 
   const handleAmpRegNotes = (newValue: number) => {
+    if (newValue < 0) newValue = 0;
     setMatch(
       setDetails(
         alliance === 'red' ? 'redTeleAmpNotes' : 'blueTeleAmpNotes',
@@ -49,6 +119,7 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   };
 
   const handleSpeakerAmplifiedNotes = (newValue: number) => {
+    if (newValue < 0) newValue = 0;
     setMatch(
       setDetails(
         alliance === 'red'
@@ -60,9 +131,21 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   };
 
   const handleSpeakerNotes = (newValue: number) => {
+    if (newValue < 0) newValue = 0;
     setMatch(
       setDetails(
         alliance === 'red' ? 'redTeleSpeakerNotes' : 'blueTeleSpeakerNotes',
+        newValue
+      )
+    );
+  };
+
+  const handleTrapNotes = (newValue: number) => {
+    if (newValue < 0) newValue = 0;
+    if (newValue > 3) newValue = 3; // Max 3 trap notes
+    setMatch(
+      setDetails(
+        alliance === 'red' ? 'redTeleTrapNotes' : 'blueTeleTrapNotes',
         newValue
       )
     );
@@ -114,9 +197,16 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
     setMatch(setDetails('coopertitionBonus', newValue));
   };
 
+  const matchInProgress = matchState === MatchState.MATCH_IN_PROGRESS;
+
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} md={4} lg={4}>
+      <Grid
+        item
+        xs={12}
+        md={matchInProgress ? 4 : 3}
+        lg={matchInProgress ? 4 : 3}
+      >
         <Typography variant='h6' sx={{ textAlign: 'center' }}>
           Amp Notes
         </Typography>
@@ -129,30 +219,63 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
           onChange={handleAmpRegNotes}
         />
       </Grid>
-      <Grid item xs={12} md={4} lg={4}>
+      {(bonusActive || !matchInProgress) && (
+        <Grid
+          item
+          xs={12}
+          md={matchInProgress ? 4 : 3}
+          lg={matchInProgress ? 4 : 3}
+        >
+          <Typography variant='h6' sx={{ textAlign: 'center' }}>
+            Speaker Amplified Notes
+          </Typography>
+          <NumberInput
+            value={
+              alliance === 'red'
+                ? match.details.redTeleSpeakerNotesAmped
+                : match.details.blueTeleSpeakerNotesAmped
+            }
+            onChange={handleSpeakerAmplifiedNotes}
+          />
+        </Grid>
+      )}
+      {(!bonusActive || !matchInProgress) && (
+        <Grid
+          item
+          xs={12}
+          md={matchInProgress ? 4 : 3}
+          lg={matchInProgress ? 4 : 3}
+        >
+          <Typography variant='h6' sx={{ textAlign: 'center' }}>
+            Speaker Regular Notes
+          </Typography>
+          <NumberInput
+            value={
+              alliance === 'red'
+                ? match.details.redTeleSpeakerNotes
+                : match.details.blueTeleAmpNotes
+            }
+            onChange={handleSpeakerNotes}
+          />
+        </Grid>
+      )}
+
+      <Grid
+        item
+        xs={12}
+        md={matchInProgress ? 4 : 3}
+        lg={matchInProgress ? 4 : 3}
+      >
         <Typography variant='h6' sx={{ textAlign: 'center' }}>
-          Speaker Amplified Notes
+          Trap Notes
         </Typography>
         <NumberInput
           value={
             alliance === 'red'
-              ? match.details.redTeleSpeakerNotesAmped
-              : match.details.blueTeleSpeakerNotesAmped
+              ? match.details.redTeleTrapNotes
+              : match.details.blueTeleTrapNotes
           }
-          onChange={handleSpeakerAmplifiedNotes}
-        />
-      </Grid>
-      <Grid item xs={12} md={4} lg={4}>
-        <Typography variant='h6' sx={{ textAlign: 'center' }}>
-          Speaker Regular Notes
-        </Typography>
-        <NumberInput
-          value={
-            alliance === 'red'
-              ? match.details.redTeleSpeakerNotes
-              : match.details.blueTeleAmpNotes
-          }
-          onChange={handleSpeakerNotes}
+          onChange={handleTrapNotes}
         />
       </Grid>
       {participants?.map((p) => {
