@@ -253,7 +253,7 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
             value={
               alliance === 'red'
                 ? match.details.redTeleSpeakerNotes
-                : match.details.blueTeleAmpNotes
+                : match.details.blueTeleSpeakerNotes
             }
             onChange={handleSpeakerNotes}
           />

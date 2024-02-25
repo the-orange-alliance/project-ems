@@ -1,4 +1,4 @@
-import { isNonNullObject, isString, isNumber, isArray } from '../types.js';
+import { isNonNullObject, isString, isNumber, isArray, isBoolean } from '../types.js';
 
 export interface FMSSettings {
   eventKey: string;
@@ -68,8 +68,8 @@ export const isFMSSettings = (obj: unknown): obj is FMSSettings =>
   isString(obj.eventKey) &&
   isNumber(obj.fieldNumber) &&
   isString(obj.hwFingerprint) &&
-  isNumber(obj.enableFms) &&
-  isNumber(obj.enableAdvNet) &&
+  (isBoolean(obj.enableFms) || isNumber(obj.enableFms)) &&
+  (isBoolean(obj.enableAdvNet) || isNumber(obj.enableAdvNet)) &&
   isString(obj.apIp) &&
   isString(obj.apUsername) &&
   isString(obj.apPassword) &&
@@ -80,7 +80,7 @@ export const isFMSSettings = (obj: unknown): obj is FMSSettings =>
   isString(obj.switchIp) &&
   isString(obj.switchUsername) &&
   isString(obj.switchPassword) &&
-  isNumber(obj.enablePlc) &&
+  (isBoolean(obj.enablePlc) || isNumber(obj.enablePlc)) &&
   isString(obj.plcIp) &&
   isString(obj.registeredAt);
 

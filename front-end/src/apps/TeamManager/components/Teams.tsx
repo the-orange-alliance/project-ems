@@ -80,6 +80,7 @@ const Teams: FC = () => {
     if (!files || files.length <= 0 || !event) return;
     e.preventDefault();
     const teams = await parseTeamsFile(files[0], event.eventKey);
+    console.log(teams);
     setTeams(teams);
   };
 

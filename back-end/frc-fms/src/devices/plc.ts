@@ -8,6 +8,7 @@ import { Socket } from "socket.io-client";
 import { sleep } from "../helpers/generic.js";
 import Watchdog from "./watchdog.js";
 import { SocketSupport } from "./socket.js";
+import { EventEmitter } from "events";
 
 const logger = log("plc")
 
@@ -32,6 +33,8 @@ export class PlcSupport {
   private noSettingsState: number = 0;
 
   private processLock = false;
+
+  private emitter: EventEmitter = new EventEmitter();
 
   // Reset PLC if not fed in 3/4 of a second
   private watchdog: Watchdog = new Watchdog(async () => {
@@ -136,12 +139,28 @@ export class PlcSupport {
         SocketSupport.getInstance().socket?.emit("frc-fms:plc-update", this.plc.inputs.toJSON());
 
         // Field E-STOP
-        if (this.plc.inputs.fieldEstop) {
+        if (this.plc.inputs.fieldEstop && !this.plc.oldInputs.fieldEstop) {
           SocketSupport.getInstance().socket?.emit(MatchSocketEvent.ABORT);
           logger.info("🛑 Field E-STOP Pressed! This can't be good!");
         } else if (!this.plc.inputs.fieldEstop && this.plc.oldInputs.fieldEstop) {
           logger.info("🟢 Field E-STOP Released!");
         }
+
+        // Station E-STOPs
+        const oldStops = [this.plc.oldInputs.redEstop1, this.plc.oldInputs.redEstop2, this.plc.oldInputs.redEstop3, this.plc.oldInputs.blueEstop1, this.plc.oldInputs.blueEstop2, this.plc.oldInputs.blueEstop3];
+        const newStops = [this.plc.inputs.redEstop1, this.plc.inputs.redEstop2, this.plc.inputs.redEstop3, this.plc.inputs.blueEstop1, this.plc.inputs.blueEstop2, this.plc.inputs.blueEstop3];
+
+        for (let i = 0; i < 6; i++) {
+          // TODO make event emitter
+          const color = i < 3 ? "Red" : "Blue";
+          const station = i < 3 ? i + 1 : i - 2;
+          if (newStops[i] && !oldStops[i]) {
+            logger.info(`🛑 Station E-STOP ${color} ${station} Pressed!`);
+          } else if (!newStops[i] && oldStops[i]) {
+            logger.info(`🟢 Station E-STOP ${color} ${station} Released!`);
+          }
+        }
+
 
         // Update "Old" Inputs
         this.plc.oldInputs = new PlcInputs().fromArray(inputs);
@@ -393,6 +412,10 @@ export class PlcSupport {
       SocketSupport.getInstance().plcFail('PLC not connected');
       logger.info("❌ Prestart failed");
     }
+  }
+
+  public events(): EventEmitter {
+    return this.emitter;
   }
 }
 

@@ -41,12 +41,12 @@ export class PlcInputs {
   public fromArray(inputs: boolean[]): PlcInputs {
     if (inputs.length > 6) {
       this.fieldEstop = !inputs[0];
-      this.redEstop1 = inputs[1];
-      this.redEstop2 = inputs[2];
-      this.redEstop3 = inputs[3];
-      this.blueEstop1 = inputs[4];
-      this.blueEstop2 = inputs[5];
-      this.blueEstop3 = inputs[6];
+      this.redEstop1 = !inputs[1];
+      this.redEstop2 = !inputs[2];
+      this.redEstop3 = !inputs[3];
+      this.blueEstop1 = !inputs[4];
+      this.blueEstop2 = !inputs[5];
+      this.blueEstop3 = !inputs[6];
     } else {
       logger.error('❌ Error reading inputs from PLC. Received Input length not long enough')
     }

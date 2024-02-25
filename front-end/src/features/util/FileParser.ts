@@ -14,7 +14,7 @@ export const parseTeamsFile = async (
       resolve(
         data.target.result
           .toString()
-          .split('\n')
+          .split('\r')
           .map((team) => {
             const t = team.split(',');
             return {

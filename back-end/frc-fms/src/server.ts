@@ -172,14 +172,15 @@ export class EmsFrcFms {
       return;
     }
 
-    if (
-      this.activeMatch.fieldNumber !==
-      SettingsSupport.getInstance().settings.fieldNumber
-    ) {
-      logger.error("ℹ Received prestart command, but not my field");
-      this.activeMatch = null;
-      return;
-    }
+    // TODO: Check if the match is for this field
+    // if (
+    //   this.activeMatch.fieldNumber !==
+    //   SettingsSupport.getInstance().settings.fieldNumber
+    // ) {
+    //   logger.error("ℹ Received prestart command, but not my field");
+    //   this.activeMatch = null;
+    //   return;
+    // }
 
     // Settings on prestart (this updates the tournament settings)
     await SettingsSupport.getInstance().onPrestart(matchKey);
