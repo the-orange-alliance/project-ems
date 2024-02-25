@@ -44,10 +44,9 @@ const Teams: FC = () => {
   // Local Variables
   const createdTeams = flags.createdTeams.includes(event?.eventKey ?? '');
 
-  if (!event) return null;
-
   const handlePost = useRecoilCallback(({ snapshot }) => async () => {
     try {
+      if (!event) return;
       const prevTeams = await snapshot.getPromise(
         teamsByEventSelectorFam(event.eventKey)
       );
@@ -84,6 +83,7 @@ const Teams: FC = () => {
   };
 
   const handleCreate = () => {
+    if (!event) return;
     const { eventKey } = event;
     setTeams((prev) => [
       { ...defaultTeam, eventKey, teamKey: teams.length + 1 },
@@ -101,6 +101,8 @@ const Teams: FC = () => {
       setTeams(removeFromArray(teams, 'teamKey', t.teamKey));
     }
   };
+
+  if (!event) return null;
 
   return (
     <>
