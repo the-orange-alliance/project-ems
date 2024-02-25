@@ -5,7 +5,6 @@ import { matchResultAtom } from 'src/stores/NewRecoil';
 import './MatchResults.less';
 import MatchBar from '../common/MatchBar';
 import { EmojiEvents, Groups, Handshake, MusicNote } from '@mui/icons-material';
-import { StageStatus } from '@toa-lib/models/build/seasons/Crescendo';
 import AllianceSheet from '../common/AllianceSheet';
 import RPBar from '../common/RPBar';
 import { AudienceDisplayProps } from '../../AudienceDisplayProvider';
@@ -23,11 +22,11 @@ const calcAmpPts = (autoAmped: number, teleAmped: number) =>
 
 const calcStagePts = (stageStatus: number) => {
   switch (stageStatus) {
-    case StageStatus.PARK:
+    case Crescendo.StageStatus.PARK:
       return 1;
-    case StageStatus.ONSTAGE:
+    case Crescendo.StageStatus.ONSTAGE:
       return 3;
-    case StageStatus.ONSTAGE_SPOTLIT:
+    case Crescendo.StageStatus.ONSTAGE_SPOTLIT:
       return 4;
     default:
       return 0;
@@ -49,10 +48,9 @@ const MatchResults: FC<AudienceDisplayProps> = ({
 
   // Blue alliance breakdowns
   const blueAutoMobility =
-    (details.blueAutoMobilityOne +
-      details.blueAutoMobilityTwo +
-      details.blueAutoMobilityThree) *
-    2;
+    Crescendo.getMobilityPoints(details.blueAutoMobilityOne) +
+    Crescendo.getMobilityPoints(details.blueAutoMobilityTwo) +
+    Crescendo.getMobilityPoints(details.blueAutoMobilityThree);
   const blueSpeakerPts = calcSpeakerPts(
     match.details.blueAutoSpeakerNotes,
     match.details.blueTeleSpeakerNotes,
@@ -70,10 +68,9 @@ const MatchResults: FC<AudienceDisplayProps> = ({
 
   // Red score breakdown
   const redAutoMobility =
-    (details.redAutoMobilityOne +
-      details.redAutoMobilityTwo +
-      details.redAutoMobilityThree) *
-    3;
+    Crescendo.getMobilityPoints(details.redAutoMobilityOne) +
+    Crescendo.getMobilityPoints(details.redAutoMobilityTwo) +
+    Crescendo.getMobilityPoints(details.redAutoMobilityThree);
 
   const redSpeakerPts = calcSpeakerPts(
     match.details.redAutoSpeakerNotes,
