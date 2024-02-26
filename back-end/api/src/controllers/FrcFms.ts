@@ -30,7 +30,7 @@ router.get('/advancedNetworkingConfig', async (req, res) => {
     if (typeof hwFingerprint === 'string' && hwFingerprint.length > 0) {
       data = await db.selectAllWhere(
         'fms_adv_net_cfg',
-        `hwFingerprint = '${hwFingerprint}'`
+        `hwFingerprint="${hwFingerprint}"`
       );
     } else {
       data = await db.selectAll('fms_adv_net_cfg');
@@ -46,8 +46,7 @@ router.post(
   '/advancedNetworkingConfig',
   validateBody(isFMSSettings),
   async (req, res) => {
-    const eventKey = req.body.eventKey;
-    const db = await getDB(eventKey);
+    const db = await getDB('global');
     try {
       await db.insertValue('fms_adv_net_cfg', [req.body]);
     } catch (e) {

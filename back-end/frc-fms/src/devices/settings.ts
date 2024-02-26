@@ -30,7 +30,6 @@ export class SettingsSupport {
   }
 
   public async initSettings() {
-    this._settings.eventKey = "FRC_2024-FIM-WK0PM";
     await this.updateSettings(true);
 
     // Listen for settings updates
