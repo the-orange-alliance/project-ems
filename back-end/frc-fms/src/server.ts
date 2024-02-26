@@ -114,9 +114,12 @@ export class EmsFrcFms {
     SocketSupport.getInstance().socket?.on(
       MatchSocketEvent.PRESTART,
       (matchKey: MatchKey) => {
-        logger.info("🔁 Prestart Command Issued");
-        this.matchState = MatchMode.PRESTART;
-        this.fmsOnPrestart(matchKey);
+        const myEvent = SettingsSupport.getInstance().settings.eventKey
+        logger.info(`🔁 Prestart Command Issued for match ${matchKey.tournamentKey}-${matchKey.id} at ${matchKey.eventKey}.  My event: ${myEvent ? 'Yes' : 'No'}`);
+        if (myEvent) {
+          this.matchState = MatchMode.PRESTART;
+          this.fmsOnPrestart(matchKey);
+        }
       }
     );
   }
@@ -172,15 +175,14 @@ export class EmsFrcFms {
       return;
     }
 
-    // TODO: Check if the match is for this field
-    // if (
-    //   this.activeMatch.fieldNumber !==
-    //   SettingsSupport.getInstance().settings.fieldNumber
-    // ) {
-    //   logger.error("ℹ Received prestart command, but not my field");
-    //   this.activeMatch = null;
-    //   return;
-    // }
+    if (
+      this.activeMatch.fieldNumber !==
+      SettingsSupport.getInstance().settings.fieldNumber
+    ) {
+      logger.error("ℹ Received prestart command, but not my field");
+      this.activeMatch = null;
+      return;
+    }
 
     // Settings on prestart (this updates the tournament settings)
     await SettingsSupport.getInstance().onPrestart(matchKey);
