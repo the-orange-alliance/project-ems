@@ -2,7 +2,6 @@ import { FC, useEffect, useState } from 'react';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import Paper from '@mui/material/Paper';
 import { Grid, Typography } from '@mui/material';
-import { useSocket } from 'src/api/SocketProvider';
 import {
   DriverstationMonitor,
   MatchMode,
@@ -11,24 +10,40 @@ import {
 } from '@toa-lib/models';
 import TeamRow from './components/TeamRow';
 import PrestartStatusIcon from './components/PrestartStatus';
+import ConnectionChip from 'src/components/ConnectionChip/ConnectionChip';
+import { useSocket } from 'src/api/SocketProvider';
 
 const FrcFmsFieldMonitorApp: FC = () => {
-  const [monitor, setMonitor] = useState<DriverstationMonitor>();
+  const [monitor, setMonitor] = useState<DriverstationMonitor>({
+    dsStatuses: [],
+    matchStatus: MatchMode.PRESTART,
+    prestartStatus: {
+      hardware: [],
+      matchKey: { tournamentKey: '?', id: 0, eventKey: '' },
+      state: PrestartState.NotReady
+    }
+  });
   const [socket, connected] = useSocket();
 
-  const setupSocket = () => {
-    socket?.off('frc-fms:ds-update');
-    socket?.on('frc-fms:ds-update', setMonitor);
+  useEffect(() => {
+    return () => {
+      socket?.off('frc-fms:ds-update');
+      socket?.off('frc-fms:prestart-status');
+    };
+  }, []);
 
-    socket?.off('frc-fms:prestart-status');
-    // @ts-ignore // Bad practice
-    socket?.on('frc-fms:prestart-status', (status: PrestartStatus) =>
-      setMonitor({ ...monitor, prestartStatus: status })
-    );
-  };
+  useEffect(() => {
+    if (connected) {
+      socket?.off('frc-fms:ds-update');
+      socket?.on('frc-fms:ds-update', setMonitor);
 
-  useEffect(setupSocket, []);
-  useEffect(setupSocket, [connected]);
+      socket?.off('frc-fms:prestart-status');
+      socket?.on('frc-fms:prestart-status', onPrestartStatus);
+    }
+  }, [connected]);
+
+  const onPrestartStatus = (status: PrestartStatus) =>
+    setMonitor({ ...monitor, prestartStatus: status });
 
   const friendlyMatchStatus = () => {
     switch (monitor?.matchStatus) {
@@ -73,7 +88,7 @@ const FrcFmsFieldMonitorApp: FC = () => {
               {/* Match Mode */}
               <Grid
                 item
-                xs={10 - (monitor?.prestartStatus.hardware.length ?? 0)}
+                xs={8 - (monitor?.prestartStatus.hardware.length ?? 0)}
               >
                 <Typography variant='h4'>
                   {friendlyMatchStatus()}
@@ -88,6 +103,11 @@ const FrcFmsFieldMonitorApp: FC = () => {
                     monitor?.prestartStatus.state === PrestartState.Success &&
                     ' Complete'}
                 </Typography>
+              </Grid>
+
+              {/* Socket Connected Chip */}
+              <Grid item xs={2}>
+                <ConnectionChip />
               </Grid>
 
               {/* HW Prestart Statuses */}
