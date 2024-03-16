@@ -1,10 +1,7 @@
-import { clientFetcher } from '@toa-lib/client';
+import { clientFetcher, apiFetcher } from '@toa-lib/client';
 import {
   ApiResponseError,
   User,
-  isUser,
-  isUserLoginResponse,
-  isUserArray,
   isRankingArray,
   UserLoginResponse,
   Event,
@@ -21,7 +18,9 @@ import {
   Tournament,
   MatchKey,
   FMSSettings,
-  MatchDetailBase
+  MatchDetailBase,
+  userZod,
+  userLoginResponseZod
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
@@ -30,14 +29,14 @@ export const login = async (
   username: string,
   password: string
 ): Promise<UserLoginResponse> =>
-  clientFetcher(
+  apiFetcher(
     'auth/login',
     'POST',
     {
       username,
       password
     },
-    isUserLoginResponse
+    userLoginResponseZod.parse
   );
 
 export const logout = async (): Promise<void> =>
@@ -213,14 +212,14 @@ export const useLoginAttempt = (
 ): SWRResponse<User, ApiResponseError> =>
   useSWR<User>(
     'auth/login',
-    (url) => clientFetcher(url, 'POST', { username, password }, isUser),
+    (url) => apiFetcher(url, 'POST', { username, password }, userZod.parse),
     { revalidateOnFocus: false }
   );
 
 export const useUsers = (): SWRResponse<User[], ApiResponseError> =>
   useSWR<User[]>(
     'auth/users',
-    (url) => clientFetcher(url, 'GET', undefined, isUserArray),
+    (url) => apiFetcher(url, 'GET', undefined, userZod.array().parse),
     { revalidateOnFocus: false }
   );
 

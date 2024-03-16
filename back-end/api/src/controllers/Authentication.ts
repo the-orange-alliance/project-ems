@@ -1,9 +1,9 @@
 import { environment as env } from '@toa-lib/server';
 import {
-  isUserLogin,
   User,
   UserLoginResponse,
-  DEFAULT_ADMIN_USERNAME
+  DEFAULT_ADMIN_USERNAME,
+  userLoginZod
 } from '@toa-lib/models';
 import { Response, Request, Router, NextFunction } from 'express';
 import passport from 'passport';
@@ -14,7 +14,7 @@ import {
   AuthenticationNotLocalError
 } from '../util/Errors.js';
 import { requireParams } from '../middleware/QueryParams.js';
-import { validateBody } from '../middleware/BodyValidator.js';
+import { validateBodyZ } from '../middleware/BodyValidator.js';
 import { getDB } from '../db/EventDatabase.js';
 
 const router = Router();
@@ -34,7 +34,7 @@ router.get(
 /** POST method that will attempt to login the user based on their credentials. */
 router.post(
   '/login',
-  validateBody(isUserLogin),
+  validateBodyZ(userLoginZod),
   (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate(
       'local',

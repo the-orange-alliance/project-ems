@@ -1,35 +1,20 @@
-import { isArray, isNonNullObject, isNumber, isString } from './types.js';
+import { z } from 'zod';
 
-export interface User {
-  id: number;
-  username: string;
-  permissions: string;
-}
+export const userZod = z.object({
+  id: z.number(),
+  username: z.string(),
+  permissions: z.string()
+});
 
-export interface UserLogin {
-  username: string;
-  password: string;
-}
+export const userLoginZod = z.object({
+  username: z.string(),
+  password: z.string()
+});
 
-export interface UserLoginResponse extends User {
-  token: string;
-}
+export const userLoginResponseZod = userZod.extend({
+  token: z.string()
+});
 
-export const isUser = (obj: unknown): obj is User =>
-  isNonNullObject(obj) &&
-  isNumber(obj.id) &&
-  isString(obj.username) &&
-  isString(obj.permissions);
-
-export const isUserLoginResponse = (obj: unknown): obj is UserLoginResponse =>
-  isNonNullObject(obj) &&
-  isNumber(obj.id) &&
-  isString(obj.username) &&
-  isString(obj.permissions) &&
-  isString(obj.token);
-
-export const isUserArray = (obj: unknown): obj is User[] =>
-  isArray(obj) && obj.every((o) => isUser(o));
-
-export const isUserLogin = (obj: unknown): obj is UserLogin =>
-  isNonNullObject(obj) && isString(obj.username) && isString(obj.password);
+export type User = z.infer<typeof userZod>;
+export type UserLogin = z.infer<typeof userLoginZod>;
+export type UserLoginResponse = z.infer<typeof userLoginResponseZod>;
