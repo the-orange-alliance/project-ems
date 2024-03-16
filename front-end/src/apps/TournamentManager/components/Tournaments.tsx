@@ -40,10 +40,9 @@ const Tournaments: FC = () => {
   // Dialogs
   const removeModal = useModal(TournamentRemovalDialog);
 
-  if (!event) return null;
-
   const handlePost = useRecoilCallback(({ snapshot }) => async () => {
     try {
+      if (!event) return;
       // The following logic takes the differences and uploads the new objects.
       const prevTournaments = await snapshot.getPromise(
         tournamentsByEventSelectorFam(event.eventKey)
@@ -78,6 +77,7 @@ const Tournaments: FC = () => {
   });
 
   const handleCreate = () => {
+    if (!event) return;
     const { eventKey } = event;
     setTournaments((prev) => [
       {
@@ -104,7 +104,7 @@ const Tournaments: FC = () => {
 
   return (
     <>
-      <ViewReturn title='Event' href={`/${event.eventKey}`} sx={{ mb: 1 }} />
+      <ViewReturn title='Event' href={`/${event?.eventKey}`} sx={{ mb: 1 }} />
       <SaveAddUploadLoadingFab
         loading={loading}
         onAdd={handleCreate}
@@ -118,6 +118,7 @@ const Tournaments: FC = () => {
         data={tournaments}
         headers={['Event', 'Tournament ID', 'Name', 'Tournament', 'Fields']}
         renderRow={(t) => {
+          if (!event) return [];
           const { eventName } = event;
           const fields = `[${t.fields.toString().replaceAll(',', ', ')}]`;
           return [

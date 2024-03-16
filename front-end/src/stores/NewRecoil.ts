@@ -15,7 +15,6 @@ import {
   isMatchParticipantArray,
   isRankingArray,
   isScheduleItemArray,
-  isTournamentArray,
   Match,
   MatchParticipant,
   MatchState,
@@ -26,6 +25,7 @@ import {
   Team,
   teamZod,
   Tournament,
+  tournamentZod,
   User
 } from '@toa-lib/models';
 import {
@@ -258,7 +258,7 @@ export const currentTournamentFieldsSelector = selector<
   key: 'currentTournamentFieldsSelector',
   get: ({ get }) => {
     return (
-      get(currentTournamentSelector)?.fields.map((f, i) => ({
+      get(currentTournamentSelector)?.fields.map((f: string, i: number) => ({
         name: f,
         field: i + 1
       })) ?? []
@@ -341,11 +341,11 @@ export const tournamentsByEventSelectorFam = selectorFamily<
   key: 'tournamentsByEventSelectorFam',
   get: (eventKey: string) => async (): Promise<Tournament[]> => {
     try {
-      return await clientFetcher(
+      return await apiFetcher(
         `tournament/${eventKey}`,
         'GET',
         undefined,
-        isTournamentArray
+        tournamentZod.array().parse
       );
     } catch (e) {
       return [];

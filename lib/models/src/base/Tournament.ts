@@ -1,20 +1,20 @@
 import { z } from 'zod';
-import { isArray, isNonNullObject, isNumber, isString } from '../types.js';
 
-export const tournamentZod = z.object({
+export const tournamentDatabaseZod = z.object({
   eventKey: z.string(),
   tournamentKey: z.string(),
-  tournamentLevel: z.number()
+  tournamentLevel: z.number(),
+  fieldCount: z.number(),
+  fields: z.string(),
+  name: z.string()
 });
 
-export interface Tournament {
-  eventKey: string;
-  tournamentKey: string;
-  tournamentLevel: number;
-  fieldCount: number;
-  fields: string[];
-  name: string;
-}
+export const tournamentZod = tournamentDatabaseZod.transform((data) => {
+  return {
+    ...data,
+    fields: JSON.parse(data.fields)
+  };
+});
 
 export const defaultTournament: Tournament = {
   eventKey: '',
@@ -31,21 +31,4 @@ export const toTournamentJSON = (
   return { ...tournament, fields: JSON.stringify(tournament.fields) };
 };
 
-export const fromTournamentJSON = (
-  obj: Record<string, string | number>
-): Tournament => {
-  const tournament = { ...obj, fields: JSON.parse(obj.fields.toString()) };
-  if (!isTournament(tournament))
-    throw Error('Error while parsing JSON as Tournament object');
-  return tournament;
-};
-
-export const isTournament = (obj: unknown): obj is Tournament =>
-  isNonNullObject(obj) &&
-  isString(obj.eventKey) &&
-  isString(obj.tournamentKey) &&
-  isArray(obj.fields) &&
-  isNumber(obj.tournamentLevel);
-
-export const isTournamentArray = (obj: unknown): obj is Tournament[] =>
-  isArray(obj) && obj.every((o) => isTournament(o));
+export type Tournament = z.infer<typeof tournamentZod>;

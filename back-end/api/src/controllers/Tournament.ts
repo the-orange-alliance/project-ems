@@ -1,13 +1,11 @@
 import {
-  isTournamentArray,
-  fromTournamentJSON,
   toTournamentJSON,
   Tournament,
-  isTournament
+  tournamentDatabaseZod
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { getDB } from '../db/EventDatabase.js';
-import { validateBody } from '../middleware/BodyValidator.js';
+import { validateBodyZ } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
@@ -25,7 +23,7 @@ router.get(
       if (!data) {
         return next(DataNotFoundError);
       }
-      res.send(data.map((t) => fromTournamentJSON(t)));
+      res.send(data.map((t) => tournamentDatabaseZod.parse(t)));
     } catch (e) {
       return next(e);
     }
@@ -34,7 +32,7 @@ router.get(
 
 router.post(
   '/',
-  validateBody(isTournamentArray),
+  validateBodyZ(tournamentDatabaseZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey } = req.body[0];
@@ -52,7 +50,7 @@ router.post(
 
 router.patch(
   '/:eventKey/:tournamentKey',
-  validateBody(isTournament),
+  validateBodyZ(tournamentDatabaseZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, tournamentKey } = req.params;
