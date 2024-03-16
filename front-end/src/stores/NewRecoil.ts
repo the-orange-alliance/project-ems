@@ -1,4 +1,4 @@
-import { clientFetcher } from '@toa-lib/client';
+import { apiFetcher, clientFetcher } from '@toa-lib/client';
 import {
   AllianceMember,
   Day,
@@ -6,16 +6,15 @@ import {
   defaultEventSchedule,
   Event,
   EventSchedule,
+  eventZod,
   FMSSettings,
   isAllianceArray,
-  isEventArray,
   isFMSSettingsArray,
   isMatch,
   isMatchArray,
   isMatchParticipantArray,
   isRankingArray,
   isScheduleItemArray,
-  isTeamArray,
   isTournamentArray,
   Match,
   MatchParticipant,
@@ -25,6 +24,7 @@ import {
   reconcileMatchParticipants,
   ScheduleItem,
   Team,
+  teamZod,
   Tournament,
   User
 } from '@toa-lib/models';
@@ -286,7 +286,12 @@ const eventsSelector = selector<Event[]>({
   key: 'eventsSelector',
   get: async () => {
     try {
-      return await clientFetcher('event', 'GET', undefined, isEventArray);
+      return await apiFetcher(
+        'event',
+        'GET',
+        undefined,
+        eventZod.array().parse
+      );
     } catch (e) {
       console.log(e);
       return [];
@@ -308,11 +313,11 @@ export const teamsByEventSelectorFam = selectorFamily<Team[], string>({
   get: (eventKey: string) => async (): Promise<Team[]> => {
     try {
       if (eventKey.length <= 0) throw new Error('Event key not initialized.');
-      return await clientFetcher(
+      return await apiFetcher(
         `teams/${eventKey}`,
         'GET',
         undefined,
-        isTeamArray
+        teamZod.array().parse
       );
     } catch (e) {
       return [];

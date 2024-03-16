@@ -1,7 +1,7 @@
-import { isScheduleItemArray, isTeam, isTeamArray } from '@toa-lib/models';
+import { isScheduleItemArray, teamZod } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { getDB } from '../db/EventDatabase.js';
-import { validateBody } from '../middleware/BodyValidator.js';
+import { validateBody, validateBodyZ } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
@@ -80,7 +80,7 @@ router.delete(
 
 router.patch(
   '/:eventKey/:tournamentKey/:id',
-  validateBody(isTeam),
+  validateBodyZ(teamZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, tournamentKey, id } = req.params;

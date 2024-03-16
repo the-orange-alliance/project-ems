@@ -1,7 +1,7 @@
-import { getSeasonKeyFromEventKey, isEvent } from '@toa-lib/models';
+import { eventZod, getSeasonKeyFromEventKey } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { getDB } from '../db/EventDatabase.js';
-import { validateBody } from '../middleware/BodyValidator.js';
+import { validateBodyZ } from '../middleware/BodyValidator.js';
 
 const router = Router();
 
@@ -31,7 +31,7 @@ router.get(
 
 router.post(
   '/',
-  validateBody(isEvent),
+  validateBodyZ(eventZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const db = await getDB('global');
@@ -45,7 +45,7 @@ router.post(
 
 router.patch(
   '/:eventKey',
-  validateBody(isEvent),
+  validateBodyZ(eventZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey } = req.params;

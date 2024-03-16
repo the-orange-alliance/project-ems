@@ -4,16 +4,16 @@ import {
   getFunctionsBySeasonKey,
   getSeasonKeyFromEventKey,
   isRankingArray,
-  isTeamArray,
   Ranking,
   reconcileMatchDetails,
   reconcileMatchParticipants,
   reconcileTeamRankings,
-  Team
+  Team,
+  teamZod
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { getDB } from '../db/EventDatabase.js';
-import { validateBody } from '../middleware/BodyValidator.js';
+import { validateBody, validateBodyZ } from '../middleware/BodyValidator.js';
 import { SeasonFunctionsMissing } from '../util/Errors.js';
 
 const router = Router();
@@ -90,7 +90,7 @@ router.post(
 
 router.post(
   '/create/:tournamentKey',
-  validateBody(isTeamArray),
+  validateBodyZ(teamZod.array()),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { tournamentKey } = req.params;

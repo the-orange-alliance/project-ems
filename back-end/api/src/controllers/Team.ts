@@ -1,8 +1,8 @@
-import { isTeam, isTeamArray } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { getDB } from '../db/EventDatabase.js';
-import { validateBody } from '../middleware/BodyValidator.js';
+import { validateBodyZ } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';
+import { teamZod } from '@toa-lib/models';
 
 const router = Router();
 
@@ -35,7 +35,7 @@ router.get(
 
 router.post(
   '/:eventKey',
-  validateBody(isTeamArray),
+  validateBodyZ(teamZod.array()),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey } = req.params;
@@ -50,7 +50,7 @@ router.post(
 
 router.patch(
   '/:eventKey/:teamKey',
-  validateBody(isTeam),
+  validateBodyZ(teamZod.array()),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, teamKey } = req.params;

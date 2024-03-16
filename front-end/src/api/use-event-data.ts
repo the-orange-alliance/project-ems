@@ -1,5 +1,5 @@
-import { clientFetcher } from '@toa-lib/client';
-import { ApiResponseError, Event, isEvent } from '@toa-lib/models';
+import { apiFetcher, clientFetcher } from '@toa-lib/client';
+import { ApiResponseError, Event, eventZod } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
 export const setupEventBase = async (eventKey: string): Promise<void> =>
@@ -22,6 +22,6 @@ export const patchEvent = async (
 export const useEvent = (): SWRResponse<Event, ApiResponseError> =>
   useSWR<Event>(
     'event',
-    (url) => clientFetcher(url, 'GET', undefined, isEvent),
+    (url) => apiFetcher(url, 'GET', undefined, eventZod.parse),
     { revalidateOnFocus: false }
   );
