@@ -2,7 +2,7 @@ import { FC } from 'react';
 import PaperLayout from '@layouts/PaperLayout';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import EventForm from 'src/components/EventForm/EventForm';
+import EventForm from 'src/components/forms/EventForm/EventForm';
 import { useRecoilState } from 'recoil';
 import { currentEventSelector } from '@stores/NewRecoil';
 

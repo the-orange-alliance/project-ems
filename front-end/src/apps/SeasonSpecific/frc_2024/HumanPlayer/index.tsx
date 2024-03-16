@@ -15,12 +15,12 @@ import {
   useSetRecoilState
 } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
-import ConnectionChip from 'src/components/ConnectionChip/ConnectionChip';
-import MatchChip from 'src/components/MatchChip/MatchChip';
-import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
-import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
-import PrestartListener from 'src/components/PrestartListener/PrestartListener';
-import MatchCountdown from 'src/components/MatchCountdown/MatchCountdown';
+import ConnectionChip from 'src/components/util/ConnectionChip/ConnectionChip';
+import MatchChip from 'src/components/util/MatchChip/MatchChip';
+import MatchStateListener from 'src/components/sync-effects/MatchStateListener/MatchStateListener';
+import MatchUpdateListener from 'src/components/sync-effects/MatchUpdateListener/MatchUpdateListener';
+import PrestartListener from 'src/components/sync-effects/PrestartListener/PrestartListener';
+import MatchCountdown from 'src/components/util/MatchCountdown/MatchCountdown';
 import {
   matchInProgressAtom,
   matchStateAtom,

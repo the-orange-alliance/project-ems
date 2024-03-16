@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { currentEventKeyAtom, eventsAtom } from 'src/stores/NewRecoil';
 import { Event, EventTypes } from '@toa-lib/models';
-import UpgradedTable from 'src/components/UpgradedTable/UpgradedTable';
+import UpgradedTable from 'src/components/tables/UpgradedTable/UpgradedTable';
 import { DateTime } from 'luxon';
 import { useNavigate } from 'react-router-dom';
 import { Fab, Tooltip } from '@mui/material';

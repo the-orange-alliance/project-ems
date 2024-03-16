@@ -7,8 +7,8 @@ import { TabContext, TabList, TabPanel } from '@mui/lab';
 import AudienceDisplaySettingsTab from './tabs/audience';
 import MainSettingsTab from './tabs/main';
 import { useSeasonComponents } from 'src/hooks/use-season-components';
-import TwoColumnHeader from 'src/components/Headers/TwoColumnHeader';
-import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
+import TwoColumnHeader from 'src/components/util/Headers/TwoColumnHeader';
+import EventTournamentsDropdown from 'src/components/dropdowns/EventTournamentsDropdown';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   currentEventKeyAtom,

@@ -2,7 +2,6 @@ import { FC, ChangeEvent } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import { text } from 'stream/consumers';
 
 interface Props {
   value: number;

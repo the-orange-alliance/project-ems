@@ -2,10 +2,10 @@ import { FC, useState, useEffect } from 'react';
 import { DateTime } from 'luxon';
 import './JBApp.less';
 import ChromaLayout from 'src/layouts/ChromaLayout';
-import PrestartListener from 'src/components/PrestartListener/PrestartListener';
-import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
+import PrestartListener from 'src/components/sync-effects/PrestartListener/PrestartListener';
+import MatchUpdateListener from 'src/components/sync-effects/MatchUpdateListener/MatchUpdateListener';
 import { useRecoilValue } from 'recoil';
-import MatchCountdown from 'src/components/MatchCountdown/MatchCountdown';
+import MatchCountdown from 'src/components/util/MatchCountdown/MatchCountdown';
 import { matchInProgressAtom } from 'src/stores/NewRecoil';
 
 const JBApp: FC = () => {

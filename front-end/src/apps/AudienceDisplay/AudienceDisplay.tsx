@@ -11,8 +11,8 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { FC, Fragment, ReactNode, Suspense, useEffect, useRef } from 'react';
 import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
-import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
-import PrestartListener from 'src/components/PrestartListener/PrestartListener';
+import MatchStateListener from 'src/components/sync-effects/MatchStateListener/MatchStateListener';
+import PrestartListener from 'src/components/sync-effects/PrestartListener/PrestartListener';
 import ChromaLayout from 'src/layouts/ChromaLayout';
 import {
   displayChromaKeyAtom,

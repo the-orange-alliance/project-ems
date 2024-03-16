@@ -14,7 +14,7 @@ import {
   MatchSocketEvent,
   Team
 } from '@toa-lib/models';
-import AutocompleteTeam from 'src/components/AutocompleteTeam/AutoCompleteTeam';
+import AutocompleteTeam from 'src/components/dropdowns/AutoCompleteTeam';
 import { replaceInArray } from 'src/stores/Util';
 import { postAllianceMembers } from 'src/api/ApiProvider';
 import { useSocket } from 'src/api/SocketProvider';

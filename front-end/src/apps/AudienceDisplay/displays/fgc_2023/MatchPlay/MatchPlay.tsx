@@ -6,7 +6,7 @@ import {
 } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
-import MatchCountdown from 'src/components/MatchCountdown/MatchCountdown';
+import MatchCountdown from 'src/components/util/MatchCountdown/MatchCountdown';
 import { matchInProgressAtom, timer } from 'src/stores/NewRecoil';
 import './MatchPlay.less';
 import { useSocket } from 'src/api/SocketProvider';

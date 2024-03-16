@@ -6,16 +6,16 @@ import MatchSelection from './components/MatchSelection/MatchSelection';
 import RedAlliance from './components/RedAlliance/RedAlliance';
 import BlueAlliance from './components/BlueAlliance/BlueAlliance';
 import MatchStatus from './components/MatchStatus/MatchStatus';
-import UnloadListener from 'src/components/UnloadListener/UnloadListener';
-import PrestartListener from 'src/components/PrestartListener/PrestartListener';
-import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
+import UnloadEffect from 'src/components/sync-effects/UnloadEffect';
+import PrestartListener from 'src/components/sync-effects/PrestartListener/PrestartListener';
+import MatchStateListener from 'src/components/sync-effects/MatchStateListener/MatchStateListener';
 
 const ScoringApp: FC = () => {
   return (
     <DefaultLayout containerWidth='xl'>
       <PrestartListener />
       <MatchStateListener />
-      <UnloadListener />
+      <UnloadEffect />
       <MatchControl />
       <Suspense fallback={null}>
         <Grid

@@ -1,7 +1,7 @@
 import { FC } from 'react';
-import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
-import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
-import PrestartListener from 'src/components/PrestartListener/PrestartListener';
+import MatchStateListener from 'src/components/sync-effects/MatchStateListener/MatchStateListener';
+import MatchUpdateListener from 'src/components/sync-effects/MatchUpdateListener/MatchUpdateListener';
+import PrestartListener from 'src/components/sync-effects/PrestartListener/PrestartListener';
 import RefereeLayout from 'src/layouts/RefereeLayout';
 import { useRecoilValue } from 'recoil';
 import { currentEventSelector } from '@stores/NewRecoil';

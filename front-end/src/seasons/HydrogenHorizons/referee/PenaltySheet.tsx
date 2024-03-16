@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import NumberInput from '@components/Referee/NumberInput';
+import NumberInput from 'src/components/inputs/NumberInput';
 import { Alliance, HydrogenHorizons, Match } from '@toa-lib/models';
 import { useRecoilValue } from 'recoil';
 import { matchInProgressAtom } from '@stores/NewRecoil';

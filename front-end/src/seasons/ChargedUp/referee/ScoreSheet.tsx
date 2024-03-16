@@ -4,14 +4,19 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import { Alliance, ChargedUpDetails, Match, MatchSocketEvent } from '@toa-lib/models';
-import ConnectionChip from '@components/ConnectionChip/ConnectionChip';
-import MatchChip from '@components/MatchChip/MatchChip';
+import {
+  Alliance,
+  ChargedUpDetails,
+  Match,
+  MatchSocketEvent
+} from '@toa-lib/models';
+import ConnectionChip from 'src/components/util/ConnectionChip/ConnectionChip';
+import MatchChip from 'src/components/util/MatchChip/MatchChip';
 import { useRecoilValue } from 'recoil';
 import { matchInProgressAtom } from '@stores/NewRecoil';
 import TeamSheet from './TeamSheet';
 import PenaltySheet from './PenaltySheet';
-import TabPanel from '@components/TabPanel/TabPanel';
+import TabPanel from 'src/components/util/TabPanel/TabPanel';
 import AutoScoreSheet from './AutoScoreSheet';
 import TeleScoreSheet from './TeleOpScoreSheet';
 import { useSocket } from 'src/api/SocketProvider';

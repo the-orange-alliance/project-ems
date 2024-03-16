@@ -4,7 +4,7 @@ import Grid from '@mui/material/Grid';
 import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import ViewReturn from '@components/ViewReturn/ViewReturn';
+import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
 import { currentTeamKeyAtom, currentTeamSelector } from '@stores/NewRecoil';
 import { Team } from '@toa-lib/models';
 

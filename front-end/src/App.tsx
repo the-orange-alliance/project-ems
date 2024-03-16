@@ -6,7 +6,7 @@ import { useSnackbar } from './hooks/use-snackbar';
 import { userAtom } from './stores/NewRecoil';
 import { useEffect } from 'react';
 import { useSocket } from './api/SocketProvider';
-import SyncEffects from './components/SyncEffects/SyncEffects';
+import SyncEffects from './components/sync-effects/SyncEffects';
 
 function App() {
   const { AppSnackbar } = useSnackbar();

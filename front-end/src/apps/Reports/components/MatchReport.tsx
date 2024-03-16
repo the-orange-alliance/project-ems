@@ -14,7 +14,7 @@ import {
   currentTeamsByEventSelector,
   currentTournamentSelector
 } from 'src/stores/NewRecoil';
-import FieldsDropdown from 'src/components/Dropdowns/FieldsDropdown';
+import FieldsDropdown from 'src/components/dropdowns/FieldsDropdown';
 
 interface Props {
   matches: Match<any>[];

@@ -13,11 +13,11 @@ import {
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import { Typography } from '@mui/material';
-import ConnectionChip from '@components/ConnectionChip/ConnectionChip';
-import MatchChip from '@components/MatchChip/MatchChip';
+import ConnectionChip from 'src/components/util/ConnectionChip/ConnectionChip';
+import MatchChip from 'src/components/util/MatchChip/MatchChip';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import TabPanel from '@components/TabPanel/TabPanel';
+import TabPanel from 'src/components/util/TabPanel/TabPanel';
 import TeleScoreSheet from './TeleOpScoreSheet';
 import TeamSheet from './TeamSheet';
 import PenaltySheet from './PenaltySheet';

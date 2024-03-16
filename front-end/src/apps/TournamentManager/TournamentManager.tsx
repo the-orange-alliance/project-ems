@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import PaperLayout from '@layouts/PaperLayout';
 import Tournaments from './components/Tournaments';
-import TournamentForm from 'src/components/TournamentForm/TournamentForm';
+import TournamentForm from 'src/components/forms/TournamentForm/TournamentForm';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import {
   currentTournamentKeyAtom,

@@ -3,7 +3,7 @@ import { FC, useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
 import { matchStateAtom } from 'src/stores/NewRecoil';
 
-const UnloadListener: FC = () => {
+const UnloadEffect: FC = () => {
   const state = useRecoilValue(matchStateAtom);
 
   useEffect(() => {
@@ -23,4 +23,4 @@ const UnloadListener: FC = () => {
   return null;
 };
 
-export default UnloadListener;
+export default UnloadEffect;

@@ -1,12 +1,12 @@
 import { FC, useState } from 'react';
 import Box from '@mui/material/Box';
-import MatchResultsTable from 'src/components/MatchResultsTable/MatchResultsTable';
+import MatchResultsTable from 'src/components/tables/MatchResultsTable/MatchResultsTable';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   matchesByTournamentSelector,
   matchDialogOpenAtom
 } from 'src/stores/NewRecoil';
-import MatchEditDialog from 'src/components/MatchEditDialog/MatchEditDialg';
+import MatchEditDialog from 'src/components/dialogs/MatchEditDialog/MatchEditDialg';
 
 const MatchEditor: FC = () => {
   const matches = useRecoilValue(matchesByTournamentSelector);

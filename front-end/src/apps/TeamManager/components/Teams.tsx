@@ -12,16 +12,16 @@ import {
   teamsByEventSelectorFam
 } from 'src/stores/NewRecoil';
 import { useFlags } from 'src/stores/AppFlags';
-import UpgradedTable from 'src/components/UpgradedTable/UpgradedTable';
+import UpgradedTable from 'src/components/tables/UpgradedTable/UpgradedTable';
 import { parseTeamsFile } from 'src/util/FileParser';
 import { Team, defaultTeam } from '@toa-lib/models';
 import { getDifferences, removeFromArray } from 'src/stores/Util';
 import { useModal } from '@ebay/nice-modal-react';
 import { useSnackbar } from 'src/hooks/use-snackbar';
-import TeamRemovalDialog from 'src/components/Dialogs/TeamRemovalDialog';
+import TeamRemovalDialog from 'src/components/dialogs/TeamRemovalDialog';
 import { patchTeam, postTeams } from 'src/api/ApiProvider';
-import ViewReturn from 'src/components/ViewReturn/ViewReturn';
-import SaveAddUploadLoadingFab from 'src/components/SaveAddUploadLoadingFab';
+import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
+import SaveAddUploadLoadingFab from 'src/components/util/SaveAddUploadLoadingFab';
 
 const Teams: FC = () => {
   // Recoil State

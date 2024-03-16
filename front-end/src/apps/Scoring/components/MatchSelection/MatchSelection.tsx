@@ -7,7 +7,7 @@ import {
   useResetRecoilState,
   useSetRecoilState
 } from 'recoil';
-import MatchResultsTable from 'src/components/MatchResultsTable/MatchResultsTable';
+import MatchResultsTable from 'src/components/tables/MatchResultsTable/MatchResultsTable';
 import { MatchState, Tournament } from '@toa-lib/models';
 import {
   currentEventKeyAtom,
@@ -18,7 +18,7 @@ import {
   matchInProgressAtom,
   matchStateAtom
 } from 'src/stores/NewRecoil';
-import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
+import EventTournamentsDropdown from 'src/components/dropdowns/EventTournamentsDropdown';
 
 const MatchSelection: FC = () => {
   const [tournamentKey, setTournamentKey] = useRecoilState(

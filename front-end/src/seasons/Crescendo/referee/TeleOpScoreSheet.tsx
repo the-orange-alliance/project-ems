@@ -10,7 +10,7 @@ import {
   MatchSocketEvent,
   MatchState
 } from '@toa-lib/models';
-import StateToggle from '@components/Referee/StateToggle';
+import StateToggle from 'src/components/inputs/StateToggle';
 import {
   SetterOrUpdater,
   useRecoilCallback,
@@ -23,7 +23,7 @@ import {
   matchStateAtom,
   redBonusActiveAtom
 } from '@stores/NewRecoil';
-import NumberInput from '@components/Referee/NumberInput';
+import NumberInput from 'src/components/inputs/NumberInput';
 import { useSocket } from 'src/api/SocketProvider';
 
 interface Props {

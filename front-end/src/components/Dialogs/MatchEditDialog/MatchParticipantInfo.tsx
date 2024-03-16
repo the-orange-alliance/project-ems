@@ -3,7 +3,7 @@ import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import { useRecoilState } from 'recoil';
 import { replaceInArray } from 'src/stores/Util';
-import EditableParticipant from 'src/components/EditableParticipant/EditableParticipant';
+import EditableParticipant from 'src/components/dropdowns/EditableParticipant';
 import { MatchParticipant } from '@toa-lib/models';
 import { matchByCurrentIdSelectorFam } from 'src/stores/NewRecoil';
 

@@ -11,7 +11,7 @@ import {
 } from 'src/api/SocketProvider';
 import { matchStateAtom } from 'src/stores/NewRecoil';
 import { useModal } from '@ebay/nice-modal-react';
-import AbortDialog from 'src/components/Dialogs/AbortDialog';
+import AbortDialog from 'src/components/dialogs/AbortDialog';
 
 const StartMatchButton: FC = () => {
   const [state, setState] = useRecoilState(matchStateAtom);

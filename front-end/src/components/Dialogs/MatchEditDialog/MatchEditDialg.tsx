@@ -7,7 +7,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Tabs, Tab } from '@mui/material';
-import TabPanel from 'src/components/TabPanel/TabPanel';
+import TabPanel from 'src/components/util/TabPanel/TabPanel';
 import MatchInfo from './MatchInfo';
 import MatchParticipantInfo from './MatchParticipantInfo';
 import {

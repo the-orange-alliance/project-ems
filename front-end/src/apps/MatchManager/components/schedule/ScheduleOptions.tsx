@@ -12,7 +12,7 @@ import {
   RANKING_LEVEL,
   ROUND_ROBIN_LEVEL
 } from '@toa-lib/models';
-import SeriesTypeDropdown from 'src/components/Dropdowns/SeriesTypeDropdown';
+import SeriesTypeDropdown from 'src/components/dropdowns/SeriesTypeDropdown';
 
 export const ScheduleOptions: FC = () => {
   const schedule = useRecoilValue(currentTournamentSelector);

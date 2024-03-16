@@ -2,7 +2,7 @@ import { FC, SyntheticEvent, useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import TabPanel from 'src/components/TabPanel/TabPanel';
+import TabPanel from 'src/components/util/TabPanel/TabPanel';
 import { useRecoilValue } from 'recoil';
 import { currentTournamentSelector } from 'src/stores/NewRecoil';
 import SetupTeams from './SetupTeams';

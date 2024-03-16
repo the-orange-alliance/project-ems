@@ -2,7 +2,7 @@ import { FC } from 'react';
 import Grid from '@mui/material/Grid';
 import { MatchParticipant, Team } from '@toa-lib/models';
 import TeamCardStatus from 'src/apps/Scoring/components/Status/TeamCardStatus';
-import ParticipantDropdown from 'src/components/Dropdowns/ParticipantDropdown';
+import ParticipantDropdown from 'src/components/dropdowns/ParticipantDropdown';
 
 interface Props {
   p: MatchParticipant;

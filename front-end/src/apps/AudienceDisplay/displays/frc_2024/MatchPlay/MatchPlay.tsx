@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
-import MatchCountdown from 'src/components/MatchCountdown/MatchCountdown';
+import MatchUpdateListener from 'src/components/sync-effects/MatchUpdateListener/MatchUpdateListener';
+import MatchCountdown from 'src/components/util/MatchCountdown/MatchCountdown';
 import {
   matchInProgressAtom,
   matchStatusAtom,

@@ -10,7 +10,7 @@ import {
 } from '@toa-lib/models';
 import TeamRow from './components/TeamRow';
 import PrestartStatusIcon from './components/PrestartStatus';
-import ConnectionChip from 'src/components/ConnectionChip/ConnectionChip';
+import ConnectionChip from 'src/components/util/ConnectionChip/ConnectionChip';
 import { useSocket } from 'src/api/SocketProvider';
 
 const FrcFmsFieldMonitorApp: FC = () => {

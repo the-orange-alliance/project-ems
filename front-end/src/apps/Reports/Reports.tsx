@@ -2,12 +2,12 @@ import { FC, ReactNode, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import PaperLayout from 'src/layouts/PaperLayout';
-import TwoColumnHeader from 'src/components/Headers/TwoColumnHeader';
+import TwoColumnHeader from 'src/components/util/Headers/TwoColumnHeader';
 import GeneralReports from './GeneralReports';
 import ReportView from './components/ReportView';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import TournamentReports from './TournamentReports';
-import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
+import EventTournamentsDropdown from 'src/components/dropdowns/EventTournamentsDropdown';
 import {
   currentEventKeyAtom,
   currentTournamentKeyAtom,

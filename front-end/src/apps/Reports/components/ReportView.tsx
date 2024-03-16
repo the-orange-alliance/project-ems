@@ -2,7 +2,7 @@ import { FC, ReactNode, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import ViewReturn from 'src/components/ViewReturn/ViewReturn';
+import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
 
 interface Props {
   onReturn: () => void;

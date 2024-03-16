@@ -3,7 +3,7 @@ import PaperLayout from '@layouts/PaperLayout';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Events from './components/Events';
-import EventForm from 'src/components/EventForm/EventForm';
+import EventForm from 'src/components/forms/EventForm/EventForm';
 import { defaultEvent } from '@toa-lib/models';
 import { useSetRecoilState } from 'recoil';
 import { currentEventKeyAtom, eventsAtom } from '@stores/NewRecoil';

@@ -4,8 +4,8 @@ import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
-import ViewReturn from '@components/ViewReturn/ViewReturn';
-import TournamentDropdown from '@components/Dropdowns/TournamentDropdown';
+import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
+import TournamentDropdown from 'src/components/dropdowns/TournamentDropdown';
 import {
   currentTournamentKeyAtom,
   currentTournamentSelector
@@ -79,7 +79,7 @@ const TournamentForm: FC<Props> = ({ onSubmit }) => {
 
   return (
     <>
-      <ViewReturn title='Tournaments' onClick={onReturn} sx={{mb: 1}} />
+      <ViewReturn title='Tournaments' onClick={onReturn} sx={{ mb: 1 }} />
       <Grid container spacing={3}>
         <FormField
           name='tournamentKey'

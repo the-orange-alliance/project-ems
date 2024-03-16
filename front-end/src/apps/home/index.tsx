@@ -1,7 +1,7 @@
 import { FC, Suspense } from 'react';
 import Grid from '@mui/material/Grid';
 import DefaultLayout from '@layouts/DefaultLayout';
-import AppCard, { AppCardProps } from '@components/AppCard/AppCard';
+import AppCard, { AppCardProps } from 'src/components/util/AppCard/AppCard';
 import { useRecoilValue } from 'recoil';
 import { currentEventSelector } from '@stores/NewRecoil';
 

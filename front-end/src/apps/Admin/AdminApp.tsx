@@ -17,8 +17,8 @@ import {
   currentTournamentSelector
 } from 'src/stores/NewRecoil';
 import PaperLayout from 'src/layouts/PaperLayout';
-import TwoColumnHeader from 'src/components/Headers/TwoColumnHeader';
-import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
+import TwoColumnHeader from 'src/components/util/Headers/TwoColumnHeader';
+import EventTournamentsDropdown from 'src/components/dropdowns/EventTournamentsDropdown';
 import { Tournament } from '@toa-lib/models';
 
 const AdminApp: FC = () => {

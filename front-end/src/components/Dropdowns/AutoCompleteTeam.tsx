@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { Team } from '@toa-lib/models';
-import ParticipantDropdown from 'src/components/Dropdowns/ParticipantDropdown';
+import ParticipantDropdown from 'src/components/dropdowns/ParticipantDropdown';
 
 interface Props {
   teamKey: number | null;

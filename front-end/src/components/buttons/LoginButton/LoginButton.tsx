@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 import { Button } from '@mui/material';
-import LoginDialog from '../LoginDialog/LoginDialog';
+import LoginDialog from '../../dialogs/LoginDialog/LoginDialog';
 
 const LoginButton: FC = () => {
   const [open, setOpen] = useState(false);

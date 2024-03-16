@@ -1,8 +1,8 @@
 import { FC } from 'react';
 import Typography from '@mui/material/Typography';
-import TwoColumnHeader from 'src/components/Headers/TwoColumnHeader';
+import TwoColumnHeader from 'src/components/util/Headers/TwoColumnHeader';
 import PaperLayout from 'src/layouts/PaperLayout';
-import EventTournamentsDropdown from 'src/components/Dropdowns/EventTournamentsDropdown';
+import EventTournamentsDropdown from 'src/components/dropdowns/EventTournamentsDropdown';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import {
   currentEventKeyAtom,

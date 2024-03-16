@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import UpgradedTable from '@components/UpgradedTable/UpgradedTable';
+import UpgradedTable from 'src/components/tables/UpgradedTable/UpgradedTable';
 import {
   useRecoilCallback,
   useRecoilState,
@@ -15,12 +15,12 @@ import {
 import { defaultTournament, Tournament } from '@toa-lib/models';
 import { getDifferences, removeFromArray } from 'src/stores/Util';
 import { useModal } from '@ebay/nice-modal-react';
-import TournamentRemovalDialog from '@components/Dialogs/TournamentRemovalDialog';
+import TournamentRemovalDialog from 'src/components/dialogs/TournamentRemovalDialog';
 import { patchTournament, postTournaments } from 'src/api/ApiProvider';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { useFlags } from 'src/stores/AppFlags';
-import SaveAddUploadLoadingFab from 'src/components/SaveAddUploadLoadingFab';
-import ViewReturn from 'src/components/ViewReturn/ViewReturn';
+import SaveAddUploadLoadingFab from 'src/components/util/SaveAddUploadLoadingFab';
+import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
 
 const Tournaments: FC = () => {
   // Recoil State

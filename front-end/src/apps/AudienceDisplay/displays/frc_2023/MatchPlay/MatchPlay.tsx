@@ -1,8 +1,8 @@
 import { FC, useState, useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
 import { getMatchTime } from '@toa-lib/models';
-import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
-import MatchCountdown from 'src/components/MatchCountdown/MatchCountdown';
+import MatchUpdateListener from 'src/components/sync-effects/MatchUpdateListener/MatchUpdateListener';
+import MatchCountdown from 'src/components/util/MatchCountdown/MatchCountdown';
 import {
   currentEventSelector,
   matchInProgressAtom,
