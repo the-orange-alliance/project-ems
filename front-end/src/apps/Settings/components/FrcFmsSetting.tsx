@@ -30,6 +30,7 @@ const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
   // Update a key inside the settings object
   const updateState = (val: any, key: keyof FMSSettings) => {
     if (typeof val === 'boolean') val = val ? 1 : 0;
+    if (key === 'fieldNumber' && val < 0) val = 0;
     setSettings({ ...settings, [key]: val });
   };
 

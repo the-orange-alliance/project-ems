@@ -91,6 +91,9 @@ const HomeApp: FC = () => {
               to={`/${event?.eventKey}/human-player`}
             />
           )}
+          {event?.eventKey.toLowerCase().startsWith('frc') && (
+            <GridAppCard title='Field Monitor' to={`/frc/fms/fieldmonitor`} />
+          )}
           {/* <GridAppCard title='Field Debugger' to='/fcs-debug' />
         <GridAppCard title='Account Manager' to='/accounts' />
 */}

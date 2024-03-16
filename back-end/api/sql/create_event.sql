@@ -23,28 +23,6 @@ CREATE TABLE IF NOT EXISTS "fms_wpakeys" (
     UNIQUE (eventKey, teamKey)
 );
 
-CREATE TABLE IF NOT EXISTS "fms_adv_net_cfg" (
-    "eventKey" VARCHAR(25),
-    "hwFingerprint" VARCHAR(255) NOT NULL,
-    "fieldNumber" INT NOT NULL,
-    "enableFms" INT NOT NULL,
-    "enableAdvNet" INT NOT NULL,
-    "apIp" VARCHAR(255) NOT NULL,
-    "apUsername" VARCHAR(255) NOT NULL,
-    "apPassword" VARCHAR(255) NOT NULL,
-    "apTeamCh" VARCHAR(255) NOT NULL,
-    "apAdminCh" VARCHAR(255) NOT NULL,
-    "apAdminSsid" VARCHAR(255) NOT NULL,
-    "apAdminWpa" VARCHAR(255) NOT NULL,
-    "switchIp" VARCHAR(255) NOT NULL,
-    "switchUsername" VARCHAR(255) NOT NULL,
-    "switchPassword" VARCHAR(255) NOT NULL,
-    "enablePlc" INT NOT NULL,
-    "plcIp" VARCHAR(255) NOT NULL,
-    "registeredAt" VARCHAR(255) NOT NULL,
-    PRIMARY KEY (hwFingerprint)
-);
-
 CREATE TABLE IF NOT EXISTS "tournament" (
     "eventKey" VARCHAR(25) NOT NULL,
     "tournamentKey" VARCHAR(25) NOT NULL,

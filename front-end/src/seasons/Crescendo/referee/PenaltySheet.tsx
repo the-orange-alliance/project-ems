@@ -15,6 +15,7 @@ const PenaltySheet: FC<Props> = ({ alliance, onUpdate }) => {
   const [match, setMatch] = useRecoilState(matchInProgressAtom);
 
   const handleFoulChange = (minPen: number) => {
+    if (minPen < 0) minPen = 0;
     if (match) {
       const newMatch = Object.assign({}, match);
       if (alliance === 'red') {
@@ -28,6 +29,7 @@ const PenaltySheet: FC<Props> = ({ alliance, onUpdate }) => {
   };
 
   const handleTechFoulChange = (majPen: number) => {
+    if (majPen < 0) majPen = 0;
     if (match) {
       const newMatch = Object.assign({}, match);
       if (alliance === 'red') {

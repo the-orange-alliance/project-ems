@@ -15,6 +15,7 @@ import {
   currentTournamentKeyAtom
 } from 'src/stores/NewRecoil';
 import { Tournament } from '@toa-lib/models';
+import FrcFmsSettingsTab from './tabs/frc-fms';
 // import FrcFmsSettingsTab from './tabs/frc-fms';
 
 const SettingsApp: FC = () => {
@@ -25,6 +26,8 @@ const SettingsApp: FC = () => {
 
   const seasonComponents = useSeasonComponents();
   const [tab, setTab] = useState<any>('0');
+
+  const isFrc = eventKey.toLowerCase().startsWith('frc');
 
   const handleTournamentChange = (tournament: Tournament | null) => {
     if (!tournament) return;
@@ -53,7 +56,7 @@ const SettingsApp: FC = () => {
             <Tab label='Main' value='0' />
             <Tab label='Audience Display' value='1' />
             <Tab label='Season' value='2' />
-            {/* <Tab label='FRC FMS' value='2' /> */}
+            {isFrc && <Tab label='FRC FMS' value='3' />}
           </TabList>
           <TabPanel value='0'>
             <MainSettingsTab />
@@ -66,9 +69,9 @@ const SettingsApp: FC = () => {
               <seasonComponents.Settings />
             )}
           </TabPanel>
-          {/* <TabPanel value='2'>
+          <TabPanel value='3'>
             <FrcFmsSettingsTab />
-          </TabPanel> */}
+          </TabPanel>
         </TabContext>
       </Paper>
     </PaperLayout>

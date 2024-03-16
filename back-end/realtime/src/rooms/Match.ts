@@ -123,7 +123,7 @@ export default class Match extends Room {
       this.displayID = 2;
 
       // Get season key frome event key
-      const seasonKey = getSeasonKeyFromEventKey(this.key!.eventKey);
+      const seasonKey = getSeasonKeyFromEventKey((this.key ?? { eventKey: '' }).eventKey);
 
       // Set match config based on season key
       const matchConfig = seasonKey.includes("frc")

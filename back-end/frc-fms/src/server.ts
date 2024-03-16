@@ -114,9 +114,12 @@ export class EmsFrcFms {
     SocketSupport.getInstance().socket?.on(
       MatchSocketEvent.PRESTART,
       (matchKey: MatchKey) => {
-        logger.info("🔁 Prestart Command Issued");
-        this.matchState = MatchMode.PRESTART;
-        this.fmsOnPrestart(matchKey);
+        const myEvent = SettingsSupport.getInstance().settings.eventKey
+        logger.info(`🔁 Prestart Command Issued for match ${matchKey.tournamentKey}-${matchKey.id} at ${matchKey.eventKey}.  My event: ${myEvent ? 'Yes' : 'No'}`);
+        if (myEvent) {
+          this.matchState = MatchMode.PRESTART;
+          this.fmsOnPrestart(matchKey);
+        }
       }
     );
   }

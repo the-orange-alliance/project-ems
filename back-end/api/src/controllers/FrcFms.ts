@@ -26,15 +26,19 @@ router.get('/advancedNetworkingConfig', async (req, res) => {
   const db = await getDB('global');
   const hwFingerprint = req.query.hwFingerprint;
   let data;
-  if (typeof hwFingerprint === 'string' && hwFingerprint.length > 0) {
-    data = await db.selectAllWhere(
-      'fms_adv_net_cfg',
-      `hwFingerprint = '${hwFingerprint}'`
-    );
-  } else {
-    data = await db.selectAll('fms_adv_net_cfg');
+  try {
+    if (typeof hwFingerprint === 'string' && hwFingerprint.length > 0) {
+      data = await db.selectAllWhere(
+        'fms_adv_net_cfg',
+        `hwFingerprint="${hwFingerprint}"`
+      );
+    } else {
+      data = await db.selectAll('fms_adv_net_cfg');
+    }
+    res.json(data);
+  } catch (e) {
+    res.json([]);
   }
-  res.json(data);
 });
 
 // Update a specific config based on the hardware fingerprint
@@ -42,8 +46,7 @@ router.post(
   '/advancedNetworkingConfig',
   validateBody(isFMSSettings),
   async (req, res) => {
-    const eventKey = req.body.eventKey;
-    const db = await getDB(eventKey);
+    const db = await getDB('global');
     try {
       await db.insertValue('fms_adv_net_cfg', [req.body]);
     } catch (e) {
