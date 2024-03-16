@@ -3,7 +3,7 @@ import Grid from '@mui/material/Grid';
 import TeamCardStatus from './TeamCardStatus';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
-import AutocompleteTeam from 'src/features/components/AutocompleteTeam/AutoCompleteTeam';
+import AutocompleteTeam from 'src/components/AutocompleteTeam/AutoCompleteTeam';
 import {
   CardStatusUpdate,
   MatchSocketEvent,

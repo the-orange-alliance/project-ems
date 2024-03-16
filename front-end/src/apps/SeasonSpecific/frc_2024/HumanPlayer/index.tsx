@@ -20,7 +20,7 @@ import MatchChip from 'src/components/MatchChip/MatchChip';
 import MatchStateListener from 'src/components/MatchStateListener/MatchStateListener';
 import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
-import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
+import MatchCountdown from 'src/components/MatchCountdown/MatchCountdown';
 import {
   matchInProgressAtom,
   matchStateAtom,

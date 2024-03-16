@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import routes from './AppRoutes';
 import './App.less';
-import { useSnackbar } from './features/hooks/use-snackbar';
+import { useSnackbar } from './hooks/use-snackbar';
 import { userAtom } from './stores/NewRecoil';
 import { useEffect } from 'react';
 import { useSocket } from './api/SocketProvider';

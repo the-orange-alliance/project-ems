@@ -7,7 +7,7 @@ import {
   useResetRecoilState,
   useSetRecoilState
 } from 'recoil';
-import MatchResultsTable from 'src/features/components/MatchResultsTable/MatchResultsTable';
+import MatchResultsTable from 'src/components/MatchResultsTable/MatchResultsTable';
 import { MatchState, Tournament } from '@toa-lib/models';
 import {
   currentEventKeyAtom,

@@ -13,10 +13,10 @@ import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import LoginButton from '@features/components/LoginButton/LoginButton';
+import LoginButton from 'src/components/LoginButton/LoginButton';
 import { userAtom } from '@stores/NewRecoil';
 import emsAvatar from '@assets/favicon.ico';
-import LogoutButton from '@features/components/LogoutButton/LogoutButton';
+import LogoutButton from 'src/components/LogoutButton/LogoutButton';
 
 import SettingsIcon from '@mui/icons-material/Settings';
 

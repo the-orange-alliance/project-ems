@@ -8,7 +8,7 @@ import SeasonDropdown from '@components/Dropdowns/SeasonDropdown';
 import EventTypeDropdown from '@components/Dropdowns/EventTypeDropdown';
 import DatePicker from '@components/DatePicker/DatePicker';
 import { patchEvent, postEvent, setupEventBase } from 'src/api/ApiProvider';
-import { useSnackbar } from '@features/hooks/use-snackbar';
+import { useSnackbar } from 'src/hooks/use-snackbar';
 import { useFlags } from '@stores/AppFlags';
 import { Event } from '@toa-lib/models';
 import { Button, Link } from '@mui/material';

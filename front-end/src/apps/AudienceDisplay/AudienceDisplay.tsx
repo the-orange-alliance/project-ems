@@ -21,7 +21,7 @@ import {
 } from 'src/stores/NewRecoil';
 
 import Rankings from './displays/fgc_2023/Rankings/Rankings';
-import { useHiddenMotionlessCursor } from '@features/hooks/use-hidden-motionless-cursor';
+import { useHiddenMotionlessCursor } from 'src/hooks/use-hidden-motionless-cursor';
 import './AudienceDisplay.less';
 import { updateSocketClient } from 'src/api/ApiProvider';
 import RankingsPlayoffs from './displays/fgc_2023/RankingsPlayoffs/RankingsPlayoff';

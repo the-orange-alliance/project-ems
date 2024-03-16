@@ -3,7 +3,7 @@ import PaperLayout from 'src/layouts/PaperLayout';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Teams from './components/Teams';
-import TeamForm from 'src/features/components/TeamForm/TeamForm';
+import TeamForm from 'src/components/TeamForm/TeamForm';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { currentTeamKeyAtom, currentTeamSelector } from 'src/stores/NewRecoil';
 import { Team } from '@toa-lib/models';

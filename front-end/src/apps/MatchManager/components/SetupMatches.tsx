@@ -9,7 +9,7 @@ import {
   postMatchSchedule
 } from 'src/api/ApiProvider';
 import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
-import MatchTable from 'src/features/components/MatchTable/MatchTable';
+import MatchTable from 'src/components/MatchTable/MatchTable';
 import { CircularProgress } from '@mui/material';
 import {
   allianceMembersByTournamentSelector,
@@ -25,7 +25,7 @@ import {
   assignMatchTimes,
   createFixedMatches
 } from '@toa-lib/models';
-import { useSnackbar } from 'src/features/hooks/use-snackbar';
+import { useSnackbar } from 'src/hooks/use-snackbar';
 import MatchSchedulerDropdown from 'src/components/Dropdowns/MatchSchedulerDropdown';
 
 const SetupMatches: FC = () => {

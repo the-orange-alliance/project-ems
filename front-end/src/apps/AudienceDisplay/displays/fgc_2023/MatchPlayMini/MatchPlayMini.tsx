@@ -2,7 +2,7 @@ import { FC, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
 import { useSearchParams } from 'react-router-dom';
 import { useSocket } from 'src/api/SocketProvider';
-import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
+import MatchCountdown from 'src/components/MatchCountdown/MatchCountdown';
 import { matchInProgressAtom, timer } from 'src/stores/NewRecoil';
 import './MatchPlayMini.css';
 import { HydrogenHorizons, Match, MatchSocketEvent } from '@toa-lib/models';

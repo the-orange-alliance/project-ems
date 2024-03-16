@@ -5,7 +5,7 @@ import ChromaLayout from 'src/layouts/ChromaLayout';
 import PrestartListener from 'src/components/PrestartListener/PrestartListener';
 import MatchUpdateListener from 'src/components/MatchUpdateListener/MatchUpdateListener';
 import { useRecoilValue } from 'recoil';
-import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
+import MatchCountdown from 'src/components/MatchCountdown/MatchCountdown';
 import { matchInProgressAtom } from 'src/stores/NewRecoil';
 
 const JBApp: FC = () => {

@@ -6,7 +6,7 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
-import MatchCountdown from 'src/features/components/MatchCountdown/MatchCountdown';
+import MatchCountdown from 'src/components/MatchCountdown/MatchCountdown';
 import { Match, MatchSocketEvent, MatchState } from '@toa-lib/models';
 import { matchInProgressAtom, matchStateAtom } from 'src/stores/NewRecoil';
 

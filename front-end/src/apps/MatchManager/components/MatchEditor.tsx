@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 import Box from '@mui/material/Box';
-import MatchResultsTable from 'src/features/components/MatchResultsTable/MatchResultsTable';
+import MatchResultsTable from 'src/components/MatchResultsTable/MatchResultsTable';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   matchesByTournamentSelector,

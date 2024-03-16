@@ -17,9 +17,9 @@ import { getDifferences, removeFromArray } from 'src/stores/Util';
 import { useModal } from '@ebay/nice-modal-react';
 import TournamentRemovalDialog from '@components/Dialogs/TournamentRemovalDialog';
 import { patchTournament, postTournaments } from 'src/api/ApiProvider';
-import { useSnackbar } from 'src/features/hooks/use-snackbar';
+import { useSnackbar } from 'src/hooks/use-snackbar';
 import { useFlags } from 'src/stores/AppFlags';
-import SaveAddUploadLoadingFab from 'src/features/components/SaveAddUploadLoadingFab';
+import SaveAddUploadLoadingFab from 'src/components/SaveAddUploadLoadingFab';
 import ViewReturn from 'src/components/ViewReturn/ViewReturn';
 
 const Tournaments: FC = () => {
