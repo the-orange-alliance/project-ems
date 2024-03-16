@@ -1,6 +1,7 @@
 import { Box, Button, Divider, Paper, Typography } from '@mui/material';
 import { FC } from 'react';
-import { setupDefaultAccounts, useUsers } from 'src/api/ApiProvider';
+import { setupDefaultAccounts } from 'src/api/use-event-data';
+import { useUsers } from 'src/api/use-login-data';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 
 const AccountManager: FC = () => {

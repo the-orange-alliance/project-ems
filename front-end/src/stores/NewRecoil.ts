@@ -35,7 +35,7 @@ import {
   selector,
   selectorFamily
 } from 'recoil';
-import { setApiStorage } from 'src/api/ApiProvider';
+import { setApiStorage } from 'src/api/use-storage-data';
 import { AppFlags, defaultFlags } from './AppFlags';
 import { replaceAllInArray, replaceInArray } from './Util';
 import { localStorageEffect } from './Effects';

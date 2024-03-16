@@ -3,11 +3,8 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import MatchMakerQuality from './match/MatchMakerQuality';
-import {
-  createMatchSchedule,
-  createRankings,
-  postMatchSchedule
-} from 'src/api/ApiProvider';
+import { createMatchSchedule, postMatchSchedule } from 'src/api/use-match-data';
+import { createRankings } from 'src/api/use-ranking-data';
 import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import MatchTable from 'src/components/tables/MatchTable/MatchTable';
 import { CircularProgress } from '@mui/material';

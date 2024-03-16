@@ -10,7 +10,7 @@ import {
 import { User } from '@toa-lib/models';
 import { ChangeEvent, FC, useEffect, useCallback, useState } from 'react';
 import { useSetRecoilState } from 'recoil';
-import { login } from 'src/api/ApiProvider';
+import { login } from 'src/api/use-login-data';
 import { useSocket } from 'src/api/SocketProvider';
 import useLocalStorage from 'src/stores/LocalStorage';
 import { userAtom } from 'src/stores/NewRecoil';

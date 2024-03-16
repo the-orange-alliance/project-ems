@@ -15,11 +15,11 @@ import {
   getSeasonKeyFromEventKey
 } from '@toa-lib/models';
 import { sendAllClear, sendCommitScores } from 'src/api/SocketProvider';
+import { patchWholeMatch } from 'src/api/use-match-data';
 import {
-  patchWholeMatch,
   recalculatePlayoffsRankings,
   recalculateRankings
-} from 'src/api/ApiProvider';
+} from 'src/api/use-ranking-data';
 import { fcsPacketsSelector } from '@seasons/HydrogenHorizons/stores/Recoil';
 
 const CommitScoresButton: FC = () => {

@@ -7,7 +7,7 @@ import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
 import SeasonDropdown from 'src/components/dropdowns/SeasonDropdown';
 import EventTypeDropdown from 'src/components/dropdowns/EventTypeDropdown';
 import DatePicker from 'src/components/util/DatePicker/DatePicker';
-import { patchEvent, postEvent, setupEventBase } from 'src/api/ApiProvider';
+import { patchEvent, postEvent, setupEventBase } from 'src/api/use-event-data';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { useFlags } from '@stores/AppFlags';
 import { Event } from '@toa-lib/models';

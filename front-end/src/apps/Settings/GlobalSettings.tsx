@@ -12,7 +12,7 @@ import DropdownSetting from './components/DropdownSetting';
 import { TeamKeys } from '@toa-lib/models';
 import TextSetting from './components/TextSetting';
 import { APIOptions } from '@toa-lib/client';
-import { updateSocketClient } from 'src/api/ApiProvider';
+import { updateSocketClient } from 'src/api/use-socket-data';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import { Paper } from '@mui/material';
 

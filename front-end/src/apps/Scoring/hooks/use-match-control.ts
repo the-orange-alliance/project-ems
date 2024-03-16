@@ -1,5 +1,5 @@
 import { useRecoilCallback } from 'recoil';
-import { patchMatchParticipants } from 'src/api/ApiProvider';
+import { patchMatchParticipants } from 'src/api/use-match-data';
 import { sendPrestart, setDisplays } from 'src/api/SocketProvider';
 import {
   currentMatchSelector,

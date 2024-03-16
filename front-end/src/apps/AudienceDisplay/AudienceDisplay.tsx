@@ -8,8 +8,8 @@ import {
   MatchSocketEvent
 } from '@toa-lib/models';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { FC, Fragment, ReactNode, Suspense, useEffect, useRef } from 'react';
-import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
+import { FC, Fragment, Suspense, useEffect, useRef } from 'react';
+import { useRecoilCallback, useRecoilState } from 'recoil';
 import { useSocket } from 'src/api/SocketProvider';
 import MatchStateListener from 'src/components/sync-effects/MatchStateListener/MatchStateListener';
 import PrestartListener from 'src/components/sync-effects/PrestartListener/PrestartListener';
@@ -23,7 +23,7 @@ import {
 import Rankings from './displays/fgc_2023/Rankings/Rankings';
 import { useHiddenMotionlessCursor } from 'src/hooks/use-hidden-motionless-cursor';
 import './AudienceDisplay.less';
-import { updateSocketClient } from 'src/api/ApiProvider';
+import { updateSocketClient } from 'src/api/use-socket-data';
 import RankingsPlayoffs from './displays/fgc_2023/RankingsPlayoffs/RankingsPlayoff';
 import AudienceDisplayProvider from './displays/AudienceDisplayProvider';
 

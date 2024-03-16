@@ -16,7 +16,10 @@ import {
 } from 'src/stores/NewRecoil';
 import { MatchState } from '@toa-lib/models';
 import { sendPostResults } from 'src/api/SocketProvider';
-import { resultsSyncMatches, resultsSyncRankings } from 'src/api/ApiProvider';
+import {
+  resultsSyncMatches,
+  resultsSyncRankings
+} from 'src/api/use-results-sync';
 
 const PostResultsButton: FC = () => {
   const [matchId, setMatchId] = useRecoilState(currentMatchIdAtom);

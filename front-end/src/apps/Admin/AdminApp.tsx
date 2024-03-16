@@ -3,12 +3,14 @@ import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
 import { Box, Button, Divider, Typography } from '@mui/material';
 import {
   createRankings,
-  purgeAll,
   recalculateRankings,
-  recalculatePlayoffsRankings,
+  recalculatePlayoffsRankings
+} from 'src/api/use-ranking-data';
+import {
   resultsSyncMatches,
   resultsSyncRankings
-} from 'src/api/ApiProvider';
+} from 'src/api/use-results-sync';
+import { purgeAll } from 'src/api/use-event-data';
 import { useFlags } from 'src/stores/AppFlags';
 import {
   currentEventKeyAtom,

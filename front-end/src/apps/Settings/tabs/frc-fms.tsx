@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import FrcFmsSetting from '../components/FrcFmsSetting';
 import { FMSSettings } from '@toa-lib/models';
-import { postFrcFmsSettings } from 'src/api/ApiProvider';
+import { postFrcFmsSettings } from 'src/api/use-fms-data';
 import { sendUpdateFrcFmsSettings, useSocket } from 'src/api/SocketProvider';
 
 const FrcFmsSettingsTab: FC = () => {

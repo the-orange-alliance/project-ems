@@ -16,7 +16,7 @@ import { defaultTournament, Tournament } from '@toa-lib/models';
 import { getDifferences, removeFromArray } from 'src/stores/Util';
 import { useModal } from '@ebay/nice-modal-react';
 import TournamentRemovalDialog from 'src/components/dialogs/TournamentRemovalDialog';
-import { patchTournament, postTournaments } from 'src/api/ApiProvider';
+import { patchTournament, postTournaments } from 'src/api/use-tournament-data';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { useFlags } from 'src/stores/AppFlags';
 import SaveAddUploadLoadingFab from 'src/components/util/SaveAddUploadLoadingFab';

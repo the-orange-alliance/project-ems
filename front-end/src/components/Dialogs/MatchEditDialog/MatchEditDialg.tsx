@@ -10,13 +10,12 @@ import { Tabs, Tab } from '@mui/material';
 import TabPanel from 'src/components/util/TabPanel/TabPanel';
 import MatchInfo from './MatchInfo';
 import MatchParticipantInfo from './MatchParticipantInfo';
-import {
-  patchWholeMatch,
-  resultsSyncMatches,
-  resultsSyncRankings,
-  useMatchAll
-} from 'src/api/ApiProvider';
 import MatchDetailInfo from './MatchDetailInfo';
+import { patchWholeMatch, useMatchAll } from 'src/api/use-match-data';
+import {
+  resultsSyncMatches,
+  resultsSyncRankings
+} from 'src/api/use-results-sync';
 import { sendCommitScores, sendPostResults } from 'src/api/SocketProvider';
 import {
   currentTournamentSelector,

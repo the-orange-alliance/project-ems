@@ -15,7 +15,7 @@ import {
   displayChromaKeyAtom
 } from 'src/stores/NewRecoil';
 import { useSnackbar } from 'src/hooks/use-snackbar';
-import { connectSocketClient } from './ApiProvider';
+import { connectSocketClient } from './use-socket-data';
 
 let socket: Socket | null = null;
 

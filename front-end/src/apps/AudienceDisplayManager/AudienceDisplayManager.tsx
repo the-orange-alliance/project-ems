@@ -25,7 +25,10 @@ import {
   sendUpdateSocketClient
 } from 'src/api/SocketProvider';
 import { Delete, RemoveRedEye } from '@mui/icons-material';
-import { deleteSocketClient, updateSocketClient } from 'src/api/ApiProvider';
+import {
+  deleteSocketClient,
+  updateSocketClient
+} from 'src/api/use-socket-data';
 
 const AudienceDisplayManager: FC = () => {
   const [clients, setClients] = useRecoilState(socketClientsAtom);

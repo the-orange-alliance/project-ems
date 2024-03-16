@@ -15,7 +15,7 @@ import { TeamKeys } from '@toa-lib/models';
 import { MultiSelectSetting } from '../components/MultiSelectSetting';
 import TextSetting from '../components/TextSetting';
 import { APIOptions } from '@toa-lib/client';
-import { updateSocketClient } from 'src/api/ApiProvider';
+import { updateSocketClient } from 'src/api/use-socket-data';
 import ButtonSetting from '../components/ButtonSetting';
 import { useGitHubDownload } from '../util/use-github-download';
 

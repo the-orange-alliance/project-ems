@@ -19,7 +19,7 @@ import { getDifferences, removeFromArray } from 'src/stores/Util';
 import { useModal } from '@ebay/nice-modal-react';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import TeamRemovalDialog from 'src/components/dialogs/TeamRemovalDialog';
-import { patchTeam, postTeams } from 'src/api/ApiProvider';
+import { patchTeam, postTeams } from 'src/api/use-team-data';
 import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
 import SaveAddUploadLoadingFab from 'src/components/util/SaveAddUploadLoadingFab';
 

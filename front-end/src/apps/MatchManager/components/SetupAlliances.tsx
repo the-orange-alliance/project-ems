@@ -16,7 +16,7 @@ import {
 } from '@toa-lib/models';
 import AutocompleteTeam from 'src/components/dropdowns/AutoCompleteTeam';
 import { replaceInArray } from 'src/stores/Util';
-import { postAllianceMembers } from 'src/api/ApiProvider';
+import { postAllianceMembers } from 'src/api/use-alliance-data';
 import { useSocket } from 'src/api/SocketProvider';
 import {
   allianceMembersByTournamentSelector,

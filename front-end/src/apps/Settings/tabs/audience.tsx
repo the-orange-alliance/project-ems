@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import { useRecoilState } from 'recoil';
 import { displayChromaKeyAtom } from 'src/stores/NewRecoil';
 import TextSetting from '../components/TextSetting';
-import { updateSocketClient } from 'src/api/ApiProvider';
+import { updateSocketClient } from 'src/api/use-socket-data';
 
 const AudienceDisplaySettingsTab: FC = () => {
   const [chromaKey, setChromaKey] = useRecoilState(displayChromaKeyAtom);

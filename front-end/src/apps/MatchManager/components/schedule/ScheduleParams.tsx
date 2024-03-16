@@ -16,11 +16,8 @@ import {
 import Days from '../time/Days';
 import ScheduleItemTable from '../ScheduleItemTable';
 import { useFlags } from 'src/stores/AppFlags';
-import {
-  deleteSchedule,
-  postSchedule,
-  setApiStorage
-} from 'src/api/ApiProvider';
+import { deleteSchedule, postSchedule } from 'src/api/use-schedule-data';
+import { setApiStorage } from 'src/api/use-storage-data';
 import { ScheduleOptions } from './ScheduleOptions';
 
 const SetupSchedule: FC = () => {
