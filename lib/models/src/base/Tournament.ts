@@ -1,4 +1,11 @@
-import { isArray, isNonNullObject, isNumber, isString } from './types.js';
+import { z } from 'zod';
+import { isArray, isNonNullObject, isNumber, isString } from '../types.js';
+
+export const tournamentZod = z.object({
+  eventKey: z.string(),
+  tournamentKey: z.string(),
+  tournamentLevel: z.number()
+});
 
 export interface Tournament {
   eventKey: string;

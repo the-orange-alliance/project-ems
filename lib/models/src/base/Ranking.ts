@@ -1,5 +1,5 @@
 import { Team } from './Team.js';
-import { isArray, isNonNullObject, isNumber, isString } from './types.js';
+import { isArray, isNonNullObject, isNumber, isString } from '../types.js';
 
 export type CompareFn = (a: Ranking, b: Ranking) => number;
 

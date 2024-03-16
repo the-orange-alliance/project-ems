@@ -1,4 +1,4 @@
-import { isNonNullObject, isString } from './types.js';
+import { isNonNullObject, isString } from '../types.js';
 
 export interface ApiStoragePost {
   file: string;

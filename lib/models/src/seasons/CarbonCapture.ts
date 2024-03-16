@@ -1,6 +1,6 @@
-import { AllianceMember } from '../Alliance.js';
-import { Match, MatchDetailBase } from '../Match.js';
-import { Ranking } from '../Ranking.js';
+import { AllianceMember } from '../base/Alliance.js';
+import { Match, MatchDetailBase } from '../base/Match.js';
+import { Ranking } from '../base/Ranking.js';
 import { isNonNullObject, isNumber } from '../types.js';
 import { Season, SeasonFunctions } from './index.js';
 
@@ -38,8 +38,8 @@ export const defaultCarbonCaptureDetails: CarbonCaptureDetails = {
 };
 
 export const CarbonCaptureSeason: Season<
-    CarbonCaptureDetails,
-    CarbonCaptureRanking
+  CarbonCaptureDetails,
+  CarbonCaptureRanking
 > = {
   key: 'fgc_2022',
   program: 'fgc',

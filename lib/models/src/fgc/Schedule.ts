@@ -1,4 +1,4 @@
-import { Match } from '../Match.js';
+import { Match } from '../base/Match.js';
 
 export namespace FGC2023 {
   // We can safely assume for FGC2023 there will be 5 fields.

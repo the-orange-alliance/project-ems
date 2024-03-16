@@ -11,7 +11,7 @@ import {
   TEST_LEVEL
 } from './Match.js';
 import { Team } from './Team.js';
-import { isArray, isNonNullObject, isNumber, isString } from './types.js';
+import { isArray, isNonNullObject, isNumber, isString } from '../types.js';
 
 export type TournamentType =
   | 'Test'

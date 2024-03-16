@@ -1,6 +1,6 @@
-import { AllianceMember } from '../Alliance.js';
-import { Match, MatchDetailBase } from '../Match.js';
-import { Ranking } from '../Ranking.js';
+import { AllianceMember } from '../base/Alliance.js';
+import { Match, MatchDetailBase } from '../base/Match.js';
+import { Ranking } from '../base/Ranking.js';
 import { isNonNullObject, isNumber, UnreachableError } from '../types.js';
 import { Season, SeasonFunctions } from './index.js';
 

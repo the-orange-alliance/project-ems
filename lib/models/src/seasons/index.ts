@@ -1,6 +1,6 @@
-import { AllianceMember } from '../Alliance.js';
-import { Match, MatchDetailBase } from '../Match.js';
-import { Ranking } from '../Ranking.js';
+import { AllianceMember } from '../base/Alliance.js';
+import { Match, MatchDetailBase } from '../base/Match.js';
+import { Ranking } from '../base/Ranking.js';
 import { CarbonCaptureSeason } from './CarbonCapture.js';
 import { ChargedUpSeason } from './ChargedUp.js';
 import { CrescendoSeason } from './Crescendo.js';

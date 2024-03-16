@@ -1,4 +1,4 @@
-import { isNonNullObject, isNumber, isString } from './types.js';
+import { isNonNullObject, isNumber, isString } from '../types.js';
 
 export class ApiResponseError extends Error {
   constructor(

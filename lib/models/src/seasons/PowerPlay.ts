@@ -1,5 +1,5 @@
-import { MatchDetailBase } from '../Match.js';
-import { Ranking } from '../Ranking.js';
+import { MatchDetailBase } from '../base/Match.js';
+import { Ranking } from '../base/Ranking.js';
 import { isNonNullObject, isNumber } from '../types.js';
 
 export interface PowerPlayDetails extends MatchDetailBase {

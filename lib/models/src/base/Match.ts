@@ -1,7 +1,7 @@
 import { AllianceMember } from './Alliance.js';
 import { ScheduleItem, TournamentType } from './Schedule.js';
 import { Team } from './Team.js';
-import { isArray, isNonNullObject, isNumber, isString } from './types.js';
+import { isArray, isNonNullObject, isNumber, isString } from '../types.js';
 
 // Match Levels
 export const TEST_LEVEL = 0;
@@ -57,7 +57,7 @@ export enum MatchSocketEvent {
   ABORT = 'match:abort',
 
   BONUS_START = 'match:bonusStart',
-  BONUS_END = 'match:bonusEnd',
+  BONUS_END = 'match:bonusEnd'
 }
 
 export interface MatchMakerParams {

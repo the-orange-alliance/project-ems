@@ -1,5 +1,5 @@
-import { Match, MatchDetailBase, RESULT_NOT_PLAYED } from '../Match.js';
-import { Ranking } from '../Ranking.js';
+import { Match, MatchDetailBase, RESULT_NOT_PLAYED } from '../base/Match.js';
+import { Ranking } from '../base/Ranking.js';
 import { Season, SeasonFunctions } from './index.js';
 
 /**

@@ -1,7 +1,7 @@
 import { randomInt } from 'crypto';
-import { AllianceMember } from '../Alliance.js';
-import { Match, MatchDetailBase, RESULT_NOT_PLAYED } from '../Match.js';
-import { Ranking } from '../Ranking.js';
+import { AllianceMember } from '../base/Alliance.js';
+import { Match, MatchDetailBase, RESULT_NOT_PLAYED } from '../base/Match.js';
+import { Ranking } from '../base/Ranking.js';
 import { isNonNullObject, isNumber } from '../types.js';
 import { Season, SeasonFunctions } from './index.js';
 

@@ -7,7 +7,7 @@
 //-------------------------------------------
 // Motor parameters
 //-------------------------------------------
-import { BlinkinPattern } from "./fcs/index.js";
+import { BlinkinPattern } from '../fcs/index.js';
 
 export interface MotorUpdateParameters {
   port: number;
@@ -37,23 +37,38 @@ export interface DigitalInputUpdateParameters {
   channel: number;
   triggerOptions: DigitalTriggerOptions | null; // Will disable the trigger if null
 }
-export interface DigitalInputInitParameters extends DigitalInputUpdateParameters {}
+export interface DigitalInputInitParameters
+  extends DigitalInputUpdateParameters {}
 
 //-------------------------------------------
 // Hub parameters
 //-------------------------------------------
-export interface HubParameters<M extends MotorUpdateParameters, S extends ServoUpdateParameters, DI extends DigitalInputUpdateParameters> {
+export interface HubParameters<
+  M extends MotorUpdateParameters,
+  S extends ServoUpdateParameters,
+  DI extends DigitalInputUpdateParameters
+> {
   motors?: M[];
   servos?: S[];
   digitalInputs?: DI[];
 }
-export type HubInitParameters = HubParameters<MotorInitParameters, ServoInitParameters, DigitalInputInitParameters>;
-export type HubUpdateParameters = HubParameters<MotorUpdateParameters, ServoUpdateParameters, DigitalInputUpdateParameters>;
+export type HubInitParameters = HubParameters<
+  MotorInitParameters,
+  ServoInitParameters,
+  DigitalInputInitParameters
+>;
+export type HubUpdateParameters = HubParameters<
+  MotorUpdateParameters,
+  ServoUpdateParameters,
+  DigitalInputUpdateParameters
+>;
 
 //-------------------------------------------
 // Field Control packets
 //-------------------------------------------
-export interface FieldControlPacket<HubParametersType extends HubParameters<any, any, any>> {
+export interface FieldControlPacket<
+  HubParametersType extends HubParameters<any, any, any>
+> {
   hubs: Record<number, HubParametersType>;
 }
 export type FieldControlInitPacket = FieldControlPacket<HubInitParameters>;
@@ -108,5 +123,5 @@ export const defaultFieldOptions: FieldOptions = {
   redCombinedHydrogenGoalBlinkinPulseWidth: BlinkinPattern.COLOR_1_2_GRADIENT,
   blueCombinedHydrogenGoalBlinkinPulseWidth: BlinkinPattern.COLOR_1_2_GRADIENT,
   redCombinedButtonBlinkinPulseWidth: BlinkinPattern.COLOR_1_2_GRADIENT,
-  blueCombinedButtonBlinkinPulseWidth: BlinkinPattern.COLOR_1_2_GRADIENT,
+  blueCombinedButtonBlinkinPulseWidth: BlinkinPattern.COLOR_1_2_GRADIENT
 };

@@ -1,34 +1,34 @@
-import { MatchMode } from "../MatchTimer.js"
-import { Tournament } from "../Tournament.js"
-import { PrestartStatus } from "./PrestartStatus.js"
+import { MatchMode } from '../base/MatchTimer.js';
+import { Tournament } from '../base/Tournament.js';
+import { PrestartStatus } from './PrestartStatus.js';
 
 export interface DriverstationStatus {
-  fmsHwFingerprint: string, // This identifies which FMS this is coming from
-  teamKey: number,
-  allianceStation: number,
-  apStatus: APStatus,
-  robotStatus: RobotStatus,
-  fmsStatus: FMSStatus,
-  dsStatus: DSStatus
+  fmsHwFingerprint: string; // This identifies which FMS this is coming from
+  teamKey: number;
+  allianceStation: number;
+  apStatus: APStatus;
+  robotStatus: RobotStatus;
+  fmsStatus: FMSStatus;
+  dsStatus: DSStatus;
 }
 
 /**
  * This is the status that the EMS-FRC-FMS emits every ~500ms
  */
 export interface DriverstationMonitor {
-  dsStatuses: DriverstationStatus[],
-  activeTournament?: Tournament,
-  matchStatus: MatchMode,
-  prestartStatus: PrestartStatus
+  dsStatuses: DriverstationStatus[];
+  activeTournament?: Tournament;
+  matchStatus: MatchMode;
+  prestartStatus: PrestartStatus;
 }
 
 /**
  * These are the statuses we extract from the Field AP
  */
 export interface APStatus {
-  linked: boolean,
-  signal: string,
-  quality: string[],
+  linked: boolean;
+  signal: string;
+  quality: string[];
 }
 
 /**
@@ -40,7 +40,7 @@ export interface RobotStatus {
   estop: boolean;
   radioPing: boolean;
   rioPing: boolean;
-  lastLinkedTime: number, // unix timestamp
+  lastLinkedTime: number; // unix timestamp
   commsActive: boolean;
   batteryVoltage: number;
   tripTimeMs: number;
@@ -48,26 +48,27 @@ export interface RobotStatus {
   bandwidth: number;
   // Additional data that isn't really relevant, or is duplicated
   additionalData: {
-    dsTele: boolean,
-    dsAuto: boolean,
-    dsDisable: boolean,
-    robotTele: boolean,
-    robotAuto: boolean,
-    robotDisable: boolean,
-    watchdog: boolean,
-  }
+    dsTele: boolean;
+    dsAuto: boolean;
+    dsDisable: boolean;
+    robotTele: boolean;
+    robotAuto: boolean;
+    robotDisable: boolean;
+    watchdog: boolean;
+  };
   // Version data
-  versionData: { // optional, won't be sent every time
-    wpilib: string,
-    rio: string,
-    ds: string,
-    pdp: string,
-    pcm: string,
-    canJag: string,
-    canTalon: string,
-    thirdParty: string,
-    usageReport: string,
-  }
+  versionData: {
+    // optional, won't be sent every time
+    wpilib: string;
+    rio: string;
+    ds: string;
+    pdp: string;
+    pcm: string;
+    canJag: string;
+    canTalon: string;
+    thirdParty: string;
+    usageReport: string;
+  };
 }
 
 /**
@@ -75,22 +76,22 @@ export interface RobotStatus {
  */
 export interface FMSStatus {
   bypassed: boolean;
-  auto: boolean
-  enabled: boolean
-  estop: boolean
+  auto: boolean;
+  enabled: boolean;
+  estop: boolean;
 }
 
 /**
  * These are statuses that we extrapolate from our DS connection
  */
 export interface DSStatus {
-  linked: boolean,
-  missedPacketCount: number,
-  lastPacketTime: number,
-  packetCount: number,
-  ipAddress: string,
-  missedPacketOffset: number,
-  computerBatteryPercent: number,
-  computerCpuPercent: number,
-  lastLog: string,
+  linked: boolean;
+  missedPacketCount: number;
+  lastPacketTime: number;
+  packetCount: number;
+  ipAddress: string;
+  missedPacketOffset: number;
+  computerBatteryPercent: number;
+  computerCpuPercent: number;
+  lastLog: string;
 }

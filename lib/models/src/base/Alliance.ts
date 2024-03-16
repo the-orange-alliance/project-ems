@@ -1,4 +1,4 @@
-import { isArray, isNonNullObject, isNumber, isString } from './types.js';
+import { isArray, isNonNullObject, isNumber, isString } from '../types.js';
 
 export interface AllianceMember {
   eventKey: string;
