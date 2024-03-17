@@ -53,7 +53,7 @@ const TeamStatusRow: FC<Props> = ({ station }) => {
 
   return (
     <Grid container spacing={3} sx={{ padding: (theme) => theme.spacing(1) }}>
-      <Grid item xs={12} sm={6} sx={{ display: 'flex', alignItems: 'center' }}>
+      <Grid item xs={12} sm={6}>
         <AutocompleteTeam
           teamKey={participant ? participant.teamKey : null}
           disabled={disabled}

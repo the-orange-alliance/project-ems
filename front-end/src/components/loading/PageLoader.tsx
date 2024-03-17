@@ -1,10 +1,12 @@
 import { Box, LinearProgress } from '@mui/material';
-import { FC } from 'react';
+import { FC, Suspense } from 'react';
 
 export const PageLoader: FC = () => {
   return (
-    <Box style={{ width: '100%', position: 'absolute', left: 0, top: 0 }}>
-      <LinearProgress />
-    </Box>
+    <Suspense>
+      <Box style={{ width: '100%', position: 'absolute', left: 0, top: 0 }}>
+        <LinearProgress />
+      </Box>
+    </Suspense>
   );
 };

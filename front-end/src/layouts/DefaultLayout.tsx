@@ -90,7 +90,7 @@ const DefaultLayout: FC<Props> = ({
       </AppBar>
       <Container
         maxWidth={containerWidth || 'xl'}
-        sx={{ marginTop: (theme) => theme.spacing(12) }}
+        sx={{ marginTop: (theme) => theme.spacing(10) }}
       >
         {children}
       </Container>

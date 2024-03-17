@@ -1,5 +1,4 @@
 import { FC, useEffect } from 'react';
-import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
 import {
   useRecoilState,
@@ -48,7 +47,7 @@ const MatchSelection: FC = () => {
   };
 
   return (
-    <Paper sx={{ padding: (theme) => theme.spacing(2) }}>
+    <>
       <EventTournamentsDropdown
         eventKey={eventKey}
         value={tournamentKey}
@@ -63,7 +62,7 @@ const MatchSelection: FC = () => {
         matches={matches}
         onSelect={handleSelect}
       />
-    </Paper>
+    </>
   );
 };
 

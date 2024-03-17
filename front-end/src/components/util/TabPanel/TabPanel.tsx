@@ -5,12 +5,19 @@ interface Props {
   children?: React.ReactNode;
   index: number;
   value: number;
+  noPadding?: boolean;
 }
 
-const TabPanel: FC<Props> = ({ children, index, value, ...other }) => {
+const TabPanel: FC<Props> = ({
+  children,
+  index,
+  value,
+  noPadding,
+  ...other
+}) => {
   return (
     <div role='tabpanel' hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ p: noPadding ? 1 : 3 }}>{children}</Box>}
     </div>
   );
 };

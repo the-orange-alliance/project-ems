@@ -37,8 +37,6 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
               <TableCell>Name</TableCell>
               <TableCell>Field</TableCell>
               <TableCell>Time</TableCell>
-              <TableCell>Red Score</TableCell>
-              <TableCell>Blue Score</TableCell>
               {matches?.[0]?.participants?.map((p, i) => (
                 <TableCell key={`robot-${i}`}>
                   {i < allianceSize
@@ -46,6 +44,8 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                     : `Blue ${i + 1 - allianceSize}`}
                 </TableCell>
               ))}
+              <TableCell>Red Score</TableCell>
+              <TableCell>Blue Score</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -70,14 +70,8 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                   <TableCell>{match.fieldNumber}</TableCell>
                   <TableCell>
                     {DateTime.fromISO(match.startTime).toLocaleString(
-                      DateTime.DATETIME_FULL
+                      DateTime.DATETIME_SHORT
                     )}
-                  </TableCell>
-                  <TableCell className={match.result > -1 ? 'red' : ''}>
-                    {match.redScore}
-                  </TableCell>
-                  <TableCell className={match.result > -1 ? 'blue' : ''}>
-                    {match.blueScore}
                   </TableCell>
                   {match.participants?.map((p) => {
                     const team = teams.find((t) => p.teamKey === t.teamKey);
@@ -90,6 +84,12 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                       </TableCell>
                     );
                   })}
+                  <TableCell className={match.result > -1 ? 'red' : ''}>
+                    {match.redScore}
+                  </TableCell>
+                  <TableCell className={match.result > -1 ? 'blue' : ''}>
+                    {match.blueScore}
+                  </TableCell>
                 </TableRow>
               );
             })}

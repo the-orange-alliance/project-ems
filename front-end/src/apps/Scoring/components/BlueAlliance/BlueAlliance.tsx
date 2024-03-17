@@ -3,44 +3,54 @@ import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
 import TeamStatusRow from '../Status/TeamStatusRow';
 import { useRecoilValue } from 'recoil';
-import {
-  currentMatchSelector,
-  matchInProgressAtom
-} from 'src/stores/NewRecoil';
-import { getSeasonKeyFromEventKey } from '@toa-lib/models';
-import { useComponents } from 'src/seasons';
+import { currentMatchSelector } from 'src/stores/NewRecoil';
 import NoShowStatus from '../Status/NoShowStatus';
+import { Typography } from '@mui/material';
+import DisqualifiedStatus from '../Status/DisqualifiedStatus';
 
 const BlueAlliance: FC = () => {
   const match = useRecoilValue(currentMatchSelector);
-  const matchInProgress = useRecoilValue(matchInProgressAtom);
   const blueAlliance = match?.participants?.filter((p) => p.station >= 20);
-  const seasonKey = getSeasonKeyFromEventKey(match ? match.eventKey : '');
-  const components = useComponents(seasonKey);
   return (
     <Paper
       className='blue-bg-imp'
-      sx={{ paddingBottom: (theme) => theme.spacing(2) }}
+      sx={{ paddingBottom: (theme) => theme.spacing(1) }}
     >
       <Grid container spacing={3}>
-        <Grid item md={8}>
-          {blueAlliance?.map((p) => (
-            <TeamStatusRow key={p.teamKey} station={p.station} />
-          ))}
+        <Grid item md={4} sx={{ paddingTop: '4px !important' }}>
+          <Typography variant='body1' align='center'>
+            Team
+          </Typography>
         </Grid>
-        <Grid item md={1}>
-          {blueAlliance?.map((p) => (
-            <NoShowStatus key={`no-show-${p.teamKey}`} station={p.station} />
-          ))}
+        <Grid item md={4} sx={{ paddingTop: '4px !important' }}>
+          <Typography variant='body1' align='center'>
+            Card Status
+          </Typography>
         </Grid>
-        <Grid item md={3}>
-          {components && match && (
-            <components.BlueScoreBreakdown
-              match={matchInProgress ?? undefined}
-            />
-          )}
+        <Grid item md={2} sx={{ paddingTop: '4px !important' }}>
+          <Typography variant='body1' align='center'>
+            No Show
+          </Typography>
+        </Grid>
+        <Grid item md={2} sx={{ paddingTop: '4px !important' }}>
+          <Typography variant='body1' align='center'>
+            DQ
+          </Typography>
         </Grid>
       </Grid>
+      {blueAlliance?.map((p) => (
+        <Grid key={`${p.teamKey}-${p.station}`} container spacing={3}>
+          <Grid item md={8}>
+            <TeamStatusRow key={p.teamKey} station={p.station} />
+          </Grid>
+          <Grid item md={2}>
+            <NoShowStatus key={`no-show-${p.teamKey}`} station={p.station} />
+          </Grid>
+          <Grid item md={2}>
+            <DisqualifiedStatus key={`dq-${p.teamKey}`} station={p.station} />
+          </Grid>
+        </Grid>
+      ))}
     </Paper>
   );
 };

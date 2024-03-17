@@ -11,7 +11,7 @@ interface Props {
   station: number;
 }
 
-const NoShowStatus: FC<Props> = ({ station }) => {
+const DisqualifiedStatus: FC<Props> = ({ station }) => {
   const [participant, setParticipant] = useRecoilState(
     matchInProgressParticipantsByStationSelectorFam(station)
   );
@@ -21,18 +21,18 @@ const NoShowStatus: FC<Props> = ({ station }) => {
   const toggle = () => {
     if (participant) {
       const newParticipant = Object.assign({}, participant);
-      newParticipant.noShow = participant.noShow === 1 ? 0 : 1;
+      newParticipant.disqualified = participant.disqualified === 1 ? 0 : 1;
       setParticipant(newParticipant);
     }
   };
   return (
     <Checkbox
       disabled={disabled}
-      checked={participant?.noShow === 1}
+      checked={participant?.disqualified === 1}
       onChange={toggle}
       sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
     />
   );
 };
 
-export default NoShowStatus;
+export default DisqualifiedStatus;

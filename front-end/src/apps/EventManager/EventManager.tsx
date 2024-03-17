@@ -3,12 +3,16 @@ import PaperLayout from '@layouts/PaperLayout';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import EventForm from 'src/components/forms/EventForm/EventForm';
-import { useRecoilState } from 'recoil';
-import { currentEventSelector } from '@stores/NewRecoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { currentEventKeyAtom, currentEventSelector } from '@stores/NewRecoil';
+import { useEvent } from 'src/api/use-event-data';
+import { PageLoader } from 'src/components/loading/PageLoader';
 
 const EventManager: FC = () => {
-  const [event, setEvent] = useRecoilState(currentEventSelector);
-  return (
+  const eventKey = useRecoilValue(currentEventKeyAtom);
+  const setEvent = useSetRecoilState(currentEventSelector);
+  const { data: event, isLoading } = useEvent(eventKey);
+  return !isLoading && event ? (
     <PaperLayout
       title={`${event?.eventName} | Event Manager`}
       titleLink={`/${event?.eventKey}`}
@@ -24,6 +28,8 @@ const EventManager: FC = () => {
         <EventForm event={event} onChange={setEvent} />
       </Box>
     </PaperLayout>
+  ) : (
+    <PageLoader />
   );
 };
 

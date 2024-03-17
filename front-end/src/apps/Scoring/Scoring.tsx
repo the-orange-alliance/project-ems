@@ -2,13 +2,13 @@ import { FC, Suspense } from 'react';
 import DefaultLayout from 'src/layouts/DefaultLayout';
 import Grid from '@mui/material/Grid';
 import MatchControl from './components/MatchControl/MatchControl';
-import MatchSelection from './components/MatchSelection/MatchSelection';
 import RedAlliance from './components/RedAlliance/RedAlliance';
 import BlueAlliance from './components/BlueAlliance/BlueAlliance';
 import MatchStatus from './components/MatchStatus/MatchStatus';
 import UnloadEffect from 'src/components/sync-effects/UnloadEffect';
 import PrestartListener from 'src/components/sync-effects/PrestartListener/PrestartListener';
 import MatchStateListener from 'src/components/sync-effects/MatchStateListener/MatchStateListener';
+import { ScoringTabs } from './ScoringTabs';
 
 const ScoringApp: FC = () => {
   return (
@@ -33,7 +33,7 @@ const ScoringApp: FC = () => {
             <BlueAlliance />
           </Grid>
           <Grid item xs={12}>
-            <MatchSelection />
+            <ScoringTabs />
           </Grid>
         </Grid>
       </Suspense>
