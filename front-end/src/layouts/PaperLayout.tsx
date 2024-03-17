@@ -112,7 +112,12 @@ const PaperLayout: FC<Props> = ({
               <Divider />
             </>
           )}
-          <Box sx={{ padding: padding ? (theme) => theme.spacing(2) : 0 }}>
+          <Box
+            sx={{
+              padding: padding ? (theme) => theme.spacing(2) : 0,
+              position: 'relative'
+            }}
+          >
             <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
           </Box>
         </Paper>

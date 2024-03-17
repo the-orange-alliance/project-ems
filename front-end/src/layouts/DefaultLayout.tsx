@@ -16,7 +16,6 @@ import LoginButton from 'src/components/buttons/LoginButton/LoginButton';
 import { userAtom } from '@stores/NewRecoil';
 import emsAvatar from '@assets/favicon.ico';
 import LogoutButton from 'src/components/buttons/LogoutButton/LogoutButton';
-
 import NotificationsIcon from '@mui/icons-material/Notifications';
 
 interface Props {

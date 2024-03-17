@@ -19,9 +19,13 @@ export const patchEvent = async (
   event: Event
 ): Promise<void> => clientFetcher(`event/${eventKey}`, 'PATCH', event);
 
-export const useEvent = (): SWRResponse<Event, ApiResponseError> =>
+export const useEvents = (): SWRResponse<Event[], ApiResponseError> =>
+  useSWR<Event[]>('event', (url) =>
+    apiFetcher(url, 'GET', undefined, eventZod.array().parse)
+  );
+
+export const useEvent = (eventKey?: string): SWRResponse<Event> =>
   useSWR<Event>(
-    'event',
-    (url) => apiFetcher(url, 'GET', undefined, eventZod.parse),
-    { revalidateOnFocus: false }
+    eventKey && eventKey.length > 0 ? `event/${eventKey}` : undefined,
+    (url) => apiFetcher(url, 'GET', undefined, eventZod.parse)
   );

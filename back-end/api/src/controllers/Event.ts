@@ -2,6 +2,7 @@ import { eventZod, getSeasonKeyFromEventKey } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { getDB } from '../db/EventDatabase.js';
 import { validateBodyZ } from '../middleware/BodyValidator.js';
+import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
 
@@ -22,7 +23,11 @@ router.get(
       const { eventKey } = req.params;
       const db = await getDB('global');
       const data = await db.selectAllWhere('event', `eventKey = "${eventKey}"`);
-      res.send(data);
+      if (data.length === 0) {
+        res.send(DataNotFoundError);
+      } else {
+        res.send(data[0]);
+      }
     } catch (e) {
       return next(e);
     }

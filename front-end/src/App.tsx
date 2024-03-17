@@ -4,9 +4,18 @@ import routes from './AppRoutes';
 import './App.less';
 import { useSnackbar } from './hooks/use-snackbar';
 import { userAtom } from './stores/NewRecoil';
-import { useEffect } from 'react';
+import { FC, ReactNode, useEffect } from 'react';
 import { useSocket } from './api/SocketProvider';
 import SyncEffects from './components/sync-effects/SyncEffects';
+
+const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {
+  return (
+    <>
+      <SyncEffects />
+      {children}
+    </>
+  );
+};
 
 function App() {
   const { AppSnackbar } = useSnackbar();
@@ -23,16 +32,27 @@ function App() {
 
   return (
     <>
-      <SyncEffects />
       <AppSnackbar />
       <Routes>
         {routes.map((route) => (
-          <Route key={route.name} path={route.path} element={route.element}>
+          <Route
+            key={route.name}
+            path={route.path}
+            element={
+              <RouteWrapper>
+                <route.element />
+              </RouteWrapper>
+            }
+          >
             {route.routes?.map((subRoute) => (
               <Route
                 key={subRoute.name}
                 path={subRoute.path}
-                element={subRoute.element}
+                element={
+                  <RouteWrapper>
+                    <route.element />
+                  </RouteWrapper>
+                }
               />
             ))}
           </Route>

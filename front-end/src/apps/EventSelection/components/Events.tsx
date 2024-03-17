@@ -1,23 +1,24 @@
 import { FC } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useSetRecoilState } from 'recoil';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { currentEventKeyAtom, eventsAtom } from 'src/stores/NewRecoil';
+import { currentEventKeyAtom } from 'src/stores/NewRecoil';
 import { Event, EventTypes } from '@toa-lib/models';
 import UpgradedTable from 'src/components/tables/UpgradedTable/UpgradedTable';
 import { DateTime } from 'luxon';
 import { useNavigate } from 'react-router-dom';
 import { Fab, Tooltip } from '@mui/material';
 import Add from '@mui/icons-material/Add';
+import { useEvents } from 'src/api/use-event-data';
+import { PageLoader } from 'src/components/loading/PageLoader';
 
 interface Props {
   onCreateDefault: () => void;
 }
 
 const Events: FC<Props> = ({ onCreateDefault }) => {
+  const { data: events, isLoading } = useEvents();
   const setEventKey = useSetRecoilState(currentEventKeyAtom);
-  const events = useRecoilValue(eventsAtom);
-
   const navigate = useNavigate();
 
   const createEvent = () => onCreateDefault();
@@ -27,13 +28,13 @@ const Events: FC<Props> = ({ onCreateDefault }) => {
     navigate(`/${e.eventKey}`);
   };
 
-  return (
+  return !isLoading && events ? (
     <>
       <Box sx={{ display: 'flex', marginBottom: (theme) => theme.spacing(3) }}>
         {events.length <= 0 && (
           <Typography>
-            There are currently no events in the database. Please consider
-            creating an event.
+            There are currently no events in the database. Please create an
+            event.
           </Typography>
         )}
         <Tooltip title='Create Event'>
@@ -73,6 +74,8 @@ const Events: FC<Props> = ({ onCreateDefault }) => {
         />
       )}
     </>
+  ) : (
+    <PageLoader />
   );
 };
 

@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useSetRecoilState } from 'recoil';
 import { currentEventKeyAtom } from 'src/stores/NewRecoil';
 
 export const useSyncUrlToRecoil = () => {
+  const { eventKey } = useParams();
   const setEventKey = useSetRecoilState(currentEventKeyAtom);
-
   useEffect(() => {
-    if (window.location.pathname.split('/').length > 1) {
-      setEventKey(window.location.pathname.split('/')[1]);
+    if (eventKey) {
+      setEventKey(eventKey);
     }
-  }, []);
+  }, [eventKey, setEventKey]);
 };
