@@ -1,7 +1,7 @@
-import { isAllianceArray, isAllianceMember } from '@toa-lib/models';
+import { allianceMemberZod } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { getDB } from '../db/EventDatabase.js';
-import { validateBody } from '../middleware/BodyValidator.js';
+import { validateBodyZ } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
@@ -45,7 +45,7 @@ router.get(
 
 router.post(
   '/:eventKey',
-  validateBody(isAllianceArray),
+  validateBodyZ(allianceMemberZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey } = req.params;
@@ -60,7 +60,7 @@ router.post(
 
 router.patch(
   '/:eventKey/:allianceKey',
-  validateBody(isAllianceMember),
+  validateBodyZ(allianceMemberZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { evnetKey, allianceKey } = req.params;

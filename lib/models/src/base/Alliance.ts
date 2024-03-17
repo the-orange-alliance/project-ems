@@ -1,15 +1,15 @@
-import { isArray, isNonNullObject, isNumber, isString } from '../types.js';
+import { z } from 'zod';
 
-export interface AllianceMember {
-  eventKey: string;
-  tournamentKey: string;
-  allianceRank: number;
-  teamKey: number;
-  allianceNameLong: string;
-  allianceNameShort: string;
-  isCaptain: boolean;
-  pickOrder: number;
-}
+export const allianceMemberZod = z.object({
+  eventKey: z.string(),
+  tournamentKey: z.string(),
+  allianceRank: z.number(),
+  teamKey: z.number(),
+  allianceNameLong: z.string(),
+  allianceNameShort: z.string(),
+  isCaptain: z.coerce.boolean(),
+  pickOrder: z.number()
+});
 
 export const defaultAllianceMember: AllianceMember = {
   eventKey: '',
@@ -22,12 +22,4 @@ export const defaultAllianceMember: AllianceMember = {
   pickOrder: -1
 };
 
-export const isAllianceMember = (obj: unknown): obj is AllianceMember =>
-  isNonNullObject(obj) &&
-  isString(obj.eventKey) &&
-  isString(obj.tournamentKey) &&
-  isNumber(obj.allianceRank) &&
-  isNumber(obj.teamKey);
-
-export const isAllianceArray = (obj: unknown): obj is AllianceMember[] =>
-  isArray(obj) && obj.every((o) => isAllianceMember(o));
+export type AllianceMember = z.infer<typeof allianceMemberZod>;

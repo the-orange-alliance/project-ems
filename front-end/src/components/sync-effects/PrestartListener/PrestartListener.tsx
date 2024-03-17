@@ -1,12 +1,12 @@
-import { clientFetcher } from '@toa-lib/client';
+import { apiFetcher } from '@toa-lib/client';
 import {
-  isMatch,
   Match,
   MatchDetailBase,
   MatchKey,
   MatchSocketEvent,
   getSeasonKeyFromEventKey,
-  getDefaultMatchDetailsBySeasonKey
+  getDefaultMatchDetailsBySeasonKey,
+  matchZod
 } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilCallback } from 'recoil';
@@ -29,11 +29,11 @@ const PrestartListener: FC = () => {
   }, []);
 
   const onPrestart = useRecoilCallback(({ set }) => async (key: MatchKey) => {
-    const match: Match<MatchDetailBase> = await clientFetcher(
+    const match: Match<MatchDetailBase> = await apiFetcher(
       `match/all/${key.eventKey}/${key.tournamentKey}/${key.id}`,
       'GET',
       undefined,
-      isMatch
+      matchZod.parse
     );
     const seasonKey = getSeasonKeyFromEventKey(key.eventKey);
 

@@ -1,10 +1,8 @@
 import {
-  ChargedUpDetails,
-  ChargedUpRanking,
   getFunctionsBySeasonKey,
   getSeasonKeyFromEventKey,
-  isRankingArray,
   Ranking,
+  rankingZod,
   reconcileMatchDetails,
   reconcileMatchParticipants,
   reconcileTeamRankings,
@@ -13,7 +11,7 @@ import {
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { getDB } from '../db/EventDatabase.js';
-import { validateBody, validateBodyZ } from '../middleware/BodyValidator.js';
+import { validateBodyZ } from '../middleware/BodyValidator.js';
 import { SeasonFunctionsMissing } from '../util/Errors.js';
 
 const router = Router();
@@ -75,7 +73,7 @@ router.get(
 
 router.post(
   '/',
-  validateBody(isRankingArray),
+  validateBodyZ(rankingZod.array()),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const eventKey = req.body[0].eventKey;
@@ -148,10 +146,7 @@ router.post(
       );
 
       const seasonKey = getSeasonKeyFromEventKey(eventKey);
-      const functions = getFunctionsBySeasonKey<
-        ChargedUpDetails,
-        ChargedUpRanking
-      >(seasonKey);
+      const functions = getFunctionsBySeasonKey(seasonKey);
 
       if (!functions) {
         return next(SeasonFunctionsMissing);

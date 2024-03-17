@@ -5,7 +5,7 @@ import {
   TypeGuard,
   isApiError
 } from '@toa-lib/models';
-import { z, ZodTypeDef, ZodType } from 'zod';
+import { ZodTypeDef, ZodType } from 'zod';
 
 export const options = {
   host: DEFAULT_API_HOST,

@@ -1,7 +1,7 @@
 import { AllianceMember } from './Alliance.js';
 import { ScheduleItem, TournamentType } from './Schedule.js';
-import { Team } from './Team.js';
-import { isArray, isNonNullObject, isNumber, isString } from '../types.js';
+import { teamZod } from './Team.js';
+import { z } from 'zod';
 
 // Match Levels
 export const TEST_LEVEL = 0;
@@ -60,36 +60,40 @@ export enum MatchSocketEvent {
   BONUS_END = 'match:bonusEnd'
 }
 
-export interface MatchMakerParams {
-  teamsParticipating: number;
-  teamsPerAlliance: number;
-  matchesPerTeam: number;
-  fields: number;
-  eventKey: string;
-  tournamentKey: string;
-  name: string;
-  quality: string;
-  teamKeys: number[];
-}
+export const matchMakerParamsZod = z.object({
+  teamsParticipating: z.number(),
+  teamsPerAlliance: z.number(),
+  matchesPerTeam: z.number(),
+  fields: z.number(),
+  eventKey: z.string(),
+  tournamentKey: z.string(),
+  name: z.string(),
+  quality: z.string(),
+  teamKeys: z.array(z.number())
+});
 
-export const isMatchMakerRequest = (obj: unknown): obj is MatchMakerParams =>
-  isNonNullObject(obj) &&
-  isNumber(obj.teamsParticipating) &&
-  isNumber(obj.teamsPerAlliance) &&
-  isNumber(obj.matchesPerTeam) &&
-  isNumber(obj.fields) &&
-  isString(obj.eventKey) &&
-  isString(obj.name) &&
-  isString(obj.quality) &&
-  isArray(obj.teamKeys);
+export const matchKeyZod = z
+  .object({
+    eventKey: z.string(),
+    tournamentKey: z.string(),
+    id: z.number()
+  })
+  .extend({});
 
-export interface MatchKey {
-  eventKey: string;
-  tournamentKey: string;
-  id: number;
-}
+export const matchParticipantZod = z.object({
+  eventKey: z.string(),
+  tournamentKey: z.string(),
+  id: z.number(),
+  teamKey: z.number(),
+  station: z.number(),
+  disqualified: z.number(),
+  cardStatus: z.number(),
+  surrogate: z.number(),
+  noShow: z.number(),
+  team: z.optional(teamZod)
+});
 
-export interface Match<T extends MatchDetailBase> {
+export type Match<T extends MatchDetailBase> = {
   eventKey: string;
   tournamentKey: string;
   id: number;
@@ -110,86 +114,42 @@ export interface Match<T extends MatchDetailBase> {
   uploaded: number;
   participants?: MatchParticipant[];
   details?: T;
-}
+};
 
-export const isMatch = (obj: unknown): obj is Match<any> =>
-  isNonNullObject(obj) &&
-  isString(obj.eventKey) &&
-  isString(obj.tournamentKey) &&
-  isNumber(obj.id) &&
-  isString(obj.name);
+export const matchZod: z.ZodSchema<Match<MatchDetailBase>> = z.object({
+  eventKey: z.string(),
+  tournamentKey: z.string(),
+  id: z.number(),
+  fieldNumber: z.number(),
+  name: z.string(),
+  scheduledTime: z.string(),
+  prestartTime: z.string(),
+  startTime: z.string(),
+  cycleTime: z.number(),
+  redScore: z.number(),
+  redMinPen: z.number(),
+  redMajPen: z.number(),
+  blueScore: z.number(),
+  blueMinPen: z.number(),
+  blueMajPen: z.number(),
+  active: z.number(),
+  result: z.number(),
+  uploaded: z.number(),
+  participants: z.array(matchParticipantZod).optional(),
+  details: matchKeyZod.optional()
+});
 
-export const isMatchArray = (obj: unknown): obj is Match<any>[] =>
-  isArray(obj) && obj.every((o) => isMatch(o));
-
-export interface ItemUpdate {
-  /** The name of the field to update */
-  key: string;
-  value: any;
-}
-
-export interface NumberAdjustment {
-  /** The name of the field to update */
-  key: string;
-  /** The amount to add to the field (use negative numbers to subtract) */
-  adjustment: number;
-}
-
-export interface CardStatusUpdate {
-  teamKey: number;
-  cardStatus: number;
-}
-
-export interface MatchParticipant {
-  eventKey: string;
-  tournamentKey: string;
-  id: number;
-  teamKey: number;
-  station: number;
-  disqualified: number;
-  cardStatus: number;
-  surrogate: number;
-  noShow: number;
-  team?: Team;
-}
-
-export const isMatchParticipant = (obj: unknown): obj is MatchParticipant =>
-  isNonNullObject(obj) &&
-  isString(obj.eventKey) &&
-  isString(obj.tournamentKey) &&
-  isNumber(obj.id) &&
-  isNumber(obj.teamKey) &&
-  isNumber(obj.station);
-
-export const isMatchKey = (obj: unknown): obj is MatchKey =>
-  isNonNullObject(obj) &&
-  isString(obj.eventKey) &&
-  isString(obj.tournamentKey) &&
-  isNumber(obj.id);
-
-export const isMatchParticipantArray = (
-  obj: unknown
-): obj is MatchParticipant[] =>
-  isArray(obj) && obj.every((o) => isMatchParticipant(o));
-
-export interface MatchDetailBase {
-  eventKey: string;
-  tournamentKey: string;
-  id: number;
-}
-
-export const isMatchDetail = (obj: MatchDetailBase): obj is MatchDetailBase =>
-  isNonNullObject(obj) &&
-  isString(obj.eventKey) &&
-  isString(obj.tournamentKey) &&
-  isNumber(obj.id);
+export type MatchMakerParams = z.infer<typeof matchMakerParamsZod>;
+export type MatchKey = z.infer<typeof matchKeyZod>;
+export type MatchDetailBase = z.infer<typeof matchKeyZod>;
+export type MatchParticipant = z.infer<typeof matchParticipantZod>;
 
 export function assignMatchTimes(
-  matches: Match<any>[],
+  matches: Match<MatchDetailBase>[],
   items: ScheduleItem[]
-): Match<any>[] {
+): Match<MatchDetailBase>[] {
   let matchNumber = 0;
-  const newMatches: Match<any>[] = [];
+  const newMatches: Match<MatchDetailBase>[] = [];
   for (const item of items) {
     if (item.isMatch) {
       newMatches.push({ ...matches[matchNumber], startTime: item.startTime });
@@ -203,13 +163,13 @@ export function createFixedMatches(
   items: ScheduleItem[],
   allianceMembers: AllianceMember[],
   matchMap: number[][]
-): Match<any>[] {
-  const matches: Match<any>[] = [];
+): Match<MatchDetailBase>[] {
+  const matches: Match<MatchDetailBase>[] = [];
   let matchNumber = 0;
   for (const item of items) {
     if (!item.isMatch) continue;
     const { eventKey, tournamentKey } = item;
-    const match: Match<any> = {
+    const match: Match<MatchDetailBase> = {
       eventKey,
       tournamentKey,
       id: matchNumber + 1,
@@ -293,9 +253,9 @@ export function getTournamentLevelFromType(type: TournamentType) {
 }
 
 export function reconcileMatchParticipants(
-  matches: Match<any>[],
+  matches: Match<MatchDetailBase>[],
   participants: MatchParticipant[]
-): Match<any>[] {
+): Match<MatchDetailBase>[] {
   const map: Map<string, MatchParticipant[]> = new Map();
   for (const participant of participants) {
     if (
@@ -315,7 +275,7 @@ export function reconcileMatchParticipants(
       ?.push(participant);
   }
 
-  const newMatches: Match<any>[] = [];
+  const newMatches: Match<MatchDetailBase>[] = [];
 
   for (const match of matches) {
     const newMatch = {
@@ -330,15 +290,15 @@ export function reconcileMatchParticipants(
 }
 
 export function reconcileMatchDetails<T extends MatchDetailBase>(
-  matches: Match<T>[],
+  matches: Match<MatchDetailBase>[],
   details: T[]
-): Match<T>[] {
+): Match<MatchDetailBase>[] {
   const map: Map<string, T> = new Map();
   for (const detail of details) {
     map.set(`${detail.eventKey}-${detail.tournamentKey}-${detail.id}`, detail);
   }
 
-  const newMatches: Match<any>[] = [];
+  const newMatches: Match<MatchDetailBase>[] = [];
 
   for (const match of matches) {
     newMatches.push({
@@ -351,11 +311,26 @@ export function reconcileMatchDetails<T extends MatchDetailBase>(
 }
 
 function getMatchKey(
-  key: Match<any> | MatchDetailBase | MatchParticipant
+  key: Match<MatchDetailBase> | MatchKey | MatchParticipant
 ): MatchKey {
   return {
     eventKey: key.eventKey,
     tournamentKey: key.tournamentKey,
     id: key.id
   };
+}
+
+export interface ItemUpdate {
+  key: string;
+  value: any;
+}
+
+export interface NumberAdjustment {
+  key: string;
+  adjustment: number;
+}
+
+export interface CardStatusUpdate {
+  teamKey: number;
+  cardStatus: number;
 }

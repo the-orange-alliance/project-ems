@@ -8,13 +8,8 @@ import {
   EventSchedule,
   eventZod,
   FMSSettings,
-  isAllianceArray,
+  allianceMemberZod,
   isFMSSettingsArray,
-  isMatch,
-  isMatchArray,
-  isMatchParticipantArray,
-  isRankingArray,
-  isScheduleItemArray,
   Match,
   MatchParticipant,
   MatchState,
@@ -22,11 +17,15 @@ import {
   Ranking,
   reconcileMatchParticipants,
   ScheduleItem,
+  scheduleItemZod,
   Team,
   teamZod,
   Tournament,
   tournamentZod,
-  User
+  User,
+  matchZod,
+  matchParticipantZod,
+  rankingZod
 } from '@toa-lib/models';
 import {
   atom,
@@ -490,11 +489,11 @@ export const scheduleItemsByEventSelectorFam = selectorFamily<
   key: 'scheduleItemsByEventSelectorFam',
   get: (eventKey: string) => async (): Promise<ScheduleItem[]> => {
     try {
-      return await clientFetcher(
+      return await apiFetcher(
         `schedule/${eventKey}`,
         'GET',
         undefined,
-        isScheduleItemArray
+        scheduleItemZod.array().parse
       );
     } catch (e) {
       return [];
@@ -559,11 +558,11 @@ export const currentMatchSelector = selector<Match<any> | null>({
     const id = get(currentMatchIdAtom);
     if (!eventKey || !tournamentKey || !id) return null;
     try {
-      return await clientFetcher<Match<any>>(
+      return await apiFetcher<Match<any>>(
         `match/all/${eventKey}/${tournamentKey}/${id}`,
         'GET',
         undefined,
-        isMatch
+        matchZod.parse
       );
     } catch (e) {
       console.error(e);
@@ -595,17 +594,17 @@ export const matchesByEventSelectorFam = selectorFamily<Match<any>[], string>({
   key: 'matchesByEventSelectorFam',
   get: (eventKey: string) => async (): Promise<Match<any>[]> => {
     try {
-      const matches = await clientFetcher(
+      const matches = await apiFetcher(
         `match/${eventKey}`,
         'GET',
         undefined,
-        isMatchArray
+        matchZod.array().parse
       );
-      const participants = await clientFetcher(
+      const participants = await apiFetcher(
         `match/participants/${eventKey}`,
         'GET',
         undefined,
-        isMatchParticipantArray
+        matchParticipantZod.array().parse
       );
       return reconcileMatchParticipants(matches, participants);
     } catch (e) {
@@ -710,11 +709,11 @@ export const rankingsByEventSelectorFam = selectorFamily<Ranking[], string>({
   key: 'rankingsByEventSelectorFam',
   get: (eventKey: string) => async (): Promise<Ranking[]> => {
     try {
-      return await clientFetcher(
+      return await apiFetcher(
         `ranking/${eventKey}`,
         'GET',
         undefined,
-        isRankingArray
+        rankingZod.array().parse
       );
     } catch (e) {
       return [];
@@ -733,11 +732,11 @@ export const currentRankingsByTournamentSelector = selector<Ranking[] | null>({
     const tournament = get(currentTournamentSelector);
     if (!tournament) return null;
     const { eventKey, tournamentKey } = tournament;
-    return await clientFetcher(
+    return await apiFetcher(
       `ranking/${eventKey}/${tournamentKey}`,
       'GET',
       undefined,
-      isRankingArray
+      rankingZod.array().parse
     );
   }
 });
@@ -748,11 +747,11 @@ export const currentRankingsByMatchSelector = selector<Ranking[] | null>({
     const match = get(matchInProgressAtom);
     if (!match) return null;
     const { eventKey, tournamentKey, id } = match;
-    return await clientFetcher(
+    return await apiFetcher(
       `ranking/${eventKey}/${tournamentKey}/${id}`,
       'GET',
       undefined,
-      isRankingArray
+      rankingZod.array().parse
     );
   }
 });
@@ -769,11 +768,11 @@ const defaultAllianceMembersByEventSelectorFam = selectorFamily<
   key: 'allianceMembersByEventSelectorFam',
   get: (eventKey: string) => async (): Promise<AllianceMember[]> => {
     try {
-      return await clientFetcher<AllianceMember[]>(
+      return await apiFetcher<AllianceMember[]>(
         `alliance/${eventKey}`,
         'GET',
         undefined,
-        isAllianceArray
+        allianceMemberZod.array().parse
       );
     } catch (e) {
       return [];

@@ -1,7 +1,7 @@
-import { isScheduleItemArray, teamZod } from '@toa-lib/models';
+import { scheduleItemZod, teamZod } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { getDB } from '../db/EventDatabase.js';
-import { validateBody, validateBodyZ } from '../middleware/BodyValidator.js';
+import { validateBodyZ } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';
 
 const router = Router();
@@ -48,7 +48,7 @@ router.get(
 
 router.post(
   '/',
-  validateBody(isScheduleItemArray),
+  validateBodyZ(scheduleItemZod.array()),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey } = req.body[0];

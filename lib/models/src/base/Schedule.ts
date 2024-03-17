@@ -11,51 +11,19 @@ import {
   TEST_LEVEL
 } from './Match.js';
 import { Team } from './Team.js';
-import { isArray, isNonNullObject, isNumber, isString } from '../types.js';
+import { z } from 'zod';
 
-export type TournamentType =
-  | 'Test'
-  | 'Practice'
-  | 'Qualification'
-  | 'Round Robin'
-  | 'Ranking'
-  | 'Eliminations'
-  | 'Finals';
-
-export const TournamentTypes: TournamentType[] = [
-  'Finals',
-  'Eliminations',
+export const tournamentTypeZod = z.enum([
+  'Test',
   'Practice',
   'Qualification',
-  'Ranking',
   'Round Robin',
-  'Test'
-];
+  'Ranking',
+  'Eliminations',
+  'Finals'
+]);
 
-export const levelToType = (level: number): TournamentType => {
-  switch (level) {
-    case TEST_LEVEL:
-      return 'Test';
-    case PRACTICE_LEVEL:
-      return 'Practice';
-    case QUALIFICATION_LEVEL:
-      return 'Qualification';
-    case RANKING_LEVEL:
-      return 'Ranking';
-    case ROUND_ROBIN_LEVEL:
-      return 'Round Robin';
-    case OCTOFINALS_LEVEL:
-      return 'Eliminations';
-    case QUARTERFINALS_LEVEL:
-      return 'Eliminations';
-    case SEMIFINALS_LEVEL:
-      return 'Eliminations';
-    case FINALS_LEVEL:
-      return 'Eliminations';
-    default:
-      return 'Qualification';
-  }
-};
+export type TournamentType = z.infer<typeof tournamentTypeZod>;
 
 export const DATE_FORMAT_MIN = 'dddd, MMMM Do YYYY, h:mm a';
 export const DATE_FORMAT_MIN_SHORT = 'ddd, MMMM Do YYYY, h:mm a';
@@ -94,17 +62,19 @@ export const defaultDay: Day = {
   breaks: []
 };
 
-export interface ScheduleItem {
-  eventKey: string;
-  tournamentKey: string;
-  id: number;
-  name: string;
-  type: TournamentType;
-  day: number;
-  startTime: string;
-  duration: number;
-  isMatch: boolean;
-}
+export const scheduleItemZod = z.object({
+  eventKey: z.string(),
+  tournamentKey: z.string(),
+  id: z.number(),
+  name: z.string(),
+  type: z.enum(tournamentTypeZod.options),
+  day: z.number(),
+  startTime: z.string(),
+  duration: z.number(),
+  isMatch: z.coerce.boolean()
+});
+
+export type ScheduleItem = z.infer<typeof scheduleItemZod>;
 
 export const defaultScheduleItem: ScheduleItem = {
   eventKey: '',
@@ -117,19 +87,6 @@ export const defaultScheduleItem: ScheduleItem = {
   duration: 0,
   isMatch: false
 };
-
-export const isScheduleItem = (obj: unknown): obj is ScheduleItem =>
-  isNonNullObject(obj) &&
-  isString(obj.eventKey) &&
-  isString(obj.tournamentKey) &&
-  isNumber(obj.id) &&
-  isString(obj.name) &&
-  isNumber(obj.day) &&
-  isString(obj.startTime) &&
-  isNumber(obj.duration);
-
-export const isScheduleItemArray = (obj: unknown): obj is ScheduleItem[] =>
-  isArray(obj) && obj.every((o) => isScheduleItem(o));
 
 export interface EventSchedule {
   eventKey: string;
@@ -343,3 +300,28 @@ export function calculateTotalMatches(schedule: EventSchedule): number {
       );
   }
 }
+
+export const levelToType = (level: number): TournamentType => {
+  switch (level) {
+    case TEST_LEVEL:
+      return 'Test';
+    case PRACTICE_LEVEL:
+      return 'Practice';
+    case QUALIFICATION_LEVEL:
+      return 'Qualification';
+    case RANKING_LEVEL:
+      return 'Ranking';
+    case ROUND_ROBIN_LEVEL:
+      return 'Round Robin';
+    case OCTOFINALS_LEVEL:
+      return 'Eliminations';
+    case QUARTERFINALS_LEVEL:
+      return 'Eliminations';
+    case SEMIFINALS_LEVEL:
+      return 'Eliminations';
+    case FINALS_LEVEL:
+      return 'Eliminations';
+    default:
+      return 'Qualification';
+  }
+};

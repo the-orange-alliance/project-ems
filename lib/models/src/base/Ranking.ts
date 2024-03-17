@@ -1,35 +1,22 @@
-import { Team } from './Team.js';
-import { isArray, isNonNullObject, isNumber, isString } from '../types.js';
+import { Team, teamZod } from './Team.js';
+import { z } from 'zod';
 
 export type CompareFn = (a: Ranking, b: Ranking) => number;
 
-export interface Ranking {
-  eventKey: string;
-  tournamentKey: string;
-  teamKey: number;
-  rank: number;
-  rankChange: number;
-  played: number;
-  wins: number;
-  losses: number;
-  ties: number;
-  team?: Team;
-}
+export const rankingZod = z.object({
+  eventKey: z.string(),
+  tournamentKey: z.string(),
+  teamKey: z.number(),
+  rank: z.number(),
+  rankChange: z.number(),
+  played: z.number(),
+  wins: z.number(),
+  losses: z.number(),
+  ties: z.number(),
+  team: teamZod.optional()
+});
 
-export const isRanking = (obj: unknown): obj is Ranking =>
-  isNonNullObject(obj) &&
-  isString(obj.eventKey) &&
-  isString(obj.tournamentKey) &&
-  isNumber(obj.teamKey) &&
-  isNumber(obj.rank) &&
-  isNumber(obj.rankChange) &&
-  isNumber(obj.played) &&
-  isNumber(obj.wins) &&
-  isNumber(obj.losses) &&
-  isNumber(obj.ties);
-
-export const isRankingArray = (obj: unknown): obj is Ranking[] =>
-  isArray(obj) && obj.every((o) => isRanking(o));
+export type Ranking = z.infer<typeof rankingZod>;
 
 export function reconcileTeamRankings(
   teams: Team[],

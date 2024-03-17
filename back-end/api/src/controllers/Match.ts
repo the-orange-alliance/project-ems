@@ -1,14 +1,13 @@
 import {
-  isMatchArray,
-  isMatchMakerRequest,
   MatchMakerParams,
   Match,
   MatchDetailBase,
-  isMatch,
-  isMatchParticipantArray
+  matchMakerParamsZod,
+  matchZod,
+  matchParticipantZod
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
-import { validateBody } from '../middleware/BodyValidator.js';
+import { validateBodyZ } from '../middleware/BodyValidator.js';
 import { DataNotFoundError } from '../util/Errors.js';
 import { join } from 'path';
 import { writeFile } from 'fs/promises';
@@ -25,7 +24,7 @@ const router = Router();
 /** SPECIAL ROUTES */
 router.post(
   '/create',
-  validateBody(isMatchMakerRequest),
+  validateBodyZ(matchMakerParamsZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const matchMakerPath = join(__dirname, '../../bin/MatchMaker.exe');
@@ -174,7 +173,7 @@ router.get(
 
 router.post(
   '/:eventKey',
-  validateBody(isMatchArray),
+  validateBodyZ(matchZod.array()),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey } = req.params;
@@ -203,7 +202,7 @@ router.post(
 
 router.patch(
   '/:eventKey/:tournamentKey/:id',
-  validateBody(isMatch),
+  validateBodyZ(matchZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, tournamentKey, id } = req.params;
@@ -243,7 +242,7 @@ router.patch(
 
 router.patch(
   '/participants/:eventKey/:tournamentKey/:id',
-  validateBody(isMatchParticipantArray),
+  validateBodyZ(matchParticipantZod.array()),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, tournamentKey, id } = req.params;

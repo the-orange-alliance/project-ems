@@ -1,20 +1,19 @@
-import { clientFetcher } from '@toa-lib/client';
+import { apiFetcher, clientFetcher } from '@toa-lib/client';
 import {
   MatchMakerParams,
   Match,
-  isMatchArray,
   MatchDetailBase,
   MatchKey,
   MatchParticipant,
   ApiResponseError,
-  isMatch
+  matchZod
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
 export const createMatchSchedule = async (
   params: MatchMakerParams
 ): Promise<Match<any>[]> =>
-  clientFetcher('match/create', 'POST', params, isMatchArray);
+  apiFetcher('match/create', 'POST', params, matchZod.array().parse);
 
 export const postMatchSchedule = async (
   eventKey: string,
@@ -76,7 +75,7 @@ export const useMatchAll = (
 ): SWRResponse<Match<any>, ApiResponseError> =>
   useSWR<Match<any>>(
     key ? `match/all/${key.eventKey}/${key.tournamentKey}/${key.id}` : '',
-    (url) => clientFetcher(url, 'GET', undefined, isMatch),
+    (url) => apiFetcher(url, 'GET', undefined, matchZod.parse),
     {
       revalidateOnFocus: false
     }
