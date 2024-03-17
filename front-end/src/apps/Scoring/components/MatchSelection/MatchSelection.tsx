@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import Divider from '@mui/material/Divider';
 import {
   useRecoilState,
@@ -31,6 +31,7 @@ const MatchSelection: FC = () => {
   );
   const setSelectedMatchId = useSetRecoilState(currentMatchIdAtom);
   const resetMatch = useResetRecoilState(matchInProgressAtom);
+  const [prevKey, setPrevKey] = useState<string | null>(tournamentKey);
 
   const handleSelect = (id: number): void => {
     setSelectedMatchId(id);
@@ -38,7 +39,8 @@ const MatchSelection: FC = () => {
   };
 
   useEffect(() => {
-    setSelectedMatchId(null);
+    if (prevKey !== tournamentKey) setSelectedMatchId(null);
+    setPrevKey(tournamentKey);
   }, [tournamentKey]);
 
   const handleTournamentChange = (tournament: Tournament | null) => {

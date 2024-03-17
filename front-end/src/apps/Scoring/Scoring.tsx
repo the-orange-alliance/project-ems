@@ -9,10 +9,20 @@ import UnloadEffect from 'src/components/sync-effects/UnloadEffect';
 import PrestartListener from 'src/components/sync-effects/PrestartListener/PrestartListener';
 import MatchStateListener from 'src/components/sync-effects/MatchStateListener/MatchStateListener';
 import { ScoringTabs } from './ScoringTabs';
+import { useRecoilValue } from 'recoil';
+import { currentEventKeyAtom } from 'src/stores/NewRecoil';
+import { useEvent } from 'src/api/use-event-data';
+import { PageLoader } from 'src/components/loading/PageLoader';
 
 const ScoringApp: FC = () => {
-  return (
-    <DefaultLayout containerWidth='xl'>
+  const eventKey = useRecoilValue(currentEventKeyAtom);
+  const { data: event, isLoading } = useEvent(eventKey);
+  return event && !isLoading ? (
+    <DefaultLayout
+      title={`${event?.eventName} | Event Manager`}
+      titleLink={`/${event?.eventKey}`}
+      containerWidth='xl'
+    >
       <PrestartListener />
       <MatchStateListener />
       <UnloadEffect />
@@ -38,6 +48,8 @@ const ScoringApp: FC = () => {
         </Grid>
       </Suspense>
     </DefaultLayout>
+  ) : (
+    <PageLoader />
   );
 };
 
