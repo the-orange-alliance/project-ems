@@ -11,8 +11,8 @@ import { PageLoader } from 'src/components/loading/PageLoader';
 const EventManager: FC = () => {
   const eventKey = useRecoilValue(currentEventKeyAtom);
   const setEvent = useSetRecoilState(currentEventSelector);
-  const { data: event, isLoading } = useEvent(eventKey);
-  return !isLoading && event ? (
+  const { data: event } = useEvent(eventKey);
+  return (
     <PaperLayout
       title={`${event?.eventName} | Event Manager`}
       titleLink={`/${event?.eventKey}`}
@@ -25,11 +25,10 @@ const EventManager: FC = () => {
           marginBottom: (theme) => theme.spacing(2)
         }}
       >
-        <EventForm event={event} onChange={setEvent} />
+        {!event && <PageLoader />}
+        {event && <EventForm event={event} onChange={setEvent} />}
       </Box>
     </PaperLayout>
-  ) : (
-    <PageLoader />
   );
 };
 
