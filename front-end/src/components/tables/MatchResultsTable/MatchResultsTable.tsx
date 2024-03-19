@@ -19,9 +19,15 @@ interface Props {
   matches: Match<any>[];
   onSelect?: (id: number) => void;
   disabled?: boolean;
+  colored?: boolean;
 }
 
-const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
+const MatchResultsTable: FC<Props> = ({
+  matches,
+  onSelect,
+  disabled,
+  colored
+}) => {
   const identifier = useRecoilValue(teamIdentifierAtom);
   const currentMatchId = useRecoilValue(currentMatchIdAtom);
   const teams = useRecoilValue(currentTeamsByEventSelector);
@@ -51,7 +57,6 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
           <TableBody>
             {matches.map((match) => {
               const isSelected = onSelect ? currentMatchId === match.id : false;
-
               const select = () => {
                 if (!disabled) {
                   onSelect?.(match.id);
@@ -78,16 +83,39 @@ const MatchResultsTable: FC<Props> = ({ matches, onSelect, disabled }) => {
                     return (
                       <TableCell
                         key={`${match.eventKey}-${match.id}-T${p.teamKey}-${p.station}`}
+                        className={
+                          colored
+                            ? p.station >= 20
+                              ? 'blue'
+                              : 'red'
+                            : undefined
+                        }
                       >
                         {team ? team[identifier] : p.teamKey}
                         {p.surrogate ? '*' : ''}
                       </TableCell>
                     );
                   })}
-                  <TableCell className={match.result > -1 ? 'red' : ''}>
+                  <TableCell
+                    className={colored ? 'red' : undefined}
+                    style={{
+                      fontWeight:
+                        colored && match.redScore > match.blueScore
+                          ? 'bold'
+                          : undefined
+                    }}
+                  >
                     {match.redScore}
                   </TableCell>
-                  <TableCell className={match.result > -1 ? 'blue' : ''}>
+                  <TableCell
+                    className={colored ? 'blue' : undefined}
+                    style={{
+                      fontWeight:
+                        colored && match.blueScore > match.redScore
+                          ? 'bold'
+                          : undefined
+                    }}
+                  >
                     {match.blueScore}
                   </TableCell>
                 </TableRow>

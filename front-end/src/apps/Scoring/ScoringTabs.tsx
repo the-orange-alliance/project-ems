@@ -7,6 +7,7 @@ import { useRecoilValue } from 'recoil';
 import { currentTournamentSelector } from 'src/stores/NewRecoil';
 import MatchSelection from './components/MatchSelection/MatchSelection';
 import { Card } from '@mui/material';
+import { MatchDetails } from './components/MatchDetails/MatchDetails';
 
 export const ScoringTabs: FC = () => {
   const tournament = useRecoilValue(currentTournamentSelector);
@@ -32,7 +33,7 @@ export const ScoringTabs: FC = () => {
         <MatchSelection />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <div>hello!</div>
+        <MatchDetails />
       </TabPanel>
     </Card>
   );

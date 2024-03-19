@@ -63,6 +63,7 @@ const MatchSelection: FC = () => {
         }
         matches={matches}
         onSelect={handleSelect}
+        colored
       />
     </>
   );

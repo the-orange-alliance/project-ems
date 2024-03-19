@@ -19,7 +19,7 @@ const ScoringApp: FC = () => {
   const { data: event, isLoading } = useEvent(eventKey);
   return event && !isLoading ? (
     <DefaultLayout
-      title={`${event?.eventName} | Event Manager`}
+      title={`${event?.eventName} | Scoring Manager`}
       titleLink={`/${event?.eventKey}`}
       containerWidth='xl'
     >

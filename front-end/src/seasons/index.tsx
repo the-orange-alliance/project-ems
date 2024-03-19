@@ -50,12 +50,12 @@ export interface SeasonComponents<
 export function getComponentsFromSeasonKey<
   T extends MatchDetailBase,
   U extends Ranking
->(seasonKey: string): SeasonComponents<T, U> | undefined {
-  return seasonComponents.get(seasonKey);
+>(seasonKey: string | undefined): SeasonComponents<T, U> | undefined {
+  return seasonKey ? seasonComponents.get(seasonKey) : undefined;
 }
 
 export function useComponents<T extends MatchDetailBase, U extends Ranking>(
-  seasonKey: string
+  seasonKey: string | undefined
 ): SeasonComponents<T, U> | undefined {
   return getComponentsFromSeasonKey(seasonKey);
 }
