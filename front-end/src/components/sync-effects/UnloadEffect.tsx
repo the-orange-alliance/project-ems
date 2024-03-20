@@ -23,4 +23,27 @@ const UnloadEffect: FC = () => {
   return null;
 };
 
+interface Props {
+  hasUnsavedChanges: boolean;
+}
+
+// TODO - figure out why this doesn't work
+export const UnsavedChangesEffect: FC<Props> = ({ hasUnsavedChanges }) => {
+  useEffect(() => {
+    window.addEventListener('beforeunload', onUnload);
+    return () => {
+      window.removeEventListener('beforeunload', onUnload);
+    };
+  }, []);
+
+  const onUnload = (e: BeforeUnloadEvent) => {
+    if (hasUnsavedChanges) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  };
+
+  return null;
+};
+
 export default UnloadEffect;

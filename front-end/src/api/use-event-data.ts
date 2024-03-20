@@ -1,5 +1,7 @@
 import { apiFetcher, clientFetcher } from '@toa-lib/client';
 import { ApiResponseError, Event, eventZod } from '@toa-lib/models';
+import { useRecoilValue } from 'recoil';
+import { currentEventKeyAtom } from 'src/stores/NewRecoil';
 import useSWR, { SWRResponse } from 'swr';
 
 export const setupEventBase = async (eventKey: string): Promise<void> =>
@@ -29,3 +31,6 @@ export const useEvent = (eventKey?: string): SWRResponse<Event> =>
     eventKey && eventKey.length > 0 ? `event/${eventKey}` : undefined,
     (url) => apiFetcher(url, 'GET', undefined, eventZod.parse)
   );
+
+export const useCurrentEvent = (): SWRResponse<Event> =>
+  useEvent(useRecoilValue(currentEventKeyAtom));

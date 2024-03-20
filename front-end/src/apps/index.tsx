@@ -2,9 +2,8 @@ import { FC, Suspense } from 'react';
 import Grid from '@mui/material/Grid';
 import DefaultLayout from '@layouts/DefaultLayout';
 import AppCard, { AppCardProps } from 'src/components/util/AppCard/AppCard';
-import { useRecoilValue } from 'recoil';
-import { currentEventSelector } from '@stores/NewRecoil';
 import AppRoutes from 'src/AppRoutes';
+import { useCurrentEvent } from 'src/api/use-event-data';
 
 const GridAppCard = (props: AppCardProps) => (
   <Grid item xs={5} md={3}>
@@ -13,7 +12,7 @@ const GridAppCard = (props: AppCardProps) => (
 );
 
 const HomeApp: FC = () => {
-  const event = useRecoilValue(currentEventSelector);
+  const { data: event } = useCurrentEvent();
 
   return !event ? (
     <Suspense>

@@ -18,6 +18,11 @@ export const deleteTeam = async (team: Team): Promise<void> =>
   clientFetcher(`teams/${team.eventKey}/${team.teamKey}`, `DELETE`, team);
 
 export const useTeams = (): SWRResponse<Team[], ApiResponseError> =>
-  useSWR('teams', (url) => clientFetcher(url, 'GET'), {
-    revalidateOnFocus: false
-  });
+  useSWR('teams', (url) => clientFetcher(url, 'GET'));
+
+export const useTeamsForEvent = (
+  eventKey: string | null | undefined
+): SWRResponse<Team[], ApiResponseError> =>
+  useSWR(eventKey ? `teams/${eventKey}` : undefined, (url) =>
+    clientFetcher(url, 'GET')
+  );

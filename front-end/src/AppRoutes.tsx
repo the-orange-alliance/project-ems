@@ -1,10 +1,26 @@
 import { FC, LazyExoticComponent, ReactNode, lazy } from 'react';
+
+// Home route
 const HomeApp = lazy(() => import('./apps/index'));
-const EventManagerApp = lazy(() => import('./apps/EventManager'));
+
+// Event routes
+const EventSelection = lazy(() =>
+  import('./apps/events').then((m) => ({ default: m.EventSelection }))
+);
+const EventCreation = lazy(() =>
+  import('./apps/events').then((m) => ({ default: m.EventCreation }))
+);
+const EventManager = lazy(() =>
+  import('./apps/events').then((m) => ({ default: m.EventManager }))
+);
+
+const TeamManager = lazy(() =>
+  import('./apps/teams').then((m) => ({ default: m.TeamManager }))
+);
+
 const SettingsApp = lazy(() => import('./apps/Settings'));
 const GlobalSettingsApp = lazy(() => import('./apps/Settings/GlobalSettings'));
-const EventSelection = lazy(() => import('./apps/EventSelection'));
-const TeamManager = lazy(() => import('./apps/TeamManager'));
+
 const TournamentManager = lazy(() => import('./apps/TournamentManager'));
 const MatchManager = lazy(() => import('./apps/MatchManager'));
 const ScoringApp = lazy(() => import('./apps/Scoring'));
@@ -56,10 +72,18 @@ const AppRoutes: AppRoute[] = [
     hidden: true
   },
   {
+    name: 'Event Creation',
+    path: '/create-event',
+    group: 0,
+    element: EventCreation,
+    icon: <EventIcon />,
+    hidden: true
+  },
+  {
     name: 'Event Manager',
     path: '/:eventKey/event-manager',
     group: 0,
-    element: EventManagerApp,
+    element: EventManager,
     icon: <EventIcon />
   },
   {

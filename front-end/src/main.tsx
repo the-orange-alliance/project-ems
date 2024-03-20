@@ -46,14 +46,14 @@ function Main() {
 
 root.render(
   <StrictMode>
-    <RecoilRoot>
-      <BrowserRouter>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <Suspense>
+    <Suspense>
+      <RecoilRoot>
+        <BrowserRouter>
+          <LocalizationProvider dateAdapter={AdapterLuxon}>
             <Main />
-          </Suspense>
-        </LocalizationProvider>
-      </BrowserRouter>
-    </RecoilRoot>
+          </LocalizationProvider>
+        </BrowserRouter>
+      </RecoilRoot>
+    </Suspense>
   </StrictMode>
 );
