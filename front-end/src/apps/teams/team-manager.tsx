@@ -3,8 +3,10 @@ import { Typography } from '@mui/material';
 import { Team, defaultTeam } from '@toa-lib/models';
 import { ChangeEvent, FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRecoilState } from 'recoil';
 import { useCurrentEvent } from 'src/api/use-event-data';
 import { patchTeam, postTeams, useTeamsForEvent } from 'src/api/use-team-data';
+import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
 import TeamRemovalDialog from 'src/components/dialogs/TeamRemovalDialog';
 import { PageLoader } from 'src/components/loading/PageLoader';
 import { UnsavedChangesEffect } from 'src/components/sync-effects/UnloadEffect';
@@ -13,13 +15,16 @@ import SaveAddUploadLoadingFab from 'src/components/util/SaveAddUploadLoadingFab
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import PaperLayout from 'src/layouts/PaperLayout';
 import { getDifferences } from 'src/stores/Util';
+import { teamsByEventKeyAtomFam } from 'src/stores/recoil';
 import { parseTeamsFile } from 'src/util/FileParser';
 
 export const TeamManager: FC = () => {
   const { data: event } = useCurrentEvent();
   const { data: initialTeams } = useTeamsForEvent(event?.eventKey);
 
-  const [teams, setTeams] = useState<Team[]>(initialTeams ?? []);
+  const [teams, setTeams] = useRecoilState(
+    teamsByEventKeyAtomFam(event?.eventKey ?? '')
+  );
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +33,8 @@ export const TeamManager: FC = () => {
   const removeModal = useModal(TeamRemovalDialog);
 
   useEffect(() => {
-    if (initialTeams) setTeams(initialTeams);
+    if (!event) return;
+    if (initialTeams && teams.length === 0) setTeams(initialTeams);
   }, [initialTeams]);
 
   const handleSave = async () => {
@@ -95,10 +101,13 @@ export const TeamManager: FC = () => {
     <PaperLayout
       containerWidth='xl'
       header={<Typography variant='h4'>Team Manager</Typography>}
+      title={`${event.eventName} | Team Manager`}
+      titleLink={`/${event.eventKey}`}
       padding
       showSettings
     >
       <UnsavedChangesEffect hasUnsavedChanges={hasUnsavedChanges} />
+      <ViewReturn title='Home' href={`/${event.eventKey}`} />
       <TeamsTable
         event={event}
         teams={teams}

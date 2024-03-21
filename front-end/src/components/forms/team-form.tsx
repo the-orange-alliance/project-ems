@@ -115,6 +115,7 @@ export const TeamForm: FC<Props> = ({ initialTeam, loading, onSubmit }) => {
         <FormField
           name='rookieYear'
           label='Rookie Year'
+          type='number'
           value={team.rookieYear}
           onChange={handleChange}
           disabled={loading}

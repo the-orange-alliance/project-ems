@@ -50,7 +50,7 @@ router.post(
 
 router.patch(
   '/:eventKey/:teamKey',
-  validateBodyZ(teamZod.array()),
+  validateBodyZ(teamZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, teamKey } = req.params;

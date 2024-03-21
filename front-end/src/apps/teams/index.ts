@@ -1,4 +1,4 @@
 import { TeamManager } from './team-manager';
-import { TeamCreation } from './team-creation';
+import { TeamEdior } from './team-editor';
 
-export { TeamManager, TeamCreation };
+export { TeamManager, TeamEdior };

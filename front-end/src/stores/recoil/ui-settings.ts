@@ -7,27 +7,27 @@ import { localStorageEffect } from '../Effects';
  * Recoil state management for UI settings
  */
 export const darkModeAtom = atom<boolean>({
-  key: 'darkModeAtom',
+  key: 'ui.darkModeAtom',
   default: false,
   effects: [localStorageEffect('darkMode')]
 });
 export const userAtom = atom<User | null>({
-  key: 'userAtom',
+  key: 'ui.userAtom',
   default: { id: 0, username: 'Bypassed', permissions: '*' },
   effects: [localStorageEffect('currentUser')]
 });
 export const teamIdentifierAtom = atom<keyof Team>({
-  key: 'teamIdentifierAtom',
+  key: 'ui.teamIdentifierAtom',
   default: 'teamKey',
   effects: [localStorageEffect('teamIdentifier')]
 });
 export const followerModeEnabledAtom = atom<boolean>({
-  key: 'followerModeEnabledAtom',
+  key: 'ui.followerModeEnabledAtom',
   default: false,
   effects: [localStorageEffect('followerMode')]
 });
 export const leaderApiHostAtom = atom<string>({
-  key: 'leaderApiHostAtom',
+  key: 'ui.leaderApiHostAtom',
   default: '',
   effects: [localStorageEffect('leaderApiHost')]
 });
@@ -37,22 +37,22 @@ export const leaderApiHostAtom = atom<string>({
  * Recoil state management for global UI interactions
  */
 export const snackbarOpenAtom = atom<boolean>({
-  key: 'snackbarOpenAtom',
+  key: 'ui.snackbarOpenAtom',
   default: false
 });
 export const snackbarMessageAtom = atom<string>({
-  key: 'snackbarMessageAtom',
+  key: 'ui.snackbarMessageAtom',
   default: ''
 });
 export const snackbarUseShowAtom = atom<boolean>({
-  key: 'snackbarUseShowAtom',
+  key: 'ui.snackbarUseShowAtom',
   default: false
 });
 export const snackbarErrorAtom = atom<string>({
-  key: 'snackbarErrorAtom',
+  key: 'ui.snackbarErrorAtom',
   default: ''
 });
 export const matchDialogOpenAtom = atom<boolean>({
-  key: 'matchDialogOpenAtom',
+  key: 'ui.matchDialogOpenAtom',
   default: false
 });

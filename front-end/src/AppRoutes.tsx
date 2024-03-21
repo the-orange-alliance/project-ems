@@ -14,8 +14,12 @@ const EventManager = lazy(() =>
   import('./apps/events').then((m) => ({ default: m.EventManager }))
 );
 
+// Team Routes
 const TeamManager = lazy(() =>
   import('./apps/teams').then((m) => ({ default: m.TeamManager }))
+);
+const TeamEditor = lazy(() =>
+  import('./apps/teams').then((m) => ({ default: m.TeamEdior }))
 );
 
 const SettingsApp = lazy(() => import('./apps/Settings'));
@@ -100,6 +104,14 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: TeamManager,
     icon: <HomeIcon />
+  },
+  {
+    name: 'Team Editor',
+    path: '/:eventKey/team-manager/edit/:teamKey',
+    group: 0,
+    element: TeamEditor,
+    icon: <HomeIcon />,
+    hidden: true
   },
   {
     name: 'Tournament Manager',

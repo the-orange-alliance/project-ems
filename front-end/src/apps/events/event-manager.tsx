@@ -28,10 +28,12 @@ export const EventManager: FC = () => {
     <PaperLayout
       containerWidth='lg'
       header={<Typography variant='h4'>Event Manager</Typography>}
+      title={`${initialEvent?.eventName} | Event Manager`}
+      titleLink={`/${initialEvent?.eventKey}`}
       padding
       showSettings
     >
-      <ViewReturn title='Events' href={`/${initialEvent?.eventKey}`} />
+      <ViewReturn title='Home' href={`/${initialEvent?.eventKey}`} />
       <EventForm
         initialEvent={initialEvent}
         loading={loading}
