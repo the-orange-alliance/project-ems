@@ -1,5 +1,6 @@
-import { clientFetcher } from '@toa-lib/client';
-import { Tournament } from '@toa-lib/models';
+import { apiFetcher, clientFetcher } from '@toa-lib/client';
+import { Tournament, tournamentZod } from '@toa-lib/models';
+import useSWR from 'swr';
 
 export const postTournaments = async (
   tournaments: Tournament[]
@@ -10,4 +11,9 @@ export const patchTournament = async (tournament: Tournament): Promise<void> =>
     `tournament/${tournament.eventKey}/${tournament.tournamentKey}`,
     'POST',
     tournament
+  );
+
+export const useTournamentsForEvent = (eventKey: string | null | undefined) =>
+  useSWR<Tournament[]>(eventKey ? `tournament/${eventKey}` : undefined, (url) =>
+    apiFetcher(url, 'GET', undefined, tournamentZod.array().parse)
   );

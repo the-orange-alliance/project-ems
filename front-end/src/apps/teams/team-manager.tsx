@@ -9,7 +9,6 @@ import { patchTeam, postTeams, useTeamsForEvent } from 'src/api/use-team-data';
 import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
 import TeamRemovalDialog from 'src/components/dialogs/TeamRemovalDialog';
 import { PageLoader } from 'src/components/loading/PageLoader';
-import { UnsavedChangesEffect } from 'src/components/sync-effects/UnloadEffect';
 import { TeamsTable } from 'src/components/tables/teams-table';
 import SaveAddUploadLoadingFab from 'src/components/util/SaveAddUploadLoadingFab';
 import { useSnackbar } from 'src/hooks/use-snackbar';
@@ -25,7 +24,6 @@ export const TeamManager: FC = () => {
   const [teams, setTeams] = useRecoilState(
     teamsByEventKeyAtomFam(event?.eventKey ?? '')
   );
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { showSnackbar } = useSnackbar();
@@ -68,19 +66,16 @@ export const TeamManager: FC = () => {
       { ...defaultTeam, eventKey, teamKey: teams.length + 1 },
       ...prev
     ]);
-    setHasUnsavedChanges(true);
   };
 
   const handleUpload = async (
     e: ChangeEvent<HTMLInputElement>
   ): Promise<void> => {
-    console.log('ALDKASLDKFJ');
     const { files } = e.target;
     if (!files || files.length <= 0 || !event) return;
     e.preventDefault();
     const importedTeams = await parseTeamsFile(files[0], event.eventKey);
     setTeams(importedTeams);
-    setHasUnsavedChanges(true);
   };
 
   const handleEdit = (team: Team) => {
@@ -93,7 +88,6 @@ export const TeamManager: FC = () => {
       setTeams((prevTeams) =>
         prevTeams.filter((t) => t.teamKey !== team.teamKey)
       );
-      setHasUnsavedChanges(true);
     }
   };
 
@@ -106,7 +100,6 @@ export const TeamManager: FC = () => {
       padding
       showSettings
     >
-      <UnsavedChangesEffect hasUnsavedChanges={hasUnsavedChanges} />
       <ViewReturn title='Home' href={`/${event.eventKey}`} />
       <TeamsTable
         event={event}

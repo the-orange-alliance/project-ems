@@ -17,10 +17,16 @@ import {
 interface Props {
   value: number;
   fullWidth?: boolean;
+  disabled?: boolean;
   onChange: (value: number) => void;
 }
 
-const TournamentDropdown: FC<Props> = ({ value, fullWidth, onChange }) => {
+const TournamentDropdown: FC<Props> = ({
+  value,
+  fullWidth,
+  disabled,
+  onChange
+}) => {
   const handleChange = (event: SelectChangeEvent) =>
     onChange(parseInt(event.target.value));
 
@@ -33,6 +39,7 @@ const TournamentDropdown: FC<Props> = ({ value, fullWidth, onChange }) => {
       <Select
         value={value.toString()}
         onChange={handleChange}
+        disabled={disabled}
         label='Tournament'
       >
         <MenuItem value={TEST_LEVEL.toString()}>Test</MenuItem>

@@ -7,10 +7,11 @@ import { Tournament } from '@toa-lib/models';
 
 interface Props {
   tournament: Tournament;
+  disabled?: boolean;
   onUpdate: (fields: string[]) => void;
 }
 
-const Fields: FC<Props> = ({ tournament, onUpdate }) => {
+const Fields: FC<Props> = ({ tournament, disabled, onUpdate }) => {
   const handleAdd = () => {
     onUpdate([...tournament.fields, `Field ${tournament.fields.length + 1}`]);
   };
@@ -33,7 +34,7 @@ const Fields: FC<Props> = ({ tournament, onUpdate }) => {
       spacing={3}
       sx={{ paddingTop: (theme) => theme.spacing(1) }}
     >
-      {tournament.fields.map((f, i) => {
+      {tournament.fields.map((f: string, i: number) => {
         const onChange = (e: ChangeEvent<HTMLInputElement>) => {
           updateFieldName(i, e.target.value);
         };
@@ -46,6 +47,7 @@ const Fields: FC<Props> = ({ tournament, onUpdate }) => {
                 value={tournament.fields[i]}
                 variant='standard'
                 type='text'
+                disabled={disabled}
                 onChange={onChange}
               />
             </FormControl>

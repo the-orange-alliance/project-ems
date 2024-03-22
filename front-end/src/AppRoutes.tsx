@@ -22,10 +22,17 @@ const TeamEditor = lazy(() =>
   import('./apps/teams').then((m) => ({ default: m.TeamEdior }))
 );
 
+// Tournament Routes
+const TournamentManager = lazy(() =>
+  import('./apps/tournaments').then((m) => ({ default: m.TournamentManager }))
+);
+const TournamentEditor = lazy(() =>
+  import('./apps/tournaments').then((m) => ({ default: m.TournamentEditor }))
+);
+
 const SettingsApp = lazy(() => import('./apps/Settings'));
 const GlobalSettingsApp = lazy(() => import('./apps/Settings/GlobalSettings'));
 
-const TournamentManager = lazy(() => import('./apps/TournamentManager'));
 const MatchManager = lazy(() => import('./apps/MatchManager'));
 const ScoringApp = lazy(() => import('./apps/Scoring'));
 const AudienceDisplay = lazy(() => import('./apps/AudienceDisplay'));
@@ -118,6 +125,13 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/tournament-manager',
     group: 0,
     element: TournamentManager,
+    icon: <HomeIcon />
+  },
+  {
+    name: 'Tournament Editor',
+    path: '/:eventKey/tournament-manager/edit/:tournamentKey',
+    group: 0,
+    element: TournamentEditor,
     icon: <HomeIcon />
   },
   {
