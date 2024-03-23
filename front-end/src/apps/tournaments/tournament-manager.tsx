@@ -52,6 +52,11 @@ export const TournamentManager: FC = () => {
         await patchTournament(tournament);
       }
       setLoading(false);
+      showSnackbar(
+        `(${
+          diffs.additions.length + diffs.edits.length
+        }) Tournaments successfully uploaded`
+      );
     } catch (e) {
       const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
       setLoading(false);

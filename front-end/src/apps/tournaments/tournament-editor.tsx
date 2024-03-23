@@ -36,6 +36,7 @@ export const TournamentEditor: FC = () => {
       header={<Typography variant='h4'>Tournament Manager</Typography>}
       title={`/${event.eventKey} | Tournament Editor`}
       titleLink={`/${event.eventKey}/tournament-manager`}
+      padding
     >
       <ViewReturn
         title='Tournaments'

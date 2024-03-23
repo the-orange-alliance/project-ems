@@ -1,20 +1,32 @@
 import { z } from 'zod';
 
-export const tournamentDatabaseZod = z.object({
+export const tournamentZod = z.object({
   eventKey: z.string(),
   tournamentKey: z.string(),
   tournamentLevel: z.number(),
   fieldCount: z.number(),
-  fields: z.string(),
+  fields: z.array(z.string()),
   name: z.string()
 });
 
-export const tournamentZod = tournamentDatabaseZod.transform((data) => {
-  return {
+export const toDatabaseZod = tournamentZod.transform((data) => ({
+  ...data,
+  fields: data.fields.toString()
+}));
+
+export const tournamentDatabaseZod = z
+  .object({
+    eventKey: z.string(),
+    tournamentKey: z.string(),
+    tournamentLevel: z.number(),
+    fieldCount: z.number(),
+    fields: z.string(),
+    name: z.string()
+  })
+  .transform((data) => ({
     ...data,
-    fields: JSON.parse(data.fields)
-  };
-});
+    fields: data.fields.toString().split(',')
+  }));
 
 export const defaultTournament: Tournament = {
   eventKey: '',
@@ -25,10 +37,10 @@ export const defaultTournament: Tournament = {
   name: ''
 };
 
-export const toTournamentJSON = (
+export const fromDatabaseJSON = (
   tournament: Tournament
 ): Record<string, unknown> => {
-  return { ...tournament, fields: JSON.stringify(tournament.fields) };
+  return { ...tournament, fields: Array.from(tournament.fields) };
 };
 
 export type Tournament = z.infer<typeof tournamentZod>;

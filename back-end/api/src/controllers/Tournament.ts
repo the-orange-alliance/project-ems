@@ -1,7 +1,8 @@
 import {
-  toTournamentJSON,
   Tournament,
-  tournamentDatabaseZod
+  tournamentDatabaseZod,
+  tournamentZod,
+  toDatabaseZod
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { getDB } from '../db/EventDatabase.js';
@@ -32,14 +33,14 @@ router.get(
 
 router.post(
   '/',
-  validateBodyZ(tournamentDatabaseZod),
+  validateBodyZ(tournamentZod.array()),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey } = req.body[0];
       const db = await getDB(eventKey);
       await db.insertValue(
         'tournament',
-        req.body.map((t: Tournament) => toTournamentJSON(t))
+        req.body.map((t: Tournament) => toDatabaseZod.parse(t))
       );
       res.status(200).send({});
     } catch (e) {
@@ -50,14 +51,14 @@ router.post(
 
 router.patch(
   '/:eventKey/:tournamentKey',
-  validateBodyZ(tournamentDatabaseZod),
+  validateBodyZ(tournamentZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey, tournamentKey } = req.params;
       const db = await getDB(eventKey);
       await db.updateWhere(
         'tournament',
-        toTournamentJSON(req.body),
+        toDatabaseZod.parse(req.body),
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
       res.status(200).send({});
