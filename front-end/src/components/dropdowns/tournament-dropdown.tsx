@@ -1,36 +1,24 @@
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { Tournament } from '@toa-lib/models';
-import { useTournamentsForEvent } from 'src/api/use-tournament-data';
 
 interface Props {
-  eventKey: string;
-  value: string | null;
+  tournaments: Tournament[] | null | undefined;
+  value: string | null | undefined;
   fullWidth?: boolean;
-  onChange: (tournament: Tournament | null) => void;
+  onChange: (tournamentKey: string) => void;
 }
 
-const EventTournamentsDropdown: FC<Props> = ({
-  eventKey,
+const TournamentDropdown: FC<Props> = ({
+  tournaments,
   value,
   fullWidth,
   onChange
 }) => {
-  const { data: tournaments } = useTournamentsForEvent(eventKey);
-
-  useEffect(() => {
-    if (!value && tournaments && tournaments.length > 0) {
-      onChange(tournaments[0]);
-    }
-  }, [tournaments]);
-
   const handleChange = (event: SelectChangeEvent) => {
-    if (!tournaments) return;
-    onChange(
-      tournaments.find((t) => t.tournamentKey === event.target.value) ?? null
-    );
+    onChange(event.target.value);
   };
 
   return (
@@ -40,13 +28,14 @@ const EventTournamentsDropdown: FC<Props> = ({
       sx={{ m: 1, minWidth: 120 }}
     >
       <Select
-        value={value?.toString() ?? tournaments?.[0]?.tournamentKey}
+        value={value?.toString()}
         onChange={handleChange}
         label='Tournament'
+        disabled={!tournaments || tournaments.length === 0}
       >
         {tournaments?.map((t) => (
           <MenuItem
-            key={`${eventKey}-${t.tournamentKey}`}
+            key={`${t.tournamentKey}-${t.tournamentKey}`}
             value={t.tournamentKey}
           >
             {t.name}
@@ -57,4 +46,4 @@ const EventTournamentsDropdown: FC<Props> = ({
   );
 };
 
-export default EventTournamentsDropdown;
+export default TournamentDropdown;

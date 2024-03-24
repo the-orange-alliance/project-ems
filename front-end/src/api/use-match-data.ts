@@ -80,3 +80,14 @@ export const useMatchAll = (
       revalidateOnFocus: false
     }
   );
+
+export const useMatchesForTournament = (
+  eventKey: string | null | undefined,
+  tournamentKey: string | null | undefined
+): SWRResponse<Match<any>[], ApiResponseError> =>
+  useSWR<Match<any>[]>(
+    eventKey && tournamentKey
+      ? `match/${eventKey}/${tournamentKey}`
+      : undefined,
+    (url) => apiFetcher(url, 'GET', undefined, matchZod.array().parse)
+  );

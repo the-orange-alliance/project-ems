@@ -69,7 +69,12 @@ export const TournamentManager: FC = () => {
     const { eventKey } = event;
     setTournaments((prev) => [
       ...prev,
-      { ...defaultTournament, eventKey, tournamentKey: '', name: '' }
+      {
+        ...defaultTournament,
+        eventKey,
+        tournamentKey: `t${prev.length + 1}`,
+        name: ''
+      }
     ]);
   };
 

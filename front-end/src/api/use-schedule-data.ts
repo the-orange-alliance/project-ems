@@ -1,14 +1,26 @@
-import { clientFetcher } from '@toa-lib/client';
-import { ScheduleItem } from '@toa-lib/models';
+import { apiFetcher } from '@toa-lib/client';
+import { ScheduleItem, EventSchedule } from '@toa-lib/models';
+import useSWR from 'swr';
 
 export const postSchedule = async (items: ScheduleItem[]): Promise<void> =>
-  clientFetcher('schedule', 'POST', items);
+  apiFetcher('schedule', 'POST', items);
 
 export const patchSchedule = async (item: ScheduleItem): Promise<void> =>
-  clientFetcher(`${item.eventKey}/schedule/${item.id}`, 'PATCH', item);
+  apiFetcher(`${item.eventKey}/schedule/${item.id}`, 'PATCH', item);
 
 export const deleteSchedule = (
   eventKey: string,
   tournamentKey: string
 ): Promise<void> =>
-  clientFetcher(`schedule/${eventKey}/${tournamentKey}`, 'DELETE');
+  apiFetcher(`schedule/${eventKey}/${tournamentKey}`, 'DELETE');
+
+export const useScheduleForTournament = (
+  eventKey: string | null | undefined,
+  tournamentKey: string | null | undefined
+) =>
+  useSWR<EventSchedule>(
+    eventKey && tournamentKey
+      ? `storage/${eventKey}_${tournamentKey}.json`
+      : undefined,
+    (url) => apiFetcher(url, 'GET')
+  );
