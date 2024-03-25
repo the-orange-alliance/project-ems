@@ -1,3 +1,4 @@
+import { Team } from '@toa-lib/models';
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import {
@@ -10,6 +11,17 @@ export const useTeamIdentifiers = (): Record<number, string> => {
   const identifier = useRecoilValue(teamIdentifierAtom);
   const eventKey = useRecoilValue(currentEventKeyAtom);
   const teams = useRecoilValue(teamsByEventSelectorFam(eventKey));
+  return useMemo(
+    () =>
+      Object.fromEntries(teams.map((t) => [t.teamKey, String(t[identifier])])),
+    [teams, identifier]
+  );
+};
+
+export const useTeamIdentifierRecord = (
+  teams: Team[]
+): Record<number, string> => {
+  const identifier = useRecoilValue(teamIdentifierAtom);
   return useMemo(
     () =>
       Object.fromEntries(teams.map((t) => [t.teamKey, String(t[identifier])])),

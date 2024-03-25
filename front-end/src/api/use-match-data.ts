@@ -6,8 +6,11 @@ import {
   MatchKey,
   MatchParticipant,
   ApiResponseError,
-  matchZod
+  matchZod,
+  matchParticipantZod,
+  reconcileMatchParticipants
 } from '@toa-lib/models';
+import { useEffect, useState } from 'react';
 import useSWR, { SWRResponse } from 'swr';
 
 export const createMatchSchedule = async (
@@ -91,3 +94,32 @@ export const useMatchesForTournament = (
       : undefined,
     (url) => apiFetcher(url, 'GET', undefined, matchZod.array().parse)
   );
+
+export const useMatchParticipantsForEvent = (
+  eventKey: string | null | undefined
+): SWRResponse<MatchParticipant[], ApiResponseError> =>
+  useSWR<MatchParticipant[]>(
+    eventKey ? `match/participants/${eventKey}` : undefined,
+    (url) =>
+      apiFetcher(url, 'GET', undefined, matchParticipantZod.array().parse)
+  );
+
+export const useAllMatchDataForTournament = (
+  eventKey: string | null | undefined,
+  tournamentKey: string | null | undefined
+): Match<any>[] => {
+  const [tourneyMatches, setTourneyMatches] = useState<Match<any>[]>([]);
+  const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
+  const { data: participants } = useMatchParticipantsForEvent(eventKey);
+  useEffect(() => {
+    if (matches && participants && tournamentKey) {
+      setTourneyMatches(
+        reconcileMatchParticipants(
+          matches,
+          participants.filter((p) => p.tournamentKey === tournamentKey)
+        )
+      );
+    }
+  }, [matches, participants, tournamentKey, setTourneyMatches]);
+  return tourneyMatches;
+};
