@@ -24,3 +24,14 @@ export const useScheduleForTournament = (
       : undefined,
     (url) => apiFetcher(url, 'GET')
   );
+
+export const useScheduleItemsForTournament = (
+  eventKey: string | null | undefined,
+  tournamentKey: string | null | undefined
+) =>
+  useSWR<ScheduleItem[]>(
+    eventKey && tournamentKey
+      ? `schedule/${eventKey}/${tournamentKey}`
+      : undefined,
+    (url) => apiFetcher(url, 'GET')
+  );

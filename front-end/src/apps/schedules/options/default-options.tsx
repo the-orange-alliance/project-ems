@@ -1,17 +1,32 @@
 import { Grid, TextField } from '@mui/material';
-import { EventSchedule } from '@toa-lib/models';
-import { ChangeEvent, FC } from 'react';
+import { EventSchedule, calculateTotalMatches } from '@toa-lib/models';
+import { ChangeEvent, FC, useEffect } from 'react';
 
 interface Props {
-  eventSchedule: EventSchedule;
+  eventSchedule?: EventSchedule;
+  disabled?: boolean;
   onChange: (schedule: EventSchedule) => void;
 }
 
 export const DefaultScheduleOptions: FC<Props> = ({
   eventSchedule,
+  disabled,
   onChange
 }) => {
+  useEffect(() => {
+    if (!eventSchedule) return;
+    onChange({
+      ...eventSchedule,
+      totalMatches: calculateTotalMatches(eventSchedule)
+    });
+  }, [
+    eventSchedule?.matchesPerTeam,
+    eventSchedule?.teamsPerAlliance,
+    eventSchedule?.playoffsOptions
+  ]);
+
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (!eventSchedule) return;
     const value = parseInt(event.target.value);
     const { name } = event.target;
     onChange({
@@ -28,18 +43,10 @@ export const DefaultScheduleOptions: FC<Props> = ({
     >
       <Grid item xs={12} sm={6} md={4} lg={3}>
         <TextField
-          label='Teams Scheduled'
-          value={eventSchedule.teams.length}
-          disabled
-          fullWidth
-          type='number'
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <TextField
           name='cycleTime'
           label='Cycle Time'
-          value={eventSchedule.cycleTime}
+          value={eventSchedule?.cycleTime}
+          disabled={disabled}
           fullWidth
           onChange={handleChange}
           type='number'
@@ -49,7 +56,8 @@ export const DefaultScheduleOptions: FC<Props> = ({
         <TextField
           name='matchesPerTeam'
           label='Matches Per Team'
-          value={eventSchedule.matchesPerTeam}
+          value={eventSchedule?.matchesPerTeam}
+          disabled={disabled}
           fullWidth
           onChange={handleChange}
           type='number'
@@ -57,8 +65,8 @@ export const DefaultScheduleOptions: FC<Props> = ({
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={3}>
         <TextField
-          label='Total Matches'
-          value={eventSchedule.totalMatches}
+          label='Teams Scheduled'
+          value={eventSchedule?.teamsParticipating}
           disabled
           fullWidth
           type='number'
@@ -66,11 +74,10 @@ export const DefaultScheduleOptions: FC<Props> = ({
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={3}>
         <TextField
-          name='matchConcurrency'
-          label='Match Concurrency'
-          value={eventSchedule.matchConcurrency}
+          label='Total Matches'
+          value={eventSchedule?.totalMatches}
+          disabled
           fullWidth
-          onChange={handleChange}
           type='number'
         />
       </Grid>

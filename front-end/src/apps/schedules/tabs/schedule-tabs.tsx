@@ -6,15 +6,20 @@ import { ScheduleParticipants } from './schedule-participants';
 import { ScheduleParams } from './schedule-params';
 
 interface Props {
+  tournamentKey: string | null;
   eventSchedule?: EventSchedule;
   hasMatches?: boolean;
 }
 
-export const ScheduleTabs: FC<Props> = ({ eventSchedule, hasMatches }) => {
+export const ScheduleTabs: FC<Props> = ({
+  tournamentKey,
+  eventSchedule,
+  hasMatches
+}) => {
   const [value, setValue] = useState(0);
   useEffect(() => {
     setValue(0);
-  }, [eventSchedule]);
+  }, [tournamentKey]);
 
   const handleChange = (_: SyntheticEvent, newValue: number) =>
     setValue(newValue);

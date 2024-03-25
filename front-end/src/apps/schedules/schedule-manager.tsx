@@ -82,7 +82,11 @@ export const ScheduleManager: FC = () => {
         />
       }
     >
-      <ScheduleTabs eventSchedule={eventSchedule} hasMatches={hasMatches} />
+      <ScheduleTabs
+        tournamentKey={tournamentKey}
+        eventSchedule={eventSchedule}
+        hasMatches={hasMatches}
+      />
     </PaperLayout>
   ) : (
     <PageLoader />

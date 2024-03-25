@@ -19,29 +19,33 @@ export const ScheduleParticipants: FC<Props> = ({
   const { data: teams, isLoading } = useTeamsForEvent(eventSchedule?.eventKey);
   const canEdit = !disabled && eventSchedule;
   const toggleScheduledTeam = (t: Team) => {
-    if (!eventSchedule) return;
+    if (!eventSchedule || !teams) return;
     const isScheduled = eventSchedule.teams.find(
       (eventTeam) => t.teamKey === eventTeam.teamKey
     );
+    const newTeams = isScheduled
+      ? eventSchedule.teams.filter(
+          (eventTeam) => eventTeam.teamKey !== t.teamKey
+        )
+      : [...eventSchedule.teams, t];
     mutate(
       `storage/${eventSchedule.eventKey}_${eventSchedule.tournamentKey}.json`,
       {
         ...eventSchedule,
-        teams: isScheduled
-          ? eventSchedule.teams.filter(
-              (eventTeam) => eventTeam.teamKey !== t.teamKey
-            )
-          : [...eventSchedule.teams, t]
+        teams: newTeams,
+        teamsParticipating: newTeams.length
       }
     );
   };
   const toggleAll = () => {
-    if (!eventSchedule) return;
+    if (!eventSchedule || !teams) return;
+    const newTeams = eventSchedule.teams.length > 0 ? [] : teams;
     mutate(
       `storage/${eventSchedule.eventKey}_${eventSchedule.tournamentKey}.json`,
       {
         ...eventSchedule,
-        teams: eventSchedule.teams.length > 0 ? [] : teams
+        teams: newTeams,
+        teamsParticipating: newTeams.length
       }
     );
   };

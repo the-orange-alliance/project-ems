@@ -189,9 +189,18 @@ interface ScheduleValidator {
   valid: boolean;
 }
 
-export function useScheduleValidator(
-  schedule: EventSchedule
+export function getScheduleValidation(
+  schedule: EventSchedule | null | undefined
 ): ScheduleValidator {
+  if (!schedule) {
+    return {
+      maxTotalMatches: 0,
+      remainingMatches: 0,
+      valid: false,
+      validationMessage: 'No schedule provided.'
+    };
+  }
+
   const maxTotalMatches = calculateTotalMatches(schedule);
 
   if (schedule.days.length <= 0)

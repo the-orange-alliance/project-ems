@@ -10,7 +10,7 @@ import {
 } from 'src/stores/NewRecoil';
 import {
   calculateTotalMatches,
-  useScheduleValidator,
+  getScheduleValidation,
   generateScheduleItems
 } from '@toa-lib/models';
 import Days from '../time/Days';
@@ -30,7 +30,7 @@ const SetupSchedule: FC = () => {
   );
 
   const [flags, setFlag] = useFlags();
-  const { valid, validationMessage } = useScheduleValidator(schedule);
+  const { valid, validationMessage } = getScheduleValidation(schedule);
 
   useEffect(() => {
     setSchedule((prev) => ({
