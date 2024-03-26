@@ -60,6 +60,11 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
       }
       await createRankings(eventSchedule.tournamentKey, eventSchedule.teams);
       await postMatchSchedule(eventSchedule.eventKey, matches);
+      mutate(
+        `match/${eventSchedule.eventKey}/${eventSchedule.tournamentKey}`,
+        matches,
+        false
+      );
       showSnackbar('Matches saved successfully.');
       setLoading(false);
     } catch (e) {
@@ -72,7 +77,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
   const handleCreateMatches = (matches: Match<any>[]) => {
     if (!eventSchedule) return;
     const newMatches = matches
-      .filter((m) => m.tournamentKey === eventSchedule.tournamentKey)
+      .filter((m) => m.tournamentKey != eventSchedule.tournamentKey)
       .concat(matches);
     setMatches(newMatches);
     if (savedMatches) {

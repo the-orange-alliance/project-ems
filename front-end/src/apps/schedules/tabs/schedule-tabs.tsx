@@ -5,6 +5,7 @@ import TabPanel from 'src/components/util/TabPanel/TabPanel';
 import { ScheduleParticipants } from './schedule-participants';
 import { ScheduleParams } from './schedule-params';
 import { ScheduleMatches } from './schedule-matches';
+import { MatchEditor } from './match-editor';
 
 interface Props {
   tournamentKey: string | null;
@@ -34,6 +35,7 @@ export const ScheduleTabs: FC<Props> = ({
           <Tab label='Schedule Participants' />
           <Tab label='Schedule Parameters' />
           <Tab label='Schedule Matches' />
+          <Tab label='Match Editor' />
         </Tabs>
         <Divider />
         <TabPanel value={value} index={0}>
@@ -50,6 +52,12 @@ export const ScheduleTabs: FC<Props> = ({
             eventSchedule={eventSchedule}
             savedMatches={savedMatches}
             disabled={hasMatches}
+          />
+        </TabPanel>
+        <TabPanel value={value} index={3}>
+          <MatchEditor
+            eventSchedule={eventSchedule}
+            savedMatches={savedMatches}
           />
         </TabPanel>
       </Box>
