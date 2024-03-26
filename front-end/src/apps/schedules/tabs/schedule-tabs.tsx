@@ -1,5 +1,5 @@
 import { Box, Divider, Tab, Tabs } from '@mui/material';
-import { EventSchedule } from '@toa-lib/models';
+import { EventSchedule, Match } from '@toa-lib/models';
 import { FC, SyntheticEvent, useEffect, useState } from 'react';
 import TabPanel from 'src/components/util/TabPanel/TabPanel';
 import { ScheduleParticipants } from './schedule-participants';
@@ -9,12 +9,14 @@ import { ScheduleMatches } from './schedule-matches';
 interface Props {
   tournamentKey: string | null;
   eventSchedule?: EventSchedule;
+  savedMatches?: Match<any>[];
   hasMatches?: boolean;
 }
 
 export const ScheduleTabs: FC<Props> = ({
   tournamentKey,
   eventSchedule,
+  savedMatches,
   hasMatches
 }) => {
   const [value, setValue] = useState(0);
@@ -46,6 +48,7 @@ export const ScheduleTabs: FC<Props> = ({
         <TabPanel value={value} index={2}>
           <ScheduleMatches
             eventSchedule={eventSchedule}
+            savedMatches={savedMatches}
             disabled={hasMatches}
           />
         </TabPanel>

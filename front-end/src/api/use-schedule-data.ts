@@ -33,5 +33,6 @@ export const useScheduleItemsForTournament = (
     eventKey && tournamentKey
       ? `schedule/${eventKey}/${tournamentKey}`
       : undefined,
-    (url) => apiFetcher(url, 'GET')
+    (url) => apiFetcher(url, 'GET'),
+    { revalidateOnFocus: false }
   );

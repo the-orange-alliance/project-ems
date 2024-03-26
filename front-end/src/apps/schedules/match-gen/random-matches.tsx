@@ -1,30 +1,29 @@
 import { Box, Button, CircularProgress, Divider } from '@mui/material';
-import { EventSchedule } from '@toa-lib/models';
-import { FC, useState } from 'react';
 import {
-  createMatchSchedule,
-  useAllMatchDataForTournament
-} from 'src/api/use-match-data';
-import { useTeamsForEvent } from 'src/api/use-team-data';
-import { useCurrentTournament } from 'src/api/use-tournament-data';
+  EventSchedule,
+  Match,
+  ScheduleItem,
+  Tournament,
+  assignMatchTimes
+} from '@toa-lib/models';
+import { FC, useState } from 'react';
+import { createMatchSchedule } from 'src/api/use-match-data';
 import MatchMakerQuality from 'src/components/dropdowns/MatchMakerQuality';
-import { MatchTable } from 'src/components/tables/matches-table';
 import { useSnackbar } from 'src/hooks/use-snackbar';
-import { useSWRConfig } from 'swr';
 
 interface Props {
   eventSchedule?: EventSchedule;
-  disabled?: boolean;
+  scheduleItems?: ScheduleItem[];
+  tournament?: Tournament;
+  onCreateMatches: (matches: Match<any>[]) => void;
 }
 
-export const RandomMatches: FC<Props> = ({ eventSchedule, disabled }) => {
-  const { mutate } = useSWRConfig();
-  const matches = useAllMatchDataForTournament(
-    eventSchedule?.eventKey,
-    eventSchedule?.tournamentKey
-  );
-  const { data: teams } = useTeamsForEvent(eventSchedule?.eventKey);
-  const tournament = useCurrentTournament();
+export const RandomMatches: FC<Props> = ({
+  eventSchedule,
+  scheduleItems,
+  tournament,
+  onCreateMatches
+}) => {
   const [quality, setQuality] = useState('best');
   const [loading, setLoading] = useState(false);
   const { showSnackbar } = useSnackbar();
@@ -33,6 +32,7 @@ export const RandomMatches: FC<Props> = ({ eventSchedule, disabled }) => {
     try {
       if (!eventSchedule) return;
       if (!tournament) return;
+      if (!scheduleItems) return;
       const {
         eventKey,
         tournamentKey,
@@ -53,10 +53,7 @@ export const RandomMatches: FC<Props> = ({ eventSchedule, disabled }) => {
         teamKeys,
         name
       });
-      // TODO - How do we want to store this match data? Do we want to implement a new route to mutate properly?
-      mutate(`match/${eventKey}/${tournamentKey}`, matches, {
-        revalidate: false
-      });
+      onCreateMatches(assignMatchTimes(matches, scheduleItems));
       showSnackbar('MatchMaker executed successfully.');
       setLoading(false);
     } catch (e) {
@@ -69,7 +66,7 @@ export const RandomMatches: FC<Props> = ({ eventSchedule, disabled }) => {
     <Box>
       <MatchMakerQuality quality={quality} onChange={setQuality} />
       <Button
-        sx={{ display: 'block' }}
+        sx={{ marginTop: (theme) => theme.spacing(2), display: 'block' }}
         variant='contained'
         disabled={loading}
         onClick={createMatches}
@@ -82,16 +79,6 @@ export const RandomMatches: FC<Props> = ({ eventSchedule, disabled }) => {
           marginBottom: (theme) => theme.spacing(2)
         }}
       />
-      {matches.length > 0 && <MatchTable matches={matches} teams={teams} />}
-      {matches.length > 0 && (
-        <Button
-          sx={{ marginTop: (theme) => theme.spacing(2) }}
-          variant='contained'
-          disabled={disabled || loading}
-        >
-          Post Schedule
-        </Button>
-      )}
     </Box>
   );
 };

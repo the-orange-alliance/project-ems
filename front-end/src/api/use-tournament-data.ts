@@ -19,8 +19,10 @@ export const patchTournament = async (tournament: Tournament): Promise<void> =>
   );
 
 export const useTournamentsForEvent = (eventKey: string | null | undefined) =>
-  useSWR<Tournament[]>(eventKey ? `tournament/${eventKey}` : undefined, (url) =>
-    apiFetcher(url, 'GET', undefined, tournamentZod.array().parse)
+  useSWR<Tournament[]>(
+    eventKey ? `tournament/${eventKey}` : undefined,
+    (url) => apiFetcher(url, 'GET', undefined, tournamentZod.array().parse),
+    { revalidateOnFocus: false }
   );
 
 export const useCurrentTournament = () => {

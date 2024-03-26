@@ -4,7 +4,8 @@ import {
   MatchDetailBase,
   matchMakerParamsZod,
   matchZod,
-  matchParticipantZod
+  matchParticipantZod,
+  reconcileMatchParticipants
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { validateBodyZ } from '../middleware/BodyValidator.js';
@@ -32,7 +33,7 @@ router.post(
       const config: MatchMakerParams = req.body;
       const teamsPath = join(
         getAppData('ems'),
-        `${config.eventKey}-${config.name}_teams.txt`
+        `${config.eventKey}_${config.tournamentKey}_teams.txt`
       );
       const contents = config.teamKeys.toString().replace(/,/g, '\n');
       await writeFile(teamsPath, contents);
@@ -107,7 +108,11 @@ router.get(
         'match',
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
-      res.send(data);
+      const participants = await db.selectAllWhere(
+        'match_participant',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+      );
+      res.send(reconcileMatchParticipants(data, participants));
     } catch (e) {
       return next(e);
     }
@@ -257,6 +262,31 @@ router.patch(
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id} AND station = ${station}`
         );
       }
+      res.status(200).send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.delete(
+  '/:eventKey/:tournamentKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventKey, tournamentKey } = req.params;
+      const db = await getDB(eventKey);
+      await db.deleteWhere(
+        'match',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+      );
+      await db.deleteWhere(
+        'match_participant',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+      );
+      await db.deleteWhere(
+        'match_detail',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+      );
       res.status(200).send({});
     } catch (e) {
       return next(e);

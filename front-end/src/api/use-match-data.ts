@@ -1,4 +1,4 @@
-import { apiFetcher, clientFetcher } from '@toa-lib/client';
+import { apiFetcher } from '@toa-lib/client';
 import {
   MatchMakerParams,
   Match,
@@ -7,10 +7,8 @@ import {
   MatchParticipant,
   ApiResponseError,
   matchZod,
-  matchParticipantZod,
-  reconcileMatchParticipants
+  matchParticipantZod
 } from '@toa-lib/models';
-import { useEffect, useState } from 'react';
 import useSWR, { SWRResponse } from 'swr';
 
 export const createMatchSchedule = async (
@@ -21,10 +19,10 @@ export const createMatchSchedule = async (
 export const postMatchSchedule = async (
   eventKey: string,
   matches: Match<any>[]
-): Promise<void> => clientFetcher(`match/${eventKey}`, 'POST', matches);
+): Promise<void> => apiFetcher(`match/${eventKey}`, 'POST', matches);
 
 export const patchMatch = async (match: Match<any>): Promise<void> =>
-  clientFetcher(
+  apiFetcher(
     `match/${match.eventKey}/${match.tournamentKey}/${match.id}`,
     'PATCH',
     match
@@ -33,7 +31,7 @@ export const patchMatch = async (match: Match<any>): Promise<void> =>
 export const patchMatchDetails = async <T extends MatchDetailBase>(
   match: Match<T>
 ): Promise<void> =>
-  clientFetcher(
+  apiFetcher(
     `match/details/${match.eventKey}/${match.tournamentKey}/${match.id}`,
     'PATCH',
     match.details
@@ -43,7 +41,7 @@ export const patchMatchParticipants = async (
   key: MatchKey,
   participants: MatchParticipant[]
 ): Promise<void> =>
-  clientFetcher(
+  apiFetcher(
     `match/participants/${key.eventKey}/${key.tournamentKey}/${key.id}`,
     'PATCH',
     participants
@@ -73,6 +71,11 @@ export const patchWholeMatch = async (match: Match<any>): Promise<void> => {
   }
 };
 
+export const deleteMatches = async (
+  eventKey: string,
+  tournamentKey: string
+): Promise<void> => apiFetcher(`match/${eventKey}/${tournamentKey}`, 'DELETE');
+
 export const useMatchAll = (
   key?: MatchKey
 ): SWRResponse<Match<any>, ApiResponseError> =>
@@ -92,7 +95,8 @@ export const useMatchesForTournament = (
     eventKey && tournamentKey
       ? `match/${eventKey}/${tournamentKey}`
       : undefined,
-    (url) => apiFetcher(url, 'GET', undefined, matchZod.array().parse)
+    (url) => apiFetcher(url, 'GET', undefined, matchZod.array().parse),
+    { revalidateOnFocus: false }
   );
 
 export const useMatchParticipantsForEvent = (
@@ -103,23 +107,3 @@ export const useMatchParticipantsForEvent = (
     (url) =>
       apiFetcher(url, 'GET', undefined, matchParticipantZod.array().parse)
   );
-
-export const useAllMatchDataForTournament = (
-  eventKey: string | null | undefined,
-  tournamentKey: string | null | undefined
-): Match<any>[] => {
-  const [tourneyMatches, setTourneyMatches] = useState<Match<any>[]>([]);
-  const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
-  const { data: participants } = useMatchParticipantsForEvent(eventKey);
-  useEffect(() => {
-    if (matches && participants && tournamentKey) {
-      setTourneyMatches(
-        reconcileMatchParticipants(
-          matches,
-          participants.filter((p) => p.tournamentKey === tournamentKey)
-        )
-      );
-    }
-  }, [matches, participants, tournamentKey, setTourneyMatches]);
-  return tourneyMatches;
-};

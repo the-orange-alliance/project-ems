@@ -1,9 +1,6 @@
-import { FC, ChangeEvent } from 'react';
+import { FC } from 'react';
 import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormLabel from '@mui/material/FormLabel';
-import Radio from '@mui/material/Radio';
-import RadioGroup from '@mui/material/RadioGroup';
+import { InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 
 interface Props {
   quality: string;
@@ -11,30 +8,22 @@ interface Props {
 }
 
 const MatchMakerQuality: FC<Props> = ({ quality, onChange }) => {
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: SelectChangeEvent<string>) => {
     onChange(event.target.value);
   };
 
   return (
-    <FormControl>
-      <FormLabel>Match Maker Quality</FormLabel>
-      <RadioGroup value={quality} onChange={handleChange}>
-        <FormControlLabel
-          value='fair'
-          control={<Radio />}
-          label='Fair Quality'
-        />
-        <FormControlLabel
-          value='good'
-          control={<Radio />}
-          label='Good Quality'
-        />
-        <FormControlLabel
-          value='best'
-          control={<Radio />}
-          label='Best Quality'
-        />
-      </RadioGroup>
+    <FormControl sx={{ minWidth: 180 }}>
+      <InputLabel>Match Maker Quality</InputLabel>
+      <Select
+        value={quality}
+        onChange={handleChange}
+        label='Match Maker Quality'
+      >
+        <MenuItem value='fair'>Fair</MenuItem>
+        <MenuItem value='good'>Good</MenuItem>
+        <MenuItem value='best'>Best</MenuItem>
+      </Select>
     </FormControl>
   );
 };

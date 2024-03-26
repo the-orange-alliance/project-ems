@@ -1,16 +1,16 @@
-import { apiFetcher, clientFetcher } from '@toa-lib/client';
+import { apiFetcher } from '@toa-lib/client';
 import { Team, Ranking, rankingZod } from '@toa-lib/models';
 
 export const createRankings = (
   tournamentKey: string,
   teams: Team[]
 ): Promise<void> =>
-  clientFetcher(`ranking/create/${tournamentKey}`, 'POST', teams);
+  apiFetcher(`ranking/create/${tournamentKey}`, 'POST', teams);
 
 export const postRankings = (
   eventKey: string,
   rankings: Ranking[]
-): Promise<void> => clientFetcher(`ranking/${eventKey}`, 'POST', rankings);
+): Promise<void> => apiFetcher(`ranking/${eventKey}`, 'POST', rankings);
 
 export const recalculateRankings = (
   eventKey: string,
@@ -31,3 +31,6 @@ export const recalculatePlayoffsRankings = (
     'POST',
     rankingZod.array().parse
   );
+
+export const deleteRankings = (eventKey: string, tournamentKey: string) =>
+  apiFetcher(`ranking/${eventKey}/${tournamentKey}`, 'DELETE');

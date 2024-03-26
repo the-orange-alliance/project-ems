@@ -30,6 +30,7 @@ export const ScheduleManager: FC = () => {
   );
   const hasMatches = eventSchedule && matches && matches.length > 0;
 
+  // Effect hook to create a new schedule if one doesn't exist
   useEffect(() => {
     if (
       !isScheduleLoading &&
@@ -85,6 +86,7 @@ export const ScheduleManager: FC = () => {
       <ScheduleTabs
         tournamentKey={tournamentKey}
         eventSchedule={eventSchedule}
+        savedMatches={matches}
         hasMatches={hasMatches}
       />
     </PaperLayout>

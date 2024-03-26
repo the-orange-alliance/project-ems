@@ -22,6 +22,8 @@ export const useTeams = (): SWRResponse<Team[], ApiResponseError> =>
 export const useTeamsForEvent = (
   eventKey: string | null | undefined
 ): SWRResponse<Team[], ApiResponseError> =>
-  useSWR(eventKey ? `teams/${eventKey}` : undefined, (url) =>
-    apiFetcher(url, 'GET')
+  useSWR(
+    eventKey ? `teams/${eventKey}` : undefined,
+    (url) => apiFetcher(url, 'GET'),
+    { revalidateOnFocus: false }
   );

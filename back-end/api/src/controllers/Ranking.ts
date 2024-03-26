@@ -191,4 +191,21 @@ router.post(
   }
 );
 
+router.delete(
+  '/:eventKey/:tournamentKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventKey, tournamentKey } = req.params;
+      const db = await getDB(eventKey);
+      await db.deleteWhere(
+        'ranking',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+      );
+      res.status(200).send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
 export default router;
