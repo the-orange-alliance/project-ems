@@ -23,6 +23,9 @@ export const RESULT_GAME_SPECIFIC = 3;
 
 export type Alliance = 'red' | 'blue';
 
+export const RED_STATION = 10;
+export const BLUE_STATION = 20;
+
 export enum MatchState {
   MATCH_NOT_SELECTED = 0,
   PRESTART_READY = 1,
