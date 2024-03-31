@@ -15,6 +15,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 interface Props<T> {
   data: T[];
   headers: string[];
+  selected?: (row: T) => boolean;
   renderRow: (row: T) => (string | number | ReactNode)[];
   onSelect?: (row: T) => void;
   onModify?: (row: T) => void;
@@ -24,6 +25,7 @@ interface Props<T> {
 const UpgradedTable = <T,>({
   data,
   headers,
+  selected,
   renderRow,
   onSelect,
   onModify,
@@ -44,6 +46,7 @@ const UpgradedTable = <T,>({
           </TableHead>
           <TableBody>
             {data.map((d, i) => {
+              const isSelected = onSelect ? selected?.(d) : false;
               const rowData = renderRow(d);
               const handleSelect = () => onSelect?.(d);
               const handleDelete = () => onDelete?.(d);
@@ -52,6 +55,7 @@ const UpgradedTable = <T,>({
                 <TableRow
                   key={`row-${i}`}
                   hover={!!onSelect}
+                  selected={isSelected}
                   onClick={handleSelect}
                   className={onSelect ? 'mouse-click' : ''}
                 >

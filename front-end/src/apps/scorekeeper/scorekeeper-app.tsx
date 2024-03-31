@@ -1,9 +1,9 @@
 import { FC } from 'react';
 import { useCurrentEvent } from 'src/api/use-event-data';
 import DefaultLayout from 'src/layouts/DefaultLayout';
-import { MatchControlHeader } from './match-control/match-control-header';
-import { Grid } from '@mui/material';
-import { AllianceCard } from './match-control/alliance-card';
+import { MatchControl } from './match-control/match-control';
+import { ScorekeeperTabs } from './tabs/scorekeeper-tabs';
+import { MatchHeader } from './match-header/match-header';
 
 export const ScorekeeperApp: FC = () => {
   const { data: event } = useCurrentEvent();
@@ -13,19 +13,9 @@ export const ScorekeeperApp: FC = () => {
       title={`${event?.eventName} | Scorekeeper App`}
       titleLink={`/${event?.eventKey}`}
     >
-      <Grid
-        container
-        spacing={3}
-        sx={{ marginTop: (theme) => theme.spacing(2) }}
-      >
-        <Grid item xs={12} sm={6} md={6}>
-          <AllianceCard alliance='red' />
-        </Grid>
-        <Grid item xs={12} sm={6} md={6}>
-          <AllianceCard alliance='blue' />
-        </Grid>
-      </Grid>
-      <MatchControlHeader />
+      <MatchHeader />
+      <MatchControl />
+      <ScorekeeperTabs eventKey={event?.eventKey} />
     </DefaultLayout>
   );
 };

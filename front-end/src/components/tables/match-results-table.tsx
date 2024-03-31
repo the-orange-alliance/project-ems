@@ -7,10 +7,16 @@ import { DateTime } from 'luxon';
 interface Props {
   matches: Match<any>[];
   teams: Team[];
+  selected?: (match: Match<any>) => boolean;
   onSelect?: (id: number) => void;
 }
 
-export const MatchResultsTable: FC<Props> = ({ matches, teams, onSelect }) => {
+export const MatchResultsTable: FC<Props> = ({
+  matches,
+  teams,
+  selected,
+  onSelect
+}) => {
   const identifiers = useTeamIdentifierRecord(teams ?? []);
   const allianceSize = matches[0]?.participants?.length
     ? matches[0].participants.length / 2
@@ -32,6 +38,7 @@ export const MatchResultsTable: FC<Props> = ({ matches, teams, onSelect }) => {
         'Red Score',
         'Blue Score'
       ]}
+      selected={selected}
       onSelect={handleSelect}
       renderRow={(e) => {
         const participants = e.participants
