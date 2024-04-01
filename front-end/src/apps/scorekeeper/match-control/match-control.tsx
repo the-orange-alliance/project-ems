@@ -1,6 +1,11 @@
 import { Grid } from '@mui/material';
 import { FC } from 'react';
 import { PrestartButton } from './prestart-button';
+import { DisplaysButton } from './displays-button';
+import { FieldPrepButton } from './field-prep-button';
+import { StartMatchButton } from './start-match-button';
+import { CommitScoresButton } from './commit-scores-button';
+import { PostResultsButton } from './post-results-button';
 
 export const MatchControl: FC = () => {
   return (
@@ -9,19 +14,19 @@ export const MatchControl: FC = () => {
         <PrestartButton />
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={2}>
-        AudienceDisplayButton
+        <DisplaysButton />
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={2}>
-        FieldPrepButton
+        <FieldPrepButton />
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={2}>
-        StartMatchButton
+        <StartMatchButton />
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={2}>
-        CommitScoresButton
+        <CommitScoresButton />
       </Grid>
       <Grid item xs={12} sm={6} md={4} lg={2}>
-        PostResultsButton
+        <PostResultsButton />
       </Grid>
     </Grid>
   );

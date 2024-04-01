@@ -7,6 +7,7 @@ import { DateTime } from 'luxon';
 interface Props {
   matches: Match<any>[];
   teams: Team[];
+  colored?: boolean;
   selected?: (match: Match<any>) => boolean;
   onSelect?: (id: number) => void;
 }
@@ -14,6 +15,7 @@ interface Props {
 export const MatchResultsTable: FC<Props> = ({
   matches,
   teams,
+  colored,
   selected,
   onSelect
 }) => {
@@ -51,9 +53,28 @@ export const MatchResultsTable: FC<Props> = ({
           e.name,
           e.fieldNumber,
           DateTime.fromISO(e.startTime).toLocaleString(DateTime.DATETIME_SHORT),
-          ...participants,
-          e.redScore,
-          e.blueScore
+          ...participants.map((p, i) => (
+            <span
+              key={`${e.eventKey}-${e.tournamentKey}-${e.id}-${i}`}
+              className={
+                colored ? (i >= allianceSize ? 'blue' : 'red') : undefined
+              }
+            >
+              {p}
+            </span>
+          )),
+          <span
+            key={`${e.eventKey}-${e.tournamentKey}-${e.id}`}
+            className={colored ? 'red' : ''}
+          >
+            {e.redScore}
+          </span>,
+          <span
+            key={`${e.eventKey}-${e.tournamentKey}-${e.id}`}
+            className={colored ? 'blue' : ''}
+          >
+            {e.blueScore}
+          </span>
         ];
       }}
     />

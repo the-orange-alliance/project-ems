@@ -32,6 +32,7 @@ export const ScorekeeperMatches: FC<Props> = ({
       />
       <Divider />
       <MatchResultsTable
+        colored
         matches={matches ?? []}
         teams={teams ?? []}
         selected={selected}

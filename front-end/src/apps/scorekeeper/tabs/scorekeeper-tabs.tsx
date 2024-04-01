@@ -8,12 +8,15 @@ import { useTournamentsForEvent } from 'src/api/use-tournament-data';
 import { useMatchesForTournament } from 'src/api/use-match-data';
 import { useTeamsForEvent } from 'src/api/use-team-data';
 import { currentMatchIdAtom, matchOccurringAtom } from 'src/stores/recoil';
+import { useMatchControl } from '../hooks/use-match-control';
+import { MatchState } from '@toa-lib/models';
 
 interface Props {
   eventKey?: string;
 }
 
 export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
+  const { setState } = useMatchControl();
   const [tournamentKey, setTournamentKey] = useRecoilState(
     currentTournamentKeyAtom
   );
@@ -34,11 +37,13 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
     setTournamentKey(key);
     setMatchId(null);
     setMatchOccurring(null);
+    setState(MatchState.MATCH_NOT_SELECTED);
   };
   const handleMatchChange = (id: number) => {
     if (!matches) return null;
     setMatchId(id);
     setMatchOccurring(matches.find((m) => m.id === id) ?? null);
+    setState(MatchState.PRESTART_READY);
   };
   return (
     <Paper sx={{ width: '100%' }}>

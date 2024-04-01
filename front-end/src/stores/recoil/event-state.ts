@@ -1,4 +1,4 @@
-import { Match, Team, Tournament } from '@toa-lib/models';
+import { Match, MatchState, Team, Tournament } from '@toa-lib/models';
 import { atom, atomFamily } from 'recoil';
 
 export const teamsByEventKeyAtomFam = atomFamily<Team[], string>({
@@ -24,4 +24,9 @@ export const currentMatchIdAtom = atom<number | null>({
 export const matchOccurringAtom = atom<Match<any> | null>({
   key: 'eventState.matchOccurringAtom',
   default: null
+});
+
+export const matchStateAtom = atom<MatchState>({
+  key: 'eventState.matchStateAtom',
+  default: MatchState.MATCH_NOT_SELECTED
 });

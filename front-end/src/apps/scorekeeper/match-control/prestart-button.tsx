@@ -1,12 +1,20 @@
 import { Button } from '@mui/material';
-import { FC, useState } from 'react';
+import { FC } from 'react';
+import { useMatchControl } from '../hooks/use-match-control';
+import { MatchState } from '@toa-lib/models';
 
 export const PrestartButton: FC = () => {
-  const [canPrestart, setCanPrestart] = useState(true);
-  const prestart = () => setCanPrestart(false);
-  const cancelPrestart = () => setCanPrestart(true);
+  const { canPrestart, canCancelPrestart, setState } = useMatchControl();
+  const prestart = () => setState(MatchState.PRESTART_COMPLETE);
+  const cancelPrestart = () => setState(MatchState.PRESTART_READY);
   return canPrestart ? (
-    <Button fullWidth color='warning' variant='contained' onClick={prestart}>
+    <Button
+      fullWidth
+      color='warning'
+      variant='contained'
+      onClick={prestart}
+      disabled={!canPrestart}
+    >
       Prestart
     </Button>
   ) : (
@@ -15,6 +23,7 @@ export const PrestartButton: FC = () => {
       color='error'
       variant='contained'
       onClick={cancelPrestart}
+      disabled={!canCancelPrestart}
     >
       Cancel Prestart
     </Button>

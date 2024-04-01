@@ -6,11 +6,12 @@ import {
   Team
 } from '@toa-lib/models';
 import { FC } from 'react';
-import AutocompleteTeam from 'src/components/dropdowns/AutoCompleteTeam';
+import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team';
 import { ParticipantCardStatus } from './participant-card-status';
 import CheckboxStatus from './checkbox-status';
 
 interface Props {
+  teams?: Team[];
   alliance: Alliance;
   disabled?: boolean;
   participants?: MatchParticipant[];
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export const AllianceCard: FC<Props> = ({
+  teams,
   alliance,
   disabled,
   participants,
@@ -60,14 +62,17 @@ export const AllianceCard: FC<Props> = ({
   };
 
   return (
-    <Paper className={alliance === 'red' ? 'red-bg-imp' : 'blue-bg-imp'}>
-      <Grid container spacing={3}>
-        <Grid item md={4} sx={{ paddingTop: '4px !important' }}>
+    <Paper
+      className={alliance === 'red' ? 'red-bg-imp' : 'blue-bg-imp'}
+      sx={{ paddingBottom: '8px' }}
+    >
+      <Grid container spacing={3} sx={{ padding: '8px' }}>
+        <Grid item md={5} sx={{ paddingTop: '4px !important' }}>
           <Typography variant='body1' align='center'>
             Team
           </Typography>
         </Grid>
-        <Grid item md={4} sx={{ paddingTop: '4px !important' }}>
+        <Grid item md={3} sx={{ paddingTop: '4px !important' }}>
           <Typography variant='body1' align='center'>
             Card Status
           </Typography>
@@ -98,15 +103,21 @@ export const AllianceCard: FC<Props> = ({
           changeDisqualified(p.station, value);
         };
         return (
-          <Grid key={`${p.teamKey}-${p.station}`} container spacing={3}>
-            <Grid item md={4}>
+          <Grid
+            key={`${p.teamKey}-${p.station}`}
+            container
+            spacing={3}
+            sx={{ padding: '4px 12px 4px 12px' }}
+          >
+            <Grid item md={5}>
               <AutocompleteTeam
+                teams={teams}
                 teamKey={p.teamKey}
                 disabled={disabled}
-                onUpdate={handleTeamChange}
+                onChange={handleTeamChange}
               />
             </Grid>
-            <Grid item md={4}>
+            <Grid item md={3}>
               <ParticipantCardStatus
                 cardStatus={p.cardStatus}
                 disabled={disabled}
