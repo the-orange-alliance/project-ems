@@ -7,7 +7,7 @@ export const useMatchStartCallback = () => {
   const { canStartMatch, setState } = useMatchControl();
   return useRecoilCallback(
     () => async () => {
-      if (canStartMatch) {
+      if (!canStartMatch) {
         throw new Error('Attempted to start match when not allowed.');
       }
       sendStartMatch();

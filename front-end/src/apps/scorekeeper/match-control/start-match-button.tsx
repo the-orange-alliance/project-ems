@@ -5,12 +5,13 @@ import { MatchState } from '@toa-lib/models';
 import { useMatchStartCallback } from '../hooks/use-start-match';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { LoadingButton } from '@mui/lab';
-import { sendAbortMatch } from 'src/api/use-socket';
+import { sendAbortMatch, useSocket } from 'src/api/use-socket';
 import { useModal } from '@ebay/nice-modal-react';
 import AbortDialog from 'src/components/dialogs/AbortDialog';
 
 export const StartMatchButton: FC = () => {
   const [loading, setLoading] = useState(false);
+  const [, connected] = useSocket();
   const { canStartMatch, canAbortMatch, setState } = useMatchControl();
   const startMatch = useMatchStartCallback();
   const { showSnackbar } = useSnackbar();
@@ -39,7 +40,7 @@ export const StartMatchButton: FC = () => {
       color='error'
       variant='contained'
       onClick={sendStartMatch}
-      disabled={!canStartMatch || loading}
+      disabled={!canStartMatch || loading || !connected}
       loading={loading}
     >
       Start Match
