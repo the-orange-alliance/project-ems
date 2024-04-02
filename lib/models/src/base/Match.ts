@@ -155,7 +155,10 @@ export function assignMatchTimes(
   const newMatches: Match<MatchDetailBase>[] = [];
   for (const item of items) {
     if (item.isMatch) {
-      newMatches.push({ ...matches[matchNumber], startTime: item.startTime });
+      newMatches.push({
+        ...matches[matchNumber],
+        scheduledTime: item.startTime
+      });
       matchNumber++;
     }
   }

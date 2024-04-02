@@ -4,7 +4,7 @@ import { Displays, MatchSocketEvent } from '@toa-lib/models';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 
 const Streaming: FC = () => {
   const [socket] = useSocket();

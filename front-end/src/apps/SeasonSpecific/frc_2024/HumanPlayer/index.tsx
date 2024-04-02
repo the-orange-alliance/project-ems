@@ -14,7 +14,7 @@ import {
   useRecoilValue,
   useSetRecoilState
 } from 'recoil';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 import ConnectionChip from 'src/components/util/ConnectionChip/ConnectionChip';
 import MatchChip from 'src/components/util/MatchChip/MatchChip';
 import MatchStateListener from 'src/components/sync-effects/MatchStateListener/MatchStateListener';

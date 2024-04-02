@@ -5,7 +5,7 @@ import './App.less';
 import { useSnackbar } from './hooks/use-snackbar';
 import { userAtom } from './stores/NewRecoil';
 import { FC, ReactNode, useEffect } from 'react';
-import { useSocket } from './api/SocketProvider';
+import { useSocket } from './api/use-socket';
 import SyncEffects from './components/sync-effects/SyncEffects';
 
 const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {

@@ -10,7 +10,7 @@ import {
 import { Duration } from 'luxon';
 import { FC, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 import {
   initAudio,
   MATCH_START,

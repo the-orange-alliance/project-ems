@@ -7,7 +7,7 @@ import {
   matchInProgressAtom,
   matchInProgressParticipantsByStationSelectorFam
 } from '@stores/NewRecoil';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 import { MatchSocketEvent } from '@toa-lib/models';
 
 interface Props {

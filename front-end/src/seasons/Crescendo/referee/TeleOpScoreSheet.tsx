@@ -24,7 +24,7 @@ import {
   redBonusActiveAtom
 } from '@stores/NewRecoil';
 import NumberInput from 'src/components/inputs/NumberInput';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 
 interface Props {
   alliance: Alliance;

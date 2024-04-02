@@ -14,7 +14,7 @@ import PenaltySheet from './PenaltySheet';
 import TabPanel from 'src/components/util/TabPanel/TabPanel';
 import AutoScoreSheet from './AutoScoreSheet';
 import TeleScoreSheet from './TeleOpScoreSheet';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 
 interface Props {
   alliance: Alliance;

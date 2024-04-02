@@ -64,15 +64,15 @@ export const AllianceCard: FC<Props> = ({
   return (
     <Paper
       className={alliance === 'red' ? 'red-bg-imp' : 'blue-bg-imp'}
-      sx={{ paddingBottom: '8px' }}
+      sx={{ paddingBottom: '8px', minHeight: '100%' }}
     >
-      <Grid container spacing={3} sx={{ padding: '8px' }}>
-        <Grid item md={5} sx={{ paddingTop: '4px !important' }}>
+      <Grid container spacing={1} sx={{ padding: '8px' }}>
+        <Grid item md={4} sx={{ paddingTop: '4px !important' }}>
           <Typography variant='body1' align='center'>
             Team
           </Typography>
         </Grid>
-        <Grid item md={3} sx={{ paddingTop: '4px !important' }}>
+        <Grid item md={4} sx={{ paddingTop: '4px !important' }}>
           <Typography variant='body1' align='center'>
             Card Status
           </Typography>
@@ -106,10 +106,10 @@ export const AllianceCard: FC<Props> = ({
           <Grid
             key={`${p.teamKey}-${p.station}`}
             container
-            spacing={3}
+            spacing={1}
             sx={{ padding: '4px 12px 4px 12px' }}
           >
-            <Grid item md={5}>
+            <Grid item md={4}>
               <AutocompleteTeam
                 teams={teams}
                 teamKey={p.teamKey}
@@ -117,7 +117,7 @@ export const AllianceCard: FC<Props> = ({
                 onChange={handleTeamChange}
               />
             </Grid>
-            <Grid item md={3}>
+            <Grid item md={4}>
               <ParticipantCardStatus
                 cardStatus={p.cardStatus}
                 disabled={disabled}

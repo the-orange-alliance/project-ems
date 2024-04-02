@@ -12,7 +12,7 @@ import {
 import FrcFmsSetting from '../components/FrcFmsSetting';
 import { FMSSettings } from '@toa-lib/models';
 import { postFrcFmsSettings } from 'src/api/use-fms-data';
-import { sendUpdateFrcFmsSettings, useSocket } from 'src/api/SocketProvider';
+import { sendUpdateFrcFmsSettings, useSocket } from 'src/api/use-socket';
 
 const FrcFmsSettingsTab: FC = () => {
   const [allFms, setAllFms] = useRecoilState(allFrcFmsAtom);

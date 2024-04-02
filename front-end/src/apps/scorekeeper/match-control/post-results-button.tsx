@@ -1,11 +1,11 @@
 import { Button } from '@mui/material';
 import { FC } from 'react';
 import { useMatchControl } from '../hooks/use-match-control';
-import { MatchState } from '@toa-lib/models';
+import { usePostResultsCallback } from '../hooks/use-post-results';
 
 export const PostResultsButton: FC = () => {
-  const { canPostResults, setState } = useMatchControl();
-  const postResults = () => setState(MatchState.RESULTS_POSTED);
+  const { canPostResults } = useMatchControl();
+  const postResults = usePostResultsCallback();
   return (
     <Button
       fullWidth

@@ -16,7 +16,7 @@ import {
 } from '@mui/icons-material';
 import MatchBar from '../common/MatchBar';
 import { AudienceDisplayProps } from '../../AudienceDisplayProvider';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 import { BonusPeriodConfig, MatchSocketEvent } from '@toa-lib/models';
 import AmpCountdown from '../common/AmpCountdown';
 

@@ -16,7 +16,7 @@ import {
   resultsSyncMatches,
   resultsSyncRankings
 } from 'src/api/use-results-sync';
-import { sendCommitScores, sendPostResults } from 'src/api/SocketProvider';
+import { sendCommitScores, sendPostResults } from 'src/api/use-socket';
 import {
   currentTournamentSelector,
   matchByCurrentIdSelectorFam,

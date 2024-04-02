@@ -1,20 +1,35 @@
-import { Button } from '@mui/material';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useMatchControl } from '../hooks/use-match-control';
-import { MatchState } from '@toa-lib/models';
+import { usePrepareFieldCallback } from '../hooks/use-prepare-field';
+import { useSnackbar } from 'src/hooks/use-snackbar';
+import { LoadingButton } from '@mui/lab';
 
 export const FieldPrepButton: FC = () => {
-  const { canPrepField, setState } = useMatchControl();
-  const prepareField = () => setState(MatchState.FIELD_READY);
+  const [loading, setLoading] = useState(false);
+  const { canPrepField } = useMatchControl();
+  const prepareField = usePrepareFieldCallback();
+  const { showSnackbar } = useSnackbar();
+  const sendPrepareField = async () => {
+    setLoading(true);
+    try {
+      await prepareField();
+      setLoading(false);
+    } catch (e) {
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      showSnackbar('Error while prestarting', error);
+      setLoading(false);
+    }
+  };
   return (
-    <Button
+    <LoadingButton
       fullWidth
       color='success'
       variant='contained'
-      onClick={prepareField}
-      disabled={!canPrepField}
+      onClick={sendPrepareField}
+      disabled={!canPrepField || loading}
+      loading={loading}
     >
       Prep Field
-    </Button>
+    </LoadingButton>
   );
 };

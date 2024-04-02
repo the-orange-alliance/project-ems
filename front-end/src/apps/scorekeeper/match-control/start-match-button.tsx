@@ -1,22 +1,49 @@
 import { Button } from '@mui/material';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { useMatchControl } from '../hooks/use-match-control';
 import { MatchState } from '@toa-lib/models';
+import { useMatchStartCallback } from '../hooks/use-start-match';
+import { useSnackbar } from 'src/hooks/use-snackbar';
+import { LoadingButton } from '@mui/lab';
+import { sendAbortMatch } from 'src/api/use-socket';
+import { useModal } from '@ebay/nice-modal-react';
+import AbortDialog from 'src/components/dialogs/AbortDialog';
 
 export const StartMatchButton: FC = () => {
+  const [loading, setLoading] = useState(false);
   const { canStartMatch, canAbortMatch, setState } = useMatchControl();
-  const startMatch = () => setState(MatchState.MATCH_IN_PROGRESS);
-  const abortMatch = () => setState(MatchState.PRESTART_READY);
+  const startMatch = useMatchStartCallback();
+  const { showSnackbar } = useSnackbar();
+  const abortModal = useModal(AbortDialog);
+  const sendStartMatch = async () => {
+    setLoading(true);
+    try {
+      await startMatch();
+      setLoading(false);
+    } catch (e) {
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      showSnackbar('Error while prestarting', error);
+      setLoading(false);
+    }
+  };
+  const abortMatch = async () => {
+    const canAbort = await abortModal.show();
+    if (canAbort) {
+      sendAbortMatch();
+      setState(MatchState.PRESTART_READY);
+    }
+  };
   return canStartMatch ? (
-    <Button
+    <LoadingButton
       fullWidth
       color='error'
       variant='contained'
-      onClick={startMatch}
-      disabled={!canStartMatch}
+      onClick={sendStartMatch}
+      disabled={!canStartMatch || loading}
+      loading={loading}
     >
       Start Match
-    </Button>
+    </LoadingButton>
   ) : (
     <Button
       fullWidth

@@ -11,7 +11,7 @@ import {
 import TeamRow from './components/TeamRow';
 import PrestartStatusIcon from './components/PrestartStatus';
 import ConnectionChip from 'src/components/util/ConnectionChip/ConnectionChip';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 
 const FrcFmsFieldMonitorApp: FC = () => {
   const [monitor, setMonitor] = useState<DriverstationMonitor>({

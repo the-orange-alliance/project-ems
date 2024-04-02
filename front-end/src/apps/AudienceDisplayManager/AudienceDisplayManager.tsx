@@ -23,7 +23,7 @@ import {
   requestAllClientsIdentification,
   requestClientIdentification,
   sendUpdateSocketClient
-} from 'src/api/SocketProvider';
+} from 'src/api/use-socket';
 import { Delete, RemoveRedEye } from '@mui/icons-material';
 import {
   deleteSocketClient,

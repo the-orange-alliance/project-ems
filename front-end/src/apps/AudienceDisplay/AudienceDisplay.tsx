@@ -10,7 +10,7 @@ import {
 import { useParams, useSearchParams } from 'react-router-dom';
 import { FC, Fragment, Suspense, useEffect, useRef } from 'react';
 import { useRecoilCallback, useRecoilState } from 'recoil';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 import MatchStateListener from 'src/components/sync-effects/MatchStateListener/MatchStateListener';
 import PrestartListener from 'src/components/sync-effects/PrestartListener/PrestartListener';
 import ChromaLayout from 'src/layouts/ChromaLayout';

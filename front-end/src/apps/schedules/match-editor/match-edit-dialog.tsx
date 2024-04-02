@@ -13,17 +13,18 @@ import { patchWholeMatch, useMatchAll } from 'src/api/use-match-data';
 import TabPanel from 'src/components/util/TabPanel/TabPanel';
 import { MatchInfoTab } from './match-info-tab';
 import { PageLoader } from 'src/components/loading/PageLoader';
-import { Match } from '@toa-lib/models';
+import { Match, Team } from '@toa-lib/models';
 import { MatchParticipantTab } from './match-participant-tab';
 import { MatchDetailTab } from './match-detail-tab';
 import { useSnackbar } from 'src/hooks/use-snackbar';
-import { sendCommitScores, sendPostResults } from 'src/api/SocketProvider';
+import { sendCommitScores, sendPostResults } from 'src/api/use-socket';
 
 interface Props {
   open: boolean;
   eventKey: string;
   tournamentKey: string;
   matchId: number;
+  teams?: Team[];
   onClose: () => void;
 }
 
@@ -32,6 +33,7 @@ export const MatchEditDialog: FC<Props> = ({
   eventKey,
   tournamentKey,
   matchId,
+  teams,
   onClose
 }) => {
   const [value, setValue] = useState(0);
@@ -91,7 +93,11 @@ export const MatchEditDialog: FC<Props> = ({
               <MatchInfoTab match={match} onUpdate={handleUpdate} />
             </TabPanel>
             <TabPanel value={value} index={1}>
-              <MatchParticipantTab match={match} onUpdate={handleUpdate} />
+              <MatchParticipantTab
+                teams={teams}
+                match={match}
+                onUpdate={handleUpdate}
+              />
             </TabPanel>
             <TabPanel value={value} index={2}>
               <MatchDetailTab match={match} onUpdate={handleUpdate} />

@@ -9,7 +9,7 @@ import { useRecoilState } from 'recoil';
 import MatchCountdown from 'src/components/util/MatchCountdown/MatchCountdown';
 import { matchInProgressAtom, timer } from 'src/stores/NewRecoil';
 import './MatchPlay.less';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 import { useSearchParams } from 'react-router-dom';
 import FGC_LOGO from '../res/Global_Logo.png';
 import RED_CARD from '../res/Penalty_Red_Dot.png';

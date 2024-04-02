@@ -10,7 +10,7 @@ import {
 } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilCallback } from 'recoil';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 import { currentMatchIdAtom, matchInProgressAtom } from 'src/stores/NewRecoil';
 
 const PrestartListener: FC = () => {

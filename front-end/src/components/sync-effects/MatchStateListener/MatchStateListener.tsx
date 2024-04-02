@@ -1,7 +1,7 @@
 import { MatchSocketEvent, MatchState } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 import { matchStatusAtom, matchStateAtom } from 'src/stores/NewRecoil';
 
 const MatchStateListener: FC = () => {

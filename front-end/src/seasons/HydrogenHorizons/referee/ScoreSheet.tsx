@@ -1,6 +1,6 @@
 import { FC, SyntheticEvent, useState } from 'react';
 import { RefereeScoreSheetProps } from '@seasons/index';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 import { SetterOrUpdater, useRecoilState } from 'recoil';
 import { matchInProgressAtom } from '@stores/NewRecoil';
 import {

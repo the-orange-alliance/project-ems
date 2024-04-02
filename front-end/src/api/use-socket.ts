@@ -137,11 +137,11 @@ export function setDisplays(): void {
 }
 
 export function sendPrepareField(
-  fieldOptions: FieldOptions,
-  fcsPackets: FcsPackets
+  fieldOptions?: FieldOptions,
+  fcsPackets?: FcsPackets
 ): void {
-  socket?.emit('fcs:setFieldOptions', fieldOptions);
-  socket?.emit('fcs:update', fcsPackets.prepareField);
+  if (fieldOptions) socket?.emit('fcs:setFieldOptions', fieldOptions);
+  if (fcsPackets) socket?.emit('fcs:update', fcsPackets.prepareField);
 }
 
 export function sendStartMatch(): void {
@@ -152,8 +152,8 @@ export async function sendAbortMatch(): Promise<void> {
   socket?.emit(MatchSocketEvent.ABORT);
 }
 
-export async function sendAllClear(fcsPackets: FcsPackets): Promise<void> {
-  socket?.emit('fcs:update', fcsPackets.allClear);
+export async function sendAllClear(fcsPackets?: FcsPackets): Promise<void> {
+  if (fcsPackets) socket?.emit('fcs:update', fcsPackets.allClear);
 }
 
 export async function sendCommitScores(key: MatchKey): Promise<void> {

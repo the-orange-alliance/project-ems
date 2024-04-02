@@ -1,7 +1,7 @@
 import { FC, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
 import { useSearchParams } from 'react-router-dom';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 import MatchCountdown from 'src/components/util/MatchCountdown/MatchCountdown';
 import { matchInProgressAtom, timer } from 'src/stores/NewRecoil';
 import './MatchPlayMini.css';

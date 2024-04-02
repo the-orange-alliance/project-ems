@@ -5,7 +5,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import Typography from '@mui/material/Typography';
 import { matchInProgressParticipantsByStationSelectorFam } from '@stores/NewRecoil';
 import { CardStatusUpdate, MatchSocketEvent } from '@toa-lib/models';
-import { useSocket } from 'src/api/SocketProvider';
+import { useSocket } from 'src/api/use-socket';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 
 interface Props {

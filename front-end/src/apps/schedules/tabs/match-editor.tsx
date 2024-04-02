@@ -25,6 +25,7 @@ export const MatchEditor: FC<Props> = ({ eventSchedule, savedMatches }) => {
         <MatchEditDialog
           eventKey={eventSchedule.eventKey}
           tournamentKey={eventSchedule.tournamentKey}
+          teams={teams}
           matchId={matchId}
           open={open}
           onClose={handleClose}
