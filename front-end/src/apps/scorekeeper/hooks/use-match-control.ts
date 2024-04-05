@@ -105,7 +105,20 @@ export const useMatchControl = (): MatchControlState => {
         canStartMatch: false,
         canAbortMatch: false,
         canResetField: true,
-        canCommitScores: true,
+        canCommitScores: false,
+        canPostResults: false,
+        setState
+      };
+    case MatchState.MATCH_ABORTED:
+      return {
+        canPrestart: true,
+        canCancelPrestart: false,
+        canSetDisplays: false,
+        canPrepField: false,
+        canStartMatch: false,
+        canAbortMatch: false,
+        canResetField: false,
+        canCommitScores: false,
         canPostResults: false,
         setState
       };
@@ -133,6 +146,19 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: false,
         canCommitScores: false,
         canPostResults: true,
+        setState
+      };
+    case MatchState.RESULTS_POSTED:
+      return {
+        canPrestart: true,
+        canCancelPrestart: false,
+        canSetDisplays: false,
+        canPrepField: false,
+        canStartMatch: false,
+        canAbortMatch: false,
+        canResetField: false,
+        canCommitScores: false,
+        canPostResults: false,
         setState
       };
     default:

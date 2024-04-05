@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import UpgradedTable from './UpgradedTable/UpgradedTable';
-import { Match, Team } from '@toa-lib/models';
+import { Match, RESULT_NOT_PLAYED, Team } from '@toa-lib/models';
 import { useTeamIdentifierRecord } from 'src/hooks/use-team-identifier';
 import { DateTime } from 'luxon';
 
@@ -67,13 +67,13 @@ export const MatchResultsTable: FC<Props> = ({
             key={`${e.eventKey}-${e.tournamentKey}-${e.id}`}
             className={colored ? 'red' : ''}
           >
-            {e.redScore}
+            {e.result > RESULT_NOT_PLAYED ? e.redScore : '--'}
           </span>,
           <span
             key={`${e.eventKey}-${e.tournamentKey}-${e.id}`}
             className={colored ? 'blue' : ''}
           >
-            {e.blueScore}
+            {e.result > RESULT_NOT_PLAYED ? e.blueScore : '--'}
           </span>
         ];
       }}

@@ -3,7 +3,7 @@ import { useRecoilCallback } from 'recoil';
 import { useMatchControl } from './use-match-control';
 import { sendPostResults } from 'src/api/use-socket';
 import { currentMatchIdAtom, matchOccurringAtom } from 'src/stores/recoil';
-import { matchesByEventAtomFam } from 'src/stores/NewRecoil';
+import { matchesByEventKeyAtomFam } from 'src/stores/recoil';
 
 export const usePostResultsCallback = () => {
   const { canPostResults, setState } = useMatchControl();
@@ -18,7 +18,7 @@ export const usePostResultsCallback = () => {
           throw new Error('Attempted to psot results when there is no match.');
         }
         const matches = await snapshot.getPromise(
-          matchesByEventAtomFam(match.eventKey)
+          matchesByEventKeyAtomFam(match.eventKey)
         );
         // TODO - Filter by matches selected via fields
         const index = matches.findIndex((m) => m.id === match.id);
