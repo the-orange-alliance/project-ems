@@ -45,6 +45,11 @@ const AdminApp = lazy(() =>
   import('./apps/admin').then((m) => ({ default: m.AdminApp }))
 );
 
+// Silly Routes
+const JBApp = lazy(() =>
+  import('./apps/jb-app').then((m) => ({ default: m.JBApp }))
+);
+
 const SettingsApp = lazy(() => import('./apps/Settings'));
 const GlobalSettingsApp = lazy(() => import('./apps/Settings/GlobalSettings'));
 
@@ -56,7 +61,6 @@ const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
 const Reports = lazy(() => import('./apps/Reports'));
 const FrcFmsFieldMonitorApp = lazy(() => import('./apps/FrcFmsFieldMonitor'));
 const QueueingDisplay = lazy(() => import('./apps/QueueingDisplay'));
-const JBApp = lazy(() => import('./apps/JBApp'));
 const Streaming = lazy(() => import('./apps/Streaming/Streaming'));
 const AudienceDisplayManager = lazy(
   () => import('./apps/AudienceDisplayManager')
