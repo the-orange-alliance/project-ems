@@ -40,6 +40,11 @@ const ScorekeeperApp = lazy(() =>
   import('./apps/scorekeeper').then((m) => ({ default: m.ScorekeeperApp }))
 );
 
+// Admin Routes
+const AdminApp = lazy(() =>
+  import('./apps/admin').then((m) => ({ default: m.AdminApp }))
+);
+
 const SettingsApp = lazy(() => import('./apps/Settings'));
 const GlobalSettingsApp = lazy(() => import('./apps/Settings/GlobalSettings'));
 
@@ -49,7 +54,6 @@ const RedReferee = lazy(() => import('./apps/Referee/RedReferee'));
 const BlueReferee = lazy(() => import('./apps/Referee/BlueReferee'));
 const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
 const Reports = lazy(() => import('./apps/Reports'));
-const AdminApp = lazy(() => import('./apps/Admin'));
 const FrcFmsFieldMonitorApp = lazy(() => import('./apps/FrcFmsFieldMonitor'));
 const QueueingDisplay = lazy(() => import('./apps/QueueingDisplay'));
 const JBApp = lazy(() => import('./apps/JBApp'));
@@ -156,6 +160,12 @@ const AppRoutes: AppRoute[] = [
     element: ScorekeeperApp
   },
   {
+    name: 'Admin App',
+    path: '/:eventKey/admin',
+    group: 0,
+    element: AdminApp
+  },
+  {
     name: 'Settings',
     path: '/:eventKey/settings',
     group: 0,
@@ -199,12 +209,6 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/reports',
     group: 0,
     element: Reports
-  },
-  {
-    name: 'Admin App',
-    path: '/:eventKey/admin',
-    group: 0,
-    element: AdminApp
   },
   {
     name: 'Settings',

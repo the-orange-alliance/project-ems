@@ -1,3 +1,3 @@
-import AdminApp from './AdminApp';
+import { AdminApp } from './admin-app';
 
-export default AdminApp;
+export { AdminApp };

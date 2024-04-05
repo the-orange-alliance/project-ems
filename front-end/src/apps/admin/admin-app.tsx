@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { useRecoilCallback, useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { Box, Button, Divider, Typography } from '@mui/material';
 import {
   createRankings,
@@ -14,20 +14,22 @@ import { purgeAll } from 'src/api/use-event-data';
 import { useFlags } from 'src/stores/AppFlags';
 import {
   currentEventKeyAtom,
-  currentTeamsByEventSelector,
-  currentTournamentKeyAtom,
-  currentTournamentSelector
+  currentTournamentKeyAtom
 } from 'src/stores/NewRecoil';
 import PaperLayout from 'src/layouts/PaperLayout';
 import TwoColumnHeader from 'src/components/util/Headers/TwoColumnHeader';
 import EventTournamentsDropdown from 'src/components/dropdowns/EventTournamentsDropdown';
 import { Tournament } from '@toa-lib/models';
+import { useTeamsForEvent } from 'src/api/use-team-data';
+import { useTournamentsForEvent } from 'src/api/use-tournament-data';
 
-const AdminApp: FC = () => {
+export const AdminApp: FC = () => {
   const [tournamentKey, setTournamentKey] = useRecoilState(
     currentTournamentKeyAtom
   );
   const eventKey = useRecoilValue(currentEventKeyAtom);
+  const { data: teams } = useTeamsForEvent(eventKey);
+  const { data: tournaments } = useTournamentsForEvent(eventKey);
 
   const [, , purgeFlags] = useFlags();
 
@@ -55,15 +57,16 @@ const AdminApp: FC = () => {
     }
   };
 
-  const handleRankingsCreate = useRecoilCallback(({ snapshot }) => async () => {
-    const teams = await snapshot.getPromise(currentTeamsByEventSelector);
-    const tournamentKey = await snapshot.getPromise(currentTournamentKeyAtom);
-    if (!tournamentKey) return;
+  const handleRankingsCreate = async () => {
+    if (!tournamentKey || !teams) return;
     await createRankings(tournamentKey, teams);
-  });
+  };
 
-  const handleRankings = useRecoilCallback(({ snapshot }) => async () => {
-    const tournament = await snapshot.getPromise(currentTournamentSelector);
+  const handleRankings = async () => {
+    if (!tournamentKey || !tournaments) return;
+    const tournament = tournaments.find(
+      (t) => t.tournamentKey === tournamentKey
+    );
     if (!tournament) return;
     // FGC2023 SPECIFIC
     if (tournamentKey === '2' || tournamentKey === '3') {
@@ -74,7 +77,7 @@ const AdminApp: FC = () => {
     } else {
       await recalculateRankings(tournament.eventKey, tournament.tournamentKey);
     }
-  });
+  };
 
   return (
     <PaperLayout
@@ -122,5 +125,3 @@ const AdminApp: FC = () => {
     </PaperLayout>
   );
 };
-
-export default AdminApp;
