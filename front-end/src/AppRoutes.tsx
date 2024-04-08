@@ -103,7 +103,14 @@ const HeadReferee = lazy(() =>
   import('./apps/referee').then((m) => ({ default: m.HeadReferee }))
 );
 
-const AudienceDisplay = lazy(() => import('./apps/AudienceDisplay'));
+// Audience Display Routes
+const AudienceDisplay = lazy(() =>
+  import('./apps/audience-display').then((m) => ({
+    default: m.AudienceDisplay
+  }))
+);
+
+// Unised Routes
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 // const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));

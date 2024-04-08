@@ -1,10 +1,6 @@
-import { clientFetcher } from '@toa-lib/client';
 import {
   Displays,
   getSeasonKeyFromEventKey,
-  isMatch,
-  Match,
-  MatchKey,
   MatchSocketEvent
 } from '@toa-lib/models';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -14,18 +10,14 @@ import { useSocket } from 'src/api/use-socket';
 import MatchStateListener from 'src/components/sync-effects/MatchStateListener/MatchStateListener';
 import PrestartListener from 'src/components/sync-effects/PrestartListener/PrestartListener';
 import ChromaLayout from 'src/layouts/ChromaLayout';
-import {
-  displayChromaKeyAtom,
-  displayIdAtom,
-  matchResultAtom
-} from 'src/stores/NewRecoil';
-
-import Rankings from './displays/fgc_2023/Rankings/Rankings';
+import { displayChromaKeyAtom, displayIdAtom } from 'src/stores/NewRecoil';
 import { useHiddenMotionlessCursor } from 'src/hooks/use-hidden-motionless-cursor';
-import './AudienceDisplay.less';
 import { updateSocketClient } from 'src/api/use-socket-data';
 import RankingsPlayoffs from './displays/fgc_2023/RankingsPlayoffs/RankingsPlayoff';
 import AudienceDisplayProvider from './displays/AudienceDisplayProvider';
+import './AudienceDisplay.less';
+
+import Rankings from './displays/fgc_2023/Rankings/Rankings';
 
 // Seasons
 import FRC2023 from './displays/frc_2023';
@@ -96,14 +88,14 @@ const AudienceDisplay: FC = () => {
     setDisplay(id);
   };
 
-  const onCommit = useRecoilCallback(({ set }) => async (key: MatchKey) => {
-    const match: Match<any> = await clientFetcher(
-      `match/all/${key.eventKey}/${key.tournamentKey}/${key.id}`,
-      'GET',
-      undefined,
-      isMatch
-    );
-    set(matchResultAtom, match);
+  const onCommit = useRecoilCallback(() => async () => {
+    // const match: Match<any> = await clientFetcher(
+    //   `match/all/${key.eventKey}/${key.tournamentKey}/${key.id}`,
+    //   'GET',
+    //   undefined,
+    //   isMatch
+    // );
+    // set(matchResultAtom, match);
   });
 
   return (
