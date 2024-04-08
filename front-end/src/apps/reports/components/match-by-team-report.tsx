@@ -6,7 +6,7 @@ import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
 import { Match, Team } from '@toa-lib/models';
-import Report from './Report';
+import { Report } from './report-container';
 import { DateTime } from 'luxon';
 
 interface Props {
@@ -15,7 +15,11 @@ interface Props {
   identifier?: keyof Team;
 }
 
-const MatchByTeamReport: FC<Props> = ({ teams, matches, identifier }) => {
+export const MatchByTeamReport: FC<Props> = ({
+  teams,
+  matches,
+  identifier
+}) => {
   const allianceSize = matches?.[0]?.participants?.length
     ? matches[0].participants.length / 2
     : 3;
@@ -89,5 +93,3 @@ const MatchByTeamReport: FC<Props> = ({ teams, matches, identifier }) => {
     </>
   );
 };
-
-export default MatchByTeamReport;

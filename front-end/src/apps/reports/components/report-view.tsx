@@ -9,7 +9,7 @@ interface Props {
   children?: ReactNode;
 }
 
-const ReportView: FC<Props> = ({ onReturn, children }) => {
+export const ReportView: FC<Props> = ({ onReturn, children }) => {
   const reportRef = useRef(null);
   const handlePrint = useReactToPrint({
     content: () => reportRef.current
@@ -27,5 +27,3 @@ const ReportView: FC<Props> = ({ onReturn, children }) => {
     </Box>
   );
 };
-
-export default ReportView;

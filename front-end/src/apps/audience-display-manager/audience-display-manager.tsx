@@ -30,7 +30,7 @@ import {
   updateSocketClient
 } from 'src/api/use-socket-data';
 
-const AudienceDisplayManager: FC = () => {
+export const AudienceDisplayManager: FC = () => {
   const [clients, setClients] = useRecoilState(socketClientsAtom);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContext, setDialogContext] = useState<any>(null);
@@ -206,5 +206,3 @@ const AudienceDisplayManager: FC = () => {
     </PaperLayout>
   );
 };
-
-export default AudienceDisplayManager;

@@ -26,7 +26,7 @@ interface IProps {
   ds: DriverstationStatus;
 }
 
-const TeamRow: FC<IProps> = ({ ds }: IProps) => {
+export const TeamRow: FC<IProps> = ({ ds }: IProps) => {
   const [dataOpen, setDataOpen] = useState<boolean>(false);
 
   const friendlyStation =
@@ -390,5 +390,3 @@ const DataPopup = ({
     </Dialog>
   );
 };
-
-export default TeamRow;

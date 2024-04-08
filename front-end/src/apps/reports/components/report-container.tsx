@@ -11,7 +11,7 @@ interface Props {
   pagebreak?: boolean;
 }
 
-const Report: FC<Props> = ({ name, children, pagebreak }) => {
+export const Report: FC<Props> = ({ name, children, pagebreak }) => {
   const eventName = useRecoilValue(currentEventSelector)?.eventName;
 
   return (
@@ -36,5 +36,3 @@ const Report: FC<Props> = ({ name, children, pagebreak }) => {
     </Box>
   );
 };
-
-export default Report;

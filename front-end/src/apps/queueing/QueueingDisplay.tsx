@@ -52,7 +52,7 @@ const FieldColumn: FC<{ field: number; tournamentKey: string | null }> = ({
   );
 };
 
-const QueueingDisplay: FC = () => {
+export const QueueingDisplay: FC = () => {
   const refreshMatches = useRecoilRefresher_UNSTABLE(
     matchesByTournamentSelector
   );
@@ -87,5 +87,3 @@ const QueueingDisplay: FC = () => {
     </ChromaLayout>
   );
 };
-
-export default QueueingDisplay;

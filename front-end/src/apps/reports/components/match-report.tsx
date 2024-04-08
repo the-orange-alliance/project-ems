@@ -6,7 +6,7 @@ import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
 import { Match, Team } from '@toa-lib/models';
-import Report from './Report';
+import { Report } from './report-container';
 import { DateTime } from 'luxon';
 import { useRecoilValue } from 'recoil';
 import {
@@ -21,7 +21,7 @@ interface Props {
   identifier?: keyof Team;
 }
 
-const MatchReport: FC<Props> = ({ matches, identifier }) => {
+export const MatchReport: FC<Props> = ({ matches, identifier }) => {
   const tournament = useRecoilValue(currentTournamentSelector);
   const teams = useRecoilValue(currentTeamsByEventSelector);
   const items = useRecoilValue(currentScheduleItemsByTournamentSelector);
@@ -114,5 +114,3 @@ const MatchReport: FC<Props> = ({ matches, identifier }) => {
     </>
   );
 };
-
-export default MatchReport;

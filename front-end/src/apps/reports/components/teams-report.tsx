@@ -6,13 +6,13 @@ import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
 import { Team } from '@toa-lib/models';
-import Report from './Report';
+import { Report } from './report-container';
 
 interface Props {
   teams: Team[];
 }
 
-const TeamsReport: FC<Props> = ({ teams }) => {
+export const TeamsReport: FC<Props> = ({ teams }) => {
   return (
     <Report name='Competing Teams'>
       <TableContainer>
@@ -52,5 +52,3 @@ const TeamsReport: FC<Props> = ({ teams }) => {
     </Report>
   );
 };
-
-export default TeamsReport;

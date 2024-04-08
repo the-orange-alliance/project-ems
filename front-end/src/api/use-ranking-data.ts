@@ -1,5 +1,6 @@
 import { apiFetcher } from '@toa-lib/client';
 import { Team, Ranking, rankingZod } from '@toa-lib/models';
+import useSWR from 'swr';
 
 export const createRankings = (
   tournamentKey: string,
@@ -34,3 +35,14 @@ export const recalculatePlayoffsRankings = (
 
 export const deleteRankings = (eventKey: string, tournamentKey: string) =>
   apiFetcher(`ranking/${eventKey}/${tournamentKey}`, 'DELETE');
+
+export const useRankingsForTournament = (
+  eventKey: string | null | undefined,
+  tournamentKey: string | null | undefined
+) =>
+  useSWR<Ranking[]>(
+    eventKey && tournamentKey
+      ? `ranking/${eventKey}/${tournamentKey}`
+      : undefined,
+    (url) => apiFetcher(url, 'GET', undefined, rankingZod.array().parse)
+  );

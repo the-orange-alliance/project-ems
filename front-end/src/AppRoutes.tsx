@@ -50,6 +50,35 @@ const JBApp = lazy(() =>
   import('./apps/jb-app').then((m) => ({ default: m.JBApp }))
 );
 
+// Streaming Routes
+const Streaming = lazy(() =>
+  import('./apps/stream').then((m) => ({ default: m.StreamApp }))
+);
+
+// Audience Display Routes
+const AudienceDisplayManager = lazy(() =>
+  import('./apps/audience-display-manager').then((m) => ({
+    default: m.AudienceDisplayManager
+  }))
+);
+
+// Field Monitor Routes
+const FrcFmsFieldMonitorApp = lazy(() =>
+  import('./apps/field-monitor').then((m) => ({
+    default: m.FrcFmsFieldMonitorApp
+  }))
+);
+
+// Queueing Display Routes
+const QueueingDisplay = lazy(() =>
+  import('./apps/queueing').then((m) => ({ default: m.QueueingDisplay }))
+);
+
+// Report Routes
+const Reports = lazy(() =>
+  import('./apps/reports').then((m) => ({ default: m.Reports }))
+);
+
 const SettingsApp = lazy(() => import('./apps/Settings'));
 const GlobalSettingsApp = lazy(() => import('./apps/Settings/GlobalSettings'));
 
@@ -58,13 +87,6 @@ const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 const RedReferee = lazy(() => import('./apps/Referee/RedReferee'));
 const BlueReferee = lazy(() => import('./apps/Referee/BlueReferee'));
 const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
-const Reports = lazy(() => import('./apps/Reports'));
-const FrcFmsFieldMonitorApp = lazy(() => import('./apps/FrcFmsFieldMonitor'));
-const QueueingDisplay = lazy(() => import('./apps/QueueingDisplay'));
-const Streaming = lazy(() => import('./apps/Streaming/Streaming'));
-const AudienceDisplayManager = lazy(
-  () => import('./apps/AudienceDisplayManager')
-);
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 // const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));

@@ -6,7 +6,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { useSocket } from 'src/api/use-socket';
 
-const Streaming: FC = () => {
+export const StreamApp: FC = () => {
   const [socket] = useSocket();
 
   const sendBlank = () =>
@@ -69,4 +69,3 @@ const Streaming: FC = () => {
     </PaperLayout>
   );
 };
-export default Streaming;

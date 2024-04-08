@@ -1,15 +1,17 @@
 import { FC } from 'react';
-import { useRecoilValue } from 'recoil';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
-import TeamsReport from './components/TeamsReport';
+import { TeamsReport } from './components/teams-report';
 import { ReportProps } from '.';
-import { currentTeamsByEventSelector } from 'src/stores/NewRecoil';
+import { useTeamsForEvent } from 'src/api/use-team-data';
 
-const GeneralReports: FC<ReportProps> = ({ onGenerate }) => {
-  const teams = useRecoilValue(currentTeamsByEventSelector);
+export const GeneralReports: FC<ReportProps> = ({ eventKey, onGenerate }) => {
+  const { data: teams } = useTeamsForEvent(eventKey);
 
-  const generateTeamReport = () => onGenerate(<TeamsReport teams={teams} />);
+  const generateTeamReport = () => {
+    if (!teams) return;
+    onGenerate(<TeamsReport teams={teams} />);
+  };
 
   return (
     <Grid container spacing={3}>
@@ -21,5 +23,3 @@ const GeneralReports: FC<ReportProps> = ({ onGenerate }) => {
     </Grid>
   );
 };
-
-export default GeneralReports;

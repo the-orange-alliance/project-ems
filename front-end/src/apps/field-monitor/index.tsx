@@ -8,12 +8,12 @@ import {
   PrestartState,
   PrestartStatus
 } from '@toa-lib/models';
-import TeamRow from './components/TeamRow';
-import PrestartStatusIcon from './components/PrestartStatus';
+import { TeamRow } from './components/team-row';
+import { PrestartStatus as PrestartStatusIcon } from './components/prestart-status';
 import ConnectionChip from 'src/components/util/ConnectionChip/ConnectionChip';
 import { useSocket } from 'src/api/use-socket';
 
-const FrcFmsFieldMonitorApp: FC = () => {
+export const FrcFmsFieldMonitorApp: FC = () => {
   const [monitor, setMonitor] = useState<DriverstationMonitor>({
     dsStatuses: [],
     matchStatus: MatchMode.PRESTART,
@@ -168,5 +168,3 @@ const FrcFmsFieldMonitorApp: FC = () => {
     </DefaultLayout>
   );
 };
-
-export default FrcFmsFieldMonitorApp;

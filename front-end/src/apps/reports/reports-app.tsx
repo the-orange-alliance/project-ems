@@ -3,29 +3,30 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import PaperLayout from 'src/layouts/PaperLayout';
 import TwoColumnHeader from 'src/components/util/Headers/TwoColumnHeader';
-import GeneralReports from './GeneralReports';
-import ReportView from './components/ReportView';
+import { GeneralReports } from './general-reports';
+import { ReportView } from './components/report-view';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import TournamentReports from './TournamentReports';
-import EventTournamentsDropdown from 'src/components/dropdowns/EventTournamentsDropdown';
+import { TournamentReports } from './tournament-reports';
 import {
   currentEventKeyAtom,
-  currentTournamentKeyAtom,
-  currentTournamentSelector
+  currentTournamentKeyAtom
 } from 'src/stores/NewRecoil';
-import { Tournament } from '@toa-lib/models';
+import { useTournamentsForEvent } from 'src/api/use-tournament-data';
+import TournamentDropdown from 'src/components/dropdowns/tournament-dropdown';
 
-const Reports: FC = () => {
+export const Reports: FC = () => {
   const eventKey = useRecoilValue(currentEventKeyAtom);
   const [tournamentKey, setTournamentKey] = useRecoilState(
     currentTournamentKeyAtom
   );
-  const tournament = useRecoilValue(currentTournamentSelector);
+  const { data: tournaments } = useTournamentsForEvent(eventKey);
+  const tournament = tournaments?.find(
+    (t) => t.tournamentKey === tournamentKey
+  );
   const [report, setReport] = useState<ReactNode | null>(null);
 
-  const handleTournamentChange = (tournament: Tournament | null) => {
-    if (!tournament) return;
-    setTournamentKey(tournament.tournamentKey);
+  const handleTournamentChange = (tournamentKey: string) => {
+    setTournamentKey(tournamentKey);
     setReport(null);
   };
   const handleReportUpdate = (c: ReactNode) => {
@@ -40,8 +41,8 @@ const Reports: FC = () => {
         <TwoColumnHeader
           left={<Typography variant='h4'>Reports</Typography>}
           right={
-            <EventTournamentsDropdown
-              eventKey={eventKey}
+            <TournamentDropdown
+              tournaments={tournaments}
               value={tournamentKey}
               onChange={handleTournamentChange}
             />
@@ -57,13 +58,18 @@ const Reports: FC = () => {
             <Typography variant='h4' gutterBottom>
               {tournament?.name} Reports
             </Typography>
-            <TournamentReports onGenerate={handleReportUpdate} />
-            <GeneralReports onGenerate={handleReportUpdate} />
+            <TournamentReports
+              eventKey={eventKey}
+              tournamentKey={tournamentKey}
+              onGenerate={handleReportUpdate}
+            />
+            <GeneralReports
+              eventKey={eventKey}
+              onGenerate={handleReportUpdate}
+            />
           </Box>
         )}
       </Box>
     </PaperLayout>
   );
 };
-
-export default Reports;
