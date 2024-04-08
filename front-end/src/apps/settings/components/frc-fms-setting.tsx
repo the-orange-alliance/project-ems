@@ -10,9 +10,9 @@ import {
 } from '@mui/material';
 import { eventsAtom } from 'src/stores/NewRecoil';
 import { useRecoilState } from 'recoil';
-import DropdownSetting from './DropdownSetting';
-import TextSetting from './TextSetting';
-import SwitchSetting from './SwitchSetting';
+import { DropdownSetting } from './dropdown-setting';
+import TextSetting from './text-setting';
+import SwitchSetting from './switch-setting';
 
 interface Props {
   onChange: (value: FMSSettings, cancel: boolean) => void;
@@ -20,7 +20,7 @@ interface Props {
   value: FMSSettings;
 }
 
-const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
+export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
   const [settings, setSettings] = useState<FMSSettings>({ ...value });
   const [events] = useRecoilState(eventsAtom);
 
@@ -226,5 +226,3 @@ const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
     </Dialog>
   );
 };
-
-export default FrcFmsSetting;

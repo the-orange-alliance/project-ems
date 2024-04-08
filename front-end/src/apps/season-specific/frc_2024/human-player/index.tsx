@@ -17,16 +17,16 @@ import {
 import { useSocket } from 'src/api/use-socket';
 import ConnectionChip from 'src/components/util/ConnectionChip/ConnectionChip';
 import MatchChip from 'src/components/util/MatchChip/MatchChip';
-import MatchStateListener from 'src/components/sync-effects/MatchStateListener/MatchStateListener';
-import MatchUpdateListener from 'src/components/sync-effects/MatchUpdateListener/MatchUpdateListener';
-import PrestartListener from 'src/components/sync-effects/PrestartListener/PrestartListener';
-import MatchCountdown from 'src/components/util/MatchCountdown/MatchCountdown';
 import {
-  matchInProgressAtom,
+  matchOccurringAtom,
   matchStateAtom,
   matchStatusAtom,
   timer
-} from 'src/stores/NewRecoil';
+} from 'src/stores/recoil';
+import { SyncMatchOccurringToRecoil } from 'src/components/sync-effects/sync-match-occurring-to-recoil';
+import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state-to-recoil';
+import { SyncMatchesToRecoil } from 'src/components/sync-effects/sync-matches-to-recoi';
+import { MatchTimer } from 'src/components/util/match-timer';
 
 // Amplify token offset
 const AmplifyTokenOffsetAtom = atom<number>({
@@ -79,7 +79,7 @@ const HumanPlayer: FC = () => {
   const [socket, connected] = useSocket();
 
   // Match state
-  const match = useRecoilValue(matchInProgressAtom);
+  const match = useRecoilValue(matchOccurringAtom);
 
   // Amplify states
   const amplifyTokenOffset = useRecoilValue(AmplifyTokenOffsetAtom);
@@ -178,7 +178,7 @@ const HumanPlayer: FC = () => {
   const onCoop = useRecoilCallback(
     ({ snapshot, set }) =>
       async () => {
-        const currMatch = await snapshot.getPromise(matchInProgressAtom);
+        const currMatch = await snapshot.getPromise(matchOccurringAtom);
         if (!currMatch) return;
         let details;
         if (allianceRef.current === 'red') {
@@ -200,7 +200,7 @@ const HumanPlayer: FC = () => {
 
         const newMatch = Object.assign({}, { ...currMatch, details });
         socketRef.current?.emit(MatchSocketEvent.UPDATE, newMatch);
-        set(matchInProgressAtom, newMatch);
+        set(matchOccurringAtom, newMatch);
       },
     []
   );
@@ -210,7 +210,7 @@ const HumanPlayer: FC = () => {
     ({ snapshot, set }) =>
       async () => {
         // Fetch current state
-        const currMatch = await snapshot.getPromise(matchInProgressAtom);
+        const currMatch = await snapshot.getPromise(matchOccurringAtom);
         const currOffset = await snapshot.getPromise(AmplifyTokenOffsetAtom);
         const currAmpActive = await snapshot.getPromise(AmplifyActiveAtom);
 
@@ -254,7 +254,7 @@ const HumanPlayer: FC = () => {
     ({ snapshot, set }) =>
       async () => {
         // Fetch current state
-        const currMatch = await snapshot.getPromise(matchInProgressAtom);
+        const currMatch = await snapshot.getPromise(matchOccurringAtom);
 
         // Return if we can't amplify
         if (!currMatch || !currMatch.details) return;
@@ -298,9 +298,9 @@ const HumanPlayer: FC = () => {
     return (
       <Grid container direction='row' sx={{ height: '100vh', width: '100vw' }}>
         {/* Match state listeners */}
-        <PrestartListener />
-        <MatchStateListener />
-        <MatchUpdateListener />
+        <SyncMatchStateToRecoil />
+        <SyncMatchesToRecoil />
+        <SyncMatchOccurringToRecoil />
 
         {/* Alliance selection buttons */}
         <Grid item xs={6}>
@@ -345,13 +345,13 @@ const HumanPlayer: FC = () => {
       }}
     >
       {/* Match state listeners */}
-      <PrestartListener />
-      <MatchStateListener />
-      <MatchUpdateListener />
+      <SyncMatchStateToRecoil />
+      <SyncMatchesToRecoil />
+      <SyncMatchOccurringToRecoil />
 
       {/* Match countdown */}
       <Typography variant='h1' sx={{ textAlign: 'center' }}>
-        <MatchCountdown
+        <MatchTimer
           mode={matchMode === 'TELEOPERATED' ? 'timeLeft' : 'modeTime'}
         />
       </Typography>

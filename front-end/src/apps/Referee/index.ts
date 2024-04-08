@@ -1,6 +1,6 @@
-import RefereeApp from './Referee';
-import HeadReferee from './HeadReferee';
-import RedReferee from './RedReferee';
-import BlueReferee from './BlueReferee';
+import { RefereeApp } from './referee-cards';
+import { HeadReferee } from './head-referee';
+import { RedReferee } from './red-referee';
+import { BlueReferee } from './blue-referee';
 
 export { RefereeApp, HeadReferee, RedReferee, BlueReferee };

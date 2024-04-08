@@ -25,7 +25,7 @@ import {
   redCombinedButtonBlinkinPulseWidthAtom,
   blueCombinedButtonBlinkinPulseWidthAtom
 } from './stores/Recoil';
-import NumberSetting from 'src/apps/Settings/components/NumberSetting';
+import { NumberSetting } from 'src/apps/settings/components/number-setting';
 
 const SettingsTab: FC = () => {
   const [redServoHoldPositionPulseWidth, setRedServoHoldPositionPulseWidth] =

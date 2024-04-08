@@ -78,15 +78,32 @@ const QueueingDisplay = lazy(() =>
 const Reports = lazy(() =>
   import('./apps/reports').then((m) => ({ default: m.Reports }))
 );
+// Settings Routes
+const SettingsApp = lazy(() =>
+  import('./apps/settings').then((m) => ({ default: m.SettingsApp }))
+);
+const GlobalSettingsApp = lazy(() =>
+  import('./apps/settings/global-settings').then((m) => ({
+    default: m.GlobalSettingsApp
+  }))
+);
 
-const SettingsApp = lazy(() => import('./apps/Settings'));
-const GlobalSettingsApp = lazy(() => import('./apps/Settings/GlobalSettings'));
+// Referee Routes
+const RefereeApp = lazy(() =>
+  import('./apps/referee').then((m) => ({ default: m.RefereeApp }))
+);
+const RedReferee = lazy(() =>
+  import('./apps/referee').then((m) => ({ default: m.RedReferee }))
+);
+0;
+const BlueReferee = lazy(() =>
+  import('./apps/referee').then((m) => ({ default: m.BlueReferee }))
+);
+const HeadReferee = lazy(() =>
+  import('./apps/referee').then((m) => ({ default: m.HeadReferee }))
+);
 
 const AudienceDisplay = lazy(() => import('./apps/AudienceDisplay'));
-const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
-const RedReferee = lazy(() => import('./apps/Referee/RedReferee'));
-const BlueReferee = lazy(() => import('./apps/Referee/BlueReferee'));
-const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
 // const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
 // const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));

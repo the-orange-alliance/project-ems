@@ -1,28 +1,31 @@
-import { FC } from 'react';
+import { FC, ChangeEvent } from 'react';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
 
 interface Props {
   name: string;
-  buttonText: string;
-  onClick: () => void;
+  value: number;
+  onChange: (value: number) => void;
   inline?: boolean;
+  type?: 'text' | 'number' | 'password';
   title?: string;
   fullWidth?: boolean;
-  disabled?: boolean;
 }
 
-const ButtonSetting: FC<Props> = ({
+export const NumberSetting: FC<Props> = ({
   name,
-  buttonText,
-  onClick,
+  value,
+  onChange,
   inline,
+  type = 'text',
   title,
-  fullWidth,
-  disabled
+  fullWidth
 }) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
+    onChange(parseInt(e.target.value));
+
   return (
     <FormGroup
       sx={{
@@ -33,14 +36,13 @@ const ButtonSetting: FC<Props> = ({
     >
       <FormControlLabel
         control={
-          <Button
-            variant='contained'
-            onClick={onClick}
+          <TextField
+            value={value}
+            onChange={handleChange}
             sx={{ m: 1, minWidth: 220 }}
+            type={type}
             fullWidth={fullWidth}
-          >
-            {buttonText}
-          </Button>
+          />
         }
         label={
           <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
@@ -50,10 +52,7 @@ const ButtonSetting: FC<Props> = ({
         labelPlacement={inline ? 'start' : 'top'}
         sx={{ padding: (theme) => theme.spacing(2) }}
         title={title}
-        disabled={disabled}
       />
     </FormGroup>
   );
 };
-
-export default ButtonSetting;

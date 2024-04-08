@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 
-const AllianceCards: FC = () => {
+export const AllianceCards: FC = () => {
   const navigate = useNavigate();
 
   const openRed = () => navigate('red', { relative: 'route' });
@@ -44,5 +44,3 @@ const AllianceCards: FC = () => {
     </Box>
   );
 };
-
-export default AllianceCards;

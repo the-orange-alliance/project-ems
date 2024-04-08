@@ -9,7 +9,7 @@ import {
   ListItemButton,
   Typography
 } from '@mui/material';
-import FrcFmsSetting from '../components/FrcFmsSetting';
+import { FrcFmsSetting } from '../components/frc-fms-setting';
 import { FMSSettings } from '@toa-lib/models';
 import { postFrcFmsSettings } from 'src/api/use-fms-data';
 import { sendUpdateFrcFmsSettings, useSocket } from 'src/api/use-socket';

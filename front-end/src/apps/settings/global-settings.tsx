@@ -7,10 +7,10 @@ import {
   leaderApiHostAtom,
   teamIdentifierAtom
 } from 'src/stores/NewRecoil';
-import SwitchSetting from './components/SwitchSetting';
-import DropdownSetting from './components/DropdownSetting';
+import { SwitchSetting } from './components/switch-setting';
+import { DropdownSetting } from './components/dropdown-setting';
 import { TeamKeys } from '@toa-lib/models';
-import TextSetting from './components/TextSetting';
+import { TextSetting } from './components/text-setting';
 import { APIOptions } from '@toa-lib/client';
 import { updateSocketClient } from 'src/api/use-socket-data';
 import DefaultLayout from 'src/layouts/DefaultLayout';
@@ -96,7 +96,7 @@ const Settings: FC = () => {
   );
 };
 
-const GlobalSettingsApp: FC = () => {
+export const GlobalSettingsApp: FC = () => {
   return (
     <DefaultLayout>
       <Paper sx={{ marginBottom: (theme) => theme.spacing(8) }}>
@@ -105,5 +105,3 @@ const GlobalSettingsApp: FC = () => {
     </DefaultLayout>
   );
 };
-
-export default GlobalSettingsApp;

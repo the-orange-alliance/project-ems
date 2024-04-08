@@ -1,33 +1,25 @@
-import { FC, ChangeEvent } from 'react';
+import { FC } from 'react';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
+import Switch from '@mui/material/Switch';
 
 interface Props {
   name: string;
-  value: string | number;
-  onChange: (value: string | number) => void;
+  value: boolean;
+  onChange: (value: boolean) => void;
   inline?: boolean;
-  type?: 'text' | 'number' | 'password';
   title?: string;
-  fullWidth?: boolean;
-  disabled?: boolean;
 }
 
-const TextSetting: FC<Props> = ({
+export const SwitchSetting: FC<Props> = ({
   name,
   value,
   onChange,
   inline,
-  type = 'text',
-  title,
-  fullWidth,
-  disabled
+  title
 }) => {
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
-    onChange(e.target.value);
-
+  const handleChange = () => onChange(!value);
   return (
     <FormGroup
       sx={{
@@ -37,15 +29,7 @@ const TextSetting: FC<Props> = ({
       }}
     >
       <FormControlLabel
-        control={
-          <TextField
-            value={value}
-            onChange={handleChange}
-            sx={{ m: 1, minWidth: 220 }}
-            type={type}
-            fullWidth={fullWidth}
-          />
-        }
+        control={<Switch checked={value} onChange={handleChange} />}
         label={
           <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
             {name}
@@ -54,10 +38,7 @@ const TextSetting: FC<Props> = ({
         labelPlacement={inline ? 'start' : 'top'}
         sx={{ padding: (theme) => theme.spacing(2) }}
         title={title}
-        disabled={disabled}
       />
     </FormGroup>
   );
 };
-
-export default TextSetting;

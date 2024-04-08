@@ -18,7 +18,7 @@ import { Tournament } from '@toa-lib/models';
 import FrcFmsSettingsTab from './tabs/frc-fms';
 // import FrcFmsSettingsTab from './tabs/frc-fms';
 
-const SettingsApp: FC = () => {
+export const SettingsApp: FC = () => {
   const eventKey = useRecoilValue(currentEventKeyAtom);
   const [tournamentKey, setTournamentKey] = useRecoilState(
     currentTournamentKeyAtom
@@ -77,5 +77,3 @@ const SettingsApp: FC = () => {
     </PaperLayout>
   );
 };
-
-export default SettingsApp;

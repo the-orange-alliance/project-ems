@@ -9,14 +9,14 @@ import {
   leaderApiHostAtom,
   teamIdentifierAtom
 } from 'src/stores/NewRecoil';
-import SwitchSetting from '../components/SwitchSetting';
-import DropdownSetting from '../components/DropdownSetting';
+import { SwitchSetting } from '../components/switch-setting';
+import { DropdownSetting } from '../components/dropdown-setting';
 import { TeamKeys } from '@toa-lib/models';
-import { MultiSelectSetting } from '../components/MultiSelectSetting';
-import TextSetting from '../components/TextSetting';
+import { MultiSelectSetting } from '../components/multi-select-setting';
+import { TextSetting } from '../components/text-setting';
 import { APIOptions } from '@toa-lib/client';
 import { updateSocketClient } from 'src/api/use-socket-data';
-import ButtonSetting from '../components/ButtonSetting';
+import { ButtonSetting } from '../components/button-setting';
 import { useGitHubDownload } from '../util/use-github-download';
 
 const MainSettingsTab: FC = () => {

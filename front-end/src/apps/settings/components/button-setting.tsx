@@ -2,30 +2,27 @@ import { FC } from 'react';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
+import Button from '@mui/material/Button';
 
 interface Props {
   name: string;
-  value: any;
-  options: any[];
-  onChange: (value: any) => void;
+  buttonText: string;
+  onClick: () => void;
   inline?: boolean;
   title?: string;
   fullWidth?: boolean;
+  disabled?: boolean;
 }
 
-const DropdownSetting: FC<Props> = ({
+export const ButtonSetting: FC<Props> = ({
   name,
-  value,
-  options,
-  onChange,
+  buttonText,
+  onClick,
   inline,
   title,
-  fullWidth
+  fullWidth,
+  disabled
 }) => {
-  const handleChange = (e: SelectChangeEvent) => onChange(e.target.value);
-
   return (
     <FormGroup
       sx={{
@@ -36,18 +33,14 @@ const DropdownSetting: FC<Props> = ({
     >
       <FormControlLabel
         control={
-          <Select
-            value={value}
-            onChange={handleChange}
-            sx={{ m: 1, minWidth: 223 }}
+          <Button
+            variant='contained'
+            onClick={onClick}
+            sx={{ m: 1, minWidth: 220 }}
             fullWidth={fullWidth}
           >
-            {options.map((o) => (
-              <MenuItem key={`${name}-${o}`} value={o}>
-                {o}
-              </MenuItem>
-            ))}
-          </Select>
+            {buttonText}
+          </Button>
         }
         label={
           <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
@@ -57,9 +50,8 @@ const DropdownSetting: FC<Props> = ({
         labelPlacement={inline ? 'start' : 'top'}
         sx={{ padding: (theme) => theme.spacing(2) }}
         title={title}
+        disabled={disabled}
       />
     </FormGroup>
   );
 };
-
-export default DropdownSetting;

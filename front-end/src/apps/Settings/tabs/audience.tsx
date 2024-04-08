@@ -2,7 +2,7 @@ import { FC } from 'react';
 import Box from '@mui/material/Box';
 import { useRecoilState } from 'recoil';
 import { displayChromaKeyAtom } from 'src/stores/NewRecoil';
-import TextSetting from '../components/TextSetting';
+import { TextSetting } from '../components/text-setting';
 import { updateSocketClient } from 'src/api/use-socket-data';
 
 const AudienceDisplaySettingsTab: FC = () => {
