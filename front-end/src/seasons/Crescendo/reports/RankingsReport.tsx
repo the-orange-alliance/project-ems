@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { Crescendo } from '@toa-lib/models';
 import { RankingsReportProps } from 'src/seasons';
-import Report from 'src/apps/reports/components/report-container';
+import { Report } from 'src/apps/reports/components/report-container';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 
 export const RankingsReport: FC<

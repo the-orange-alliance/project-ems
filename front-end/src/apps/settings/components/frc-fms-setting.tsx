@@ -11,8 +11,8 @@ import {
 import { eventsAtom } from 'src/stores/NewRecoil';
 import { useRecoilState } from 'recoil';
 import { DropdownSetting } from './dropdown-setting';
-import TextSetting from './text-setting';
-import SwitchSetting from './switch-setting';
+import { TextSetting } from './text-setting';
+import { SwitchSetting } from './switch-setting';
 
 interface Props {
   onChange: (value: FMSSettings, cancel: boolean) => void;
