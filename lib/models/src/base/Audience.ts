@@ -6,3 +6,9 @@ export enum Displays {
   RANKINGS = 4,
   BLANK = 5
 }
+
+export enum DisplayModes {
+  DEFAULT = 'default',
+  TIMER_ONLY = 'timer-only',
+  STREAM = 'stream'
+}
