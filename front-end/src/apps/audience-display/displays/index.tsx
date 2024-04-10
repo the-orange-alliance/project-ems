@@ -6,6 +6,7 @@ import { AudDisplayStream } from './ad-stream';
 
 export interface DisplayProps {
   id: number;
+  eventKey: string | null | undefined;
 }
 
 interface Props {
@@ -14,16 +15,16 @@ interface Props {
   mode?: DisplayModes;
 }
 
-const Displays: FC<Props> = ({ id, mode = DisplayModes.DEFAULT }) => {
+const Displays: FC<Props> = ({ id, mode = DisplayModes.DEFAULT, eventKey }) => {
   switch (mode) {
     case DisplayModes.DEFAULT:
-      return <AudDisplayDefault id={id} />;
+      return <AudDisplayDefault id={id} eventKey={eventKey} />;
     case DisplayModes.TIMER_ONLY:
-      return <AudDisplayTimer id={id} />;
+      return <AudDisplayTimer id={id} eventKey={eventKey} />;
     case DisplayModes.STREAM:
-      return <AudDisplayStream id={id} />;
+      return <AudDisplayStream id={id} eventKey={eventKey} />;
     default:
-      return <AudDisplayDefault id={id} />;
+      return <AudDisplayDefault id={id} eventKey={eventKey} />;
   }
 };
 

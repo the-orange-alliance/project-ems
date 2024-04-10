@@ -27,7 +27,9 @@ export const useEvents = (): SWRResponse<Event[], ApiResponseError> =>
     apiFetcher(url, 'GET', undefined, eventZod.array().parse)
   );
 
-export const useEvent = (eventKey?: string): SWRResponse<Event> =>
+export const useEvent = (
+  eventKey: string | null | undefined
+): SWRResponse<Event> =>
   useSWRImmutable<Event>(
     eventKey && eventKey.length > 0 ? `event/${eventKey}` : undefined,
     (url) => apiFetcher(url, 'GET', undefined, eventZod.parse)
