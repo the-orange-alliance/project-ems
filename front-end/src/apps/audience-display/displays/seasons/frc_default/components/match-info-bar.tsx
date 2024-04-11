@@ -50,11 +50,12 @@ const RightContent = styled.div`
 
 interface Props {
   title: string;
+  gridAreaId?: string;
 }
 
-export const MatchInfoBar: FC<Props> = ({ title }) => {
+export const MatchInfoBar: FC<Props> = ({ title, gridAreaId }) => {
   return (
-    <Container>
+    <Container style={{ gridArea: gridAreaId }}>
       <Top>
         <LeftContent>Up Next</LeftContent>
         <CenterContent>{title}</CenterContent>

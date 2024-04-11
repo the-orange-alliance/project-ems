@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
-  const { setState } = useMatchControl();
+  const { canPrestart, setState } = useMatchControl();
   const [tournamentKey, setTournamentKey] = useRecoilState(
     currentTournamentKeyAtom
   );
@@ -61,6 +61,7 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
           selected={(match) => match.id === matchId}
           onTournamentChange={handleTournamentChange}
           onMatchSelect={handleMatchChange}
+          disabled={!canPrestart && matchId !== null}
         />
       </TabPanel>
       <TabPanel value={value} index={1}>

@@ -1,3 +1,4 @@
+import { MatchSocketEvent } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/use-socket';
@@ -9,13 +10,13 @@ export const SyncDisplayToRecoil: FC = () => {
 
   useEffect(() => {
     if (connected) {
-      socket?.on('DISPLAY', setDisplay);
+      socket?.on(MatchSocketEvent.DISPLAY, setDisplay);
     }
   }, [connected]);
 
   useEffect(() => {
     return () => {
-      socket?.removeListener('DISPLAY', setDisplay);
+      socket?.removeListener(MatchSocketEvent.DISPLAY, setDisplay);
     };
   }, []);
 

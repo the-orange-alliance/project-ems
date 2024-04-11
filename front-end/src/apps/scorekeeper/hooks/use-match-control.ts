@@ -17,6 +17,7 @@ interface MatchControlState {
 
 export const useMatchControl = (): MatchControlState => {
   const [matchState, setState] = useRecoilState(matchStateAtom);
+  console.log({ matchState });
   switch (matchState) {
     case MatchState.MATCH_NOT_SELECTED:
       return {

@@ -24,7 +24,7 @@ export const SyncOnPrestart: FC = () => {
     return () => {
       socket?.removeListener(MatchSocketEvent.PRESTART, handlePrestart);
     };
-  });
+  }, []);
   const handlePrestart = useRecoilCallback(
     ({ set }) =>
       async (key: MatchKey) => {

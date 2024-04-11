@@ -8,6 +8,7 @@ interface Props {
   matches: Match<any>[];
   teams: Team[];
   colored?: boolean;
+  disabled?: boolean;
   selected?: (match: Match<any>) => boolean;
   onSelect?: (id: number) => void;
 }
@@ -16,6 +17,7 @@ export const MatchResultsTable: FC<Props> = ({
   matches,
   teams,
   colored,
+  disabled,
   selected,
   onSelect
 }) => {
@@ -41,7 +43,7 @@ export const MatchResultsTable: FC<Props> = ({
         'Blue Score'
       ]}
       selected={selected}
-      onSelect={handleSelect}
+      onSelect={disabled ? undefined : handleSelect}
       renderRow={(e) => {
         const participants = e.participants
           ? e.participants?.map((p) => {

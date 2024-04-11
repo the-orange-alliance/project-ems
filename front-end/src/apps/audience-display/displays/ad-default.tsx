@@ -4,14 +4,26 @@ import { MatchPreview } from './seasons/frc_default/match-preview';
 import { useRecoilValue } from 'recoil';
 import { matchOccurringAtom } from 'src/stores/recoil';
 import { useEvent } from 'src/api/use-event-data';
+import { Displays } from '@toa-lib/models';
+import { MatchPlay } from './seasons/frc_default/match-play';
 
 /**
  * Classic audience display that handles all scenarios.
  */
-export const AudDisplayDefault: FC<DisplayProps> = ({ eventKey }) => {
+export const AudDisplayDefault: FC<DisplayProps> = ({ eventKey, id }) => {
   // TODO - Is this how we want to handle the data flow?
   // TODO - Get rankings for teams in the match
   const { data: event } = useEvent(eventKey);
   const match = useRecoilValue(matchOccurringAtom);
-  return match && event ? <MatchPreview event={event} match={match} /> : null;
+  if (!match || !event) return null;
+  switch (id) {
+    case Displays.BLANK:
+      return null;
+    case Displays.MATCH_PREVIEW:
+      return <MatchPreview event={event} match={match} />;
+    case Displays.MATCH_START:
+      return <MatchPlay match={match} />;
+    default:
+      return null;
+  }
 };

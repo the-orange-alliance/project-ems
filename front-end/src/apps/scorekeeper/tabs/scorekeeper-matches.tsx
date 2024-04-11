@@ -9,6 +9,7 @@ interface Props {
   teams?: Team[];
   tournaments?: Tournament[];
   tournamentKey: string | null;
+  disabled?: boolean;
   selected?: (match: Match<any>) => boolean;
   onTournamentChange: (tournamentKey: string) => void;
   onMatchSelect: (matchId: number) => void;
@@ -19,6 +20,7 @@ export const ScorekeeperMatches: FC<Props> = ({
   teams,
   tournaments,
   tournamentKey,
+  disabled,
   selected,
   onTournamentChange,
   onMatchSelect
@@ -37,6 +39,7 @@ export const ScorekeeperMatches: FC<Props> = ({
         teams={teams ?? []}
         selected={selected}
         onSelect={onMatchSelect}
+        disabled={disabled}
       />
     </>
   );
