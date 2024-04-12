@@ -6,6 +6,7 @@ import { matchOccurringAtom } from 'src/stores/recoil';
 import { useEvent } from 'src/api/use-event-data';
 import { Displays } from '@toa-lib/models';
 import { MatchPlay } from './seasons/frc_default/match-play';
+import { MatchResults } from './seasons/frc_default/match-results';
 
 /**
  * Classic audience display that handles all scenarios.
@@ -23,6 +24,8 @@ export const AudDisplayDefault: FC<DisplayProps> = ({ eventKey, id }) => {
       return <MatchPreview event={event} match={match} />;
     case Displays.MATCH_START:
       return <MatchPlay match={match} />;
+    case Displays.MATCH_RESULTS:
+      return <MatchResults event={event} match={match} />;
     default:
       return null;
   }
