@@ -2,6 +2,7 @@ import {
   Match,
   MatchState,
   MatchTimer,
+  Ranking,
   Team,
   Tournament
 } from '@toa-lib/models';
@@ -29,6 +30,11 @@ export const currentMatchIdAtom = atom<number | null>({
 
 export const matchOccurringAtom = atom<Match<any> | null>({
   key: 'eventState.matchOccurringAtom',
+  default: null
+});
+
+export const matchOccurringRanksAtom = atom<Ranking[] | null>({
+  key: 'eventState.matchOccurringRanksAtom',
   default: null
 });
 

@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { MatchInfoBar } from './components/match-info-bar';
 import { MatchBottomBar } from './components/match-bottom-bar';
 import { MatchAllianceResult } from './components/match-alliance-result';
-import { Event, Match } from '@toa-lib/models';
+import { Event, Match, Ranking } from '@toa-lib/models';
 
 const Container = styled.div`
   display: grid;
@@ -27,20 +27,23 @@ const Content = styled.div`
 interface Props {
   event: Event;
   match: Match<any>;
+  ranks: Ranking[];
 }
 
-export const MatchResults: FC<Props> = ({ event, match }) => {
+export const MatchResults: FC<Props> = ({ event, match, ranks }) => {
   return (
     <Container>
       <MatchInfoBar title={match.name} />
       <Content>
         <MatchAllianceResult
           participants={match.participants ?? []}
+          ranks={ranks}
           alliance='red'
         />
         <MatchAllianceResult
           participants={match.participants ?? []}
           alliance='blue'
+          ranks={ranks}
           invert
         />
       </Content>

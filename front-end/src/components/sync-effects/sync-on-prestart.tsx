@@ -4,14 +4,20 @@ import {
   MatchDetailBase,
   MatchKey,
   MatchSocketEvent,
+  Ranking,
   getDefaultMatchDetailsBySeasonKey,
   getSeasonKeyFromEventKey,
-  matchZod
+  matchZod,
+  rankingZod
 } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilCallback } from 'recoil';
 import { useSocket } from 'src/api/use-socket';
-import { currentMatchIdAtom, matchOccurringAtom } from 'src/stores/recoil';
+import {
+  currentMatchIdAtom,
+  matchOccurringAtom,
+  matchOccurringRanksAtom
+} from 'src/stores/recoil';
 
 export const SyncOnPrestart: FC = () => {
   const [socket, connected] = useSocket();
@@ -35,6 +41,12 @@ export const SyncOnPrestart: FC = () => {
           undefined,
           matchZod.parse
         );
+        const rankings: Ranking[] = await apiFetcher(
+          `ranking/${eventKey}/${tournamentKey}/${id}`,
+          'GET',
+          undefined,
+          rankingZod.array().parse
+        );
         const seasonKey = getSeasonKeyFromEventKey(eventKey);
         const details = getDefaultMatchDetailsBySeasonKey(seasonKey);
         match.details = { eventKey, id, tournamentKey, ...details };
@@ -53,6 +65,7 @@ export const SyncOnPrestart: FC = () => {
         }
         set(matchOccurringAtom, match);
         set(currentMatchIdAtom, match.id);
+        set(matchOccurringRanksAtom, rankings);
       }
   );
   return null;

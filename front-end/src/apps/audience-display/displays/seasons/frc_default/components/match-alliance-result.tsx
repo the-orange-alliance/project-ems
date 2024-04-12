@@ -1,7 +1,15 @@
 import styled from '@emotion/styled';
-import { Alliance, BLUE_STATION, MatchParticipant } from '@toa-lib/models';
-import { FC } from 'react';
+import {
+  Alliance,
+  BLUE_STATION,
+  MatchParticipant,
+  Ranking
+} from '@toa-lib/models';
+import { FC, useMemo } from 'react';
 import { MatchBillboard } from './match-billboard';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
 
 const Container = styled.div((props: { alliance: Alliance }) => ({
   width: '100%',
@@ -58,24 +66,54 @@ const NameText = styled.div`
   padding-left: 16px;
 `;
 
-const RankText = styled.div`
+const RankContainer = styled.div`
   background-color: #101820;
   height: 6vh;
-  width: 6vh;
+  width: 9vh;
   margin-left: auto;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding-left: 12px;
+  padding-right: 12px;
 `;
+
+const RankText = styled.div`
+  width: 100%;
+  text-align: center;
+`;
+
+const TeamRank: FC<{ rank: number; rankChange: number }> = ({
+  rank,
+  rankChange
+}) => {
+  const rankIcon = useMemo(() => {
+    if (rankChange === 0) {
+      return <HorizontalRuleIcon fontSize='inherit' />;
+    } else if (rankChange > 0) {
+      return <ArrowUpwardIcon fontSize='inherit' />;
+    } else if (rankChange < 0) {
+      return <ArrowDownwardIcon fontSize='inherit' />;
+    }
+  }, [rankChange]);
+  return (
+    <RankContainer>
+      <RankText>{rank}</RankText>
+      <RankText style={{ marginTop: '8px' }}>{rankIcon}</RankText>
+    </RankContainer>
+  );
+};
 
 interface Props {
   participants: MatchParticipant[];
+  ranks: Ranking[];
   alliance: Alliance;
   invert?: boolean;
 }
 
 export const MatchAllianceResult: FC<Props> = ({
   participants,
+  ranks,
   alliance,
   invert
 }) => {
@@ -97,13 +135,18 @@ export const MatchAllianceResult: FC<Props> = ({
       <AllianceContainer
         style={invert ? { marginLeft: 'auto' } : { marginRight: 'auto' }}
       >
-        {allianceParticipants.map((p) => (
-          <TeamContainer key={p.station} alliance={alliance}>
-            <TeamText>{p.teamKey}</TeamText>
-            <NameText>{p.team?.teamNameShort}</NameText>
-            <RankText>+9</RankText>
-          </TeamContainer>
-        ))}
+        {allianceParticipants.map((p) => {
+          const rank = ranks.find((r) => r.teamKey === p.teamKey);
+          return (
+            <TeamContainer key={p.station} alliance={alliance}>
+              <TeamText>{p.teamKey}</TeamText>
+              <NameText>{p.team?.teamNameShort}</NameText>
+              {rank && (
+                <TeamRank rank={rank.rank} rankChange={rank.rankChange} />
+              )}
+            </TeamContainer>
+          );
+        })}
       </AllianceContainer>
     </Container>
   );

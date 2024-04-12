@@ -98,9 +98,14 @@ const AllianceTeam: FC<AllianceProps> = ({ alliance, team, ranking }) => {
 interface Props {
   alliance: Alliance;
   participants: MatchParticipant[];
+  ranks: Ranking[];
 }
 
-export const MatchAlliancePreview: FC<Props> = ({ alliance, participants }) => {
+export const MatchAlliancePreview: FC<Props> = ({
+  alliance,
+  participants,
+  ranks
+}) => {
   const title = `${alliance} alliance`.toUpperCase();
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
@@ -109,7 +114,12 @@ export const MatchAlliancePreview: FC<Props> = ({ alliance, participants }) => {
     <Container alliance={alliance} size={allianceParticipants.length}>
       <AllianceHeader>{title}</AllianceHeader>
       {allianceParticipants.map((p) => (
-        <AllianceTeam key={p.station} alliance={alliance} team={p.team} />
+        <AllianceTeam
+          key={p.station}
+          alliance={alliance}
+          team={p.team}
+          ranking={ranks.find((r) => r.teamKey === p.teamKey)}
+        />
       ))}
     </Container>
   );

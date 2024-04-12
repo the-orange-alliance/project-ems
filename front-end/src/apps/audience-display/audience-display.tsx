@@ -3,6 +3,7 @@ import { useRecoilValue } from 'recoil';
 import { SyncDisplayToRecoil } from 'src/components/sync-effects/sync-display-to-recoi';
 import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state-to-recoil';
 import { SyncOnPrestart } from 'src/components/sync-effects/sync-on-prestart';
+import { SyncOnCommit } from 'src/components/sync-effects/sync-on-commit';
 import ChromaLayout from 'src/layouts/ChromaLayout';
 import { currentEventKeyAtom, displayIdAtom } from 'src/stores/NewRecoil';
 import Displays from './displays';
@@ -26,6 +27,7 @@ export const AudienceDisplay: FC = () => {
       <ChromaLayout>
         <SyncMatchStateToRecoil />
         <SyncOnPrestart />
+        <SyncOnCommit />
         <SyncDisplayToRecoil />
         <Displays id={displayId} eventKey={eventKey} />
       </ChromaLayout>
