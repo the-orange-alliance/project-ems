@@ -6,7 +6,7 @@ import { SyncOnPrestart } from 'src/components/sync-effects/sync-on-prestart';
 import { SyncOnCommit } from 'src/components/sync-effects/sync-on-commit';
 import ChromaLayout from 'src/layouts/ChromaLayout';
 import { currentEventKeyAtom, displayIdAtom } from 'src/stores/NewRecoil';
-import Displays from './displays';
+import { DisplaySwitcher } from './displays';
 
 export const AudienceDisplay: FC = () => {
   const eventKey = useRecoilValue(currentEventKeyAtom);
@@ -29,7 +29,7 @@ export const AudienceDisplay: FC = () => {
         <SyncOnPrestart />
         <SyncOnCommit />
         <SyncDisplayToRecoil />
-        <Displays id={displayId} eventKey={eventKey} />
+        <DisplaySwitcher id={displayId} eventKey={eventKey} />
       </ChromaLayout>
     </Suspense>
   );

@@ -5,7 +5,7 @@ import { MatchAlliancePlay } from './components/match-alliance-play';
 import { MatchBillboard } from './components/match-billboard';
 import { MatchTimer } from 'src/components/util/match-timer';
 import { SmartToyOutlined } from '@mui/icons-material';
-import { Match } from '@toa-lib/models';
+import { DisplayProps } from '../../displays';
 
 const Container = styled.div`
   position: absolute;
@@ -24,11 +24,7 @@ const ScoreText = styled.span`
   font-size: 3vh;
 `;
 
-interface Props {
-  match: Match<any>;
-}
-
-export const MatchPlay: FC<Props> = ({ match }) => {
+export const MatchPlay: FC<DisplayProps> = ({ match }) => {
   const { redScore, blueScore } = match;
   return (
     <Container>

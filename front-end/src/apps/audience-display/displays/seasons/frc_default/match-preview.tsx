@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { MatchInfoBar } from './components/match-info-bar';
 import { MatchBottomBar } from './components/match-bottom-bar';
 import { MatchAlliancePreview } from './components/match-alliance-preview';
-import { Event, Match, Ranking } from '@toa-lib/models';
+import { DisplayProps } from '../../displays';
 
 const Container = styled.div`
   display: grid;
@@ -25,13 +25,7 @@ const Content = styled.div`
   width: 100%;
 `;
 
-interface Props {
-  match: Match<any>;
-  event: Event;
-  ranks: Ranking[];
-}
-
-export const MatchPreview: FC<Props> = ({ event, match, ranks }) => {
+export const MatchPreview: FC<DisplayProps> = ({ event, match, ranks }) => {
   return (
     <Container>
       <MatchInfoBar title={match.name} />
