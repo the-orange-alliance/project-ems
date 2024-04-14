@@ -19,7 +19,7 @@ import {
   MATCH_ABORT,
   MATCH_ENDGAME,
   MATCH_END
-} from 'src/apps/AudienceDisplay/Audio';
+} from 'src/apps/audience-display/audio';
 import {
   matchOccurringAtom,
   matchStateAtom,
