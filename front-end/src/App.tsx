@@ -3,7 +3,7 @@ import { useRecoilValue } from 'recoil';
 import routes from './AppRoutes';
 import './App.less';
 import { useSnackbar } from './hooks/use-snackbar';
-import { userAtom } from './stores/NewRecoil';
+import { userAtom } from './stores/recoil';
 import { FC, ReactNode, useEffect } from 'react';
 import { useSocket } from './api/use-socket';
 import SyncEffects from './components/sync-effects/SyncEffects';

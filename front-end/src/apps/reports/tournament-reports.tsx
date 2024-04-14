@@ -5,7 +5,7 @@ import Grid from '@mui/material/Grid';
 import { MatchReport } from './components/match-report';
 import { ReportProps } from '.';
 import { MatchByTeamReport } from './components/match-by-team-report';
-import { teamIdentifierAtom } from 'src/stores/NewRecoil';
+import { teamIdentifierAtom } from 'src/stores/recoil';
 import { useSeasonComponents } from 'src/hooks/use-season-components';
 import { useMatchesForTournament } from 'src/api/use-match-data';
 import { useTeamsForEvent } from 'src/api/use-team-data';

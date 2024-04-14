@@ -9,11 +9,13 @@ import { Socket } from 'socket.io-client';
 import { useRecoilCallback, useRecoilState } from 'recoil';
 import {
   currentTournamentFieldsAtom,
-  followerModeEnabledAtom,
-  leaderApiHostAtom,
   socketConnectedAtom
 } from 'src/stores/NewRecoil';
-import { displayChromaKeyAtom } from 'src/stores/recoil';
+import {
+  followerModeEnabledAtom,
+  leaderApiHostAtom,
+  displayChromaKeyAtom
+} from 'src/stores/recoil';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { connectSocketClient } from './use-socket-data';
 

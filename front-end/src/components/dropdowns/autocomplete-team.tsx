@@ -3,7 +3,7 @@ import { useRecoilValue } from 'recoil';
 import Box from '@mui/material/Box';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
-import { teamIdentifierAtom } from 'src/stores/NewRecoil';
+import { teamIdentifierAtom } from 'src/stores/recoil';
 import { Team } from '@toa-lib/models';
 
 interface Props {

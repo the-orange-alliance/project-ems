@@ -8,7 +8,7 @@ import { Provider as ModalProvider } from '@ebay/nice-modal-react';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import App from './App';
 import { frcTheme } from './AppTheme';
-import { darkModeAtom } from './stores/NewRecoil';
+import { darkModeAtom } from './stores/recoil';
 import { APIOptions, SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/LocalStorage';
 

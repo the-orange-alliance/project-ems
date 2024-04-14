@@ -6,7 +6,7 @@ import {
   followerModeEnabledAtom,
   leaderApiHostAtom,
   teamIdentifierAtom
-} from 'src/stores/NewRecoil';
+} from 'src/stores/recoil';
 import { SwitchSetting } from './components/switch-setting';
 import { DropdownSetting } from './components/dropdown-setting';
 import { TeamKeys } from '@toa-lib/models';

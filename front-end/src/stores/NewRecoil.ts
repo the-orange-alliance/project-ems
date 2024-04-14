@@ -4,10 +4,8 @@ import {
   eventZod,
   FMSSettings,
   isFMSSettingsArray,
-  Team,
   Tournament,
-  tournamentZod,
-  User
+  tournamentZod
 } from '@toa-lib/models';
 import {
   atom,
@@ -20,36 +18,6 @@ import { setApiStorage } from 'src/api/use-storage-data';
 import { AppFlags, defaultFlags } from './AppFlags';
 import { replaceInArray } from './Util';
 import { localStorageEffect } from './Effects';
-
-/**
- * @section UI SETTINGS STATE
- * Recoil state management for UI settings
- */
-export const darkModeAtom = atom<boolean>({
-  key: 'darkModeAtom',
-  default: false,
-  effects: [localStorageEffect('darkMode')]
-});
-export const userAtom = atom<User | null>({
-  key: 'userAtom',
-  default: { id: 0, username: 'Bypassed', permissions: '*' },
-  effects: [localStorageEffect('currentUser')]
-});
-export const teamIdentifierAtom = atom<keyof Team>({
-  key: 'teamIdentifierAtom',
-  default: 'teamKey',
-  effects: [localStorageEffect('teamIdentifier')]
-});
-export const followerModeEnabledAtom = atom<boolean>({
-  key: 'followerModeEnabledAtom',
-  default: false,
-  effects: [localStorageEffect('followerMode')]
-});
-export const leaderApiHostAtom = atom<string>({
-  key: 'leaderApiHostAtom',
-  default: '',
-  effects: [localStorageEffect('leaderApiHost')]
-});
 
 /**
  * @section FRC FMS STATE

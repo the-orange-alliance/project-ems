@@ -3,12 +3,14 @@ import Box from '@mui/material/Box';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   currentTournamentFieldsAtom,
-  currentTournamentFieldsSelector,
+  currentTournamentFieldsSelector
+} from 'src/stores/NewRecoil';
+import {
   darkModeAtom,
   followerModeEnabledAtom,
   leaderApiHostAtom,
   teamIdentifierAtom
-} from 'src/stores/NewRecoil';
+} from 'src/stores/recoil';
 import { SwitchSetting } from '../components/switch-setting';
 import { DropdownSetting } from '../components/dropdown-setting';
 import { TeamKeys } from '@toa-lib/models';
