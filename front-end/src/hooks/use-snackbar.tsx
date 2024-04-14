@@ -7,7 +7,7 @@ import {
   snackbarMessageAtom,
   snackbarOpenAtom,
   snackbarUseShowAtom
-} from 'src/stores/NewRecoil';
+} from 'src/stores/recoil';
 import { useModal } from '@ebay/nice-modal-react';
 import ErrorDialog from 'src/components/dialogs/ErrorDialog';
 

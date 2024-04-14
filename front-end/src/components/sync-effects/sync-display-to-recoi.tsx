@@ -2,7 +2,7 @@ import { MatchSocketEvent } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { useSocket } from 'src/api/use-socket';
-import { displayIdAtom } from 'src/stores/NewRecoil';
+import { displayIdAtom } from 'src/stores/recoil';
 
 export const SyncDisplayToRecoil: FC = () => {
   const setDisplay = useSetRecoilState(displayIdAtom);

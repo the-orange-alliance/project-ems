@@ -56,3 +56,17 @@ export const matchDialogOpenAtom = atom<boolean>({
   key: 'ui.matchDialogOpenAtom',
   default: false
 });
+
+/**
+ * @section AUDIENCE DISPLAY STATE
+ * Recoil state management for audience display
+ */
+export const displayIdAtom = atom({
+  key: 'displayIDAtom',
+  default: 0
+});
+export const displayChromaKeyAtom = atom({
+  key: 'chromaKeyAtom',
+  default: '#ff00ff',
+  effects: [localStorageEffect('chromaKey')]
+});

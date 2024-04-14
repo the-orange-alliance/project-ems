@@ -5,8 +5,9 @@ import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-s
 import { SyncOnPrestart } from 'src/components/sync-effects/sync-on-prestart';
 import { SyncOnCommit } from 'src/components/sync-effects/sync-on-commit';
 import ChromaLayout from 'src/layouts/ChromaLayout';
-import { currentEventKeyAtom, displayIdAtom } from 'src/stores/NewRecoil';
+import { currentEventKeyAtom } from 'src/stores/NewRecoil';
 import { DisplaySwitcher } from './displays';
+import { displayIdAtom } from 'src/stores/recoil';
 
 export const AudienceDisplay: FC = () => {
   const eventKey = useRecoilValue(currentEventKeyAtom);
