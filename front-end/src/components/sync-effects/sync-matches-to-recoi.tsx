@@ -1,7 +1,7 @@
 import { FC, useEffect } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { useMatchesForEvent } from 'src/api/use-match-data';
-import { currentEventKeyAtom } from 'src/stores/NewRecoil';
+import { currentEventKeyAtom } from 'src/stores/recoil';
 import { matchesByEventKeyAtomFam } from 'src/stores/recoil';
 
 export const SyncMatchesToRecoil: FC = () => {

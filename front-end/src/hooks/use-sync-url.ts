@@ -5,7 +5,7 @@ import {
   currentEventKeyAtom,
   currentTeamKeyAtom,
   currentTournamentKeyAtom
-} from 'src/stores/NewRecoil';
+} from 'src/stores/recoil';
 
 export const useSyncUrlToRecoil = () => {
   const { eventKey, teamKey, tournamentKey } = useParams();

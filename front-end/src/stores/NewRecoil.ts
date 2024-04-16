@@ -3,21 +3,11 @@ import {
   Event,
   eventZod,
   FMSSettings,
-  isFMSSettingsArray,
-  Tournament,
-  tournamentZod
+  isFMSSettingsArray
 } from '@toa-lib/models';
-import {
-  atom,
-  atomFamily,
-  DefaultValue,
-  selector,
-  selectorFamily
-} from 'recoil';
+import { atom, selector } from 'recoil';
 import { setApiStorage } from 'src/api/use-storage-data';
 import { AppFlags, defaultFlags } from './AppFlags';
-import { replaceInArray } from './Util';
-import { localStorageEffect } from './Effects';
 
 /**
  * @section FRC FMS STATE
@@ -78,10 +68,6 @@ export const allFrcFmsAtom = atom<FMSSettings[]>({
  * @section NETWORK STATE
  * Recoil state management for backend network interactions
  */
-export const socketConnectedAtom = atom<boolean>({
-  key: 'socketConnectedAtom',
-  default: false
-});
 
 /**
  * @section FLAGS STATE
@@ -101,48 +87,6 @@ export const appFlagsAtom = atom<AppFlags>({
       }
     }
   })
-});
-
-/**
- * @section SELECTION STATE
- * Recoil state management for selecting data
- */
-export const currentEventKeyAtom = atom<string>({
-  key: 'currentEventKeySelector',
-  default: ''
-});
-
-export const currentTeamKeyAtom = atom<number | null>({
-  key: 'currentTeamKeyAtom',
-  default: null
-});
-
-export const currentTournamentFieldsSelector = selector<
-  {
-    name: string;
-    field: number;
-  }[]
->({
-  key: 'currentTournamentFieldsSelector',
-  get: ({ get }) => {
-    return (
-      get(currentTournamentSelector)?.fields.map((f: string, i: number) => ({
-        name: f,
-        field: i + 1
-      })) ?? []
-    );
-  }
-});
-
-export const currentTournamentFieldsAtom = atom<
-  {
-    name: string;
-    field: number;
-  }[]
->({
-  key: 'currentTournamentFieldsAtom',
-  default: currentTournamentFieldsSelector,
-  effects: [localStorageEffect('tournamentFieldControl')]
 });
 
 /**
@@ -170,62 +114,4 @@ const eventsSelector = selector<Event[]>({
 export const eventsAtom = atom<Event[]>({
   key: 'eventsAtom',
   default: eventsSelector
-});
-
-/**
- * @section TOURNAMENT STATE
- * Recoil state management for tournaments
- */
-export const tournamentsByEventSelectorFam = selectorFamily<
-  Tournament[],
-  string
->({
-  key: 'tournamentsByEventSelectorFam',
-  get: (eventKey: string) => async (): Promise<Tournament[]> => {
-    try {
-      return await apiFetcher(
-        `tournament/${eventKey}`,
-        'GET',
-        undefined,
-        tournamentZod.array().parse
-      );
-    } catch (e) {
-      return [];
-    }
-  }
-});
-
-export const tournamentsByEventAtomFam = atomFamily<Tournament[], string>({
-  key: 'tournamentsByEventAtomFam',
-  default: tournamentsByEventSelectorFam
-});
-
-export const currentTournamentKeyAtom = atom<string | null>({
-  key: 'currentTournamentKeyAtom',
-  default: null
-});
-
-export const currentTournamentSelector = selector<Tournament | null>({
-  key: 'currentTournamentSelector',
-  get: ({ get }) => {
-    const tournamentKey = get(currentTournamentKeyAtom);
-    const eventKey = get(currentEventKeyAtom);
-    const tournaments = get(tournamentsByEventAtomFam(eventKey));
-    return (
-      tournaments.find(
-        (t) => t.tournamentKey === tournamentKey && t.eventKey === eventKey
-      ) ?? null
-    );
-  },
-  set: ({ get, set }, newValue) => {
-    if (newValue instanceof DefaultValue || !newValue) return;
-    const tournaments = get(tournamentsByEventAtomFam(newValue.eventKey));
-    const newTeams = replaceInArray(
-      tournaments,
-      'tournamentKey',
-      newValue.tournamentKey,
-      newValue
-    );
-    set(tournamentsByEventAtomFam(newValue.eventKey), newTeams ?? tournaments);
-  }
 });

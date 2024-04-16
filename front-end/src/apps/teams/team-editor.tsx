@@ -9,7 +9,7 @@ import { TeamForm } from 'src/components/forms/team-form';
 import { PageLoader } from 'src/components/loading/PageLoader';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import PaperLayout from 'src/layouts/PaperLayout';
-import { currentTeamKeyAtom } from 'src/stores/NewRecoil';
+import { currentTeamKeyAtom } from 'src/stores/recoil';
 import { teamsByEventKeyAtomFam } from 'src/stores/recoil/event-state';
 
 export const TeamEdior: FC = () => {

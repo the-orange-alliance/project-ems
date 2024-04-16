@@ -1,39 +1,28 @@
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 import ChromaLayout from 'src/layouts/ChromaLayout';
 import { DateTime } from 'luxon';
 import './Display.less';
 
-import { useRecoilRefresher_UNSTABLE, useRecoilValue } from 'recoil';
-import {
-  currentEventKeyAtom,
-  matchesByEventAtomFam,
-  matchesByTournamentSelector
-} from 'src/stores/NewRecoil';
-import { isNumber } from '@toa-lib/models';
+import { useRecoilValue } from 'recoil';
+import { currentEventKeyAtom } from 'src/stores/recoil';
+import { isNumber, Match } from '@toa-lib/models';
 
 import FGC_BG from '../AudienceDisplay/displays/fgc_2023/res/global-bg.png';
 import FGC_LOGO from '../AudienceDisplay/displays/fgc_2023/res/Global_Logo.png';
 import { useSearchParams } from 'react-router-dom';
+import { useMatchesForTournament } from 'src/api/use-match-data';
 
-const REFRESH_RATE_S = 60;
-
-const FieldColumn: FC<{ field: number; tournamentKey: string | null }> = ({
+const FieldColumn: FC<{ field: number; matches: Match<any>[] }> = ({
   field,
-  tournamentKey
+  matches
 }) => {
-  const eventKey = useRecoilValue(currentEventKeyAtom);
-  const fieldMatches = useRecoilValue(matchesByEventAtomFam(eventKey))
-    .filter(
-      (m) =>
-        m.fieldNumber === field &&
-        m.result === -1 &&
-        (tournamentKey ? m.tournamentKey === tournamentKey : true)
-    )
+  const fieldMatches = matches
+    .filter((m) => m.fieldNumber === field && m.result === -1)
     .slice(0, 6);
   return (
     <div id='q-field'>
       <h2>Field {field}</h2>
-      {fieldMatches.map((m) => {
+      {fieldMatches?.map((m) => {
         const params = m.name.split(' ');
         const matchNumber = isNumber(parseInt(params[2]))
           ? params[2]
@@ -53,20 +42,11 @@ const FieldColumn: FC<{ field: number; tournamentKey: string | null }> = ({
 };
 
 export const QueueingDisplay: FC = () => {
-  const refreshMatches = useRecoilRefresher_UNSTABLE(
-    matchesByTournamentSelector
-  );
+  const eventKey = useRecoilValue(currentEventKeyAtom);
   const [searchParams] = useSearchParams();
   const tournamentKey = searchParams.get('tournamentKey') ?? null;
-
-  useEffect(() => {
-    const intervalID = setInterval(() => {
-      refreshMatches();
-    }, 1000 * REFRESH_RATE_S);
-    return () => {
-      clearInterval(intervalID);
-    };
-  }, []);
+  // TODO - REFRESH EVERY X SECONDS/MINUTES (MUTATE SWR)
+  const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
 
   return (
     <ChromaLayout>
@@ -76,13 +56,30 @@ export const QueueingDisplay: FC = () => {
           <h1 id='q-head-left'>Upcoming Matches</h1>
           <img id='q-head-right' className='fit-w' src={FGC_LOGO} />
         </div>
-        <div id='q-field-base'>
-          <FieldColumn field={1} tournamentKey={tournamentKey} />
-          <FieldColumn field={2} tournamentKey={tournamentKey} />
-          <FieldColumn field={3} tournamentKey={tournamentKey} />
-          <FieldColumn field={4} tournamentKey={tournamentKey} />
-          <FieldColumn field={5} tournamentKey={tournamentKey} />
-        </div>
+        {matches && (
+          <div id='q-field-base'>
+            <FieldColumn
+              field={1}
+              matches={matches.filter((m) => m.fieldNumber === 1)}
+            />
+            <FieldColumn
+              field={2}
+              matches={matches.filter((m) => m.fieldNumber === 2)}
+            />
+            <FieldColumn
+              field={3}
+              matches={matches.filter((m) => m.fieldNumber === 3)}
+            />
+            <FieldColumn
+              field={4}
+              matches={matches.filter((m) => m.fieldNumber === 4)}
+            />
+            <FieldColumn
+              field={5}
+              matches={matches.filter((m) => m.fieldNumber === 5)}
+            />
+          </div>
+        )}
       </div>
     </ChromaLayout>
   );

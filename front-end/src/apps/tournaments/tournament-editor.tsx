@@ -9,7 +9,7 @@ import { TournamentForm } from 'src/components/forms/tournament-form';
 import { PageLoader } from 'src/components/loading/PageLoader';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import PaperLayout from 'src/layouts/PaperLayout';
-import { currentTournamentKeyAtom } from 'src/stores/NewRecoil';
+import { currentTournamentKeyAtom } from 'src/stores/recoil';
 import { tournamentsByEventKeyAtomFam } from 'src/stores/recoil';
 
 export const TournamentEditor: FC = () => {

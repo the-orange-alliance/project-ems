@@ -1,10 +1,6 @@
 import { FC } from 'react';
 import Box from '@mui/material/Box';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import {
-  currentTournamentFieldsAtom,
-  currentTournamentFieldsSelector
-} from 'src/stores/NewRecoil';
+import { useRecoilState } from 'recoil';
 import {
   darkModeAtom,
   followerModeEnabledAtom,
@@ -20,6 +16,8 @@ import { APIOptions } from '@toa-lib/client';
 import { updateSocketClient } from 'src/api/use-socket-data';
 import { ButtonSetting } from '../components/button-setting';
 import { useGitHubDownload } from '../util/use-github-download';
+import { useCurrentTournament } from 'src/api/use-tournament-data';
+import { useActiveFields } from 'src/components/sync-effects/sync-fields-to-recoil';
 
 const MainSettingsTab: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
@@ -30,15 +28,14 @@ const MainSettingsTab: FC = () => {
   );
   const [leaderApiHost, setLeaderApiHost] = useRecoilState(leaderApiHostAtom);
 
-  const allFields = useRecoilValue(currentTournamentFieldsSelector);
-  const [fieldControl, setFieldControl] = useRecoilState(
-    currentTournamentFieldsAtom
-  );
+  const tournament = useCurrentTournament();
+  const [fieldControl, setFieldControl] = useActiveFields();
 
   const downloadRelease = useGitHubDownload();
 
   const handleFieldChange = (value: string[]) => {
-    setFieldControl(allFields.filter((f) => value.includes(f.name)));
+    if (!tournament) return;
+    setFieldControl(tournament.fields.filter((f) => value.includes(f)));
   };
 
   const handleFollowerModeChange = (value: boolean) => {
@@ -82,12 +79,12 @@ const MainSettingsTab: FC = () => {
 
   let fieldIdTimeout: any = null;
   const updateFieldControl = (value: any[]) => {
+    if (!tournament) return;
     handleFieldChange(value);
-
     // Don't hammer the server with requests
-    const fields = allFields
-      .filter((f) => value.includes(f.name))
-      .map((f) => f.field)
+    const fields = tournament.fields
+      .filter((f) => value.includes(f))
+      .map((f) => f)
       .join(',');
     if (fieldIdTimeout !== null) clearTimeout(fieldIdTimeout);
     fieldIdTimeout = setTimeout(() => {
@@ -126,8 +123,8 @@ const MainSettingsTab: FC = () => {
       />
       <MultiSelectSetting
         name='Field Control'
-        value={fieldControl.map((f) => f.name)}
-        options={allFields.map((f) => f.name)}
+        value={fieldControl.map((f) => f)}
+        options={tournament?.fields?.map((f) => f) ?? []}
         onChange={updateFieldControl}
         inline
       />

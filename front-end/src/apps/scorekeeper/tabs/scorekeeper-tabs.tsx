@@ -3,7 +3,7 @@ import { FC, useEffect, useState } from 'react';
 import TabPanel from 'src/components/util/TabPanel/TabPanel';
 import { ScorekeeperMatches } from './scorekeeper-matches';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { currentTournamentKeyAtom } from 'src/stores/NewRecoil';
+import { currentTournamentKeyAtom } from 'src/stores/recoil';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data';
 import { useMatchesForTournament } from 'src/api/use-match-data';
 import { useTeamsForEvent } from 'src/api/use-team-data';

@@ -1,7 +1,7 @@
 import { apiFetcher } from '@toa-lib/client';
 import { ApiResponseError, Event, eventZod } from '@toa-lib/models';
 import { useRecoilValue } from 'recoil';
-import { currentEventKeyAtom } from 'src/stores/NewRecoil';
+import { currentEventKeyAtom } from 'src/stores/recoil';
 import useSWR, { SWRResponse } from 'swr';
 import useSWRImmutable from 'swr/immutable';
 

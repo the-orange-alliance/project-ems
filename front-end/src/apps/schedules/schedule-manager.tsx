@@ -5,7 +5,7 @@ import { useCurrentEvent } from 'src/api/use-event-data';
 import { PageLoader } from 'src/components/loading/PageLoader';
 import TwoColumnHeader from 'src/components/util/Headers/TwoColumnHeader';
 import PaperLayout from 'src/layouts/PaperLayout';
-import { currentTournamentKeyAtom } from 'src/stores/NewRecoil';
+import { currentTournamentKeyAtom } from 'src/stores/recoil';
 import { ScheduleTabs } from './tabs/schedule-tabs';
 import { useScheduleForTournament } from 'src/api/use-schedule-data';
 import TournamentDropdown from 'src/components/dropdowns/tournament-dropdown';

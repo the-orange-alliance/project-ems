@@ -15,7 +15,7 @@ import { useFlags } from 'src/stores/AppFlags';
 import {
   currentEventKeyAtom,
   currentTournamentKeyAtom
-} from 'src/stores/NewRecoil';
+} from 'src/stores/recoil';
 import PaperLayout from 'src/layouts/PaperLayout';
 import TwoColumnHeader from 'src/components/util/Headers/TwoColumnHeader';
 import EventTournamentsDropdown from 'src/components/dropdowns/EventTournamentsDropdown';

@@ -5,29 +5,26 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
-import { Match, Team } from '@toa-lib/models';
+import { Match, ScheduleItem, Team, Tournament } from '@toa-lib/models';
 import { Report } from './report-container';
 import { DateTime } from 'luxon';
-import { useRecoilValue } from 'recoil';
-import {
-  currentScheduleItemsByTournamentSelector,
-  currentTeamsByEventSelector,
-  currentTournamentSelector
-} from 'src/stores/NewRecoil';
 import FieldsDropdown from 'src/components/dropdowns/FieldsDropdown';
 
 interface Props {
+  tournament: Tournament;
   matches: Match<any>[];
+  teams: Team[];
+  items: ScheduleItem[];
   identifier?: keyof Team;
 }
 
-export const MatchReport: FC<Props> = ({ matches, identifier }) => {
-  const tournament = useRecoilValue(currentTournamentSelector);
-  const teams = useRecoilValue(currentTeamsByEventSelector);
-  const items = useRecoilValue(currentScheduleItemsByTournamentSelector);
-
-  if (!tournament) return null;
-
+export const MatchReport: FC<Props> = ({
+  tournament,
+  matches,
+  teams,
+  items,
+  identifier
+}) => {
   const allFields = tournament.fields.map((_, i) => i + 1);
   const [fields, setFields] = useState(allFields);
 

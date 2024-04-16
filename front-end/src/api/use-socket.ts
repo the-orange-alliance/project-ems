@@ -7,14 +7,13 @@ import {
 } from '@toa-lib/models';
 import { Socket } from 'socket.io-client';
 import { useRecoilCallback, useRecoilState } from 'recoil';
+
 import {
-  currentTournamentFieldsAtom,
-  socketConnectedAtom
-} from 'src/stores/NewRecoil';
-import {
+  socketConnectedAtom,
   followerModeEnabledAtom,
   leaderApiHostAtom,
-  displayChromaKeyAtom
+  displayChromaKeyAtom,
+  activeFieldsAtom
 } from 'src/stores/recoil';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { connectSocketClient } from './use-socket-data';
@@ -48,7 +47,7 @@ export const useSocket = (): [
 
   const identify = useRecoilCallback(({ snapshot, set }) => async () => {
     if (socket) {
-      const fields = await snapshot.getPromise(currentTournamentFieldsAtom);
+      const fields = await snapshot.getPromise(activeFieldsAtom);
       const followerModeEnabled = await snapshot.getPromise(
         followerModeEnabledAtom
       );
@@ -73,7 +72,7 @@ export const useSocket = (): [
       socket.on('settings', (data) => {
         // TODO: Make this get the field names properly
         set(
-          currentTournamentFieldsAtom,
+          activeFieldsAtom,
           data.fieldNumbers
             .split(',')
             .map((d: any) => ({ field: parseInt(d), name: `Field ${d}` }))

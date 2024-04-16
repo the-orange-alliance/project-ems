@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import { useRecoilValue } from 'recoil';
-import { currentEventKeyAtom } from 'src/stores/NewRecoil';
+import { currentEventKeyAtom } from 'src/stores/recoil';
 import { useEvent } from 'src/api/use-event-data';
 
 interface Props {

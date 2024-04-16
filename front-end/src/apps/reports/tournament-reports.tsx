@@ -10,6 +10,8 @@ import { useSeasonComponents } from 'src/hooks/use-season-components';
 import { useMatchesForTournament } from 'src/api/use-match-data';
 import { useTeamsForEvent } from 'src/api/use-team-data';
 import { useRankingsForTournament } from 'src/api/use-ranking-data';
+import { useScheduleItemsForTournament } from 'src/api/use-schedule-data';
+import { useCurrentTournament } from 'src/api/use-tournament-data';
 
 export const TournamentReports: FC<ReportProps> = ({
   eventKey,
@@ -17,15 +19,28 @@ export const TournamentReports: FC<ReportProps> = ({
   onGenerate
 }) => {
   const identifier = useRecoilValue(teamIdentifierAtom);
+  const tournament = useCurrentTournament();
   const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
   const { data: teams } = useTeamsForEvent(eventKey);
   const { data: rankings } = useRankingsForTournament(eventKey, tournamentKey);
+  const { data: scheduleItems } = useScheduleItemsForTournament(
+    eventKey,
+    tournamentKey
+  );
 
   const seasonComponents = useSeasonComponents();
 
   const generateScheduleReport = () => {
-    if (!matches) return;
-    onGenerate(<MatchReport matches={matches} identifier={identifier} />);
+    if (!tournament || !matches || !teams || !scheduleItems) return;
+    onGenerate(
+      <MatchReport
+        tournament={tournament}
+        matches={matches}
+        teams={teams}
+        items={scheduleItems}
+        identifier={identifier}
+      />
+    );
   };
   const generateRankingReport = () => {
     if (seasonComponents?.RankingsReport) {

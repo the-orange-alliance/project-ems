@@ -23,6 +23,26 @@ export const matchesByEventKeyAtomFam = atomFamily<Match<any>[], string>({
   default: []
 });
 
+export const currentEventKeyAtom = atom<string>({
+  key: 'eventState.currentEventKeySelector',
+  default: ''
+});
+
+export const currentTeamKeyAtom = atom<number | null>({
+  key: 'eventState.currentTeamKeyAtom',
+  default: null
+});
+
+export const currentTournamentKeyAtom = atom<string | null>({
+  key: 'currentTournamentKeyAtom',
+  default: null
+});
+
+export const activeFieldsAtom = atom<string[]>({
+  key: 'eventState.activeFieldsAtom',
+  default: []
+});
+
 export const currentMatchIdAtom = atom<number | null>({
   key: 'eventState.currentMatchIdAtom',
   default: null
@@ -67,5 +87,10 @@ export const redBonusActiveAtom = atom({
 
 export const blueBonusActiveAtom = atom({
   key: 'blueBonusActiveAtom',
+  default: false
+});
+
+export const socketConnectedAtom = atom<boolean>({
+  key: 'socketConnectedAtom',
   default: false
 });

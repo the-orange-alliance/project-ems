@@ -4,7 +4,7 @@ import { useRecoilValue } from 'recoil';
 import {
   currentEventKeyAtom,
   currentTournamentKeyAtom
-} from 'src/stores/NewRecoil';
+} from 'src/stores/recoil';
 import useSWR from 'swr';
 
 export const postTournaments = async (

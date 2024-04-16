@@ -2,7 +2,7 @@ import { Team } from '@toa-lib/models';
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import { teamIdentifierAtom } from 'src/stores/recoil';
-import { currentEventKeyAtom } from 'src/stores/NewRecoil';
+import { currentEventKeyAtom } from 'src/stores/recoil';
 import { useTeamsForEvent } from 'src/api/use-team-data';
 
 export const useTeamIdentifiers = (): Record<number, string> => {
