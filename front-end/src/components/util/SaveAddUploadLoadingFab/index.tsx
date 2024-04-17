@@ -4,7 +4,7 @@ import {
   SpeedDialAction,
   SpeedDialIcon
 } from '@mui/material';
-import { ChangeEvent } from 'react';
+import { ChangeEvent, useRef } from 'react';
 import { ExpandLess, Upload, Save } from '@mui/icons-material';
 
 interface IProps {
@@ -32,6 +32,11 @@ const SaveAddUploadLoadingFab = ({
   saveTooltip,
   addTooltip
 }: IProps) => {
+  const uploadRef = useRef<HTMLInputElement | null>(null);
+  const handleUpload = () => {
+    if (!uploadRef.current) return;
+    uploadRef.current.click();
+  };
   return (
     <SpeedDial
       sx={{ position: 'fixed', bottom: 16, right: 16 }}
@@ -51,8 +56,8 @@ const SaveAddUploadLoadingFab = ({
           tooltipTitle={uploadTooltip ?? 'Upload'}
           icon={
             <>
-              <Upload />
-              <input type='file' hidden onChange={onUpload} />
+              <Upload onClick={handleUpload} />
+              <input ref={uploadRef} type='file' hidden onChange={onUpload} />
             </>
           }
         />

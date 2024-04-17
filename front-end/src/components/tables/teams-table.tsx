@@ -15,7 +15,7 @@ export const TeamsTable: FC<Props> = ({ event, teams, onEdit, onDelete }) => {
       data={teams}
       headers={[
         'Event',
-        'Team',
+        'Team Number',
         'Short Name',
         'Long Name',
         'Location',
@@ -37,7 +37,7 @@ export const TeamsTable: FC<Props> = ({ event, teams, onEdit, onDelete }) => {
         );
         return [
           eventName,
-          t.teamKey,
+          t.teamNumber,
           t.teamNameShort,
           t.teamNameLong,
           location,

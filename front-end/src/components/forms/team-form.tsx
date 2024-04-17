@@ -61,7 +61,14 @@ export const TeamForm: FC<Props> = ({ initialTeam, loading, onSubmit }) => {
           label='Team Key'
           value={team.teamKey}
           onChange={handleChange}
-          disabled={typeof initialTeam !== 'undefined' || loading}
+          disabled
+        />
+        <FormField
+          name='teamNumber'
+          label='Team Number'
+          value={team.teamNumber}
+          onChange={handleChange}
+          disabled={loading}
         />
         <FormField
           name='teamNameShort'

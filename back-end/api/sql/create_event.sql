@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS "team" (
     "teamKey" INT NOT NULL,
     "eventKey" VARCHAR(25) NOT NULL,
     "hasCard" INT,
+    "teamNumber" VARCHAR(255),
     "teamNameShort" VARCHAR(255),
     "teamNameLong" VARCHAR(255),
     "robotName" VARCHAR(100),

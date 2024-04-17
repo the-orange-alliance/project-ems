@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const teamZod = z.object({
   eventKey: z.string(),
   teamKey: z.number(),
-  hasCard: z.coerce.boolean(),
+  teamNumber: z.string(),
   teamNameShort: z.string(),
   teamNameLong: z.string(),
   robotName: z.string(),
@@ -12,12 +12,14 @@ export const teamZod = z.object({
   country: z.string(),
   countryCode: z.string().max(2),
   rookieYear: z.number(),
-  cardStatus: z.number()
+  cardStatus: z.number(),
+  hasCard: z.coerce.boolean()
 });
 
 export const defaultTeam: Team = {
   eventKey: '',
   teamKey: 0,
+  teamNumber: '',
   hasCard: false,
   teamNameShort: '',
   teamNameLong: '',

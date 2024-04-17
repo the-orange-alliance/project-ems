@@ -15,11 +15,12 @@ export const parseTeamsFile = async (
         data.target.result
           .toString()
           .split('\r')
-          .map((team) => {
+          .map((team, i) => {
             const t = team.split(',');
             return {
               eventKey,
-              teamKey: parseInt(t[0]),
+              teamKey: i + 1,
+              teamNumber: t[0],
               teamNameLong: t[1],
               teamNameShort: t[2],
               robotName: t[3],

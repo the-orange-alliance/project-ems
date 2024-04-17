@@ -30,7 +30,6 @@ const MainSettingsTab: FC = () => {
 
   const tournament = useCurrentTournament();
   const [fieldControl, setFieldControl] = useActiveFields();
-
   const downloadRelease = useGitHubDownload();
 
   const handleFieldChange = (value: string[]) => {
@@ -82,10 +81,7 @@ const MainSettingsTab: FC = () => {
     if (!tournament) return;
     handleFieldChange(value);
     // Don't hammer the server with requests
-    const fields = tournament.fields
-      .filter((f) => value.includes(f))
-      .map((f) => f)
-      .join(',');
+    const fields = tournament.fields.filter((f) => value.includes(f));
     if (fieldIdTimeout !== null) clearTimeout(fieldIdTimeout);
     fieldIdTimeout = setTimeout(() => {
       updateSocketClient(localStorage.getItem('persistantClientId') ?? '', {
