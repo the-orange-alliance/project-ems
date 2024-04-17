@@ -13,7 +13,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   currentEventKeyAtom,
   currentTournamentKeyAtom
-} from 'src/stores/NewRecoil';
+} from 'src/stores/recoil';
 import { Tournament } from '@toa-lib/models';
 import FrcFmsSettingsTab from './tabs/frc-fms';
 // import FrcFmsSettingsTab from './tabs/frc-fms';

@@ -3,10 +3,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import Box from '@mui/material/Box';
 import ToggleButton from '@mui/material/ToggleButton';
 import Typography from '@mui/material/Typography';
-import {
-  matchInProgressAtom,
-  matchInProgressParticipantsByStationSelectorFam
-} from '@stores/NewRecoil';
+import { matchOccurringAtom } from '@stores/recoil';
 import { useSocket } from 'src/api/use-socket';
 import { MatchSocketEvent } from '@toa-lib/models';
 
@@ -16,7 +13,7 @@ interface Props {
 
 const TeamSheet: FC<Props> = ({ station }) => {
   const [socket] = useSocket();
-  const match = useRecoilValue(matchInProgressAtom);
+  const match = useRecoilValue(matchOccurringAtom);
   const [participant, setParticipant] = useRecoilState(
     matchInProgressParticipantsByStationSelectorFam(station)
   );

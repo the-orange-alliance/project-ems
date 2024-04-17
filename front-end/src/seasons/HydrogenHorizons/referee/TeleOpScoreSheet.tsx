@@ -9,16 +9,14 @@ import {
 } from '@toa-lib/models';
 import StateToggle from 'src/components/inputs/StateToggle';
 import { useRecoilValue } from 'recoil';
-import {
-  currentTeamsByEventSelector,
-  matchInProgressAtom
-} from '@stores/NewRecoil';
 import NumberInput from 'src/components/inputs/NumberInput';
 import {
   AlignmentStatus,
   Proficiency
 } from '@toa-lib/models/build/seasons/HydrogenHorizons';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
+import { matchOccurringAtom } from 'src/stores/recoil';
+import { useTeamsForEvent } from 'src/api/use-team-data';
 
 interface Props {
   alliance: Alliance;
@@ -40,8 +38,8 @@ const TeleScoreSheet: FC<Props> = ({
   onMatchDetailsUpdate
 }) => {
   const match: Match<HydrogenHorizons.MatchDetails> | null =
-    useRecoilValue(matchInProgressAtom);
-  const teams = useRecoilValue(currentTeamsByEventSelector);
+    useRecoilValue(matchOccurringAtom);
+  const { data: teams } = useTeamsForEvent(match?.eventKey ?? '');
   const identifiers = useTeamIdentifiers();
 
   if (!match || !match.details) return null;
@@ -193,7 +191,7 @@ const TeleScoreSheet: FC<Props> = ({
         />
       </Grid>
       {participants?.map((p) => {
-        const team = teams.find((t) => t.teamKey === p.teamKey);
+        const team = teams?.find((t) => t.teamKey === p.teamKey);
         const update = (value: Proficiency) => {
           updateProficiency(p.station, value);
         };

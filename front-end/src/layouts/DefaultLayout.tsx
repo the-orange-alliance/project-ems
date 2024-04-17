@@ -13,7 +13,7 @@ import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import LoginButton from 'src/components/buttons/LoginButton/LoginButton';
-import { userAtom } from '@stores/NewRecoil';
+import { userAtom } from '@stores/recoil';
 import emsAvatar from '@assets/favicon.ico';
 import LogoutButton from 'src/components/buttons/LogoutButton/LogoutButton';
 import NotificationsIcon from '@mui/icons-material/Notifications';

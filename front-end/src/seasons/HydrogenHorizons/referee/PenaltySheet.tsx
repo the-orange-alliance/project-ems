@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import NumberInput from 'src/components/inputs/NumberInput';
 import { Alliance, HydrogenHorizons, Match } from '@toa-lib/models';
 import { useRecoilValue } from 'recoil';
-import { matchInProgressAtom } from '@stores/NewRecoil';
+import { matchOccurringAtom } from '@stores/recoil';
 
 interface Props {
   alliance: Alliance;
@@ -15,7 +15,7 @@ interface Props {
 }
 
 const PenaltySheet: FC<Props> = ({ alliance, onMatchItemUpdate }) => {
-  const match = useRecoilValue(matchInProgressAtom);
+  const match = useRecoilValue(matchOccurringAtom);
 
   const handleFoulChange = (minPen: number) => {
     onMatchItemUpdate(alliance === 'red' ? 'redMinPen' : 'blueMinPen', minPen);

@@ -19,10 +19,10 @@ import {
 } from 'recoil';
 import {
   blueBonusActiveAtom,
-  matchInProgressAtom,
+  matchOccurringAtom,
   matchStateAtom,
   redBonusActiveAtom
-} from '@stores/NewRecoil';
+} from '@stores/recoil';
 import NumberInput from 'src/components/inputs/NumberInput';
 import { useSocket } from 'src/api/use-socket';
 
@@ -36,7 +36,7 @@ const TeleScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   const [match, setMatch]: [
     Match<Crescendo.MatchDetails> | null,
     SetterOrUpdater<Match<Crescendo.MatchDetails> | null>
-  ] = useRecoilState(matchInProgressAtom);
+  ] = useRecoilState(matchOccurringAtom);
   const matchState = useRecoilValue(matchStateAtom);
 
   const [socket, connected] = useSocket();

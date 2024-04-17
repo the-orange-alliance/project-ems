@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import NumberInput from 'src/components/inputs/NumberInput';
 import { Alliance, Crescendo, Match } from '@toa-lib/models';
 import { useRecoilState } from 'recoil';
-import { matchInProgressAtom } from '@stores/NewRecoil';
+import { matchOccurringAtom } from '@stores/recoil';
 
 interface Props {
   alliance: Alliance;
@@ -12,7 +12,7 @@ interface Props {
 }
 
 const PenaltySheet: FC<Props> = ({ alliance, onUpdate }) => {
-  const [match, setMatch] = useRecoilState(matchInProgressAtom);
+  const [match, setMatch] = useRecoilState(matchOccurringAtom);
 
   const handleFoulChange = (minPen: number) => {
     if (minPen < 0) minPen = 0;

@@ -13,7 +13,7 @@ import {
 import ConnectionChip from 'src/components/util/ConnectionChip/ConnectionChip';
 import MatchChip from 'src/components/util/MatchChip/MatchChip';
 import { useRecoilValue } from 'recoil';
-import { matchInProgressAtom } from '@stores/NewRecoil';
+import { matchOccurringAtom } from '@stores/recoil';
 import TeamSheet from './TeamSheet';
 import PenaltySheet from './PenaltySheet';
 import TabPanel from 'src/components/util/TabPanel/TabPanel';
@@ -27,7 +27,7 @@ interface Props {
 
 const ScoreSheet: FC<Props> = ({ alliance }) => {
   const [socket] = useSocket();
-  const match = useRecoilValue(matchInProgressAtom);
+  const match = useRecoilValue(matchOccurringAtom);
 
   const [tabIndex, setTabIndex] = useState(0);
 

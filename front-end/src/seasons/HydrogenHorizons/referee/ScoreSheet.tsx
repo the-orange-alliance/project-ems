@@ -2,7 +2,7 @@ import { FC, SyntheticEvent, useState } from 'react';
 import { RefereeScoreSheetProps } from '@seasons/index';
 import { useSocket } from 'src/api/use-socket';
 import { SetterOrUpdater, useRecoilState } from 'recoil';
-import { matchInProgressAtom } from '@stores/NewRecoil';
+import { matchOccurringAtom } from '@stores/recoil';
 import {
   HydrogenHorizons,
   Match,
@@ -27,7 +27,7 @@ const ScoreSheet: FC<RefereeScoreSheetProps> = ({ alliance }) => {
   const [match, setMatch]: [
     Match<HydrogenHorizons.MatchDetails> | null,
     SetterOrUpdater<Match<HydrogenHorizons.MatchDetails> | null>
-  ] = useRecoilState(matchInProgressAtom);
+  ] = useRecoilState(matchOccurringAtom);
 
   const [tabIndex, setTabIndex] = useState(0);
 

@@ -9,7 +9,7 @@ import {
 } from '@toa-lib/models';
 import StateToggle from 'src/components/inputs/StateToggle';
 import { SetterOrUpdater, useRecoilState } from 'recoil';
-import { matchInProgressAtom } from '@stores/NewRecoil';
+import { matchOccurringAtom } from '@stores/recoil';
 import NumberInput from 'src/components/inputs/NumberInput';
 
 interface Props {
@@ -22,7 +22,7 @@ const AutoScoreSheet: FC<Props> = ({ alliance, participants, onUpdate }) => {
   const [match, setMatch]: [
     Match<ChargedUpDetails> | null,
     SetterOrUpdater<Match<ChargedUpDetails> | null>
-  ] = useRecoilState(matchInProgressAtom);
+  ] = useRecoilState(matchOccurringAtom);
 
   if (!match || !match.details) return null;
 

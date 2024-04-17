@@ -10,7 +10,7 @@ import { TournamentReports } from './tournament-reports';
 import {
   currentEventKeyAtom,
   currentTournamentKeyAtom
-} from 'src/stores/NewRecoil';
+} from 'src/stores/recoil';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data';
 import TournamentDropdown from 'src/components/dropdowns/tournament-dropdown';
 

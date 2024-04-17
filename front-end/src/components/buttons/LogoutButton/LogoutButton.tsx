@@ -4,7 +4,7 @@ import { FC } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { logout } from 'src/api/use-login-data';
 import useLocalStorage from 'src/stores/LocalStorage';
-import { userAtom } from 'src/stores/NewRecoil';
+import { userAtom } from 'src/stores/recoil';
 
 const LogoutButton: FC = () => {
   const setUser = useSetRecoilState(userAtom);
