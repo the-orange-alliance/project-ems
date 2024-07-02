@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import PaperLayout from 'src/layouts/PaperLayout';
+import { PaperLayout } from 'src/layouts/paper-layout';
 import { Displays, MatchSocketEvent } from '@toa-lib/models';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';

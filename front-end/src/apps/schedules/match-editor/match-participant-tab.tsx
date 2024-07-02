@@ -3,7 +3,7 @@ import { Match, MatchParticipant, Team } from '@toa-lib/models';
 import { FC } from 'react';
 import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team';
 
-import { replaceInArray } from 'src/stores/Util';
+import { replaceInArray } from 'src/stores/array-utils';
 
 interface Props {
   match: Match<any>;

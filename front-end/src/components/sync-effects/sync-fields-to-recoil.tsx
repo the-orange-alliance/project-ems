@@ -2,7 +2,7 @@ import { useRecoilState, useSetRecoilState } from 'recoil';
 import { activeFieldsAtom } from 'src/stores/recoil';
 import { useEffect } from 'react';
 import { useCurrentTournament } from 'src/api/use-tournament-data';
-import useLocalStorage from 'src/stores/LocalStorage';
+import useLocalStorage from 'src/stores/local-storage';
 
 export const useSyncFieldsToRecoil = () => {
   const setActiveFields = useSetRecoilState(activeFieldsAtom);

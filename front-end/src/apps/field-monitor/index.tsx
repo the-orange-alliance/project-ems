@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import DefaultLayout from 'src/layouts/DefaultLayout';
+import { DefaultLayout } from '@layouts/default-layout';
 import Paper from '@mui/material/Paper';
 import { Grid, Typography } from '@mui/material';
 import {
@@ -10,7 +10,7 @@ import {
 } from '@toa-lib/models';
 import { TeamRow } from './components/team-row';
 import { PrestartStatus as PrestartStatusIcon } from './components/prestart-status';
-import ConnectionChip from 'src/components/util/ConnectionChip/ConnectionChip';
+import { ConnectionChip } from 'src/components/util/connection-chip';
 import { useSocket } from 'src/api/use-socket';
 
 export const FrcFmsFieldMonitorApp: FC = () => {

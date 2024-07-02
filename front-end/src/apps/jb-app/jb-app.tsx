@@ -1,7 +1,7 @@
 import { FC, useState, useEffect } from 'react';
 import { DateTime } from 'luxon';
 import './JBApp.less';
-import ChromaLayout from 'src/layouts/ChromaLayout';
+import { ChromaLayout } from 'src/layouts/chroma-layout';
 import { useRecoilValue } from 'recoil';
 import { MatchTimer } from 'src/components/util/match-timer';
 import { matchOccurringAtom } from 'src/stores/recoil';

@@ -1,6 +1,6 @@
 import { Event, Tournament } from '@toa-lib/models';
 import { FC } from 'react';
-import UpgradedTable from './UpgradedTable/UpgradedTable';
+import { UpgradedTable } from './upgraded-table';
 
 interface Props {
   event: Event;

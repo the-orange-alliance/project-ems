@@ -7,9 +7,7 @@ import {
   Match,
   MatchParticipant
 } from '@toa-lib/models';
-import StateToggle from 'src/components/inputs/StateToggle';
 import { useRecoilValue } from 'recoil';
-import NumberInput from 'src/components/inputs/NumberInput';
 import {
   AlignmentStatus,
   Proficiency
@@ -17,6 +15,8 @@ import {
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 import { matchOccurringAtom } from 'src/stores/recoil';
 import { useTeamsForEvent } from 'src/api/use-team-data';
+import { NumberInput } from 'src/components/inputs/number-input';
+import { StateToggle } from 'src/components/inputs/state-toggle';
 
 interface Props {
   alliance: Alliance;

@@ -8,11 +8,10 @@ import {
   DialogTitle,
   Grid
 } from '@mui/material';
-import { eventsAtom } from 'src/stores/NewRecoil';
-import { useRecoilState } from 'recoil';
 import { DropdownSetting } from './dropdown-setting';
 import { TextSetting } from './text-setting';
 import { SwitchSetting } from './switch-setting';
+import { useEvents } from 'src/api/use-event-data';
 
 interface Props {
   onChange: (value: FMSSettings, cancel: boolean) => void;
@@ -22,7 +21,7 @@ interface Props {
 
 export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
   const [settings, setSettings] = useState<FMSSettings>({ ...value });
-  const [events] = useRecoilState(eventsAtom);
+  const { data: events } = useEvents();
 
   const save = () => onChange(settings, false);
   const cancel = () => onChange(settings, true);
@@ -53,7 +52,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
             <DropdownSetting
               name='Assigned Event'
               value={settings.eventKey}
-              options={events.map((e) => e.eventKey)}
+              options={events?.map((e) => e.eventKey) ?? []}
               onChange={(v) => updateState(v, 'eventKey')}
             />
           </Grid>

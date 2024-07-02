@@ -4,7 +4,7 @@ import { SyncDisplayToRecoil } from 'src/components/sync-effects/sync-display-to
 import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state-to-recoil';
 import { SyncOnPrestart } from 'src/components/sync-effects/sync-on-prestart';
 import { SyncOnCommit } from 'src/components/sync-effects/sync-on-commit';
-import ChromaLayout from 'src/layouts/ChromaLayout';
+import { ChromaLayout } from 'src/layouts/chroma-layout';
 import { currentEventKeyAtom } from 'src/stores/recoil';
 import { DisplaySwitcher } from './displays';
 import { displayIdAtom } from 'src/stores/recoil';

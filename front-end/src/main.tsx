@@ -6,11 +6,11 @@ import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { Provider as ModalProvider } from '@ebay/nice-modal-react';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
-import App from './App';
-import { frcTheme } from './AppTheme';
+import { frcTheme } from './app-theme';
 import { darkModeAtom } from './stores/recoil';
 import { APIOptions, SocketOptions } from '@toa-lib/client';
-import { getFromLocalStorage } from './stores/LocalStorage';
+import { getFromLocalStorage } from './stores/local-storage';
+import { AppContainer } from './App';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Error while trying to find document root.');
@@ -38,7 +38,7 @@ function Main() {
   return (
     <ThemeProvider theme={useMemo(() => frcTheme(darkMode), [darkMode])}>
       <ModalProvider>
-        <App />
+        <AppContainer />
       </ModalProvider>
     </ThemeProvider>
   );

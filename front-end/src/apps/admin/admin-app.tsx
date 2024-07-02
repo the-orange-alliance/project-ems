@@ -11,14 +11,14 @@ import {
   resultsSyncRankings
 } from 'src/api/use-results-sync';
 import { purgeAll } from 'src/api/use-event-data';
-import { useFlags } from 'src/stores/AppFlags';
+import { useFlags } from 'src/stores/app-flags';
 import {
   currentEventKeyAtom,
   currentTournamentKeyAtom
 } from 'src/stores/recoil';
-import PaperLayout from 'src/layouts/PaperLayout';
-import TwoColumnHeader from 'src/components/util/Headers/TwoColumnHeader';
-import EventTournamentsDropdown from 'src/components/dropdowns/EventTournamentsDropdown';
+import { PaperLayout } from 'src/layouts/paper-layout';
+import { TwoColumnHeader } from 'src/components/util/two-column-header';
+import { EventTournamentsDropdown } from 'src/components/dropdowns/event-tournaments-dropdown';
 import { Tournament } from '@toa-lib/models';
 import { useTeamsForEvent } from 'src/api/use-team-data';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data';

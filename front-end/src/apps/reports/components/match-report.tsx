@@ -8,7 +8,7 @@ import TableBody from '@mui/material/TableBody';
 import { Match, ScheduleItem, Team, Tournament } from '@toa-lib/models';
 import { Report } from './report-container';
 import { DateTime } from 'luxon';
-import FieldsDropdown from 'src/components/dropdowns/FieldsDropdown';
+import { EventTournamentFieldsDropdown } from 'src/components/dropdowns/event-tournament-fields-dropdown';
 
 interface Props {
   tournament: Tournament;
@@ -39,7 +39,10 @@ export const MatchReport: FC<Props> = ({
   return (
     <>
       <div className='no-print'>
-        <FieldsDropdown fields={fields} onChange={changeFields} />
+        <EventTournamentFieldsDropdown
+          fields={fields}
+          onChange={changeFields}
+        />
       </div>
       <Report name={`${tournament.name} Match Schedule`}>
         <TableContainer>

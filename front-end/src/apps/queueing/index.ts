@@ -1,3 +1,3 @@
-import { QueueingDisplay } from './QueueingDisplay';
+import { QueueingManager } from './queueing-manager';
 
-export { QueueingDisplay };
+export { QueueingManager };

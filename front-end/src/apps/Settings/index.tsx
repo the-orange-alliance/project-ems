@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import PaperLayout from 'src/layouts/PaperLayout';
+import { PaperLayout } from 'src/layouts/paper-layout';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { Tab } from '@mui/material';
@@ -7,8 +7,8 @@ import { TabContext, TabList, TabPanel } from '@mui/lab';
 import AudienceDisplaySettingsTab from './tabs/audience';
 import MainSettingsTab from './tabs/main';
 import { useSeasonComponents } from 'src/hooks/use-season-components';
-import TwoColumnHeader from 'src/components/util/Headers/TwoColumnHeader';
-import EventTournamentsDropdown from 'src/components/dropdowns/EventTournamentsDropdown';
+import { TwoColumnHeader } from 'src/components/util/two-column-header';
+import { EventTournamentsDropdown } from 'src/components/dropdowns/event-tournaments-dropdown';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   currentEventKeyAtom,

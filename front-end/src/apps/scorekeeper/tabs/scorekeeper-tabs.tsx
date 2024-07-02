@@ -1,6 +1,6 @@
 import { Divider, Paper, Tab, Tabs } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
-import TabPanel from 'src/components/util/TabPanel/TabPanel';
+import { TabPanel } from 'src/components/util/tab-panel';
 import { ScorekeeperMatches } from './scorekeeper-matches';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { currentTournamentKeyAtom } from 'src/stores/recoil';

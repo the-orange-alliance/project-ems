@@ -3,9 +3,9 @@ import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import FormControl from '@mui/material/FormControl';
 import LoadingButton from '@mui/lab/LoadingButton';
-import SeasonDropdown from 'src/components/dropdowns/SeasonDropdown';
-import EventTypeDropdown from 'src/components/dropdowns/EventTypeDropdown';
-import DatePicker from 'src/components/util/DatePicker/DatePicker';
+import { SeasonDropdown } from 'src/components/dropdowns/season-dropdown';
+import { EventTypeDropdown } from 'src/components/dropdowns/event-type-dropdown';
+import { DatePicker } from 'src/components/util/date-picker';
 import { Event, defaultEvent } from '@toa-lib/models';
 
 const FormField: FC<{

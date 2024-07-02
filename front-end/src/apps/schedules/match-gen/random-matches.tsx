@@ -8,7 +8,7 @@ import {
 } from '@toa-lib/models';
 import { FC, useState } from 'react';
 import { createMatchSchedule } from 'src/api/use-match-data';
-import MatchMakerQuality from 'src/components/dropdowns/MatchMakerQuality';
+import { MatchMakerQualityDropdown } from 'src/components/dropdowns/match-maker-dropdown';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 
 interface Props {
@@ -64,7 +64,7 @@ export const RandomMatches: FC<Props> = ({
   };
   return (
     <Box>
-      <MatchMakerQuality quality={quality} onChange={setQuality} />
+      <MatchMakerQualityDropdown quality={quality} onChange={setQuality} />
       <Button
         sx={{ marginTop: (theme) => theme.spacing(2), display: 'block' }}
         variant='contained'

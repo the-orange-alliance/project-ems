@@ -1,12 +1,12 @@
 import { Routes, Route } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
-import routes from './AppRoutes';
-import './App.less';
+import routes from './app-routes';
+import './utils.less';
 import { useSnackbar } from './hooks/use-snackbar';
 import { userAtom } from './stores/recoil';
 import { FC, ReactNode, useEffect } from 'react';
 import { useSocket } from './api/use-socket';
-import SyncEffects from './components/sync-effects/SyncEffects';
+import SyncEffects from './components/sync-effects/sync-effects';
 
 const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {
   return (
@@ -17,7 +17,7 @@ const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {
   );
 };
 
-function App() {
+export function AppContainer() {
   const { AppSnackbar } = useSnackbar();
   const user = useRecoilValue(userAtom);
   const [, , setupSocket] = useSocket();
@@ -61,5 +61,3 @@ function App() {
     </>
   );
 }
-
-export default App;

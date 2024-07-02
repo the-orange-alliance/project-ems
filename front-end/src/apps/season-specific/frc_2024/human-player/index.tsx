@@ -15,8 +15,8 @@ import {
   useSetRecoilState
 } from 'recoil';
 import { useSocket } from 'src/api/use-socket';
-import ConnectionChip from 'src/components/util/ConnectionChip/ConnectionChip';
-import MatchChip from 'src/components/util/MatchChip/MatchChip';
+import { ConnectionChip } from 'src/components/util/connection-chip';
+import { MatchChip } from 'src/components/util/match-chip';
 import {
   matchOccurringAtom,
   matchStateAtom,

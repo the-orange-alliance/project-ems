@@ -1,10 +1,10 @@
 import { FC } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import NumberInput from 'src/components/inputs/NumberInput';
 import { Alliance, HydrogenHorizons, Match } from '@toa-lib/models';
 import { useRecoilValue } from 'recoil';
 import { matchOccurringAtom } from '@stores/recoil';
+import { NumberInput } from 'src/components/inputs/number-input';
 
 interface Props {
   alliance: Alliance;

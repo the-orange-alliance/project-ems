@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { Box } from '@mui/material';
 import { useSeasonComponents } from 'src/hooks/use-season-components';
-import RefereeLayout from 'src/layouts/RefereeLayout';
+import { RefereeLayout } from 'src/layouts/referee-layout';
 import { SyncMatchOccurringToRecoil } from 'src/components/sync-effects/sync-match-occurring-to-recoil';
 import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state-to-recoil';
 import { SyncMatchesToRecoil } from 'src/components/sync-effects/sync-matches-to-recoi';

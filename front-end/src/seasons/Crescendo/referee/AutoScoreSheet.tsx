@@ -2,10 +2,10 @@ import { FC } from 'react';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import { Alliance, Crescendo, Match, MatchParticipant } from '@toa-lib/models';
-import StateToggle from 'src/components/inputs/StateToggle';
 import { SetterOrUpdater, useRecoilState } from 'recoil';
 import { matchOccurringAtom } from '@stores/recoil';
-import NumberInput from 'src/components/inputs/NumberInput';
+import { NumberInput } from 'src/components/inputs/number-input';
+import { StateToggle } from 'src/components/inputs/state-toggle';
 
 interface Props {
   alliance: Alliance;

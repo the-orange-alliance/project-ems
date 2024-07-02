@@ -7,7 +7,7 @@ import { useSnackbar } from 'src/hooks/use-snackbar';
 import { LoadingButton } from '@mui/lab';
 import { sendAbortMatch, useSocket } from 'src/api/use-socket';
 import { useModal } from '@ebay/nice-modal-react';
-import AbortDialog from 'src/components/dialogs/AbortDialog';
+import { AbortDialog } from 'src/components/dialogs/abort-dialog';
 
 export const StartMatchButton: FC = () => {
   const [loading, setLoading] = useState(false);

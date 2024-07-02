@@ -13,7 +13,7 @@ import { TeamKeys } from '@toa-lib/models';
 import { TextSetting } from './components/text-setting';
 import { APIOptions } from '@toa-lib/client';
 import { updateSocketClient } from 'src/api/use-socket-data';
-import DefaultLayout from 'src/layouts/DefaultLayout';
+import { DefaultLayout } from '@layouts/default-layout';
 import { Paper } from '@mui/material';
 
 const Settings: FC = () => {

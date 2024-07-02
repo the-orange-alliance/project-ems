@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import RefereeLayout from 'src/layouts/RefereeLayout';
+import { RefereeLayout } from 'src/layouts/referee-layout';
 import { useComponents } from '@seasons/index';
 import { useRecoilValue } from 'recoil';
 import { currentEventKeyAtom } from '@stores/recoil';

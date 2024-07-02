@@ -4,11 +4,11 @@ import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { useCurrentEvent } from 'src/api/use-event-data';
-import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
+import { ViewReturn } from 'src/components/buttons/view-return';
 import { TeamForm } from 'src/components/forms/team-form';
-import { PageLoader } from 'src/components/loading/PageLoader';
+import { PageLoader } from 'src/components/loading/page-loader';
 import { useSnackbar } from 'src/hooks/use-snackbar';
-import PaperLayout from 'src/layouts/PaperLayout';
+import { PaperLayout } from 'src/layouts/paper-layout';
 import { currentTeamKeyAtom } from 'src/stores/recoil';
 import { teamsByEventKeyAtomFam } from 'src/stores/recoil/event-state';
 

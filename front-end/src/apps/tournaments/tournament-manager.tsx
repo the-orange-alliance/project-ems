@@ -9,13 +9,13 @@ import {
   postTournaments,
   useTournamentsForEvent
 } from 'src/api/use-tournament-data';
-import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
-import { PageLoader } from 'src/components/loading/PageLoader';
+import { ViewReturn } from 'src/components/buttons/view-return';
+import { PageLoader } from 'src/components/loading/page-loader';
 import { TournamentTable } from 'src/components/tables/tournament-table';
-import SaveAddUploadLoadingFab from 'src/components/util/SaveAddUploadLoadingFab';
+import { SaveAddUploadLoadingFab } from 'src/components/util/save-upload-fab';
 import { useSnackbar } from 'src/hooks/use-snackbar';
-import PaperLayout from 'src/layouts/PaperLayout';
-import { getDifferences } from 'src/stores/Util';
+import { PaperLayout } from 'src/layouts/paper-layout';
+import { getDifferences } from 'src/stores/array-utils';
 import { tournamentsByEventKeyAtomFam } from 'src/stores/recoil';
 
 export const TournamentManager: FC = () => {

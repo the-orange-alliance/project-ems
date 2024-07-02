@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 import Typography from '@mui/material/Typography';
-import PaperLayout from '@layouts/PaperLayout';
+import { PaperLayout } from 'src/layouts/paper-layout';
 import { useRecoilState } from 'recoil';
 import { socketClientsAtom } from 'src/stores/NewRecoil';
 import {

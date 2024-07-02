@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { AllianceCards } from './components/alliance-cards';
-import RefereeLayout from 'src/layouts/RefereeLayout';
+import { RefereeLayout } from 'src/layouts/referee-layout';
 
 export const RefereeApp: FC = () => {
   return (

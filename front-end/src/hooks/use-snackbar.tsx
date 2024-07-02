@@ -9,7 +9,7 @@ import {
   snackbarUseShowAtom
 } from 'src/stores/recoil';
 import { useModal } from '@ebay/nice-modal-react';
-import ErrorDialog from 'src/components/dialogs/ErrorDialog';
+import { ErrorDialog } from 'src/components/dialogs/error-dialog';
 
 /**
  * The goal is to have the following

@@ -1,5 +1,5 @@
 import { atom, RecoilValueReadOnly, selector } from 'recoil';
-import { localStorageEffect } from 'src/stores/Effects';
+import { localStorageEffect } from 'src/stores/recoil-effects';
 import {
   defaultFieldOptions,
   FcsPackets,

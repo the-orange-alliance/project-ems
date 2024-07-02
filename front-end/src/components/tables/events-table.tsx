@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { Event, EventTypes } from '@toa-lib/models';
-import UpgradedTable from './UpgradedTable/UpgradedTable';
+import { UpgradedTable } from './upgraded-table';
 import { DateTime } from 'luxon';
 
 interface Props {

@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useCurrentEvent } from 'src/api/use-event-data';
-import DefaultLayout from 'src/layouts/DefaultLayout';
+import { DefaultLayout } from '@layouts/default-layout';
 import { MatchControl } from './match-control/match-control';
 import { ScorekeeperTabs } from './tabs/scorekeeper-tabs';
 import { MatchHeader } from './match-header/match-header';

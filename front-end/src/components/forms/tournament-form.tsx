@@ -1,7 +1,7 @@
 import { Grid, FormControl, TextField, Button } from '@mui/material';
 import { Tournament, defaultTournament } from '@toa-lib/models';
 import { FC, ChangeEvent, useState, useEffect } from 'react';
-import TournamentDropdown from '../dropdowns/TournamentDropdown';
+import { TournamentDropdown } from '../dropdowns/tournament-level-dropdown';
 
 const FormField: FC<{
   name: string;

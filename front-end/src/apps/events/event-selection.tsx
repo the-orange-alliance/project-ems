@@ -4,9 +4,9 @@ import { Event } from '@toa-lib/models';
 import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvents } from 'src/api/use-event-data';
-import { PageLoader } from 'src/components/loading/PageLoader';
+import { PageLoader } from 'src/components/loading/page-loader';
 import EventsTable from 'src/components/tables/events-table';
-import PaperLayout from 'src/layouts/PaperLayout';
+import { PaperLayout } from 'src/layouts/paper-layout';
 
 export const EventSelection: FC = () => {
   const { data: events } = useEvents();

@@ -1,7 +1,7 @@
 import { Box, Divider, Tab, Tabs } from '@mui/material';
 import { EventSchedule, Match } from '@toa-lib/models';
 import { FC, SyntheticEvent, useEffect, useState } from 'react';
-import TabPanel from 'src/components/util/TabPanel/TabPanel';
+import { TabPanel } from 'src/components/util/tab-panel';
 import { ScheduleParticipants } from './schedule-participants';
 import { ScheduleParams } from './schedule-params';
 import { ScheduleMatches } from './schedule-matches';

@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import NumberInput from 'src/components/inputs/NumberInput';
+import { NumberInput } from 'src/components/inputs/number-input';
 import { Alliance, ChargedUpDetails, Match } from '@toa-lib/models';
 import { useRecoilState } from 'recoil';
 import { matchOccurringAtom } from '@stores/recoil';

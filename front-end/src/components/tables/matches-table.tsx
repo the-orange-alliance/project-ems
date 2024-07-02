@@ -1,6 +1,6 @@
 import { Match, Team } from '@toa-lib/models';
 import { FC } from 'react';
-import UpgradedTable from './UpgradedTable/UpgradedTable';
+import { UpgradedTable } from './upgraded-table';
 import { DateTime } from 'luxon';
 import { useTeamIdentifierRecord } from 'src/hooks/use-team-identifier';
 

@@ -1,13 +1,8 @@
-import { apiFetcher, clientFetcher } from '@toa-lib/client';
-import {
-  Event,
-  eventZod,
-  FMSSettings,
-  isFMSSettingsArray
-} from '@toa-lib/models';
+import { clientFetcher } from '@toa-lib/client';
+import { FMSSettings, isFMSSettingsArray } from '@toa-lib/models';
 import { atom, selector } from 'recoil';
 import { setApiStorage } from 'src/api/use-storage-data';
-import { AppFlags, defaultFlags } from './AppFlags';
+import { AppFlags, defaultFlags } from './app-flags';
 
 /**
  * @section FRC FMS STATE
@@ -65,11 +60,6 @@ export const allFrcFmsAtom = atom<FMSSettings[]>({
 });
 
 /**
- * @section NETWORK STATE
- * Recoil state management for backend network interactions
- */
-
-/**
  * @section FLAGS STATE
  * Recoil state management for application flags
  */
@@ -87,31 +77,4 @@ export const appFlagsAtom = atom<AppFlags>({
       }
     }
   })
-});
-
-/**
- * @section EVENT STATE
- * Recoil state management for various events
- */
-// Private selector that shouldn't be globally available
-const eventsSelector = selector<Event[]>({
-  key: 'eventsSelector',
-  get: async () => {
-    try {
-      return await apiFetcher(
-        'event',
-        'GET',
-        undefined,
-        eventZod.array().parse
-      );
-    } catch (e) {
-      console.log(e);
-      return [];
-    }
-  }
-});
-
-export const eventsAtom = atom<Event[]>({
-  key: 'eventsAtom',
-  default: eventsSelector
 });

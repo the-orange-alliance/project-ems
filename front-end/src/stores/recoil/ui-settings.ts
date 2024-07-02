@@ -1,6 +1,6 @@
 import { User, Team } from '@toa-lib/models';
 import { atom } from 'recoil';
-import { localStorageEffect } from '../Effects';
+import { localStorageEffect } from '../recoil-effects';
 
 /**
  * @section UI SETTINGS STATE

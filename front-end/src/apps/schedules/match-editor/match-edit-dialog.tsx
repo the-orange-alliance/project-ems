@@ -10,9 +10,9 @@ import {
 } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
 import { patchWholeMatch, useMatchAll } from 'src/api/use-match-data';
-import TabPanel from 'src/components/util/TabPanel/TabPanel';
+import { TabPanel } from 'src/components/util/tab-panel';
 import { MatchInfoTab } from './match-info-tab';
-import { PageLoader } from 'src/components/loading/PageLoader';
+import { PageLoader } from 'src/components/loading/page-loader';
 import { Match, Team } from '@toa-lib/models';
 import { MatchParticipantTab } from './match-participant-tab';
 import { MatchDetailTab } from './match-detail-tab';

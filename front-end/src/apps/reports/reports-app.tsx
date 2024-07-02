@@ -1,8 +1,8 @@
 import { FC, ReactNode, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import PaperLayout from 'src/layouts/PaperLayout';
-import TwoColumnHeader from 'src/components/util/Headers/TwoColumnHeader';
+import { PaperLayout } from 'src/layouts/paper-layout';
+import { TwoColumnHeader } from 'src/components/util/two-column-header';
 import { GeneralReports } from './general-reports';
 import { ReportView } from './components/report-view';
 import { useRecoilState, useRecoilValue } from 'recoil';

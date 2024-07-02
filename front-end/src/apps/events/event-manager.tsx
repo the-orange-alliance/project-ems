@@ -2,10 +2,10 @@ import { FC, useState } from 'react';
 import { Typography } from '@mui/material';
 import { Event } from '@toa-lib/models';
 import { patchEvent, useCurrentEvent } from 'src/api/use-event-data';
-import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
+import { ViewReturn } from 'src/components/buttons/view-return';
 import { EventForm } from 'src/components/forms/event-form';
 import { useSnackbar } from 'src/hooks/use-snackbar';
-import PaperLayout from 'src/layouts/PaperLayout';
+import { PaperLayout } from 'src/layouts/paper-layout';
 
 export const EventManager: FC = () => {
   const { data: initialEvent, mutate } = useCurrentEvent();

@@ -6,16 +6,16 @@ import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
 import { useCurrentEvent } from 'src/api/use-event-data';
 import { patchTeam, postTeams, useTeamsForEvent } from 'src/api/use-team-data';
-import ViewReturn from 'src/components/buttons/ViewReturn/ViewReturn';
-import TeamRemovalDialog from 'src/components/dialogs/TeamRemovalDialog';
-import { PageLoader } from 'src/components/loading/PageLoader';
+import { ViewReturn } from 'src/components/buttons/view-return';
+import { TeamRemovalDialog } from 'src/components/dialogs/team-removal-dialog';
+import { PageLoader } from 'src/components/loading/page-loader';
 import { TeamsTable } from 'src/components/tables/teams-table';
-import SaveAddUploadLoadingFab from 'src/components/util/SaveAddUploadLoadingFab';
+import { SaveAddUploadLoadingFab } from 'src/components/util/save-upload-fab';
 import { useSnackbar } from 'src/hooks/use-snackbar';
-import PaperLayout from 'src/layouts/PaperLayout';
-import { getDifferences } from 'src/stores/Util';
+import { PaperLayout } from 'src/layouts/paper-layout';
+import { getDifferences } from 'src/stores/array-utils';
 import { teamsByEventKeyAtomFam } from 'src/stores/recoil';
-import { parseTeamsFile } from 'src/util/FileParser';
+import { parseTeamsFile } from 'src/util/file-parser';
 
 export const TeamManager: FC = () => {
   const { data: event } = useCurrentEvent();

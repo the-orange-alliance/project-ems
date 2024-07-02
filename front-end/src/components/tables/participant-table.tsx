@@ -1,6 +1,6 @@
 import { Team } from '@toa-lib/models';
 import { FC } from 'react';
-import UpgradedTable from './UpgradedTable/UpgradedTable';
+import { UpgradedTable } from './upgraded-table';
 import { Checkbox } from '@mui/material';
 
 interface Props {
