@@ -293,7 +293,8 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/jb',
     group: 0,
     element: JBApp,
-    hidden: true
+    hidden: true,
+    hideAppbar: true
   },
   {
     name: 'Streaming',
