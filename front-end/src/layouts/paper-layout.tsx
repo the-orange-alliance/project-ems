@@ -40,10 +40,6 @@ export const PaperLayout: FC<Props> = ({
   showSettings
 }: Props) => {
   const user = useRecoilValue(userAtom);
-  const navigate = useNavigate();
-  const openSettings = () => {
-    navigate('/global-settings');
-  };
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -88,7 +84,8 @@ export const PaperLayout: FC<Props> = ({
                   color='inherit'
                   aria-label='open drawer'
                   sx={{ ml: 1, mr: 1 }}
-                  onClick={openSettings}
+                  component={Link}
+                  to='/global-settings'
                 >
                   <SettingsIcon />
                 </IconButton>

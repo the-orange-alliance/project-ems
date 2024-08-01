@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
@@ -20,16 +20,9 @@ export const AppCard: FC<AppCardProps> = ({
   href,
   imgSrc
 }: AppCardProps) => {
-  const navigate = useNavigate();
 
-  const handleClick = (): void => {
-    if (to) {
-      navigate(to);
-    }
-    if (href) {
-      window.location.href = href;
-    }
-  };
+  // Calculate any extra props needed
+  const extraProps = to ? { component: Link, to } : href ? { href } : {};
 
   return (
     <Card
@@ -41,7 +34,6 @@ export const AppCard: FC<AppCardProps> = ({
       }}
     >
       <CardActionArea
-        onClick={handleClick}
         sx={{
           position: 'absolute',
           top: 0,
@@ -51,6 +43,7 @@ export const AppCard: FC<AppCardProps> = ({
           flexDirection: 'column'
         }}
         className='center'
+        {...extraProps}        
       >
         <Box
           sx={{
