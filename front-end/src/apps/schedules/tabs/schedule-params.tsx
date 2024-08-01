@@ -6,7 +6,7 @@ import {
   generateScheduleItems,
   getScheduleValidation
 } from '@toa-lib/models';
-import { PageLoader } from 'src/components/loading/PageLoader';
+import { PageLoader } from 'src/components/loading';
 import {
   deleteSchedule,
   postSchedule,

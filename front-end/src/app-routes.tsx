@@ -133,6 +133,7 @@ export interface AppRoute {
   hidden?: boolean;
   routes?: AppRoute[];
   exact?: boolean;
+  hideAppbar?: boolean;
 }
 
 const AppRoutes: AppRoute[] = [
@@ -225,7 +226,8 @@ const AppRoutes: AppRoute[] = [
     name: 'Audience Display',
     path: '/:eventKey/audience',
     group: 0,
-    element: AudienceDisplay
+    element: AudienceDisplay,
+    hideAppbar: true
   },
   {
     name: 'Referee App',
