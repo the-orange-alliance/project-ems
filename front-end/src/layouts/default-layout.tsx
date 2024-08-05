@@ -3,7 +3,6 @@ import { useRecoilState } from 'recoil';
 import { Breakpoint } from '@mui/material';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
-import CssBaseline from '@mui/material/CssBaseline';
 import { appbarConfigAtom } from '@stores/recoil';
 
 interface Props {
@@ -30,7 +29,6 @@ export const DefaultLayout: FC<Props> = ({
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
       <Container
         maxWidth={containerWidth || 'xl'}
         sx={{ marginTop: (theme) => theme.spacing(10) }}

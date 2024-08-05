@@ -6,6 +6,9 @@ import CardActionArea from '@mui/material/CardActionArea';
 import Typography from '@mui/material/Typography';
 
 import firstLogo from 'src/assets/images/first-logo.png';
+import firstLogoDarkMode from 'src/assets/images/first-logo-reverse.png';
+import { useRecoilValue } from 'recoil';
+import { darkModeAtom } from 'src/stores/recoil';
 
 export interface AppCardProps {
   title: string;
@@ -20,6 +23,8 @@ export const AppCard: FC<AppCardProps> = ({
   href,
   imgSrc
 }: AppCardProps) => {
+  // Get the dark mode state
+  const darkMode = useRecoilValue(darkModeAtom);
 
   // Calculate any extra props needed
   const extraProps = to ? { component: Link, to } : href ? { href } : {};
@@ -43,13 +48,15 @@ export const AppCard: FC<AppCardProps> = ({
           flexDirection: 'column'
         }}
         className='center'
-        {...extraProps}        
+        {...extraProps}
       >
         <Box
           sx={{
             width: '100%',
             height: '100%',
-            background: `url(${imgSrc ? imgSrc : firstLogo}) center`,
+            background: `url(${
+              imgSrc ? imgSrc : darkMode ? firstLogoDarkMode : firstLogo
+            }) center`,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             marginBottom: (theme) => theme.spacing(2)

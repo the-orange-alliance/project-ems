@@ -12,6 +12,7 @@ import { APIOptions, SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/local-storage';
 import { AppContainer } from './App';
 import { useCurrentEvent } from './api/use-event-data';
+import { CssBaseline } from '@mui/material';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Error while trying to find document root.');
@@ -46,6 +47,7 @@ function Main() {
     : fgcTheme;
   return (
     <ThemeProvider theme={useMemo(() => theme(darkMode), [darkMode, eventKey])}>
+      <CssBaseline />
       <ModalProvider>
         <AppContainer />
       </ModalProvider>

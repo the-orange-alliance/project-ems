@@ -11,7 +11,7 @@ export const ftcTheme = (darkMode: boolean) =>
         main: '#f50057'
       },
       background: {
-        default: '#f0f0f0'
+        default: darkMode ? '#121212' : '#f0f0f0'
       }
     }
   });
@@ -27,7 +27,7 @@ export const frcTheme = (darkMode: boolean) =>
         main: '#f50057'
       },
       background: {
-        default: '#f0f0f0'
+        default: darkMode ? '#121212' : '#f0f0f0'
       }
     }
   });
@@ -43,7 +43,7 @@ export const fgcTheme = (darkMode: boolean) =>
         main: '#f50057'
       },
       background: {
-        default: '#f0f0f0'
+        default: darkMode ? '#121212' : '#f0f0f0'
       }
     }
   });

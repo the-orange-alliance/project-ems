@@ -3,7 +3,6 @@ import { useRecoilState } from 'recoil';
 import { Breakpoint } from '@mui/material';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
-import CssBaseline from '@mui/material/CssBaseline';
 import { appbarConfigAtom } from '@stores/recoil';
 
 
@@ -20,7 +19,7 @@ export const RefereeLayout: FC<Props> = ({
   containerWidth,
   children
 }: Props) => {  
-  const [appbarConfig, updateAppbarConfig] = useRecoilState(appbarConfigAtom);
+  const [, updateAppbarConfig] = useRecoilState(appbarConfigAtom);
 
   useEffect(() => {
     updateAppbarConfig({
@@ -32,7 +31,6 @@ export const RefereeLayout: FC<Props> = ({
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
       <Container
         maxWidth={containerWidth || 'xl'}
         sx={{ marginTop: (theme) => theme.spacing(12) }}
