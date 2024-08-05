@@ -119,23 +119,23 @@ export const AudienceDisplayManager: FC = () => {
               <TableCell>{client.fieldNumbers}</TableCell>
               <TableCell>{client.followerMode ? 'Yes' : 'No'}</TableCell>
               <TableCell>
-                <IconButton>
-                  <RemoveRedEye
-                    onClick={(e) => {
-                      requestClientToIdentify(client);
-                      e.stopPropagation();
-                    }}
-                  />
+                <IconButton
+                  onClick={(e) => {
+                    requestClientToIdentify(client);
+                    e.stopPropagation();
+                  }}
+                >
+                  <RemoveRedEye />
                 </IconButton>
               </TableCell>
               <TableCell>
-                <IconButton>
-                  <Delete
-                    onClick={(e) => {
-                      deleteDevice(client.persistantClientId);
-                      e.stopPropagation();
-                    }}
-                  />
+                <IconButton
+                  onClick={(e) => {
+                    deleteDevice(client.persistantClientId);
+                    e.stopPropagation();
+                  }}
+                >
+                  <Delete />
                 </IconButton>
               </TableCell>
             </TableRow>
