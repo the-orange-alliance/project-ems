@@ -1,8 +1,8 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import Typography from '@mui/material/Typography';
 import { PaperLayout } from 'src/layouts/paper-layout';
-import { useRecoilState } from 'recoil';
-import { socketClientsAtom } from 'src/stores/NewRecoil';
+import { useRecoilState, useResetRecoilState } from 'recoil';
+import { socketClientsSelector } from 'src/stores/NewRecoil';
 import {
   Button,
   Checkbox,
@@ -11,8 +11,10 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
+  Grid,
   IconButton,
   Table,
+  TableBody,
   TableCell,
   TableContainer,
   TableHead,
@@ -24,16 +26,31 @@ import {
   requestClientIdentification,
   sendUpdateSocketClient
 } from 'src/api/use-socket';
-import { Delete, RemoveRedEye } from '@mui/icons-material';
+import {
+  ChevronLeft,
+  Delete,
+  Refresh,
+  RemoveRedEye,
+  Visibility
+} from '@mui/icons-material';
 import {
   deleteSocketClient,
   updateSocketClient
 } from 'src/api/use-socket-data';
+import { Link } from 'react-router-dom';
 
 export const AudienceDisplayManager: FC = () => {
-  const [clients, setClients] = useRecoilState(socketClientsAtom);
+  const [clients, setClients] = useRecoilState(socketClientsSelector);
+  const resetClients = useResetRecoilState(socketClientsSelector);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContext, setDialogContext] = useState<any>(null);
+
+  // Add effect to invalidate the clients atom when the component is unmounted
+  useEffect(() => {
+    return () => {
+      setClients([]);
+    };
+  }, []);
 
   const handleClose = () => {
     setDialogOpen(false);
@@ -62,6 +79,11 @@ export const AudienceDisplayManager: FC = () => {
     setClients(cpy);
   };
 
+  const refreshClients = async () => {
+    setClients([]);
+    resetClients();
+  };
+
   const requestClientToIdentify = (data: any) => {
     requestClientIdentification(data);
   };
@@ -84,9 +106,32 @@ export const AudienceDisplayManager: FC = () => {
       header={<Typography variant='h4'>Audience Display Manager</Typography>}
       padding
     >
-      <Button variant='contained' onClick={idAll}>
-        Identify All Devices
-      </Button>
+      <Grid container direction='row' spacing={2}>
+        <Grid item>
+          <Button startIcon={<ChevronLeft />} component={Link} to='../'>
+            Back
+          </Button>
+        </Grid>
+        <Grid item flex={1} />
+        <Grid item>
+          <Button
+            startIcon={<Refresh />}
+            variant='contained'
+            onClick={refreshClients}
+          >
+            Refresh Clients
+          </Button>
+        </Grid>
+        <Grid item>
+          <Button
+            startIcon={<Visibility />}
+            variant='contained'
+            onClick={idAll}
+          >
+            Identify All Devices
+          </Button>
+        </Grid>
+      </Grid>
       <TableContainer>
         <Table size='small'>
           <TableHead>
@@ -103,43 +148,45 @@ export const AudienceDisplayManager: FC = () => {
               <TableCell>Delete</TableCell>
             </TableRow>
           </TableHead>
-          {clients.map((client) => (
-            <TableRow
-              key={client.persistantClientId}
-              onClick={() => openDialog(client)}
-            >
-              <TableCell>{client.persistantClientId}</TableCell>
-              <TableCell>{client.ipAddress}</TableCell>
-              <TableCell>{client.connected ? 'Yes' : 'No'}</TableCell>
-              <TableCell>{client.lastSocketId}</TableCell>
-              <TableCell>{client.currentUrl}</TableCell>
-              <TableCell>
-                {client.audienceDisplayChroma.replaceAll('"', '')}
-              </TableCell>
-              <TableCell>{client.fieldNumbers}</TableCell>
-              <TableCell>{client.followerMode ? 'Yes' : 'No'}</TableCell>
-              <TableCell>
-                <IconButton>
-                  <RemoveRedEye
+          <TableBody>
+            {clients.map((client) => (
+              <TableRow
+                key={client.persistantClientId}
+                onClick={() => openDialog(client)}
+              >
+                <TableCell>{client.persistantClientId}</TableCell>
+                <TableCell>{client.ipAddress}</TableCell>
+                <TableCell>{client.connected ? 'Yes' : 'No'}</TableCell>
+                <TableCell>{client.lastSocketId}</TableCell>
+                <TableCell>{client.currentUrl}</TableCell>
+                <TableCell>
+                  {client.audienceDisplayChroma.replaceAll('"', '')}
+                </TableCell>
+                <TableCell>{client.fieldNumbers}</TableCell>
+                <TableCell>{client.followerMode ? 'Yes' : 'No'}</TableCell>
+                <TableCell>
+                  <IconButton
                     onClick={(e) => {
                       requestClientToIdentify(client);
                       e.stopPropagation();
                     }}
-                  />
-                </IconButton>
-              </TableCell>
-              <TableCell>
-                <IconButton>
-                  <Delete
+                  >
+                    <RemoveRedEye />
+                  </IconButton>
+                </TableCell>
+                <TableCell>
+                  <IconButton
                     onClick={(e) => {
                       deleteDevice(client.persistantClientId);
                       e.stopPropagation();
                     }}
-                  />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
+                  >
+                    <Delete />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
         </Table>
       </TableContainer>
 

@@ -5,13 +5,22 @@ import { setApiStorage } from 'src/api/use-storage-data';
 import { AppFlags, defaultFlags } from './app-flags';
 
 /**
- * @section FRC FMS STATE
+ * @section Socket Client States
  * Recoil state management for frc-fms
  */
-// Not public
-const socketClients = selector<any[]>({
+export const socketClientsSelector = selector<any[]>({
   key: 'socketClients',
-  get: async () => {
+  get: async ({get}) => {
+    // This is stupid, but is a surefire way to force the atom to refetch each time when the array is empty
+    // This way, to force a refetch, you can just set the atom to an empty array.  Since we're not using any
+    // kind of async fetch library, like react-query, this is probably the best, but dumbest way to do it.
+    // this also allows us to use the atom as a cache when updating locally.
+    const current: any[] = await get(socketClientsAtom);
+    // If we have data, return it
+    if (current && current.length > 0) {
+      return current;
+    }
+    // Otherwise, fetch it
     try {
       return await clientFetcher<any[]>(
         'socketClients',
@@ -23,16 +32,19 @@ const socketClients = selector<any[]>({
       console.log(e);
       return [];
     }
+  },
+  set: ({ set }, newValue) => {
+    set(socketClientsAtom, newValue);
   }
 });
 
 // TODO: Make a model for this
-export const socketClientsAtom = atom<any[]>({
+const socketClientsAtom = atom<any[]>({
   key: 'allSocketClients',
-  default: socketClients
+  default: []
 });
 
-/**
+/** FRC FMS STATE
  * @section Socket Client States
  * Recoil state management for frc-fms
  */

@@ -1,14 +1,9 @@
 import { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 
 export const AllianceCards: FC = () => {
-  const navigate = useNavigate();
-
-  const openRed = () => navigate('red', { relative: 'route' });
-  const openBlue = () => navigate('blue', { relative: 'route' });
-  const openHead = () => navigate('head', { relative: 'route' });
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -18,7 +13,8 @@ export const AllianceCards: FC = () => {
           variant='contained'
           className='red-bg-imp'
           sx={{ height: '30em' }}
-          onClick={openRed}
+          component={Link}
+          to='./red'
         >
           Red Alliance
         </Button>
@@ -27,7 +23,8 @@ export const AllianceCards: FC = () => {
           variant='contained'
           className='blue-bg-imp'
           sx={{ height: '30em' }}
-          onClick={openBlue}
+          component={Link}
+          to='./blue'
         >
           Blue Alliance
         </Button>
@@ -37,7 +34,8 @@ export const AllianceCards: FC = () => {
         variant='contained'
         className='yellow-bg-imp'
         sx={{ height: '30em' }}
-        onClick={openHead}
+        component={Link}
+        to='./head'
       >
         Head Referee
       </Button>

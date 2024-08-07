@@ -4,9 +4,11 @@ import routes from './app-routes';
 import './utils.less';
 import { useSnackbar } from './hooks/use-snackbar';
 import { userAtom } from './stores/recoil';
-import { FC, ReactNode, useEffect } from 'react';
+import { FC, ReactNode, Suspense, useEffect } from 'react';
 import { useSocket } from './api/use-socket';
 import SyncEffects from './components/sync-effects/sync-effects';
+import PrimaryAppbar from './components/appbars/primary';
+import { LinearProgress } from '@mui/material';
 
 const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {
   return (
@@ -40,7 +42,10 @@ export function AppContainer() {
             path={route.path}
             element={
               <RouteWrapper>
-                <route.element />
+                {!route.hideAppbar && <PrimaryAppbar />}
+                <Suspense fallback={<LinearProgress color='secondary' />}>
+                  <route.element />
+                </Suspense>
               </RouteWrapper>
             }
           >
@@ -50,7 +55,10 @@ export function AppContainer() {
                 path={subRoute.path}
                 element={
                   <RouteWrapper>
-                    <route.element />
+                    {!route.hideAppbar && <PrimaryAppbar />}
+                    <Suspense fallback={<LinearProgress color='secondary' />}>
+                      <route.element />
+                    </Suspense>
                   </RouteWrapper>
                 }
               />

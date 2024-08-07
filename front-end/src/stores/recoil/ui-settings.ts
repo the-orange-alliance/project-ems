@@ -56,6 +56,15 @@ export const matchDialogOpenAtom = atom<boolean>({
   key: 'ui.matchDialogOpenAtom',
   default: false
 });
+export const appbarConfigAtom = atom<{
+  title?: string;
+  titleLink?: string;
+  showSettings?: boolean;
+  showFullscreen?: boolean;
+}>({
+  key: 'ui.appbarConfigAtom',
+  default: { title: 'Event Management System', showSettings: false }
+});
 
 /**
  * @section AUDIENCE DISPLAY STATE

@@ -17,6 +17,7 @@ import {
 } from 'src/stores/recoil';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { connectSocketClient } from './use-socket-data';
+import { v4 as uuidv4 } from 'uuid';
 
 let socket: Socket | null = null;
 
@@ -55,7 +56,13 @@ export const useSocket = (): [
       const chromaKey = await snapshot.getPromise(displayChromaKeyAtom);
 
       // ID Message
-      const persistantClientId = localStorage.getItem('persistantClientId');
+      let persistantClientId = localStorage.getItem('persistantClientId');
+      
+      // If no persistantClientId is found, generate a new one and save it
+      if (!persistantClientId || persistantClientId === 'undefined') {
+        persistantClientId = uuidv4();
+        localStorage.setItem('persistantClientId', persistantClientId);
+      }
 
       const idMsg: any = {
         currentUrl: window.location.href,
