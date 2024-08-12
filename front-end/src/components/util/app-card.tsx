@@ -1,11 +1,14 @@
 import { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import Typography from '@mui/material/Typography';
 
 import firstLogo from 'src/assets/images/first-logo.png';
+import firstLogoDarkMode from 'src/assets/images/first-logo-reverse.png';
+import { useRecoilValue } from 'recoil';
+import { darkModeAtom } from 'src/stores/recoil';
 
 export interface AppCardProps {
   title: string;
@@ -20,16 +23,11 @@ export const AppCard: FC<AppCardProps> = ({
   href,
   imgSrc
 }: AppCardProps) => {
-  const navigate = useNavigate();
+  // Get the dark mode state
+  const darkMode = useRecoilValue(darkModeAtom);
 
-  const handleClick = (): void => {
-    if (to) {
-      navigate(to);
-    }
-    if (href) {
-      window.location.href = href;
-    }
-  };
+  // Calculate any extra props needed
+  const extraProps = to ? { component: Link, to } : href ? { href } : {};
 
   return (
     <Card
@@ -41,7 +39,6 @@ export const AppCard: FC<AppCardProps> = ({
       }}
     >
       <CardActionArea
-        onClick={handleClick}
         sx={{
           position: 'absolute',
           top: 0,
@@ -51,12 +48,15 @@ export const AppCard: FC<AppCardProps> = ({
           flexDirection: 'column'
         }}
         className='center'
+        {...extraProps}
       >
         <Box
           sx={{
             width: '100%',
             height: '100%',
-            background: `url(${imgSrc ? imgSrc : firstLogo}) center`,
+            background: `url(${
+              imgSrc ? imgSrc : darkMode ? firstLogoDarkMode : firstLogo
+            }) center`,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             marginBottom: (theme) => theme.spacing(2)

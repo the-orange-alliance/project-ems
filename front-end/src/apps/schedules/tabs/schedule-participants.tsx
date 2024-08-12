@@ -2,7 +2,7 @@ import { Box, Button } from '@mui/material';
 import { EventSchedule, Team } from '@toa-lib/models';
 import { FC } from 'react';
 import { useTeamsForEvent } from 'src/api/use-team-data';
-import { PageLoader } from 'src/components/loading/PageLoader';
+import { PageLoader } from 'src/components/loading';
 import { ParticipantTable } from 'src/components/tables/participant-table';
 import { useSWRConfig } from 'swr';
 
