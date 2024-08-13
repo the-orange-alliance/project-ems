@@ -5,7 +5,6 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import { appbarConfigAtom } from '@stores/recoil';
 
-
 interface Props {
   title?: string;
   titleLink?: string;
@@ -18,7 +17,7 @@ export const RefereeLayout: FC<Props> = ({
   titleLink,
   containerWidth,
   children
-}: Props) => {  
+}: Props) => {
   const [, updateAppbarConfig] = useRecoilState(appbarConfigAtom);
 
   useEffect(() => {
@@ -26,7 +25,7 @@ export const RefereeLayout: FC<Props> = ({
       title,
       titleLink,
       showFullscreen: true
-    });      
+    });
   }, []);
 
   return (

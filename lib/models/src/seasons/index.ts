@@ -4,6 +4,7 @@ import { Ranking } from '../base/Ranking.js';
 import { CarbonCaptureSeason } from './CarbonCapture.js';
 import { ChargedUpSeason } from './ChargedUp.js';
 import { CrescendoSeason } from './Crescendo.js';
+import { FeedingTheFutureSeason } from './FeedingTheFuture.js';
 import { HydrogenHorizonsSeason } from './HydrogenHorizons.js';
 
 export * from './CarbonCapture.js';
@@ -23,7 +24,8 @@ export const Seasons: Season<any, any>[] = [
   CarbonCaptureSeason,
   ChargedUpSeason,
   HydrogenHorizonsSeason,
-  CrescendoSeason
+  CrescendoSeason,
+  FeedingTheFutureSeason
 ];
 
 export interface SeasonFunctions<T extends MatchDetailBase, J extends Ranking> {
