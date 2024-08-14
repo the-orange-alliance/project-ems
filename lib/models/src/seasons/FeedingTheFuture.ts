@@ -4,6 +4,13 @@ import { Ranking } from '../base/Ranking.js';
 import { isNonNullObject, isNumber } from '../types.js';
 import { Season, SeasonFunctions } from './index.js';
 
+export enum CardStatus {
+  WHITE_CARD = 3,
+  RED_CARD = 2,
+  YELLOW_CARD = 1,
+  NO_CARD = 0
+}
+
 /**
  * Score Table
  * Final score is ((WaterConserved + EnergyConserved + FoodProduced) * BalanceMultiplier) + FoodSecured + Coopertition
@@ -136,7 +143,10 @@ function calculateRankings(
 
       if (participant.station < 20) {
         // Red Alliance
-        if (participant.cardStatus === 2 || participant.noShow === 1) {
+        if (
+          participant.cardStatus === CardStatus.RED_CARD ||
+          participant.noShow === CardStatus.YELLOW_CARD
+        ) {
           scoresMap.set(participant.teamKey, [...scores, 0]);
           ranking.losses = ranking.losses + 1;
         } else {
@@ -155,7 +165,10 @@ function calculateRankings(
 
       if (participant.station >= 20) {
         // Blue Alliance
-        if (participant.cardStatus === 2 || participant.noShow === 1) {
+        if (
+          participant.cardStatus === CardStatus.RED_CARD ||
+          participant.noShow === CardStatus.YELLOW_CARD
+        ) {
           scoresMap.set(participant.teamKey, [...scores, 0]);
           ranking.losses = ranking.losses + 1;
         } else {
@@ -255,7 +268,7 @@ export function calculatePlayoffsRankings(
         ...(rankingMap.get(participant.teamKey) as SeasonRanking)
       };
 
-      if (participant.cardStatus === 2) {
+      if (participant.cardStatus === CardStatus.RED_CARD) {
         ranking.played += 1;
         rankingMap.set(participant.teamKey, ranking);
         continue;
