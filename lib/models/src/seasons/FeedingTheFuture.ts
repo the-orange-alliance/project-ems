@@ -154,8 +154,7 @@ function calculateRankings(
           ranking.wins = ranking.wins + (redWin ? 1 : 0);
           ranking.losses = ranking.losses + (redWin ? 0 : 1);
           ranking.ties = ranking.ties + (isTie ? 1 : 0);
-          ranking.foodSecuredPoints =
-            ranking.foodSecuredPoints +
+          ranking.foodSecuredPoints +=
             match.details.redFoodSecured * ScoreTable.FoodSecured;
           if (ranking.highestScore < match.redScore) {
             ranking.highestScore = match.redScore;
@@ -176,8 +175,7 @@ function calculateRankings(
           ranking.wins = ranking.wins + (blueWin ? 1 : 0);
           ranking.losses = ranking.losses + (blueWin ? 0 : 1);
           ranking.ties = ranking.ties + (isTie ? 1 : 0);
-          ranking.foodSecuredPoints =
-            ranking.foodSecuredPoints +
+          ranking.foodSecuredPoints +=
             match.details.blueFoodSecured * ScoreTable.FoodSecured;
           if (ranking.highestScore < match.blueScore) {
             ranking.highestScore = match.blueScore;
