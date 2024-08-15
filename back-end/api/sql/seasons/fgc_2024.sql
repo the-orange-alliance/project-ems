@@ -1,6 +1,6 @@
 ALTER TABLE "ranking" ADD COLUMN rankingScore INT;
 ALTER TABLE "ranking" ADD COLUMN highestScore INT;
-ALTER TABLE "ranking" ADD COLUMN oxyHydroPoints INT;
+ALTER TABLE "ranking" ADD COLUMN foodSecuredPoints INT;
 
 ALTER TABLE "match_detail" ADD COLUMN redResevoirConserved;
 ALTER TABLE "match_detail" ADD COLUMN redNexusConserved;
