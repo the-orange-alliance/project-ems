@@ -12,19 +12,25 @@ export interface DisplayProps {
 interface SeasonDisplay {
   matchPreview: FC<DisplayProps>;
   matchPlay: FC<DisplayProps>;
+  matchPlayStream: FC<DisplayProps>;
   matchResults: FC<DisplayProps>;
+  matchResultsStream: FC<DisplayProps>;
 }
 
 export const frcDefault: SeasonDisplay = {
   matchPlay: FRCDefault.MatchPlay,
+  matchPlayStream: FRCDefault.MatchPlay,
   matchPreview: FRCDefault.MatchPreview,
-  matchResults: FRCDefault.MatchResults
+  matchResults: FRCDefault.MatchResults,
+  matchResultsStream: FRCDefault.MatchResults
 };
 
 export const fgcDefault: SeasonDisplay = {
   matchPlay: FGCDefault.MatchPlay,
+  matchPlayStream: FGCDefault.MatchPlay,
   matchPreview: FGCDefault.MatchPreview,
-  matchResults: FGCDefault.MatchResults
+  matchResults: FGCDefault.MatchResults,
+  matchResultsStream: FGCDefault.MatchResults
 };
 
 // Map that contains all the displays for their seasons.

@@ -12,3 +12,12 @@ export enum DisplayModes {
   TIMER_ONLY = 'timer-only',
   STREAM = 'stream'
 }
+
+export enum AudienceScreens {
+  PREVIEW = 'preview',
+  MATCH_FULL = 'match-full',
+  MATCH_STREAM = 'match-stream',
+  RESULTS = 'results',
+  RESULTS_STREAM = 'results-stream',
+  RANKINGS = 'rankings'
+}
