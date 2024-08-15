@@ -8,7 +8,24 @@ interface Props {
 export const ChromaLayout: FC<Props> = ({ children }) => {
   return (
     <Box>
-      <Box>{children}</Box>
+      {/* because mui is dumb */}
+      <style>
+        {`
+          body {
+            background: #00000000
+          }
+        `}
+      </style>
+      <Box
+        // because I suck at css
+        sx={{
+          height: '100vh',
+          width: '100vw',
+          overflow: 'hidden',
+        }}
+      >
+        {children}
+      </Box>
     </Box>
   );
 };

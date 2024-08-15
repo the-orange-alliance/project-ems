@@ -82,7 +82,7 @@ export const AlliancePlay: FC<Props> = ({ alliance, participants, invert }) => {
             }
           : {
               borderTopLeftRadius: '0.5em',
-              borderBottomLeftRadius: '0.em',
+              borderBottomLeftRadius: '0.5em',
               margin: '0.5em 0 0.5em 0.5em'
             }
       }

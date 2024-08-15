@@ -3,17 +3,31 @@ import { DisplayProps } from '../../displays';
 import styled from '@emotion/styled';
 import FGC_BG from './assets/global-bg.png';
 import FGC_LOGO from './assets/fg-logo-lg.png';
-import { InfoBar } from './components/info-bar';
 import { AlliancePreview } from './components/alliance-preview';
+import MatchTitle from './components/match-title';
 
-const Container = styled.div`
+const BGImage = styled.div`
   background-image: url(${FGC_BG});
   background-size: cover;
   width: 100vw;
   height: 100vh;
+`;
+
+const Container = styled.div`
+  background-size: cover;
+  background: linear-gradient(
+    to right,
+    #00000000,
+    #00000000 15%,
+    #0000007c 15%,
+    #0000007c 85%,
+    #00000000 85%
+  );
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
   display: grid;
-  grid-template-rows: 20vh 7vh 30vh 30vh;
+  grid-template-rows: 20vh 9vh 30vh 30vh;
   grid-template-areas:
     'logo'
     'info'
@@ -35,35 +49,25 @@ const Logo = styled.img`
   width: auto;
 `;
 
-const InfoContainer = styled.div`
-  grid-area: info;
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-`;
-
 export const MatchPreview: FC<DisplayProps> = ({ match, ranks }) => {
-  const matchParts = match.name.split(' ');
-  const matchNumber = matchParts[matchParts.length - 1];
   return (
-    <Container>
-      <LogoContainer>
-        <Logo src={FGC_LOGO} />
-      </LogoContainer>
-      <InfoContainer>
-        <InfoBar left='match' right={matchNumber} />
-        <InfoBar left='field' right={match.fieldNumber} />
-      </InfoContainer>
-      <AlliancePreview
-        alliance='red'
-        participants={match.participants ?? []}
-        ranks={ranks}
-      />
-      <AlliancePreview
-        alliance='blue'
-        participants={match.participants ?? []}
-        ranks={ranks}
-      />
-    </Container>
+    <BGImage>
+      <Container>
+        <LogoContainer>
+          <Logo src={FGC_LOGO} />
+        </LogoContainer>
+        <MatchTitle match={match} />
+        <AlliancePreview
+          alliance='red'
+          participants={match.participants ?? []}
+          ranks={ranks}
+        />
+        <AlliancePreview
+          alliance='blue'
+          participants={match.participants ?? []}
+          ranks={ranks}
+        />
+      </Container>
+    </BGImage>
   );
 };

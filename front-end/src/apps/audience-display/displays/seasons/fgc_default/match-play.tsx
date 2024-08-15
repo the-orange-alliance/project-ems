@@ -6,7 +6,7 @@ import { MatchScoreBug } from './components/match-score-bug';
 const Container = styled.div`
   background-color: #000000;
   position: absolute;
-  bottom: 0.5vh;
+  bottom: 0;
   left: 32vw;
   height: 18vh;
   width: 36vw;
