@@ -1,59 +1,110 @@
 import { FC } from 'react';
 import { DisplayProps } from '../../displays';
 import styled from '@emotion/styled';
+import FGC_BG from './assets/global-bg.png';
 import { AlliancePlay } from './components/alliance-play';
-import { MatchScoreBug } from './components/match-score-bug';
-const Container = styled.div`
-  background-color: #000000;
-  position: absolute;
-  bottom: 0;
-  left: 32vw;
-  height: 18vh;
-  width: 36vw;
-  border-top-left-radius: 1em;
-  border-top-right-radius: 1em;
-  display: grid;
-  grid-template-columns: 12vw 12vw 12vw;
-  grid-template-rows: auto 3vh;
-  grid-template-areas:
-    'left center right'
-    'bottom bottom bottom';
+import { MatchTimer } from 'src/components/util/match-timer';
+import { Stack } from '@mui/material';
+import MatchTitle from './components/match-title';
+import { Alliance } from '@toa-lib/models';
+import * as muiStyled from '@mui/material';
+
+const BGImage = styled.div`
+  background-image: url(${FGC_BG});
+  background-size: cover;
+  width: 100vw;
+  height: 100vh;
 `;
 
-const BottomBar = styled.div`
-  background-color: #d5ff8b;
-  grid-area: bottom;
-  font-size: 2vh;
+const Container = styled(Stack)(() => ({
+  padding: '1em 1em'
+}));
+
+const MatchTitleContainer = styled.div`
+  border: 0.8em solid #000000;
+  border-radius: 1.5vw;
+`;
+
+const TimerContainer = styled.div`
+  background-color: #f9ae3b;
+  color: #000000;
+  width: 100%;
+  height: 65vh;
+  border-radius: 3rem;
+  border: 1rem solid #000000;
   font-weight: bold;
-  padding-left: 1em;
-  padding-right: 1em;
+  font-size: 50vh;
   display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 `;
 
-const LeftText = styled.div`
-  margin-right: auto;
-`;
+const ScoreRow = muiStyled.styled(Stack)(({ theme }) => ({
+  marginTop: '-0.8rem !important',
+  height: '19vh',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  '> *:first-child': {
+    borderLeft: '.8rem solid #000000',
+    borderRight: '.4rem solid #000000',
+    borderBottomLeftRadius: '3rem !important'
+  },
+  '> *:nth-child(2), > *:nth-child(3)': {
+    borderLeft: '.4rem solid #000000',
+    borderRight: '.4rem solid #000000'
+  },
+  '> *:last-child': {
+    borderLeft: '.4rem solid #000000',
+    borderRight: '.8rem solid #000000',
+    borderBottomRightRadius: '3rem !important'
+  },
+  '> *': {
+    borderTop: '.8rem solid #000000',
+    borderBottom: '.8rem solid #000000'
+  }
+}));
 
-const RightText = styled.div`
-  margin-left: auto;
-`;
+const ScoreContainer = styled.div((props: { alliance: Alliance }) => ({
+  backgroundColor: props.alliance === 'red' ? '#ce2000' : '#5c88ff',
+  color: '#ffffff',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  fontWeight: 'bold',
+  height: '100%',
+  width: '20%',
+  fontSize: '15vh',
+  lineHeight: '5vh'
+}));
 
 export const MatchPlay: FC<DisplayProps> = ({ event, match }) => {
-  const matchParts = match.name.split(' ');
-  const matchNumber = matchParts[matchParts.length - 1];
   return (
-    <Container>
-      <AlliancePlay alliance='red' participants={match.participants ?? []} />
-      <MatchScoreBug match={match} />
-      <AlliancePlay
-        alliance='blue'
-        participants={match.participants ?? []}
-        invert
-      />
-      <BottomBar>
-        <LeftText>MATCH:&nbsp;{matchNumber}</LeftText>
-        <RightText>{event.eventName}</RightText>
-      </BottomBar>
-    </Container>
+    <BGImage>
+      <Container spacing={5}>
+        <MatchTitleContainer>
+          <MatchTitle match={match} noMargin branding />
+        </MatchTitleContainer>
+        <TimerContainer>
+          <MatchTimer audio />
+        </TimerContainer>
+        <ScoreRow direction='row'>
+          <AlliancePlay
+            alliance='red'
+            participants={match.participants ?? []}
+            fullHeight
+          />
+          <ScoreContainer alliance='red'>{match.redScore}</ScoreContainer>
+          <ScoreContainer alliance='blue'>{match.blueScore}</ScoreContainer>
+          <AlliancePlay
+            alliance='blue'
+            participants={match.participants ?? []}
+            invert
+            fullHeight
+          />
+        </ScoreRow>
+      </Container>
+    </BGImage>
   );
 };

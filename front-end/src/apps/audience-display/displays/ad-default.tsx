@@ -3,9 +3,13 @@ import { DisplayModeProps } from 'src/apps/audience-display/displays';
 import { useRecoilValue } from 'recoil';
 import { matchOccurringAtom, matchOccurringRanksAtom } from 'src/stores/recoil';
 import { useEvent } from 'src/api/use-event-data';
-import { AudienceScreens, Displays } from '@toa-lib/models';
+import { AudienceScreens, Displays, LayoutMode } from '@toa-lib/models';
 import { getDisplays } from './displays';
-import { FadeInOut, SlideInBottom } from 'src/components/animations';
+import {
+  FadeInOut,
+  SlideInBottom,
+  SlideInLeft
+} from 'src/components/animations';
 import AbsolouteLocator from 'src/components/util/absoloute-locator';
 import { useSearchParams } from 'react-router-dom';
 
@@ -16,7 +20,15 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
   const match = useRecoilValue(matchOccurringAtom);
   const ranks = useRecoilValue(matchOccurringRanksAtom);
   const [searchParams] = useSearchParams();
+
+  // Pin a display
   const pin = searchParams.get('pin');
+
+  // Change which version of the display to use
+  const layout =
+    searchParams.get('layout')?.toLowerCase() ??
+    `${LayoutMode.FULL}${LayoutMode.STREAM}${LayoutMode.FULL}`;
+
   // Make sure you use the event key from the match to make sure we get the correct event, not
   // the one loaded from the url.
   const { data: event } = useEvent(match?.eventKey);
@@ -31,20 +43,37 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
         return (
           <displays.matchPreview event={event} match={match} ranks={ranks} />
         );
-      case AudienceScreens.MATCH_FULL:
+      case AudienceScreens.PREVIEW_STREAM:
+        return (
+          <displays.matchPreviewStream
+            event={event}
+            match={match}
+            ranks={ranks}
+          />
+        );
+      case AudienceScreens.MATCH:
         return <displays.matchPlay event={event} match={match} ranks={ranks} />;
       case AudienceScreens.RESULTS:
         return (
           <displays.matchResults event={event} match={match} ranks={ranks} />
         );
       case AudienceScreens.MATCH_STREAM:
-        return <displays.matchPlayStream event={event} match={match} ranks={ranks} />;
+        return (
+          <displays.matchPlayStream event={event} match={match} ranks={ranks} />
+        );
       case AudienceScreens.RESULTS_STREAM:
         return (
-          <displays.matchResultsStream event={event} match={match} ranks={ranks} />
+          <displays.matchResultsStream
+            event={event}
+            match={match}
+            ranks={ranks}
+          />
         );
     }
   }
+
+  console.log(layout, layout[0], layout[1], layout[2]);
+  console.log(id);
 
   return (
     <>
@@ -52,27 +81,76 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {id === Displays.BLANK && <></>}
 
       {/* Displays.MATCH_PREVIEW */}
-      <AbsolouteLocator top={0} left={0}>
-        <FadeInOut in={id === Displays.MATCH_PREVIEW} duration={0.5}>
-          <displays.matchPreview event={event} match={match} ranks={ranks} />
-        </FadeInOut>
-      </AbsolouteLocator>
+      {layout[0] === LayoutMode.FULL && (
+        <AbsolouteLocator top={0} left={0}>
+          <FadeInOut in={id === Displays.MATCH_PREVIEW} duration={0.5}>
+            <displays.matchPreview event={event} match={match} ranks={ranks} />
+          </FadeInOut>
+        </AbsolouteLocator>
+      )}
+      {layout[0] === LayoutMode.STREAM && (
+        <AbsolouteLocator bottom={0} left={0}>
+          <SlideInBottom
+            in={id === Displays.MATCH_PREVIEW}
+            duration={0.75}
+            inDelay={0.25}
+          >
+            <displays.matchPreviewStream
+              event={event}
+              match={match}
+              ranks={ranks}
+            />
+          </SlideInBottom>
+        </AbsolouteLocator>
+      )}
 
       {/* Displays.MATCH_START */}
-      <SlideInBottom
-        in={id === Displays.MATCH_START}
-        duration={0.75}
-        inDelay={0.25}
-      >
-        <displays.matchPlay event={event} match={match} ranks={ranks} />
-      </SlideInBottom>
+      {layout[1] === LayoutMode.FULL && (
+        <AbsolouteLocator top={0} left={0}>
+          <FadeInOut in={id === Displays.MATCH_START} duration={0.5}>
+            <displays.matchPlay event={event} match={match} ranks={ranks} />
+          </FadeInOut>
+        </AbsolouteLocator>
+      )}
+      {layout[1] === LayoutMode.STREAM && (
+        <AbsolouteLocator bottom={0} left={0}>
+          <SlideInBottom
+            in={id === Displays.MATCH_START}
+            duration={0.75}
+            inDelay={0.25}
+          >
+            <displays.matchPlayStream
+              event={event}
+              match={match}
+              ranks={ranks}
+            />
+          </SlideInBottom>
+        </AbsolouteLocator>
+      )}
 
       {/* Displays.MATCH_RESULTS */}
-      <AbsolouteLocator top={0} left={0}>
-        <FadeInOut in={id === Displays.MATCH_RESULTS}>
-          <displays.matchResults event={event} match={match} ranks={ranks} />
-        </FadeInOut>
-      </AbsolouteLocator>
+      {layout[2] === LayoutMode.FULL && (
+        <AbsolouteLocator top={0} left={0}>
+          <FadeInOut in={id === Displays.MATCH_RESULTS}>
+            <displays.matchResults event={event} match={match} ranks={ranks} />
+          </FadeInOut>
+        </AbsolouteLocator>
+      )}
+      {layout[2] === LayoutMode.STREAM && (
+        <AbsolouteLocator top={0} left={0}>
+          <SlideInLeft
+            in={id === Displays.MATCH_RESULTS}
+            duration={0.75}
+            inDelay={0.25}
+          >
+            <displays.matchResultsStream
+              event={event}
+              match={match}
+              ranks={ranks}
+            />
+          </SlideInLeft>
+        </AbsolouteLocator>
+      )}
     </>
   );
 };

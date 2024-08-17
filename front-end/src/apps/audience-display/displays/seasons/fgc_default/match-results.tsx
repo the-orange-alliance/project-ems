@@ -44,7 +44,7 @@ const ResultsText = styled.div`
 `;
 
 const InfoContainer = styled.div`
-  width: 40vw;
+  width: 30vw;
 `;
 
 export const MatchResults: FC<DisplayProps> = ({ match, ranks }) => {
@@ -54,7 +54,7 @@ export const MatchResults: FC<DisplayProps> = ({ match, ranks }) => {
         <HeaderContainer>
           <ResultsText>RESULTS</ResultsText>
           <InfoContainer>
-            <MatchTitle match={match} />
+            <MatchTitle match={match} noMargin />
           </InfoContainer>
         </HeaderContainer>
         <AllianceResult alliance='red' match={match} ranks={ranks} />

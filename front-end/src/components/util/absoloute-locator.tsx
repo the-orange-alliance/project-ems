@@ -16,7 +16,16 @@ const AbsoluteLodator: React.FC<AbsoluteLodatorProps> = ({
   right
 }) => {
   return (
-    <div style={{ position: 'absolute', top, left, bottom, right }}>
+    <div
+      style={{
+        position: 'absolute',
+        top,
+        left,
+        bottom,
+        right,
+        overflow: 'hidden'
+      }}
+    >
       {children}
     </div>
   );
