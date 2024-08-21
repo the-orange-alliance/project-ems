@@ -2,7 +2,7 @@ name: Test building EMS
 
 on:
   push:
-    branches: 
+    branches:
       - "*"
   workflow_dispatch:
 
@@ -12,129 +12,136 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 2
+      - name: Cleanup workspace
+        run: |
+          ls -la ./
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          ls -la ./
 
-    - name: Detect changes
-      id: changed
-      uses: tj-actions/changed-files@v34
-      with:
-        files: |
-          front-end/**
-          lib/**
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
 
-    - name: Use Node.js 18.x
-      if: steps.changed.outputs.any_changed == 'true'
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18.x
-        
-    - name: Install lib dependencies
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        npm run install:lib
+      - name: Detect changes
+        id: changed
+        uses: tj-actions/changed-files@v34
+        with:
+          files: |
+            front-end/**
+            lib/**
 
-    - name: Build libs
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        npm run build:lib
+      - name: Use Node.js 18.x
+        if: steps.changed.outputs.any_changed == 'true'
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
 
-    - name: Install frontend dependencies
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        npm run install:frontend
+      - name: Install lib dependencies
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          npm run install:lib
 
-    - name: Build frontend
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        npm run build:frontend
+      - name: Build libs
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          npm run build:lib
+
+      - name: Install frontend dependencies
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          npm run install:frontend
+
+      - name: Build frontend
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          npm run build:frontend
 
   build-backend:
     name: Build Backend
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 2
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
 
-    - name: Detect changes
-      id: changed
-      uses: tj-actions/changed-files@v34
-      with:
-        files: |
-          back-end/api/**
-          bacl-end/realtime/**
-          lib/**
+      - name: Detect changes
+        id: changed
+        uses: tj-actions/changed-files@v34
+        with:
+          files: |
+            back-end/api/**
+            bacl-end/realtime/**
+            lib/**
 
-    - name: Use Node.js 18.x
-      if: steps.changed.outputs.any_changed == 'true'
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18.x
-        
-    - name: Install lib dependencies
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        npm run install:lib
+      - name: Use Node.js 18.x
+        if: steps.changed.outputs.any_changed == 'true'
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
 
-    - name: Build libs
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        npm run build:lib
+      - name: Install lib dependencies
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          npm run install:lib
 
-    - name: Install backend dependencies
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        npm run install:backend
+      - name: Build libs
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          npm run build:lib
 
-    - name: Build backend
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        npm run build:backend
+      - name: Install backend dependencies
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          npm run install:backend
+
+      - name: Build backend
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          npm run build:backend
 
   build-frc-fms:
     name: Build FRC FMS
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 2
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
 
-    - name: Detect changes
-      id: changed
-      uses: tj-actions/changed-files@v34
-      with:
-        files: |
-          back-end/frc-fms/**
-          lib/**
+      - name: Detect changes
+        id: changed
+        uses: tj-actions/changed-files@v34
+        with:
+          files: |
+            back-end/frc-fms/**
+            lib/**
 
-    - name: Use Node.js 18.x
-      if: steps.changed.outputs.any_changed == 'true'
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18.x
-        
-    - name: Install lib dependencies
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        npm run install:lib
+      - name: Use Node.js 18.x
+        if: steps.changed.outputs.any_changed == 'true'
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
 
-    - name: Build libs
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        npm run build:lib
+      - name: Install lib dependencies
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          npm run install:lib
 
-    - name: Install backend dependencies
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        cd back-end/frc-fms
-        npm i
+      - name: Build libs
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          npm run build:lib
 
-    - name: Build backend
-      if: steps.changed.outputs.any_changed == 'true'
-      run: |
-        cd back-end/frc-fms
-        npm run build
+      - name: Install backend dependencies
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          cd back-end/frc-fms
+          npm i
+
+      - name: Build backend
+        if: steps.changed.outputs.any_changed == 'true'
+        run: |
+          cd back-end/frc-fms
+          npm run build
