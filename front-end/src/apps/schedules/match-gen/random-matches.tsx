@@ -6,6 +6,7 @@ import {
   Tournament,
   assignMatchTimes
 } from '@toa-lib/models';
+import { FGCSchedule } from '@toa-lib/models';
 import { FC, useState } from 'react';
 import { createMatchSchedule } from 'src/api/use-match-data';
 import { MatchMakerQualityDropdown } from 'src/components/dropdowns/match-maker-dropdown';
@@ -53,7 +54,14 @@ export const RandomMatches: FC<Props> = ({
         teamKeys,
         name
       });
-      onCreateMatches(assignMatchTimes(matches, scheduleItems));
+      onCreateMatches(
+        assignMatchTimes(
+          eventSchedule.hasPremiereField
+            ? FGCSchedule.FGC2024.assignFields(matches)
+            : matches,
+          scheduleItems
+        )
+      );
       showSnackbar('MatchMaker executed successfully.');
       setLoading(false);
     } catch (e) {
