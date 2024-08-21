@@ -7,7 +7,7 @@ import {
 } from '@toa-lib/models';
 import { FC } from 'react';
 import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team';
-import { ParticipantCardStatus } from './participant-card-status';
+import { FGCParticipantCardStatus } from './participant-card-status';
 import CheckboxStatus from './checkbox-status';
 
 interface Props {
@@ -118,7 +118,7 @@ export const AllianceCard: FC<Props> = ({
               />
             </Grid>
             <Grid item md={4}>
-              <ParticipantCardStatus
+              <FGCParticipantCardStatus
                 cardStatus={p.cardStatus}
                 disabled={disabled}
                 onChange={handleCardChange}

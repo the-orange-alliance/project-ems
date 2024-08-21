@@ -10,6 +10,7 @@ import { useTeamsForEvent } from 'src/api/use-team-data';
 import { currentMatchIdAtom, matchOccurringAtom } from 'src/stores/recoil';
 import { useMatchControl } from '../hooks/use-match-control';
 import { MatchState } from '@toa-lib/models';
+import { ScorekeeperDetails } from './scorekeeper-details';
 
 interface Props {
   eventKey?: string;
@@ -65,7 +66,7 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
         />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        Score Details
+        <ScorekeeperDetails />
       </TabPanel>
     </Paper>
   );
