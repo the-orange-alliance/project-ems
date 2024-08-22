@@ -33,7 +33,9 @@ export const MatchTable: FC<Props> = ({ matches, teams }) => {
         return [
           e.name,
           e.fieldNumber,
-          DateTime.fromISO(e.startTime).toLocaleString(DateTime.DATETIME_FULL),
+          DateTime.fromISO(e.scheduledTime).toLocaleString(
+            DateTime.DATETIME_FULL
+          ),
           ...participants
         ];
       }}

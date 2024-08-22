@@ -59,7 +59,7 @@ router.post(
         matchMakerArgs,
         config
       );
-      logger.info('mathmaker complete - sending results');
+      logger.info('matchmaker complete - sending results');
       res.send(matches);
     } catch (e) {
       return next(e);

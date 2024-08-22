@@ -1,23 +1,29 @@
 import {
   Alliance,
   ChargedUpSeason,
+  HydrogenHorizons,
+  Crescendo,
+  FeedingTheFuture,
   Match,
   MatchDetailBase,
   Ranking
 } from '@toa-lib/models';
 import { FC, ChangeEvent } from 'react';
 import { chargedUpComponents } from './ChargedUp';
-import { HydrogenHorizonsSeason } from '@toa-lib/models/build/seasons/HydrogenHorizons';
 import { hydrogenHorizonComponents } from './HydrogenHorizons';
 import { crescendoComponents } from './Crescendo';
+import { fgc2024Components } from './fgc-2024';
 
-import { CrescendoSeason } from '@toa-lib/models/build/seasons/Crescendo';
+const { HydrogenHorizonsSeason } = HydrogenHorizons;
+const { CrescendoSeason } = Crescendo;
+const { FeedingTheFutureSeason } = FeedingTheFuture;
 
 // Add season components map here to be used in the function for later.
 const seasonComponents = new Map<string, SeasonComponents<any, any>>();
 seasonComponents.set(ChargedUpSeason.key, chargedUpComponents);
 seasonComponents.set(HydrogenHorizonsSeason.key, hydrogenHorizonComponents);
 seasonComponents.set(CrescendoSeason.key, crescendoComponents);
+seasonComponents.set(FeedingTheFutureSeason.key, fgc2024Components);
 
 export interface MatchDetailInfoProps<T extends MatchDetailBase> {
   match?: Match<T>;

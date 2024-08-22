@@ -54,7 +54,9 @@ export const MatchResultsTable: FC<Props> = ({
         return [
           e.name,
           e.fieldNumber,
-          DateTime.fromISO(e.startTime).toLocaleString(DateTime.DATETIME_SHORT),
+          DateTime.fromISO(e.scheduledTime).toLocaleString(
+            DateTime.DATETIME_SHORT
+          ),
           ...participants.map((p, i) => (
             <span
               key={`${e.eventKey}-${e.tournamentKey}-${e.id}-${i}`}
