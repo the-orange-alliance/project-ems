@@ -72,9 +72,6 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
     }
   }
 
-  console.log(layout, layout[0], layout[1], layout[2]);
-  console.log(id);
-
   return (
     <>
       {/* Displays.BLANK (show nothing) */}
