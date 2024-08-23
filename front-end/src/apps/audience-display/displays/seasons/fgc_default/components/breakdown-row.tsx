@@ -11,7 +11,7 @@ interface BreakdownRowProps {
 
 const RowContainer = styled(Grid)((props: { color: string }) => ({
   height: '100%',
-  fontSize: '3.2vh',
+  fontSize: '3vh',
   fontWeight: '700',
   lineHeight: '.9',
   color: props.color

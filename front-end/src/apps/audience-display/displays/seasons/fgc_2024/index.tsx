@@ -1,4 +1,4 @@
-import { MenuBook } from '@mui/icons-material';
+import { Lock, MenuBook, Restaurant, StarBorder } from '@mui/icons-material';
 import { ResultsBreakdown } from '../../displays';
 import {
   getBalancedRobots,
@@ -11,6 +11,8 @@ import {
   ScoreTable
 } from '@toa-lib/models/build/seasons/FeedingTheFuture';
 import CoopertitionLogo from '../fgc_default/assets/Coopertition_Points.svg';
+import Resevoir from './assets/Resevoir.svg';
+import Nexus from './assets/Nexus.svg';
 import styled from '@emotion/styled';
 import { Icon } from '@mui/material';
 
@@ -23,7 +25,11 @@ const CustomIcon = styled(Icon)(() => {
 
 export const Breakdown: ResultsBreakdown<MatchDetails>[] = [
   {
-    icon: <MenuBook fontSize='inherit' />,
+    icon: (
+      <CustomIcon>
+        <img src={Resevoir} />
+      </CustomIcon>
+    ),
     title: 'Resevoir Points',
     color: '#000000',
     resultCalc: (match, alliance) => {
@@ -36,7 +42,11 @@ export const Breakdown: ResultsBreakdown<MatchDetails>[] = [
     }
   },
   {
-    icon: <MenuBook fontSize='inherit' />,
+    icon: (
+      <CustomIcon>
+        <img src={Nexus} />
+      </CustomIcon>
+    ),
     title: 'Nexus Points',
     color: '#000000',
     resultCalc: (match, alliance) => {
@@ -47,7 +57,7 @@ export const Breakdown: ResultsBreakdown<MatchDetails>[] = [
     }
   },
   {
-    icon: <MenuBook fontSize='inherit' />,
+    icon: <Restaurant fontSize='inherit' />,
     title: 'Food Produced Points',
     color: '#000000',
     resultCalc: (match, alliance) => {
@@ -60,7 +70,7 @@ export const Breakdown: ResultsBreakdown<MatchDetails>[] = [
     }
   },
   {
-    icon: <MenuBook fontSize='inherit' />,
+    icon: <StarBorder fontSize='inherit' />,
     title: 'Bonus Multiplier',
     color: '#000000',
     resultCalc: (match, alliance) => {
@@ -89,7 +99,7 @@ export const Breakdown: ResultsBreakdown<MatchDetails>[] = [
     }
   },
   {
-    icon: <MenuBook fontSize='inherit' />,
+    icon: <Lock fontSize='inherit' />,
     title: 'Food Secured Points',
     color: '#000000',
     resultCalc: (match, alliance) => {

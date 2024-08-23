@@ -18,7 +18,7 @@ export enum AudienceScreens {
   PREVIEW_STREAM = 'preview-stream',
   MATCH = 'match-full',
   MATCH_STREAM = 'match-stream',
-  RESULTS = 'results',
+  RESULTS = 'results-full',
   RESULTS_STREAM = 'results-stream',
   RANKINGS = 'rankings'
 }

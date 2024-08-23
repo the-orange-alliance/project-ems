@@ -11,6 +11,7 @@ import { ResultsBreakdown } from '../../../displays';
 import { Breakdown as Breakdown2024 } from '../../fgc_2024';
 import { Grid } from '@mui/material';
 import BreakdownRow from './breakdown-row';
+import { Block } from '@mui/icons-material';
 
 const Container = styled.div`
   display: flex;
@@ -42,7 +43,8 @@ const BreakdownContainer = styled.div((props: { alliance: Alliance }) => ({
   marginTop: '-1px',
   paddingBottom: '1em',
   paddingLeft: '1em',
-  paddingRight: '1em'
+  paddingRight: '1em',
+  paddingTop: '1em'
 }));
 
 const BreakdownTable = styled(Grid)(() => ({
@@ -145,6 +147,7 @@ export const AllianceResult: FC<Props> = ({ alliance, match, ranks }) => {
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
   );
+  allianceParticipants.push(participants[0]);
 
   // try to get breakdown sheet
   let breakdown: ResultsBreakdown<any>[] = [];
@@ -163,6 +166,9 @@ export const AllianceResult: FC<Props> = ({ alliance, match, ranks }) => {
       return total > 0 ? `+ ${total}` : '0';
     }
   };
+
+  // Calculate the size of each row in the breakdown table
+  const breakdownRowSize = 12 / (breakdown.length + 2);
 
   return (
     <Container>
@@ -184,17 +190,17 @@ export const AllianceResult: FC<Props> = ({ alliance, match, ranks }) => {
       <BreakdownContainer alliance={alliance}>
         <BreakdownTable container direction='column' gap={0.5}>
           {breakdown.map((b, i) => (
-            <Grid item key={i} xs={1.75}>
+            <Grid item key={i} xs={breakdownRowSize}>
               <BreakdownRow breakdown={b} match={match} alliance={alliance} />
             </Grid>
           ))}
           {/* Penalty Row */}
-          <Grid item xs={1.75}>
+          <Grid item xs={breakdownRowSize}>
             <BreakdownRow
               match={match}
               alliance={alliance}
               breakdown={{
-                icon: <HorizontalRuleIcon fontSize='inherit' />,
+                icon: <Block fontSize='inherit' />,
                 title: alliance === 'red' ? 'Blue Penalty' : 'Red Penalty',
                 color: 'red',
                 resultCalc: penaltyCalc
