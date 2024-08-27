@@ -1,6 +1,9 @@
 import { User, Team } from '@toa-lib/models';
 import { atom } from 'recoil';
-import { localStorageEffect } from '../recoil-effects';
+import {
+  localStorageEffect,
+  localStorageQueryParamDefaultEffect
+} from '../recoil-effects';
 
 /**
  * @section UI SETTINGS STATE
@@ -74,8 +77,9 @@ export const displayIdAtom = atom({
   key: 'displayIDAtom',
   default: 0
 });
+
 export const displayChromaKeyAtom = atom({
   key: 'chromaKeyAtom',
   default: '#ff00ff',
-  effects: [localStorageEffect('chromaKey')]
+  effects: [localStorageQueryParamDefaultEffect('chromaKey')]
 });

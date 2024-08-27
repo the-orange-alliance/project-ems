@@ -7,6 +7,11 @@ import { CountryFlag } from './country-flag';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
+import { ResultsBreakdown } from '../../../displays';
+import { Breakdown as Breakdown2024 } from '../../fgc_2024';
+import { Grid } from '@mui/material';
+import BreakdownRow from './breakdown-row';
+import { Block } from '@mui/icons-material';
 
 const Container = styled.div`
   display: flex;
@@ -17,6 +22,7 @@ const TopBanner = styled.img`
   width: 100%;
   height: auto;
   margin-top: -2px;
+  margin-bottom: -2px;
 `;
 
 const AllianceContainer = styled.div(
@@ -30,11 +36,28 @@ const AllianceContainer = styled.div(
   })
 );
 
-const BreakdownTable = styled.div((props: { alliance: Alliance }) => ({
+const BreakdownContainer = styled.div((props: { alliance: Alliance }) => ({
   backgroundColor: props.alliance === 'red' ? '#ce2000' : '#5c88ff',
   height: '50vh',
   width: '100%',
-  marginTop: '-1px'
+  marginTop: '-1px',
+  paddingBottom: '1em',
+  paddingLeft: '1em',
+  paddingRight: '1em',
+  paddingTop: '1em'
+}));
+
+const BreakdownTable = styled(Grid)(() => ({
+  width: '100%',
+  height: '100%',
+  '> :nth-child(odd)': {
+    backgroundColor: '#ffffff',
+    color: 'black'
+  },
+  '> :nth-child(even)': {
+    backgroundColor: '#e9e9e9',
+    color: 'black'
+  }
 }));
 
 const ScoreContainer = styled.div((props: { alliance: Alliance }) => ({
@@ -124,6 +147,29 @@ export const AllianceResult: FC<Props> = ({ alliance, match, ranks }) => {
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
   );
+  allianceParticipants.push(participants[0]);
+
+  // try to get breakdown sheet
+  let breakdown: ResultsBreakdown<any>[] = [];
+
+  switch (match.eventKey.split('-')[0]?.replace('FGC_', '')) {
+    case '2024':
+      breakdown = Breakdown2024;
+  }
+
+  const penaltyCalc = () => {
+    if (alliance === 'red') {
+      const total = match.blueMajPen + match.blueMinPen;
+      return total > 0 ? `+ ${total}` : '0';
+    } else {
+      const total = match.redMajPen + match.redMinPen;
+      return total > 0 ? `+ ${total}` : '0';
+    }
+  };
+
+  // Calculate the size of each row in the breakdown table
+  const breakdownRowSize = 12 / (breakdown.length + 2);
+
   return (
     <Container>
       <TopBanner src={alliance === 'red' ? RED_BANNER : BLUE_BANNER} />
@@ -141,7 +187,28 @@ export const AllianceResult: FC<Props> = ({ alliance, match, ranks }) => {
           );
         })}
       </AllianceContainer>
-      <BreakdownTable alliance={alliance} />
+      <BreakdownContainer alliance={alliance}>
+        <BreakdownTable container direction='column' gap={0.5}>
+          {breakdown.map((b, i) => (
+            <Grid item key={i} xs={breakdownRowSize}>
+              <BreakdownRow breakdown={b} match={match} alliance={alliance} />
+            </Grid>
+          ))}
+          {/* Penalty Row */}
+          <Grid item xs={breakdownRowSize}>
+            <BreakdownRow
+              match={match}
+              alliance={alliance}
+              breakdown={{
+                icon: <Block fontSize='inherit' />,
+                title: alliance === 'red' ? 'Blue Penalty' : 'Red Penalty',
+                color: 'red',
+                resultCalc: penaltyCalc
+              }}
+            />
+          </Grid>
+        </BreakdownTable>
+      </BreakdownContainer>
       <ScoreContainer alliance={alliance}>
         <ScoreText>TOTAL:</ScoreText>
         <ScoreText>

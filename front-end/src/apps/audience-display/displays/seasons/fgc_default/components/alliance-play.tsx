@@ -10,7 +10,10 @@ import { CountryFlag } from './country-flag';
 import { CardStatus } from './card-status';
 
 const Container = styled.div((props: { alliance: Alliance }) => ({
-  backgroundColor: props.alliance === 'red' ? '#ce2000' : '#5c88ff'
+  backgroundColor: props.alliance === 'red' ? '#ce2000' : '#5c88ff',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'space-around',
 }));
 
 const TeamContainer = styled.div`
@@ -64,9 +67,15 @@ interface Props {
   alliance: Alliance;
   participants: MatchParticipant[];
   invert?: boolean;
+  fullHeight?: boolean;
 }
 
-export const AlliancePlay: FC<Props> = ({ alliance, participants, invert }) => {
+export const AlliancePlay: FC<Props> = ({
+  alliance,
+  participants,
+  invert,
+  fullHeight = false
+}) => {
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
   );
@@ -78,12 +87,14 @@ export const AlliancePlay: FC<Props> = ({ alliance, participants, invert }) => {
           ? {
               borderTopRightRadius: '0.5em',
               borderBottomRightRadius: '0.5em',
-              margin: '0.5em 0.5em 0.5em 0'
+              margin: '0.5em 0.5em 0.5em 0',
+              height: fullHeight ? '100%' : undefined
             }
           : {
               borderTopLeftRadius: '0.5em',
-              borderBottomLeftRadius: '0.em',
-              margin: '0.5em 0 0.5em 0.5em'
+              borderBottomLeftRadius: '0.5em',
+              margin: '0.5em 0 0.5em 0.5em',
+              height: fullHeight ? '100%' : undefined
             }
       }
     >

@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Event, Match, Ranking } from '@toa-lib/models';
+import { Event, Match, MatchDetailBase, Ranking } from '@toa-lib/models';
 import * as FRCDefault from './seasons/frc_default';
 import * as FGCDefault from './seasons/fgc_default';
 
@@ -9,22 +9,38 @@ export interface DisplayProps {
   ranks: Ranking[];
 }
 
+export interface ResultsBreakdown<T extends MatchDetailBase> {
+  icon: React.ReactNode;
+  title: string;
+  color: string;
+  resultCalc: (match: Match<T>, alliance: 'red' | 'blue') => string;
+}
+
 interface SeasonDisplay {
   matchPreview: FC<DisplayProps>;
+  matchPreviewStream: FC<DisplayProps>;
   matchPlay: FC<DisplayProps>;
+  matchPlayStream: FC<DisplayProps>;
   matchResults: FC<DisplayProps>;
+  matchResultsStream: FC<DisplayProps>;
 }
 
 export const frcDefault: SeasonDisplay = {
-  matchPlay: FRCDefault.MatchPlay,
   matchPreview: FRCDefault.MatchPreview,
-  matchResults: FRCDefault.MatchResults
+  matchPreviewStream: FRCDefault.MatchPreview,
+  matchPlay: FRCDefault.MatchPlay,
+  matchPlayStream: FRCDefault.MatchPlay,
+  matchResults: FRCDefault.MatchResults,
+  matchResultsStream: FRCDefault.MatchResults
 };
 
 export const fgcDefault: SeasonDisplay = {
-  matchPlay: FGCDefault.MatchPlay,
   matchPreview: FGCDefault.MatchPreview,
-  matchResults: FGCDefault.MatchResults
+  matchPreviewStream: FGCDefault.MatchPreviewStream,
+  matchPlay: FGCDefault.MatchPlay,
+  matchPlayStream: FGCDefault.MatchPlayStream,
+  matchResults: FGCDefault.MatchResults,
+  matchResultsStream: FGCDefault.MatchResultsStream
 };
 
 // Map that contains all the displays for their seasons.

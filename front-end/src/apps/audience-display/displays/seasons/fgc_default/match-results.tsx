@@ -3,6 +3,7 @@ import { DisplayProps } from '../../displays';
 import FGC_BG from './assets/global-bg.png';
 import styled from '@emotion/styled';
 import { AllianceResult } from './components/alliance-result';
+import MatchTitle from './components/match-title';
 
 const Container = styled.div`
   background-image: url(${FGC_BG});
@@ -43,17 +44,7 @@ const ResultsText = styled.div`
 `;
 
 const InfoContainer = styled.div`
-  background-color: #ffffff;
-  border-radius: 1em;
-  padding: 0.5em;
-  text-align: center;
-  font-weight: bold;
-  font-size: 2em;
-  width: 24vw;
-`;
-
-const InfoText = styled.div`
-  line-height: 1.25em;
+  width: 30vw;
 `;
 
 export const MatchResults: FC<DisplayProps> = ({ match, ranks }) => {
@@ -63,8 +54,7 @@ export const MatchResults: FC<DisplayProps> = ({ match, ranks }) => {
         <HeaderContainer>
           <ResultsText>RESULTS</ResultsText>
           <InfoContainer>
-            <InfoText>{match.name}</InfoText>
-            <InfoText>Field&nbsp;{match.fieldNumber}</InfoText>
+            <MatchTitle match={match} noMargin />
           </InfoContainer>
         </HeaderContainer>
         <AllianceResult alliance='red' match={match} ranks={ranks} />

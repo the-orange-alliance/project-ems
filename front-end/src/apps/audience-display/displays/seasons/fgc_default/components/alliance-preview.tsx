@@ -28,6 +28,7 @@ const AllianceContainer = styled.div((props: { size: number }) => ({
   height: '100%',
   'background-color': '#ffffff',
   display: 'grid',
+  color: 'black',
   'grid-template-rows': `repeat(${props.size}, 1fr)`
 }));
 
