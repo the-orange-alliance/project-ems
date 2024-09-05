@@ -1,6 +1,6 @@
 import { getSeasonKeyFromEventKey } from '@toa-lib/models';
 import { useRecoilValue } from 'recoil';
-import { useComponents } from 'src/seasons';
+import { useComponents, useFieldControl } from 'src/seasons';
 import { currentEventKeyAtom } from 'src/stores/recoil';
 
 export const useSeasonComponents = () => {
@@ -8,4 +8,11 @@ export const useSeasonComponents = () => {
     useRecoilValue(currentEventKeyAtom)
   );
   return useComponents(seasonKey);
+};
+
+export const useSeasonFieldControl = () => {
+  const seasonKey = getSeasonKeyFromEventKey(
+    useRecoilValue(currentEventKeyAtom)
+  );
+  return useFieldControl(seasonKey);
 };

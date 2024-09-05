@@ -2,15 +2,25 @@ import { MatchState } from '@toa-lib/models';
 import { useRecoilCallback } from 'recoil';
 import { useMatchControl } from './use-match-control';
 import { sendPostResults } from 'src/api/use-socket';
-import { currentMatchIdAtom, matchOccurringAtom } from 'src/stores/recoil';
+import {
+  currentMatchIdAtom,
+  matchOccurringAtom,
+  socketConnectedAtom
+} from 'src/stores/recoil';
 import { matchesByEventKeyAtomFam } from 'src/stores/recoil';
+import { useSeasonFieldControl } from 'src/hooks/use-season-components';
 
 export const usePostResultsCallback = () => {
   const { canPostResults, setState } = useMatchControl();
+  const fieldControl = useSeasonFieldControl();
   return useRecoilCallback(
     ({ snapshot, set }) =>
       async () => {
         const match = await snapshot.getPromise(matchOccurringAtom);
+        const socketConnected = await snapshot.getPromise(socketConnectedAtom);
+        if (!socketConnected) {
+          throw new Error('Not connected to realtime service.');
+        }
         if (!canPostResults) {
           throw new Error('Attempted to post results when not allowed.');
         }
@@ -27,6 +37,7 @@ export const usePostResultsCallback = () => {
           set(currentMatchIdAtom, matches[index + 1].id);
           set(matchOccurringAtom, matches[index + 1]);
         }
+        fieldControl?.postResultsForField?.();
         sendPostResults();
         setState(MatchState.RESULTS_POSTED);
       },
