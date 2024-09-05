@@ -4,6 +4,7 @@ import { MatchDetailInfo } from './match-detail-info';
 import { RedScoreBreakdown, BlueScoreBreakdown } from './score-breakdowns';
 import { RankingsReport } from './rankings-report';
 import { Settings } from './settings';
+import { useFieldControl } from './field-control';
 
 export const fgc2024Components: SeasonComponents<
   FeedingTheFuture.MatchDetails,
@@ -14,5 +15,6 @@ export const fgc2024Components: SeasonComponents<
   BlueScoreBreakdown,
   RefereeScoreSheet: () => <div>RefereeScoreSheet</div>,
   RankingsReport,
-  Settings
+  Settings,
+  useFieldControl
 };

@@ -8,9 +8,11 @@ import {
   socketConnectedAtom
 } from 'src/stores/recoil';
 import { matchesByEventKeyAtomFam } from 'src/stores/recoil';
+import { useSeasonFieldControl } from 'src/hooks/use-season-components';
 
 export const usePostResultsCallback = () => {
   const { canPostResults, setState } = useMatchControl();
+  const fieldControl = useSeasonFieldControl();
   return useRecoilCallback(
     ({ snapshot, set }) =>
       async () => {
@@ -35,6 +37,7 @@ export const usePostResultsCallback = () => {
           set(currentMatchIdAtom, matches[index + 1].id);
           set(matchOccurringAtom, matches[index + 1]);
         }
+        fieldControl?.postResultsForField?.();
         sendPostResults();
         setState(MatchState.RESULTS_POSTED);
       },

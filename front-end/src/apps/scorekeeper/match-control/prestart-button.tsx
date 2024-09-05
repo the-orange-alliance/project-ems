@@ -1,16 +1,19 @@
 import { Button } from '@mui/material';
 import { FC, useState } from 'react';
 import { useMatchControl } from '../hooks/use-match-control';
-import { MatchState } from '@toa-lib/models';
-import { usePrestartCallback } from '../hooks/use-prestart';
+import {
+  useCancelPrestartCallback,
+  usePrestartCallback
+} from '../hooks/use-prestart';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { LoadingButton } from '@mui/lab';
 
 export const PrestartButton: FC = () => {
   const [loading, setLoading] = useState(false);
-  const { canPrestart, canCancelPrestart, setState } = useMatchControl();
+  const { canPrestart, canCancelPrestart } = useMatchControl();
   const { showSnackbar } = useSnackbar();
   const prestart = usePrestartCallback();
+  const cancelPrestart = useCancelPrestartCallback();
   const sendPrestart = async () => {
     setLoading(true);
     try {
@@ -22,7 +25,14 @@ export const PrestartButton: FC = () => {
       setLoading(false);
     }
   };
-  const cancelPrestart = () => setState(MatchState.PRESTART_READY);
+  const sendCancelPrestart = async () => {
+    try {
+      await cancelPrestart();
+    } catch (e) {
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      showSnackbar('Error while cancelling prestart', error);
+    }
+  };
   return canPrestart ? (
     <LoadingButton
       fullWidth
@@ -39,7 +49,7 @@ export const PrestartButton: FC = () => {
       fullWidth
       color='error'
       variant='contained'
-      onClick={cancelPrestart}
+      onClick={sendCancelPrestart}
       disabled={!canCancelPrestart}
     >
       Cancel Prestart
