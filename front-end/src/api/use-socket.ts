@@ -57,7 +57,7 @@ export const useSocket = (): [
 
       // ID Message
       let persistantClientId = localStorage.getItem('persistantClientId');
-      
+
       // If no persistantClientId is found, generate a new one and save it
       if (!persistantClientId || persistantClientId === 'undefined') {
         persistantClientId = uuidv4();
