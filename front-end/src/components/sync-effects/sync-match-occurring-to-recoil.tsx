@@ -2,6 +2,7 @@ import { Match, MatchSocketEvent, MatchState } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
 import { useRecoilCallback } from 'recoil';
 import { useSocket } from 'src/api/use-socket';
+import { useSeasonFieldControl } from 'src/hooks/use-season-components';
 import { matchOccurringAtom, matchStateAtom } from 'src/stores/recoil';
 
 interface Props {
@@ -12,6 +13,7 @@ export const SyncMatchOccurringToRecoil: FC<Props> = ({
   stopAfterMatchEnd
 }) => {
   const [socket, connected] = useSocket();
+  const fieldControl = useSeasonFieldControl();
 
   useEffect(() => {
     if (connected) {
@@ -34,6 +36,7 @@ export const SyncMatchOccurringToRecoil: FC<Props> = ({
           return;
         } else {
           set(matchOccurringAtom, newMatch);
+          fieldControl?.onMatchUpdate?.(newMatch);
         }
       }
   );

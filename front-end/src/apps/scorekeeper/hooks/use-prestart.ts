@@ -1,17 +1,23 @@
 import { useRecoilCallback } from 'recoil';
 import { useMatchControl } from './use-match-control';
 import { MatchState } from '@toa-lib/models';
-import { matchOccurringAtom } from 'src/stores/recoil';
+import { matchOccurringAtom, socketConnectedAtom } from 'src/stores/recoil';
 import { patchMatch, patchMatchParticipants } from 'src/api/use-match-data';
 import { DateTime } from 'luxon';
 import { sendPrestart } from 'src/api/use-socket';
+import { useSeasonFieldControl } from 'src/hooks/use-season-components';
 
 export const usePrestartCallback = () => {
   const { canPrestart, setState } = useMatchControl();
+  const fieldControl = useSeasonFieldControl();
   return useRecoilCallback(
     ({ snapshot }) =>
       async () => {
         const match = await snapshot.getPromise(matchOccurringAtom);
+        const socketConnected = await snapshot.getPromise(socketConnectedAtom);
+        if (!socketConnected) {
+          throw new Error('Not connected to realtime service.');
+        }
         if (!canPrestart) {
           throw new Error('Attemped to prestart when not allowed.');
         }
@@ -30,9 +36,22 @@ export const usePrestartCallback = () => {
           { eventKey, tournamentKey, id },
           match.participants
         );
+        fieldControl?.prestartField?.();
         sendPrestart({ eventKey, tournamentKey, id });
         setState(MatchState.PRESTART_COMPLETE);
       },
     [canPrestart, setState]
   );
+};
+
+export const useCancelPrestartCallback = () => {
+  const { canCancelPrestart, setState } = useMatchControl();
+  const fieldControl = useSeasonFieldControl();
+  return useRecoilCallback(() => async () => {
+    if (!canCancelPrestart) {
+      throw new Error('Attempted to cancel prestart when not allowed.');
+    }
+    fieldControl?.cancelPrestartForField?.();
+    setState(MatchState.PRESTART_READY);
+  });
 };

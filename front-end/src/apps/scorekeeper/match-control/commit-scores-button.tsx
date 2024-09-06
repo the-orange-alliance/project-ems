@@ -1,20 +1,26 @@
 import { Button } from '@mui/material';
 import { FC, useState } from 'react';
 import { useMatchControl } from '../hooks/use-match-control';
-import { MatchState } from '@toa-lib/models';
-import { useCommitScoresCallback } from '../hooks/use-commit-scores';
+import {
+  useClearFieldCallback,
+  useCommitScoresCallback
+} from '../hooks/use-commit-scores';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { LoadingButton } from '@mui/lab';
-import { sendAllClear } from 'src/api/use-socket';
 
 export const CommitScoresButton: FC = () => {
   const [loading, setLoading] = useState(false);
-  const { canResetField, canCommitScores, setState } = useMatchControl();
+  const { canResetField, canCommitScores } = useMatchControl();
   const commitScores = useCommitScoresCallback();
+  const clearField = useClearFieldCallback();
   const { showSnackbar } = useSnackbar();
-  const resetField = () => {
-    sendAllClear();
-    setState(MatchState.RESULTS_READY);
+  const sendResetField = async () => {
+    try {
+      await clearField();
+    } catch (e) {
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      showSnackbar('Error while clearing field', error);
+    }
   };
   const sendCommitScores = async () => {
     setLoading(true);
@@ -23,7 +29,7 @@ export const CommitScoresButton: FC = () => {
       setLoading(false);
     } catch (e) {
       const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while prestarting', error);
+      showSnackbar('Error while committing scores', error);
       setLoading(false);
     }
   };
@@ -43,7 +49,7 @@ export const CommitScoresButton: FC = () => {
       fullWidth
       color='success'
       variant='contained'
-      onClick={resetField}
+      onClick={sendResetField}
       disabled={!canResetField}
     >
       All Clear
