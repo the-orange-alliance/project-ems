@@ -36,40 +36,76 @@ const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
 
 export interface MatchDetails extends MatchDetailBase {
   redResevoirConserved: number;
-  redNexusConserved: number;
   redFoodProduced: number;
   redFoodSecured: number;
   redRobotOneBalanced: number;
   redRobotTwoBalanced: number;
   redRobotThreeBalanced: number;
+  redNexusState: AllianceNexusGoalState;
   blueResevoirConserved: number;
-  blueNexusConserved: number;
   blueFoodProduced: number;
   blueFoodSecured: number;
   blueRobotOneBalanced: number;
   blueRobotTwoBalanced: number;
   blueRobotThreeBalanced: number;
+  blueNexusState: AllianceNexusGoalState;
   coopertition: number;
 }
+
+export enum NexusGoalState {
+  Empty = 0,
+  BlueOnly = 1,
+  GreenOnly = 2,
+  Full = 3
+}
+export interface AllianceNexusGoalState {
+  CW1: NexusGoalState;
+  CW2: NexusGoalState;
+  CW3: NexusGoalState;
+  CW4: NexusGoalState;
+  CW5: NexusGoalState;
+  CW6: NexusGoalState;
+  EC1: NexusGoalState;
+  EC2: NexusGoalState;
+  EC3: NexusGoalState;
+  EC4: NexusGoalState;
+  EC5: NexusGoalState;
+  EC6: NexusGoalState;
+}
+
+export const defaultNexusGoalState: AllianceNexusGoalState = {
+  CW1: NexusGoalState.Empty,
+  CW2: NexusGoalState.Empty,
+  CW3: NexusGoalState.Empty,
+  CW4: NexusGoalState.Empty,
+  CW5: NexusGoalState.Empty,
+  CW6: NexusGoalState.Empty,
+  EC1: NexusGoalState.Empty,
+  EC2: NexusGoalState.Empty,
+  EC3: NexusGoalState.Empty,
+  EC4: NexusGoalState.Empty,
+  EC5: NexusGoalState.Empty,
+  EC6: NexusGoalState.Empty
+};
 
 export const defaultMatchDetails: MatchDetails = {
   eventKey: '',
   id: -1,
   tournamentKey: '',
   redResevoirConserved: 0,
-  redNexusConserved: 0,
   redFoodProduced: 0,
   redFoodSecured: 0,
   redRobotOneBalanced: 0,
   redRobotTwoBalanced: 0,
   redRobotThreeBalanced: 0,
+  redNexusState: {...defaultNexusGoalState},
   blueResevoirConserved: 0,
-  blueNexusConserved: 0,
   blueFoodProduced: 0,
   blueFoodSecured: 0,
   blueRobotOneBalanced: 0,
   blueRobotTwoBalanced: 0,
   blueRobotThreeBalanced: 0,
+  blueNexusState: {...defaultNexusGoalState},
   coopertition: 0
 };
 
@@ -347,9 +383,32 @@ export function getResevoirPoints(details: MatchDetails): [number, number] {
 }
 
 export function getNexusPoints(details: MatchDetails): [number, number] {
+  let [red, blue] = [0, 0];
+  Object.keys(defaultNexusGoalState).forEach((key) => {
+    switch ((details.redNexusState as any)[key]) {
+      case NexusGoalState.BlueOnly:
+      case NexusGoalState.GreenOnly:
+        red += 1;
+        break;
+      case NexusGoalState.Full:
+        red += 2;
+        break;
+    }
+
+    switch ((details.blueNexusState as any)[key]) {
+      case NexusGoalState.BlueOnly:
+      case NexusGoalState.GreenOnly:
+        blue += 1;
+        break;
+      case NexusGoalState.Full:
+        blue += 2;
+        break;
+    }
+  });
+
   return [
-    details.redNexusConserved * ScoreTable.Conserved,
-    details.blueNexusConserved * ScoreTable.Conserved
+    red * ScoreTable.Conserved,
+    blue * ScoreTable.Conserved
   ];
 }
 
