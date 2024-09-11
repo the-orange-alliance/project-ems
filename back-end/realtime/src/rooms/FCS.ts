@@ -9,13 +9,26 @@ import {
 } from "@toa-lib/models";
 import Room from "./Room.js";
 import Match from "./Match.js";
+import { WebSocket } from 'ws';
+import { buildWledInitializationPacket, buildWledSetColorPacket } from "../util/WLEDHelper.js";
 
 export default class FCS extends Room {
-  private readonly latestFcsStatus: FieldControlUpdatePacket = { hubs: {} };
+  private readonly latestFcsStatus: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
   private fcsPackets: FcsPackets = getFcsPackets(defaultFieldOptions);
+  private wledSockets: Record<string, WebSocket> = {};
 
   public constructor(server: Server, matchRoom: Match) {
     super(server, "fcs");
+
+    // Connect to wled websocket servers if there are wleds
+    Object.entries(this.fcsPackets.init.wleds).forEach((wled) => {
+      this.wledSockets[wled[0]] = new WebSocket(wled[1].address);
+
+      // Send initialization packet
+      this.wledSockets[wled[0]].onopen = () => {
+        this.wledSockets[wled[0]].send(buildWledInitializationPacket(wled[1]));
+      }
+    });
 
     matchRoom.localEmitter.on(MatchSocketEvent.TELEOPERATED, () => {
       this.broadcastFcsUpdate(this.fcsPackets.matchStart);
@@ -50,6 +63,11 @@ export default class FCS extends Room {
 
   private broadcastFcsUpdate(update: FieldControlUpdatePacket): void {
     this.broadcast().emit("fcs:update", update);
+
+    // Handle wleds
+    Object.entries(update.wleds).forEach((wled) => {
+      this.wledSockets[wled[0]].send(buildWledSetColorPacket(wled[1]));
+    });
 
     // Update this.latestFcsStatus AFTER sending out the new update
     for (const hubNumber in update.hubs) {

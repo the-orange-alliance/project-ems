@@ -20,6 +20,7 @@
     "@types/passport-jwt": "^3.0.9",
     "@types/passport-local": "^1.0.35",
     "@types/uuid": "^9.0.4",
+    "@types/ws": "^8.5.12",
     "@vercel/ncc": "^0.36.1",
     "typescript": "^5.1.6"
   },
@@ -34,7 +35,8 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "socket.io": "^4.7.1",
-    "winston": "^3.10.0"
+    "winston": "^3.10.0",
+    "ws": "^8.18.0"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.7",

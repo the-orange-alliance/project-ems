@@ -64,21 +64,44 @@ export type HubUpdateParameters = HubParameters<
 >;
 
 //-------------------------------------------
+// WLED parameters
+//-------------------------------------------
+export interface WledUpdateParameters {
+  color: string;
+  targetSegments?: number[];
+}
+
+export interface WledSegment {
+  start: number;
+  stop: number;
+}
+
+export interface WledInitParameters extends WledUpdateParameters {
+  address: string;
+  segments: WledSegment[];
+}
+
+//-------------------------------------------
 // Field Control packets
 //-------------------------------------------
 export interface FieldControlPacket<
-  HubParametersType extends HubParameters<any, any, any>
+  HubParametersType extends HubParameters<any, any, any>,
+  WledParametersType extends WledUpdateParameters
 > {
   hubs: Record<number, HubParametersType>;
+  wleds: Record<string, WledParametersType>;
 }
-export type FieldControlInitPacket = FieldControlPacket<HubInitParameters>;
-export type FieldControlUpdatePacket = FieldControlPacket<HubUpdateParameters>;
+export type FieldControlInitPacket = FieldControlPacket<HubInitParameters, WledInitParameters>;
+export type FieldControlUpdatePacket = FieldControlPacket<HubUpdateParameters, WledUpdateParameters>;
 
 //-------------------------------------------
 // Field options
 //-------------------------------------------
 
 export interface FieldOptions {
+  goalLedLength: number;
+  rampLedLength: number;
+
   redServoHoldPositionPulseWidth: number;
   redServoReleasedPositionPulseWidth: number;
   blueServoHoldPositionPulseWidth: number;
@@ -103,6 +126,9 @@ export interface FieldOptions {
 }
 
 export const defaultFieldOptions: FieldOptions = {
+  goalLedLength: 23,
+  rampLedLength: 90,
+
   redServoHoldPositionPulseWidth: 500,
   redServoReleasedPositionPulseWidth: 2500,
   blueServoHoldPositionPulseWidth: 500,

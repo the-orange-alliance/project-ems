@@ -2,7 +2,8 @@ import {
   FieldControlInitPacket,
   FieldControlUpdatePacket,
   FieldOptions,
-  HubUpdateParameters
+  HubUpdateParameters,
+  WledSegment
 } from '../base/FieldControl.js';
 import { UnreachableError } from '../types.js';
 import { Alliance } from '../base/Match.js';
@@ -201,7 +202,7 @@ function assemblePwmCommands(
     });
   }
 
-  return { hubs };
+  return { hubs, wleds: {} };
 }
 
 function createPacketToSetPatternEverywhere(
@@ -278,6 +279,19 @@ function createBlueOxygenAccumulatorReleasedPwmCommand(
   };
 }
 
+function createNexusGoalSegments(
+  fieldOptions: FieldOptions, startingIndex: number = 0
+): WledSegment[] {
+  const segments: WledSegment[] = [];
+  for (let i = 0; i < 6; i++) {
+    segments.push({
+      start: i * fieldOptions.goalLedLength + startingIndex,
+      stop: (i + 1) * fieldOptions.goalLedLength + startingIndex
+    });
+  }
+  return segments;
+}
+
 export enum BlinkinPattern {
   COLOR_1_2_GRADIENT = 1705,
   COLOR_1_HB_FAST = 1535,
@@ -328,7 +342,32 @@ export enum BlinkinPattern {
  * This packet must specify the initial state of EVERY port that will be used at any point.
  */
 function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
-  const result: FieldControlInitPacket = { hubs: {} };
+  const result: FieldControlInitPacket = { hubs: {}, wleds: {} };
+
+  result.wleds['center'] = {
+    address: 'ws://quad-ctr-field-7/ws',
+    segments: [
+      ...createNexusGoalSegments(fieldOptions),
+      ...createNexusGoalSegments(fieldOptions, 6 * fieldOptions.goalLedLength),
+      {
+        start: 2 * 6 * fieldOptions.goalLedLength,
+        stop: 2 * 6 * fieldOptions.goalLedLength + fieldOptions.rampLedLength
+      }
+    ],
+    color: 'ffffff'
+  };
+
+  result.wleds['red'] = {
+    address: 'ws://uno-red-field-7/ws',
+    segments: createNexusGoalSegments(fieldOptions),
+    color: 'ffffff'
+  };
+  
+  result.wleds['blue'] = {
+    address: 'ws://uno-blue-field-7/ws',
+    segments: createNexusGoalSegments(fieldOptions),
+    color: 'ffffff'
+  };
 
   const ensureHub = (hub: RevHub) => {
     if (result.hubs[hub] == undefined) {
