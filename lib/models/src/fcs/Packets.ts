@@ -30,9 +30,7 @@ enum ConversionButtonDigitalChannel {
   BLUE = 2
 }
 
-const IDLE_BLINKIN_PATTERN = 1285; // COLOR_WAVES_PARTY (defined before BlinkinPattern for code organization purposes)
-
-type PwmDeviceType = 'blinkin' | 'servo';
+type PwmDeviceType = 'servo';
 type PwmDeviceFieldElement =
   | 'oxygenAccumulator'
   | 'hydrogenTank'
@@ -40,47 +38,12 @@ type PwmDeviceFieldElement =
   | 'oxygenReleaser';
 
 class PwmDevice {
-  public static readonly RED_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(
-    RevHub.TOTE,
-    0,
-    'red',
-    'oxygenAccumulator',
-    'blinkin'
-  );
-  public static readonly RED_CONVERSION_BUTTON_BLINKIN = new PwmDevice(
-    RevHub.TOTE,
-    1,
-    'red',
-    'conversionButton',
-    'blinkin'
-  );
   public static readonly RED_OXYGEN_RELEASER_SERVO = new PwmDevice(
     RevHub.TOTE,
     2,
     'red',
     'oxygenReleaser',
     'servo'
-  );
-  public static readonly RED_HYDROGEN_TANK_BLINKIN = new PwmDevice(
-    RevHub.RED_HYDROGEN_TANK,
-    0,
-    'red',
-    'hydrogenTank',
-    'blinkin'
-  );
-  public static readonly BLUE_OXYGEN_ACCUMULATOR_BLINKIN = new PwmDevice(
-    RevHub.TOTE,
-    3,
-    'blue',
-    'oxygenAccumulator',
-    'blinkin'
-  );
-  public static readonly BLUE_CONVERSION_BUTTON_BLINKIN = new PwmDevice(
-    RevHub.TOTE,
-    4,
-    'blue',
-    'conversionButton',
-    'blinkin'
   );
   public static readonly BLUE_OXYGEN_RELEASER_SERVO = new PwmDevice(
     RevHub.TOTE,
@@ -89,25 +52,8 @@ class PwmDevice {
     'oxygenReleaser',
     'servo'
   );
-  public static readonly BLUE_HYDROGEN_TANK_BLINKIN = new PwmDevice(
-    RevHub.BLUE_HYDROGEN_TANK,
-    0,
-    'blue',
-    'hydrogenTank',
-    'blinkin'
-  );
-
-  public static readonly ALL_BLINKIN_DEVICES = [
-    PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN,
-    PwmDevice.RED_CONVERSION_BUTTON_BLINKIN,
-    PwmDevice.RED_HYDROGEN_TANK_BLINKIN,
-    PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN,
-    PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN,
-    PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN
-  ];
 
   public static readonly ALL_PWM_DEVICES = [
-    ...PwmDevice.ALL_BLINKIN_DEVICES,
     PwmDevice.RED_OXYGEN_RELEASER_SERVO,
     PwmDevice.BLUE_OXYGEN_RELEASER_SERVO
   ];
@@ -143,7 +89,7 @@ class PwmDevice {
 
 interface PwmCommand {
   device: PwmDevice;
-  pulseWidth_us: number | BlinkinPattern;
+  pulseWidth_us: number;
 }
 
 function assemblePwmCommands(
@@ -206,18 +152,6 @@ function assemblePwmCommands(
   return { hubs, wleds: {} };
 }
 
-function createPacketToSetPatternEverywhere(
-  pattern: BlinkinPattern | number,
-  additionalCommands: PwmCommand[] = []
-): FieldControlUpdatePacket {
-  return assemblePwmCommands([
-    ...additionalCommands,
-    ...PwmDevice.ALL_BLINKIN_DEVICES.map((device) => {
-      return { device, pulseWidth_us: pattern };
-    })
-  ]);
-}
-
 function cancelConversionButtonTriggers(packet: FieldControlUpdatePacket) {
   let toteHub = packet.hubs[RevHub.TOTE];
   if (toteHub == undefined) {
@@ -242,42 +176,6 @@ function cancelConversionButtonTriggers(packet: FieldControlUpdatePacket) {
       triggerOptions: null
     });
   }
-}
-
-function createRedOxygenAccumulatorHoldingPwmCommand(
-  fieldOptions: FieldOptions
-): PwmCommand {
-  return {
-    device: PwmDevice.RED_OXYGEN_RELEASER_SERVO,
-    pulseWidth_us: fieldOptions.redServoHoldPositionPulseWidth
-  };
-}
-
-function createRedOxygenAccumulatorReleasedPwmCommand(
-  fieldOptions: FieldOptions
-): PwmCommand {
-  return {
-    device: PwmDevice.RED_OXYGEN_RELEASER_SERVO,
-    pulseWidth_us: fieldOptions.redServoReleasedPositionPulseWidth
-  };
-}
-
-function createBlueOxygenAccumulatorHoldingPwmCommand(
-  fieldOptions: FieldOptions
-): PwmCommand {
-  return {
-    device: PwmDevice.BLUE_OXYGEN_RELEASER_SERVO,
-    pulseWidth_us: fieldOptions.blueServoHoldPositionPulseWidth
-  };
-}
-
-function createBlueOxygenAccumulatorReleasedPwmCommand(
-  fieldOptions: FieldOptions
-): PwmCommand {
-  return {
-    device: PwmDevice.BLUE_OXYGEN_RELEASER_SERVO,
-    pulseWidth_us: fieldOptions.blueServoReleasedPositionPulseWidth
-  };
 }
 
 function createNexusGoalSegments(
@@ -311,52 +209,6 @@ function applyPatternToStrips(
       color
     });
   });
-}
-
-export enum BlinkinPattern {
-  COLOR_1_2_GRADIENT = 1705,
-  COLOR_1_HB_FAST = 1535,
-  COLOR_1_HB_MED = 1525,
-  COLOR_1_HB_SLOW = 1515,
-  COLOR_1_LIGHT_CHASE = 1505,
-  COLOR_1_SHOT = 1565,
-  COLOR_2_HB_FAST = 1635,
-  COLOR_2_HB_MED = 1625,
-  COLOR_2_HB_SLOW = 1615,
-  COLOR_2_SHOT = 1665,
-  COLOR_AQUA = 1905,
-  COLOR_BLACK = 1995,
-  COLOR_BLUE = 1935,
-  COLOR_BLUE_GREEN = 1895,
-  COLOR_BLUE_VIOLET = 1945,
-  COLOR_DARK_BLUE = 1925,
-  COLOR_DARK_GRAY = 1985,
-  COLOR_DARK_GREEN = 1875,
-  COLOR_DARK_RED = 1795,
-  COLOR_FIRE = 1215,
-  COLOR_GOLD = 1835,
-  COLOR_GRAY = 1975,
-  COLOR_GREEN = 1885,
-  COLOR_LAWN_GREEN = 1855,
-  COLOR_LIME = 1865,
-  COLOR_ORANGE = 1825,
-  COLOR_PINK = 1785,
-  COLOR_PURPLE = 1955,
-  COLOR_RED = 1805,
-  COLOR_RED_ORANGE = 1815,
-  COLOR_SKY_BLUE = 1915,
-  COLOR_VIOLET = 1955,
-  COLOR_WHITE = 1965,
-  COLOR_YELLOW = 1845,
-  COLOR_WAVES_RAINBOW = 1275,
-  COLOR_WAVES_PARTY = 1285,
-  LIGHT_CHASE_RED = 1345,
-  LIGHT_CHASE_BLUE = 1355,
-  OFF = 1995,
-  SPARKLE_COLOR_1_ON_COLOR_2 = 1685,
-  SPARKLE_COLOR_2_ON_COLOR_1 = 1695,
-  STROBE_BLUE = 1455,
-  STROBE_RED = 1445
 }
 
 type WledController = 'center' | 'red' | 'blue';
@@ -452,8 +304,6 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
       } else {
         pulseWidth = fieldOptions.blueServoHoldPositionPulseWidth;
       }
-    } else if (device.type == 'blinkin') {
-      pulseWidth = IDLE_BLINKIN_PATTERN;
     } else {
       throw new UnreachableError(device.type);
     }
@@ -493,91 +343,10 @@ function buildMatchStartPacket(
   return result;
 }
 
-function buildRedCombinedPacket(
-  fieldOptions: FieldOptions
-): FieldControlUpdatePacket {
-  return assemblePwmCommands([
-    createRedOxygenAccumulatorReleasedPwmCommand(fieldOptions),
-    {
-      device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN,
-      pulseWidth_us: fieldOptions.redCombinedOxygenGoalBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN,
-      pulseWidth_us: fieldOptions.redCombinedHydrogenGoalBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN,
-      pulseWidth_us: fieldOptions.redCombinedButtonBlinkinPulseWidth
-    }
-  ]);
-}
-
-function buildBlueCombinedPacket(
-  fieldOptions: FieldOptions
-): FieldControlUpdatePacket {
-  return assemblePwmCommands([
-    createBlueOxygenAccumulatorReleasedPwmCommand(fieldOptions),
-    {
-      device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN,
-      pulseWidth_us: fieldOptions.blueCombinedOxygenGoalBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN,
-      pulseWidth_us: fieldOptions.blueCombinedHydrogenGoalBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN,
-      pulseWidth_us: fieldOptions.blueCombinedButtonBlinkinPulseWidth
-    }
-  ]);
-}
-
 function buildEndgamePacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
-  const result = assemblePwmCommands([
-    {
-      device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN,
-      pulseWidth_us: fieldOptions.redEndgameOxygenGoalBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN,
-      pulseWidth_us: fieldOptions.redEndgameHydrogenGoalBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN,
-      pulseWidth_us: fieldOptions.redEndgameButtonBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN,
-      pulseWidth_us: fieldOptions.blueEndgameOxygenGoalBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN,
-      pulseWidth_us: fieldOptions.blueEndgameHydrogenGoalBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN,
-      pulseWidth_us: fieldOptions.blueEndgameButtonBlinkinPulseWidth
-    }
-  ]);
-  result.hubs[RevHub.TOTE]!.digitalInputs = [
-    {
-      channel: ConversionButtonDigitalChannel.RED,
-      triggerOptions: {
-        triggerOnLow: true,
-        fcsUpdateToSend: buildRedCombinedPacket(fieldOptions)
-      }
-    },
-    {
-      channel: ConversionButtonDigitalChannel.BLUE,
-      triggerOptions: {
-        triggerOnLow: true,
-        fcsUpdateToSend: buildBlueCombinedPacket(fieldOptions)
-      }
-    }
-  ];
+  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
   return result;
 }
 
