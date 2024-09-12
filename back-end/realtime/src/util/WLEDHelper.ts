@@ -1,24 +1,24 @@
-import { WledInitParameters, WledUpdateParameters } from "@toa-lib/models";
+import { WledInitParameters, WledUpdateParameters } from '@toa-lib/models';
 
 export const buildWledInitializationPacket = (
-  packet: WledInitParameters,
+  packet: WledInitParameters
 ): string => {
   const wledJson = {
     transition: 0,
     bri: 255,
     frz: false,
     fx: 0,
-    seg: packet.segments,
+    seg: packet.segments
   };
 
   return JSON.stringify(wledJson);
 };
 
 export const buildWledSetColorPacket = (
-  packet: WledUpdateParameters,
+  packet: WledUpdateParameters
 ): string => {
   const wledJson: any = {
-    seg: [],
+    seg: []
   };
 
   packet.patterns.forEach((pattern) => {
@@ -28,8 +28,8 @@ export const buildWledSetColorPacket = (
         on: true,
         frz: false,
         fx: 0,
-        col: [pattern.color],
-      })),
+        col: [pattern.color]
+      }))
     );
   });
 

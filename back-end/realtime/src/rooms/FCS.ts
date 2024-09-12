@@ -1,4 +1,4 @@
-import { Server, Socket } from "socket.io";
+import { Server, Socket } from 'socket.io';
 import {
   defaultFieldOptions,
   FcsPackets,
@@ -6,19 +6,25 @@ import {
   FieldOptions,
   getFcsPackets,
   MatchSocketEvent
-} from "@toa-lib/models";
-import Room from "./Room.js";
-import Match from "./Match.js";
+} from '@toa-lib/models';
+import Room from './Room.js';
+import Match from './Match.js';
 import { WebSocket } from 'ws';
-import { buildWledInitializationPacket, buildWledSetColorPacket } from "../util/WLEDHelper.js";
+import {
+  buildWledInitializationPacket,
+  buildWledSetColorPacket
+} from '../util/WLEDHelper.js';
 
 export default class FCS extends Room {
-  private readonly latestFcsStatus: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+  private readonly latestFcsStatus: FieldControlUpdatePacket = {
+    hubs: {},
+    wleds: {}
+  };
   private fcsPackets: FcsPackets = getFcsPackets(defaultFieldOptions);
   private wledSockets: Record<string, WebSocket> = {};
 
   public constructor(server: Server, matchRoom: Match) {
-    super(server, "fcs");
+    super(server, 'fcs');
 
     // Connect to wled websocket servers if there are wleds
     Object.entries(this.fcsPackets.init.wleds).forEach((wled) => {
@@ -27,7 +33,7 @@ export default class FCS extends Room {
       // Send initialization packet
       this.wledSockets[wled[0]].onopen = () => {
         this.wledSockets[wled[0]].send(buildWledInitializationPacket(wled[1]));
-      }
+      };
     });
 
     matchRoom.localEmitter.on(MatchSocketEvent.TELEOPERATED, () => {
@@ -44,33 +50,33 @@ export default class FCS extends Room {
 
     matchRoom.localEmitter.on(MatchSocketEvent.ABORT, () => {
       this.broadcastFcsUpdate(this.fcsPackets.fieldFault);
-    })
+    });
   }
 
   public initializeEvents(socket: Socket): void {
-    socket.emit("fcs:init", this.fcsPackets.init);
+    socket.emit('fcs:init', this.fcsPackets.init);
 
-    socket.on("fcs:setFieldOptions", (fieldOptions: FieldOptions) => {
+    socket.on('fcs:setFieldOptions', (fieldOptions: FieldOptions) => {
       this.fcsPackets = getFcsPackets(fieldOptions);
     });
 
-    socket.on("fcs:update", (update: FieldControlUpdatePacket) => {
+    socket.on('fcs:update', (update: FieldControlUpdatePacket) => {
       this.broadcastFcsUpdate(update);
     });
 
-    socket.on("fcs:prepareField", () => {
+    socket.on('fcs:prepareField', () => {
       this.broadcastFcsUpdate(this.fcsPackets.prepareField);
     });
 
-    socket.on("fcs:allClear", () => {
+    socket.on('fcs:allClear', () => {
       this.broadcastFcsUpdate(this.fcsPackets.allClear);
     });
 
-    socket.emit("fcs:update", this.latestFcsStatus);
+    socket.emit('fcs:update', this.latestFcsStatus);
   }
 
   private broadcastFcsUpdate(update: FieldControlUpdatePacket): void {
-    this.broadcast().emit("fcs:update", update);
+    this.broadcast().emit('fcs:update', update);
 
     // Handle wleds
     Object.entries(update.wleds).forEach((wled) => {
@@ -94,30 +100,37 @@ export default class FCS extends Room {
       if (servosFromThisUpdate) {
         for (const newServoParams of servosFromThisUpdate) {
           // Remove any parameters from this.latestFcsStatus that are intended for the same servo as newServoParams.
-          latestFcsStatusHub.servos = latestFcsStatusHub.servos?.filter(
-            oldServoParams => oldServoParams.port != newServoParams.port) ?? [];
+          latestFcsStatusHub.servos =
+            latestFcsStatusHub.servos?.filter(
+              (oldServoParams) => oldServoParams.port != newServoParams.port
+            ) ?? [];
 
-          latestFcsStatusHub.servos!.push(newServoParams)
+          latestFcsStatusHub.servos!.push(newServoParams);
         }
       }
 
       if (motorsFromThisUpdate) {
         for (const newMotorParams of motorsFromThisUpdate) {
           // Remove any parameters from this.latestFcsStatus that are intended for the same motor as newMotorParams.
-          latestFcsStatusHub.motors = latestFcsStatusHub.motors?.filter(
-            oldMotorParams => oldMotorParams.port != newMotorParams.port) ?? [];
+          latestFcsStatusHub.motors =
+            latestFcsStatusHub.motors?.filter(
+              (oldMotorParams) => oldMotorParams.port != newMotorParams.port
+            ) ?? [];
 
-          latestFcsStatusHub.motors!.push(newMotorParams)
+          latestFcsStatusHub.motors!.push(newMotorParams);
         }
       }
 
       if (digitalInputsFromThisUpdate) {
         for (const newDigitalInputParams of digitalInputsFromThisUpdate) {
           // Remove any parameters from this.latestFcsStatus that are intended for the same channel as newDigitalInputParams.
-          latestFcsStatusHub.digitalInputs = latestFcsStatusHub.digitalInputs?.filter(
-            oldDigitalInputParams => oldDigitalInputParams.channel != newDigitalInputParams.channel) ?? [];
+          latestFcsStatusHub.digitalInputs =
+            latestFcsStatusHub.digitalInputs?.filter(
+              (oldDigitalInputParams) =>
+                oldDigitalInputParams.channel != newDigitalInputParams.channel
+            ) ?? [];
 
-          latestFcsStatusHub.digitalInputs!.push(newDigitalInputParams)
+          latestFcsStatusHub.digitalInputs!.push(newDigitalInputParams);
         }
       }
     }

@@ -83,7 +83,7 @@ export interface WledInitParameters {
 
 export interface WledUpdateParameters {
   patterns: LedPatternUpdateParameters[];
-};
+}
 
 //-------------------------------------------
 // Field Control packets
@@ -95,8 +95,14 @@ export interface FieldControlPacket<
   hubs: Record<number, HubParametersType>;
   wleds: Record<string, WledParametersType>;
 }
-export type FieldControlInitPacket = FieldControlPacket<HubInitParameters, WledInitParameters>;
-export type FieldControlUpdatePacket = FieldControlPacket<HubUpdateParameters, WledUpdateParameters>;
+export type FieldControlInitPacket = FieldControlPacket<
+  HubInitParameters,
+  WledInitParameters
+>;
+export type FieldControlUpdatePacket = FieldControlPacket<
+  HubUpdateParameters,
+  WledUpdateParameters
+>;
 
 //-------------------------------------------
 // Field options

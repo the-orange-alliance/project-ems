@@ -281,7 +281,8 @@ function createBlueOxygenAccumulatorReleasedPwmCommand(
 }
 
 function createNexusGoalSegments(
-  fieldOptions: FieldOptions, startingIndex: number = 0
+  fieldOptions: FieldOptions,
+  startingIndex: number = 0
 ): LedSegment[] {
   const segments: LedSegment[] = [];
   for (let i = 0; i < 6; i++) {
@@ -294,19 +295,21 @@ function createNexusGoalSegments(
 }
 
 function applyPatternToStrips(
-  color: string, strips: LedStrip[], packet: FieldControlUpdatePacket
+  color: string,
+  strips: LedStrip[],
+  packet: FieldControlUpdatePacket
 ): void {
   strips.forEach((strip) => {
     if (!packet.wleds[strip.controller]) {
       packet.wleds[strip.controller] = {
         patterns: []
-      }
+      };
     }
 
     packet.wleds[strip.controller].patterns.push({
       targetSegments: strip.segments,
       color
-    })
+    });
   });
 }
 
@@ -359,17 +362,29 @@ export enum BlinkinPattern {
 type WledController = 'center' | 'red' | 'blue';
 
 class LedStrip {
-  public static readonly RED_NEXUS_GOAL = new LedStrip('red', [0, 1, 2, 3, 4, 5]);
-  public static readonly BLUE_NEXUS_GOAL = new LedStrip('blue', [0, 1, 2, 3, 4, 5]);
-  public static readonly RED_CENTER_NEXUS_GOAL = new LedStrip('center', [0, 1, 2, 3, 4, 5]);
-  public static readonly BLUE_CENTER_NEXUS_GOAL = new LedStrip('center', [6, 7, 8, 9, 10, 11]);
+  public static readonly RED_NEXUS_GOAL = new LedStrip(
+    'red',
+    [0, 1, 2, 3, 4, 5]
+  );
+  public static readonly BLUE_NEXUS_GOAL = new LedStrip(
+    'blue',
+    [0, 1, 2, 3, 4, 5]
+  );
+  public static readonly RED_CENTER_NEXUS_GOAL = new LedStrip(
+    'center',
+    [0, 1, 2, 3, 4, 5]
+  );
+  public static readonly BLUE_CENTER_NEXUS_GOAL = new LedStrip(
+    'center',
+    [6, 7, 8, 9, 10, 11]
+  );
   public static readonly RAMP = new LedStrip('center', [12]);
 
   public static readonly ALL_RED_STRIPS = [
     LedStrip.RED_NEXUS_GOAL,
     LedStrip.RED_CENTER_NEXUS_GOAL
   ];
-  
+
   public static readonly ALL_BLUE_STRIPS = [
     LedStrip.BLUE_NEXUS_GOAL,
     LedStrip.BLUE_CENTER_NEXUS_GOAL
@@ -416,7 +431,7 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
     address: 'ws://uno-red-field-7/ws',
     segments: createNexusGoalSegments(fieldOptions)
   };
-  
+
   result.wleds['blue'] = {
     address: 'ws://uno-blue-field-7/ws',
     segments: createNexusGoalSegments(fieldOptions)
@@ -457,7 +472,7 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
 function buildFieldFaultPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
-  const result:FieldControlUpdatePacket = { hubs: {}, wleds: {} } 
+  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
   applyPatternToStrips('ff0000', LedStrip.ALL_STRIPS, result);
   return result;
 }
@@ -465,7 +480,7 @@ function buildFieldFaultPacket(
 function buildPrepareFieldPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
-  const result:FieldControlUpdatePacket = { hubs: {}, wleds: {} } 
+  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
   applyPatternToStrips('ffff00', LedStrip.ALL_STRIPS, result);
   return result;
 }
@@ -473,7 +488,7 @@ function buildPrepareFieldPacket(
 function buildMatchStartPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
-  const result:FieldControlUpdatePacket = { hubs: {}, wleds: {} } 
+  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
   applyPatternToStrips('000000', LedStrip.ALL_STRIPS, result);
   return result;
 }
@@ -569,7 +584,7 @@ function buildEndgamePacket(
 function buildMatchEndPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
-  const result:FieldControlUpdatePacket = { hubs: {}, wleds: {} } 
+  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
   applyPatternToStrips('0000ff', LedStrip.ALL_BLUE_STRIPS, result);
   applyPatternToStrips('ff0000', LedStrip.ALL_RED_STRIPS, result);
   applyPatternToStrips('ff00ff', [LedStrip.RAMP], result);
@@ -579,7 +594,7 @@ function buildMatchEndPacket(
 function buildAllClearPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
-  const result:FieldControlUpdatePacket = { hubs: {}, wleds: {} } 
+  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
   applyPatternToStrips('00ff00', LedStrip.ALL_STRIPS, result);
   return result;
 }
