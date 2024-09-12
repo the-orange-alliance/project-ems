@@ -81,7 +81,6 @@ export default class Match extends Room {
       this.emitToAll(MatchSocketEvent.PRESTART, key);
       this.emitToAll(MatchSocketEvent.DISPLAY, 1);
       this.displayID = 1;
-      this.state = MatchState.PRESTART_COMPLETE;
       logger.info(`prestarting ${key.eventKey}-${key.tournamentKey}-${key.id}`);
     });
     socket.on(MatchSocketEvent.ABORT, () => {
@@ -177,6 +176,10 @@ export default class Match extends Room {
               })`
             );
           }
+        } else {
+          logger.error(
+            `Failed to adjust match details field ${numberAdjustment.key} - match details not found`
+          );
         }
       }
     );

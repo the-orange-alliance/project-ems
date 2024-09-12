@@ -1,10 +1,10 @@
 import { useRecoilCallback } from 'recoil';
 import { useMatchControl } from './use-match-control';
-import { MatchState } from '@toa-lib/models';
+import { MatchSocketEvent, MatchState } from '@toa-lib/models';
 import { matchOccurringAtom, socketConnectedAtom } from 'src/stores/recoil';
 import { patchMatch, patchMatchParticipants } from 'src/api/use-match-data';
 import { DateTime } from 'luxon';
-import { sendPrestart } from 'src/api/use-socket';
+import { once, sendPrestart, sendUpdate } from 'src/api/use-socket';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components';
 
 export const usePrestartCallback = () => {
@@ -37,6 +37,9 @@ export const usePrestartCallback = () => {
           match.participants
         );
         fieldControl?.prestartField?.();
+        // Once we recieve the prestart response, immediately send update to load socket with match
+        once(MatchSocketEvent.PRESTART, () => sendUpdate(match));
+        // Send prestart to server
         sendPrestart({ eventKey, tournamentKey, id });
         setState(MatchState.PRESTART_COMPLETE);
       },

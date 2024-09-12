@@ -1,11 +1,12 @@
 import { FC } from 'react';
-import { useRecoilState } from 'recoil';
+import { SetterOrUpdater, useRecoilState } from 'recoil';
 import Box from '@mui/material/Box';
 import ToggleButton from '@mui/material/ToggleButton';
 import Typography from '@mui/material/Typography';
-import { CardStatusUpdate, MatchSocketEvent } from '@toa-lib/models';
+import { CardStatusUpdate, Match, MatchParticipant, MatchSocketEvent } from '@toa-lib/models';
 import { useSocket } from 'src/api/use-socket';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
+import { matchOccurringAtom } from 'src/stores/recoil';
 
 interface Props {
   station: number;
@@ -13,11 +14,21 @@ interface Props {
 
 const TeamSheet: FC<Props> = ({ station }) => {
   const [socket] = useSocket();
-  const [participant, setParticipant] = useRecoilState(
-    matchInProgressParticipantsByStationSelectorFam(station)
-  );
+  const [match, setMatch]: [
+    Match<any> | null,
+    SetterOrUpdater<Match<any> | null>
+  ] = useRecoilState(matchOccurringAtom);
 
   const identifiers = useTeamIdentifiers();
+  const participant = match?.participants?.find(p => p.station === station);
+
+  const setParticipant = (participant: MatchParticipant) => {
+    if (match && match.participants) {
+      setMatch(
+        Object.assign({}, { ...match, participants: match.participants.map(p => (p.station === station ? participant : p)) })
+      );
+    }
+  };
 
   const handleCardChange = (cardStatus: number) => {
     if (participant) {
