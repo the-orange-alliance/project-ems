@@ -3,7 +3,8 @@ import {
   FieldControlUpdatePacket,
   FieldOptions,
   HubUpdateParameters,
-  WledSegment
+  LedSegment,
+  WledUpdateParameters
 } from '../base/FieldControl.js';
 import { UnreachableError } from '../types.js';
 import { Alliance } from '../base/Match.js';
@@ -281,8 +282,8 @@ function createBlueOxygenAccumulatorReleasedPwmCommand(
 
 function createNexusGoalSegments(
   fieldOptions: FieldOptions, startingIndex: number = 0
-): WledSegment[] {
-  const segments: WledSegment[] = [];
+): LedSegment[] {
+  const segments: LedSegment[] = [];
   for (let i = 0; i < 6; i++) {
     segments.push({
       start: i * fieldOptions.goalLedLength + startingIndex,
@@ -290,6 +291,23 @@ function createNexusGoalSegments(
     });
   }
   return segments;
+}
+
+function applyPatternToStrips(
+  color: string, strips: LedStrip[], packet: FieldControlUpdatePacket
+): void {
+  strips.forEach((strip) => {
+    if (!packet.wleds[strip.controller]) {
+      packet.wleds[strip.controller] = {
+        patterns: []
+      }
+    }
+
+    packet.wleds[strip.controller].patterns.push({
+      targetSegments: strip.segments,
+      color
+    })
+  });
 }
 
 export enum BlinkinPattern {
@@ -338,6 +356,44 @@ export enum BlinkinPattern {
   STROBE_RED = 1445
 }
 
+type WledController = 'center' | 'red' | 'blue';
+
+class LedStrip {
+  public static readonly RED_NEXUS_GOAL = new LedStrip('red', [0, 1, 2, 3, 4, 5]);
+  public static readonly BLUE_NEXUS_GOAL = new LedStrip('blue', [0, 1, 2, 3, 4, 5]);
+  public static readonly RED_CENTER_NEXUS_GOAL = new LedStrip('center', [0, 1, 2, 3, 4, 5]);
+  public static readonly BLUE_CENTER_NEXUS_GOAL = new LedStrip('center', [6, 7, 8, 9, 10, 11]);
+  public static readonly RAMP = new LedStrip('center', [12]);
+
+  public static readonly ALL_RED_STRIPS = [
+    LedStrip.RED_NEXUS_GOAL,
+    LedStrip.RED_CENTER_NEXUS_GOAL
+  ];
+  
+  public static readonly ALL_BLUE_STRIPS = [
+    LedStrip.BLUE_NEXUS_GOAL,
+    LedStrip.BLUE_CENTER_NEXUS_GOAL
+  ];
+
+  public static readonly ALL_NEXUS_GOALS = [
+    ...LedStrip.ALL_RED_STRIPS,
+    ...LedStrip.ALL_BLUE_STRIPS
+  ];
+
+  public static readonly ALL_STRIPS = [
+    ...LedStrip.ALL_NEXUS_GOALS,
+    LedStrip.RAMP
+  ];
+
+  public readonly controller: WledController;
+  public readonly segments: number[];
+
+  private constructor(controller: WledController, segments: number[]) {
+    this.controller = controller;
+    this.segments = segments;
+  }
+}
+
 /**
  * This packet must specify the initial state of EVERY port that will be used at any point.
  */
@@ -353,20 +409,17 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
         start: 2 * 6 * fieldOptions.goalLedLength,
         stop: 2 * 6 * fieldOptions.goalLedLength + fieldOptions.rampLedLength
       }
-    ],
-    color: 'ffffff'
+    ]
   };
 
   result.wleds['red'] = {
     address: 'ws://uno-red-field-7/ws',
-    segments: createNexusGoalSegments(fieldOptions),
-    color: 'ffffff'
+    segments: createNexusGoalSegments(fieldOptions)
   };
   
   result.wleds['blue'] = {
     address: 'ws://uno-blue-field-7/ws',
-    segments: createNexusGoalSegments(fieldOptions),
-    color: 'ffffff'
+    segments: createNexusGoalSegments(fieldOptions)
   };
 
   const ensureHub = (hub: RevHub) => {
@@ -396,7 +449,7 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
     });
   }
 
-  cancelConversionButtonTriggers(result);
+  // cancelConversionButtonTriggers(result);
 
   return result;
 }
@@ -404,61 +457,25 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
 function buildFieldFaultPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
-  const result = createPacketToSetPatternEverywhere(
-    fieldOptions.fieldFaultBlinkinPulseWidth,
-    [
-      // Return any accumulated oxygen to the field for field reset
-      createRedOxygenAccumulatorReleasedPwmCommand(fieldOptions),
-      createBlueOxygenAccumulatorReleasedPwmCommand(fieldOptions)
-    ]
-  );
-  cancelConversionButtonTriggers(result);
+  const result:FieldControlUpdatePacket = { hubs: {}, wleds: {} } 
+  applyPatternToStrips('ff0000', LedStrip.ALL_STRIPS, result);
   return result;
 }
 
 function buildPrepareFieldPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
-  const result = createPacketToSetPatternEverywhere(
-    fieldOptions.prepareFieldBlinkinPulseWidth,
-    [
-      createRedOxygenAccumulatorHoldingPwmCommand(fieldOptions),
-      createBlueOxygenAccumulatorHoldingPwmCommand(fieldOptions)
-    ]
-  );
-  cancelConversionButtonTriggers(result);
+  const result:FieldControlUpdatePacket = { hubs: {}, wleds: {} } 
+  applyPatternToStrips('ffff00', LedStrip.ALL_STRIPS, result);
   return result;
 }
 
 function buildMatchStartPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
-  return assemblePwmCommands([
-    {
-      device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN,
-      pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN,
-      pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN,
-      pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN,
-      pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN,
-      pulseWidth_us: BlinkinPattern.OFF
-    },
-    {
-      device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN,
-      pulseWidth_us: BlinkinPattern.OFF
-    }
-  ]);
+  const result:FieldControlUpdatePacket = { hubs: {}, wleds: {} } 
+  applyPatternToStrips('000000', LedStrip.ALL_STRIPS, result);
+  return result;
 }
 
 function buildRedCombinedPacket(
@@ -552,48 +569,18 @@ function buildEndgamePacket(
 function buildMatchEndPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
-  const result = assemblePwmCommands([
-    {
-      device: PwmDevice.RED_OXYGEN_ACCUMULATOR_BLINKIN,
-      pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.RED_HYDROGEN_TANK_BLINKIN,
-      pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.BLUE_OXYGEN_ACCUMULATOR_BLINKIN,
-      pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.BLUE_HYDROGEN_TANK_BLINKIN,
-      pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.RED_CONVERSION_BUTTON_BLINKIN,
-      pulseWidth_us: fieldOptions.solidRedBlinkinPulseWidth
-    },
-    {
-      device: PwmDevice.BLUE_CONVERSION_BUTTON_BLINKIN,
-      pulseWidth_us: fieldOptions.solidBlueBlinkinPulseWidth
-    }
-  ]);
-  cancelConversionButtonTriggers(result);
+  const result:FieldControlUpdatePacket = { hubs: {}, wleds: {} } 
+  applyPatternToStrips('0000ff', LedStrip.ALL_BLUE_STRIPS, result);
+  applyPatternToStrips('ff0000', LedStrip.ALL_RED_STRIPS, result);
+  applyPatternToStrips('ff00ff', [LedStrip.RAMP], result);
   return result;
 }
 
 function buildAllClearPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
-  const result = createPacketToSetPatternEverywhere(
-    fieldOptions.allClearBlinkinPulseWidth,
-    [
-      // Make sure that the oxygen accumulators are empty during field reset
-      createRedOxygenAccumulatorReleasedPwmCommand(fieldOptions),
-      createBlueOxygenAccumulatorReleasedPwmCommand(fieldOptions)
-    ]
-  );
-  cancelConversionButtonTriggers(result);
+  const result:FieldControlUpdatePacket = { hubs: {}, wleds: {} } 
+  applyPatternToStrips('00ff00', LedStrip.ALL_STRIPS, result);
   return result;
 }
 

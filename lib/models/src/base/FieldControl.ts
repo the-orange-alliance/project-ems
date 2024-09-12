@@ -66,27 +66,31 @@ export type HubUpdateParameters = HubParameters<
 //-------------------------------------------
 // WLED parameters
 //-------------------------------------------
-export interface WledUpdateParameters {
+export interface LedPatternUpdateParameters {
   color: string;
-  targetSegments?: number[];
+  targetSegments: number[];
 }
 
-export interface WledSegment {
+export interface LedSegment {
   start: number;
   stop: number;
 }
 
-export interface WledInitParameters extends WledUpdateParameters {
+export interface WledInitParameters {
   address: string;
-  segments: WledSegment[];
+  segments: LedSegment[];
 }
+
+export interface WledUpdateParameters {
+  patterns: LedPatternUpdateParameters[];
+};
 
 //-------------------------------------------
 // Field Control packets
 //-------------------------------------------
 export interface FieldControlPacket<
   HubParametersType extends HubParameters<any, any, any>,
-  WledParametersType extends WledUpdateParameters
+  WledParametersType
 > {
   hubs: Record<number, HubParametersType>;
   wleds: Record<string, WledParametersType>;

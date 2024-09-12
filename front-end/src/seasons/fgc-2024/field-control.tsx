@@ -1,4 +1,4 @@
-import { FeedingTheFuture, FieldControlUpdatePacket } from '@toa-lib/models';
+import { FeedingTheFuture } from '@toa-lib/models';
 import { FieldControlCallbacks } from '..';
 import { useSocket } from 'src/api/use-socket';
 
@@ -16,86 +16,20 @@ export const useFieldControl =
     };
 
     const prepareField = () => {
-      socket?.emit('fcs:update', {
-        hubs: {},
-        wleds: {
-          center: {
-            color: 'ffff00',
-            targetSegments: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-          },
-          red: {
-            color: 'ffff00',
-            targetSegments: [0, 1, 2, 3, 4, 5]
-          },
-          blue: {
-            color: 'ffff00',
-            targetSegments: [0, 1, 2, 3, 4, 5]
-          }
-        }
-      } satisfies FieldControlUpdatePacket);
+      socket?.emit('fcs:prepareField');
       console.log('prepareField');
     };
 
     const startField = () => {
-      socket?.emit('fcs:update', {
-        hubs: {},
-        wleds: {
-          center: {
-            color: '000000',
-            targetSegments: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-          },
-          red: {
-            color: '000000',
-            targetSegments: [0, 1, 2, 3, 4, 5]
-          },
-          blue: {
-            color: '000000',
-            targetSegments: [0, 1, 2, 3, 4, 5]
-          }
-        }
-      } satisfies FieldControlUpdatePacket);
       console.log('startField');
     };
 
     const abortField = () => {
-      socket?.emit('fcs:update', {
-        hubs: {},
-        wleds: {
-          center: {
-            color: 'ff0000',
-            targetSegments: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-          },
-          red: {
-            color: 'ff0000',
-            targetSegments: [0, 1, 2, 3, 4, 5]
-          },
-          blue: {
-            color: 'ff0000',
-            targetSegments: [0, 1, 2, 3, 4, 5]
-          }
-        }
-      } satisfies FieldControlUpdatePacket);
       console.log('abortField');
     };
 
     const clearField = () => {
-      socket?.emit('fcs:update', {
-        hubs: {},
-        wleds: {
-          center: {
-            color: '00ff00',
-            targetSegments: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-          },
-          red: {
-            color: '00ff00',
-            targetSegments: [0, 1, 2, 3, 4, 5]
-          },
-          blue: {
-            color: '00ff00',
-            targetSegments: [0, 1, 2, 3, 4, 5]
-          }
-        }
-      } satisfies FieldControlUpdatePacket);
+      socket?.emit('fcs:allClear');
       console.log('clearField');
     };
 

@@ -58,6 +58,14 @@ export default class FCS extends Room {
       this.broadcastFcsUpdate(update);
     });
 
+    socket.on("fcs:prepareField", () => {
+      this.broadcastFcsUpdate(this.fcsPackets.prepareField);
+    });
+
+    socket.on("fcs:allClear", () => {
+      this.broadcastFcsUpdate(this.fcsPackets.allClear);
+    });
+
     socket.emit("fcs:update", this.latestFcsStatus);
   }
 
