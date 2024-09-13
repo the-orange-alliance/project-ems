@@ -236,6 +236,11 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
     }
   });
 
+  result.hubs[RevHub.CENTER_CONTROL_HUB]!.digitalInputs!.push({
+    channel: 0,
+    triggerOptions: null
+  });
+
   return result;
 }
 

@@ -79,6 +79,10 @@ export default class FCS extends Room {
       this.reinitializeWleds();
     });
 
+    socket.on('fcs:digitalInputs', (packet) => {
+      // TODO(jan): Update match data
+    });
+
     socket.emit('fcs:update', this.latestFcsStatus);
   }
 
