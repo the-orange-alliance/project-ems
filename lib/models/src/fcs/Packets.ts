@@ -268,7 +268,7 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
   const result: FieldControlInitPacket = { hubs: {}, wleds: {} };
 
   result.wleds['center'] = {
-    address: 'ws://quad-ctr-field-7/ws',
+    address: fieldOptions.centerWledWebSocketAddress,
     segments: [
       ...createNexusGoalSegments(fieldOptions),
       ...createNexusGoalSegments(fieldOptions, 6 * fieldOptions.goalLedLength),
@@ -280,12 +280,12 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
   };
 
   result.wleds['red'] = {
-    address: 'ws://uno-red-field-7/ws',
+    address: fieldOptions.redWledWebSocketAddress,
     segments: createNexusGoalSegments(fieldOptions)
   };
 
   result.wleds['blue'] = {
-    address: 'ws://uno-blue-field-7/ws',
+    address: fieldOptions.blueWledWebSocketAddress,
     segments: createNexusGoalSegments(fieldOptions)
   };
 

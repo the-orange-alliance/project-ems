@@ -3,6 +3,8 @@ import { FC, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   allClearColorAtom,
+  blueWledWebSocketAddressAtom,
+  centerWledWebSocketAddressAtom,
   fieldFaultColorAtom,
   fieldOptionsSelector,
   goalLedLengthAtom,
@@ -10,7 +12,8 @@ import {
   matchEndRampColorAtom,
   matchEndRedNexusGoalColorAtom,
   prepareFieldColorAtom,
-  rampLedLengthAtom
+  rampLedLengthAtom,
+  redWledWebSocketAddressAtom
 } from './stores/settings-store';
 import { NumberSetting } from 'src/apps/settings/components/number-setting';
 import { useSocket } from 'src/api/use-socket';
@@ -34,6 +37,13 @@ export const Settings: FC = () => {
   const [matchEndRampColor, setMatchEndRampColor] = useRecoilState(
     matchEndRampColorAtom
   );
+  const [redWledWebSocketAddress, setRedWledWebSocketAddress] = useRecoilState(
+    redWledWebSocketAddressAtom
+  );
+  const [blueWledWebSocketAddress, setBlueWledWebSocketAddress] =
+    useRecoilState(blueWledWebSocketAddressAtom);
+  const [centerWledWebSocketAddress, setCenterWledWebSocketAddress] =
+    useRecoilState(centerWledWebSocketAddressAtom);
 
   const fieldOptions: FieldOptions = useRecoilValue(fieldOptionsSelector);
 
@@ -89,6 +99,24 @@ export const Settings: FC = () => {
         name='Match End Ramp Color'
         value={matchEndRampColor}
         onChange={setMatchEndRampColor}
+        inline
+      />
+      <TextSetting
+        name='Red WLED WebSocket Address'
+        value={redWledWebSocketAddress}
+        onChange={setRedWledWebSocketAddress}
+        inline
+      />
+      <TextSetting
+        name='Blue WLED WebSocket Address'
+        value={blueWledWebSocketAddress}
+        onChange={setBlueWledWebSocketAddress}
+        inline
+      />
+      <TextSetting
+        name='Center WLED WebSocket Address'
+        value={centerWledWebSocketAddress}
+        onChange={setCenterWledWebSocketAddress}
         inline
       />
     </Box>

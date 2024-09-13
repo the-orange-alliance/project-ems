@@ -5,7 +5,8 @@ import {
   FieldControlUpdatePacket,
   FieldOptions,
   getFcsPackets,
-  MatchSocketEvent
+  MatchSocketEvent,
+  WledInitParameters
 } from '@toa-lib/models';
 import Room from './Room.js';
 import Match from './Match.js';
@@ -14,6 +15,7 @@ import {
   buildWledInitializationPacket,
   buildWledSetColorPacket
 } from '../util/WLEDHelper.js';
+import logger from '../util/Logger.js';
 
 export default class FCS extends Room {
   private readonly latestFcsStatus: FieldControlUpdatePacket = {
@@ -28,12 +30,7 @@ export default class FCS extends Room {
 
     // Connect to wled websocket servers if there are wleds
     Object.entries(this.fcsPackets.init.wleds).forEach((wled) => {
-      this.wledSockets[wled[0]] = new WebSocket(wled[1].address);
-
-      // Send initialization packet
-      this.wledSockets[wled[0]].onopen = () => {
-        this.wledSockets[wled[0]].send(buildWledInitializationPacket(wled[1]));
-      };
+      this.initializeWled(wled[0], wled[1]);
     });
 
     matchRoom.localEmitter.on(MatchSocketEvent.TELEOPERATED, () => {
@@ -79,6 +76,7 @@ export default class FCS extends Room {
 
     socket.on('fcs:settings', (fieldOptions: FieldOptions) => {
       this.fcsPackets = getFcsPackets(fieldOptions);
+      this.reinitializeWleds();
     });
 
     socket.emit('fcs:update', this.latestFcsStatus);
@@ -89,7 +87,11 @@ export default class FCS extends Room {
 
     // Handle wleds
     Object.entries(update.wleds).forEach((wled) => {
-      this.wledSockets[wled[0]].send(buildWledSetColorPacket(wled[1]));
+      try {
+        this.wledSockets[wled[0]].send(buildWledSetColorPacket(wled[1]));
+      } catch {
+        logger.warn('Failed to send wled pattern update');
+      }
     });
 
     // Update this.latestFcsStatus AFTER sending out the new update
@@ -143,5 +145,49 @@ export default class FCS extends Room {
         }
       }
     }
+  }
+
+  // TODO(jan): Handle disconnects? Regular websockets suck
+
+  private initializeWled(wled: string, packet: WledInitParameters): void {
+    // Don't initialize if address is the default empty string
+    if (packet.address === '') return;
+
+    this.wledSockets[wled] = new WebSocket(packet.address);
+
+    // Send initialization packet
+    this.wledSockets[wled].onopen = () => {
+      logger.info(
+        `Successfully connected to ${wled} wled websocket: ${packet.address}`
+      );
+      this.wledSockets[wled].send(buildWledInitializationPacket(packet));
+    };
+
+    // Don't end program if connection failed
+    this.wledSockets[wled].onerror = () => {
+      logger.error(
+        `Failed to connect to ${wled} wled websocket: ${packet.address}`
+      );
+    };
+  }
+
+  private reinitializeWleds(): void {
+    Object.entries(this.fcsPackets.init.wleds).forEach((wled) => {
+      if (
+        !this.wledSockets[wled[0]] ||
+        this.wledSockets[wled[0]].url !== wled[1].address
+      ) {
+        // Address update
+        this.initializeWled(wled[0], wled[1]);
+      } else {
+        try {
+          this.wledSockets[wled[0]].send(
+            buildWledInitializationPacket(wled[1])
+          );
+        } catch {
+          logger.warn('Failed to send wled initialization packet');
+        }
+      }
+    });
   }
 }

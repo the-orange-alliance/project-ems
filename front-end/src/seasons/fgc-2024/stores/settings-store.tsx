@@ -50,6 +50,24 @@ export const matchEndRampColorAtom = atom<string>({
   effects: [localStorageEffect('ftf.matchEndRampColor')]
 });
 
+export const redWledWebSocketAddressAtom = atom<string>({
+  key: 'ftf.redWledWebSocketAddress',
+  default: defaultFieldOptions.redWledWebSocketAddress,
+  effects: [localStorageEffect('ftf.redWledWebSocketAddress')]
+});
+
+export const blueWledWebSocketAddressAtom = atom<string>({
+  key: 'ftf.blueWledWebSocketAddress',
+  default: defaultFieldOptions.blueWledWebSocketAddress,
+  effects: [localStorageEffect('ftf.blueWledWebSocketAddress')]
+});
+
+export const centerWledWebSocketAddressAtom = atom<string>({
+  key: 'ftf.centerWledWebSocketAddress',
+  default: defaultFieldOptions.centerWledWebSocketAddress,
+  effects: [localStorageEffect('ftf.centerWledWebSocketAddress')]
+});
+
 export const fieldOptionsSelector: RecoilValueReadOnly<FieldOptions> = selector(
   {
     key: 'ftf.fieldOptions',
@@ -62,7 +80,10 @@ export const fieldOptionsSelector: RecoilValueReadOnly<FieldOptions> = selector(
         fieldFaultColor: get(fieldFaultColorAtom),
         matchEndRedNexusGoalColor: get(matchEndRedNexusGoalColorAtom),
         matchEndBlueNexusGoalColor: get(matchEndBlueNexusGoalColorAtom),
-        matchEndRampColor: get(matchEndRampColorAtom)
+        matchEndRampColor: get(matchEndRampColorAtom),
+        redWledWebSocketAddress: get(redWledWebSocketAddressAtom),
+        blueWledWebSocketAddress: get(blueWledWebSocketAddressAtom),
+        centerWledWebSocketAddress: get(centerWledWebSocketAddressAtom)
       };
     }
   }

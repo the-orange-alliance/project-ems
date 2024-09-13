@@ -115,6 +115,9 @@ export interface FieldOptions {
   matchEndRedNexusGoalColor: string;
   matchEndBlueNexusGoalColor: string;
   matchEndRampColor: string;
+  redWledWebSocketAddress: string;
+  blueWledWebSocketAddress: string;
+  centerWledWebSocketAddress: string;
 }
 
 export const defaultFieldOptions: FieldOptions = {
@@ -125,5 +128,8 @@ export const defaultFieldOptions: FieldOptions = {
   fieldFaultColor: 'ff0000',
   matchEndRedNexusGoalColor: 'ff0000',
   matchEndBlueNexusGoalColor: '0000ff',
-  matchEndRampColor: 'ff00ff'
+  matchEndRampColor: 'ff00ff',
+  redWledWebSocketAddress: '',
+  blueWledWebSocketAddress: '',
+  centerWledWebSocketAddress: ''
 };
