@@ -51,6 +51,11 @@ export default class FCS extends Room {
     matchRoom.localEmitter.on(MatchSocketEvent.ABORT, () => {
       this.broadcastFcsUpdate(this.fcsPackets.fieldFault);
     });
+
+    // TODO(jan): Callback to process match details
+    // matchRoom.localEmitter.on(MatchSocketEvent.UPDATE, (match: Match<any>) => {
+    //   this.broadcastFcsUpdate(this.fcsPackets.???);
+    // });
   }
 
   public initializeEvents(socket: Socket): void {
@@ -70,6 +75,10 @@ export default class FCS extends Room {
 
     socket.on('fcs:allClear', () => {
       this.broadcastFcsUpdate(this.fcsPackets.allClear);
+    });
+
+    socket.on('fcs:settings', (fieldOptions: FieldOptions) => {
+      this.fcsPackets = getFcsPackets(fieldOptions);
     });
 
     socket.emit('fcs:update', this.latestFcsStatus);

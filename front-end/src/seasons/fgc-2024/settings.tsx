@@ -1,5 +1,5 @@
 import { Box } from '@mui/material';
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   allClearColorAtom,
@@ -13,10 +13,12 @@ import {
   rampLedLengthAtom
 } from './stores/settings-store';
 import { NumberSetting } from 'src/apps/settings/components/number-setting';
+import { useSocket } from 'src/api/use-socket';
+import { FieldOptions } from '@toa-lib/models';
 import { TextSetting } from 'src/apps/settings/components/text-setting';
 
 export const Settings: FC = () => {
-  const [test, setTest] = useRecoilState(testAtom);
+  const [socket] = useSocket();
   const [goalLedLength, setGoalLedLength] = useRecoilState(goalLedLengthAtom);
   const [rampLedLength, setRampLedLength] = useRecoilState(rampLedLengthAtom);
   const [allClearColor, setAllClearColor] = useRecoilState(allClearColorAtom);
@@ -32,6 +34,12 @@ export const Settings: FC = () => {
   const [matchEndRampColor, setMatchEndRampColor] = useRecoilState(
     matchEndRampColorAtom
   );
+
+  const fieldOptions: FieldOptions = useRecoilValue(fieldOptionsSelector);
+
+  useEffect(() => {
+    socket?.emit('fcs:settings', fieldOptions);
+  }, [fieldOptions]);
 
   return (
     <Box>
