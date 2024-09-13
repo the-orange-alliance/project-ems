@@ -2,12 +2,8 @@ import {
   FieldControlInitPacket,
   FieldControlUpdatePacket,
   FieldOptions,
-  HubUpdateParameters,
-  LedSegment,
-  WledUpdateParameters
+  LedSegment
 } from '../base/FieldControl.js';
-import { UnreachableError } from '../types.js';
-import { Alliance } from '../base/Match.js';
 
 export interface FcsPackets {
   init: FieldControlInitPacket;
@@ -20,162 +16,10 @@ export interface FcsPackets {
 }
 
 enum RevHub {
-  TOTE = 0,
-  RED_HYDROGEN_TANK = 1,
-  BLUE_HYDROGEN_TANK = 2
-}
-
-enum ConversionButtonDigitalChannel {
-  RED = 0,
-  BLUE = 2
-}
-
-type PwmDeviceType = 'servo';
-type PwmDeviceFieldElement =
-  | 'oxygenAccumulator'
-  | 'hydrogenTank'
-  | 'conversionButton'
-  | 'oxygenReleaser';
-
-class PwmDevice {
-  public static readonly RED_OXYGEN_RELEASER_SERVO = new PwmDevice(
-    RevHub.TOTE,
-    2,
-    'red',
-    'oxygenReleaser',
-    'servo'
-  );
-  public static readonly BLUE_OXYGEN_RELEASER_SERVO = new PwmDevice(
-    RevHub.TOTE,
-    5,
-    'blue',
-    'oxygenReleaser',
-    'servo'
-  );
-
-  public static readonly ALL_PWM_DEVICES = [
-    PwmDevice.RED_OXYGEN_RELEASER_SERVO,
-    PwmDevice.BLUE_OXYGEN_RELEASER_SERVO
-  ];
-
-  public readonly hub: RevHub;
-  public readonly port: number;
-  public readonly alliance: Alliance;
-  public readonly type: PwmDeviceType;
-  public readonly framePeriod_us: number;
-  public readonly fieldElement: PwmDeviceFieldElement;
-
-  private constructor(
-    hub: RevHub,
-    port: number,
-    alliance: Alliance,
-    fieldElement: PwmDeviceFieldElement,
-    type: PwmDeviceType
-  ) {
-    this.hub = hub;
-    this.port = port;
-    this.alliance = alliance;
-    this.type = type;
-    this.fieldElement = fieldElement;
-    /*
-     * Using multiple different frame periods can cause problems w/ Expansion Hub firmware version 1.8.2.
-     * REV employees: see https://github.com/REVrobotics/ExpansionHubFW/issues/81
-     *
-     * Additionally, the shorter the frame period, the faster the Blinkin patterns are.
-     */
-    this.framePeriod_us = 20000;
-  }
-}
-
-interface PwmCommand {
-  device: PwmDevice;
-  pulseWidth_us: number;
-}
-
-function assemblePwmCommands(
-  pwmCommands: PwmCommand[]
-): FieldControlUpdatePacket {
-  // Sort the commands for optimal visual synchronization.
-  // The most important thing is to have field elements of the same type grouped together.
-  pwmCommands.sort((a, b) => {
-    if (a.device.fieldElement == b.device.fieldElement) {
-      return 0; // Elements have the same priority
-    } else if (
-      a.device.fieldElement == 'hydrogenTank' ||
-      b.device.fieldElement == 'hydrogenTank'
-    ) {
-      // Hydrogen tanks are wireless, list them first
-      return a.device.fieldElement == 'hydrogenTank' ? -1 : 1;
-    } else if (
-      a.device.fieldElement == 'oxygenAccumulator' ||
-      b.device.fieldElement == 'oxygenAccumulator'
-    ) {
-      // Oxygen accumulators are most prominent, list them next
-      return a.device.fieldElement == 'oxygenAccumulator' ? -1 : 1;
-    } else if (
-      a.device.fieldElement == 'conversionButton' ||
-      b.device.fieldElement == 'conversionButton'
-    ) {
-      // Prioritize button visual feedback over moving the servo
-      return a.device.fieldElement == 'conversionButton' ? -1 : 1;
-    } else {
-      /*
-       * We shouldn't be able to get to this point (though we can't convince the Typescript compiler of that),
-       * because the only way to get here is if both field elements are oxygenReleaser, and we've already covered
-       * the case where the field elements are the same.
-       */
-      return 0;
-    }
-  });
-
-  // This type is the same as the hubs field in FieldControlUpdatePacket, but with
-  // only servo parameters, and the servo parameters are required instead of optional.
-  const hubs: Record<
-    string,
-    Required<Pick<HubUpdateParameters, 'servos'>>
-  > = {};
-
-  const ensureHub = (hub: RevHub) => {
-    if (hubs[hub] == undefined) {
-      hubs[hub] = { servos: [] };
-    }
-  };
-
-  for (const command of pwmCommands) {
-    ensureHub(command.device.hub);
-    hubs[command.device.hub].servos.push({
-      port: command.device.port,
-      pulseWidth: command.pulseWidth_us
-    });
-  }
-
-  return { hubs, wleds: {} };
-}
-
-function cancelConversionButtonTriggers(packet: FieldControlUpdatePacket) {
-  let toteHub = packet.hubs[RevHub.TOTE];
-  if (toteHub == undefined) {
-    toteHub = {};
-    packet.hubs[RevHub.TOTE] = toteHub;
-  }
-
-  if (toteHub.digitalInputs === undefined) {
-    toteHub.digitalInputs = [];
-  }
-
-  for (let conversionButtonDigitalChannel in ConversionButtonDigitalChannel) {
-    const digitalChannelNumber = Number.parseInt(
-      conversionButtonDigitalChannel
-    );
-    if (Number.isNaN(digitalChannelNumber)) {
-      continue;
-    } // Filter out the string entries on the enum
-
-    toteHub.digitalInputs.push({
-      channel: digitalChannelNumber,
-      triggerOptions: null
-    });
-  }
+  RED_CONTROL_HUB = 0,
+  CENTER_EXPANSION_HUB = 1,
+  CENTER_CONTROL_HUB = 2,
+  BLUE_CONTROL_HUB = 3
 }
 
 function createNexusGoalSegments(
@@ -234,8 +78,6 @@ function applySetpointToMotors(
     }
   });
 }
-
-function applyPulseWidthToServos() {}
 
 type WledController = 'center' | 'red' | 'blue';
 
@@ -393,27 +235,6 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
       });
     }
   });
-
-  // for (const device of PwmDevice.ALL_PWM_DEVICES) {
-  //   ensureHub(device.hub);
-  //   let pulseWidth: number;
-  //   if (device.type == 'servo') {
-  //     if (device.alliance == 'red') {
-  //       pulseWidth = fieldOptions.redServoHoldPositionPulseWidth;
-  //     } else {
-  //       pulseWidth = fieldOptions.blueServoHoldPositionPulseWidth;
-  //     }
-  //   } else {
-  //     throw new UnreachableError(device.type);
-  //   }
-  //   result.hubs[device.hub]!.servos!.push({
-  //     port: device.port,
-  //     framePeriod: device.framePeriod_us,
-  //     pulseWidth
-  //   });
-  // }
-
-  // cancelConversionButtonTriggers(result);
 
   return result;
 }
