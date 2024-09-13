@@ -211,6 +211,32 @@ function applyPatternToStrips(
   });
 }
 
+function applySetpointToMotors(
+  setpoint: number,
+  motors: Motor[],
+  packet: FieldControlUpdatePacket
+): void {
+  motors.forEach((motor) => {
+    if (packet.hubs[motor.hub] == undefined) {
+      packet.hubs[motor.hub] = { motors: [], servos: [], digitalInputs: [] };
+    }
+
+    if (motor.portType === 'on board') {
+      packet.hubs[motor.hub].motors?.push({
+        port: motor.port,
+        setpoint: setpoint
+      });
+    } else if (motor.portType === 'spark mini') {
+      packet.hubs[motor.hub].servos?.push({
+        port: motor.port,
+        pulseWidth: setpoint * 1000 + 1500
+      });
+    }
+  });
+}
+
+function applyPulseWidthToServos() {}
+
 type WledController = 'center' | 'red' | 'blue';
 
 class LedStrip {
@@ -261,6 +287,63 @@ class LedStrip {
   }
 }
 
+type MotorPortType = 'on board' | 'spark mini';
+
+class Motor {
+  public static readonly RED_NEXUS_GOALS: Motor[] = [
+    new Motor(RevHub.RED_CONTROL_HUB, 'on board', 0),
+    new Motor(RevHub.RED_CONTROL_HUB, 'on board', 1),
+    new Motor(RevHub.RED_CONTROL_HUB, 'on board', 2),
+    new Motor(RevHub.RED_CONTROL_HUB, 'on board', 3),
+    new Motor(RevHub.RED_CONTROL_HUB, 'spark mini', 4),
+    new Motor(RevHub.RED_CONTROL_HUB, 'spark mini', 5)
+  ];
+
+  public static readonly BLUE_NEXUS_GOALS: Motor[] = [
+    new Motor(RevHub.BLUE_CONTROL_HUB, 'on board', 0),
+    new Motor(RevHub.BLUE_CONTROL_HUB, 'on board', 1),
+    new Motor(RevHub.BLUE_CONTROL_HUB, 'on board', 2),
+    new Motor(RevHub.BLUE_CONTROL_HUB, 'on board', 3),
+    new Motor(RevHub.BLUE_CONTROL_HUB, 'spark mini', 4),
+    new Motor(RevHub.BLUE_CONTROL_HUB, 'spark mini', 5)
+  ];
+
+  public static readonly RED_CENTER_NEXUS_GOALS: Motor[] = [
+    new Motor(RevHub.CENTER_CONTROL_HUB, 'on board', 0),
+    new Motor(RevHub.CENTER_CONTROL_HUB, 'on board', 1),
+    new Motor(RevHub.CENTER_CONTROL_HUB, 'on board', 2),
+    new Motor(RevHub.CENTER_CONTROL_HUB, 'on board', 3),
+    new Motor(RevHub.CENTER_CONTROL_HUB, 'spark mini', 4),
+    new Motor(RevHub.CENTER_CONTROL_HUB, 'spark mini', 5)
+  ];
+
+  public static readonly BLUE_CENTER_NEXUS_GOALS: Motor[] = [
+    new Motor(RevHub.CENTER_EXPANSION_HUB, 'on board', 0),
+    new Motor(RevHub.CENTER_EXPANSION_HUB, 'on board', 1),
+    new Motor(RevHub.CENTER_EXPANSION_HUB, 'on board', 2),
+    new Motor(RevHub.CENTER_EXPANSION_HUB, 'on board', 3),
+    new Motor(RevHub.CENTER_EXPANSION_HUB, 'spark mini', 4),
+    new Motor(RevHub.CENTER_EXPANSION_HUB, 'spark mini', 5)
+  ];
+
+  public static readonly ALL_GOALS = [
+    ...this.RED_NEXUS_GOALS,
+    ...this.BLUE_NEXUS_GOALS,
+    ...this.RED_CENTER_NEXUS_GOALS,
+    ...this.BLUE_CENTER_NEXUS_GOALS
+  ];
+
+  public readonly hub: RevHub;
+  public readonly portType: MotorPortType;
+  public readonly port: number;
+
+  private constructor(hub: RevHub, portType: MotorPortType, port: number) {
+    this.hub = hub;
+    this.portType = portType;
+    this.port = port;
+  }
+}
+
 /**
  * This packet must specify the initial state of EVERY port that will be used at any point.
  */
@@ -294,6 +377,22 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
       result.hubs[hub] = { motors: [], servos: [], digitalInputs: [] };
     }
   };
+
+  Motor.ALL_GOALS.forEach((motor) => {
+    ensureHub(motor.hub);
+    if (motor.portType === 'on board') {
+      result.hubs[motor.hub]!.motors!.push({
+        port: motor.port,
+        setpoint: 0
+      });
+    } else if (motor.portType === 'spark mini') {
+      result.hubs[motor.hub]!.servos!.push({
+        port: motor.port,
+        pulseWidth: 1500,
+        framePeriod: 20000
+      });
+    }
+  });
 
   // for (const device of PwmDevice.ALL_PWM_DEVICES) {
   //   ensureHub(device.hub);
@@ -340,6 +439,7 @@ function buildPrepareFieldPacket(
     LedStrip.ALL_STRIPS,
     result
   );
+  applySetpointToMotors(0, Motor.ALL_GOALS, result);
   return result;
 }
 
@@ -373,6 +473,7 @@ function buildMatchEndPacket(
     result
   );
   applyPatternToStrips(fieldOptions.matchEndRampColor, [LedStrip.RAMP], result);
+  applySetpointToMotors(0, Motor.ALL_GOALS, result);
   return result;
 }
 
@@ -381,6 +482,11 @@ function buildAllClearPacket(
 ): FieldControlUpdatePacket {
   const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
   applyPatternToStrips(fieldOptions.allClearColor, LedStrip.ALL_STRIPS, result);
+  applySetpointToMotors(
+    fieldOptions.foodResetMotorSetpoint,
+    Motor.ALL_GOALS,
+    result
+  );
   return result;
 }
 
