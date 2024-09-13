@@ -118,6 +118,9 @@ export interface FieldOptions {
   redWledWebSocketAddress: string;
   blueWledWebSocketAddress: string;
   centerWledWebSocketAddress: string;
+  foodProductionMotorSetpoint: number;
+  foodProductionMotorDurationSeconds: number;
+  foodResetMotorSetpoint: number;
 }
 
 export const defaultFieldOptions: FieldOptions = {
@@ -131,5 +134,8 @@ export const defaultFieldOptions: FieldOptions = {
   matchEndRampColor: 'ff00ff',
   redWledWebSocketAddress: '',
   blueWledWebSocketAddress: '',
-  centerWledWebSocketAddress: ''
+  centerWledWebSocketAddress: '',
+  foodProductionMotorSetpoint: 1.0,
+  foodProductionMotorDurationSeconds: 5,
+  foodResetMotorSetpoint: -0.5
 };

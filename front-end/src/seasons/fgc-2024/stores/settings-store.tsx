@@ -68,6 +68,24 @@ export const centerWledWebSocketAddressAtom = atom<string>({
   effects: [localStorageEffect('ftf.centerWledWebSocketAddress')]
 });
 
+export const foodProductionMotorSetpointAtom = atom<number>({
+  key: 'ftf.foodProductionMotorSetpoint',
+  default: defaultFieldOptions.foodProductionMotorSetpoint,
+  effects: [localStorageEffect('ftf.foodProductionMotorSetpoint')]
+});
+
+export const foodProductionMotorDurationSecondsAtom = atom<number>({
+  key: 'ftf.foodProductionMotorDurationSeconds',
+  default: defaultFieldOptions.foodProductionMotorDurationSeconds,
+  effects: [localStorageEffect('ftf.foodProductionMotorDurationSeconds')]
+});
+
+export const foodResetMotorSetpointAtom = atom<number>({
+  key: 'ftf.foodResetMotorSetpoint',
+  default: defaultFieldOptions.foodResetMotorSetpoint,
+  effects: [localStorageEffect('ftf.foodResetMotorSetpoint')]
+});
+
 export const fieldOptionsSelector: RecoilValueReadOnly<FieldOptions> = selector(
   {
     key: 'ftf.fieldOptions',
@@ -83,7 +101,12 @@ export const fieldOptionsSelector: RecoilValueReadOnly<FieldOptions> = selector(
         matchEndRampColor: get(matchEndRampColorAtom),
         redWledWebSocketAddress: get(redWledWebSocketAddressAtom),
         blueWledWebSocketAddress: get(blueWledWebSocketAddressAtom),
-        centerWledWebSocketAddress: get(centerWledWebSocketAddressAtom)
+        centerWledWebSocketAddress: get(centerWledWebSocketAddressAtom),
+        foodProductionMotorSetpoint: get(foodProductionMotorSetpointAtom),
+        foodProductionMotorDurationSeconds: get(
+          foodProductionMotorDurationSecondsAtom
+        ),
+        foodResetMotorSetpoint: get(foodResetMotorSetpointAtom)
       };
     }
   }

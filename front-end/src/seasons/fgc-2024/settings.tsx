@@ -7,6 +7,9 @@ import {
   centerWledWebSocketAddressAtom,
   fieldFaultColorAtom,
   fieldOptionsSelector,
+  foodProductionMotorDurationSecondsAtom,
+  foodProductionMotorSetpointAtom,
+  foodResetMotorSetpointAtom,
   goalLedLengthAtom,
   matchEndBlueNexusGoalColorAtom,
   matchEndRampColorAtom,
@@ -44,6 +47,15 @@ export const Settings: FC = () => {
     useRecoilState(blueWledWebSocketAddressAtom);
   const [centerWledWebSocketAddress, setCenterWledWebSocketAddress] =
     useRecoilState(centerWledWebSocketAddressAtom);
+  const [foodProductionMotorSetpoint, setFoodProductionMotorSetpoint] =
+    useRecoilState(foodProductionMotorSetpointAtom);
+  const [
+    foodProductionMotorDurationSeconds,
+    setFoodProductionMotorDurationSeconds
+  ] = useRecoilState(foodProductionMotorDurationSecondsAtom);
+  const [foodResetMotorSetpoint, setFoodResetMotorSetpoint] = useRecoilState(
+    foodResetMotorSetpointAtom
+  );
 
   const fieldOptions: FieldOptions = useRecoilValue(fieldOptionsSelector);
 
@@ -117,6 +129,24 @@ export const Settings: FC = () => {
         name='Center WLED WebSocket Address'
         value={centerWledWebSocketAddress}
         onChange={setCenterWledWebSocketAddress}
+        inline
+      />
+      <NumberSetting
+        name='Food Production Motor Setpoint'
+        value={foodProductionMotorSetpoint}
+        onChange={setFoodProductionMotorSetpoint}
+        inline
+      />
+      <NumberSetting
+        name='Food Production Moto rDuration Seconds'
+        value={foodProductionMotorDurationSeconds}
+        onChange={setFoodProductionMotorDurationSeconds}
+        inline
+      />
+      <NumberSetting
+        name='Food Reset Motor Setpoint'
+        value={foodResetMotorSetpoint}
+        onChange={setFoodResetMotorSetpoint}
         inline
       />
     </Box>
