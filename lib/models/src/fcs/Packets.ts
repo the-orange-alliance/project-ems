@@ -295,24 +295,24 @@ function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
     }
   };
 
-  for (const device of PwmDevice.ALL_PWM_DEVICES) {
-    ensureHub(device.hub);
-    let pulseWidth: number;
-    if (device.type == 'servo') {
-      if (device.alliance == 'red') {
-        pulseWidth = fieldOptions.redServoHoldPositionPulseWidth;
-      } else {
-        pulseWidth = fieldOptions.blueServoHoldPositionPulseWidth;
-      }
-    } else {
-      throw new UnreachableError(device.type);
-    }
-    result.hubs[device.hub]!.servos!.push({
-      port: device.port,
-      framePeriod: device.framePeriod_us,
-      pulseWidth
-    });
-  }
+  // for (const device of PwmDevice.ALL_PWM_DEVICES) {
+  //   ensureHub(device.hub);
+  //   let pulseWidth: number;
+  //   if (device.type == 'servo') {
+  //     if (device.alliance == 'red') {
+  //       pulseWidth = fieldOptions.redServoHoldPositionPulseWidth;
+  //     } else {
+  //       pulseWidth = fieldOptions.blueServoHoldPositionPulseWidth;
+  //     }
+  //   } else {
+  //     throw new UnreachableError(device.type);
+  //   }
+  //   result.hubs[device.hub]!.servos!.push({
+  //     port: device.port,
+  //     framePeriod: device.framePeriod_us,
+  //     pulseWidth
+  //   });
+  // }
 
   // cancelConversionButtonTriggers(result);
 
@@ -323,7 +323,11 @@ function buildFieldFaultPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
   const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-  applyPatternToStrips('ff0000', LedStrip.ALL_STRIPS, result);
+  applyPatternToStrips(
+    fieldOptions.fieldFaultColor,
+    LedStrip.ALL_STRIPS,
+    result
+  );
   return result;
 }
 
@@ -331,7 +335,11 @@ function buildPrepareFieldPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
   const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-  applyPatternToStrips('ffff00', LedStrip.ALL_STRIPS, result);
+  applyPatternToStrips(
+    fieldOptions.prepareFieldColor,
+    LedStrip.ALL_STRIPS,
+    result
+  );
   return result;
 }
 
@@ -354,9 +362,17 @@ function buildMatchEndPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
   const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-  applyPatternToStrips('0000ff', LedStrip.ALL_BLUE_STRIPS, result);
-  applyPatternToStrips('ff0000', LedStrip.ALL_RED_STRIPS, result);
-  applyPatternToStrips('ff00ff', [LedStrip.RAMP], result);
+  applyPatternToStrips(
+    fieldOptions.matchEndBlueNexusGoalColor,
+    LedStrip.ALL_BLUE_STRIPS,
+    result
+  );
+  applyPatternToStrips(
+    fieldOptions.matchEndRedNexusGoalColor,
+    LedStrip.ALL_RED_STRIPS,
+    result
+  );
+  applyPatternToStrips(fieldOptions.matchEndRampColor, [LedStrip.RAMP], result);
   return result;
 }
 
@@ -364,7 +380,7 @@ function buildAllClearPacket(
   fieldOptions: FieldOptions
 ): FieldControlUpdatePacket {
   const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-  applyPatternToStrips('00ff00', LedStrip.ALL_STRIPS, result);
+  applyPatternToStrips(fieldOptions.allClearColor, LedStrip.ALL_STRIPS, result);
   return result;
 }
 

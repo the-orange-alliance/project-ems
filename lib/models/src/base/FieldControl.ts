@@ -109,19 +109,21 @@ export type FieldControlUpdatePacket = FieldControlPacket<
 export interface FieldOptions {
   goalLedLength: number;
   rampLedLength: number;
-
-  redServoHoldPositionPulseWidth: number;
-  redServoReleasedPositionPulseWidth: number;
-  blueServoHoldPositionPulseWidth: number;
-  blueServoReleasedPositionPulseWidth: number;
+  allClearColor: string;
+  prepareFieldColor: string;
+  fieldFaultColor: string;
+  matchEndRedNexusGoalColor: string;
+  matchEndBlueNexusGoalColor: string;
+  matchEndRampColor: string;
 }
 
 export const defaultFieldOptions: FieldOptions = {
   goalLedLength: 23,
   rampLedLength: 90,
-
-  redServoHoldPositionPulseWidth: 500,
-  redServoReleasedPositionPulseWidth: 2500,
-  blueServoHoldPositionPulseWidth: 500,
-  blueServoReleasedPositionPulseWidth: 2500
+  allClearColor: '00ff00',
+  prepareFieldColor: 'ffff00',
+  fieldFaultColor: 'ff0000',
+  matchEndRedNexusGoalColor: 'ff0000',
+  matchEndBlueNexusGoalColor: '0000ff',
+  matchEndRampColor: 'ff00ff'
 };
