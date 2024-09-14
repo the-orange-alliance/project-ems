@@ -65,8 +65,8 @@ export type HubUpdateParameters = HubParameters<
 // WLED parameters
 //-------------------------------------------
 export interface LedPatternUpdateParameters {
+  segment: number;
   color: string;
-  targetSegments: number[];
 }
 
 export interface LedSegment {

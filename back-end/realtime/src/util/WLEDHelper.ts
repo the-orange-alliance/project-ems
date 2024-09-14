@@ -22,15 +22,13 @@ export const buildWledSetColorPacket = (
   };
 
   packet.patterns.forEach((pattern) => {
-    wledJson.seg.push(
-      ...pattern.targetSegments.map((segment) => ({
-        id: segment,
-        on: true,
-        frz: false,
-        fx: 0,
-        col: [pattern.color]
-      }))
-    );
+    wledJson.seg.push({
+      id: pattern.segment,
+      on: true,
+      frz: false,
+      fx: 0,
+      col: [pattern.color]
+    });
   });
 
   return JSON.stringify(wledJson);

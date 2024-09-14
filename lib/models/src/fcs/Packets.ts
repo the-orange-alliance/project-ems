@@ -49,7 +49,7 @@ function applyPatternToStrips(
     }
 
     packet.wleds[strip.controller].patterns.push({
-      targetSegments: strip.segments,
+      segment: strip.segment,
       color
     });
   });
@@ -82,37 +82,57 @@ function applySetpointToMotors(
 type WledController = 'center' | 'red' | 'blue';
 
 class LedStrip {
-  public static readonly RED_NEXUS_GOAL = new LedStrip(
-    'red',
-    [0, 1, 2, 3, 4, 5]
-  );
-  public static readonly BLUE_NEXUS_GOAL = new LedStrip(
-    'blue',
-    [0, 1, 2, 3, 4, 5]
-  );
-  public static readonly RED_CENTER_NEXUS_GOAL = new LedStrip(
-    'center',
-    [0, 1, 2, 3, 4, 5]
-  );
-  public static readonly BLUE_CENTER_NEXUS_GOAL = new LedStrip(
-    'center',
-    [6, 7, 8, 9, 10, 11]
-  );
-  public static readonly RAMP = new LedStrip('center', [12]);
-
-  public static readonly ALL_RED_STRIPS = [
-    LedStrip.RED_NEXUS_GOAL,
-    LedStrip.RED_CENTER_NEXUS_GOAL
+  public static readonly RED_SIDE_GOALS = [
+    new LedStrip('red', 0),
+    new LedStrip('red', 1),
+    new LedStrip('red', 2),
+    new LedStrip('red', 3),
+    new LedStrip('red', 4),
+    new LedStrip('red', 5)
   ];
 
-  public static readonly ALL_BLUE_STRIPS = [
-    LedStrip.BLUE_NEXUS_GOAL,
-    LedStrip.BLUE_CENTER_NEXUS_GOAL
+  public static readonly BLUE_SIDE_GOALS = [
+    new LedStrip('blue', 0),
+    new LedStrip('blue', 1),
+    new LedStrip('blue', 2),
+    new LedStrip('blue', 3),
+    new LedStrip('blue', 4),
+    new LedStrip('blue', 5)
+  ];
+
+  public static readonly RED_CENTER_GOALS = [
+    new LedStrip('center', 0),
+    new LedStrip('center', 1),
+    new LedStrip('center', 2),
+    new LedStrip('center', 3),
+    new LedStrip('center', 4),
+    new LedStrip('center', 5)
+  ];
+
+  public static readonly BLUE_CENTER_GOALS = [
+    new LedStrip('center', 6),
+    new LedStrip('center', 7),
+    new LedStrip('center', 8),
+    new LedStrip('center', 9),
+    new LedStrip('center', 10),
+    new LedStrip('center', 11)
+  ];
+
+  public static readonly RAMP = new LedStrip('center', 12);
+
+  public static readonly ALL_RED_GOALS = [
+    ...LedStrip.RED_SIDE_GOALS,
+    ...LedStrip.RED_CENTER_GOALS
+  ];
+
+  public static readonly ALL_BLUE_GOALS = [
+    ...LedStrip.BLUE_SIDE_GOALS,
+    ...LedStrip.BLUE_CENTER_GOALS
   ];
 
   public static readonly ALL_NEXUS_GOALS = [
-    ...LedStrip.ALL_RED_STRIPS,
-    ...LedStrip.ALL_BLUE_STRIPS
+    ...LedStrip.ALL_RED_GOALS,
+    ...LedStrip.ALL_BLUE_GOALS
   ];
 
   public static readonly ALL_STRIPS = [
@@ -121,18 +141,18 @@ class LedStrip {
   ];
 
   public readonly controller: WledController;
-  public readonly segments: number[];
+  public readonly segment: number;
 
-  private constructor(controller: WledController, segments: number[]) {
+  private constructor(controller: WledController, segment: number) {
     this.controller = controller;
-    this.segments = segments;
+    this.segment = segment;
   }
 }
 
 type MotorPortType = 'on board' | 'spark mini';
 
 class Motor {
-  public static readonly RED_NEXUS_GOALS: Motor[] = [
+  public static readonly RED_SIDE_GOALS: Motor[] = [
     new Motor(RevHub.RED_CONTROL_HUB, 'on board', 0),
     new Motor(RevHub.RED_CONTROL_HUB, 'on board', 1),
     new Motor(RevHub.RED_CONTROL_HUB, 'on board', 2),
@@ -141,7 +161,7 @@ class Motor {
     new Motor(RevHub.RED_CONTROL_HUB, 'spark mini', 5)
   ];
 
-  public static readonly BLUE_NEXUS_GOALS: Motor[] = [
+  public static readonly BLUE_SIDE_GOALS: Motor[] = [
     new Motor(RevHub.BLUE_CONTROL_HUB, 'on board', 0),
     new Motor(RevHub.BLUE_CONTROL_HUB, 'on board', 1),
     new Motor(RevHub.BLUE_CONTROL_HUB, 'on board', 2),
@@ -150,7 +170,7 @@ class Motor {
     new Motor(RevHub.BLUE_CONTROL_HUB, 'spark mini', 5)
   ];
 
-  public static readonly RED_CENTER_NEXUS_GOALS: Motor[] = [
+  public static readonly RED_CENTER_GOALS: Motor[] = [
     new Motor(RevHub.CENTER_CONTROL_HUB, 'on board', 0),
     new Motor(RevHub.CENTER_CONTROL_HUB, 'on board', 1),
     new Motor(RevHub.CENTER_CONTROL_HUB, 'on board', 2),
@@ -159,7 +179,7 @@ class Motor {
     new Motor(RevHub.CENTER_CONTROL_HUB, 'spark mini', 5)
   ];
 
-  public static readonly BLUE_CENTER_NEXUS_GOALS: Motor[] = [
+  public static readonly BLUE_CENTER_GOALS: Motor[] = [
     new Motor(RevHub.CENTER_EXPANSION_HUB, 'on board', 0),
     new Motor(RevHub.CENTER_EXPANSION_HUB, 'on board', 1),
     new Motor(RevHub.CENTER_EXPANSION_HUB, 'on board', 2),
@@ -169,10 +189,10 @@ class Motor {
   ];
 
   public static readonly ALL_GOALS = [
-    ...this.RED_NEXUS_GOALS,
-    ...this.BLUE_NEXUS_GOALS,
-    ...this.RED_CENTER_NEXUS_GOALS,
-    ...this.BLUE_CENTER_NEXUS_GOALS
+    ...this.RED_SIDE_GOALS,
+    ...this.BLUE_SIDE_GOALS,
+    ...this.RED_CENTER_GOALS,
+    ...this.BLUE_CENTER_GOALS
   ];
 
   public readonly hub: RevHub;
@@ -290,12 +310,12 @@ function buildMatchEndPacket(
   const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
   applyPatternToStrips(
     fieldOptions.matchEndBlueNexusGoalColor,
-    LedStrip.ALL_BLUE_STRIPS,
+    LedStrip.ALL_BLUE_GOALS,
     result
   );
   applyPatternToStrips(
     fieldOptions.matchEndRedNexusGoalColor,
-    LedStrip.ALL_RED_STRIPS,
+    LedStrip.ALL_RED_GOALS,
     result
   );
   applyPatternToStrips(fieldOptions.matchEndRampColor, [LedStrip.RAMP], result);
