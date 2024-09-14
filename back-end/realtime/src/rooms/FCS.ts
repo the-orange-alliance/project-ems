@@ -5,7 +5,9 @@ import {
   FieldControlUpdatePacket,
   FieldOptions,
   getFcsPackets,
+  Match as MatchObj,
   MatchSocketEvent,
+  processMatchData,
   WledInitParameters
 } from '@toa-lib/models';
 import Room from './Room.js';
@@ -49,10 +51,12 @@ export default class FCS extends Room {
       this.broadcastFcsUpdate(this.fcsPackets.fieldFault);
     });
 
-    // TODO(jan): Callback to process match details
-    // matchRoom.localEmitter.on(MatchSocketEvent.UPDATE, (match: Match<any>) => {
-    //   this.broadcastFcsUpdate(this.fcsPackets.???);
-    // });
+    matchRoom.localEmitter.on(
+      MatchSocketEvent.UPDATE,
+      (match: MatchObj<any>) => {
+        this.broadcastFcsUpdate(processMatchData(match.details));
+      }
+    );
   }
 
   public initializeEvents(socket: Socket): void {

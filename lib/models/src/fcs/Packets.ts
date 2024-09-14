@@ -4,6 +4,8 @@ import {
   FieldOptions,
   LedSegment
 } from '../base/FieldControl.js';
+import { NexusGoalState } from '../seasons/FeedingTheFuture.js';
+import { FeedingTheFuture } from '../seasons/index.js';
 
 export interface FcsPackets {
   init: FieldControlInitPacket;
@@ -346,4 +348,69 @@ export function getFcsPackets(fieldOptions: FieldOptions): FcsPackets {
     matchEnd: buildMatchEndPacket(fieldOptions),
     allClear: buildAllClearPacket(fieldOptions)
   };
+}
+
+function applyStateToGoal(
+  state: NexusGoalState,
+  strip: LedStrip,
+  result: FieldControlUpdatePacket
+) {
+  switch (state) {
+    case NexusGoalState.Full:
+      applyPatternToStrips('ffa500', [strip], result);
+      break;
+    case NexusGoalState.BlueOnly:
+      applyPatternToStrips('0000ff', [strip], result);
+      break;
+    case NexusGoalState.GreenOnly:
+      applyPatternToStrips('00ff00', [strip], result);
+      break;
+    default:
+      applyPatternToStrips('000000', [strip], result);
+  }
+}
+
+export function processMatchData(
+  details: FeedingTheFuture.MatchDetails
+): FieldControlUpdatePacket {
+  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+
+  const redNexus = details.redNexusState;
+  const blueNexus = details.blueNexusState;
+
+  applyStateToGoal(redNexus.CW1, LedStrip.RED_SIDE_GOALS[0], result);
+  applyStateToGoal(redNexus.CW2, LedStrip.RED_SIDE_GOALS[1], result);
+  applyStateToGoal(redNexus.CW3, LedStrip.RED_SIDE_GOALS[2], result);
+  applyStateToGoal(redNexus.CW4, LedStrip.RED_SIDE_GOALS[3], result);
+  applyStateToGoal(redNexus.CW5, LedStrip.RED_SIDE_GOALS[4], result);
+  applyStateToGoal(redNexus.CW6, LedStrip.RED_SIDE_GOALS[5], result);
+
+  applyStateToGoal(redNexus.EC1, LedStrip.RED_CENTER_GOALS[0], result);
+  applyStateToGoal(redNexus.EC2, LedStrip.RED_CENTER_GOALS[1], result);
+  applyStateToGoal(redNexus.EC3, LedStrip.RED_CENTER_GOALS[2], result);
+  applyStateToGoal(redNexus.EC4, LedStrip.RED_CENTER_GOALS[3], result);
+  applyStateToGoal(redNexus.EC5, LedStrip.RED_CENTER_GOALS[4], result);
+  applyStateToGoal(redNexus.EC6, LedStrip.RED_CENTER_GOALS[5], result);
+
+  applyStateToGoal(blueNexus.CW1, LedStrip.BLUE_SIDE_GOALS[0], result);
+  applyStateToGoal(blueNexus.CW2, LedStrip.BLUE_SIDE_GOALS[1], result);
+  applyStateToGoal(blueNexus.CW3, LedStrip.BLUE_SIDE_GOALS[2], result);
+  applyStateToGoal(blueNexus.CW4, LedStrip.BLUE_SIDE_GOALS[3], result);
+  applyStateToGoal(blueNexus.CW5, LedStrip.BLUE_SIDE_GOALS[4], result);
+  applyStateToGoal(blueNexus.CW6, LedStrip.BLUE_SIDE_GOALS[5], result);
+
+  applyStateToGoal(blueNexus.EC1, LedStrip.BLUE_CENTER_GOALS[0], result);
+  applyStateToGoal(blueNexus.EC2, LedStrip.BLUE_CENTER_GOALS[1], result);
+  applyStateToGoal(blueNexus.EC3, LedStrip.BLUE_CENTER_GOALS[2], result);
+  applyStateToGoal(blueNexus.EC4, LedStrip.BLUE_CENTER_GOALS[3], result);
+  applyStateToGoal(blueNexus.EC5, LedStrip.BLUE_CENTER_GOALS[4], result);
+  applyStateToGoal(blueNexus.EC6, LedStrip.BLUE_CENTER_GOALS[5], result);
+
+  applyPatternToStrips(
+    details.coopertition > 0 ? 'ff00ff' : '000000',
+    [LedStrip.RAMP],
+    result
+  );
+
+  return result;
 }
