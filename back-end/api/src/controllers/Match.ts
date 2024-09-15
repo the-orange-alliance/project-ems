@@ -10,7 +10,7 @@ import {
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { validateBodyZ } from '../middleware/BodyValidator.js';
-import { DataNotFoundError } from '../util/Errors.js';
+import { DataNotFoundError, InvalidDataError } from '../util/Errors.js';
 import { join } from 'path';
 import { writeFile } from 'fs/promises';
 import {
@@ -159,7 +159,6 @@ router.get(
 
       res.send(match);
     } catch (e) {
-      console.log(e);
       return next(e);
     }
   }
@@ -245,6 +244,14 @@ router.patch(
       const funcs = getFunctionsBySeasonKey(
         eventKey.split('-')[0].toLowerCase()
       );
+      // Ensure they are actually updating what they say they're updating
+      if (
+        req.body.eventKey !== eventKey ||
+        req.body.tournamentKey !== tournamentKey ||
+        String(req.body.id) !== id
+      ) {
+        return next(InvalidDataError);
+      }
       const data = funcs?.detailsToJson
         ? funcs.detailsToJson(req.body)
         : req.body;
