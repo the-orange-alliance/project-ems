@@ -6,7 +6,7 @@ ALTER TABLE "match_detail" ADD COLUMN redFoodProduced;
 ALTER TABLE "match_detail" ADD COLUMN redFoodSecured;
 ALTER TABLE "match_detail" ADD COLUMN redRobotOneParked;
 ALTER TABLE "match_detail" ADD COLUMN redRobotTwoParked;
-ALTER TABLE "match_detail" ADD COLUMN redRobotTwoParked;
+ALTER TABLE "match_detail" ADD COLUMN redRobotThreeParked;
 ALTER TABLE "match_detail" ADD COLUMN redCw1 INT;
 ALTER TABLE "match_detail" ADD COLUMN redCw2 INT;
 ALTER TABLE "match_detail" ADD COLUMN redCw3 INT;
