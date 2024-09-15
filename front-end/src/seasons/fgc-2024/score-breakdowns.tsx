@@ -4,6 +4,7 @@ import { ScoreBreakdownProps } from '..';
 import { Grid, TextField } from '@mui/material';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 import NexusScoresheet from './nexus-sheets/nexus-scoresheet';
+import { StateToggle } from 'src/components/inputs/state-toggle';
 
 export const RedScoreBreakdown: FC<
   ScoreBreakdownProps<FeedingTheFuture.MatchDetails>
@@ -51,30 +52,30 @@ export const RedScoreBreakdown: FC<
 
       {/* RED ALLIANCE BALANCE STATUS */}
       <Grid item xs={12} sm={6} md={4}>
-        <TextField
-          label={`${identifiers[redAlliance[0].teamKey]} Balance Status`}
+        <StateToggle
+          title={<span>{identifiers[redAlliance[0].teamKey]} Balanced</span>}
+          states={['N', 'Y']}
           value={match?.details?.redRobotOneParked ?? 0}
-          type='number'
-          fullWidth
           disabled
+          fullWidth
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
-        <TextField
-          label={`${identifiers[redAlliance[1].teamKey]} Balance Status`}
+        <StateToggle
+          title={<span>{identifiers[redAlliance[1].teamKey]} Balanced</span>}
+          states={['N', 'Y']}
           value={match?.details?.redRobotTwoParked ?? 0}
-          type='number'
-          fullWidth
           disabled
+          fullWidth
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
-        <TextField
-          label={`${identifiers[redAlliance[2].teamKey]} Balance Status`}
+        <StateToggle
+          title={<span>{identifiers[redAlliance[2].teamKey]} Balanced</span>}
+          states={['N', 'Y']}
           value={match?.details?.redRobotThreeParked ?? 0}
-          type='number'
-          fullWidth
           disabled
+          fullWidth
         />
       </Grid>
       <Grid item xs={12} sm={6} md={6}>
@@ -147,30 +148,30 @@ export const BlueScoreBreakdown: FC<
 
       {/* BLUE ALLIANCE BALANCE STATUS */}
       <Grid item xs={12} sm={6} md={4}>
-        <TextField
-          label={`${identifiers[blueAlliance[0].teamKey]} Balance Status`}
+        <StateToggle
+          title={<span>{identifiers[blueAlliance[0].teamKey]} Balanced</span>}
+          states={['N', 'Y']}
           value={match?.details?.blueRobotOneParked ?? 0}
-          type='number'
-          fullWidth
           disabled
+          fullWidth
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
-        <TextField
-          label={`${identifiers[blueAlliance[1].teamKey]} Balance Status`}
+        <StateToggle
+          title={<span>{identifiers[blueAlliance[1].teamKey]} Balanced</span>}
+          states={['N', 'Y']}
           value={match?.details?.blueRobotTwoParked ?? 0}
-          type='number'
-          fullWidth
           disabled
+          fullWidth
         />
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
-        <TextField
-          label={`${identifiers[blueAlliance[2].teamKey]} Balance Status`}
+        <StateToggle
+          title={<span>{identifiers[blueAlliance[2].teamKey]} Balanced</span>}
+          states={['N', 'Y']}
           value={match?.details?.blueRobotThreeParked ?? 0}
-          type='number'
-          fullWidth
           disabled
+          fullWidth
         />
       </Grid>
       <Grid item xs={12} sm={6} md={6}>
