@@ -2,6 +2,7 @@ import { createSocket } from '@toa-lib/client';
 import {
   FcsPackets,
   FieldOptions,
+  Match,
   MatchKey,
   MatchSocketEvent
 } from '@toa-lib/models';
@@ -140,8 +141,16 @@ export function sendPrestart(key: MatchKey): void {
   socket?.emit(MatchSocketEvent.PRESTART, key);
 }
 
+export function sendUpdate(match: Match<any>): void {
+  socket?.emit(MatchSocketEvent.UPDATE, match);
+}
+
 export function setDisplays(): void {
   socket?.emit(MatchSocketEvent.DISPLAY, 2);
+}
+
+export function once(key: MatchSocketEvent | string, callback: (data: any) => void): void {
+  socket?.once(key, callback);
 }
 
 export function sendPrepareField(

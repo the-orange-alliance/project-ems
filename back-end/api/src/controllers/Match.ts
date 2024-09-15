@@ -5,11 +5,12 @@ import {
   matchMakerParamsZod,
   matchZod,
   matchParticipantZod,
-  reconcileMatchParticipants
+  reconcileMatchParticipants,
+  getFunctionsBySeasonKey
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { validateBodyZ } from '../middleware/BodyValidator.js';
-import { DataNotFoundError } from '../util/Errors.js';
+import { DataNotFoundError, InvalidDataError } from '../util/Errors.js';
 import { join } from 'path';
 import { writeFile } from 'fs/promises';
 import {
@@ -138,6 +139,13 @@ router.get(
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
       );
 
+      const funcs = getFunctionsBySeasonKey(
+        eventKey.split('-')[0].toLowerCase()
+      );
+      const parsedDetails = funcs?.detailsFromJson
+        ? funcs.detailsFromJson(details)
+        : details;
+
       for (let i = 0; i < participants.length; i++) {
         const [team] = await db.selectAllWhere(
           'team',
@@ -147,7 +155,7 @@ router.get(
       }
 
       match.participants = participants;
-      match.details = details;
+      match.details = parsedDetails;
 
       res.send(match);
     } catch (e) {
@@ -233,9 +241,23 @@ router.patch(
     try {
       const { eventKey, tournamentKey, id } = req.params;
       const db = await getDB(eventKey);
+      const funcs = getFunctionsBySeasonKey(
+        eventKey.split('-')[0].toLowerCase()
+      );
+      // Ensure they are actually updating what they say they're updating
+      if (
+        req.body.eventKey !== eventKey ||
+        req.body.tournamentKey !== tournamentKey ||
+        String(req.body.id) !== id
+      ) {
+        return next(InvalidDataError);
+      }
+      const data = funcs?.detailsToJson
+        ? funcs.detailsToJson(req.body)
+        : req.body;
       await db.updateWhere(
         'match_detail',
-        req.body,
+        data,
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
       );
       res.status(200).send({});

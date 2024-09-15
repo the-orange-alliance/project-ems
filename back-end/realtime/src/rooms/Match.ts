@@ -177,6 +177,10 @@ export default class Match extends Room {
               })`
             );
           }
+        } else {
+          logger.error(
+            `Failed to adjust match details field ${numberAdjustment.key} - match details not found`
+          );
         }
       }
     );

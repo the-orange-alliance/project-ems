@@ -10,7 +10,7 @@ interface Props {
   value: number;
   fullWidth?: boolean;
   disabled?: boolean;
-  onChange: (value: number) => void;
+  onChange?: (value: number) => void;
 }
 
 export const StateToggle: FC<Props> = ({
@@ -23,6 +23,7 @@ export const StateToggle: FC<Props> = ({
 }) => {
   const handleChange = (event: MouseEvent, newValue: number) => {
     if (newValue != null) {
+      if (!onChange) return;
       onChange(newValue);
     }
   };

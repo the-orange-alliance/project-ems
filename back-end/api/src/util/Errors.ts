@@ -41,6 +41,11 @@ export const DataNotFoundError: ApiError = {
   message: 'Data requested was not found'
 };
 
+export const InvalidDataError: ApiError = {
+  code: 400,
+  message: 'The body sent does not match the route parameters. Please ensure the body matches the route.'
+};
+
 export const RouteNotFound: ApiError = {
   code: 404,
   message: 'Route not found.'

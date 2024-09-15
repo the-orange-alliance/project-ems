@@ -31,46 +31,86 @@ export const ScoreTable = {
 const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
   calculateRankings,
   calculatePlayoffsRankings,
-  calculateScore
+  calculateScore,
+  detailsToJson,
+  detailsFromJson
 };
 
 export interface MatchDetails extends MatchDetailBase {
   redResevoirConserved: number;
-  redNexusConserved: number;
   redFoodProduced: number;
   redFoodSecured: number;
-  redRobotOneBalanced: number;
-  redRobotTwoBalanced: number;
-  redRobotThreeBalanced: number;
+  redRobotOneParked: number;
+  redRobotTwoParked: number;
+  redRobotThreeParked: number;
+  redNexusState: AllianceNexusGoalState;
   blueResevoirConserved: number;
-  blueNexusConserved: number;
   blueFoodProduced: number;
   blueFoodSecured: number;
-  blueRobotOneBalanced: number;
-  blueRobotTwoBalanced: number;
-  blueRobotThreeBalanced: number;
+  blueRobotOneParked: number;
+  blueRobotTwoParked: number;
+  blueRobotThreeParked: number;
+  blueNexusState: AllianceNexusGoalState;
   coopertition: number;
+  fieldBalanced: number;
 }
+
+export enum NexusGoalState {
+  Empty = 0,
+  BlueOnly = 1,
+  GreenOnly = 2,
+  Full = 3
+}
+export interface AllianceNexusGoalState {
+  CW1: NexusGoalState;
+  CW2: NexusGoalState;
+  CW3: NexusGoalState;
+  CW4: NexusGoalState;
+  CW5: NexusGoalState;
+  CW6: NexusGoalState;
+  EC1: NexusGoalState;
+  EC2: NexusGoalState;
+  EC3: NexusGoalState;
+  EC4: NexusGoalState;
+  EC5: NexusGoalState;
+  EC6: NexusGoalState;
+}
+
+export const defaultNexusGoalState: AllianceNexusGoalState = {
+  CW1: NexusGoalState.Empty,
+  CW2: NexusGoalState.Empty,
+  CW3: NexusGoalState.Empty,
+  CW4: NexusGoalState.Empty,
+  CW5: NexusGoalState.Empty,
+  CW6: NexusGoalState.Empty,
+  EC1: NexusGoalState.Empty,
+  EC2: NexusGoalState.Empty,
+  EC3: NexusGoalState.Empty,
+  EC4: NexusGoalState.Empty,
+  EC5: NexusGoalState.Empty,
+  EC6: NexusGoalState.Empty
+};
 
 export const defaultMatchDetails: MatchDetails = {
   eventKey: '',
   id: -1,
   tournamentKey: '',
   redResevoirConserved: 0,
-  redNexusConserved: 0,
   redFoodProduced: 0,
   redFoodSecured: 0,
-  redRobotOneBalanced: 0,
-  redRobotTwoBalanced: 0,
-  redRobotThreeBalanced: 0,
+  redRobotOneParked: 0,
+  redRobotTwoParked: 0,
+  redRobotThreeParked: 0,
+  redNexusState: { ...defaultNexusGoalState },
   blueResevoirConserved: 0,
-  blueNexusConserved: 0,
   blueFoodProduced: 0,
   blueFoodSecured: 0,
-  blueRobotOneBalanced: 0,
-  blueRobotTwoBalanced: 0,
-  blueRobotThreeBalanced: 0,
-  coopertition: 0
+  blueRobotOneParked: 0,
+  blueRobotTwoParked: 0,
+  blueRobotThreeParked: 0,
+  blueNexusState: { ...defaultNexusGoalState },
+  coopertition: 0,
+  fieldBalanced: 0
 };
 
 export const isFeedingTheFutureDetails = (obj: unknown): obj is MatchDetails =>
@@ -91,6 +131,80 @@ export const FeedingTheFutureSeason: Season<MatchDetails, SeasonRanking> = {
   defaultMatchDetails,
   functions
 };
+
+function detailsToJson(details: MatchDetails): any {
+  const json: any =  {
+    ...details,
+    redCw1: details.redNexusState.CW1,
+    redCw2: details.redNexusState.CW2,
+    redCw3: details.redNexusState.CW3,
+    redCw4: details.redNexusState.CW4,
+    redCw5: details.redNexusState.CW5,
+    redCw6: details.redNexusState.CW6,
+    redEc1: details.redNexusState.EC1,
+    redEc2: details.redNexusState.EC2,
+    redEc3: details.redNexusState.EC3,
+    redEc4: details.redNexusState.EC4,
+    redEc5: details.redNexusState.EC5,
+    redEc6: details.redNexusState.EC6,
+    blueCw1: details.blueNexusState.CW1,
+    blueCw2: details.blueNexusState.CW2,
+    blueCw3: details.blueNexusState.CW3,
+    blueCw4: details.blueNexusState.CW4,
+    blueCw5: details.blueNexusState.CW5,
+    blueCw6: details.blueNexusState.CW6,
+    blueEc1: details.blueNexusState.EC1,
+    blueEc2: details.blueNexusState.EC2,
+    blueEc3: details.blueNexusState.EC3,
+    blueEc4: details.blueNexusState.EC4,
+    blueEc5: details.blueNexusState.EC5,
+    blueEc6: details.blueNexusState.EC6
+  };
+  delete json.redNexusState;
+  delete json.blueNexusState;
+  return json;
+}
+
+function detailsFromJson(json?: any): MatchDetails | undefined {
+  if (!json) return undefined;
+  const stripped = {} as any;
+  for (const key in json) {
+    if (!/^(red|blue)(Cw|Ec)/.test(key)) {
+      stripped[key] = json[key];
+    }
+  }
+  return {
+    ...stripped,
+    redNexusState: {
+      CW1: json.redCw1,
+      CW2: json.redCw2,
+      CW3: json.redCw3,
+      CW4: json.redCw4,
+      CW5: json.redCw5,
+      CW6: json.redCw6,
+      EC1: json.redEc1,
+      EC2: json.redEc2,
+      EC3: json.redEc3,
+      EC4: json.redEc4,
+      EC5: json.redEc5,
+      EC6: json.redEc6
+    },
+    blueNexusState: {
+      CW1: json.blueCw1,
+      CW2: json.blueCw2,
+      CW3: json.blueCw3,
+      CW4: json.blueCw4,
+      CW5: json.blueCw5,
+      CW6: json.blueCw6,
+      EC1: json.blueEc1,
+      EC2: json.blueEc2,
+      EC3: json.blueEc3,
+      EC4: json.blueEc4,
+      EC5: json.blueEc5,
+      EC6: json.blueEc6
+    }
+  };
+}
 
 /* Functions for calculating ranks. */
 function calculateRankings(
@@ -347,10 +461,30 @@ export function getResevoirPoints(details: MatchDetails): [number, number] {
 }
 
 export function getNexusPoints(details: MatchDetails): [number, number] {
-  return [
-    details.redNexusConserved * ScoreTable.Conserved,
-    details.blueNexusConserved * ScoreTable.Conserved
-  ];
+  let [red, blue] = [0, 0];
+  Object.keys(defaultNexusGoalState).forEach((key) => {
+    switch ((details.redNexusState as any)[key]) {
+      case NexusGoalState.BlueOnly:
+      case NexusGoalState.GreenOnly:
+        red += 1;
+        break;
+      case NexusGoalState.Full:
+        red += 2;
+        break;
+    }
+
+    switch ((details.blueNexusState as any)[key]) {
+      case NexusGoalState.BlueOnly:
+      case NexusGoalState.GreenOnly:
+        blue += 1;
+        break;
+      case NexusGoalState.Full:
+        blue += 2;
+        break;
+    }
+  });
+
+  return [red * ScoreTable.Conserved, blue * ScoreTable.Conserved];
 }
 
 export function getFoodProducedPoints(details: MatchDetails): [number, number] {
@@ -369,12 +503,13 @@ export function getFoodSecuredPoints(details: MatchDetails): [number, number] {
 
 export function getBalancedRobots(details: MatchDetails): number {
   return (
-    details.redRobotOneBalanced +
-    details.redRobotTwoBalanced +
-    details.redRobotThreeBalanced +
-    details.blueRobotOneBalanced +
-    details.blueRobotTwoBalanced +
-    details.blueRobotThreeBalanced
+    (details.redRobotOneParked +
+      details.redRobotTwoParked +
+      details.redRobotThreeParked +
+      details.blueRobotOneParked +
+      details.blueRobotTwoParked +
+      details.blueRobotThreeParked) *
+    details.fieldBalanced
   );
 }
 

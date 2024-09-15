@@ -20,12 +20,17 @@ export const HeadReferee: FC = () => {
       <SyncMatchStateToRecoil />
       <SyncMatchesToRecoil />
       <SyncMatchOccurringToRecoil />
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <Box
+        sx={{ display: 'flex', flexDirection: 'column', gap: '16px', mb: 1 }}
+      >
         <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
           <seasonComponents.RefereeScoreSheet alliance='red' />
           <seasonComponents.RefereeScoreSheet alliance='blue' />
         </Box>
       </Box>
+      {seasonComponents.HeadRefExtrasSheet && (
+        <seasonComponents.HeadRefExtrasSheet />
+      )}
     </RefereeLayout>
   );
 };

@@ -1,20 +1,26 @@
-import { FC } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { Alliance, HydrogenHorizons, Match } from '@toa-lib/models';
+import {
+  Alliance,
+  Match,
+  MatchDetailBase
+} from '@toa-lib/models';
 import { useRecoilValue } from 'recoil';
 import { matchOccurringAtom } from '@stores/recoil';
 import { NumberInput } from 'src/components/inputs/number-input';
 
-interface Props {
+interface Props<DetailsType extends MatchDetailBase> {
   alliance: Alliance;
-  onMatchItemUpdate: <K extends keyof Match<HydrogenHorizons.MatchDetails>>(
+  onMatchItemUpdate: <K extends keyof Match<DetailsType>>(
     key: K,
-    value: Match<HydrogenHorizons.MatchDetails>[K]
+    value: Match<DetailsType>[K]
   ) => void;
 }
 
-const PenaltySheet: FC<Props> = ({ alliance, onMatchItemUpdate }) => {
+const PenaltySheet = <DetailsType extends MatchDetailBase>({
+  alliance,
+  onMatchItemUpdate
+}: Props<DetailsType>) => {
   const match = useRecoilValue(matchOccurringAtom);
 
   const handleFoulChange = (minPen: number) => {
