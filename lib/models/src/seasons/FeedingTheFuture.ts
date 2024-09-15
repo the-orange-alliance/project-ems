@@ -133,7 +133,7 @@ export const FeedingTheFutureSeason: Season<MatchDetails, SeasonRanking> = {
 };
 
 function detailsToJson(details: MatchDetails): any {
-  return {
+  const json: any =  {
     ...details,
     redCw1: details.redNexusState.CW1,
     redCw2: details.redNexusState.CW2,
@@ -160,9 +160,13 @@ function detailsToJson(details: MatchDetails): any {
     blueEc5: details.blueNexusState.EC5,
     blueEc6: details.blueNexusState.EC6
   };
+  delete json.redNexusState;
+  delete json.blueNexusState;
+  return json;
 }
 
-function detailsFromJson(json: any): MatchDetails {
+function detailsFromJson(json?: any): MatchDetails | undefined {
+  if (!json) return undefined;
   const stripped = {} as any;
   for (const key in json) {
     if (!/^(red|blue)(Cw|Ec)/.test(key)) {

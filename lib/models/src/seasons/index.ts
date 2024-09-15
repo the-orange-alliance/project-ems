@@ -42,7 +42,7 @@ export interface SeasonFunctions<T extends MatchDetailBase, J extends Ranking> {
   calculateTeleScore?: (match: Match<T>) => [number, number];
   calculateEndScore?: (match: Match<T>) => [number, number];
   detailsToJson?: (details: T) => any;
-  detailsFromJson?: (json: any) => T;
+  detailsFromJson?: (json?: any) => T | undefined;
 }
 
 export function getFunctionsBySeasonKey<

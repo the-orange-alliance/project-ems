@@ -139,7 +139,9 @@ router.get(
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
       );
 
-      const funcs = getFunctionsBySeasonKey(match.seasonKey);
+      const funcs = getFunctionsBySeasonKey(
+        eventKey.split('-')[0].toLowerCase()
+      );
       const parsedDetails = funcs?.detailsFromJson
         ? funcs.detailsFromJson(details)
         : details;
@@ -157,6 +159,7 @@ router.get(
 
       res.send(match);
     } catch (e) {
+      console.log(e);
       return next(e);
     }
   }
@@ -239,7 +242,9 @@ router.patch(
     try {
       const { eventKey, tournamentKey, id } = req.params;
       const db = await getDB(eventKey);
-      const funcs = getFunctionsBySeasonKey(eventKey.split('-')[0]);
+      const funcs = getFunctionsBySeasonKey(
+        eventKey.split('-')[0].toLowerCase()
+      );
       const data = funcs?.detailsToJson
         ? funcs.detailsToJson(req.body)
         : req.body;
