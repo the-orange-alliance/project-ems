@@ -6,6 +6,7 @@ import { RedScoreBreakdown, BlueScoreBreakdown } from './score-breakdowns';
 import { RankingsReport } from './rankings-report';
 import { Settings } from './settings';
 import { useFieldControl } from './field-control';
+import HeadRefExtrasSheet from './referee/HRExtra';
 
 export const fgc2024Components: SeasonComponents<
   FeedingTheFuture.MatchDetails,
@@ -16,6 +17,7 @@ export const fgc2024Components: SeasonComponents<
   RedScoreBreakdown,
   BlueScoreBreakdown,
   RankingsReport,
+  HeadRefExtrasSheet,
   Settings,
   useFieldControl
 };

@@ -15,7 +15,10 @@ import { useTeamsForEvent } from 'src/api/use-team-data';
 import { NumberInput } from 'src/components/inputs/number-input';
 import { StateToggle } from 'src/components/inputs/state-toggle';
 import NexusScoresheet from '../nexus-sheets/nexus-scoresheet';
-import { AllianceNexusGoalState, NexusGoalState } from '@toa-lib/models/build/seasons/FeedingTheFuture';
+import {
+  AllianceNexusGoalState,
+  NexusGoalState
+} from '@toa-lib/models/build/seasons/FeedingTheFuture';
 
 interface Props {
   alliance: Alliance;
@@ -98,17 +101,17 @@ const TeleScoreSheet: FC<Props> = ({
   const getBalanceStatus = (station: number): number | undefined => {
     switch (station) {
       case 11:
-        return match.details?.redRobotOneBalanced;
+        return match.details?.redRobotOneParked;
       case 12:
-        return match.details?.redRobotTwoBalanced;
+        return match.details?.redRobotTwoParked;
       case 13:
-        return match.details?.redRobotThreeBalanced;
+        return match.details?.redRobotThreeParked;
       case 21:
-        return match.details?.blueRobotOneBalanced;
+        return match.details?.blueRobotOneParked;
       case 22:
-        return match.details?.blueRobotTwoBalanced;
+        return match.details?.blueRobotTwoParked;
       case 23:
-        return match.details?.blueRobotThreeBalanced;
+        return match.details?.blueRobotThreeParked;
       default:
         return 0;
     }
@@ -120,27 +123,27 @@ const TeleScoreSheet: FC<Props> = ({
     } else {
       onMatchDetailsUpdate('blueNexusState', state);
     }
-  }
+  };
 
-  const updateBalance = (station: number, value: number) => {
+  const updateParking = (station: number, value: number) => {
     switch (station) {
       case 11:
-        onMatchDetailsUpdate('redRobotOneBalanced', value);
+        onMatchDetailsUpdate('redRobotOneParked', value);
         break;
       case 12:
-        onMatchDetailsUpdate('redRobotTwoBalanced', value);
+        onMatchDetailsUpdate('redRobotTwoParked', value);
         break;
       case 13:
-        onMatchDetailsUpdate('redRobotThreeBalanced', value);
+        onMatchDetailsUpdate('redRobotThreeParked', value);
         break;
       case 21:
-        onMatchDetailsUpdate('blueRobotOneBalanced', value);
+        onMatchDetailsUpdate('blueRobotOneParked', value);
         break;
       case 22:
-        onMatchDetailsUpdate('blueRobotTwoBalanced', value);
+        onMatchDetailsUpdate('blueRobotTwoParked', value);
         break;
       case 23:
-        onMatchDetailsUpdate('blueRobotThreeBalanced', value);
+        onMatchDetailsUpdate('blueRobotThreeParked', value);
         break;
     }
   };
@@ -193,7 +196,7 @@ const TeleScoreSheet: FC<Props> = ({
       {participants?.map((p) => {
         const team = teams?.find((t) => t.teamKey === p.teamKey);
         const update = (value: number) => {
-          updateBalance(p.station, value);
+          updateParking(p.station, value);
         };
 
         return (
@@ -207,10 +210,10 @@ const TeleScoreSheet: FC<Props> = ({
                       className={`flag-icon flag-icon-${team.countryCode}`}
                     />
                   )}
-                  {identifiers[p.teamKey]}&nbsp;Balance
+                  {identifiers[p.teamKey]}&nbsp;Parked
                 </span>
               }
-              states={['Unbalanced', 'Balanced']}
+              states={['Not Parked', 'Parked']}
               value={getBalanceStatus(p.station) ?? 0}
               onChange={update}
               fullWidth

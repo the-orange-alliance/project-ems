@@ -1,12 +1,12 @@
 ALTER TABLE "ranking" ADD COLUMN rankingScore INT;
 ALTER TABLE "ranking" ADD COLUMN highestScore INT;
-ALTER TABLE "ranking" ADD COLUMN foodSecuredPoints INT;
 
 ALTER TABLE "match_detail" ADD COLUMN redResevoirConserved;
 ALTER TABLE "match_detail" ADD COLUMN redFoodProduced;
 ALTER TABLE "match_detail" ADD COLUMN redFoodSecured;
-ALTER TABLE "match_detail" ADD COLUMN redRobotOneBalanced;
-ALTER TABLE "match_detail" ADD COLUMN redRobotTwoBalanced;
+ALTER TABLE "match_detail" ADD COLUMN redRobotOneParked;
+ALTER TABLE "match_detail" ADD COLUMN redRobotTwoParked;
+ALTER TABLE "match_detail" ADD COLUMN redRobotTwoParked;
 ALTER TABLE "match_detail" ADD COLUMN redCw1 INT;
 ALTER TABLE "match_detail" ADD COLUMN redCw2 INT;
 ALTER TABLE "match_detail" ADD COLUMN redCw3 INT;
@@ -23,9 +23,9 @@ ALTER TABLE "match_detail" ADD COLUMN redEc6 INT;
 ALTER TABLE "match_detail" ADD COLUMN blueResevoirConserved;
 ALTER TABLE "match_detail" ADD COLUMN blueFoodProduced;
 ALTER TABLE "match_detail" ADD COLUMN blueFoodSecured;
-ALTER TABLE "match_detail" ADD COLUMN blueRobotOneBalanced;
-ALTER TABLE "match_detail" ADD COLUMN blueRobotTwoBalanced;
-ALTER TABLE "match_detail" ADD COLUMN blueRobotThreeBalanced;
+ALTER TABLE "match_detail" ADD COLUMN blueRobotOneParked;
+ALTER TABLE "match_detail" ADD COLUMN blueRobotTwoParked;
+ALTER TABLE "match_detail" ADD COLUMN blueRobotThreeParked;
 ALTER TABLE "match_detail" ADD COLUMN blueCw1 INT;
 ALTER TABLE "match_detail" ADD COLUMN blueCw2 INT;
 ALTER TABLE "match_detail" ADD COLUMN blueCw3 INT;
@@ -40,3 +40,4 @@ ALTER TABLE "match_detail" ADD COLUMN blueEc5 INT;
 ALTER TABLE "match_detail" ADD COLUMN blueEc6 INT;
 
 ALTER TABLE "match_detail" ADD COLUMN coopertition;
+ALTER TABLE "match_detail" ADD COLUMN fieldBalanced;

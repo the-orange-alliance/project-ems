@@ -40,18 +40,19 @@ export interface MatchDetails extends MatchDetailBase {
   redResevoirConserved: number;
   redFoodProduced: number;
   redFoodSecured: number;
-  redRobotOneBalanced: number;
-  redRobotTwoBalanced: number;
-  redRobotThreeBalanced: number;
+  redRobotOneParked: number;
+  redRobotTwoParked: number;
+  redRobotThreeParked: number;
   redNexusState: AllianceNexusGoalState;
   blueResevoirConserved: number;
   blueFoodProduced: number;
   blueFoodSecured: number;
-  blueRobotOneBalanced: number;
-  blueRobotTwoBalanced: number;
-  blueRobotThreeBalanced: number;
+  blueRobotOneParked: number;
+  blueRobotTwoParked: number;
+  blueRobotThreeParked: number;
   blueNexusState: AllianceNexusGoalState;
   coopertition: number;
+  fieldBalanced: number;
 }
 
 export enum NexusGoalState {
@@ -97,18 +98,19 @@ export const defaultMatchDetails: MatchDetails = {
   redResevoirConserved: 0,
   redFoodProduced: 0,
   redFoodSecured: 0,
-  redRobotOneBalanced: 0,
-  redRobotTwoBalanced: 0,
-  redRobotThreeBalanced: 0,
-  redNexusState: {...defaultNexusGoalState},
+  redRobotOneParked: 0,
+  redRobotTwoParked: 0,
+  redRobotThreeParked: 0,
+  redNexusState: { ...defaultNexusGoalState },
   blueResevoirConserved: 0,
   blueFoodProduced: 0,
   blueFoodSecured: 0,
-  blueRobotOneBalanced: 0,
-  blueRobotTwoBalanced: 0,
-  blueRobotThreeBalanced: 0,
-  blueNexusState: {...defaultNexusGoalState},
-  coopertition: 0
+  blueRobotOneParked: 0,
+  blueRobotTwoParked: 0,
+  blueRobotThreeParked: 0,
+  blueNexusState: { ...defaultNexusGoalState },
+  coopertition: 0,
+  fieldBalanced: 0
 };
 
 export const isFeedingTheFutureDetails = (obj: unknown): obj is MatchDetails =>
@@ -478,10 +480,7 @@ export function getNexusPoints(details: MatchDetails): [number, number] {
     }
   });
 
-  return [
-    red * ScoreTable.Conserved,
-    blue * ScoreTable.Conserved
-  ];
+  return [red * ScoreTable.Conserved, blue * ScoreTable.Conserved];
 }
 
 export function getFoodProducedPoints(details: MatchDetails): [number, number] {
@@ -500,12 +499,13 @@ export function getFoodSecuredPoints(details: MatchDetails): [number, number] {
 
 export function getBalancedRobots(details: MatchDetails): number {
   return (
-    details.redRobotOneBalanced +
-    details.redRobotTwoBalanced +
-    details.redRobotThreeBalanced +
-    details.blueRobotOneBalanced +
-    details.blueRobotTwoBalanced +
-    details.blueRobotThreeBalanced
+    (details.redRobotOneParked +
+      details.redRobotTwoParked +
+      details.redRobotThreeParked +
+      details.blueRobotOneParked +
+      details.blueRobotTwoParked +
+      details.blueRobotThreeParked) *
+    details.fieldBalanced
   );
 }
 
