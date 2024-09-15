@@ -5,6 +5,7 @@ import { Checkbox, Grid, Stack, Typography } from '@mui/material';
 import styled from '@emotion/styled';
 import {
   AllianceNexusGoalState,
+  defaultNexusGoalState,
   NexusGoalState
 } from '@toa-lib/models/build/seasons/FeedingTheFuture';
 
@@ -37,7 +38,11 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
   alliance,
   onChange
 }) => {
-  if (!state) return null; // No details, no scoresheet
+  // If we're not passed in a state, we'll use the default state and disable the sheet
+  if (!state) {
+    state = { ...defaultNexusGoalState };
+    disabled = true;
+  }
 
   const onGoalChange = (
     goal: keyof AllianceNexusGoalState,

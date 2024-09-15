@@ -53,7 +53,7 @@ export const RedScoreBreakdown: FC<
       <Grid item xs={12} sm={6} md={4}>
         <TextField
           label={`${identifiers[redAlliance[0].teamKey]} Balance Status`}
-          value={match?.details?.redRobotOneBalanced ?? 0}
+          value={match?.details?.redRobotOneParked ?? 0}
           type='number'
           fullWidth
           disabled
@@ -62,7 +62,7 @@ export const RedScoreBreakdown: FC<
       <Grid item xs={12} sm={6} md={4}>
         <TextField
           label={`${identifiers[redAlliance[1].teamKey]} Balance Status`}
-          value={match?.details?.redRobotTwoBalanced ?? 0}
+          value={match?.details?.redRobotTwoParked ?? 0}
           type='number'
           fullWidth
           disabled
@@ -71,7 +71,7 @@ export const RedScoreBreakdown: FC<
       <Grid item xs={12} sm={6} md={4}>
         <TextField
           label={`${identifiers[redAlliance[2].teamKey]} Balance Status`}
-          value={match?.details?.redRobotThreeBalanced ?? 0}
+          value={match?.details?.redRobotThreeParked ?? 0}
           type='number'
           fullWidth
           disabled
@@ -149,7 +149,7 @@ export const BlueScoreBreakdown: FC<
       <Grid item xs={12} sm={6} md={4}>
         <TextField
           label={`${identifiers[blueAlliance[0].teamKey]} Balance Status`}
-          value={match?.details?.blueRobotOneBalanced ?? 0}
+          value={match?.details?.blueRobotOneParked ?? 0}
           type='number'
           fullWidth
           disabled
@@ -158,7 +158,7 @@ export const BlueScoreBreakdown: FC<
       <Grid item xs={12} sm={6} md={4}>
         <TextField
           label={`${identifiers[blueAlliance[1].teamKey]} Balance Status`}
-          value={match?.details?.blueRobotTwoBalanced ?? 0}
+          value={match?.details?.blueRobotTwoParked ?? 0}
           type='number'
           fullWidth
           disabled
@@ -167,7 +167,7 @@ export const BlueScoreBreakdown: FC<
       <Grid item xs={12} sm={6} md={4}>
         <TextField
           label={`${identifiers[blueAlliance[2].teamKey]} Balance Status`}
-          value={match?.details?.blueRobotThreeBalanced ?? 0}
+          value={match?.details?.blueRobotThreeParked ?? 0}
           type='number'
           fullWidth
           disabled
