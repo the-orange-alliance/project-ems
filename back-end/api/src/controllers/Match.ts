@@ -5,7 +5,8 @@ import {
   matchMakerParamsZod,
   matchZod,
   matchParticipantZod,
-  reconcileMatchParticipants
+  reconcileMatchParticipants,
+  getFunctionsBySeasonKey
 } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { validateBodyZ } from '../middleware/BodyValidator.js';
@@ -138,6 +139,11 @@ router.get(
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
       );
 
+      const funcs = getFunctionsBySeasonKey(match.seasonKey);
+      const parsedDetails = funcs?.detailsFromJson
+        ? funcs.detailsFromJson(details)
+        : details;
+
       for (let i = 0; i < participants.length; i++) {
         const [team] = await db.selectAllWhere(
           'team',
@@ -147,7 +153,7 @@ router.get(
       }
 
       match.participants = participants;
-      match.details = details;
+      match.details = parsedDetails;
 
       res.send(match);
     } catch (e) {
@@ -233,9 +239,13 @@ router.patch(
     try {
       const { eventKey, tournamentKey, id } = req.params;
       const db = await getDB(eventKey);
+      const funcs = getFunctionsBySeasonKey(eventKey.split('-')[0]);
+      const data = funcs?.detailsToJson
+        ? funcs.detailsToJson(req.body)
+        : req.body;
       await db.updateWhere(
         'match_detail',
-        req.body,
+        data,
         `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
       );
       res.status(200).send({});

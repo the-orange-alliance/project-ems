@@ -14,6 +14,8 @@ import { matchOccurringAtom } from 'src/stores/recoil';
 import { useTeamsForEvent } from 'src/api/use-team-data';
 import { NumberInput } from 'src/components/inputs/number-input';
 import { StateToggle } from 'src/components/inputs/state-toggle';
+import NexusScoresheet from '../nexus-sheets/nexus-scoresheet';
+import { AllianceNexusGoalState, NexusGoalState } from '@toa-lib/models/build/seasons/FeedingTheFuture';
 
 interface Props {
   alliance: Alliance;
@@ -67,33 +69,13 @@ const TeleScoreSheet: FC<Props> = ({
     );
   };
 
-  const handleNexusChange = (newValue: number, manuallyTyped: boolean) => {
+  const handleFoodSecuredChange = (
+    newValue: number,
+    manuallyTyped: boolean
+  ) => {
     if (manuallyTyped) {
       onMatchDetailsUpdate(
-        alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
-        newValue
-      );
-    }
-  };
-
-  const handleNexusDecrement = () => {
-    onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
-      -1
-    );
-  };
-
-  const handleNexusIncrement = () => {
-    onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
-      1
-    );
-  };
-
-  const handleFoodSecuredChange = (newValue: number, manuallyTyped: boolean) => {
-    if (manuallyTyped) {
-      onMatchDetailsUpdate(
-        alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
+        alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
         newValue
       );
     }
@@ -101,14 +83,14 @@ const TeleScoreSheet: FC<Props> = ({
 
   const handleFoodSecuredDecrement = () => {
     onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
+      alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
       -1
     );
   };
 
   const handleFoodSecuredIncrement = () => {
     onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
+      alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
       1
     );
   };
@@ -131,6 +113,14 @@ const TeleScoreSheet: FC<Props> = ({
         return 0;
     }
   };
+
+  const updateNexusState = (state: AllianceNexusGoalState) => {
+    if (alliance === 'red') {
+      onMatchDetailsUpdate('redNexusState', state);
+    } else {
+      onMatchDetailsUpdate('blueNexusState', state);
+    }
+  }
 
   const updateBalance = (station: number, value: number) => {
     switch (station) {
@@ -175,22 +165,6 @@ const TeleScoreSheet: FC<Props> = ({
       </Grid>
       <Grid item xs={12} md={6} lg={6}>
         <Typography variant='h6' textAlign='center'>
-          Nexus Scored
-        </Typography>
-        <NumberInput
-          value={
-            alliance === 'red'
-              ? match.details.redNexusConserved
-              : match.details.blueNexusConserved
-          }
-          textFieldDisabled
-          onChange={handleNexusChange}
-          onIncrement={handleNexusIncrement}
-          onDecrement={handleNexusDecrement}
-        />
-      </Grid>
-      <Grid item xs={12} md={6} lg={6}>
-        <Typography variant='h6' textAlign='center'>
           Food Secured
         </Typography>
         <NumberInput
@@ -203,6 +177,17 @@ const TeleScoreSheet: FC<Props> = ({
           onChange={handleFoodSecuredChange}
           onIncrement={handleFoodSecuredIncrement}
           onDecrement={handleFoodSecuredDecrement}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <NexusScoresheet
+          state={
+            alliance === 'red'
+              ? match.details.redNexusState
+              : match.details.blueNexusState
+          }
+          onChange={updateNexusState}
+          alliance={alliance}
         />
       </Grid>
       {participants?.map((p) => {

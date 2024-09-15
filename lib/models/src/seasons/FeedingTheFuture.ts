@@ -31,7 +31,9 @@ export const ScoreTable = {
 const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
   calculateRankings,
   calculatePlayoffsRankings,
-  calculateScore
+  calculateScore,
+  detailsToJson,
+  detailsFromJson
 };
 
 export interface MatchDetails extends MatchDetailBase {
@@ -127,6 +129,76 @@ export const FeedingTheFutureSeason: Season<MatchDetails, SeasonRanking> = {
   defaultMatchDetails,
   functions
 };
+
+function detailsToJson(details: MatchDetails): any {
+  return {
+    ...details,
+    redCw1: details.redNexusState.CW1,
+    redCw2: details.redNexusState.CW2,
+    redCw3: details.redNexusState.CW3,
+    redCw4: details.redNexusState.CW4,
+    redCw5: details.redNexusState.CW5,
+    redCw6: details.redNexusState.CW6,
+    redEc1: details.redNexusState.EC1,
+    redEc2: details.redNexusState.EC2,
+    redEc3: details.redNexusState.EC3,
+    redEc4: details.redNexusState.EC4,
+    redEc5: details.redNexusState.EC5,
+    redEc6: details.redNexusState.EC6,
+    blueCw1: details.blueNexusState.CW1,
+    blueCw2: details.blueNexusState.CW2,
+    blueCw3: details.blueNexusState.CW3,
+    blueCw4: details.blueNexusState.CW4,
+    blueCw5: details.blueNexusState.CW5,
+    blueCw6: details.blueNexusState.CW6,
+    blueEc1: details.blueNexusState.EC1,
+    blueEc2: details.blueNexusState.EC2,
+    blueEc3: details.blueNexusState.EC3,
+    blueEc4: details.blueNexusState.EC4,
+    blueEc5: details.blueNexusState.EC5,
+    blueEc6: details.blueNexusState.EC6
+  };
+}
+
+function detailsFromJson(json: any): MatchDetails {
+  const stripped = {} as any;
+  for (const key in json) {
+    if (!/^(red|blue)(Cw|Ec)/.test(key)) {
+      stripped[key] = json[key];
+    }
+  }
+  return {
+    ...stripped,
+    redNexusState: {
+      CW1: json.redCw1,
+      CW2: json.redCw2,
+      CW3: json.redCw3,
+      CW4: json.redCw4,
+      CW5: json.redCw5,
+      CW6: json.redCw6,
+      EC1: json.redEc1,
+      EC2: json.redEc2,
+      EC3: json.redEc3,
+      EC4: json.redEc4,
+      EC5: json.redEc5,
+      EC6: json.redEc6
+    },
+    blueNexusState: {
+      CW1: json.blueCw1,
+      CW2: json.blueCw2,
+      CW3: json.blueCw3,
+      CW4: json.blueCw4,
+      CW5: json.blueCw5,
+      CW6: json.blueCw6,
+      EC1: json.blueEc1,
+      EC2: json.blueEc2,
+      EC3: json.blueEc3,
+      EC4: json.blueEc4,
+      EC5: json.blueEc5,
+      EC6: json.blueEc6
+    }
+  };
+}
 
 /* Functions for calculating ranks. */
 function calculateRankings(

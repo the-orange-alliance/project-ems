@@ -3,6 +3,7 @@ import { FC } from 'react';
 import { ScoreBreakdownProps } from '..';
 import { Grid, TextField } from '@mui/material';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
+import NexusScoresheet from './nexus-sheets/nexus-scoresheet';
 
 export const RedScoreBreakdown: FC<
   ScoreBreakdownProps<FeedingTheFuture.MatchDetails>
@@ -12,7 +13,7 @@ export const RedScoreBreakdown: FC<
   return (
     <Grid container spacing={3}>
       {/* RED ALLIANCE */}
-      <Grid item xs={12} sm={6} md={6}>
+      <Grid item xs={12} sm={4} md={4}>
         <TextField
           label='Red Resevoir Conserved'
           value={match?.details?.redResevoirConserved ?? 0}
@@ -21,16 +22,7 @@ export const RedScoreBreakdown: FC<
           disabled
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={6}>
-        <TextField
-          label='Red Nexus Conserved'
-          value={match?.details?.redNexusConserved ?? 0}
-          type='number'
-          fullWidth
-          disabled
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={6}>
+      <Grid item xs={12} sm={4} md={4}>
         <TextField
           label='Red Food Produced'
           value={match?.details?.redFoodProduced ?? 0}
@@ -39,7 +31,7 @@ export const RedScoreBreakdown: FC<
           disabled
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={6}>
+      <Grid item xs={12} sm={4} md={4}>
         <TextField
           label='Red Food Secured'
           value={match?.details?.redFoodSecured ?? 0}
@@ -48,6 +40,15 @@ export const RedScoreBreakdown: FC<
           disabled
         />
       </Grid>
+      {/* Red Alliance Stepped Nexus */}
+      <Grid item xs={12} sm={12} md={12}>
+        <NexusScoresheet
+          state={match?.details?.redNexusState}
+          disabled
+          alliance='red'
+        />
+      </Grid>
+
       {/* RED ALLIANCE BALANCE STATUS */}
       <Grid item xs={12} sm={6} md={4}>
         <TextField
@@ -107,7 +108,7 @@ export const BlueScoreBreakdown: FC<
   return (
     <Grid container spacing={3}>
       {/* BLUE ALLIANCE */}
-      <Grid item xs={12} sm={6} md={6}>
+      <Grid item xs={12} sm={4} md={4}>
         <TextField
           label='Blue Resevoir Conserved'
           value={match?.details?.blueResevoirConserved ?? 0}
@@ -116,16 +117,7 @@ export const BlueScoreBreakdown: FC<
           disabled
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={6}>
-        <TextField
-          label='Blue Nexus Conserved'
-          value={match?.details?.blueNexusConserved ?? 0}
-          type='number'
-          fullWidth
-          disabled
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={6}>
+      <Grid item xs={12} sm={4} md={4}>
         <TextField
           label='Blue Food Produced'
           value={match?.details?.blueFoodProduced ?? 0}
@@ -134,7 +126,7 @@ export const BlueScoreBreakdown: FC<
           disabled
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={6}>
+      <Grid item xs={12} sm={4} md={4}>
         <TextField
           label='Blue Food Secured'
           value={match?.details?.blueFoodSecured ?? 0}
@@ -143,6 +135,16 @@ export const BlueScoreBreakdown: FC<
           disabled
         />
       </Grid>
+
+      {/* Blue Alliance Stepped Nexus */}
+      <Grid item xs={12} sm={12} md={12}>
+        <NexusScoresheet
+          state={match?.details?.blueNexusState}
+          disabled
+          alliance='blue'
+        />
+      </Grid>
+
       {/* BLUE ALLIANCE BALANCE STATUS */}
       <Grid item xs={12} sm={6} md={4}>
         <TextField

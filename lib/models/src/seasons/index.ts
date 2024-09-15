@@ -41,6 +41,8 @@ export interface SeasonFunctions<T extends MatchDetailBase, J extends Ranking> {
   calculateAutoScore?: (match: Match<T>) => [number, number];
   calculateTeleScore?: (match: Match<T>) => [number, number];
   calculateEndScore?: (match: Match<T>) => [number, number];
+  detailsToJson?: (details: T) => any;
+  detailsFromJson?: (json: any) => T;
 }
 
 export function getFunctionsBySeasonKey<
