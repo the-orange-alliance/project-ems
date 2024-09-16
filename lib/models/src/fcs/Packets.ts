@@ -38,7 +38,7 @@ function createNexusGoalSegments(
   return segments;
 }
 
-function applyPatternToStrips(
+export function applyPatternToStrips(
   color: string,
   strips: LedStrip[],
   packet: FieldControlUpdatePacket
@@ -83,7 +83,7 @@ function applySetpointToMotors(
 
 type WledController = 'center' | 'red' | 'blue';
 
-class LedStrip {
+export class LedStrip {
   public static readonly RED_SIDE_GOALS = [
     new LedStrip('red', 0),
     new LedStrip('red', 1),
@@ -350,7 +350,7 @@ export function getFcsPackets(fieldOptions: FieldOptions): FcsPackets {
   };
 }
 
-function applyStateToGoal(
+export function applyStateToGoal(
   state: NexusGoalState,
   strip: LedStrip,
   result: FieldControlUpdatePacket

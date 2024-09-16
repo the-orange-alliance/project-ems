@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import {
   defaultFieldOptions,
   FcsPackets,
+  FeedingTheFuture,
   FieldControlUpdatePacket,
   FieldOptions,
   getFcsPackets,
@@ -19,6 +20,8 @@ import {
   buildWledSetColorPacket
 } from '../util/WLEDHelper.js';
 import logger from '../util/Logger.js';
+import { matchUpdateCallback } from '../util/FeedingTheFutureCallbacks.js';
+import { defaultMatchDetails } from '@toa-lib/models/build/seasons/FeedingTheFuture.js';
 
 export default class FCS extends Room {
   private readonly latestFcsStatus: FieldControlUpdatePacket = {
@@ -28,6 +31,8 @@ export default class FCS extends Room {
   private fcsPackets: FcsPackets = getFcsPackets(defaultFieldOptions);
   private wledSockets: Record<string, WebSocket> = {};
   public readonly matchRoom: Match;
+  private previousMatchDetails: FeedingTheFuture.MatchDetails =
+    defaultMatchDetails;
 
   public constructor(server: Server, matchRoom: Match) {
     super(server, 'fcs');
@@ -58,7 +63,13 @@ export default class FCS extends Room {
     matchRoom.localEmitter.on(
       MatchSocketEvent.UPDATE,
       (match: MatchObj<any>) => {
-        this.broadcastFcsUpdate(processMatchData(match.details));
+        if (!match.details) return;
+        matchUpdateCallback(
+          this.previousMatchDetails,
+          match.details,
+          this.broadcastFcsUpdate
+        );
+        this.previousMatchDetails = { ...match.details };
       }
     );
   }
@@ -102,7 +113,7 @@ export default class FCS extends Room {
     socket.emit('fcs:update', this.latestFcsStatus);
   }
 
-  private broadcastFcsUpdate(update: FieldControlUpdatePacket): void {
+  private broadcastFcsUpdate = (update: FieldControlUpdatePacket): void => {
     this.broadcast().emit('fcs:update', update);
 
     // Handle wleds
@@ -165,7 +176,7 @@ export default class FCS extends Room {
         }
       }
     }
-  }
+  };
 
   // TODO(jan): Handle disconnects? Regular websockets suck
 
