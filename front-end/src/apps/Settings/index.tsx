@@ -75,6 +75,9 @@ export const SettingsApp: FC = () => {
             <FrcFmsSettingsTab />
           </TabPanel>
         </TabContext>
+        <Typography variant='caption' sx={{ m: 1 }}>
+          ** Settings Save Automatically
+        </Typography>
       </Paper>
     </PaperLayout>
   );
