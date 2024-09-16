@@ -63,6 +63,7 @@ export interface SeasonComponents<
   RedScoreBreakdown: FC<ScoreBreakdownProps<T>>;
   BlueScoreBreakdown: FC<ScoreBreakdownProps<T>>;
   RefereeScoreSheet: FC<RefereeScoreSheetProps>;
+  HeadRefExtrasSheet?: FC;
   RankingsReport?: FC<RankingsReportProps<U>>;
   useFieldControl?: () => FieldControlCallbacks<T>;
 }

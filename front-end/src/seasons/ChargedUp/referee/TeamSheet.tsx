@@ -5,7 +5,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import Typography from '@mui/material/Typography';
 import { matchOccurringAtom } from '@stores/recoil';
 import { useSocket } from 'src/api/use-socket';
-import { MatchSocketEvent } from '@toa-lib/models';
+import { MatchParticipant, MatchSocketEvent } from '@toa-lib/models';
 
 interface Props {
   station: number;
@@ -13,10 +13,8 @@ interface Props {
 
 const TeamSheet: FC<Props> = ({ station }) => {
   const [socket] = useSocket();
-  const match = useRecoilValue(matchOccurringAtom);
-  const [participant, setParticipant] = useRecoilState(
-    matchInProgressParticipantsByStationSelectorFam(station)
-  );
+  const [match, setMatch] = useRecoilState(matchOccurringAtom);
+  const participant = match?.participants?.find((p) => p.station === station);
 
   const [updateReady, setUpdateReady] = useState(false);
 
@@ -26,6 +24,22 @@ const TeamSheet: FC<Props> = ({ station }) => {
       setUpdateReady(false);
     }
   }, [updateReady]);
+
+  const setParticipant = (participant: MatchParticipant) => {
+    if (match && match.participants) {
+      setMatch(
+        Object.assign(
+          {},
+          {
+            ...match,
+            participants: match.participants.map((p) =>
+              p.station === station ? participant : p
+            )
+          }
+        )
+      );
+    }
+  };
 
   const handleCardChange = (cardStatus: number) => {
     if (participant) {

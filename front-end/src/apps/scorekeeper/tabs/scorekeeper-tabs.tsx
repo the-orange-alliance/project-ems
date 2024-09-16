@@ -11,6 +11,7 @@ import { currentMatchIdAtom, matchOccurringAtom } from 'src/stores/recoil';
 import { useMatchControl } from '../hooks/use-match-control';
 import { MatchState } from '@toa-lib/models';
 import { ScorekeeperDetails } from './scorekeeper-details';
+import { useActiveFieldNumbers } from 'src/components/sync-effects/sync-fields-to-recoil';
 
 interface Props {
   eventKey?: string;
@@ -24,6 +25,7 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
   const [matchId, setMatchId] = useRecoilState(currentMatchIdAtom);
   const [value, setValue] = useState(0);
   const setMatchOccurring = useSetRecoilState(matchOccurringAtom);
+  const [activeFields, setActiveFields] = useActiveFieldNumbers();
 
   const { data: tournaments } = useTournamentsForEvent(eventKey);
   const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
@@ -55,7 +57,7 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
       <Divider />
       <TabPanel value={value} index={0}>
         <ScorekeeperMatches
-          matches={matches}
+          matches={matches?.filter((m) => activeFields.includes(m.fieldNumber))}
           teams={teams}
           tournaments={tournaments}
           tournamentKey={tournamentKey}

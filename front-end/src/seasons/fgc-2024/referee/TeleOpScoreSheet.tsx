@@ -14,6 +14,11 @@ import { matchOccurringAtom } from 'src/stores/recoil';
 import { useTeamsForEvent } from 'src/api/use-team-data';
 import { NumberInput } from 'src/components/inputs/number-input';
 import { StateToggle } from 'src/components/inputs/state-toggle';
+import NexusScoresheet from '../nexus-sheets/nexus-scoresheet';
+import {
+  AllianceNexusGoalState,
+  NexusGoalState
+} from '@toa-lib/models/build/seasons/FeedingTheFuture';
 
 interface Props {
   alliance: Alliance;
@@ -67,33 +72,13 @@ const TeleScoreSheet: FC<Props> = ({
     );
   };
 
-  const handleNexusChange = (newValue: number, manuallyTyped: boolean) => {
+  const handleFoodSecuredChange = (
+    newValue: number,
+    manuallyTyped: boolean
+  ) => {
     if (manuallyTyped) {
       onMatchDetailsUpdate(
-        alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
-        newValue
-      );
-    }
-  };
-
-  const handleNexusDecrement = () => {
-    onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
-      -1
-    );
-  };
-
-  const handleNexusIncrement = () => {
-    onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
-      1
-    );
-  };
-
-  const handleFoodSecuredChange = (newValue: number, manuallyTyped: boolean) => {
-    if (manuallyTyped) {
-      onMatchDetailsUpdate(
-        alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
+        alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
         newValue
       );
     }
@@ -101,14 +86,14 @@ const TeleScoreSheet: FC<Props> = ({
 
   const handleFoodSecuredDecrement = () => {
     onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
+      alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
       -1
     );
   };
 
   const handleFoodSecuredIncrement = () => {
     onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redNexusConserved' : 'blueNexusConserved',
+      alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
       1
     );
   };
@@ -116,41 +101,49 @@ const TeleScoreSheet: FC<Props> = ({
   const getBalanceStatus = (station: number): number | undefined => {
     switch (station) {
       case 11:
-        return match.details?.redRobotOneBalanced;
+        return match.details?.redRobotOneParked;
       case 12:
-        return match.details?.redRobotTwoBalanced;
+        return match.details?.redRobotTwoParked;
       case 13:
-        return match.details?.redRobotThreeBalanced;
+        return match.details?.redRobotThreeParked;
       case 21:
-        return match.details?.blueRobotOneBalanced;
+        return match.details?.blueRobotOneParked;
       case 22:
-        return match.details?.blueRobotTwoBalanced;
+        return match.details?.blueRobotTwoParked;
       case 23:
-        return match.details?.blueRobotThreeBalanced;
+        return match.details?.blueRobotThreeParked;
       default:
         return 0;
     }
   };
 
-  const updateBalance = (station: number, value: number) => {
+  const updateNexusState = (state: AllianceNexusGoalState) => {
+    if (alliance === 'red') {
+      onMatchDetailsUpdate('redNexusState', state);
+    } else {
+      onMatchDetailsUpdate('blueNexusState', state);
+    }
+  };
+
+  const updateParking = (station: number, value: number) => {
     switch (station) {
       case 11:
-        onMatchDetailsUpdate('redRobotOneBalanced', value);
+        onMatchDetailsUpdate('redRobotOneParked', value);
         break;
       case 12:
-        onMatchDetailsUpdate('redRobotTwoBalanced', value);
+        onMatchDetailsUpdate('redRobotTwoParked', value);
         break;
       case 13:
-        onMatchDetailsUpdate('redRobotThreeBalanced', value);
+        onMatchDetailsUpdate('redRobotThreeParked', value);
         break;
       case 21:
-        onMatchDetailsUpdate('blueRobotOneBalanced', value);
+        onMatchDetailsUpdate('blueRobotOneParked', value);
         break;
       case 22:
-        onMatchDetailsUpdate('blueRobotTwoBalanced', value);
+        onMatchDetailsUpdate('blueRobotTwoParked', value);
         break;
       case 23:
-        onMatchDetailsUpdate('blueRobotThreeBalanced', value);
+        onMatchDetailsUpdate('blueRobotThreeParked', value);
         break;
     }
   };
@@ -175,22 +168,6 @@ const TeleScoreSheet: FC<Props> = ({
       </Grid>
       <Grid item xs={12} md={6} lg={6}>
         <Typography variant='h6' textAlign='center'>
-          Nexus Scored
-        </Typography>
-        <NumberInput
-          value={
-            alliance === 'red'
-              ? match.details.redNexusConserved
-              : match.details.blueNexusConserved
-          }
-          textFieldDisabled
-          onChange={handleNexusChange}
-          onIncrement={handleNexusIncrement}
-          onDecrement={handleNexusDecrement}
-        />
-      </Grid>
-      <Grid item xs={12} md={6} lg={6}>
-        <Typography variant='h6' textAlign='center'>
           Food Secured
         </Typography>
         <NumberInput
@@ -205,10 +182,21 @@ const TeleScoreSheet: FC<Props> = ({
           onDecrement={handleFoodSecuredDecrement}
         />
       </Grid>
+      <Grid item xs={12}>
+        <NexusScoresheet
+          state={
+            alliance === 'red'
+              ? match.details.redNexusState
+              : match.details.blueNexusState
+          }
+          onChange={updateNexusState}
+          alliance={alliance}
+        />
+      </Grid>
       {participants?.map((p) => {
         const team = teams?.find((t) => t.teamKey === p.teamKey);
         const update = (value: number) => {
-          updateBalance(p.station, value);
+          updateParking(p.station, value);
         };
 
         return (
@@ -222,10 +210,10 @@ const TeleScoreSheet: FC<Props> = ({
                       className={`flag-icon flag-icon-${team.countryCode}`}
                     />
                   )}
-                  {identifiers[p.teamKey]}&nbsp;Balance
+                  {identifiers[p.teamKey]}&nbsp;Parked
                 </span>
               }
-              states={['Unbalanced', 'Balanced']}
+              states={['Not Parked', 'Parked']}
               value={getBalanceStatus(p.station) ?? 0}
               onChange={update}
               fullWidth

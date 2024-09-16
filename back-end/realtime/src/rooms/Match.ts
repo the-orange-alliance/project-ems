@@ -47,7 +47,8 @@ export default class Match extends Room {
     // These are in case of mid-match disconnect/reconnects
     if (
       this.state >= MatchState.PRESTART_COMPLETE &&
-      this.state !== MatchState.MATCH_COMPLETE &&
+      this.state !== MatchState.MATCH_COMPLETE && // we never actually get into this state (in the socket server, anyway)
+      this.state !== MatchState.RESULTS_COMMITTED && // so instead we'll stop prestarting people here instead
       this.key &&
       !this.timer.inProgress()
     ) {
@@ -81,6 +82,7 @@ export default class Match extends Room {
       this.emitToAll(MatchSocketEvent.PRESTART, key);
       this.emitToAll(MatchSocketEvent.DISPLAY, 1);
       this.displayID = 1;
+      this.state = MatchState.PRESTART_COMPLETE;
       logger.info(`prestarting ${key.eventKey}-${key.tournamentKey}-${key.id}`);
     });
     socket.on(MatchSocketEvent.ABORT, () => {

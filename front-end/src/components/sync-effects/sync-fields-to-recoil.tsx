@@ -7,7 +7,7 @@ import useLocalStorage from 'src/stores/local-storage';
 export const useSyncFieldsToRecoil = () => {
   const setActiveFields = useSetRecoilState(activeFieldsAtom);
   const tournament = useCurrentTournament();
-  const [localStorage, setLocalStorage] = useLocalStorage(
+  const [localStorageState, setLocalStorage] = useLocalStorage(
     `${tournament?.eventKey}-${tournament?.tournamentKey}`,
     tournament?.fields
   );
@@ -15,15 +15,25 @@ export const useSyncFieldsToRecoil = () => {
   // Set active fields whenever the tournament changes.1
   useEffect(() => {
     if (!tournament) return;
-    if (localStorage) {
-      console.log('Setting active fields from local storage:', localStorage);
-      setActiveFields(localStorage);
+
+    // This is dumb, but resolves this issue for now.  Currently, the tournament resolves, 
+    // but the localStorageState doesn't update fast enough.
+    // So, we'll fetch it manually and double-check JUST in case...
+    const stored = localStorage.getItem(
+      `${tournament.eventKey}-${tournament.tournamentKey}`
+    );
+    if (localStorageState) {
+      console.log('Setting active fields from local storage state:', localStorage);
+      setActiveFields(localStorageState);
+    } else if (stored) {
+      console.log('Setting active fields from local storage (manual):', stored);
+      setActiveFields(JSON.parse(stored));
     } else {
-      console.log('Setting active fields from tournament:', localStorage);
+      console.log('Setting active fields from tournament:', tournament.fields);
       setActiveFields(tournament.fields);
       setLocalStorage(tournament.fields);
     }
-  }, [tournament]);
+  }, [tournament, localStorage]);
 
   return null;
 };
@@ -41,4 +51,22 @@ export const useActiveFields = () => {
     setLocalStorage(fields);
   };
   return [activeFields, set] as const;
+};
+
+export const useActiveFieldNumbers = () => {
+  const [activeFields, setActiveFields] = useRecoilState(activeFieldsAtom);
+  const tournament = useCurrentTournament();
+  const [, setLocalStorage] = useLocalStorage(
+    `${tournament?.eventKey}-${tournament?.tournamentKey}`,
+    tournament?.fields
+  );
+  // Convert the fields to numbers
+  const numbers = activeFields.map((f) => (tournament?.fields.indexOf(f) ?? -2) + 1);
+  const set = (fields: number[]) => {
+    if (!tournament) return;
+    const names = fields.map((f) => tournament.fields[f - 1]);
+    setActiveFields(names);
+    setLocalStorage(names);
+  };
+  return [numbers, set] as const;
 };
