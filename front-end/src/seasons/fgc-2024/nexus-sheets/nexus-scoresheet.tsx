@@ -49,7 +49,7 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
     newState: NexusGoalState
   ) => {
     if (!onChange) return;
-    onChange({ ...state, [goal]: newState });
+    onChange({ ...state, [goal]: newState } as AllianceNexusGoalState);
   };
 
   return (
