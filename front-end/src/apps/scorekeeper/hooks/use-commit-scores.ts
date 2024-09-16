@@ -1,4 +1,9 @@
-import { useRecoilCallback } from 'recoil';
+import {
+  useRecoilCallback,
+  useRecoilState,
+  useRecoilValue,
+  useSetRecoilState
+} from 'recoil';
 import { useMatchControl } from './use-match-control';
 import {
   MatchState,
@@ -7,8 +12,14 @@ import {
   RESULT_RED_WIN,
   RESULT_TIE
 } from '@toa-lib/models';
-import { matchOccurringAtom, socketConnectedAtom } from 'src/stores/recoil';
-import { patchWholeMatch } from 'src/api/use-match-data';
+import {
+  currentEventKeyAtom,
+  currentTournamentKeyAtom,
+  matchesByEventKeyAtomFam,
+  matchOccurringAtom,
+  socketConnectedAtom
+} from 'src/stores/recoil';
+import { patchWholeMatch, useMatchesForTournament } from 'src/api/use-match-data';
 import { recalculateRankings } from 'src/api/use-ranking-data';
 import { sendAllClear, sendCommitScores } from 'src/api/use-socket';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components';
@@ -16,8 +27,12 @@ import { useSeasonFieldControl } from 'src/hooks/use-season-components';
 export const useCommitScoresCallback = () => {
   const { canCommitScores, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
+  const eventKey = useRecoilValue(currentEventKeyAtom);
+  const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
+  const { data: matches, mutate: setMatches } = useMatchesForTournament(eventKey, tournamentKey);
+
   return useRecoilCallback(
-    ({ snapshot }) =>
+    ({ snapshot, set }) =>
       async () => {
         const match = await snapshot.getPromise(matchOccurringAtom);
         const socketConnected = await snapshot.getPromise(socketConnectedAtom);
@@ -52,15 +67,26 @@ export const useCommitScoresCallback = () => {
           pending.details.eventKey = eventKey;
           pending.details.tournamentKey = tournamentKey;
         }
-        
+
         await patchWholeMatch(pending);
         // TODO - When to calculate rankings vs. playoff rankings?
         await recalculateRankings(eventKey, tournamentKey);
         fieldControl?.commitScoresForField?.();
         sendCommitScores({ eventKey, tournamentKey, id });
         setState(MatchState.RESULTS_COMMITTED);
+
+        // If there is no match list, we can't update the matches
+        if (!matches) return;
+
+        // Lastly, update the matches array
+        const index = matches.findIndex((m) => m.id === id);
+        if (index >= 0) {
+          const copy = [...matches];
+          copy[index] = pending;
+          setMatches(copy);
+        }
       },
-    [canCommitScores, setState]
+    [canCommitScores, setState, matches, eventKey, tournamentKey]
   );
 };
 
