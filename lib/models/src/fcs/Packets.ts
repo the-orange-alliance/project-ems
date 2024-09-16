@@ -19,9 +19,9 @@ export interface FcsPackets {
 
 enum RevHub {
   RED_CONTROL_HUB = 0,
-  CENTER_EXPANSION_HUB = 1,
-  CENTER_CONTROL_HUB = 2,
-  BLUE_CONTROL_HUB = 3
+  BLUE_CONTROL_HUB = 1,
+  CENTER_EXPANSION_HUB = 2,
+  CENTER_CONTROL_HUB = 3
 }
 
 function createNexusGoalSegments(
