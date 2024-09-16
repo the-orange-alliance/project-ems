@@ -38,6 +38,18 @@ export default class Match extends Room {
     this.state = MatchState.MATCH_NOT_SELECTED;
     this.displayID = 0;
     this.localEmitter = new EventEmitter();
+
+    // Needed for FCS room to send events here
+    this.localEmitter.on(
+      MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
+      (itemUpdate: ItemUpdate) => {
+        const matchDetails = this.match?.details;
+        if (matchDetails) {
+          matchDetails[itemUpdate.key] = itemUpdate.value;
+          this.handlePartiallyUpdatedMatch(this.match!);
+        }
+      }
+    );
   }
 
   public initializeEvents(socket: Socket): void {

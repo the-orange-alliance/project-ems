@@ -5,6 +5,7 @@ import {
   FieldControlUpdatePacket,
   FieldOptions,
   getFcsPackets,
+  ItemUpdate,
   Match as MatchObj,
   MatchSocketEvent,
   processMatchData,
@@ -26,9 +27,12 @@ export default class FCS extends Room {
   };
   private fcsPackets: FcsPackets = getFcsPackets(defaultFieldOptions);
   private wledSockets: Record<string, WebSocket> = {};
+  public readonly matchRoom: Match;
 
   public constructor(server: Server, matchRoom: Match) {
     super(server, 'fcs');
+
+    this.matchRoom = matchRoom;
 
     // Connect to wled websocket servers if there are wleds
     Object.entries(this.fcsPackets.init.wleds).forEach((wled) => {
@@ -84,7 +88,15 @@ export default class FCS extends Room {
     });
 
     socket.on('fcs:digitalInputs', (packet) => {
-      // TODO(jan): Update match data
+      // TODO(jan): Abstract this
+      const digitalInput = packet.hubs[3] & 0x1;
+      this.matchRoom.localEmitter.emit(
+        MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
+        {
+          key: 'fieldBalanced',
+          value: digitalInput
+        } satisfies ItemUpdate
+      );
     });
 
     socket.emit('fcs:update', this.latestFcsStatus);

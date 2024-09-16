@@ -407,7 +407,7 @@ export function processMatchData(
   applyStateToGoal(blueNexus.EC6, LedStrip.BLUE_CENTER_GOALS[5], result);
 
   applyPatternToStrips(
-    details.coopertition > 0 ? 'ff00ff' : '000000',
+    details.fieldBalanced ? 'ff00ff' : '000000',
     [LedStrip.RAMP],
     result
   );
