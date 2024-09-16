@@ -9,9 +9,9 @@ import {
   matchOccurringAtom,
   socketConnectedAtom
 } from 'src/stores/recoil';
-import { matchesByEventKeyAtomFam } from 'src/stores/recoil';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components';
 import { useMatchesForTournament } from 'src/api/use-match-data';
+import { useActiveFieldNumbers } from 'src/components/sync-effects/sync-fields-to-recoil';
 
 export const usePostResultsCallback = () => {
   const { canPostResults, setState } = useMatchControl();
@@ -19,6 +19,8 @@ export const usePostResultsCallback = () => {
   const eventKey = useRecoilValue(currentEventKeyAtom);
   const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
   const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
+  const [activeFields] = useActiveFieldNumbers();
+
   return useRecoilCallback(
     ({ snapshot, set }) =>
       async () => {
@@ -38,11 +40,20 @@ export const usePostResultsCallback = () => {
 
         // Try to find the next match and select it
         if (matches) {
-          // TODO - Filter by matches selected via fields
-          const index = matches.findIndex((m) => m.id === match.id);
-          if (matches[index + 1]) {
-            set(currentMatchIdAtom, matches[index + 1].id);
-            set(matchOccurringAtom, matches[index + 1]);
+          const ourMatches = matches
+            .filter((m) => activeFields.includes(m.fieldNumber))
+            .sort((a, b) => a.id - b.id);
+
+          // Find the next match that hasn't had results posted
+          const index = ourMatches.findIndex(
+            (m) => m.id >= match.id && m.result < 0
+          );
+          if (ourMatches[index]) {
+            set(currentMatchIdAtom, ourMatches[index].id);
+            set(matchOccurringAtom, ourMatches[index]);
+          } else {
+            set(currentMatchIdAtom, null);
+            set(matchOccurringAtom, null);
           }
         }
         fieldControl?.postResultsForField?.();

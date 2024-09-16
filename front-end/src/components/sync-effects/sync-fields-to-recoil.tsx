@@ -52,3 +52,21 @@ export const useActiveFields = () => {
   };
   return [activeFields, set] as const;
 };
+
+export const useActiveFieldNumbers = () => {
+  const [activeFields, setActiveFields] = useRecoilState(activeFieldsAtom);
+  const tournament = useCurrentTournament();
+  const [, setLocalStorage] = useLocalStorage(
+    `${tournament?.eventKey}-${tournament?.tournamentKey}`,
+    tournament?.fields
+  );
+  // Convert the fields to numbers
+  const numbers = activeFields.map((f) => (tournament?.fields.indexOf(f) ?? -2) + 1);
+  const set = (fields: number[]) => {
+    if (!tournament) return;
+    const names = fields.map((f) => tournament.fields[f - 1]);
+    setActiveFields(names);
+    setLocalStorage(names);
+  };
+  return [numbers, set] as const;
+};
