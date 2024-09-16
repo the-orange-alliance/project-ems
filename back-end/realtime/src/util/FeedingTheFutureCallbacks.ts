@@ -195,23 +195,22 @@ const handleGoalStateChange = (
   goal: string,
   broadcast: (update: FieldControlUpdatePacket) => void
 ) => {
+  if (previousState === currentState) return;
+
   const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
 
-  // Only set color on state change
-  if (previousState !== currentState) {
-    switch (currentState) {
-      case NexusGoalState.Full:
-        applyPatternToStrips('ffa500', [strip], result);
-        break;
-      case NexusGoalState.BlueOnly:
-        applyPatternToStrips('0000ff', [strip], result);
-        break;
-      case NexusGoalState.GreenOnly:
-        applyPatternToStrips('00ff00', [strip], result);
-        break;
-      default:
-        applyPatternToStrips('000000', [strip], result);
-    }
+  switch (currentState) {
+    case NexusGoalState.Full:
+      applyPatternToStrips('ffa500', [strip], result);
+      break;
+    case NexusGoalState.BlueOnly:
+      applyPatternToStrips('0000ff', [strip], result);
+      break;
+    case NexusGoalState.GreenOnly:
+      applyPatternToStrips('00ff00', [strip], result);
+      break;
+    default:
+      applyPatternToStrips('000000', [strip], result);
   }
 
   if (
