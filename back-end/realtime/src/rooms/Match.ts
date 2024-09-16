@@ -47,7 +47,8 @@ export default class Match extends Room {
     // These are in case of mid-match disconnect/reconnects
     if (
       this.state >= MatchState.PRESTART_COMPLETE &&
-      this.state !== MatchState.MATCH_COMPLETE &&
+      this.state !== MatchState.MATCH_COMPLETE && // we never actually get into this state (in the socket server, anyway)
+      this.state !== MatchState.RESULTS_COMMITTED && // so instead we'll stop prestarting people here instead
       this.key &&
       !this.timer.inProgress()
     ) {

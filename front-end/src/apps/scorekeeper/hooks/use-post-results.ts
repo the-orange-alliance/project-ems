@@ -1,18 +1,26 @@
 import { MatchState } from '@toa-lib/models';
-import { useRecoilCallback } from 'recoil';
+import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { useMatchControl } from './use-match-control';
 import { sendPostResults } from 'src/api/use-socket';
 import {
+  currentEventKeyAtom,
   currentMatchIdAtom,
+  currentTournamentKeyAtom,
   matchOccurringAtom,
   socketConnectedAtom
 } from 'src/stores/recoil';
-import { matchesByEventKeyAtomFam } from 'src/stores/recoil';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components';
+import { useMatchesForTournament } from 'src/api/use-match-data';
+import { useNextUnplayedMatch } from './use-next-unplayed-match';
 
 export const usePostResultsCallback = () => {
   const { canPostResults, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
+  const eventKey = useRecoilValue(currentEventKeyAtom);
+  const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
+  const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
+  const getNextUnplayed = useNextUnplayedMatch();
+
   return useRecoilCallback(
     ({ snapshot, set }) =>
       async () => {
@@ -27,20 +35,20 @@ export const usePostResultsCallback = () => {
         if (!match) {
           throw new Error('Attempted to psot results when there is no match.');
         }
-        const matches = await snapshot.getPromise(
-          matchesByEventKeyAtomFam(match.eventKey)
-        );
-        // TODO - Filter by matches selected via fields
-        const index = matches.findIndex((m) => m.id === match.id);
+
         // TODO - Sync results to server
-        if (matches[index + 1]) {
-          set(currentMatchIdAtom, matches[index + 1].id);
-          set(matchOccurringAtom, matches[index + 1]);
+
+        // Set the current match to the next
+        const next = await getNextUnplayed();
+        if (next) {
+          set(currentMatchIdAtom, next.id);
+          set(matchOccurringAtom, next);
         }
+
         fieldControl?.postResultsForField?.();
         sendPostResults();
         setState(MatchState.RESULTS_POSTED);
       },
-    [canPostResults, setState]
+    [canPostResults, setState, matches, eventKey, tournamentKey]
   );
 };
