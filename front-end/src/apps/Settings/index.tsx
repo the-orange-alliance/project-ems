@@ -16,6 +16,7 @@ import {
 } from 'src/stores/recoil';
 import { Tournament } from '@toa-lib/models';
 import FrcFmsSettingsTab from './tabs/frc-fms';
+import { ViewReturn } from 'src/components/buttons/view-return';
 // import FrcFmsSettingsTab from './tabs/frc-fms';
 
 export const SettingsApp: FC = () => {
@@ -50,6 +51,7 @@ export const SettingsApp: FC = () => {
       }
     >
       <Paper sx={{ marginBottom: (theme) => theme.spacing(8) }}>
+        <ViewReturn title='Home' href={`/${eventKey}`} sx={{ m: 1 }} />
         {/* Tabs */}
         <TabContext value={tab}>
           <TabList onChange={(e, t) => setTab(t)}>
