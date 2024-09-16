@@ -57,7 +57,7 @@ export function applyPatternToStrips(
   });
 }
 
-function applySetpointToMotors(
+export function applySetpointToMotors(
   setpoint: number,
   motors: Motor[],
   packet: FieldControlUpdatePacket
@@ -153,7 +153,7 @@ export class LedStrip {
 
 type MotorPortType = 'on board' | 'spark mini';
 
-class Motor {
+export class Motor {
   public static readonly RED_SIDE_GOALS: Motor[] = [
     new Motor(RevHub.RED_CONTROL_HUB, 'on board', 0),
     new Motor(RevHub.RED_CONTROL_HUB, 'on board', 1),

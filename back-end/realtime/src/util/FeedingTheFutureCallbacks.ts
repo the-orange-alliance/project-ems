@@ -1,11 +1,13 @@
 import {
   applyPatternToStrips,
+  applySetpointToMotors,
   applyStateToGoal,
   FeedingTheFuture,
   FieldControlUpdatePacket,
   FieldOptions,
   LedStrip,
-  Match
+  Match,
+  Motor
 } from '@toa-lib/models';
 import { NexusGoalState } from '@toa-lib/models/build/seasons/FeedingTheFuture.js';
 import { Socket } from 'socket.io';
@@ -21,6 +23,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.CW1,
     currentDetails.redNexusState.CW1,
     LedStrip.RED_SIDE_GOALS[0],
+    Motor.RED_SIDE_GOALS[0],
     'red.CW1',
     broadcast
   );
@@ -28,6 +31,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.CW2,
     currentDetails.redNexusState.CW2,
     LedStrip.RED_SIDE_GOALS[1],
+    Motor.RED_SIDE_GOALS[1],
     'red.CW2',
     broadcast
   );
@@ -35,6 +39,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.CW3,
     currentDetails.redNexusState.CW3,
     LedStrip.RED_SIDE_GOALS[2],
+    Motor.RED_SIDE_GOALS[2],
     'red.CW3',
     broadcast
   );
@@ -42,6 +47,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.CW4,
     currentDetails.redNexusState.CW4,
     LedStrip.RED_SIDE_GOALS[3],
+    Motor.RED_SIDE_GOALS[3],
     'red.CW4',
     broadcast
   );
@@ -49,6 +55,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.CW5,
     currentDetails.redNexusState.CW5,
     LedStrip.RED_SIDE_GOALS[4],
+    Motor.RED_SIDE_GOALS[4],
     'red.CW5',
     broadcast
   );
@@ -56,6 +63,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.CW6,
     currentDetails.redNexusState.CW6,
     LedStrip.RED_SIDE_GOALS[5],
+    Motor.RED_SIDE_GOALS[5],
     'red.CW6',
     broadcast
   );
@@ -63,6 +71,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.EC1,
     currentDetails.redNexusState.EC1,
     LedStrip.RED_CENTER_GOALS[0],
+    Motor.RED_CENTER_GOALS[0],
     'red.EC1',
     broadcast
   );
@@ -70,6 +79,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.EC2,
     currentDetails.redNexusState.EC2,
     LedStrip.RED_CENTER_GOALS[1],
+    Motor.RED_CENTER_GOALS[1],
     'red.EC2',
     broadcast
   );
@@ -77,6 +87,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.EC3,
     currentDetails.redNexusState.EC3,
     LedStrip.RED_CENTER_GOALS[2],
+    Motor.RED_CENTER_GOALS[2],
     'red.EC3',
     broadcast
   );
@@ -84,6 +95,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.EC4,
     currentDetails.redNexusState.EC4,
     LedStrip.RED_CENTER_GOALS[3],
+    Motor.RED_CENTER_GOALS[3],
     'red.EC4',
     broadcast
   );
@@ -91,6 +103,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.EC5,
     currentDetails.redNexusState.EC5,
     LedStrip.RED_CENTER_GOALS[4],
+    Motor.RED_CENTER_GOALS[4],
     'red.EC5',
     broadcast
   );
@@ -98,6 +111,7 @@ export const matchUpdateCallback = (
     previousDetails.redNexusState.EC6,
     currentDetails.redNexusState.EC6,
     LedStrip.RED_CENTER_GOALS[5],
+    Motor.RED_CENTER_GOALS[5],
     'red.EC6',
     broadcast
   );
@@ -106,6 +120,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.CW1,
     currentDetails.blueNexusState.CW1,
     LedStrip.BLUE_SIDE_GOALS[0],
+    Motor.BLUE_SIDE_GOALS[0],
     'blue.CW1',
     broadcast
   );
@@ -113,6 +128,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.CW2,
     currentDetails.blueNexusState.CW2,
     LedStrip.BLUE_SIDE_GOALS[1],
+    Motor.BLUE_SIDE_GOALS[1],
     'blue.CW2',
     broadcast
   );
@@ -120,6 +136,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.CW3,
     currentDetails.blueNexusState.CW3,
     LedStrip.BLUE_SIDE_GOALS[2],
+    Motor.BLUE_SIDE_GOALS[2],
     'blue.CW3',
     broadcast
   );
@@ -127,6 +144,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.CW4,
     currentDetails.blueNexusState.CW4,
     LedStrip.BLUE_SIDE_GOALS[3],
+    Motor.BLUE_SIDE_GOALS[3],
     'blue.CW4',
     broadcast
   );
@@ -134,6 +152,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.CW5,
     currentDetails.blueNexusState.CW5,
     LedStrip.BLUE_SIDE_GOALS[4],
+    Motor.BLUE_SIDE_GOALS[4],
     'blue.CW5',
     broadcast
   );
@@ -141,6 +160,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.CW6,
     currentDetails.blueNexusState.CW6,
     LedStrip.BLUE_SIDE_GOALS[5],
+    Motor.BLUE_SIDE_GOALS[5],
     'blue.CW6',
     broadcast
   );
@@ -148,6 +168,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.EC1,
     currentDetails.blueNexusState.EC1,
     LedStrip.BLUE_CENTER_GOALS[0],
+    Motor.BLUE_CENTER_GOALS[0],
     'blue.EC1',
     broadcast
   );
@@ -155,6 +176,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.EC2,
     currentDetails.blueNexusState.EC2,
     LedStrip.BLUE_CENTER_GOALS[1],
+    Motor.BLUE_CENTER_GOALS[1],
     'blue.EC2',
     broadcast
   );
@@ -162,6 +184,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.EC3,
     currentDetails.blueNexusState.EC3,
     LedStrip.BLUE_CENTER_GOALS[2],
+    Motor.BLUE_CENTER_GOALS[2],
     'blue.EC3',
     broadcast
   );
@@ -169,6 +192,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.EC4,
     currentDetails.blueNexusState.EC4,
     LedStrip.BLUE_CENTER_GOALS[3],
+    Motor.BLUE_CENTER_GOALS[3],
     'blue.EC4',
     broadcast
   );
@@ -176,6 +200,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.EC5,
     currentDetails.blueNexusState.EC5,
     LedStrip.BLUE_CENTER_GOALS[4],
+    Motor.BLUE_CENTER_GOALS[4],
     'blue.EC5',
     broadcast
   );
@@ -183,6 +208,7 @@ export const matchUpdateCallback = (
     previousDetails.blueNexusState.EC6,
     currentDetails.blueNexusState.EC6,
     LedStrip.BLUE_CENTER_GOALS[5],
+    Motor.BLUE_CENTER_GOALS[5],
     'blue.EC6',
     broadcast
   );
@@ -198,6 +224,7 @@ const handleGoalStateChange = (
   previousState: NexusGoalState,
   currentState: NexusGoalState,
   strip: LedStrip,
+  motor: Motor,
   goal: string,
   broadcast: (update: FieldControlUpdatePacket) => void
 ) => {
@@ -230,7 +257,14 @@ const handleGoalStateChange = (
         // Set pattern
         const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
         applyPatternToStrips('ffffff', [strip], result);
+        applySetpointToMotors(1.0, [motor], result);
         broadcast(result);
+
+        setTimeout(() => {
+          const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+          applySetpointToMotors(0, [motor], result);
+          broadcast(result);
+        }, 5000); // TODO(jan): Use field options
 
         // TODO(jan): Update match to mark food as dispensed
       }, 5000) // TODO(jan): Make this time configurable
