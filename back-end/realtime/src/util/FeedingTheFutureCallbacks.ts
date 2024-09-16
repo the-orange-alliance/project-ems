@@ -186,6 +186,12 @@ export const matchUpdateCallback = (
     'blue.EC6',
     broadcast
   );
+
+  handleRampStateChange(
+    previousDetails.fieldBalanced,
+    currentDetails.fieldBalanced,
+    broadcast
+  );
 };
 
 const handleGoalStateChange = (
@@ -239,4 +245,27 @@ const handleGoalStateChange = (
 
   // Broadcast update
   broadcast(result);
+};
+
+const handleRampStateChange = (
+  previousBalanced: number,
+  currentBalanced: number,
+  broadcast: (update: FieldControlUpdatePacket) => void
+) => {
+  if (currentBalanced === previousBalanced) return;
+
+  clearTimeout(timers.get('ramp'));
+
+  timers.set(
+    'ramp',
+    setTimeout(() => {
+      const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+      applyPatternToStrips(
+        currentBalanced ? '000000' : 'ff00ff',
+        [LedStrip.RAMP],
+        result
+      );
+      broadcast(result);
+    }, 500) // TODO(jan): Make this configurable
+  );
 };
