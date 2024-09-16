@@ -19,7 +19,10 @@ import {
   matchOccurringAtom,
   socketConnectedAtom
 } from 'src/stores/recoil';
-import { patchWholeMatch, useMatchesForTournament } from 'src/api/use-match-data';
+import {
+  patchWholeMatch,
+  useMatchesForTournament
+} from 'src/api/use-match-data';
 import { recalculateRankings } from 'src/api/use-ranking-data';
 import { sendAllClear, sendCommitScores } from 'src/api/use-socket';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components';
@@ -29,7 +32,10 @@ export const useCommitScoresCallback = () => {
   const fieldControl = useSeasonFieldControl();
   const eventKey = useRecoilValue(currentEventKeyAtom);
   const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
-  const { data: matches, mutate: setMatches } = useMatchesForTournament(eventKey, tournamentKey);
+  const { data: matches, mutate: setMatches } = useMatchesForTournament(
+    eventKey,
+    tournamentKey
+  );
 
   return useRecoilCallback(
     ({ snapshot, set }) =>
@@ -45,7 +51,7 @@ export const useCommitScoresCallback = () => {
         if (!match) {
           throw new Error('Attempted to commit scores when there is no match.');
         }
-        const pending = { ...match };
+        const pending = { ...match, details: { ...match.details } };
         // Update the result if it hasn't been set yet
         if (pending.result < 0) {
           pending.result =
