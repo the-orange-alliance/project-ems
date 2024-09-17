@@ -7,7 +7,6 @@ import {
 import {
   applyPatternToStrips,
   applySetpointToMotors,
-  FcsPackets,
   LedStrip,
   Motor
 } from './Packets.js';
@@ -142,15 +141,23 @@ const createNexusGoalSegments = (
 
 export class PacketManager {
   private fieldOptions: FieldOptions;
+  private broadcastCallback: (update: FieldControlUpdatePacket) => void =
+    () => {};
 
   public constructor(fieldOptions: FieldOptions) {
     this.fieldOptions = fieldOptions;
   }
 
+  public initialize = (
+    broadcast: (update: FieldControlUpdatePacket) => void
+  ) => {
+    this.broadcastCallback = broadcast;
+  };
+
   /**
    * This packet must specify the initial state of EVERY port that will be used at any point.
    */
-  buildInitPacket = (): FieldControlInitPacket => {
+  getInitPacket = (): FieldControlInitPacket => {
     const result: FieldControlInitPacket = { hubs: {}, wleds: {} };
 
     result.wleds['center'] = {
@@ -210,17 +217,18 @@ export class PacketManager {
     return result;
   };
 
-  buildFieldFaultPacket = (): FieldControlUpdatePacket => {
+  public handleAbort = (): void => {
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
       this.fieldOptions.fieldFaultColor,
       LedStripA.ALL_STRIPS,
       result
     );
-    return result;
+
+    this.broadcastCallback(result);
   };
 
-  buildPrepareFieldPacket = (): FieldControlUpdatePacket => {
+  public handlePrepareField = (): void => {
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
       this.fieldOptions.prepareFieldColor,
@@ -228,21 +236,22 @@ export class PacketManager {
       result
     );
     applySetpointToMotors(0, MotorA.ALL_GOALS, result);
-    return result;
+
+    this.broadcastCallback(result);
   };
 
-  buildMatchStartPacket = (): FieldControlUpdatePacket => {
+  public handleMatchStart = (): void => {
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips('000000', LedStripA.ALL_STRIPS, result);
-    return result;
+
+    this.broadcastCallback(result);
   };
 
-  buildEndgamePacket = (): FieldControlUpdatePacket => {
-    const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-    return result;
+  public handleEndGame = (): void => {
+    // This game has no end game
   };
 
-  buildMatchEndPacket = (): FieldControlUpdatePacket => {
+  public handleMatchEnd = (): void => {
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
       this.fieldOptions.matchEndBlueNexusGoalColor,
@@ -260,10 +269,11 @@ export class PacketManager {
       result
     );
     applySetpointToMotors(0, MotorA.ALL_GOALS, result);
-    return result;
+
+    this.broadcastCallback(result);
   };
 
-  buildAllClearPacket = (): FieldControlUpdatePacket => {
+  public handleAllClear = (): void => {
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
       this.fieldOptions.allClearColor,
@@ -275,19 +285,8 @@ export class PacketManager {
       MotorA.ALL_GOALS,
       result
     );
-    return result;
-  };
 
-  public getFcsPackets = (): FcsPackets => {
-    return {
-      init: this.buildInitPacket(),
-      fieldFault: this.buildFieldFaultPacket(),
-      prepareField: this.buildPrepareFieldPacket(),
-      matchStart: this.buildMatchStartPacket(),
-      endgame: this.buildEndgamePacket(),
-      matchEnd: this.buildMatchEndPacket(),
-      allClear: this.buildAllClearPacket()
-    };
+    this.broadcastCallback(result);
   };
 
   public setFieldOptions = (fieldOptions: FieldOptions): void => {

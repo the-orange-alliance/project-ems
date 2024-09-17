@@ -1,7 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import {
   defaultFieldOptions,
-  FcsPackets,
   FeedingTheFuture,
   FeedingTheFutureFCS,
   FieldControlUpdatePacket,
@@ -34,33 +33,37 @@ export default class FCS extends Room {
   private packetManager = new FeedingTheFutureFCS.PacketManager(
     defaultFieldOptions
   );
-  private fcsPackets: FcsPackets = this.packetManager.getFcsPackets();
 
   public constructor(server: Server, matchRoom: Match) {
     super(server, 'fcs');
 
     this.matchRoom = matchRoom;
+    this.packetManager.initialize(this.broadcastFcsUpdate);
 
     // Connect to wled websocket servers if there are wleds
-    Object.entries(this.fcsPackets.init.wleds).forEach((wled) => {
+    Object.entries(this.packetManager.getInitPacket().wleds).forEach((wled) => {
       this.initializeWled(wled[0], wled[1]);
     });
 
-    matchRoom.localEmitter.on(MatchSocketEvent.TELEOPERATED, () => {
-      this.broadcastFcsUpdate(this.fcsPackets.matchStart);
-    });
+    matchRoom.localEmitter.on(
+      MatchSocketEvent.TELEOPERATED,
+      this.packetManager.handleMatchStart
+    );
 
-    matchRoom.localEmitter.on(MatchSocketEvent.ENDGAME, () => {
-      this.broadcastFcsUpdate(this.fcsPackets.endgame);
-    });
+    matchRoom.localEmitter.on(
+      MatchSocketEvent.ENDGAME,
+      this.packetManager.handleEndGame
+    );
 
-    matchRoom.localEmitter.on(MatchSocketEvent.END, () => {
-      this.broadcastFcsUpdate(this.fcsPackets.matchEnd);
-    });
+    matchRoom.localEmitter.on(
+      MatchSocketEvent.END,
+      this.packetManager.handleMatchEnd
+    );
 
-    matchRoom.localEmitter.on(MatchSocketEvent.ABORT, () => {
-      this.broadcastFcsUpdate(this.fcsPackets.fieldFault);
-    });
+    matchRoom.localEmitter.on(
+      MatchSocketEvent.ABORT,
+      this.packetManager.handleAbort
+    );
 
     matchRoom.localEmitter.on(
       MatchSocketEvent.UPDATE,
@@ -77,7 +80,7 @@ export default class FCS extends Room {
   }
 
   public initializeEvents(socket: Socket): void {
-    socket.emit('fcs:init', this.fcsPackets.init);
+    socket.emit('fcs:init', this.packetManager.getInitPacket());
 
     socket.on('fcs:setFieldOptions', (fieldOptions: FieldOptions) => {
       this.packetManager.setFieldOptions(fieldOptions);
@@ -87,17 +90,12 @@ export default class FCS extends Room {
       this.broadcastFcsUpdate(update);
     });
 
-    socket.on('fcs:prepareField', () => {
-      this.broadcastFcsUpdate(this.fcsPackets.prepareField);
-    });
+    socket.on('fcs:prepareField', this.packetManager.handlePrepareField);
 
-    socket.on('fcs:allClear', () => {
-      this.broadcastFcsUpdate(this.fcsPackets.allClear);
-    });
+    socket.on('fcs:allClear', this.packetManager.handleAllClear);
 
     socket.on('fcs:settings', (fieldOptions: FieldOptions) => {
       this.packetManager.setFieldOptions(fieldOptions);
-      this.fcsPackets = this.packetManager.getFcsPackets();
       this.reinitializeWleds();
     });
 
@@ -206,7 +204,7 @@ export default class FCS extends Room {
   }
 
   private reinitializeWleds(): void {
-    Object.entries(this.fcsPackets.init.wleds).forEach((wled) => {
+    Object.entries(this.packetManager.getInitPacket().wleds).forEach((wled) => {
       if (
         !this.wledSockets[wled[0]] ||
         this.wledSockets[wled[0]].url !== wled[1].address

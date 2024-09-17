@@ -3,16 +3,6 @@ import {
   FieldControlUpdatePacket
 } from '../base/FieldControl.js';
 
-export interface FcsPackets {
-  init: FieldControlInitPacket;
-  fieldFault: FieldControlUpdatePacket;
-  prepareField: FieldControlUpdatePacket;
-  matchStart: FieldControlUpdatePacket;
-  endgame: FieldControlUpdatePacket;
-  matchEnd: FieldControlUpdatePacket;
-  allClear: FieldControlUpdatePacket;
-}
-
 export class LedStrip {
   public readonly controller: string;
   public readonly segment: number;
