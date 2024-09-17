@@ -42,13 +42,11 @@ export default class Match extends Room {
     // Needed for FCS room to send events here
     this.localEmitter.on(
       MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
-      (itemUpdate: ItemUpdate) => {
-        const matchDetails = this.match?.details;
-        if (matchDetails) {
-          matchDetails[itemUpdate.key] = itemUpdate.value;
-          this.handlePartiallyUpdatedMatch(this.match!);
-        }
-      }
+      this.onMatchUpdateDetailsItem
+    );
+    this.localEmitter.on(
+      MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
+      this.onMatchAdjustNumber
     );
   }
 
@@ -166,36 +164,11 @@ export default class Match extends Room {
     });
     socket.on(
       MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
-      (itemUpdate: ItemUpdate) => {
-        const matchDetails = this.match?.details;
-        if (matchDetails) {
-          matchDetails[itemUpdate.key] = itemUpdate.value;
-          this.handlePartiallyUpdatedMatch(this.match!);
-        }
-      }
+      this.onMatchUpdateDetailsItem
     );
     socket.on(
       MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
-      (numberAdjustment: NumberAdjustment) => {
-        const matchDetails = this.match?.details;
-        if (matchDetails) {
-          try {
-            matchDetails[numberAdjustment.key] += numberAdjustment.adjustment;
-            this.handlePartiallyUpdatedMatch(this.match!);
-          } catch (e) {
-            // Don't take down the server if a client tries to adjust a non-numeric value
-            logger.error(
-              `Failed to adjust match details field ${numberAdjustment.key} (${
-                matchDetails[numberAdjustment.key]
-              })`
-            );
-          }
-        } else {
-          logger.error(
-            `Failed to adjust match details field ${numberAdjustment.key} - match details not found`
-          );
-        }
-      }
+      this.onMatchUpdateDetailsItem
     );
     socket.on(
       MatchSocketEvent.UPDATE_CARD_STATUS,
@@ -232,6 +205,36 @@ export default class Match extends Room {
 
       this.broadcast().emit(MatchSocketEvent.BONUS_START, bonusType);
     });
+  }
+
+  onMatchUpdateDetailsItem = (itemUpdate: ItemUpdate) => {
+    const matchDetails = this.match?.details;
+    if (matchDetails) {
+      const keys = itemUpdate.key.split('.');
+      keys.slice(0, -1).reduce((obj, key) => obj[key], matchDetails)[keys[keys.length - 1]] = itemUpdate.value;
+      this.handlePartiallyUpdatedMatch(this.match!);
+    }
+  }
+
+  onMatchAdjustNumber = (numberAdjustment: NumberAdjustment) => {
+    const matchDetails = this.match?.details;
+    if (matchDetails) {
+      try {
+        matchDetails[numberAdjustment.key] += numberAdjustment.adjustment;
+        this.handlePartiallyUpdatedMatch(this.match!);
+      } catch (e) {
+        // Don't take down the server if a client tries to adjust a non-numeric value
+        logger.error(
+          `Failed to adjust match details field ${numberAdjustment.key} (${
+            matchDetails[numberAdjustment.key]
+          })`
+        );
+      }
+    } else {
+      logger.error(
+        `Failed to adjust match details field ${numberAdjustment.key} - match details not found`
+      );
+    }
   }
 
   private handlePartiallyUpdatedMatch(

@@ -14,7 +14,11 @@ import {
   LedStrip,
   Motor
 } from './Packets.js';
-import { ItemUpdate, MatchSocketEvent } from '../base/Match.js';
+import {
+  ItemUpdate,
+  MatchSocketEvent,
+  NumberAdjustment
+} from '../base/Match.js';
 
 enum RevHub {
   RED_CONTROL_HUB = 0,
@@ -318,7 +322,8 @@ export class PacketManager {
       currentDetails.redNexusState.CW1,
       LedStripA.RED_SIDE_GOALS[0],
       MotorA.RED_SIDE_GOALS[0],
-      'red.CW1',
+      'redNexusState.CW1',
+      'red',
       broadcast
     );
     this.handleGoalStateChange(
@@ -326,7 +331,8 @@ export class PacketManager {
       currentDetails.redNexusState.CW2,
       LedStripA.RED_SIDE_GOALS[1],
       MotorA.RED_SIDE_GOALS[1],
-      'red.CW2',
+      'redNexusState.CW2',
+      'red',
       broadcast
     );
     this.handleGoalStateChange(
@@ -334,7 +340,8 @@ export class PacketManager {
       currentDetails.redNexusState.CW3,
       LedStripA.RED_SIDE_GOALS[2],
       MotorA.RED_SIDE_GOALS[2],
-      'red.CW3',
+      'redNexusState.CW3',
+      'red',
       broadcast
     );
     this.handleGoalStateChange(
@@ -342,7 +349,8 @@ export class PacketManager {
       currentDetails.redNexusState.CW4,
       LedStripA.RED_SIDE_GOALS[3],
       MotorA.RED_SIDE_GOALS[3],
-      'red.CW4',
+      'redNexusState.CW4',
+      'red',
       broadcast
     );
     this.handleGoalStateChange(
@@ -350,7 +358,8 @@ export class PacketManager {
       currentDetails.redNexusState.CW5,
       LedStripA.RED_SIDE_GOALS[4],
       MotorA.RED_SIDE_GOALS[4],
-      'red.CW5',
+      'redNexusState.CW5',
+      'red',
       broadcast
     );
     this.handleGoalStateChange(
@@ -358,7 +367,8 @@ export class PacketManager {
       currentDetails.redNexusState.CW6,
       LedStripA.RED_SIDE_GOALS[5],
       MotorA.RED_SIDE_GOALS[5],
-      'red.CW6',
+      'redNexusState.CW6',
+      'red',
       broadcast
     );
     this.handleGoalStateChange(
@@ -366,7 +376,8 @@ export class PacketManager {
       currentDetails.redNexusState.EC1,
       LedStripA.RED_CENTER_GOALS[0],
       MotorA.RED_CENTER_GOALS[0],
-      'red.EC1',
+      'redNexusState.EC1',
+      'red',
       broadcast
     );
     this.handleGoalStateChange(
@@ -374,7 +385,8 @@ export class PacketManager {
       currentDetails.redNexusState.EC2,
       LedStripA.RED_CENTER_GOALS[1],
       MotorA.RED_CENTER_GOALS[1],
-      'red.EC2',
+      'redNexusState.EC2',
+      'red',
       broadcast
     );
     this.handleGoalStateChange(
@@ -382,7 +394,8 @@ export class PacketManager {
       currentDetails.redNexusState.EC3,
       LedStripA.RED_CENTER_GOALS[2],
       MotorA.RED_CENTER_GOALS[2],
-      'red.EC3',
+      'redNexusState.EC3',
+      'red',
       broadcast
     );
     this.handleGoalStateChange(
@@ -390,7 +403,8 @@ export class PacketManager {
       currentDetails.redNexusState.EC4,
       LedStripA.RED_CENTER_GOALS[3],
       MotorA.RED_CENTER_GOALS[3],
-      'red.EC4',
+      'redNexusState.EC4',
+      'red',
       broadcast
     );
     this.handleGoalStateChange(
@@ -398,7 +412,8 @@ export class PacketManager {
       currentDetails.redNexusState.EC5,
       LedStripA.RED_CENTER_GOALS[4],
       MotorA.RED_CENTER_GOALS[4],
-      'red.EC5',
+      'redNexusState.EC5',
+      'red',
       broadcast
     );
     this.handleGoalStateChange(
@@ -406,7 +421,8 @@ export class PacketManager {
       currentDetails.redNexusState.EC6,
       LedStripA.RED_CENTER_GOALS[5],
       MotorA.RED_CENTER_GOALS[5],
-      'red.EC6',
+      'redNexusState.EC6',
+      'red',
       broadcast
     );
 
@@ -415,7 +431,8 @@ export class PacketManager {
       currentDetails.blueNexusState.CW1,
       LedStripA.BLUE_SIDE_GOALS[0],
       MotorA.BLUE_SIDE_GOALS[0],
-      'blue.CW1',
+      'blueNexusState.CW1',
+      'blue',
       broadcast
     );
     this.handleGoalStateChange(
@@ -423,7 +440,8 @@ export class PacketManager {
       currentDetails.blueNexusState.CW2,
       LedStripA.BLUE_SIDE_GOALS[1],
       MotorA.BLUE_SIDE_GOALS[1],
-      'blue.CW2',
+      'blueNexusState.CW2',
+      'blue',
       broadcast
     );
     this.handleGoalStateChange(
@@ -431,7 +449,8 @@ export class PacketManager {
       currentDetails.blueNexusState.CW3,
       LedStripA.BLUE_SIDE_GOALS[2],
       MotorA.BLUE_SIDE_GOALS[2],
-      'blue.CW3',
+      'blueNexusState.CW3',
+      'blue',
       broadcast
     );
     this.handleGoalStateChange(
@@ -439,7 +458,8 @@ export class PacketManager {
       currentDetails.blueNexusState.CW4,
       LedStripA.BLUE_SIDE_GOALS[3],
       MotorA.BLUE_SIDE_GOALS[3],
-      'blue.CW4',
+      'blueNexusState.CW4',
+      'blue',
       broadcast
     );
     this.handleGoalStateChange(
@@ -447,7 +467,8 @@ export class PacketManager {
       currentDetails.blueNexusState.CW5,
       LedStripA.BLUE_SIDE_GOALS[4],
       MotorA.BLUE_SIDE_GOALS[4],
-      'blue.CW5',
+      'blueNexusState.CW5',
+      'blue',
       broadcast
     );
     this.handleGoalStateChange(
@@ -455,7 +476,8 @@ export class PacketManager {
       currentDetails.blueNexusState.CW6,
       LedStripA.BLUE_SIDE_GOALS[5],
       MotorA.BLUE_SIDE_GOALS[5],
-      'blue.CW6',
+      'blueNexusState.CW6',
+      'blue',
       broadcast
     );
     this.handleGoalStateChange(
@@ -463,7 +485,8 @@ export class PacketManager {
       currentDetails.blueNexusState.EC1,
       LedStripA.BLUE_CENTER_GOALS[0],
       MotorA.BLUE_CENTER_GOALS[0],
-      'blue.EC1',
+      'blueNexusState.EC1',
+      'blue',
       broadcast
     );
     this.handleGoalStateChange(
@@ -471,7 +494,8 @@ export class PacketManager {
       currentDetails.blueNexusState.EC2,
       LedStripA.BLUE_CENTER_GOALS[1],
       MotorA.BLUE_CENTER_GOALS[1],
-      'blue.EC2',
+      'blueNexusState.EC2',
+      'blue',
       broadcast
     );
     this.handleGoalStateChange(
@@ -479,7 +503,8 @@ export class PacketManager {
       currentDetails.blueNexusState.EC3,
       LedStripA.BLUE_CENTER_GOALS[2],
       MotorA.BLUE_CENTER_GOALS[2],
-      'blue.EC3',
+      'blueNexusState.EC3',
+      'blue',
       broadcast
     );
     this.handleGoalStateChange(
@@ -487,7 +512,8 @@ export class PacketManager {
       currentDetails.blueNexusState.EC4,
       LedStripA.BLUE_CENTER_GOALS[3],
       MotorA.BLUE_CENTER_GOALS[3],
-      'blue.EC4',
+      'blueNexusState.EC4',
+      'blue',
       broadcast
     );
     this.handleGoalStateChange(
@@ -495,7 +521,8 @@ export class PacketManager {
       currentDetails.blueNexusState.EC5,
       LedStripA.BLUE_CENTER_GOALS[4],
       MotorA.BLUE_CENTER_GOALS[4],
-      'blue.EC5',
+      'blueNexusState.EC5',
+      'blue',
       broadcast
     );
     this.handleGoalStateChange(
@@ -503,7 +530,8 @@ export class PacketManager {
       currentDetails.blueNexusState.EC6,
       LedStripA.BLUE_CENTER_GOALS[5],
       MotorA.BLUE_CENTER_GOALS[5],
-      'blue.EC6',
+      'blueNexusState.EC6',
+      'blue',
       broadcast
     );
 
@@ -520,6 +548,7 @@ export class PacketManager {
     strip: LedStripA,
     motor: MotorA,
     goal: string,
+    side: string,
     broadcast: (update: FieldControlUpdatePacket) => void
   ) => {
     if (previousState === currentState) return;
@@ -562,7 +591,15 @@ export class PacketManager {
             broadcast(result);
           }, 5000); // TODO(jan): Use field options
 
-          // TODO(jan): Update match to mark food as dispensed
+          this.matchEmitter.emit(MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER, {
+            key: `${side}FoodProduced`,
+            adjustment: 1
+          } satisfies NumberAdjustment);
+
+          this.matchEmitter.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, {
+            key: goal,
+            value: NexusGoalState.Produced
+          });
         }, 5000) // TODO(jan): Make this time configurable
       );
     } else if (
