@@ -1,4 +1,6 @@
+import EventEmitter from 'node:events';
 import {
+  DigitalInputsResult,
   FieldControlInitPacket,
   FieldControlUpdatePacket,
   FieldOptions,
@@ -12,6 +14,7 @@ import {
   LedStrip,
   Motor
 } from './Packets.js';
+import { ItemUpdate, MatchSocketEvent } from '../base/Match.js';
 
 enum RevHub {
   RED_CONTROL_HUB = 0,
@@ -143,19 +146,19 @@ const createNexusGoalSegments = (
 
 export class PacketManager {
   private fieldOptions: FieldOptions;
-  private broadcastCallback: (update: FieldControlUpdatePacket) => void =
-    () => {};
+  private broadcastCallback: (update: FieldControlUpdatePacket) => void;
+  private matchEmitter: EventEmitter;
   private timers = new Map<string, NodeJS.Timeout>();
 
-  public constructor(fieldOptions: FieldOptions) {
+  public constructor(
+    fieldOptions: FieldOptions,
+    broadcastCallback: (update: FieldControlUpdatePacket) => void,
+    matchEmitter: EventEmitter
+  ) {
     this.fieldOptions = fieldOptions;
+    this.broadcastCallback = broadcastCallback;
+    this.matchEmitter = matchEmitter;
   }
-
-  public initialize = (
-    broadcast: (update: FieldControlUpdatePacket) => void
-  ) => {
-    this.broadcastCallback = broadcast;
-  };
 
   public setFieldOptions = (fieldOptions: FieldOptions): void => {
     this.fieldOptions = fieldOptions;
@@ -584,5 +587,13 @@ export class PacketManager {
         broadcast(result);
       }, 500) // TODO(jan): Make this configurable
     );
+  };
+
+  public handleDigitalInputs = (packet: DigitalInputsResult) => {
+    const digitalInput = packet.hubs[RevHub.CENTER_CONTROL_HUB] & 0x1;
+    this.matchEmitter.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, {
+      key: 'fieldBalanced',
+      value: digitalInput
+    } satisfies ItemUpdate);
   };
 }

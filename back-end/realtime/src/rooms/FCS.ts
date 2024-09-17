@@ -2,10 +2,8 @@ import { Server, Socket } from 'socket.io';
 import {
   defaultFieldOptions,
   FeedingTheFuture,
-  FeedingTheFutureFCS,
   FieldControlUpdatePacket,
   FieldOptions,
-  ItemUpdate,
   Match as MatchObj,
   MatchSocketEvent,
   WledInitParameters
@@ -19,6 +17,7 @@ import {
 } from '../util/WLEDHelper.js';
 import logger from '../util/Logger.js';
 import { defaultMatchDetails } from '@toa-lib/models/build/seasons/FeedingTheFuture.js';
+import { PacketManager } from '@toa-lib/models/build/fcs/FeedingTheFutureFCS.js';
 
 export default class FCS extends Room {
   private readonly latestFcsStatus: FieldControlUpdatePacket = {
@@ -26,18 +25,18 @@ export default class FCS extends Room {
     wleds: {}
   };
   private wledSockets: Record<string, WebSocket> = {};
-  public readonly matchRoom: Match;
   private previousMatchDetails: FeedingTheFuture.MatchDetails =
     defaultMatchDetails;
-  private packetManager = new FeedingTheFutureFCS.PacketManager(
-    defaultFieldOptions
-  );
+  private packetManager: PacketManager;
 
   public constructor(server: Server, matchRoom: Match) {
     super(server, 'fcs');
 
-    this.matchRoom = matchRoom;
-    this.packetManager.initialize(this.broadcastFcsUpdate);
+    this.packetManager = new PacketManager(
+      defaultFieldOptions,
+      this.broadcastFcsUpdate,
+      matchRoom.localEmitter
+    );
 
     // Connect to wled websocket servers if there are wleds
     Object.entries(this.packetManager.getInitPacket().wleds).forEach((wled) => {
@@ -98,17 +97,7 @@ export default class FCS extends Room {
       this.reinitializeWleds();
     });
 
-    socket.on('fcs:digitalInputs', (packet) => {
-      // TODO(jan): Abstract this
-      const digitalInput = packet.hubs[3] & 0x1;
-      this.matchRoom.localEmitter.emit(
-        MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
-        {
-          key: 'fieldBalanced',
-          value: digitalInput
-        } satisfies ItemUpdate
-      );
-    });
+    socket.on('fcs:digitalInputs', this.packetManager.handleDigitalInputs);
 
     socket.emit('fcs:update', this.latestFcsStatus);
   }

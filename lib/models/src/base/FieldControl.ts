@@ -37,6 +37,9 @@ export interface DigitalInputUpdateParameters {
 }
 export interface DigitalInputInitParameters
   extends DigitalInputUpdateParameters {}
+export interface DigitalInputsResult {
+  hubs: Record<number, number>;
+}
 
 //-------------------------------------------
 // Hub parameters
