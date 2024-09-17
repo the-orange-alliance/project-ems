@@ -580,7 +580,7 @@ export class PacketManager {
       setTimeout(() => {
         const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
         applyPatternToStrips(
-          currentBalanced ? '000000' : 'ff00ff',
+          currentBalanced ? 'ff00ff' : '000000',
           [LedStripA.RAMP],
           result
         );
@@ -590,10 +590,10 @@ export class PacketManager {
   };
 
   public handleDigitalInputs = (packet: DigitalInputsResult) => {
-    const digitalInput = packet.hubs[RevHub.CENTER_CONTROL_HUB] & 0x1;
+    const balanced = (packet.hubs[RevHub.CENTER_CONTROL_HUB] & 0x1) !== 1;
     this.matchEmitter.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, {
       key: 'fieldBalanced',
-      value: digitalInput
+      value: balanced
     } satisfies ItemUpdate);
   };
 }
