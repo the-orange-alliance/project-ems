@@ -149,6 +149,7 @@ export class PacketManager {
   private broadcastCallback: (update: FieldControlUpdatePacket) => void;
   private matchEmitter: EventEmitter;
   private timers = new Map<string, NodeJS.Timeout>();
+  private matchInProgress: boolean = false;
 
   public constructor(
     fieldOptions: FieldOptions,
@@ -228,6 +229,8 @@ export class PacketManager {
   };
 
   public handleAbort = (): void => {
+    this.matchInProgress = false;
+
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
       this.fieldOptions.fieldFaultColor,
@@ -251,6 +254,8 @@ export class PacketManager {
   };
 
   public handleMatchStart = (): void => {
+    this.matchInProgress = true;
+
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips('000000', LedStripA.ALL_STRIPS, result);
 
@@ -262,6 +267,8 @@ export class PacketManager {
   };
 
   public handleMatchEnd = (): void => {
+    this.matchInProgress = false;
+
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
       this.fieldOptions.matchEndBlueNexusGoalColor,
@@ -304,6 +311,8 @@ export class PacketManager {
     currentDetails: FeedingTheFuture.MatchDetails,
     broadcast: (update: FieldControlUpdatePacket) => void
   ) => {
+    if (!this.matchInProgress) return;
+
     this.handleGoalStateChange(
       previousDetails.redNexusState.CW1,
       currentDetails.redNexusState.CW1,
@@ -539,6 +548,8 @@ export class PacketManager {
       this.timers.set(
         goal,
         setTimeout(() => {
+          if (!this.matchInProgress) return;
+
           // Set pattern
           const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
           applyPatternToStrips('ffffff', [strip], result);
@@ -590,6 +601,8 @@ export class PacketManager {
   };
 
   public handleDigitalInputs = (packet: DigitalInputsResult) => {
+    if (!this.matchInProgress) return;
+
     const balanced = (packet.hubs[RevHub.CENTER_CONTROL_HUB] & 0x1) !== 1;
     this.matchEmitter.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, {
       key: 'fieldBalanced',
