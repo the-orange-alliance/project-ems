@@ -122,8 +122,16 @@ export interface FieldOptions {
   blueWledWebSocketAddress: string;
   centerWledWebSocketAddress: string;
   foodProductionMotorSetpoint: number;
-  foodProductionMotorDurationSeconds: number;
+  foodProductionMotorDurationMs: number;
   foodResetMotorSetpoint: number;
+  foodProductionDelayMs: number;
+  rampHysteresisWindowMs: number;
+  goalEmptyColor: string;
+  goalBlueOnlyColor: string;
+  goalGreenOnlyColor: string;
+  goalFullColor: string;
+  rampBalancedColor: string;
+  rampUnbalancedColor: string;
 }
 
 export const defaultFieldOptions: FieldOptions = {
@@ -139,6 +147,14 @@ export const defaultFieldOptions: FieldOptions = {
   blueWledWebSocketAddress: '',
   centerWledWebSocketAddress: '',
   foodProductionMotorSetpoint: 1.0,
-  foodProductionMotorDurationSeconds: 5,
-  foodResetMotorSetpoint: -0.5
+  foodProductionMotorDurationMs: 5000,
+  foodResetMotorSetpoint: -0.5,
+  foodProductionDelayMs: 5000,
+  rampHysteresisWindowMs: 500,
+  goalEmptyColor: '000000',
+  goalBlueOnlyColor: '0000ff',
+  goalGreenOnlyColor: '00ff00',
+  goalFullColor: 'ffa500',
+  rampBalancedColor: 'ff00ff',
+  rampUnbalancedColor: '000000'
 };

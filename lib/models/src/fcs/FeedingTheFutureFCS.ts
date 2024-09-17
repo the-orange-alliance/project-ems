@@ -261,7 +261,11 @@ export class PacketManager {
     this.matchInProgress = true;
 
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-    applyPatternToStrips('000000', LedStripA.ALL_STRIPS, result);
+    applyPatternToStrips(
+      this.fieldOptions.goalEmptyColor,
+      LedStripA.ALL_STRIPS,
+      result
+    );
 
     this.broadcastCallback(result);
   };
@@ -557,16 +561,24 @@ export class PacketManager {
 
     switch (currentState) {
       case NexusGoalState.Full:
-        applyPatternToStrips('ffa500', [strip], result);
+        applyPatternToStrips(this.fieldOptions.goalFullColor, [strip], result);
         break;
       case NexusGoalState.BlueOnly:
-        applyPatternToStrips('0000ff', [strip], result);
+        applyPatternToStrips(
+          this.fieldOptions.goalBlueOnlyColor,
+          [strip],
+          result
+        );
         break;
       case NexusGoalState.GreenOnly:
-        applyPatternToStrips('00ff00', [strip], result);
+        applyPatternToStrips(
+          this.fieldOptions.goalGreenOnlyColor,
+          [strip],
+          result
+        );
         break;
       default:
-        applyPatternToStrips('000000', [strip], result);
+        applyPatternToStrips(this.fieldOptions.goalEmptyColor, [strip], result);
     }
 
     if (
@@ -582,14 +594,18 @@ export class PacketManager {
           // Set pattern
           const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
           applyPatternToStrips('ffffff', [strip], result);
-          applySetpointToMotors(1.0, [motor], result);
+          applySetpointToMotors(
+            this.fieldOptions.foodProductionMotorSetpoint,
+            [motor],
+            result
+          );
           broadcast(result);
 
           setTimeout(() => {
             const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
             applySetpointToMotors(0, [motor], result);
             broadcast(result);
-          }, 5000); // TODO(jan): Use field options
+          }, this.fieldOptions.foodProductionMotorDurationMs);
 
           this.matchEmitter.emit(MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER, {
             key: `${side}FoodProduced`,
@@ -600,7 +616,7 @@ export class PacketManager {
             key: goal,
             value: NexusGoalState.Produced
           });
-        }, 5000) // TODO(jan): Make this time configurable
+        }, this.fieldOptions.foodProductionDelayMs)
       );
     } else if (
       currentState !== NexusGoalState.Full &&
@@ -628,12 +644,14 @@ export class PacketManager {
       setTimeout(() => {
         const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
         applyPatternToStrips(
-          currentBalanced ? 'ff00ff' : '000000',
+          currentBalanced
+            ? this.fieldOptions.rampBalancedColor
+            : this.fieldOptions.rampUnbalancedColor,
           [LedStripA.RAMP],
           result
         );
         broadcast(result);
-      }, 500) // TODO(jan): Make this configurable
+      }, this.fieldOptions.rampHysteresisWindowMs)
     );
   };
 

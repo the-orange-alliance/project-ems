@@ -7,15 +7,23 @@ import {
   centerWledWebSocketAddressAtom,
   fieldFaultColorAtom,
   fieldOptionsSelector,
-  foodProductionMotorDurationSecondsAtom,
+  foodProductionDelayMsAtom,
+  foodProductionMotorDurationMsAtom,
   foodProductionMotorSetpointAtom,
   foodResetMotorSetpointAtom,
+  goalBlueOnlyColorAtom,
+  goalEmptyColorAtom,
+  goalFullColorAtom,
+  goalGreenOnlyColorAtom,
   goalLedLengthAtom,
   matchEndBlueNexusGoalColorAtom,
   matchEndRampColorAtom,
   matchEndRedNexusGoalColorAtom,
   prepareFieldColorAtom,
+  rampBalancedColorAtom,
+  rampHysteresisWindowMsAtom,
   rampLedLengthAtom,
+  rampUnbalancedColorAtom,
   redWledWebSocketAddressAtom
 } from './stores/settings-store';
 import { NumberSetting } from 'src/apps/settings/components/number-setting';
@@ -49,12 +57,31 @@ export const Settings: FC = () => {
     useRecoilState(centerWledWebSocketAddressAtom);
   const [foodProductionMotorSetpoint, setFoodProductionMotorSetpoint] =
     useRecoilState(foodProductionMotorSetpointAtom);
-  const [
-    foodProductionMotorDurationSeconds,
-    setFoodProductionMotorDurationSeconds
-  ] = useRecoilState(foodProductionMotorDurationSecondsAtom);
+  const [foodProductionMotorDurationMs, setFoodProductionMotorDurationMs] =
+    useRecoilState(foodProductionMotorDurationMsAtom);
   const [foodResetMotorSetpoint, setFoodResetMotorSetpoint] = useRecoilState(
     foodResetMotorSetpointAtom
+  );
+  const [foodProductionDelayMs, setFoodProductionDelayMs] = useRecoilState(
+    foodProductionDelayMsAtom
+  );
+  const [rampHysteresisWindowMs, setRampHysteresisWindowMs] = useRecoilState(
+    rampHysteresisWindowMsAtom
+  );
+  const [goalEmptyColor, setGoalEmptyColor] =
+    useRecoilState(goalEmptyColorAtom);
+  const [goalBlueOnlyColor, setGoalBlueOnlyColor] = useRecoilState(
+    goalBlueOnlyColorAtom
+  );
+  const [goalGreenOnlyColor, setGoalGreenOnlyColor] = useRecoilState(
+    goalGreenOnlyColorAtom
+  );
+  const [goalFullColor, setGoalFullColor] = useRecoilState(goalFullColorAtom);
+  const [rampBalancedColor, setRampBalancedColor] = useRecoilState(
+    rampBalancedColorAtom
+  );
+  const [rampUnbalancedColor, setRampUnbalancedColor] = useRecoilState(
+    rampUnbalancedColorAtom
   );
 
   const fieldOptions: FieldOptions = useRecoilValue(fieldOptionsSelector);
@@ -138,15 +165,63 @@ export const Settings: FC = () => {
         inline
       />
       <NumberSetting
-        name='Food Production Moto rDuration Seconds'
-        value={foodProductionMotorDurationSeconds}
-        onChange={setFoodProductionMotorDurationSeconds}
+        name='Food Production Motor Duration (ms)'
+        value={foodProductionMotorDurationMs}
+        onChange={setFoodProductionMotorDurationMs}
         inline
       />
       <NumberSetting
         name='Food Reset Motor Setpoint'
         value={foodResetMotorSetpoint}
         onChange={setFoodResetMotorSetpoint}
+        inline
+      />
+      <NumberSetting
+        name='Food Production Delay (ms)'
+        value={foodProductionDelayMs}
+        onChange={setFoodProductionDelayMs}
+        inline
+      />
+      <NumberSetting
+        name='Ramp Hysteresis Window (ms)'
+        value={rampHysteresisWindowMs}
+        onChange={setRampHysteresisWindowMs}
+        inline
+      />
+      <TextSetting
+        name='Empty Goal Color'
+        value={goalEmptyColor}
+        onChange={setGoalEmptyColor}
+        inline
+      />
+      <TextSetting
+        name='Blue Only Goal Color'
+        value={goalBlueOnlyColor}
+        onChange={setGoalBlueOnlyColor}
+        inline
+      />
+      <TextSetting
+        name='Green Only Goal Color'
+        value={goalGreenOnlyColor}
+        onChange={setGoalGreenOnlyColor}
+        inline
+      />
+      <TextSetting
+        name='Full Goal Color'
+        value={goalFullColor}
+        onChange={setGoalFullColor}
+        inline
+      />
+      <TextSetting
+        name='Ramp Balanced Color'
+        value={rampBalancedColor}
+        onChange={setRampBalancedColor}
+        inline
+      />
+      <TextSetting
+        name='Ramp Unbalanced Color'
+        value={rampUnbalancedColor}
+        onChange={setRampUnbalancedColor}
         inline
       />
     </Box>

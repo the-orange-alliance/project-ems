@@ -74,16 +74,64 @@ export const foodProductionMotorSetpointAtom = atom<number>({
   effects: [localStorageEffect('ftf.foodProductionMotorSetpoint')]
 });
 
-export const foodProductionMotorDurationSecondsAtom = atom<number>({
-  key: 'ftf.foodProductionMotorDurationSeconds',
-  default: defaultFieldOptions.foodProductionMotorDurationSeconds,
-  effects: [localStorageEffect('ftf.foodProductionMotorDurationSeconds')]
+export const foodProductionMotorDurationMsAtom = atom<number>({
+  key: 'ftf.foodProductionMotorDurationMs',
+  default: defaultFieldOptions.foodProductionMotorDurationMs,
+  effects: [localStorageEffect('ftf.foodProductionMotorDurationMs')]
 });
 
 export const foodResetMotorSetpointAtom = atom<number>({
   key: 'ftf.foodResetMotorSetpoint',
   default: defaultFieldOptions.foodResetMotorSetpoint,
   effects: [localStorageEffect('ftf.foodResetMotorSetpoint')]
+});
+
+export const foodProductionDelayMsAtom = atom<number>({
+  key: 'ftf.foodProductionDelayMs',
+  default: defaultFieldOptions.foodProductionDelayMs,
+  effects: [localStorageEffect('ftf.foodProductionDelayMs')]
+});
+
+export const rampHysteresisWindowMsAtom = atom<number>({
+  key: 'ftf.rampHysteresisWindowMs',
+  default: defaultFieldOptions.rampHysteresisWindowMs,
+  effects: [localStorageEffect('ftf.rampHysteresisWindowMs')]
+});
+
+export const goalEmptyColorAtom = atom<string>({
+  key: 'ftf.goalEmptyColor',
+  default: defaultFieldOptions.goalEmptyColor,
+  effects: [localStorageEffect('ftf.goalEmptyColor')]
+});
+
+export const goalBlueOnlyColorAtom = atom<string>({
+  key: 'ftf.goalBlueOnlyColor',
+  default: defaultFieldOptions.goalBlueOnlyColor,
+  effects: [localStorageEffect('ftf.goalBlueOnlyColor')]
+});
+
+export const goalGreenOnlyColorAtom = atom<string>({
+  key: 'ftf.goalGreenOnlyColor',
+  default: defaultFieldOptions.goalGreenOnlyColor,
+  effects: [localStorageEffect('ftf.goalGreenOnlyColor')]
+});
+
+export const goalFullColorAtom = atom<string>({
+  key: 'ftf.goalFullColor',
+  default: defaultFieldOptions.goalFullColor,
+  effects: [localStorageEffect('ftf.goalFullColor')]
+});
+
+export const rampBalancedColorAtom = atom<string>({
+  key: 'ftf.rampBalancedColor',
+  default: defaultFieldOptions.rampBalancedColor,
+  effects: [localStorageEffect('ftf.rampBalancedColor')]
+});
+
+export const rampUnbalancedColorAtom = atom<string>({
+  key: 'ftf.rampUnbalancedColor',
+  default: defaultFieldOptions.rampUnbalancedColor,
+  effects: [localStorageEffect('ftf.rampUnbalancedColor')]
 });
 
 export const fieldOptionsSelector: RecoilValueReadOnly<FieldOptions> = selector(
@@ -103,10 +151,16 @@ export const fieldOptionsSelector: RecoilValueReadOnly<FieldOptions> = selector(
         blueWledWebSocketAddress: get(blueWledWebSocketAddressAtom),
         centerWledWebSocketAddress: get(centerWledWebSocketAddressAtom),
         foodProductionMotorSetpoint: get(foodProductionMotorSetpointAtom),
-        foodProductionMotorDurationSeconds: get(
-          foodProductionMotorDurationSecondsAtom
-        ),
-        foodResetMotorSetpoint: get(foodResetMotorSetpointAtom)
+        foodProductionMotorDurationMs: get(foodProductionMotorDurationMsAtom),
+        foodResetMotorSetpoint: get(foodResetMotorSetpointAtom),
+        foodProductionDelayMs: get(foodProductionDelayMsAtom),
+        rampHysteresisWindowMs: get(rampHysteresisWindowMsAtom),
+        goalEmptyColor: get(goalEmptyColorAtom),
+        goalBlueOnlyColor: get(goalBlueOnlyColorAtom),
+        goalGreenOnlyColor: get(goalGreenOnlyColorAtom),
+        goalFullColor: get(goalFullColorAtom),
+        rampBalancedColor: get(rampBalancedColorAtom),
+        rampUnbalancedColor: get(rampUnbalancedColorAtom)
       };
     }
   }
