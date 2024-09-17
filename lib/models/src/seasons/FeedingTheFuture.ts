@@ -59,7 +59,8 @@ export enum NexusGoalState {
   Empty = 0,
   BlueOnly = 1,
   GreenOnly = 2,
-  Full = 3
+  Full = 3,
+  Produced = 4
 }
 export interface AllianceNexusGoalState {
   CW1: NexusGoalState;

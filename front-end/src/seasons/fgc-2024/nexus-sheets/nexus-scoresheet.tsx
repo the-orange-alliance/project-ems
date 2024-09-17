@@ -284,6 +284,12 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
   onChange,
   single
 }) => {
+
+  // If the food has been produced, we'll disable the toggle
+  if (state === NexusGoalState.Produced) {
+    disabled = true;
+  }
+
   const toggleBlue = () => {
     if (!onChange) return;
 
