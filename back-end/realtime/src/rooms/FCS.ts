@@ -18,7 +18,6 @@ import {
   buildWledSetColorPacket
 } from '../util/WLEDHelper.js';
 import logger from '../util/Logger.js';
-import { matchUpdateCallback } from '../util/FeedingTheFutureCallbacks.js';
 import { defaultMatchDetails } from '@toa-lib/models/build/seasons/FeedingTheFuture.js';
 
 export default class FCS extends Room {
@@ -69,7 +68,7 @@ export default class FCS extends Room {
       MatchSocketEvent.UPDATE,
       (match: MatchObj<any>) => {
         if (!match.details) return;
-        matchUpdateCallback(
+        this.packetManager.handleMatchUpdate(
           this.previousMatchDetails,
           match.details,
           this.broadcastFcsUpdate
