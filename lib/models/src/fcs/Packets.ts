@@ -1,11 +1,7 @@
 import {
   FieldControlInitPacket,
-  FieldControlUpdatePacket,
-  FieldOptions,
-  LedSegment
+  FieldControlUpdatePacket
 } from '../base/FieldControl.js';
-import { NexusGoalState } from '../seasons/FeedingTheFuture.js';
-import { FeedingTheFuture } from '../seasons/index.js';
 
 export interface FcsPackets {
   init: FieldControlInitPacket;
@@ -17,25 +13,28 @@ export interface FcsPackets {
   allClear: FieldControlUpdatePacket;
 }
 
-enum RevHub {
-  RED_CONTROL_HUB = 0,
-  BLUE_CONTROL_HUB = 1,
-  CENTER_EXPANSION_HUB = 2,
-  CENTER_CONTROL_HUB = 3
+export class LedStrip {
+  public readonly controller: string;
+  public readonly segment: number;
+
+  public constructor(controller: string, segment: number) {
+    this.controller = controller;
+    this.segment = segment;
+  }
 }
 
-function createNexusGoalSegments(
-  fieldOptions: FieldOptions,
-  startingIndex: number = 0
-): LedSegment[] {
-  const segments: LedSegment[] = [];
-  for (let i = 0; i < 6; i++) {
-    segments.push({
-      start: i * fieldOptions.goalLedLength + startingIndex,
-      stop: (i + 1) * fieldOptions.goalLedLength + startingIndex
-    });
+type MotorPortType = 'on board' | 'spark mini';
+
+export class Motor {
+  public readonly hub: number;
+  public readonly portType: MotorPortType;
+  public readonly port: number;
+
+  public constructor(hub: number, portType: MotorPortType, port: number) {
+    this.hub = hub;
+    this.portType = portType;
+    this.port = port;
   }
-  return segments;
 }
 
 export function applyPatternToStrips(
@@ -79,338 +78,4 @@ export function applySetpointToMotors(
       });
     }
   });
-}
-
-type WledController = 'center' | 'red' | 'blue';
-
-export class LedStrip {
-  public static readonly RED_SIDE_GOALS = [
-    new LedStrip('red', 0),
-    new LedStrip('red', 1),
-    new LedStrip('red', 2),
-    new LedStrip('red', 3),
-    new LedStrip('red', 4),
-    new LedStrip('red', 5)
-  ];
-
-  public static readonly BLUE_SIDE_GOALS = [
-    new LedStrip('blue', 0),
-    new LedStrip('blue', 1),
-    new LedStrip('blue', 2),
-    new LedStrip('blue', 3),
-    new LedStrip('blue', 4),
-    new LedStrip('blue', 5)
-  ];
-
-  public static readonly RED_CENTER_GOALS = [
-    new LedStrip('center', 0),
-    new LedStrip('center', 1),
-    new LedStrip('center', 2),
-    new LedStrip('center', 3),
-    new LedStrip('center', 4),
-    new LedStrip('center', 5)
-  ];
-
-  public static readonly BLUE_CENTER_GOALS = [
-    new LedStrip('center', 6),
-    new LedStrip('center', 7),
-    new LedStrip('center', 8),
-    new LedStrip('center', 9),
-    new LedStrip('center', 10),
-    new LedStrip('center', 11)
-  ];
-
-  public static readonly RAMP = new LedStrip('center', 12);
-
-  public static readonly ALL_RED_GOALS = [
-    ...LedStrip.RED_SIDE_GOALS,
-    ...LedStrip.RED_CENTER_GOALS
-  ];
-
-  public static readonly ALL_BLUE_GOALS = [
-    ...LedStrip.BLUE_SIDE_GOALS,
-    ...LedStrip.BLUE_CENTER_GOALS
-  ];
-
-  public static readonly ALL_NEXUS_GOALS = [
-    ...LedStrip.ALL_RED_GOALS,
-    ...LedStrip.ALL_BLUE_GOALS
-  ];
-
-  public static readonly ALL_STRIPS = [
-    ...LedStrip.ALL_NEXUS_GOALS,
-    LedStrip.RAMP
-  ];
-
-  public readonly controller: WledController;
-  public readonly segment: number;
-
-  private constructor(controller: WledController, segment: number) {
-    this.controller = controller;
-    this.segment = segment;
-  }
-}
-
-type MotorPortType = 'on board' | 'spark mini';
-
-export class Motor {
-  public static readonly RED_SIDE_GOALS: Motor[] = [
-    new Motor(RevHub.RED_CONTROL_HUB, 'on board', 0),
-    new Motor(RevHub.RED_CONTROL_HUB, 'on board', 1),
-    new Motor(RevHub.RED_CONTROL_HUB, 'on board', 2),
-    new Motor(RevHub.RED_CONTROL_HUB, 'on board', 3),
-    new Motor(RevHub.RED_CONTROL_HUB, 'spark mini', 4),
-    new Motor(RevHub.RED_CONTROL_HUB, 'spark mini', 5)
-  ];
-
-  public static readonly BLUE_SIDE_GOALS: Motor[] = [
-    new Motor(RevHub.BLUE_CONTROL_HUB, 'on board', 0),
-    new Motor(RevHub.BLUE_CONTROL_HUB, 'on board', 1),
-    new Motor(RevHub.BLUE_CONTROL_HUB, 'on board', 2),
-    new Motor(RevHub.BLUE_CONTROL_HUB, 'on board', 3),
-    new Motor(RevHub.BLUE_CONTROL_HUB, 'spark mini', 4),
-    new Motor(RevHub.BLUE_CONTROL_HUB, 'spark mini', 5)
-  ];
-
-  public static readonly RED_CENTER_GOALS: Motor[] = [
-    new Motor(RevHub.CENTER_CONTROL_HUB, 'on board', 0),
-    new Motor(RevHub.CENTER_CONTROL_HUB, 'on board', 1),
-    new Motor(RevHub.CENTER_CONTROL_HUB, 'on board', 2),
-    new Motor(RevHub.CENTER_CONTROL_HUB, 'on board', 3),
-    new Motor(RevHub.CENTER_CONTROL_HUB, 'spark mini', 4),
-    new Motor(RevHub.CENTER_CONTROL_HUB, 'spark mini', 5)
-  ];
-
-  public static readonly BLUE_CENTER_GOALS: Motor[] = [
-    new Motor(RevHub.CENTER_EXPANSION_HUB, 'on board', 0),
-    new Motor(RevHub.CENTER_EXPANSION_HUB, 'on board', 1),
-    new Motor(RevHub.CENTER_EXPANSION_HUB, 'on board', 2),
-    new Motor(RevHub.CENTER_EXPANSION_HUB, 'on board', 3),
-    new Motor(RevHub.CENTER_EXPANSION_HUB, 'spark mini', 4),
-    new Motor(RevHub.CENTER_EXPANSION_HUB, 'spark mini', 5)
-  ];
-
-  public static readonly ALL_GOALS = [
-    ...this.RED_SIDE_GOALS,
-    ...this.BLUE_SIDE_GOALS,
-    ...this.RED_CENTER_GOALS,
-    ...this.BLUE_CENTER_GOALS
-  ];
-
-  public readonly hub: RevHub;
-  public readonly portType: MotorPortType;
-  public readonly port: number;
-
-  private constructor(hub: RevHub, portType: MotorPortType, port: number) {
-    this.hub = hub;
-    this.portType = portType;
-    this.port = port;
-  }
-}
-
-/**
- * This packet must specify the initial state of EVERY port that will be used at any point.
- */
-function buildInitPacket(fieldOptions: FieldOptions): FieldControlInitPacket {
-  const result: FieldControlInitPacket = { hubs: {}, wleds: {} };
-
-  result.wleds['center'] = {
-    address: fieldOptions.centerWledWebSocketAddress,
-    segments: [
-      ...createNexusGoalSegments(fieldOptions),
-      ...createNexusGoalSegments(fieldOptions, 6 * fieldOptions.goalLedLength),
-      {
-        start: 2 * 6 * fieldOptions.goalLedLength,
-        stop: 2 * 6 * fieldOptions.goalLedLength + fieldOptions.rampLedLength
-      }
-    ]
-  };
-
-  result.wleds['red'] = {
-    address: fieldOptions.redWledWebSocketAddress,
-    segments: createNexusGoalSegments(fieldOptions)
-  };
-
-  result.wleds['blue'] = {
-    address: fieldOptions.blueWledWebSocketAddress,
-    segments: createNexusGoalSegments(fieldOptions)
-  };
-
-  const ensureHub = (hub: RevHub) => {
-    if (result.hubs[hub] == undefined) {
-      result.hubs[hub] = { motors: [], servos: [], digitalInputs: [] };
-    }
-  };
-
-  Motor.ALL_GOALS.forEach((motor) => {
-    ensureHub(motor.hub);
-    if (motor.portType === 'on board') {
-      result.hubs[motor.hub]!.motors!.push({
-        port: motor.port,
-        setpoint: 0
-      });
-    } else if (motor.portType === 'spark mini') {
-      result.hubs[motor.hub]!.servos!.push({
-        port: motor.port,
-        pulseWidth: 1500,
-        framePeriod: 20000
-      });
-    }
-  });
-
-  result.hubs[RevHub.CENTER_CONTROL_HUB]!.digitalInputs!.push({
-    channel: 0,
-    triggerOptions: null
-  });
-
-  return result;
-}
-
-function buildFieldFaultPacket(
-  fieldOptions: FieldOptions
-): FieldControlUpdatePacket {
-  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-  applyPatternToStrips(
-    fieldOptions.fieldFaultColor,
-    LedStrip.ALL_STRIPS,
-    result
-  );
-  return result;
-}
-
-function buildPrepareFieldPacket(
-  fieldOptions: FieldOptions
-): FieldControlUpdatePacket {
-  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-  applyPatternToStrips(
-    fieldOptions.prepareFieldColor,
-    LedStrip.ALL_STRIPS,
-    result
-  );
-  applySetpointToMotors(0, Motor.ALL_GOALS, result);
-  return result;
-}
-
-function buildMatchStartPacket(
-  fieldOptions: FieldOptions
-): FieldControlUpdatePacket {
-  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-  applyPatternToStrips('000000', LedStrip.ALL_STRIPS, result);
-  return result;
-}
-
-function buildEndgamePacket(
-  fieldOptions: FieldOptions
-): FieldControlUpdatePacket {
-  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-  return result;
-}
-
-function buildMatchEndPacket(
-  fieldOptions: FieldOptions
-): FieldControlUpdatePacket {
-  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-  applyPatternToStrips(
-    fieldOptions.matchEndBlueNexusGoalColor,
-    LedStrip.ALL_BLUE_GOALS,
-    result
-  );
-  applyPatternToStrips(
-    fieldOptions.matchEndRedNexusGoalColor,
-    LedStrip.ALL_RED_GOALS,
-    result
-  );
-  applyPatternToStrips(fieldOptions.matchEndRampColor, [LedStrip.RAMP], result);
-  applySetpointToMotors(0, Motor.ALL_GOALS, result);
-  return result;
-}
-
-function buildAllClearPacket(
-  fieldOptions: FieldOptions
-): FieldControlUpdatePacket {
-  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-  applyPatternToStrips(fieldOptions.allClearColor, LedStrip.ALL_STRIPS, result);
-  applySetpointToMotors(
-    fieldOptions.foodResetMotorSetpoint,
-    Motor.ALL_GOALS,
-    result
-  );
-  return result;
-}
-
-export function getFcsPackets(fieldOptions: FieldOptions): FcsPackets {
-  return {
-    init: buildInitPacket(fieldOptions),
-    fieldFault: buildFieldFaultPacket(fieldOptions),
-    prepareField: buildPrepareFieldPacket(fieldOptions),
-    matchStart: buildMatchStartPacket(fieldOptions),
-    endgame: buildEndgamePacket(fieldOptions),
-    matchEnd: buildMatchEndPacket(fieldOptions),
-    allClear: buildAllClearPacket(fieldOptions)
-  };
-}
-
-export function applyStateToGoal(
-  state: NexusGoalState,
-  strip: LedStrip,
-  result: FieldControlUpdatePacket
-) {
-  switch (state) {
-    case NexusGoalState.Full:
-      applyPatternToStrips('ffa500', [strip], result);
-      break;
-    case NexusGoalState.BlueOnly:
-      applyPatternToStrips('0000ff', [strip], result);
-      break;
-    case NexusGoalState.GreenOnly:
-      applyPatternToStrips('00ff00', [strip], result);
-      break;
-    default:
-      applyPatternToStrips('000000', [strip], result);
-  }
-}
-
-export function processMatchData(
-  details: FeedingTheFuture.MatchDetails
-): FieldControlUpdatePacket {
-  const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-
-  const redNexus = details.redNexusState;
-  const blueNexus = details.blueNexusState;
-
-  applyStateToGoal(redNexus.CW1, LedStrip.RED_SIDE_GOALS[0], result);
-  applyStateToGoal(redNexus.CW2, LedStrip.RED_SIDE_GOALS[1], result);
-  applyStateToGoal(redNexus.CW3, LedStrip.RED_SIDE_GOALS[2], result);
-  applyStateToGoal(redNexus.CW4, LedStrip.RED_SIDE_GOALS[3], result);
-  applyStateToGoal(redNexus.CW5, LedStrip.RED_SIDE_GOALS[4], result);
-  applyStateToGoal(redNexus.CW6, LedStrip.RED_SIDE_GOALS[5], result);
-
-  applyStateToGoal(redNexus.EC1, LedStrip.RED_CENTER_GOALS[0], result);
-  applyStateToGoal(redNexus.EC2, LedStrip.RED_CENTER_GOALS[1], result);
-  applyStateToGoal(redNexus.EC3, LedStrip.RED_CENTER_GOALS[2], result);
-  applyStateToGoal(redNexus.EC4, LedStrip.RED_CENTER_GOALS[3], result);
-  applyStateToGoal(redNexus.EC5, LedStrip.RED_CENTER_GOALS[4], result);
-  applyStateToGoal(redNexus.EC6, LedStrip.RED_CENTER_GOALS[5], result);
-
-  applyStateToGoal(blueNexus.CW1, LedStrip.BLUE_SIDE_GOALS[0], result);
-  applyStateToGoal(blueNexus.CW2, LedStrip.BLUE_SIDE_GOALS[1], result);
-  applyStateToGoal(blueNexus.CW3, LedStrip.BLUE_SIDE_GOALS[2], result);
-  applyStateToGoal(blueNexus.CW4, LedStrip.BLUE_SIDE_GOALS[3], result);
-  applyStateToGoal(blueNexus.CW5, LedStrip.BLUE_SIDE_GOALS[4], result);
-  applyStateToGoal(blueNexus.CW6, LedStrip.BLUE_SIDE_GOALS[5], result);
-
-  applyStateToGoal(blueNexus.EC1, LedStrip.BLUE_CENTER_GOALS[0], result);
-  applyStateToGoal(blueNexus.EC2, LedStrip.BLUE_CENTER_GOALS[1], result);
-  applyStateToGoal(blueNexus.EC3, LedStrip.BLUE_CENTER_GOALS[2], result);
-  applyStateToGoal(blueNexus.EC4, LedStrip.BLUE_CENTER_GOALS[3], result);
-  applyStateToGoal(blueNexus.EC5, LedStrip.BLUE_CENTER_GOALS[4], result);
-  applyStateToGoal(blueNexus.EC6, LedStrip.BLUE_CENTER_GOALS[5], result);
-
-  applyPatternToStrips(
-    details.fieldBalanced ? 'ff00ff' : '000000',
-    [LedStrip.RAMP],
-    result
-  );
-
-  return result;
 }

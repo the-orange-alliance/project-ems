@@ -3,13 +3,12 @@ import {
   defaultFieldOptions,
   FcsPackets,
   FeedingTheFuture,
+  FeedingTheFutureFCS,
   FieldControlUpdatePacket,
   FieldOptions,
-  getFcsPackets,
   ItemUpdate,
   Match as MatchObj,
   MatchSocketEvent,
-  processMatchData,
   WledInitParameters
 } from '@toa-lib/models';
 import Room from './Room.js';
@@ -28,11 +27,14 @@ export default class FCS extends Room {
     hubs: {},
     wleds: {}
   };
-  private fcsPackets: FcsPackets = getFcsPackets(defaultFieldOptions);
   private wledSockets: Record<string, WebSocket> = {};
   public readonly matchRoom: Match;
   private previousMatchDetails: FeedingTheFuture.MatchDetails =
     defaultMatchDetails;
+  private packetManager = new FeedingTheFutureFCS.PacketManager(
+    defaultFieldOptions
+  );
+  private fcsPackets: FcsPackets = this.packetManager.getFcsPackets();
 
   public constructor(server: Server, matchRoom: Match) {
     super(server, 'fcs');
@@ -78,7 +80,7 @@ export default class FCS extends Room {
     socket.emit('fcs:init', this.fcsPackets.init);
 
     socket.on('fcs:setFieldOptions', (fieldOptions: FieldOptions) => {
-      this.fcsPackets = getFcsPackets(fieldOptions);
+      this.packetManager.setFieldOptions(fieldOptions);
     });
 
     socket.on('fcs:update', (update: FieldControlUpdatePacket) => {
@@ -94,7 +96,8 @@ export default class FCS extends Room {
     });
 
     socket.on('fcs:settings', (fieldOptions: FieldOptions) => {
-      this.fcsPackets = getFcsPackets(fieldOptions);
+      this.packetManager.setFieldOptions(fieldOptions);
+      this.fcsPackets = this.packetManager.getFcsPackets();
       this.reinitializeWleds();
     });
 
