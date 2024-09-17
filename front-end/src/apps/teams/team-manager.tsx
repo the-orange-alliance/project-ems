@@ -5,6 +5,7 @@ import { ChangeEvent, FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
 import { useCurrentEvent } from 'src/api/use-event-data';
+import { resultsSyncTeams } from 'src/api/use-results-sync';
 import { patchTeam, postTeams, useTeamsForEvent } from 'src/api/use-team-data';
 import { ViewReturn } from 'src/components/buttons/view-return';
 import { TeamRemovalDialog } from 'src/components/dialogs/team-removal-dialog';
@@ -12,6 +13,7 @@ import { PageLoader } from 'src/components/loading/page-loader';
 import { TeamsTable } from 'src/components/tables/teams-table';
 import { SaveAddUploadLoadingFab } from 'src/components/util/save-upload-fab';
 import { useSnackbar } from 'src/hooks/use-snackbar';
+import { useSyncConfig } from 'src/hooks/use-sync-config';
 import { PaperLayout } from 'src/layouts/paper-layout';
 import { getDifferences } from 'src/stores/array-utils';
 import { teamsByEventKeyAtomFam } from 'src/stores/recoil';
@@ -20,7 +22,7 @@ import { parseTeamsFile } from 'src/util/file-parser';
 export const TeamManager: FC = () => {
   const { data: event } = useCurrentEvent();
   const { data: initialTeams } = useTeamsForEvent(event?.eventKey);
-
+  const {platform, apiKey} = useSyncConfig();
   const [teams, setTeams] = useRecoilState(
     teamsByEventKeyAtomFam(event?.eventKey ?? '')
   );
@@ -46,6 +48,8 @@ export const TeamManager: FC = () => {
       for (const team of diffs.edits) {
         await patchTeam(team.eventKey, team.teamKey, team);
       }
+      await resultsSyncTeams(event.eventKey, platform, apiKey);
+
       setLoading(false);
       showSnackbar(
         `(${

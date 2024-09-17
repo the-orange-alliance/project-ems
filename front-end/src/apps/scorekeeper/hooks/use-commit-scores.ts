@@ -81,6 +81,9 @@ export const useCommitScoresCallback = () => {
         sendCommitScores({ eventKey, tournamentKey, id });
         setState(MatchState.RESULTS_COMMITTED);
 
+        // Update the match occurring atom
+        set(matchOccurringAtom, pending);
+
         // If there is no match list, we can't update the matches
         if (!matches) return;
 
