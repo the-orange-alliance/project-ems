@@ -14,6 +14,8 @@ import ScheduleRepostDialog from 'src/components/dialogs/schedule-repost-dialog'
 import { useRecoilState } from 'recoil';
 import { matchesByEventKeyAtomFam } from 'src/stores/recoil';
 import { useSWRConfig } from 'swr';
+import { useSyncConfig } from 'src/hooks/use-sync-config';
+import { resultsSyncMatches } from 'src/api/use-results-sync';
 
 interface Props {
   eventSchedule?: EventSchedule;
@@ -26,6 +28,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
   const [matches, setMatches] = useRecoilState(
     matchesByEventKeyAtomFam(eventSchedule?.eventKey ?? '')
   );
+  const {apiKey, platform} = useSyncConfig();
   const [loading, setLoading] = useState(false);
   const { data: scheduleItems } = useScheduleItemsForTournament(
     eventSchedule?.eventKey,
@@ -60,11 +63,12 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
       }
       await createRankings(eventSchedule.tournamentKey, eventSchedule.teams);
       await postMatchSchedule(eventSchedule.eventKey, matches);
-      mutate(
+      await mutate(
         `match/${eventSchedule.eventKey}/${eventSchedule.tournamentKey}`,
         matches,
         false
       );
+      await resultsSyncMatches(eventSchedule.eventKey, eventSchedule.tournamentKey, platform, apiKey);
       showSnackbar('Matches saved successfully.');
       setLoading(false);
     } catch (e) {

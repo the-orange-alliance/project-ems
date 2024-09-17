@@ -12,6 +12,8 @@ import {
 import { useSeasonFieldControl } from 'src/hooks/use-season-components';
 import { useMatchesForTournament } from 'src/api/use-match-data';
 import { useNextUnplayedMatch } from './use-next-unplayed-match';
+import { resultsSyncMatch } from 'src/api/use-results-sync';
+import { useSyncConfig } from 'src/hooks/use-sync-config';
 
 export const usePostResultsCallback = () => {
   const { canPostResults, setState } = useMatchControl();
@@ -20,6 +22,8 @@ export const usePostResultsCallback = () => {
   const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
   const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
   const getNextUnplayed = useNextUnplayedMatch();
+  const { apiKey, platform } = useSyncConfig();
+
 
   return useRecoilCallback(
     ({ snapshot, set }) =>
@@ -36,7 +40,8 @@ export const usePostResultsCallback = () => {
           throw new Error('Attempted to psot results when there is no match.');
         }
 
-        // TODO - Sync results to server
+        // Sync match online
+        await resultsSyncMatch(match.eventKey, match.tournamentKey, match.id, platform, apiKey);
 
         // Set the current match to the next
         const next = await getNextUnplayed();

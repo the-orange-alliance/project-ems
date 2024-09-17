@@ -2,7 +2,9 @@ import {
   MatchKey,
   reconcileMatchDetails,
   reconcileMatchParticipants,
-  reconcileTeamRankings
+  reconcileTeamRankings,
+  SyncPlatform,
+  Team
 } from '@toa-lib/models';
 import { environment } from '@toa-lib/server';
 import { NextFunction, Request, Response, Router } from 'express';
@@ -12,17 +14,39 @@ import logger from '../util/Logger.js';
 
 const router = Router();
 
-const request = (path: string, options: RequestInit) =>
-  fetch(environment.get().resultsApiBaseUrl + path, {
+const getUrlByPlatform = (platform: SyncPlatform) => {
+  switch (platform) {
+    case SyncPlatform.FGC:
+      return 'https://api.first.global';
+    default:
+      return '';
+  }
+};
+
+const request = (
+  path: string,
+  options: RequestInit,
+  platform: SyncPlatform,
+  apiKey: string
+) => {
+  if (platform === SyncPlatform.DISABLED) return;
+
+  return fetch(getUrlByPlatform(platform) + path, {
     ...options,
     headers: {
-      Authorization: `Bearer ${environment.get().resultsApiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       ...options?.headers
     }
   });
+}
 
-export const postRankings = async (eventKey: string, tournamentKey: string) => {
+export const postRankings = async (
+  eventKey: string,
+  tournamentKey: string,
+  platform: SyncPlatform,
+  apiKey: string
+) => {
   const db = await getDB(eventKey);
   const [rankingsRaw, teams] = await Promise.all([
     db.selectAllWhere(
@@ -31,19 +55,49 @@ export const postRankings = async (eventKey: string, tournamentKey: string) => {
     ),
     db.selectAllWhere('team', `eventKey = "${eventKey}"`)
   ]);
-  await request('/upload/teams', {
-    method: 'POST',
-    body: JSON.stringify(teams)
-  });
+  await request(
+    '/upload/teams',
+    {
+      method: 'POST',
+      body: JSON.stringify(teams)
+    },
+    platform,
+    apiKey
+  );
 
   const rankings = reconcileTeamRankings(teams, rankingsRaw);
-  return await request('/upload/rankings', {
-    method: 'POST',
-    body: JSON.stringify(rankings)
-  });
+  return await request(
+    '/upload/rankings',
+    {
+      method: 'POST',
+      body: JSON.stringify(rankings)
+    },
+    platform,
+    apiKey
+  );
 };
 
-export const postMatchResults = async (info: MatchKey) => {
+export const postTeams = async (
+  teams: Team[],
+  platform: SyncPlatform,
+  apiKey: string
+) => {
+  return await request(
+    '/upload/teams',
+    {
+      method: 'POST',
+      body: JSON.stringify(teams)
+    },
+    platform,
+    apiKey
+  );
+};
+
+export const postMatchResults = async (
+  info: MatchKey,
+  platform: SyncPlatform,
+  apiKey: string
+) => {
   const db = await getDB(info.eventKey);
   const [match] = await db.selectAllWhere(
     'match',
@@ -61,12 +115,22 @@ export const postMatchResults = async (info: MatchKey) => {
   match.participants = participants;
   match.details = details;
 
-  await request('/upload/matches', {
-    method: 'PUT',
-    body: JSON.stringify([match])
-  });
+  await request(
+    '/upload/matches',
+    {
+      method: 'PUT',
+      body: JSON.stringify([match])
+    },
+    platform,
+    apiKey
+  );
 
-  return await postRankings(info.eventKey, info.tournamentKey);
+  return await postRankings(
+    info.eventKey,
+    info.tournamentKey,
+    platform,
+    apiKey
+  );
 };
 
 router.post(
@@ -79,8 +143,14 @@ router.post(
     );
     if (!environment.isProd()) return res.send({ success: false });
     const { eventKey, tournamentKey } = req.params;
-    const rankingsReq = await postRankings(eventKey, tournamentKey);
-    res.send({ success: rankingsReq.ok });
+    const { platform, apiKey } = req.body;
+    const rankingsReq = await postRankings(
+      eventKey,
+      tournamentKey,
+      platform,
+      apiKey
+    );
+    res.send({ success: rankingsReq?.ok });
   }
 );
 
@@ -95,8 +165,13 @@ router.post(
     if (!environment.isProd()) return res.send({ succuess: false });
     const { eventKey, tournamentKey, id: idStr } = req.params;
     const id = parseInt(idStr);
-    const matchesReq = await postMatchResults({ eventKey, tournamentKey, id });
-    res.send({ succuess: matchesReq.ok });
+    const { platform, apiKey } = req.body;
+    const matchesReq = await postMatchResults(
+      { eventKey, tournamentKey, id },
+      platform,
+      apiKey
+    );
+    res.send({ succuess: matchesReq?.ok });
   }
 );
 
@@ -131,12 +206,40 @@ router.post(
       matchesWithParticipants,
       details
     );
-    const matchesReq = await request('/upload/matches', {
-      method: 'PUT',
-      body: JSON.stringify(matchesWithDetails)
-    });
+    const { platform, apiKey } = req.body;
+    const matchesReq = await request(
+      '/upload/matches',
+      {
+        method: 'PUT',
+        body: JSON.stringify(matchesWithDetails)
+      },
+      platform,
+      apiKey
+    );
 
-    res.send({ success: matchesReq.ok });
+    res.send({ success: matchesReq?.ok });
+  }
+);
+
+router.post(
+  '/sync/teams/:eventKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    logger.info(
+      environment.isProd()
+        ? 'attempting to sync results'
+        : 'not syncing results'
+    );
+    if (!environment.isProd()) return res.send({ succuess: false });
+    const { eventKey } = req.params;
+    const db = await getDB(eventKey);
+    const teams = await db.selectAll('team');
+    const { platform, apiKey } = req.body;
+    const teamsReq = await postTeams(
+      teams,
+      platform,
+      apiKey
+    );
+    res.send({ succuess: teamsReq?.ok });
   }
 );
 

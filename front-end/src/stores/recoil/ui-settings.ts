@@ -1,4 +1,4 @@
-import { User, Team } from '@toa-lib/models';
+import { User, Team, SyncPlatform } from '@toa-lib/models';
 import { atom } from 'recoil';
 import {
   localStorageEffect,
@@ -33,6 +33,16 @@ export const leaderApiHostAtom = atom<string>({
   key: 'ui.leaderApiHostAtom',
   default: '',
   effects: [localStorageEffect('leaderApiHost')]
+});
+export const syncPlatformAtom = atom<SyncPlatform>({
+  key: 'ui.syncPlatform',
+  default: SyncPlatform.DISABLED,
+  effects: [localStorageEffect('syncPlatform')]
+});
+export const syncApiKeyAtom = atom<string>({
+  key: 'ui.syncApiKey',
+  default: '',
+  effects: [localStorageEffect('syncApiKey')]
 });
 
 /**

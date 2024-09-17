@@ -22,6 +22,7 @@ import { EventTournamentsDropdown } from 'src/components/dropdowns/event-tournam
 import { Tournament } from '@toa-lib/models';
 import { useTeamsForEvent } from 'src/api/use-team-data';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data';
+import { useSyncConfig } from 'src/hooks/use-sync-config';
 
 export const AdminApp: FC = () => {
   const [tournamentKey, setTournamentKey] = useRecoilState(
@@ -30,6 +31,7 @@ export const AdminApp: FC = () => {
   const eventKey = useRecoilValue(currentEventKeyAtom);
   const { data: teams } = useTeamsForEvent(eventKey);
   const { data: tournaments } = useTournamentsForEvent(eventKey);
+  const {apiKey, platform} = useSyncConfig();
 
   const [, , purgeFlags] = useFlags();
 
@@ -40,12 +42,12 @@ export const AdminApp: FC = () => {
 
   const syncMatches = async (): Promise<void> => {
     if (!tournamentKey) return;
-    return resultsSyncMatches(eventKey, tournamentKey);
+    return resultsSyncMatches(eventKey, tournamentKey, platform, apiKey);
   };
 
   const syncRankings = async (): Promise<void> => {
     if (!tournamentKey) return;
-    return resultsSyncRankings(eventKey, tournamentKey);
+    return resultsSyncRankings(eventKey, tournamentKey, platform, apiKey);
   };
 
   const handlePurge = async (): Promise<void> => {
