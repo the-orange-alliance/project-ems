@@ -1,9 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import {
-  defaultFieldOptions,
   FeedingTheFuture,
   FieldControlUpdatePacket,
-  FieldOptions,
+  FeedingTheFutureFCS,
   Match as MatchObj,
   MatchSocketEvent,
   WledInitParameters
@@ -33,7 +32,7 @@ export default class FCS extends Room {
     super(server, 'fcs');
 
     this.packetManager = new PacketManager(
-      defaultFieldOptions,
+      FeedingTheFutureFCS.defaultFieldOptions,
       this.broadcastFcsUpdate,
       matchRoom.localEmitter
     );
@@ -80,9 +79,12 @@ export default class FCS extends Room {
   public initializeEvents(socket: Socket): void {
     socket.emit('fcs:init', this.packetManager.getInitPacket());
 
-    socket.on('fcs:setFieldOptions', (fieldOptions: FieldOptions) => {
-      this.packetManager.setFieldOptions(fieldOptions);
-    });
+    socket.on(
+      'fcs:setFieldOptions',
+      (fieldOptions: FeedingTheFutureFCS.FieldOptions) => {
+        this.packetManager.setFieldOptions(fieldOptions);
+      }
+    );
 
     socket.on('fcs:update', (update: FieldControlUpdatePacket) => {
       this.broadcastFcsUpdate(update);
@@ -92,10 +94,13 @@ export default class FCS extends Room {
 
     socket.on('fcs:allClear', this.packetManager.handleAllClear);
 
-    socket.on('fcs:settings', (fieldOptions: FieldOptions) => {
-      this.packetManager.setFieldOptions(fieldOptions);
-      this.reinitializeWleds();
-    });
+    socket.on(
+      'fcs:settings',
+      (fieldOptions: FeedingTheFutureFCS.FieldOptions) => {
+        this.packetManager.setFieldOptions(fieldOptions);
+        this.reinitializeWleds();
+      }
+    );
 
     socket.on('fcs:digitalInputs', this.packetManager.handleDigitalInputs);
 
