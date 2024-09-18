@@ -122,6 +122,12 @@ export const goalFullColorAtom = atom<string>({
   effects: [localStorageEffect('ftf.goalFullColor')]
 });
 
+export const goalFullSecondaryColorAtom = atom<string>({
+  key: 'ftf.goalFullSecondaryColor',
+  default: defaultFieldOptions.goalFullSecondaryColor,
+  effects: [localStorageEffect('ftf.goalFullSecondaryColor')]
+});
+
 export const rampBalancedColorAtom = atom<string>({
   key: 'ftf.rampBalancedColor',
   default: defaultFieldOptions.rampBalancedColor,
@@ -159,6 +165,7 @@ export const fieldOptionsSelector: RecoilValueReadOnly<FieldOptions> = selector(
         goalBlueOnlyColor: get(goalBlueOnlyColorAtom),
         goalGreenOnlyColor: get(goalGreenOnlyColorAtom),
         goalFullColor: get(goalFullColorAtom),
+        goalFullSecondaryColor: get(goalFullSecondaryColorAtom),
         rampBalancedColor: get(rampBalancedColorAtom),
         rampUnbalancedColor: get(rampUnbalancedColorAtom)
       };

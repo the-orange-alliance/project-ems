@@ -17,19 +17,35 @@ export const buildWledInitializationPacket = (
 export const buildWledSetColorPacket = (
   packet: WledUpdateParameters
 ): string => {
-  const wledJson: any = {
-    seg: []
-  };
+  const segments = new Map<number, any>();
 
   packet.patterns.forEach((pattern) => {
-    wledJson.seg.push({
-      id: pattern.segment,
-      on: true,
-      frz: false,
-      fx: 0,
-      col: [pattern.color]
-    });
+    if (!pattern.subset) {
+      segments.set(pattern.segment, {
+        id: pattern.segment,
+        on: true,
+        frz: false,
+        fx: 0,
+        col: [pattern.color]
+      });
+    } else {
+      if (!segments.get(pattern.segment)) {
+        segments.set(pattern.segment, {
+          id: pattern.segment,
+          on: true,
+          i: [pattern.subset.startIndex, pattern.subset.endIndex, pattern.color]
+        });
+      } else {
+        segments
+          .get(pattern.segment)
+          .i.push(
+            pattern.subset.startIndex,
+            pattern.subset.endIndex,
+            pattern.color
+          );
+      }
+    }
   });
 
-  return JSON.stringify(wledJson);
+  return JSON.stringify({ seg: Array.from(segments.values()) });
 };

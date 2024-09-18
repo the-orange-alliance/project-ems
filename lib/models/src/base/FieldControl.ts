@@ -70,6 +70,10 @@ export type HubUpdateParameters = HubParameters<
 export interface LedPatternUpdateParameters {
   segment: number;
   color: string;
+  subset?: {
+    startIndex: number;
+    endIndex: number;
+  };
 }
 
 export interface LedSegment {
@@ -130,6 +134,7 @@ export interface FieldOptions {
   goalBlueOnlyColor: string;
   goalGreenOnlyColor: string;
   goalFullColor: string;
+  goalFullSecondaryColor: string;
   rampBalancedColor: string;
   rampUnbalancedColor: string;
 }
@@ -155,6 +160,7 @@ export const defaultFieldOptions: FieldOptions = {
   goalBlueOnlyColor: '0000ff',
   goalGreenOnlyColor: '00ff00',
   goalFullColor: 'ffa500',
+  goalFullSecondaryColor: '000000',
   rampBalancedColor: 'ff00ff',
   rampUnbalancedColor: '000000'
 };

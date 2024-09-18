@@ -9,6 +9,7 @@ import {
 import { NexusGoalState } from '../seasons/FeedingTheFuture.js';
 import { FeedingTheFuture } from '../seasons/index.js';
 import {
+  applyPartialPatternToStrips,
   applyPatternToStrips,
   applySetpointToMotors,
   LedStrip,
@@ -559,65 +560,28 @@ export class PacketManager {
 
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
 
-    switch (currentState) {
-      case NexusGoalState.Full:
-        applyPatternToStrips(this.fieldOptions.goalFullColor, [strip], result);
-        break;
-      case NexusGoalState.BlueOnly:
-        applyPatternToStrips(
-          this.fieldOptions.goalBlueOnlyColor,
-          [strip],
-          result
-        );
-        break;
-      case NexusGoalState.GreenOnly:
-        applyPatternToStrips(
-          this.fieldOptions.goalGreenOnlyColor,
-          [strip],
-          result
-        );
-        break;
-      default:
-        applyPatternToStrips(this.fieldOptions.goalEmptyColor, [strip], result);
+    // Full goal will be handled later
+    if (currentState === NexusGoalState.BlueOnly) {
+      applyPatternToStrips(
+        this.fieldOptions.goalBlueOnlyColor,
+        [strip],
+        result
+      );
+    } else if (currentState === NexusGoalState.GreenOnly) {
+      applyPatternToStrips(
+        this.fieldOptions.goalGreenOnlyColor,
+        [strip],
+        result
+      );
+    } else if (currentState === NexusGoalState.Empty) {
+      applyPatternToStrips(this.fieldOptions.goalEmptyColor, [strip], result);
     }
 
     if (
       currentState === NexusGoalState.Full &&
       previousState !== NexusGoalState.Full
     ) {
-      // Start timer with callback
-      this.timers.set(
-        goal,
-        setTimeout(() => {
-          if (!this.matchInProgress) return;
-
-          // Set pattern
-          const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-          applyPatternToStrips('ffffff', [strip], result);
-          applySetpointToMotors(
-            this.fieldOptions.foodProductionMotorSetpoint,
-            [motor],
-            result
-          );
-          broadcast(result);
-
-          setTimeout(() => {
-            const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-            applySetpointToMotors(0, [motor], result);
-            broadcast(result);
-          }, this.fieldOptions.foodProductionMotorDurationMs);
-
-          this.matchEmitter.emit(MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER, {
-            key: `${side}FoodProduced`,
-            adjustment: 1
-          } satisfies NumberAdjustment);
-
-          this.matchEmitter.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, {
-            key: goal,
-            value: NexusGoalState.Produced
-          });
-        }, this.fieldOptions.foodProductionDelayMs)
-      );
+      this.runFoodProductionSequence(motor, strip, side, goal);
     } else if (
       currentState !== NexusGoalState.Full &&
       previousState === NexusGoalState.Full
@@ -663,5 +627,88 @@ export class PacketManager {
       key: 'fieldBalanced',
       value: balanced
     } satisfies ItemUpdate);
+  };
+
+  runFoodProductionSequence = (
+    motor: MotorA,
+    strip: LedStripA,
+    side: string,
+    goal: string
+  ) => {
+    const steps = 10;
+
+    const recurse = (count: number) => {
+      if (!this.matchInProgress) return;
+
+      // Base state. Food production is over, dispense food and update lights
+      if (count === 0) {
+        // Update lights and run motor
+        const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+        applyPatternToStrips(this.fieldOptions.goalFullColor, [strip], result);
+        applySetpointToMotors(
+          this.fieldOptions.foodProductionMotorSetpoint,
+          [motor],
+          result
+        );
+        this.broadcastCallback(result);
+
+        // Stop motor after the configured duration
+        this.timers.set(
+          goal,
+          setTimeout(() => {
+            const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+            applySetpointToMotors(0, [motor], result);
+            this.broadcastCallback(result);
+          }, this.fieldOptions.foodProductionMotorDurationMs)
+        );
+
+        // Update food produced count
+        this.matchEmitter.emit(MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER, {
+          key: `${side}FoodProduced`,
+          adjustment: 1
+        } satisfies NumberAdjustment);
+
+        // Update goal state
+        this.matchEmitter.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, {
+          key: goal,
+          value: NexusGoalState.Produced
+        });
+
+        return;
+      }
+
+      // Determine starting and ending indexes for outward growing lights
+      const middle = Math.floor(23 / 2);
+      const length = Math.floor(23 / 2 / steps) * (steps - count + 1);
+      const startIndex = middle - length;
+      const endIndex = middle + 1 + length;
+
+      const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+
+      applyPartialPatternToStrips(
+        this.fieldOptions.goalFullSecondaryColor,
+        0,
+        24,
+        [strip],
+        result
+      );
+      applyPartialPatternToStrips(
+        this.fieldOptions.goalFullColor,
+        startIndex,
+        endIndex,
+        [strip],
+        result
+      );
+      this.broadcastCallback(result);
+
+      this.timers.set(
+        goal,
+        setTimeout(() => {
+          recurse(count - 1);
+        }, Math.floor(this.fieldOptions.foodProductionDelayMs / steps))
+      );
+    };
+
+    recurse(steps);
   };
 }

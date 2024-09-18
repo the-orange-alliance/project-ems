@@ -46,6 +46,31 @@ export function applyPatternToStrips(
   });
 }
 
+export function applyPartialPatternToStrips(
+  color: string,
+  startIndex: number,
+  endIndex: number,
+  strips: LedStrip[],
+  packet: FieldControlUpdatePacket
+): void {
+  strips.forEach((strip) => {
+    if (!packet.wleds[strip.controller]) {
+      packet.wleds[strip.controller] = {
+        patterns: []
+      };
+    }
+
+    packet.wleds[strip.controller].patterns.push({
+      segment: strip.segment,
+      color,
+      subset: {
+        startIndex,
+        endIndex
+      }
+    });
+  });
+}
+
 export function applySetpointToMotors(
   setpoint: number,
   motors: Motor[],

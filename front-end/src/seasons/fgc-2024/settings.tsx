@@ -14,6 +14,7 @@ import {
   goalBlueOnlyColorAtom,
   goalEmptyColorAtom,
   goalFullColorAtom,
+  goalFullSecondaryColorAtom,
   goalGreenOnlyColorAtom,
   goalLedLengthAtom,
   matchEndBlueNexusGoalColorAtom,
@@ -77,6 +78,9 @@ export const Settings: FC = () => {
     goalGreenOnlyColorAtom
   );
   const [goalFullColor, setGoalFullColor] = useRecoilState(goalFullColorAtom);
+  const [goalFullSecondaryColor, setGoalFullSecondaryColor] = useRecoilState(
+    goalFullSecondaryColorAtom
+  );
   const [rampBalancedColor, setRampBalancedColor] = useRecoilState(
     rampBalancedColorAtom
   );
@@ -210,6 +214,12 @@ export const Settings: FC = () => {
         name='Full Goal Color'
         value={goalFullColor}
         onChange={setGoalFullColor}
+        inline
+      />
+      <TextSetting
+        name='Full Goal Secondary Color'
+        value={goalFullSecondaryColor}
+        onChange={setGoalFullSecondaryColor}
         inline
       />
       <TextSetting
