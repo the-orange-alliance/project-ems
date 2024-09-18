@@ -80,7 +80,7 @@ const HeadRefereeExtra: React.FC = () => {
   ) => {
     if (manuallyTyped) {
       handleMatchDetailsUpdate(
-        alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
+        alliance === 'red' ? 'redFoodProduced' : 'blueFoodProduced',
         newValue
       );
     }
@@ -88,14 +88,14 @@ const HeadRefereeExtra: React.FC = () => {
 
   const handleFoodProducedDecrement = (alliance: Alliance) => {
     handleMatchDetailsAdjustment(
-      alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
+      alliance === 'red' ? 'redFoodProduced' : 'blueFoodProduced',
       -1
     );
   };
 
   const handleFoodProducedIncrement = (alliance: Alliance) => {
     handleMatchDetailsAdjustment(
-      alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
+      alliance === 'red' ? 'redFoodProduced' : 'blueFoodProduced',
       1
     );
   };
