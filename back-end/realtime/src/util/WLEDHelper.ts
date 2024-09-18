@@ -8,7 +8,13 @@ export const buildWledInitializationPacket = (
     bri: 255,
     frz: false,
     fx: 0,
-    seg: packet.segments
+    ps: 0,
+    seg: packet.segments.map((segment) => ({
+      start: segment.start,
+      stop: segment.stop,
+      col: [0],
+      fx: 0
+    }))
   };
 
   return JSON.stringify(wledJson);
