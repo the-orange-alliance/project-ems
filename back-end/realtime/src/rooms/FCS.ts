@@ -117,7 +117,7 @@ export default class FCS extends Room {
 
     // Handle wleds
     Object.entries(update.wleds).forEach((wled) => {
-      this.wledControllers[wled[0]].sendPatterns(wled[1]);
+      this.wledControllers[wled[0]].update(wled[1]);
     });
 
     // Update this.latestFcsStatus AFTER sending out the new update
@@ -185,6 +185,8 @@ export class WledController {
   private heartbeat: NodeJS.Timer | undefined;
   private reinit: NodeJS.Timeout | undefined;
 
+  private latestState: WledUpdateParameters | undefined;
+
   constructor(initPacket: WledInitParameters) {
     this.initPacket = initPacket;
   }
@@ -224,6 +226,10 @@ export class WledController {
         logger.error(`Failed to initialize ${this.initPacket.address}`);
       }
       this.startHeartbeat();
+
+      if (this.latestState) {
+        this.update(this.latestState);
+      }
     };
 
     this.socket.onerror = () => {
@@ -259,11 +265,23 @@ export class WledController {
     }, WledController.heartbeatPeriodMs);
   }
 
-  public sendPatterns(patterns: WledUpdateParameters): void {
+  public update(update: WledUpdateParameters): void {
     try {
-      this.socket?.send(buildWledSetColorPacket(patterns));
+      this.socket?.send(buildWledSetColorPacket(update));
     } catch {
       logger.error(`Failed to send pattern to ${this.initPacket.address}`);
+    }
+
+    if (!this.latestState) {
+      this.latestState = update;
+    }
+    for (const newPattern of update.patterns) {
+      this.latestState.patterns =
+        this.latestState.patterns.filter(
+          (oldPattern) => oldPattern.segment != newPattern.segment
+        ) ?? [];
+
+      this.latestState.patterns!.push(newPattern);
     }
   }
 }
