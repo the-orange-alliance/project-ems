@@ -52,6 +52,7 @@ export interface FieldControlCallbacks<T extends MatchDetailBase> {
   commitScoresForField?: () => void;
   postResultsForField?: () => void;
   onMatchUpdate?: (match: T) => void;
+  updateFieldSettings: () => void;
 }
 
 export interface SeasonComponents<

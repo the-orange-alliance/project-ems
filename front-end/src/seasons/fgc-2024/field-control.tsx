@@ -20,8 +20,6 @@ export const useFieldControl =
     };
 
     const prepareField = () => {
-      // Keep field options up to date
-      socket?.emit('fcs:settings', fieldOptions);
       socket?.emit('fcs:prepareField');
       console.log('prepareField');
     };
@@ -51,6 +49,11 @@ export const useFieldControl =
       console.log('onMatchUpdate', match);
     };
 
+    const updateFieldSettings = () => {
+      socket?.emit('fcs:settings', fieldOptions);
+      console.log('updateFieldSettings');
+    };
+
     return {
       prestartField,
       cancelPrestartForField,
@@ -60,6 +63,7 @@ export const useFieldControl =
       clearField,
       commitScoresForField,
       postResultsForField,
-      onMatchUpdate
+      onMatchUpdate,
+      updateFieldSettings
     };
   };
