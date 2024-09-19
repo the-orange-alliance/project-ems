@@ -1,10 +1,14 @@
-import { FeedingTheFuture } from '@toa-lib/models';
+import { FeedingTheFuture, FeedingTheFutureFCS } from '@toa-lib/models';
 import { FieldControlCallbacks } from '..';
 import { useSocket } from 'src/api/use-socket';
+import { useRecoilValue } from 'recoil';
+import { fieldOptionsSelector } from './stores/settings-store';
 
 export const useFieldControl =
   (): FieldControlCallbacks<FeedingTheFuture.MatchDetails> => {
     const [socket] = useSocket();
+    const fieldOptions: FeedingTheFutureFCS.FieldOptions =
+      useRecoilValue(fieldOptionsSelector);
 
     const prestartField = () => {
       socket?.emit('fcs:test', { test: 'test' });
@@ -16,6 +20,7 @@ export const useFieldControl =
     };
 
     const prepareField = () => {
+      socket?.emit('fcs:prepareField');
       console.log('prepareField');
     };
 
@@ -28,6 +33,7 @@ export const useFieldControl =
     };
 
     const clearField = () => {
+      socket?.emit('fcs:allClear');
       console.log('clearField');
     };
 
@@ -43,6 +49,11 @@ export const useFieldControl =
       console.log('onMatchUpdate', match);
     };
 
+    const updateFieldSettings = () => {
+      socket?.emit('fcs:settings', fieldOptions);
+      console.log('updateFieldSettings');
+    };
+
     return {
       prestartField,
       cancelPrestartForField,
@@ -52,6 +63,7 @@ export const useFieldControl =
       clearField,
       commitScoresForField,
       postResultsForField,
-      onMatchUpdate
+      onMatchUpdate,
+      updateFieldSettings
     };
   };

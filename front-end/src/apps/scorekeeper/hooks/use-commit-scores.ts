@@ -24,7 +24,7 @@ import {
   useMatchesForTournament
 } from 'src/api/use-match-data';
 import { recalculateRankings } from 'src/api/use-ranking-data';
-import { sendAllClear, sendCommitScores } from 'src/api/use-socket';
+import { sendCommitScores } from 'src/api/use-socket';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components';
 
 export const useCommitScoresCallback = () => {
@@ -107,7 +107,6 @@ export const useClearFieldCallback = () => {
       throw new Error('Attempted to clear field when not allowed.');
     }
     fieldControl?.clearField?.();
-    sendAllClear();
     setState(MatchState.RESULTS_READY);
   });
 };

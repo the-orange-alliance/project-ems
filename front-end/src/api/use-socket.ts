@@ -1,11 +1,5 @@
 import { createSocket } from '@toa-lib/client';
-import {
-  FcsPackets,
-  FieldOptions,
-  Match,
-  MatchKey,
-  MatchSocketEvent
-} from '@toa-lib/models';
+import { Match, MatchKey, MatchSocketEvent } from '@toa-lib/models';
 import { Socket } from 'socket.io-client';
 import { useRecoilCallback, useRecoilState } from 'recoil';
 
@@ -149,16 +143,11 @@ export function setDisplays(): void {
   socket?.emit(MatchSocketEvent.DISPLAY, 2);
 }
 
-export function once(key: MatchSocketEvent | string, callback: (data: any) => void): void {
-  socket?.once(key, callback);
-}
-
-export function sendPrepareField(
-  fieldOptions?: FieldOptions,
-  fcsPackets?: FcsPackets
+export function once(
+  key: MatchSocketEvent | string,
+  callback: (data: any) => void
 ): void {
-  if (fieldOptions) socket?.emit('fcs:setFieldOptions', fieldOptions);
-  if (fcsPackets) socket?.emit('fcs:update', fcsPackets.prepareField);
+  socket?.once(key, callback);
 }
 
 export function sendStartMatch(): void {
@@ -167,10 +156,6 @@ export function sendStartMatch(): void {
 
 export async function sendAbortMatch(): Promise<void> {
   socket?.emit(MatchSocketEvent.ABORT);
-}
-
-export async function sendAllClear(fcsPackets?: FcsPackets): Promise<void> {
-  if (fcsPackets) socket?.emit('fcs:update', fcsPackets.allClear);
 }
 
 export async function sendCommitScores(key: MatchKey): Promise<void> {

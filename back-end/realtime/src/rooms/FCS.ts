@@ -1,55 +1,124 @@
-import { Server, Socket } from "socket.io";
+import { Server, Socket } from 'socket.io';
 import {
-  defaultFieldOptions,
-  FcsPackets,
+  FeedingTheFuture,
   FieldControlUpdatePacket,
-  FieldOptions,
-  getFcsPackets,
-  MatchSocketEvent
-} from "@toa-lib/models";
-import Room from "./Room.js";
-import Match from "./Match.js";
+  FeedingTheFutureFCS,
+  Match as MatchObj,
+  MatchSocketEvent,
+  WledInitParameters,
+  WledUpdateParameters
+} from '@toa-lib/models';
+import Room from './Room.js';
+import Match from './Match.js';
+import { WebSocket } from 'ws';
+import {
+  buildWledInitializationPacket,
+  buildWledSetColorPacket
+} from '../util/WLEDHelper.js';
+import logger from '../util/Logger.js';
+import { defaultMatchDetails } from '@toa-lib/models/build/seasons/FeedingTheFuture.js';
+import { PacketManager } from '@toa-lib/models/build/fcs/FeedingTheFutureFCS.js';
 
 export default class FCS extends Room {
-  private readonly latestFcsStatus: FieldControlUpdatePacket = { hubs: {} };
-  private fcsPackets: FcsPackets = getFcsPackets(defaultFieldOptions);
+  private readonly latestFcsStatus: FieldControlUpdatePacket = {
+    hubs: {},
+    wleds: {}
+  };
+  private wledControllers: Record<string, WledController> = {};
+  private previousMatchDetails: FeedingTheFuture.MatchDetails =
+    defaultMatchDetails;
+  private packetManager: PacketManager;
 
   public constructor(server: Server, matchRoom: Match) {
-    super(server, "fcs");
+    super(server, 'fcs');
 
-    matchRoom.localEmitter.on(MatchSocketEvent.TELEOPERATED, () => {
-      this.broadcastFcsUpdate(this.fcsPackets.matchStart);
+    this.packetManager = new PacketManager(
+      FeedingTheFutureFCS.defaultFieldOptions,
+      this.broadcastFcsUpdate,
+      matchRoom.localEmitter
+    );
+
+    // Connect to wled websocket servers if there are wleds
+    Object.entries(this.packetManager.getInitPacket().wleds).forEach((wled) => {
+      this.wledControllers[wled[0]] = new WledController(wled[1]);
     });
 
-    matchRoom.localEmitter.on(MatchSocketEvent.ENDGAME, () => {
-      this.broadcastFcsUpdate(this.fcsPackets.endgame);
-    });
+    matchRoom.localEmitter.on(
+      MatchSocketEvent.TELEOPERATED,
+      this.packetManager.handleMatchStart
+    );
 
-    matchRoom.localEmitter.on(MatchSocketEvent.END, () => {
-      this.broadcastFcsUpdate(this.fcsPackets.matchEnd);
-    });
+    matchRoom.localEmitter.on(
+      MatchSocketEvent.ENDGAME,
+      this.packetManager.handleEndGame
+    );
 
-    matchRoom.localEmitter.on(MatchSocketEvent.ABORT, () => {
-      this.broadcastFcsUpdate(this.fcsPackets.fieldFault);
-    })
+    matchRoom.localEmitter.on(
+      MatchSocketEvent.END,
+      this.packetManager.handleMatchEnd
+    );
+
+    matchRoom.localEmitter.on(
+      MatchSocketEvent.ABORT,
+      this.packetManager.handleAbort
+    );
+
+    matchRoom.localEmitter.on(
+      MatchSocketEvent.UPDATE,
+      (match: MatchObj<any>) => {
+        if (!match.details) return;
+        this.packetManager.handleMatchUpdate(
+          this.previousMatchDetails,
+          match.details,
+          this.broadcastFcsUpdate
+        );
+        this.previousMatchDetails = { ...match.details };
+      }
+    );
   }
 
   public initializeEvents(socket: Socket): void {
-    socket.emit("fcs:init", this.fcsPackets.init);
+    socket.emit('fcs:init', this.packetManager.getInitPacket());
 
-    socket.on("fcs:setFieldOptions", (fieldOptions: FieldOptions) => {
-      this.fcsPackets = getFcsPackets(fieldOptions);
-    });
+    socket.on(
+      'fcs:setFieldOptions',
+      (fieldOptions: FeedingTheFutureFCS.FieldOptions) => {
+        this.packetManager.setFieldOptions(fieldOptions);
+      }
+    );
 
-    socket.on("fcs:update", (update: FieldControlUpdatePacket) => {
+    socket.on('fcs:update', (update: FieldControlUpdatePacket) => {
       this.broadcastFcsUpdate(update);
     });
 
-    socket.emit("fcs:update", this.latestFcsStatus);
+    socket.on('fcs:prepareField', this.packetManager.handlePrepareField);
+
+    socket.on('fcs:allClear', this.packetManager.handleAllClear);
+
+    socket.on(
+      'fcs:settings',
+      (fieldOptions: FeedingTheFutureFCS.FieldOptions) => {
+        this.packetManager.setFieldOptions(fieldOptions);
+        Object.entries(this.packetManager.getInitPacket().wleds).forEach(
+          (wled) => {
+            this.wledControllers[wled[0]].initialize(wled[1]);
+          }
+        );
+      }
+    );
+
+    socket.on('fcs:digitalInputs', this.packetManager.handleDigitalInputs);
+
+    socket.emit('fcs:update', this.latestFcsStatus);
   }
 
-  private broadcastFcsUpdate(update: FieldControlUpdatePacket): void {
-    this.broadcast().emit("fcs:update", update);
+  private broadcastFcsUpdate = (update: FieldControlUpdatePacket): void => {
+    this.broadcast().emit('fcs:update', update);
+
+    // Handle wleds
+    Object.entries(update.wleds).forEach((wled) => {
+      this.wledControllers[wled[0]].update(wled[1]);
+    });
 
     // Update this.latestFcsStatus AFTER sending out the new update
     for (const hubNumber in update.hubs) {
@@ -68,32 +137,151 @@ export default class FCS extends Room {
       if (servosFromThisUpdate) {
         for (const newServoParams of servosFromThisUpdate) {
           // Remove any parameters from this.latestFcsStatus that are intended for the same servo as newServoParams.
-          latestFcsStatusHub.servos = latestFcsStatusHub.servos?.filter(
-            oldServoParams => oldServoParams.port != newServoParams.port) ?? [];
+          latestFcsStatusHub.servos =
+            latestFcsStatusHub.servos?.filter(
+              (oldServoParams) => oldServoParams.port != newServoParams.port
+            ) ?? [];
 
-          latestFcsStatusHub.servos!.push(newServoParams)
+          latestFcsStatusHub.servos!.push(newServoParams);
         }
       }
 
       if (motorsFromThisUpdate) {
         for (const newMotorParams of motorsFromThisUpdate) {
           // Remove any parameters from this.latestFcsStatus that are intended for the same motor as newMotorParams.
-          latestFcsStatusHub.motors = latestFcsStatusHub.motors?.filter(
-            oldMotorParams => oldMotorParams.port != newMotorParams.port) ?? [];
+          latestFcsStatusHub.motors =
+            latestFcsStatusHub.motors?.filter(
+              (oldMotorParams) => oldMotorParams.port != newMotorParams.port
+            ) ?? [];
 
-          latestFcsStatusHub.motors!.push(newMotorParams)
+          latestFcsStatusHub.motors!.push(newMotorParams);
         }
       }
 
       if (digitalInputsFromThisUpdate) {
         for (const newDigitalInputParams of digitalInputsFromThisUpdate) {
           // Remove any parameters from this.latestFcsStatus that are intended for the same channel as newDigitalInputParams.
-          latestFcsStatusHub.digitalInputs = latestFcsStatusHub.digitalInputs?.filter(
-            oldDigitalInputParams => oldDigitalInputParams.channel != newDigitalInputParams.channel) ?? [];
+          latestFcsStatusHub.digitalInputs =
+            latestFcsStatusHub.digitalInputs?.filter(
+              (oldDigitalInputParams) =>
+                oldDigitalInputParams.channel != newDigitalInputParams.channel
+            ) ?? [];
 
-          latestFcsStatusHub.digitalInputs!.push(newDigitalInputParams)
+          latestFcsStatusHub.digitalInputs!.push(newDigitalInputParams);
         }
       }
+    }
+  };
+}
+
+export class WledController {
+  private static heartbeatPeriodMs = 1000;
+  private static keepAliveTimeoutMs = 2000;
+  private static reconnectPeriodMs = 1000;
+
+  private socket: WebSocket | undefined;
+  private initPacket: WledInitParameters;
+  private keepAlive: NodeJS.Timeout | undefined;
+  private heartbeat: NodeJS.Timer | undefined;
+  private reinit: NodeJS.Timeout | undefined;
+
+  private latestState: WledUpdateParameters | undefined;
+
+  constructor(initPacket: WledInitParameters) {
+    this.initPacket = initPacket;
+  }
+
+  public initialize(initPacket?: WledInitParameters): void {
+    if (initPacket) {
+      this.initPacket = initPacket;
+
+      if (this.initPacket.address === this.socket?.url) {
+        try {
+          this.socket?.send(buildWledInitializationPacket(this.initPacket));
+        } catch {
+          logger.error(`Failed to reinitialize ${this.initPacket.address}`);
+        }
+        return;
+      }
+    }
+
+    clearInterval(this.heartbeat);
+    clearTimeout(this.reinit);
+    clearTimeout(this.keepAlive);
+
+    if (this.initPacket.address === '') return;
+
+    try {
+      this.socket = new WebSocket(this.initPacket.address);
+    } catch {
+      logger.error(`Failed to create websocket for ${this.initPacket.address}`);
+      return;
+    }
+
+    this.socket.onopen = () => {
+      logger.info(`Connected to ${this.initPacket.address}`);
+      try {
+        this.socket?.send(buildWledInitializationPacket(this.initPacket));
+      } catch {
+        logger.error(`Failed to initialize ${this.initPacket.address}`);
+      }
+      this.startHeartbeat();
+
+      if (this.latestState) {
+        this.update(this.latestState);
+      }
+    };
+
+    this.socket.onerror = () => {
+      logger.error(`Failed to connect to ${this.initPacket.address}`);
+
+      // Attempt to reconnect
+      this.reinit = setTimeout(() => {
+        this.initialize();
+      }, WledController.reconnectPeriodMs);
+    };
+
+    this.socket.onmessage = () => {
+      clearTimeout(this.keepAlive);
+    };
+  }
+
+  private startHeartbeat(): void {
+    this.heartbeat = setInterval(() => {
+      // Send dummy message that the controller will respond to
+      try {
+        this.socket?.send('{}');
+      } catch {
+        logger.error(`Failed to send heartbeat to ${this.initPacket.address}`);
+      }
+
+      // Start keepalive
+      this.keepAlive = setTimeout(() => {
+        logger.info(`Disconnected from ${this.initPacket.address}`);
+
+        // If the keepalive is not cleared in time attempt to reinitialize
+        this.initialize();
+      }, WledController.keepAliveTimeoutMs);
+    }, WledController.heartbeatPeriodMs);
+  }
+
+  public update(update: WledUpdateParameters): void {
+    try {
+      this.socket?.send(buildWledSetColorPacket(update));
+    } catch {
+      logger.error(`Failed to send pattern to ${this.initPacket.address}`);
+    }
+
+    if (!this.latestState) {
+      this.latestState = update;
+    }
+    for (const newPattern of update.patterns) {
+      this.latestState.patterns =
+        this.latestState.patterns.filter(
+          (oldPattern) => oldPattern.segment != newPattern.segment
+        ) ?? [];
+
+      this.latestState.patterns!.push(newPattern);
     }
   }
 }
