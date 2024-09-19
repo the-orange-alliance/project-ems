@@ -5,11 +5,13 @@ import {
   darkModeAtom,
   followerModeEnabledAtom,
   leaderApiHostAtom,
+  syncApiKeyAtom,
+  syncPlatformAtom,
   teamIdentifierAtom
 } from 'src/stores/recoil';
 import { SwitchSetting } from './components/switch-setting';
 import { DropdownSetting } from './components/dropdown-setting';
-import { TeamKeys } from '@toa-lib/models';
+import { SyncPlatform, TeamKeys } from '@toa-lib/models';
 import { TextSetting } from './components/text-setting';
 import { APIOptions } from '@toa-lib/client';
 import { updateSocketClient } from 'src/api/use-socket-data';
@@ -24,6 +26,8 @@ const Settings: FC = () => {
     followerModeEnabledAtom
   );
   const [leaderApiHost, setLeaderApiHost] = useRecoilState(leaderApiHostAtom);
+  const [syncPlatform, setSyncPlatform] = useRecoilState(syncPlatformAtom);
+  const [syncApiKey, setSyncApiKey] = useRecoilState(syncApiKeyAtom);
 
   const handleFollowerModeChange = (value: boolean) => {
     setFollowerMode(value);
@@ -91,6 +95,24 @@ const Settings: FC = () => {
         onChange={updateFollowerApiHost}
         inline
         disabled={!followerMode}
+      />
+      <DropdownSetting
+        name='Sync Platform'
+        value={syncPlatform}
+        options={[
+          SyncPlatform.DISABLED,
+          SyncPlatform.TBA,
+          SyncPlatform.FGC,
+          SyncPlatform.TOA
+        ]}
+        onChange={setSyncPlatform}
+        inline
+      />
+      <TextSetting
+        name='Sync Key'
+        value={syncApiKey}
+        onChange={(s) => setSyncApiKey(String(s))}
+        inline
       />
     </Box>
   );

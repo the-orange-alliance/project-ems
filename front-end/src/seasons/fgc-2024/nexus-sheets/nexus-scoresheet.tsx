@@ -1,6 +1,6 @@
 import React from 'react';
 import Box from '@mui/material/Box';
-import { Alliance, FeedingTheFuture } from '@toa-lib/models';
+import { Alliance, FeedingTheFuture, MatchState } from '@toa-lib/models';
 import { Checkbox, Grid, Stack, Typography } from '@mui/material';
 import styled from '@emotion/styled';
 import {
@@ -8,6 +8,8 @@ import {
   defaultNexusGoalState,
   NexusGoalState
 } from '@toa-lib/models/build/seasons/FeedingTheFuture';
+import { useRecoilValue } from 'recoil';
+import { matchStateAtom } from 'src/stores/recoil';
 
 interface NexusScoresheetProps {
   state?: AllianceNexusGoalState;
@@ -284,6 +286,17 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
   onChange,
   single
 }) => {
+  const matchState = useRecoilValue(matchStateAtom);
+
+  // If the food has been produced, we'll disable the toggle during and before the match is complete
+  // after the match, we'll allow the toggles to be changed
+  if (
+    state === NexusGoalState.Produced &&
+    matchState < MatchState.MATCH_COMPLETE
+  ) {
+    disabled = true;
+  }
+
   const toggleBlue = () => {
     if (!onChange) return;
 
@@ -322,7 +335,15 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
 
   return (
     <Stack
-      sx={{ height: '100%', width: '100%' }}
+      sx={{
+        height: '100%',
+        width: '100%',
+        border:
+          matchState === MatchState.MATCH_IN_PROGRESS &&
+          state === NexusGoalState.Produced
+            ? '5px dashed orange'
+            : undefined
+      }}
       direction={single ? 'row' : 'column'}
       flexGrow={1}
       justifyContent={'center'}
@@ -331,7 +352,9 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
         ball='blue'
         disabled={disabled}
         checked={
-          state === NexusGoalState.BlueOnly || state === NexusGoalState.Full
+          state === NexusGoalState.BlueOnly ||
+          state === NexusGoalState.Full ||
+          state === NexusGoalState.Produced
         }
         onChange={toggleBlue}
         single={single}
@@ -340,7 +363,9 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
         ball='green'
         disabled={disabled}
         checked={
-          state === NexusGoalState.GreenOnly || state === NexusGoalState.Full
+          state === NexusGoalState.GreenOnly ||
+          state === NexusGoalState.Full ||
+          state === NexusGoalState.Produced
         }
         onChange={toggleGreen}
         single={single}
