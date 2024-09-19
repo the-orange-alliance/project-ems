@@ -192,10 +192,6 @@ export class WledController {
   }
 
   public initialize(initPacket?: WledInitParameters): void {
-    clearInterval(this.heartbeat);
-    clearTimeout(this.reinit);
-    clearTimeout(this.keepAlive);
-
     if (initPacket) {
       this.initPacket = initPacket;
 
@@ -208,6 +204,10 @@ export class WledController {
         return;
       }
     }
+
+    clearInterval(this.heartbeat);
+    clearTimeout(this.reinit);
+    clearTimeout(this.keepAlive);
 
     if (this.initPacket.address === '') return;
 
