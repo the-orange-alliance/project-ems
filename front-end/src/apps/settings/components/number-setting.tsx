@@ -29,12 +29,17 @@ export const NumberSetting: FC<Props> = ({
   min,
   max
 }) => {
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
-    onChange(
-      typeof e.target.value.includes('.')
-        ? parseFloat(e.target.value)
-        : parseInt(e.target.value)
-    );
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const parsed = e.target.value.includes('.')
+      ? parseFloat(e.target.value)
+      : parseInt(e.target.value);
+
+    if (isNaN(parsed)) {
+      onChange(0);
+    } else {
+      onChange(parsed);
+    }
+  };
 
   return (
     <FormGroup
