@@ -101,12 +101,14 @@ export const Settings: FC = () => {
         name='Goal LED Length'
         value={goalLedLength}
         onChange={setGoalLedLength}
+        type='number'
         inline
       />
       <NumberSetting
         name='Ramp LED Length'
         value={rampLedLength}
         onChange={setRampLedLength}
+        type='number'
         inline
       />
       <TextSetting
@@ -167,30 +169,41 @@ export const Settings: FC = () => {
         name='Food Production Motor Setpoint'
         value={foodProductionMotorSetpoint}
         onChange={setFoodProductionMotorSetpoint}
+        step={0.1}
+        min={-1}
+        max={1}
+        type='number'
         inline
       />
       <NumberSetting
         name='Food Production Motor Duration (ms)'
         value={foodProductionMotorDurationMs}
         onChange={setFoodProductionMotorDurationMs}
+        type='number'
         inline
       />
       <NumberSetting
         name='Food Reset Motor Setpoint'
         value={foodResetMotorSetpoint}
         onChange={setFoodResetMotorSetpoint}
+        step={0.1}
+        min={-1}
+        max={1}
+        type='number'
         inline
       />
       <NumberSetting
         name='Food Production Delay (ms)'
         value={foodProductionDelayMs}
         onChange={setFoodProductionDelayMs}
+        type='number'
         inline
       />
       <NumberSetting
         name='Ramp Hysteresis Window (ms)'
         value={rampHysteresisWindowMs}
         onChange={setRampHysteresisWindowMs}
+        type='number'
         inline
       />
       <TextSetting
