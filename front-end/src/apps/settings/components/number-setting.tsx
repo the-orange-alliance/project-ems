@@ -12,6 +12,9 @@ interface Props {
   type?: 'text' | 'number' | 'password';
   title?: string;
   fullWidth?: boolean;
+  step?: number;
+  min?: number;
+  max?: number;
 }
 
 export const NumberSetting: FC<Props> = ({
@@ -21,10 +24,22 @@ export const NumberSetting: FC<Props> = ({
   inline,
   type = 'text',
   title,
-  fullWidth
+  fullWidth,
+  step,
+  min,
+  max
 }) => {
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
-    onChange(parseInt(e.target.value));
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const parsed = e.target.value.includes('.')
+      ? parseFloat(e.target.value)
+      : parseInt(e.target.value);
+
+    if (isNaN(parsed)) {
+      onChange(0);
+    } else {
+      onChange(parsed);
+    }
+  };
 
   return (
     <FormGroup
@@ -41,6 +56,11 @@ export const NumberSetting: FC<Props> = ({
             onChange={handleChange}
             sx={{ m: 1, minWidth: 220 }}
             type={type}
+            inputProps={{
+              step,
+              min,
+              max
+            }}
             fullWidth={fullWidth}
           />
         }
