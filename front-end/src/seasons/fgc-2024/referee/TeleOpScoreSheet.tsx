@@ -40,7 +40,6 @@ const TeleScoreSheet: FC<Props> = ({
     useRecoilValue(matchOccurringAtom);
   const { data: teams } = useTeamsForEvent(match?.eventKey ?? '');
   const identifiers = useTeamIdentifiers();
-
   if (!match || !match.details) return null;
 
   const handleResevoirChange = (newValue: number, manuallyTyped: boolean) => {
