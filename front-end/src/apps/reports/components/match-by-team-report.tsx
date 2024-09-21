@@ -70,7 +70,7 @@ export const MatchByTeamReport: FC<Props> = ({
                       <TableCell>{m.name}</TableCell>
                       <TableCell size='small'>{m.fieldNumber}</TableCell>
                       <TableCell>
-                        {DateTime.fromISO(m.startTime).toLocaleString(
+                        {DateTime.fromISO(m.scheduledTime).toLocaleString(
                           DateTime.DATETIME_FULL
                         )}
                       </TableCell>
