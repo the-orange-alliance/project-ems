@@ -21,6 +21,9 @@ const TournamentDropdown: FC<Props> = ({
     onChange(event.target.value);
   };
 
+  // This resolves "uncontrolled" input becoming "controlled" error
+  if (!value) value = '__select__tournament__';
+
   return (
     <FormControl
       fullWidth={fullWidth}
@@ -33,6 +36,9 @@ const TournamentDropdown: FC<Props> = ({
         label='Tournament'
         disabled={!tournaments || tournaments.length === 0}
       >
+        <MenuItem value='__select__tournament__' disabled>
+          Select A Tournament
+        </MenuItem>
         {tournaments?.map((t) => (
           <MenuItem
             key={`${t.tournamentKey}-${t.tournamentKey}`}

@@ -50,11 +50,11 @@ const BreakdownContainer = styled.div((props: { alliance: Alliance }) => ({
 const BreakdownTable = styled(Grid)(() => ({
   width: '100%',
   height: '100%',
-  '> :nth-child(odd)': {
+  '> :nth-of-type(odd)': {
     backgroundColor: '#ffffff',
     color: 'black'
   },
-  '> :nth-child(even)': {
+  '> :nth-of-type(even)': {
     backgroundColor: '#e9e9e9',
     color: 'black'
   }
@@ -69,7 +69,8 @@ const ScoreContainer = styled.div((props: { alliance: Alliance }) => ({
   justifyContent: 'space-between',
   alignItems: 'center',
   paddingLeft: '1em',
-  paddingRight: '1em;'
+  paddingRight: '1em;',
+  marginTop: '-2px'
 }));
 
 const ScoreText = styled.div`
@@ -147,11 +148,11 @@ export const AllianceResult: FC<Props> = ({ alliance, match, ranks }) => {
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
   );
-  allianceParticipants.push(participants[0]);
 
   // try to get breakdown sheet
   let breakdown: ResultsBreakdown<any>[] = [];
 
+  // TODO: move this to the generic model thingy for each year
   switch (match.eventKey.split('-')[0]?.replace('FGC_', '')) {
     case '2024':
       breakdown = Breakdown2024;
@@ -175,6 +176,7 @@ export const AllianceResult: FC<Props> = ({ alliance, match, ranks }) => {
       <TopBanner src={alliance === 'red' ? RED_BANNER : BLUE_BANNER} />
       <AllianceContainer alliance={alliance} size={allianceParticipants.length}>
         {allianceParticipants.map((p) => {
+          // TODO: this seems horribly inefficient
           const rank = ranks.find((r) => r.teamKey === p.teamKey);
           if (!p.team) return null;
           return (

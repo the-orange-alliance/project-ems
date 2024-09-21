@@ -25,7 +25,7 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
   const [matchId, setMatchId] = useRecoilState(currentMatchIdAtom);
   const [value, setValue] = useState(0);
   const setMatchOccurring = useSetRecoilState(matchOccurringAtom);
-  const [activeFields, setActiveFields] = useActiveFieldNumbers();
+  const [activeFields] = useActiveFieldNumbers();
 
   const { data: tournaments } = useTournamentsForEvent(eventKey);
   const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);

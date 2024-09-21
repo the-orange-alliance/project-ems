@@ -40,18 +40,18 @@ const TimerContainer = styled.div`
   text-align: center;
 `;
 
-const ScoreRow = muiStyled.styled(Stack)(({ theme }) => ({
+const ScoreRow = muiStyled.styled(Stack)(() => ({
   marginTop: '-0.8rem !important',
   height: '19vh',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  '> *:first-child': {
+  '> *:first-of-type': {
     borderLeft: '.8rem solid #000000',
     borderRight: '.4rem solid #000000',
     borderBottomLeftRadius: '3rem !important'
   },
-  '> *:nth-child(2), > *:nth-child(3)': {
+  '> *:nth-of-type(2), > *:nth-of-type(3)': {
     borderLeft: '.4rem solid #000000',
     borderRight: '.4rem solid #000000'
   },
@@ -79,7 +79,7 @@ const ScoreContainer = styled.div((props: { alliance: Alliance }) => ({
   lineHeight: '5vh'
 }));
 
-export const MatchPlay: FC<DisplayProps> = ({ event, match }) => {
+export const MatchPlay: FC<DisplayProps> = ({ match }) => {
   return (
     <BGImage>
       <Container spacing={5}>

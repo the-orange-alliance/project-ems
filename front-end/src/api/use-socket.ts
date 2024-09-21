@@ -64,7 +64,7 @@ export const useSocket = (): [
         fieldNumbers: fields.map((d: any) => d.field).join(','),
         followerMode: followerModeEnabled ? 1 : 0,
         followerApiHost: leaderApiHost,
-        audienceDisplayChroma: chromaKey.replaceAll('"', '')
+        audienceDisplayChroma: (chromaKey ?? '').replaceAll('"', '')
       };
 
       if (persistantClientId) {
