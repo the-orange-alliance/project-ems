@@ -2,7 +2,6 @@ import { useRecoilCallback } from 'recoil';
 import { useMatchControl } from './use-match-control';
 import {
   getDefaultMatchDetailsBySeasonKey,
-  getFunctionsBySeasonKey,
   MatchSocketEvent,
   MatchState
 } from '@toa-lib/models';
@@ -11,7 +10,6 @@ import { patchMatch, patchMatchParticipants } from 'src/api/use-match-data';
 import { DateTime } from 'luxon';
 import { once, sendPrestart, sendUpdate } from 'src/api/use-socket';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components';
-import { c } from 'vite/dist/node/types.d-aGj9QkWt';
 
 export const usePrestartCallback = () => {
   const { canPrestart, setState } = useMatchControl();

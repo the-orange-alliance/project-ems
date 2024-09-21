@@ -86,7 +86,6 @@ const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
   ) => {
     const updatePacket: ItemUpdate = { key: String(detailsKey), value };
     socket?.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, updatePacket);
-
     // Reduce UI latency by updating our local match state in anticipation
     // of the update that the server wil send soon
     if (match?.details) {
@@ -111,7 +110,6 @@ const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
       MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
       adjustmentPacket
     );
-
     // Reduce UI latency by updating our local match state in anticipation
     // of the update that the server wil send soon
     if (match?.details) {

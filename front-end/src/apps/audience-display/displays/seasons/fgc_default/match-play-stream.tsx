@@ -39,17 +39,22 @@ const RightText = styled.div`
   margin-left: auto;
 `;
 
-export const MatchPlayStream: FC<DisplayProps> = ({ event, match }) => {
+export const MatchPlayStream: FC<DisplayProps> = ({ event, match, teams }) => {
   const matchParts = match.name.split(' ');
   const matchNumber = matchParts[matchParts.length - 1];
   const field = match.fieldNumber;
   return (
     <Container>
-      <AlliancePlay alliance='red' participants={match.participants ?? []} />
+      <AlliancePlay
+        alliance='red'
+        participants={match.participants ?? []}
+        teams={teams}
+      />
       <MatchScoreBug match={match} />
       <AlliancePlay
         alliance='blue'
         participants={match.participants ?? []}
+        teams={teams}
         invert
       />
       <BottomBar>

@@ -1,4 +1,4 @@
-import { Lock, MenuBook, Restaurant, StarBorder } from '@mui/icons-material';
+import { Lock, Restaurant, StarBorder } from '@mui/icons-material';
 import { ResultsBreakdown } from '../../displays';
 import {
   getBalancedRobots,

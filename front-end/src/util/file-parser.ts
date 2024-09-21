@@ -20,7 +20,7 @@ export const parseTeamsFile = async (
             return {
               eventKey,
               teamKey: i + 1,
-              teamNumber: t[0],
+              teamNumber: t[0].replace('\n', ''),
               teamNameLong: t[1],
               teamNameShort: t[2],
               robotName: t[3],

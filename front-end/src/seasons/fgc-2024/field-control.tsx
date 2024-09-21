@@ -45,8 +45,8 @@ export const useFieldControl =
       console.log('postResultsForField');
     };
 
-    const onMatchUpdate = (match: FeedingTheFuture.MatchDetails) => {
-      console.log('onMatchUpdate', match);
+    const onMatchUpdate = () => {
+      // console.log('onMatchUpdate', match);
     };
 
     const updateFieldSettings = () => {
