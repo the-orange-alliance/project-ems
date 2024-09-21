@@ -46,12 +46,12 @@ const ScoreRow = muiStyled.styled(Stack)(() => ({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  '> *:first-child': {
+  '> *:first-of-type': {
     borderLeft: '.8rem solid #000000',
     borderRight: '.4rem solid #000000',
     borderBottomLeftRadius: '3rem !important'
   },
-  '> *:nth-child(2), > *:nth-child(3)': {
+  '> *:nth-of-type(2), > *:nth-of-type(3)': {
     borderLeft: '.4rem solid #000000',
     borderRight: '.4rem solid #000000'
   },

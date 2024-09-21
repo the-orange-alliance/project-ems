@@ -50,11 +50,11 @@ const BreakdownContainer = styled.div((props: { alliance: Alliance }) => ({
 const BreakdownTable = styled(Grid)(() => ({
   width: '100%',
   height: '100%',
-  '> :nth-child(odd)': {
+  '> :nth-of-type(odd)': {
     backgroundColor: '#ffffff',
     color: 'black'
   },
-  '> :nth-child(even)': {
+  '> :nth-of-type(even)': {
     backgroundColor: '#e9e9e9',
     color: 'black'
   }

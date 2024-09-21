@@ -26,10 +26,10 @@ const Banner = styled.img`
 const AllianceContainer = styled.div((props: { size: number }) => ({
   width: '100%',
   height: '100%',
-  'background-color': '#ffffff',
+  backgroundColor: '#ffffff',
   display: 'grid',
   color: 'black',
-  'grid-template-rows': `repeat(${props.size}, 1fr)`
+  gridTemplateRows: `repeat(${props.size}, 1fr)`
 }));
 
 const TeamContainer = styled.div`
