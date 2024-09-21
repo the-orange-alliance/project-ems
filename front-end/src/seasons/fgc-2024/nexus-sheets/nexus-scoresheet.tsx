@@ -1,6 +1,6 @@
 import React from 'react';
 import Box from '@mui/material/Box';
-import { Alliance, FeedingTheFuture, MatchState } from '@toa-lib/models';
+import { Alliance, MatchState } from '@toa-lib/models';
 import { Checkbox, Grid, Stack, Typography } from '@mui/material';
 import styled from '@emotion/styled';
 import {
@@ -29,7 +29,7 @@ const CenterGoal = styled(Grid)((props: { alliance: Alliance }) => ({
   border: `1px solid ${props.alliance === 'red' ? 'red' : 'blue'}`
 }));
 
-const SideText = styled(Typography)((props: { alliance: Alliance }) => ({
+const SideText = styled(Typography)(() => ({
   textOrientation: 'sideways',
   writingMode: 'vertical-lr'
 }));
@@ -58,9 +58,7 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
     <>
       <Stack direction={alliance === 'blue' ? 'row' : 'row-reverse'}>
         {/* Placeholder for better alignment */}
-        <SideText alliance='blue' variant='h6'>
-          &nbsp;
-        </SideText>
+        <SideText variant='h6'>&nbsp;</SideText>
         <StepGoalGrid
           disabled={disabled}
           state={state}
@@ -102,9 +100,7 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
           alliance={alliance}
         />
         {/* Placeholder for better alignment */}
-        <SideText alliance='blue' variant='h6'>
-          &nbsp;
-        </SideText>
+        <SideText variant='h6'>&nbsp;</SideText>
       </Stack>
     </>
   );
@@ -263,7 +259,7 @@ interface GoalToggleProps {
 }
 
 const BallCheckbox = styled(Checkbox)(
-  (props: { ball: 'blue' | 'green'; single?: boolean }) => ({
+  (props: { ball: 'blue' | 'green'; single?: string }) => ({
     color: props.ball === 'blue' ? '#6ab7c1' : '#81cb46',
     '&.Mui-checked': {
       color: props.ball === 'blue' ? '#6ab7c1' : '#81cb46'
@@ -340,7 +336,7 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
         width: '100%',
         border:
           matchState === MatchState.MATCH_IN_PROGRESS &&
-          state === NexusGoalState.Produced
+            state === NexusGoalState.Produced
             ? '5px dashed orange'
             : undefined
       }}
@@ -357,7 +353,7 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
           state === NexusGoalState.Produced
         }
         onChange={toggleBlue}
-        single={single}
+        single={single?.toString()}
       />
       <BallCheckbox
         ball='green'
@@ -368,7 +364,7 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
           state === NexusGoalState.Produced
         }
         onChange={toggleGreen}
-        single={single}
+        single={single?.toString()}
       />
     </Stack>
   );
