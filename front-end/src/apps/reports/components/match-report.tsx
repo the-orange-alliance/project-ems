@@ -77,9 +77,9 @@ export const MatchReport: FC<Props> = ({
                         <TableCell>{m?.name}</TableCell>
                         <TableCell size='small'>{m?.fieldNumber}</TableCell>
                         <TableCell>
-                          {DateTime.fromISO(m?.startTime || '').toLocaleString(
-                            DateTime.DATETIME_FULL
-                          )}
+                          {DateTime.fromISO(
+                            m?.scheduledTime || ''
+                          ).toLocaleString(DateTime.DATETIME_FULL)}
                         </TableCell>
                         {m?.participants?.map((p) => {
                           const team = teams.find(
