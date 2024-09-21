@@ -8,6 +8,7 @@ import { ChromaLayout } from 'src/layouts/chroma-layout';
 import { currentEventKeyAtom } from 'src/stores/recoil';
 import { DisplaySwitcher } from './displays';
 import { displayIdAtom } from 'src/stores/recoil';
+import { SyncMatchOccurringToRecoil } from 'src/components/sync-effects/sync-match-occurring-to-recoil';
 
 export const AudienceDisplay: FC = () => {
   const eventKey = useRecoilValue(currentEventKeyAtom);
@@ -30,6 +31,7 @@ export const AudienceDisplay: FC = () => {
         <SyncOnPrestart />
         <SyncOnCommit />
         <SyncDisplayToRecoil />
+        <SyncMatchOccurringToRecoil />
         <DisplaySwitcher id={displayId} eventKey={eventKey} />
       </ChromaLayout>
     </Suspense>

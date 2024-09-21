@@ -168,7 +168,7 @@ export default class Match extends Room {
     );
     socket.on(
       MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
-      this.onMatchUpdateDetailsItem
+      this.onMatchAdjustNumber
     );
     socket.on(
       MatchSocketEvent.UPDATE_CARD_STATUS,

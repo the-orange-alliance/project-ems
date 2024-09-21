@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Event, Match, MatchDetailBase, Ranking } from '@toa-lib/models';
+import { Event, Match, MatchDetailBase, Ranking, Team } from '@toa-lib/models';
 import * as FRCDefault from './seasons/frc_default';
 import * as FGCDefault from './seasons/fgc_default';
 
@@ -7,6 +7,7 @@ export interface DisplayProps {
   event: Event;
   match: Match<any>;
   ranks: Ranking[];
+  teams?: Team[];
 }
 
 export interface ResultsBreakdown<T extends MatchDetailBase> {

@@ -12,6 +12,7 @@ import {
 } from 'src/components/animations';
 import AbsolouteLocator from 'src/components/util/absoloute-locator';
 import { useSearchParams } from 'react-router-dom';
+import { useTeamsForEvent } from 'src/api/use-team-data';
 
 /**
  * Classic audience display that handles all scenarios.
@@ -20,6 +21,8 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
   const match = useRecoilValue(matchOccurringAtom);
   const ranks = useRecoilValue(matchOccurringRanksAtom);
   const [searchParams] = useSearchParams();
+
+  const { data: teams } = useTeamsForEvent(match?.eventKey);
 
   // Pin a display
   const pin = searchParams.get('pin');
@@ -52,14 +55,31 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
           />
         );
       case AudienceScreens.MATCH:
-        return <displays.matchPlay event={event} match={match} ranks={ranks} />;
+        return (
+          <displays.matchPlay
+            event={event}
+            match={match}
+            ranks={ranks}
+            teams={teams}
+          />
+        );
       case AudienceScreens.RESULTS:
         return (
-          <displays.matchResults event={event} match={match} ranks={ranks} />
+          <displays.matchResults
+            event={event}
+            match={match}
+            ranks={ranks}
+            teams={teams}
+          />
         );
       case AudienceScreens.MATCH_STREAM:
         return (
-          <displays.matchPlayStream event={event} match={match} ranks={ranks} />
+          <displays.matchPlayStream
+            event={event}
+            match={match}
+            ranks={ranks}
+            teams={teams}
+          />
         );
       case AudienceScreens.RESULTS_STREAM:
         return (
@@ -67,6 +87,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
             event={event}
             match={match}
             ranks={ranks}
+            teams={teams}
           />
         );
     }
@@ -81,7 +102,12 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {layout[0] === LayoutMode.FULL && (
         <AbsolouteLocator top={0} left={0}>
           <FadeInOut in={id === Displays.MATCH_PREVIEW} duration={0.5}>
-            <displays.matchPreview event={event} match={match} ranks={ranks} />
+            <displays.matchPreview
+              event={event}
+              match={match}
+              ranks={ranks}
+              teams={teams}
+            />
           </FadeInOut>
         </AbsolouteLocator>
       )}
@@ -96,6 +122,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
               event={event}
               match={match}
               ranks={ranks}
+              teams={teams}
             />
           </SlideInBottom>
         </AbsolouteLocator>
@@ -105,7 +132,12 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {layout[1] === LayoutMode.FULL && (
         <AbsolouteLocator top={0} left={0}>
           <FadeInOut in={id === Displays.MATCH_START} duration={0.5}>
-            <displays.matchPlay event={event} match={match} ranks={ranks} />
+            <displays.matchPlay
+              event={event}
+              match={match}
+              ranks={ranks}
+              teams={teams}
+            />
           </FadeInOut>
         </AbsolouteLocator>
       )}
@@ -120,6 +152,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
               event={event}
               match={match}
               ranks={ranks}
+              teams={teams}
             />
           </SlideInBottom>
         </AbsolouteLocator>
@@ -129,7 +162,12 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {layout[2] === LayoutMode.FULL && (
         <AbsolouteLocator top={0} left={0}>
           <FadeInOut in={id === Displays.MATCH_RESULTS}>
-            <displays.matchResults event={event} match={match} ranks={ranks} />
+            <displays.matchResults
+              event={event}
+              match={match}
+              ranks={ranks}
+              teams={teams}
+            />
           </FadeInOut>
         </AbsolouteLocator>
       )}
@@ -144,6 +182,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
               event={event}
               match={match}
               ranks={ranks}
+              teams={teams}
             />
           </SlideInLeft>
         </AbsolouteLocator>

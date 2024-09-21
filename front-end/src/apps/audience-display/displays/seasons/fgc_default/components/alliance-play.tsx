@@ -5,7 +5,7 @@ import {
   MatchParticipant,
   Team
 } from '@toa-lib/models';
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 import { CountryFlag } from './country-flag';
 import { CardStatus } from './card-status';
 
@@ -13,7 +13,7 @@ const Container = styled.div((props: { alliance: Alliance }) => ({
   backgroundColor: props.alliance === 'red' ? '#ce2000' : '#5c88ff',
   display: 'flex',
   flexDirection: 'column',
-  justifyContent: 'space-around',
+  justifyContent: 'space-around'
 }));
 
 const TeamContainer = styled.div`
@@ -68,17 +68,24 @@ interface Props {
   participants: MatchParticipant[];
   invert?: boolean;
   fullHeight?: boolean;
+  teams?: Team[];
 }
 
 export const AlliancePlay: FC<Props> = ({
   alliance,
   participants,
   invert,
-  fullHeight = false
+  fullHeight = false,
+  teams
 }) => {
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
   );
+  const teamsRecord = useMemo(
+    () => (teams ? Object.fromEntries(teams.map((t) => [t.teamKey, t])) : {}),
+    [teams]
+  );
+  console.log({ teamsRecord });
   return (
     <Container
       alliance={alliance}
@@ -99,11 +106,11 @@ export const AlliancePlay: FC<Props> = ({
       }
     >
       {allianceParticipants.map((p) => {
-        if (!p.team) return null;
+        if (!p.team && !teamsRecord[p.teamKey]) return null;
         return (
           <AllianceTeam
             key={p.station}
-            team={p.team}
+            team={p.team ?? teamsRecord[p.teamKey]}
             cardStatus={p.cardStatus}
             invert={invert}
           />

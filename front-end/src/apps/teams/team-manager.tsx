@@ -22,7 +22,7 @@ import { parseTeamsFile } from 'src/util/file-parser';
 export const TeamManager: FC = () => {
   const { data: event } = useCurrentEvent();
   const { data: initialTeams } = useTeamsForEvent(event?.eventKey);
-  const {platform, apiKey} = useSyncConfig();
+  const { platform, apiKey } = useSyncConfig();
   const [teams, setTeams] = useRecoilState(
     teamsByEventKeyAtomFam(event?.eventKey ?? '')
   );
