@@ -13,9 +13,10 @@ const InfoContainer = styled.div`
   padding-bottom: 0.1em;
   color: black;
   line-height: 0.95;
-  font-size: 4vh;
+  font-size: 3.3vh;
   font-weight: 800;
   text-align: center;
+  height: 100%;
 `;
 
 const GridLogo = styled(Grid)(() => ({
@@ -37,12 +38,20 @@ const MatchTitle = ({
   const Item = branding ? GridLogo : Grid;
   return (
     <InfoContainer style={{ margin: noMargin ? 0 : undefined }}>
-      <Grid container direction='row' justifyContent={'center'}>
-        {/* Funky Spacing Shenatigans */}
+      <Grid
+        container
+        direction='row'
+        justifyContent={'center'}
+        sx={{ height: '100%' }}
+      >
+        {/* Funky Spacing Shenatigans (for FIRST global logo) */}
         <Grid item xs={0.2}></Grid>
         <Item item xs={2.3} />
         <Grid item xs={7}>
-          <Stack>
+          <Stack
+            sx={{ height: '100%', marginTop: '-2px' }}
+            justifyContent={'center'}
+          >
             <div>{match.name}</div>
             <div>Field {match.fieldNumber}</div>
           </Stack>

@@ -42,6 +42,7 @@ const RightText = styled.div`
 export const MatchPlayStream: FC<DisplayProps> = ({ event, match }) => {
   const matchParts = match.name.split(' ');
   const matchNumber = matchParts[matchParts.length - 1];
+  const field = match.fieldNumber;
   return (
     <Container>
       <AlliancePlay alliance='red' participants={match.participants ?? []} />
@@ -52,7 +53,9 @@ export const MatchPlayStream: FC<DisplayProps> = ({ event, match }) => {
         invert
       />
       <BottomBar>
-        <LeftText>MATCH:&nbsp;{matchNumber}</LeftText>
+        <LeftText>
+          Match&nbsp;{matchNumber}&nbsp;|&nbsp;Field&nbsp;{field}
+        </LeftText>
         <RightText>{event.eventName}</RightText>
       </BottomBar>
     </Container>

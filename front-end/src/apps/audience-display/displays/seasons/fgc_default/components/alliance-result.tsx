@@ -69,7 +69,8 @@ const ScoreContainer = styled.div((props: { alliance: Alliance }) => ({
   justifyContent: 'space-between',
   alignItems: 'center',
   paddingLeft: '1em',
-  paddingRight: '1em;'
+  paddingRight: '1em;',
+  marginTop: '-2px'
 }));
 
 const ScoreText = styled.div`
