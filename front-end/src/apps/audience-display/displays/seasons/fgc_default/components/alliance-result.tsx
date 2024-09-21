@@ -147,11 +147,11 @@ export const AllianceResult: FC<Props> = ({ alliance, match, ranks }) => {
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
   );
-  allianceParticipants.push(participants[0]);
 
   // try to get breakdown sheet
   let breakdown: ResultsBreakdown<any>[] = [];
 
+  // TODO: move this to the generic model thingy for each year
   switch (match.eventKey.split('-')[0]?.replace('FGC_', '')) {
     case '2024':
       breakdown = Breakdown2024;
@@ -175,6 +175,7 @@ export const AllianceResult: FC<Props> = ({ alliance, match, ranks }) => {
       <TopBanner src={alliance === 'red' ? RED_BANNER : BLUE_BANNER} />
       <AllianceContainer alliance={alliance} size={allianceParticipants.length}>
         {allianceParticipants.map((p) => {
+          // TODO: this seems horribly inefficient
           const rank = ranks.find((r) => r.teamKey === p.teamKey);
           if (!p.team) return null;
           return (
