@@ -111,7 +111,7 @@ export const defaultMatchDetails: MatchDetails = {
   blueRobotThreeParked: 0,
   blueNexusState: { ...defaultNexusGoalState },
   coopertition: 0,
-  fieldBalanced: 0
+  fieldBalanced: 1
 };
 
 export const isFeedingTheFutureDetails = (obj: unknown): obj is MatchDetails =>
@@ -134,7 +134,7 @@ export const FeedingTheFutureSeason: Season<MatchDetails, SeasonRanking> = {
 };
 
 function detailsToJson(details: MatchDetails): any {
-  const json: any =  {
+  const json: any = {
     ...details,
     redCw1: details.redNexusState.CW1,
     redCw2: details.redNexusState.CW2,

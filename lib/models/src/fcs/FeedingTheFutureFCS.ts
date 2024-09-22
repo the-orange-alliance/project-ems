@@ -263,7 +263,12 @@ export class PacketManager {
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
       this.fieldOptions.goalEmptyColor,
-      LedStripA.ALL_STRIPS,
+      LedStripA.ALL_NEXUS_GOALS,
+      result
+    );
+    applyPatternToStrips(
+      this.fieldOptions.rampBalancedColor,
+      [LedStripA.RAMP],
       result
     );
 
