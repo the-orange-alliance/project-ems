@@ -93,10 +93,18 @@ export const foodProductionDelayMsAtom = atom<number>({
   effects: [localStorageEffect('ftf.foodProductionDelayMs')]
 });
 
-export const rampHysteresisWindowMsAtom = atom<number>({
-  key: 'ftf.rampHysteresisWindowMs',
-  default: FeedingTheFutureFCS.defaultFieldOptions.rampHysteresisWindowMs,
-  effects: [localStorageEffect('ftf.rampHysteresisWindowMs')]
+export const rampBalancedHysteresisWindowMsAtom = atom<number>({
+  key: 'ftf.rampBalancedHysteresisWindowMs',
+  default:
+    FeedingTheFutureFCS.defaultFieldOptions.rampBalancedHysteresisWindowMs,
+  effects: [localStorageEffect('ftf.rampBalancedHysteresisWindowMs')]
+});
+
+export const rampUnbalancedHysteresisWindowMsAtom = atom<number>({
+  key: 'ftf.rampUnbalancedHysteresisWindowMs',
+  default:
+    FeedingTheFutureFCS.defaultFieldOptions.rampUnbalancedHysteresisWindowMs,
+  effects: [localStorageEffect('ftf.rampUnbalancedHysteresisWindowMs')]
 });
 
 export const goalEmptyColorAtom = atom<string>({
@@ -161,7 +169,10 @@ export const fieldOptionsSelector: RecoilValueReadOnly<FeedingTheFutureFCS.Field
         foodProductionMotorDurationMs: get(foodProductionMotorDurationMsAtom),
         foodResetMotorSetpoint: get(foodResetMotorSetpointAtom),
         foodProductionDelayMs: get(foodProductionDelayMsAtom),
-        rampHysteresisWindowMs: get(rampHysteresisWindowMsAtom),
+        rampBalancedHysteresisWindowMs: get(rampBalancedHysteresisWindowMsAtom),
+        rampUnbalancedHysteresisWindowMs: get(
+          rampUnbalancedHysteresisWindowMsAtom
+        ),
         goalEmptyColor: get(goalEmptyColorAtom),
         goalBlueOnlyColor: get(goalBlueOnlyColorAtom),
         goalGreenOnlyColor: get(goalGreenOnlyColorAtom),

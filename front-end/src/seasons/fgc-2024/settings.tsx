@@ -22,9 +22,10 @@ import {
   matchEndRedNexusGoalColorAtom,
   prepareFieldColorAtom,
   rampBalancedColorAtom,
-  rampHysteresisWindowMsAtom,
+  rampBalancedHysteresisWindowMsAtom,
   rampLedLengthAtom,
   rampUnbalancedColorAtom,
+  rampUnbalancedHysteresisWindowMsAtom,
   redWledWebSocketAddressAtom
 } from './stores/settings-store';
 import { NumberSetting } from 'src/apps/settings/components/number-setting';
@@ -66,9 +67,12 @@ export const Settings: FC = () => {
   const [foodProductionDelayMs, setFoodProductionDelayMs] = useRecoilState(
     foodProductionDelayMsAtom
   );
-  const [rampHysteresisWindowMs, setRampHysteresisWindowMs] = useRecoilState(
-    rampHysteresisWindowMsAtom
-  );
+  const [rampBalancedHysteresisWindowMs, setRampBalancedHysteresisWindowMs] =
+    useRecoilState(rampBalancedHysteresisWindowMsAtom);
+  const [
+    rampUnbalancedHysteresisWindowMs,
+    setRampUnbalancedHysteresisWindowMs
+  ] = useRecoilState(rampUnbalancedHysteresisWindowMsAtom);
   const [goalEmptyColor, setGoalEmptyColor] =
     useRecoilState(goalEmptyColorAtom);
   const [goalBlueOnlyColor, setGoalBlueOnlyColor] = useRecoilState(
@@ -200,9 +204,16 @@ export const Settings: FC = () => {
         inline
       />
       <NumberSetting
-        name='Ramp Hysteresis Window (ms)'
-        value={rampHysteresisWindowMs}
-        onChange={setRampHysteresisWindowMs}
+        name='Ramp Balanced Hysteresis Window (ms)'
+        value={rampBalancedHysteresisWindowMs}
+        onChange={setRampBalancedHysteresisWindowMs}
+        type='number'
+        inline
+      />
+      <NumberSetting
+        name='Ramp Unbalanced Hysteresis Window (ms)'
+        value={rampUnbalancedHysteresisWindowMs}
+        onChange={setRampUnbalancedHysteresisWindowMs}
         type='number'
         inline
       />
