@@ -1,9 +1,4 @@
-import {
-  useRecoilCallback,
-  useRecoilState,
-  useRecoilValue,
-  useSetRecoilState
-} from 'recoil';
+import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { useMatchControl } from './use-match-control';
 import {
   MatchState,
@@ -15,7 +10,6 @@ import {
 import {
   currentEventKeyAtom,
   currentTournamentKeyAtom,
-  matchesByEventKeyAtomFam,
   matchOccurringAtom,
   socketConnectedAtom
 } from 'src/stores/recoil';
