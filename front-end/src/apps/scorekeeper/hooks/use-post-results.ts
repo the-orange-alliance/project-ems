@@ -1,4 +1,4 @@
-import { MatchState } from '@toa-lib/models';
+import { Match, MatchState } from '@toa-lib/models';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { useMatchControl } from './use-match-control';
 import { sendPostResults } from 'src/api/use-socket';
@@ -20,10 +20,12 @@ export const usePostResultsCallback = () => {
   const fieldControl = useSeasonFieldControl();
   const eventKey = useRecoilValue(currentEventKeyAtom);
   const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
-  const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
+  const { data: matches, mutate: setMatches } = useMatchesForTournament(
+    eventKey,
+    tournamentKey
+  );
   const getNextUnplayed = useNextUnplayedMatch();
   const { apiKey, platform } = useSyncConfig();
-
 
   return useRecoilCallback(
     ({ snapshot, set }) =>
@@ -41,7 +43,25 @@ export const usePostResultsCallback = () => {
         }
 
         // Sync match online
-        await resultsSyncMatch(match.eventKey, match.tournamentKey, match.id, platform, apiKey);
+        const { success } = await resultsSyncMatch(
+          match.eventKey,
+          match.tournamentKey,
+          match.id,
+          platform,
+          apiKey
+        );
+
+        // Update local match array with posted = 1
+        if (success && matches) {
+          const copy = [...matches];
+          const index = copy.findIndex(
+            (m) => m.id === match.id && m.tournamentKey === match.tournamentKey
+          );
+          if (index >= 0) {
+            copy[index] = { ...copy[index], uploaded: 1 };
+            setMatches(copy);
+          }
+        }
 
         // Set the current match to the next
         const next = await getNextUnplayed();

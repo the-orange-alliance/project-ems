@@ -115,7 +115,7 @@ export const postMatchResults = async (
   match.participants = participants;
   match.details = details;
 
-  await request(
+  const res = await request(
     '/upload/matches',
     {
       method: 'PUT',
@@ -124,6 +124,13 @@ export const postMatchResults = async (
     platform,
     apiKey
   );
+
+  if (res?.ok) {
+    await db.updateWhere(
+      'match',
+      { uploaded: 1 },
+      `eventKey = "${info.eventKey}" AND tournamentKey = "${info.tournamentKey}" AND id = ${info.id}`)
+  }
 
   return await postRankings(
     info.eventKey,

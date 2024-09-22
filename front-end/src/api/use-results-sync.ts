@@ -1,16 +1,24 @@
 import { clientFetcher } from '@toa-lib/client';
 import { SyncPlatform } from '@toa-lib/models';
 
+interface SyncResponse {
+  success: boolean;
+}
+
 export const resultsSyncMatches = (
   eventKey: string,
   tournamentKey: string,
   platform: SyncPlatform,
   apiKey: string
-): Promise<void> =>
-  clientFetcher(`results/sync/matches/${eventKey}/${tournamentKey}`, 'POST', {
-    platform,
-    apiKey
-  });
+): Promise<SyncResponse> =>
+  clientFetcher<SyncResponse>(
+    `results/sync/matches/${eventKey}/${tournamentKey}`,
+    'POST',
+    {
+      platform,
+      apiKey
+    }
+  );
 
 export const resultsSyncMatch = (
   eventKey: string,
@@ -18,8 +26,8 @@ export const resultsSyncMatch = (
   id: number,
   platform: SyncPlatform,
   apiKey: string
-): Promise<void> =>
-  clientFetcher(
+): Promise<SyncResponse> =>
+  clientFetcher<SyncResponse>(
     `results/sync/matches/${eventKey}/${tournamentKey}/${id}`,
     'POST',
     {
@@ -33,18 +41,22 @@ export const resultsSyncRankings = (
   tournamentKey: string,
   platform: SyncPlatform,
   apiKey: string
-): Promise<void> =>
-  clientFetcher(`results/sync/rankings/${eventKey}/${tournamentKey}`, 'POST', {
-    platform,
-    apiKey
-  });
+): Promise<SyncResponse> =>
+  clientFetcher<SyncResponse>(
+    `results/sync/rankings/${eventKey}/${tournamentKey}`,
+    'POST',
+    {
+      platform,
+      apiKey
+    }
+  );
 
 export const resultsSyncTeams = (
   eventKey: string,
   platform: SyncPlatform,
   apiKey: string
-): Promise<void> =>
-  clientFetcher(`results/sync/teams/${eventKey}`, 'POST', {
+): Promise<SyncResponse> =>
+  clientFetcher<SyncResponse>(`results/sync/teams/${eventKey}`, 'POST', {
     platform,
     apiKey
   });
