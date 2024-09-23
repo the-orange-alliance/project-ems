@@ -274,7 +274,7 @@ export class PacketManager {
     );
 
     this.actionQueue.set('resetFood', {
-      timestamp: Date.now() + 10000,
+      timestamp: Date.now() + this.fieldOptions.foodResetMotorDurationMs,
       callback: () => {
         const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
         applySetpointToMotors(0, MotorA.ALL_GOALS, result);
@@ -768,6 +768,7 @@ export interface FieldOptions {
   foodProductionMotorSetpoint: number;
   foodProductionMotorDurationMs: number;
   foodResetMotorSetpoint: number;
+  foodResetMotorDurationMs: number;
   foodProductionDelayMs: number;
   rampBalancedHysteresisWindowMs: number;
   rampUnbalancedHysteresisWindowMs: number;
@@ -795,6 +796,7 @@ export const defaultFieldOptions: FieldOptions = {
   foodProductionMotorSetpoint: 1.0,
   foodProductionMotorDurationMs: 5000,
   foodResetMotorSetpoint: -0.5,
+  foodResetMotorDurationMs: 5000,
   foodProductionDelayMs: 5000,
   rampBalancedHysteresisWindowMs: 500,
   rampUnbalancedHysteresisWindowMs: 100,

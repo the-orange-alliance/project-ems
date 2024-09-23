@@ -10,6 +10,7 @@ import {
   foodProductionDelayMsAtom,
   foodProductionMotorDurationMsAtom,
   foodProductionMotorSetpointAtom,
+  foodResetMotorDurationMsAtom,
   foodResetMotorSetpointAtom,
   goalBlueOnlyColorAtom,
   goalEmptyColorAtom,
@@ -65,6 +66,8 @@ export const Settings: FC = () => {
   const [foodResetMotorSetpoint, setFoodResetMotorSetpoint] = useRecoilState(
     foodResetMotorSetpointAtom
   );
+  const [foodResetMotorDurationMs, setFoodResetMotorDurationMs] =
+    useRecoilState(foodResetMotorDurationMsAtom);
   const [foodProductionDelayMs, setFoodProductionDelayMs] = useRecoilState(
     foodProductionDelayMsAtom
   );
@@ -200,6 +203,13 @@ export const Settings: FC = () => {
         step={0.1}
         min={-1}
         max={1}
+        type='number'
+        inline
+      />
+      <NumberSetting
+        name='Food Reset Motor Duration (ms)'
+        value={foodResetMotorDurationMs}
+        onChange={setFoodResetMotorDurationMs}
         type='number'
         inline
       />
