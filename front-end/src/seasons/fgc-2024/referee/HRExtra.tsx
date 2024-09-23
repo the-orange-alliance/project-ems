@@ -1,4 +1,4 @@
-import { Divider, Grid, Paper, Typography } from '@mui/material';
+import { Divider, Grid, Paper, Stack, Typography } from '@mui/material';
 import {
   Alliance,
   FeedingTheFuture,
@@ -8,6 +8,7 @@ import {
   MatchState,
   NumberAdjustment
 } from '@toa-lib/models';
+import { NexusGoalState } from '@toa-lib/models/build/seasons/FeedingTheFuture';
 import { SetterOrUpdater, useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/use-socket';
 import { NumberInput } from 'src/components/inputs/number-input';
@@ -15,6 +16,9 @@ import { StateToggle } from 'src/components/inputs/state-toggle';
 import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state-to-recoil';
 import { SyncOnPrestart } from 'src/components/sync-effects/sync-on-prestart';
 import { matchOccurringAtom, matchStateAtom } from 'src/stores/recoil';
+import NexusScoresheet from '../nexus-sheets/nexus-scoresheet';
+import { ConnectionChip } from 'src/components/util/connection-chip';
+import { MatchChip } from 'src/components/util/match-chip';
 
 const HeadRefereeExtra: React.FC = () => {
   const [socket] = useSocket();
@@ -112,6 +116,10 @@ const HeadRefereeExtra: React.FC = () => {
     >
       <SyncMatchStateToRecoil />
       <SyncOnPrestart />
+      <Stack direction='row' className='center' spacing={1}>
+        <ConnectionChip />
+        <MatchChip match={match} />
+      </Stack>
       <Typography variant='h6' textAlign='center'>
         Automated Fields
       </Typography>
@@ -126,8 +134,8 @@ const HeadRefereeExtra: React.FC = () => {
             textFieldDisabled
             disabled={matchState !== MatchState.MATCH_COMPLETE}
             onChange={(v, m) => handleFoodProducedChange('red', v, m)}
-            onIncrement={(v) => handleFoodProducedIncrement('red')}
-            onDecrement={(v) => handleFoodProducedDecrement('red')}
+            onIncrement={() => handleFoodProducedIncrement('red')}
+            onDecrement={() => handleFoodProducedDecrement('red')}
           />
         </Grid>
         <Grid item xs={4}>
@@ -149,8 +157,33 @@ const HeadRefereeExtra: React.FC = () => {
             textFieldDisabled
             disabled={matchState !== MatchState.MATCH_COMPLETE}
             onChange={(v, m) => handleFoodProducedChange('blue', v, m)}
-            onIncrement={(v) => handleFoodProducedIncrement('blue')}
-            onDecrement={(v) => handleFoodProducedDecrement('blue')}
+            onIncrement={() => handleFoodProducedIncrement('blue')}
+            onDecrement={() => handleFoodProducedDecrement('blue')}
+          />
+        </Grid>
+      </Grid>
+
+      <Typography variant='h6' textAlign='center' sx={{ my: 1 }}>
+        Scorekeeper Center Near Scoring
+      </Typography>
+      <Divider sx={{ my: 1 }} />
+      <Grid container>
+        <Grid item xs={6}>
+          <NexusScoresheet
+            alliance='blue'
+            state={match?.details?.blueNexusState}
+            onChange={(v) => handleMatchDetailsUpdate('blueNexusState', v)}
+            scorekeeperView
+            side='near'
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <NexusScoresheet
+            alliance='red'
+            state={match?.details?.redNexusState}
+            onChange={(v) => handleMatchDetailsUpdate('redNexusState', v)}
+            scorekeeperView
+            side='near'
           />
         </Grid>
       </Grid>

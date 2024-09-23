@@ -47,6 +47,7 @@ export const RedScoreBreakdown: FC<
           state={match?.details?.redNexusState}
           disabled
           alliance='red'
+          side='both'
         />
       </Grid>
 
@@ -143,6 +144,7 @@ export const BlueScoreBreakdown: FC<
           state={match?.details?.blueNexusState}
           disabled
           alliance='blue'
+          side='both'
         />
       </Grid>
 

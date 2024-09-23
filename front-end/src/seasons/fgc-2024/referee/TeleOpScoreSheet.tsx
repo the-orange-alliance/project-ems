@@ -121,6 +121,14 @@ const TeleScoreSheet: FC<Props> = ({
     }
   };
 
+  const updateOpposingNexusState = (state: AllianceNexusGoalState) => {
+    if (alliance === 'red') {
+      onMatchDetailsUpdate('blueNexusState', state);
+    } else {
+      onMatchDetailsUpdate('redNexusState', state);
+    }
+  };
+
   const updateParking = (station: number, value: number) => {
     switch (station) {
       case 11:
@@ -147,8 +155,12 @@ const TeleScoreSheet: FC<Props> = ({
   return (
     <Grid container spacing={3}>
       <Grid item xs={12} md={6} lg={6}>
-        <Typography variant='h6' textAlign='center'>
-          Resevoir Scored
+        <Typography
+          variant='h6'
+          textAlign='center'
+          sx={{ textTransform: 'capitalize' }}
+        >
+          {alliance} Resevoir Scored
         </Typography>
         <NumberInput
           value={
@@ -163,8 +175,12 @@ const TeleScoreSheet: FC<Props> = ({
         />
       </Grid>
       <Grid item xs={12} md={6} lg={6}>
-        <Typography variant='h6' textAlign='center'>
-          Food Secured
+        <Typography
+          variant='h6'
+          textAlign='center'
+          sx={{ textTransform: 'capitalize' }}
+        >
+          {alliance} Food Secured
         </Typography>
         <NumberInput
           value={
@@ -185,8 +201,15 @@ const TeleScoreSheet: FC<Props> = ({
               ? match.details.redNexusState
               : match.details.blueNexusState
           }
+          opposingState={
+            alliance === 'red'
+              ? match.details.blueNexusState
+              : match.details.redNexusState
+          }
           onChange={updateNexusState}
+          onOpposingChange={updateOpposingNexusState}
           alliance={alliance}
+          side={'far'}
         />
       </Grid>
       {participants?.map((p) => {

@@ -39,6 +39,16 @@ export const AllianceCards: FC = () => {
       >
         Head Referee
       </Button>
+      <Button
+        fullWidth
+        variant='contained'
+        className='purple-bg-imp'
+        sx={{ height: '30em', backgroundColor: 'purple' }}
+        component={Link}
+        to='./head-min'
+      >
+        Head Ref Minimal
+      </Button>
     </Box>
   );
 };

@@ -13,20 +13,24 @@ import { matchStateAtom } from 'src/stores/recoil';
 
 interface NexusScoresheetProps {
   state?: AllianceNexusGoalState;
+  opposingState?: AllianceNexusGoalState;
   disabled?: boolean;
   alliance: Alliance;
   onChange?: (state: AllianceNexusGoalState) => void;
+  onOpposingChange?: (state: AllianceNexusGoalState) => void;
+  side: 'near' | 'far' | 'both';
+  scorekeeperView?: boolean;
 }
 
 const StairGoal = styled(Box)((props: { alliance: Alliance }) => ({
-  border: `1px solid ${props.alliance === 'red' ? 'red' : 'blue'}`,
+  border: `3px solid ${props.alliance === 'red' ? 'red' : 'blue'}`,
   marginTop: 'auto',
   flexGrow: 1,
   width: 1 / 6
 }));
 
 const CenterGoal = styled(Grid)((props: { alliance: Alliance }) => ({
-  border: `1px solid ${props.alliance === 'red' ? 'red' : 'blue'}`
+  border: `3px solid ${props.alliance === 'red' ? 'red' : 'blue'}`
 }));
 
 const SideText = styled(Typography)(() => ({
@@ -36,9 +40,13 @@ const SideText = styled(Typography)(() => ({
 
 const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
   state,
+  opposingState,
   disabled,
   alliance,
-  onChange
+  onChange,
+  onOpposingChange,
+  side,
+  scorekeeperView
 }) => {
   // If we're not passed in a state, we'll use the default state and disable the sheet
   if (!state) {
@@ -46,40 +54,56 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
     disabled = true;
   }
 
+  if (!opposingState) {
+    opposingState = { ...defaultNexusGoalState };
+  }
+
   const onGoalChange = (
     goal: keyof AllianceNexusGoalState,
     newState: NexusGoalState
   ) => {
-    if (!onChange) return;
-    onChange({ ...state, [goal]: newState } as AllianceNexusGoalState);
+    if (goal.startsWith('CW')) {
+      if (!onOpposingChange) return;
+      onOpposingChange({
+        ...opposingState,
+        [goal]: newState
+      } as AllianceNexusGoalState);
+    } else {
+      // Center Field
+      if (!onChange) return;
+      onChange({ ...state, [goal]: newState } as AllianceNexusGoalState);
+    }
   };
 
   return (
     <>
-      <Stack direction={alliance === 'blue' ? 'row' : 'row-reverse'}>
-        {/* Placeholder for better alignment */}
-        <SideText variant='h6'>&nbsp;</SideText>
-        <StepGoalGrid
-          disabled={disabled}
-          state={state}
-          onGoalChange={onGoalChange}
-          alliance={alliance}
-        />
-        <Typography
-          variant='h6'
-          sx={{
-            textOrientation: 'sideways',
-            writingMode: 'vertical-lr',
-            textAlign: alliance === 'blue' ? 'right' : 'left',
-            transform: alliance === 'red' ? 'rotate(180deg)' : undefined
-          }}
-        >
-          Center Field
-        </Typography>
-      </Stack>
-
-      {/* Spacing between the two sets of goals */}
-      <Box sx={{ height: '10px' }} />
+      {!scorekeeperView && (
+        <>
+          <Stack direction={alliance === 'red' ? 'row' : 'row-reverse'}>
+            {/* Placeholder for better alignment */}
+            <SideText variant='h6'>&nbsp;</SideText>
+            <StepGoalGrid
+              disabled={disabled}
+              state={opposingState}
+              onGoalChange={onGoalChange}
+              alliance={alliance === 'red' ? 'blue' : 'red'} // intentionally inverted
+            />
+            <Typography
+              variant='h6'
+              sx={{
+                textOrientation: 'sideways',
+                writingMode: 'vertical-lr',
+                textAlign: alliance === 'red' ? 'right' : 'left',
+                transform: alliance === 'blue' ? 'rotate(180deg)' : undefined
+              }}
+            >
+              Center Field
+            </Typography>
+          </Stack>
+          {/* Spacing between the two sets of goals */}
+          <Box sx={{ height: '10px' }} />
+        </>
+      )}
 
       <Stack direction={alliance === 'blue' ? 'row' : 'row-reverse'}>
         <Typography
@@ -88,7 +112,8 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
             textOrientation: 'sideways',
             writingMode: 'vertical-lr',
             textAlign: 'center',
-            transform: alliance === 'blue' ? 'rotate(180deg)' : undefined
+            transform: alliance === 'blue' ? 'rotate(180deg)' : undefined,
+            display: scorekeeperView ? 'none' : undefined
           }}
         >
           Center Field
@@ -98,6 +123,8 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
           state={state}
           onGoalChange={onGoalChange}
           alliance={alliance}
+          side={side}
+          fullWidth={scorekeeperView}
         />
         {/* Placeholder for better alignment */}
         <SideText variant='h6'>&nbsp;</SideText>
@@ -114,6 +141,11 @@ interface GoalGridProps {
     state: NexusGoalState
   ) => void;
   alliance: Alliance;
+}
+
+interface CenterGoalGridProps extends GoalGridProps {
+  side: 'near' | 'far' | 'both'; // perspective is from scorekeeper side of field
+  fullWidth?: boolean;
 }
 
 const StepGoalGrid: React.FC<GoalGridProps> = ({
@@ -182,11 +214,13 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
   );
 };
 
-const CenterGoalGrid: React.FC<GoalGridProps> = ({
+const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
   disabled,
   state,
   onGoalChange,
-  alliance
+  alliance,
+  side,
+  fullWidth
 }) => {
   /*
    * Center-field 3x2 goal.
@@ -195,58 +229,65 @@ const CenterGoalGrid: React.FC<GoalGridProps> = ({
    * R4 R5 R6 B6 B5 B4
    * Again, we'll utelize row-reverse here in the grid and lay out the grid with blue taking default
    */
+  const directionBlue = side === 'far' ? 'row' : 'row-reverse';
+  const directionRed = side === 'far' ? 'row-reverse' : 'row';
   return (
-    <Grid container direction={alliance === 'blue' ? 'row' : 'row-reverse'}>
+    <Grid
+      container
+      direction={alliance === 'blue' ? directionBlue : directionRed}
+    >
       {/* First Row */}
-      <CenterGoal item xs={4} alliance={alliance}>
-        <GoalToggle
-          disabled={disabled}
-          state={state.EC1}
-          onChange={(s) => onGoalChange('EC1', s)}
-          single
-        />
-      </CenterGoal>
-      <CenterGoal item xs={4} alliance={alliance}>
-        <GoalToggle
-          disabled={disabled}
-          state={state.EC2}
-          onChange={(s) => onGoalChange('EC2', s)}
-          single
-        />
-      </CenterGoal>
-      <CenterGoal item xs={4} alliance={alliance}>
-        <GoalToggle
-          disabled={disabled}
-          state={state.EC3}
-          onChange={(s) => onGoalChange('EC3', s)}
-          single
-        />
-      </CenterGoal>
+      {(side === 'near' || side === 'both') && (
+        <>
+          <CenterGoal item xs={fullWidth ? 4 : 2} alliance={alliance}>
+            <GoalToggle
+              disabled={disabled}
+              state={state.EC1}
+              onChange={(s) => onGoalChange('EC1', s)}
+            />
+          </CenterGoal>
+          <CenterGoal item xs={fullWidth ? 4 : 2} alliance={alliance}>
+            <GoalToggle
+              disabled={disabled}
+              state={state.EC2}
+              onChange={(s) => onGoalChange('EC2', s)}
+            />
+          </CenterGoal>
+          <CenterGoal item xs={fullWidth ? 4 : 2} alliance={alliance}>
+            <GoalToggle
+              disabled={disabled}
+              state={state.EC3}
+              onChange={(s) => onGoalChange('EC3', s)}
+            />
+          </CenterGoal>
+        </>
+      )}
       {/* Second Row (yes, it's backwards. gg FGC) */}
-      <CenterGoal item xs={4} alliance={alliance}>
-        <GoalToggle
-          disabled={disabled}
-          state={state.EC6}
-          onChange={(s) => onGoalChange('EC6', s)}
-          single
-        />
-      </CenterGoal>
-      <CenterGoal item xs={4} alliance={alliance}>
-        <GoalToggle
-          disabled={disabled}
-          state={state.EC5}
-          onChange={(s) => onGoalChange('EC5', s)}
-          single
-        />
-      </CenterGoal>
-      <CenterGoal item xs={4} alliance={alliance}>
-        <GoalToggle
-          disabled={disabled}
-          state={state.EC4}
-          onChange={(s) => onGoalChange('EC4', s)}
-          single
-        />
-      </CenterGoal>
+      {(side === 'far' || side === 'both') && (
+        <>
+          <CenterGoal item xs={2} alliance={alliance}>
+            <GoalToggle
+              disabled={disabled}
+              state={state.EC6}
+              onChange={(s) => onGoalChange('EC6', s)}
+            />
+          </CenterGoal>
+          <CenterGoal item xs={2} alliance={alliance}>
+            <GoalToggle
+              disabled={disabled}
+              state={state.EC5}
+              onChange={(s) => onGoalChange('EC5', s)}
+            />
+          </CenterGoal>
+          <CenterGoal item xs={2} alliance={alliance}>
+            <GoalToggle
+              disabled={disabled}
+              state={state.EC4}
+              onChange={(s) => onGoalChange('EC4', s)}
+            />
+          </CenterGoal>
+        </>
+      )}
     </Grid>
   );
 };

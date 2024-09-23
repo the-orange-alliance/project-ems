@@ -102,6 +102,9 @@ const BlueReferee = lazy(() =>
 const HeadReferee = lazy(() =>
   import('./apps/referee').then((m) => ({ default: m.HeadReferee }))
 );
+const HeadRefereeMin = lazy(() =>
+  import('./apps/referee').then((m) => ({ default: m.HeadRefereeMin }))
+);
 
 // Audience Display Routes
 const AudienceDisplay = lazy(() =>
@@ -254,6 +257,13 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/referee/head',
     group: 0,
     element: HeadReferee,
+    hidden: true
+  },
+  {
+    name: 'Head Referee Page',
+    path: '/:eventKey/referee/head-min',
+    group: 0,
+    element: HeadRefereeMin,
     hidden: true
   },
   {
