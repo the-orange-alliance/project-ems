@@ -2,7 +2,8 @@ import { FC } from 'react';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import Button, { ButtonPropsColorOverrides } from '@mui/material/Button';
+import { OverridableStringUnion } from '@mui/types';
 
 interface Props {
   name: string;
@@ -12,6 +13,16 @@ interface Props {
   title?: string;
   fullWidth?: boolean;
   disabled?: boolean;
+  color?: OverridableStringUnion<
+    | 'inherit'
+    | 'primary'
+    | 'secondary'
+    | 'success'
+    | 'error'
+    | 'info'
+    | 'warning',
+    ButtonPropsColorOverrides
+  >;
 }
 
 export const ButtonSetting: FC<Props> = ({
@@ -21,7 +32,8 @@ export const ButtonSetting: FC<Props> = ({
   inline,
   title,
   fullWidth,
-  disabled
+  disabled,
+  color
 }) => {
   return (
     <FormGroup
@@ -35,6 +47,7 @@ export const ButtonSetting: FC<Props> = ({
         control={
           <Button
             variant='contained'
+            color={color ?? 'primary'}
             onClick={onClick}
             sx={{ m: 1, minWidth: 220 }}
             fullWidth={fullWidth}

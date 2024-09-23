@@ -17,6 +17,7 @@ import { APIOptions } from '@toa-lib/client';
 import { updateSocketClient } from 'src/api/use-socket-data';
 import { DefaultLayout } from '@layouts/default-layout';
 import { Paper } from '@mui/material';
+import { ButtonSetting } from './components/button-setting';
 
 const Settings: FC = () => {
   const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
@@ -68,6 +69,8 @@ const Settings: FC = () => {
     }, 1000);
   };
 
+  const handleClear = () => localStorage.clear();
+
   return (
     <Box>
       <SwitchSetting
@@ -112,6 +115,13 @@ const Settings: FC = () => {
         name='Sync Key'
         value={syncApiKey}
         onChange={(s) => setSyncApiKey(String(s))}
+        inline
+      />
+      <ButtonSetting
+        name='Clear Cache'
+        buttonText='Clear'
+        color='error'
+        onClick={handleClear}
         inline
       />
     </Box>
