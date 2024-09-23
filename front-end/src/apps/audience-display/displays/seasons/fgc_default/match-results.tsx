@@ -47,7 +47,7 @@ const InfoContainer = styled.div`
   width: 30vw;
 `;
 
-export const MatchResults: FC<DisplayProps> = ({ match, ranks }) => {
+export const MatchResults: FC<DisplayProps> = ({ match, ranks, teams }) => {
   return (
     <Container>
       <InnterContainer>
@@ -57,8 +57,18 @@ export const MatchResults: FC<DisplayProps> = ({ match, ranks }) => {
             <MatchTitle match={match} noMargin />
           </InfoContainer>
         </HeaderContainer>
-        <AllianceResult alliance='red' match={match} ranks={ranks} />
-        <AllianceResult alliance='blue' match={match} ranks={ranks} />
+        <AllianceResult
+          alliance='red'
+          match={match}
+          ranks={ranks}
+          teams={teams}
+        />
+        <AllianceResult
+          alliance='blue'
+          match={match}
+          ranks={ranks}
+          teams={teams}
+        />
       </InnterContainer>
     </Container>
   );

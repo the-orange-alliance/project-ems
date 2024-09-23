@@ -141,12 +141,22 @@ interface Props {
   alliance: Alliance;
   match: Match<any>;
   ranks: Ranking[];
+  teams?: Team[];
 }
 
-export const AllianceResult: FC<Props> = ({ alliance, match, ranks }) => {
+export const AllianceResult: FC<Props> = ({
+  alliance,
+  match,
+  ranks,
+  teams
+}) => {
   const participants = match.participants ?? [];
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
+  );
+  const teamsRecord = useMemo(
+    () => (teams ? Object.fromEntries(teams.map((t) => [t.teamKey, t])) : {}),
+    [teams]
   );
 
   // try to get breakdown sheet
@@ -178,12 +188,12 @@ export const AllianceResult: FC<Props> = ({ alliance, match, ranks }) => {
         {allianceParticipants.map((p) => {
           // TODO: this seems horribly inefficient
           const rank = ranks.find((r) => r.teamKey === p.teamKey);
-          if (!p.team) return null;
+          if (!p.team && !teamsRecord[p.teamKey]) return null;
           return (
             <AllianceTeam
               key={p.station}
               alliance={alliance}
-              team={p.team}
+              team={p.team ?? teamsRecord[p.teamKey]}
               rank={rank}
             />
           );
