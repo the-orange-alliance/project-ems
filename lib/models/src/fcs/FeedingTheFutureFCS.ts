@@ -148,11 +148,16 @@ const createNexusGoalSegments = (
   return segments;
 };
 
+interface Action {
+  timestamp: number;
+  callback: () => void;
+}
+
 export class PacketManager {
   private fieldOptions: FieldOptions;
   private broadcastCallback: (update: FieldControlUpdatePacket) => void;
   private matchEmitter: EventEmitter;
-  private timers = new Map<string, NodeJS.Timeout>();
+  private actionQueue = new Map<string, Action>();
   private matchInProgress: boolean = false;
 
   public constructor(
@@ -163,6 +168,15 @@ export class PacketManager {
     this.fieldOptions = fieldOptions;
     this.broadcastCallback = broadcastCallback;
     this.matchEmitter = matchEmitter;
+
+    setInterval(() => {
+      this.actionQueue.forEach((action, key) => {
+        if (Date.now() > action.timestamp) {
+          this.actionQueue.delete(key);
+          action.callback();
+        }
+      });
+    }, 100);
   }
 
   public setFieldOptions = (fieldOptions: FieldOptions): void => {
@@ -590,8 +604,9 @@ export class PacketManager {
       currentState !== NexusGoalState.Full &&
       previousState === NexusGoalState.Full
     ) {
-      // Cancel timer if there is one
-      clearTimeout(this.timers.get(goal));
+      // // Cancel timer if there is one
+      // clearTimeout(this.timers.get(goal));
+      this.actionQueue.delete(goal);
     }
 
     // Broadcast update
@@ -605,15 +620,16 @@ export class PacketManager {
   ) => {
     if (currentBalanced === previousBalanced) return;
 
-    clearTimeout(this.timers.get('ramp'));
+    // clearTimeout(this.timers.get('ramp'));
+    this.actionQueue.delete('ramp');
 
     const hysteresisWindowMs = currentBalanced
       ? this.fieldOptions.rampBalancedHysteresisWindowMs
       : this.fieldOptions.rampUnbalancedHysteresisWindowMs;
 
-    this.timers.set(
-      'ramp',
-      setTimeout(() => {
+    this.actionQueue.set('ramp', {
+      timestamp: Date.now() + hysteresisWindowMs,
+      callback: () => {
         const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
         applyPatternToStrips(
           currentBalanced
@@ -623,8 +639,8 @@ export class PacketManager {
           result
         );
         broadcast(result);
-      }, hysteresisWindowMs)
-    );
+      }
+    });
   };
 
   public handleDigitalInputs = (packet: DigitalInputsResult) => {
@@ -661,14 +677,15 @@ export class PacketManager {
         this.broadcastCallback(result);
 
         // Stop motor after the configured duration
-        this.timers.set(
-          goal,
-          setTimeout(() => {
+        this.actionQueue.set(goal, {
+          timestamp:
+            Date.now() + this.fieldOptions.foodProductionMotorDurationMs,
+          callback: () => {
             const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
             applySetpointToMotors(0, [motor], result);
             this.broadcastCallback(result);
-          }, this.fieldOptions.foodProductionMotorDurationMs)
-        );
+          }
+        });
 
         // Update food produced count
         this.matchEmitter.emit(MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER, {
@@ -709,12 +726,14 @@ export class PacketManager {
       );
       this.broadcastCallback(result);
 
-      this.timers.set(
-        goal,
-        setTimeout(() => {
+      this.actionQueue.set(goal, {
+        timestamp:
+          Date.now() +
+          Math.floor(this.fieldOptions.foodProductionDelayMs / steps),
+        callback: () => {
           recurse(count - 1);
-        }, Math.floor(this.fieldOptions.foodProductionDelayMs / steps))
-      );
+        }
+      });
     };
 
     recurse(steps);
