@@ -7,7 +7,6 @@ import Divider from '@mui/material/Divider';
 import Paper from '@mui/material/Paper';
 import { appbarConfigAtom } from '@stores/recoil';
 
-
 interface Props {
   title?: string;
   titleLink?: string;

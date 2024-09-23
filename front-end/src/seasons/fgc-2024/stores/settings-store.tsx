@@ -87,6 +87,12 @@ export const foodResetMotorSetpointAtom = atom<number>({
   effects: [localStorageEffect('ftf.foodResetMotorSetpoint')]
 });
 
+export const foodResetMotorDurationMsAtom = atom<number>({
+  key: 'ftf.foodResetMotorDurationMs',
+  default: FeedingTheFutureFCS.defaultFieldOptions.foodResetMotorDurationMs,
+  effects: [localStorageEffect('ftf.foodResetMotorDurationMs')]
+});
+
 export const foodProductionDelayMsAtom = atom<number>({
   key: 'ftf.foodProductionDelayMs',
   default: FeedingTheFutureFCS.defaultFieldOptions.foodProductionDelayMs,
@@ -168,6 +174,7 @@ export const fieldOptionsSelector: RecoilValueReadOnly<FeedingTheFutureFCS.Field
         foodProductionMotorSetpoint: get(foodProductionMotorSetpointAtom),
         foodProductionMotorDurationMs: get(foodProductionMotorDurationMsAtom),
         foodResetMotorSetpoint: get(foodResetMotorSetpointAtom),
+        foodResetMotorDurationMs: get(foodResetMotorDurationMsAtom),
         foodProductionDelayMs: get(foodProductionDelayMsAtom),
         rampBalancedHysteresisWindowMs: get(rampBalancedHysteresisWindowMsAtom),
         rampUnbalancedHysteresisWindowMs: get(

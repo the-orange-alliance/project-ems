@@ -20,16 +20,13 @@ const root = createRoot(container);
 
 // Configure lib-ems
 if (getFromLocalStorage('followerMode', false)) {
-  APIOptions.host = getFromLocalStorage(
+  APIOptions.host = `http://${getFromLocalStorage(
     'leaderApiHost',
     `http://${window.location.hostname}`
-  );
-  console.warn('FOLLOWER MODE DETECTED: SETTING API HOST FROM LOCAL STORAGE');
-} else {
-  APIOptions.host = `http://${getFromLocalStorage(
-    'ems:host',
-    window.location.hostname
   )}`;
+  console.warn(
+    `FOLLOWER MODE DETECTED: SETTING API HOST FROM LOCAL STORAGE\n${APIOptions.host}`
+  );
 }
 APIOptions.port = 8080;
 SocketOptions.host = window.location.hostname;

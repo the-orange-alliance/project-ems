@@ -37,6 +37,7 @@ const HomeApp: FC = () => {
               key={`route-${i}`}
               title={route.name}
               to={`${route.path.replaceAll(':eventKey', event?.eventKey)}`}
+              imgSrc={route.image ? route.image : undefined}
             />
           ))}
         </Grid>

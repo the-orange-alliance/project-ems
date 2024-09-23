@@ -30,6 +30,9 @@ export const EventSelection: FC = () => {
       </Fab>
     </PaperLayout>
   ) : (
-    <PageLoader />
+    <PaperLayout containerWidth='lg' padding showSettings>
+      <PageLoader />
+      <div>Loading events...</div>
+    </PaperLayout>
   );
 };
