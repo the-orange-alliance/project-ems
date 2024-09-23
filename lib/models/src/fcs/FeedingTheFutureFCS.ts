@@ -263,7 +263,12 @@ export class PacketManager {
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
       this.fieldOptions.goalEmptyColor,
-      LedStripA.ALL_STRIPS,
+      LedStripA.ALL_NEXUS_GOALS,
+      result
+    );
+    applyPatternToStrips(
+      this.fieldOptions.rampBalancedColor,
+      [LedStripA.RAMP],
       result
     );
 
@@ -602,6 +607,10 @@ export class PacketManager {
 
     clearTimeout(this.timers.get('ramp'));
 
+    const hysteresisWindowMs = currentBalanced
+      ? this.fieldOptions.rampBalancedHysteresisWindowMs
+      : this.fieldOptions.rampUnbalancedHysteresisWindowMs;
+
     this.timers.set(
       'ramp',
       setTimeout(() => {
@@ -614,7 +623,7 @@ export class PacketManager {
           result
         );
         broadcast(result);
-      }, this.fieldOptions.rampHysteresisWindowMs)
+      }, hysteresisWindowMs)
     );
   };
 
@@ -732,7 +741,8 @@ export interface FieldOptions {
   foodProductionMotorDurationMs: number;
   foodResetMotorSetpoint: number;
   foodProductionDelayMs: number;
-  rampHysteresisWindowMs: number;
+  rampBalancedHysteresisWindowMs: number;
+  rampUnbalancedHysteresisWindowMs: number;
   goalEmptyColor: string;
   goalBlueOnlyColor: string;
   goalGreenOnlyColor: string;
@@ -758,7 +768,8 @@ export const defaultFieldOptions: FieldOptions = {
   foodProductionMotorDurationMs: 5000,
   foodResetMotorSetpoint: -0.5,
   foodProductionDelayMs: 5000,
-  rampHysteresisWindowMs: 500,
+  rampBalancedHysteresisWindowMs: 500,
+  rampUnbalancedHysteresisWindowMs: 100,
   goalEmptyColor: '000000',
   goalBlueOnlyColor: '0000ff',
   goalGreenOnlyColor: '00ff00',
