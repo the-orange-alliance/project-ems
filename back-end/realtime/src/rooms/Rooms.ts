@@ -25,7 +25,7 @@ export function assignRooms(rooms: string[], socket: Socket) {
     // This is a hack to ensure that the client has the correct event listeners.
     setTimeout(() => {
       r.initializeEvents(socket);
-    }, 500)
+    }, 750)
   });
 }
 
