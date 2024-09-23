@@ -1,12 +1,11 @@
-import { FC, ChangeEvent } from 'react';
-import FormGroup from '@mui/material/FormGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
+import { FormGroup, FormControlLabel, Typography } from '@mui/material';
+import { MuiColorInput } from 'mui-color-input';
+import { FC } from 'react';
 
 interface Props {
   name: string;
   value: string;
+  format: 'hex' | 'string';
   onChange: (value: string) => void;
   inline?: boolean;
   title?: string;
@@ -14,17 +13,19 @@ interface Props {
   disabled?: boolean;
 }
 
-export const TextSetting: FC<Props> = ({
+export const ColorSetting: FC<Props> = ({
   name,
   value,
   onChange,
   inline,
   title,
   fullWidth,
-  disabled
+  disabled,
+  format
 }) => {
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
-    onChange(e.target.value);
+  const handleChange = (value: string) => {
+    onChange(format === 'string' ? value.substring(1, value.length) : value);
+  };
 
   return (
     <FormGroup
@@ -36,11 +37,12 @@ export const TextSetting: FC<Props> = ({
     >
       <FormControlLabel
         control={
-          <TextField
-            value={value}
+          <MuiColorInput
+            format='hex'
+            value={format === 'string' ? `#${value}` : value}
             onChange={handleChange}
-            sx={{ m: 1, minWidth: 220 }}
             fullWidth={fullWidth}
+            sx={{ m: 1, width: 224 }}
           />
         }
         label={

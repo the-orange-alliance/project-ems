@@ -1,4 +1,4 @@
-import { Match, MatchState } from '@toa-lib/models';
+import { MatchState } from '@toa-lib/models';
 import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { useMatchControl } from './use-match-control';
 import { sendPostResults } from 'src/api/use-socket';

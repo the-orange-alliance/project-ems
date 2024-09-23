@@ -32,6 +32,7 @@ import { NumberSetting } from 'src/apps/settings/components/number-setting';
 import { useSocket } from 'src/api/use-socket';
 import { FeedingTheFutureFCS } from '@toa-lib/models';
 import { TextSetting } from 'src/apps/settings/components/text-setting';
+import { ColorSetting } from 'src/apps/settings/components/color-setting';
 
 export const Settings: FC = () => {
   const [socket] = useSocket();
@@ -115,40 +116,46 @@ export const Settings: FC = () => {
         type='number'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='All Clear Color'
         value={allClearColor}
         onChange={setAllClearColor}
+        format='string'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Prepare Field Color'
         value={prepareFieldColor}
         onChange={setPrepareFieldColor}
+        format='string'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Field Fault Color'
         value={fieldFaultColor}
         onChange={setFieldFaultColor}
+        format='string'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Match End Red Nexus Goal Color'
         value={matchEndRedNexusGoalColor}
         onChange={setMatchEndRedNexusGoalColor}
+        format='string'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Match End Blue Nexus Goal Color'
         value={matchEndBlueNexusGoalColor}
         onChange={setMatchEndBlueNexusGoalColor}
+        format='string'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Match End Ramp Color'
         value={matchEndRampColor}
         onChange={setMatchEndRampColor}
+        format='string'
         inline
       />
       <TextSetting
@@ -217,46 +224,53 @@ export const Settings: FC = () => {
         type='number'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Empty Goal Color'
         value={goalEmptyColor}
         onChange={setGoalEmptyColor}
+        format='string'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Blue Only Goal Color'
         value={goalBlueOnlyColor}
         onChange={setGoalBlueOnlyColor}
+        format='string'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Green Only Goal Color'
         value={goalGreenOnlyColor}
         onChange={setGoalGreenOnlyColor}
+        format='string'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Full Goal Color'
         value={goalFullColor}
         onChange={setGoalFullColor}
+        format='string'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Full Goal Secondary Color'
         value={goalFullSecondaryColor}
         onChange={setGoalFullSecondaryColor}
+        format='string'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Ramp Balanced Color'
         value={rampBalancedColor}
         onChange={setRampBalancedColor}
+        format='string'
         inline
       />
-      <TextSetting
+      <ColorSetting
         name='Ramp Unbalanced Color'
         value={rampUnbalancedColor}
         onChange={setRampUnbalancedColor}
+        format='string'
         inline
       />
     </Box>

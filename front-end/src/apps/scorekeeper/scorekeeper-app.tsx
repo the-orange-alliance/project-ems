@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 import { useCurrentEvent } from 'src/api/use-event-data';
 import { DefaultLayout } from '@layouts/default-layout';
 import { MatchControl } from './match-control/match-control';
@@ -10,18 +10,10 @@ import { SyncMatchesToRecoil } from 'src/components/sync-effects/sync-matches-to
 import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state-to-recoil';
 import { SyncMatchOccurringToRecoil } from 'src/components/sync-effects/sync-match-occurring-to-recoil';
 import { SyncOnPrestart } from 'src/components/sync-effects/sync-on-prestart';
-import { useSeasonFieldControl } from 'src/hooks/use-season-components';
-import { useSocket } from 'src/api/use-socket';
 
 export const ScorekeeperApp: FC = () => {
   const { data: event } = useCurrentEvent();
   const { data: teams } = useTeamsForEvent(event?.eventKey);
-  const [, connected] = useSocket();
-  const fieldControl = useSeasonFieldControl();
-
-  useEffect(() => {
-    if (connected) fieldControl?.updateFieldSettings?.();
-  }, [connected]);
 
   return (
     <>

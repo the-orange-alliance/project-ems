@@ -85,7 +85,6 @@ export const AlliancePlay: FC<Props> = ({
     () => (teams ? Object.fromEntries(teams.map((t) => [t.teamKey, t])) : {}),
     [teams]
   );
-  console.log({ teamsRecord });
   return (
     <Container
       alliance={alliance}
