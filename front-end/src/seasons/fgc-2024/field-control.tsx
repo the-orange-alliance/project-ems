@@ -11,7 +11,7 @@ export const useFieldControl =
       useRecoilValue(fieldOptionsSelector);
 
     const prestartField = () => {
-      socket?.emit('fcs:test', { test: 'test' });
+      updateFieldSettings();
       console.log('prestartField');
     };
 
