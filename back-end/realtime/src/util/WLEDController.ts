@@ -1,6 +1,7 @@
 import { WledInitParameters, WledUpdateParameters } from "@toa-lib/models";
 import logger from "./Logger.js";
 import { buildWledInitializationPacket, buildWledSetColorPacket } from "./WLEDHelper.js";
+import WebSocket from "ws";
 
 export class WledController {
     private static heartbeatPeriodMs = 1000;
@@ -26,8 +27,8 @@ export class WledController {
             if (this.initPacket.address === this.socket?.url) {
                 try {
                     this.socket?.send(buildWledInitializationPacket(this.initPacket));
-                } catch {
-                    logger.error(`Failed to reinitialize ${this.initPacket.address}`);
+                } catch (e) {
+                    logger.error(`Failed to reinitialize ${this.initPacket.address}: ${e}`);
                 }
                 return;
             }
@@ -41,8 +42,8 @@ export class WledController {
 
         try {
             this.socket = new WebSocket(this.initPacket.address);
-        } catch {
-            logger.error(`Failed to create websocket for ${this.initPacket.address}`);
+        } catch (e) {
+            logger.error(`Failed to create websocket for ${this.initPacket.address}: ${e}`);
             return;
         }
 
@@ -50,8 +51,8 @@ export class WledController {
             logger.info(`Connected to ${this.initPacket.address}`);
             try {
                 this.socket?.send(buildWledInitializationPacket(this.initPacket));
-            } catch {
-                logger.error(`Failed to initialize ${this.initPacket.address}`);
+            } catch (e) {
+                logger.error(`Failed to initialize ${this.initPacket.address}: ${e}`);
             }
             this.startHeartbeat();
 
@@ -60,8 +61,8 @@ export class WledController {
             }
         };
 
-        this.socket.onerror = () => {
-            logger.error(`Failed to connect to ${this.initPacket.address}`);
+        this.socket.onerror = (e) => {
+            logger.error(`Failed to connect to ${this.initPacket.address}: ${e}`);
 
             // Attempt to reconnect
             this.reinit = setTimeout(() => {
