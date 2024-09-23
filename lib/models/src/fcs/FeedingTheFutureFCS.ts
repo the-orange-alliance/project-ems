@@ -266,7 +266,21 @@ export class PacketManager {
       LedStripA.ALL_STRIPS,
       result
     );
-    applySetpointToMotors(0, MotorA.ALL_GOALS, result);
+
+    applySetpointToMotors(
+      this.fieldOptions.foodResetMotorSetpoint,
+      MotorA.ALL_GOALS,
+      result
+    );
+
+    this.actionQueue.set('resetFood', {
+      timestamp: Date.now() + 10000,
+      callback: () => {
+        const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+        applySetpointToMotors(0, MotorA.ALL_GOALS, result);
+        this.broadcastCallback(result);
+      }
+    });
 
     this.broadcastCallback(result);
   };
@@ -322,11 +336,6 @@ export class PacketManager {
     applyPatternToStrips(
       this.fieldOptions.allClearColor,
       LedStripA.ALL_STRIPS,
-      result
-    );
-    applySetpointToMotors(
-      this.fieldOptions.foodResetMotorSetpoint,
-      MotorA.ALL_GOALS,
       result
     );
 
