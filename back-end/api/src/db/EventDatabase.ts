@@ -1,4 +1,4 @@
-import { getAppData, environment as env } from '@toa-lib/server';
+import { getAppData, environment as env, environment } from '@toa-lib/server';
 import { AsyncDatabase } from 'promised-sqlite3';
 import { sep, join, dirname } from 'path';
 import { mkdir, readFile } from 'node:fs/promises';
@@ -206,8 +206,9 @@ export class EventDatabase {
    */
   public async getQueryFromFile(filePath: string): Promise<string> {
     try {
-      const fullPath = join(__dirname, '../../sql/' + filePath);
-      const data = await readFile(fullPath);
+      const isProd = process.env.NODE_ENV === 'production';
+      const path = isProd ? `${__dirname}/sql` : join(__dirname, '../../sql');
+      const data = await readFile(join(path, sep, filePath));
       return data
         .toString()
         .replace(/\n/g, '')

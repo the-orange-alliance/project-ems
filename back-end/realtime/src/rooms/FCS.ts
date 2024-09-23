@@ -11,6 +11,13 @@ import Match from './Match.js';
 import { defaultMatchDetails } from '@toa-lib/models/build/seasons/FeedingTheFuture.js';
 import { PacketManager } from '@toa-lib/models/build/fcs/FeedingTheFutureFCS.js';
 import { Worker } from 'worker_threads';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { environment } from '@toa-lib/server';
+import logger from '../util/Logger.js';
+
+const __filename = fileURLToPath(import.meta.url);
+export const __dirname = dirname(__filename);
 
 export default class FCS extends Room {
   private readonly latestFcsStatus: FieldControlUpdatePacket = {
@@ -34,7 +41,10 @@ export default class FCS extends Room {
 
     // Connect to wled websocket servers if there are wleds
     Object.entries(this.packetManager.getInitPacket().wleds).forEach((wled) => {
-      this.wledControllers[wled[0]] = new Worker("./build/util/WLEDWorker/worker.js", { workerData: wled[1] });
+      const isProd = environment.get().nodeEnv === 'production';
+      const path = isProd ? `${__dirname}/worker/index.js` : join(__dirname, "../../build/util/WLEDWorker/worker.js");
+      logger.verbose(`Creating WLED worker for ${wled[0]} at ${path}`);
+      this.wledControllers[wled[0]] = new Worker(path, { workerData: wled[1] });
       // this.wledControllers[wled[0]] = new WledController(wled[1]);
     });
 

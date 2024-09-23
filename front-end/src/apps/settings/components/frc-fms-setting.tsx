@@ -12,6 +12,7 @@ import { DropdownSetting } from './dropdown-setting';
 import { TextSetting } from './text-setting';
 import { SwitchSetting } from './switch-setting';
 import { useEvents } from 'src/api/use-event-data';
+import { NumberSetting } from './number-setting';
 
 interface Props {
   onChange: (value: FMSSettings, cancel: boolean) => void;
@@ -58,7 +59,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
           </Grid>
           {/* Field Number */}
           <Grid item xs={6}>
-            <TextSetting
+            <NumberSetting
               name='Field Number'
               value={settings.fieldNumber}
               onChange={(v) => updateState(parseInt(String(v)), 'fieldNumber')}

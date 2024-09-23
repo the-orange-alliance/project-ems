@@ -1,6 +1,6 @@
 import { WledInitParameters, WledUpdateParameters } from "@toa-lib/models";
 import { workerData, parentPort } from 'worker_threads'
-import { WledController } from "../WLEDController.js";
+import { WledController } from "./WLEDController.js";
 
 interface UpdateMessage {
     data: WledUpdateParameters

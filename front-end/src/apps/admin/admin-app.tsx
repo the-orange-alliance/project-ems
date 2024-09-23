@@ -31,7 +31,7 @@ export const AdminApp: FC = () => {
   const eventKey = useRecoilValue(currentEventKeyAtom);
   const { data: teams } = useTeamsForEvent(eventKey);
   const { data: tournaments } = useTournamentsForEvent(eventKey);
-  const {apiKey, platform} = useSyncConfig();
+  const { apiKey, platform } = useSyncConfig();
 
   const [, , purgeFlags] = useFlags();
 
@@ -42,12 +42,12 @@ export const AdminApp: FC = () => {
 
   const syncMatches = async (): Promise<void> => {
     if (!tournamentKey) return;
-    return resultsSyncMatches(eventKey, tournamentKey, platform, apiKey);
+    await resultsSyncMatches(eventKey, tournamentKey, platform, apiKey);
   };
 
   const syncRankings = async (): Promise<void> => {
     if (!tournamentKey) return;
-    return resultsSyncRankings(eventKey, tournamentKey, platform, apiKey);
+    await resultsSyncRankings(eventKey, tournamentKey, platform, apiKey);
   };
 
   const handlePurge = async (): Promise<void> => {

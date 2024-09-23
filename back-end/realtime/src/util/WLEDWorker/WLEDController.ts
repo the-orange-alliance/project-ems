@@ -1,6 +1,6 @@
 import { WledInitParameters, WledUpdateParameters } from "@toa-lib/models";
-import logger from "./Logger.js";
-import { buildWledInitializationPacket, buildWledSetColorPacket } from "./WLEDHelper.js";
+import logger from "../Logger.js";
+import { buildWledInitializationPacket, buildWledSetColorPacket } from "../WLEDHelper.js";
 import WebSocket from "ws";
 
 export class WledController {
