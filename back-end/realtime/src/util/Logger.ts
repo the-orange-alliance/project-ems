@@ -1,8 +1,10 @@
 import winston from 'winston';
+import { threadId } from 'worker_threads';
 
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.json(),
+  defaultMeta: threadId ? { tid: `${threadId}` } : undefined,
   transports: [
     //
     // - Write all logs with importance level of `error` or less to `error.log`
