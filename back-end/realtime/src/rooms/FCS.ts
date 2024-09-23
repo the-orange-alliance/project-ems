@@ -4,27 +4,21 @@ import {
   FieldControlUpdatePacket,
   FeedingTheFutureFCS,
   Match as MatchObj,
-  MatchSocketEvent,
-  WledInitParameters,
-  WledUpdateParameters
+  MatchSocketEvent
 } from '@toa-lib/models';
 import Room from './Room.js';
 import Match from './Match.js';
-import { WebSocket } from 'ws';
-import {
-  buildWledInitializationPacket,
-  buildWledSetColorPacket
-} from '../util/WLEDHelper.js';
-import logger from '../util/Logger.js';
 import { defaultMatchDetails } from '@toa-lib/models/build/seasons/FeedingTheFuture.js';
 import { PacketManager } from '@toa-lib/models/build/fcs/FeedingTheFutureFCS.js';
+import { Worker } from 'worker_threads';
 
 export default class FCS extends Room {
   private readonly latestFcsStatus: FieldControlUpdatePacket = {
     hubs: {},
     wleds: {}
   };
-  private wledControllers: Record<string, WledController> = {};
+  // private wledControllers: Record<string, WledController> = {};
+  private wledControllers: Record<string, Worker> = {};
   private previousMatchDetails: FeedingTheFuture.MatchDetails =
     defaultMatchDetails;
   private packetManager: PacketManager;
@@ -40,7 +34,8 @@ export default class FCS extends Room {
 
     // Connect to wled websocket servers if there are wleds
     Object.entries(this.packetManager.getInitPacket().wleds).forEach((wled) => {
-      this.wledControllers[wled[0]] = new WledController(wled[1]);
+      this.wledControllers[wled[0]] = new Worker("./build/util/WLEDWorker/worker.js", { workerData: wled[1] });
+      // this.wledControllers[wled[0]] = new WledController(wled[1]);
     });
 
     matchRoom.localEmitter.on(
@@ -101,7 +96,8 @@ export default class FCS extends Room {
         this.packetManager.setFieldOptions(fieldOptions);
         Object.entries(this.packetManager.getInitPacket().wleds).forEach(
           (wled) => {
-            this.wledControllers[wled[0]].initialize(wled[1]);
+            // this.wledControllers[wled[0]].initialize(wled[1]);
+            this.wledControllers[wled[0]].postMessage({ type: "initialize", data: wled[1] });
           }
         );
       }
@@ -117,7 +113,8 @@ export default class FCS extends Room {
 
     // Handle wleds
     Object.entries(update.wleds).forEach((wled) => {
-      this.wledControllers[wled[0]].update(wled[1]);
+      // this.wledControllers[wled[0]].update(wled[1]);
+      this.wledControllers[wled[0]].postMessage({ type: "update", data: wled[1] });
     });
 
     // Update this.latestFcsStatus AFTER sending out the new update
@@ -172,116 +169,4 @@ export default class FCS extends Room {
       }
     }
   };
-}
-
-export class WledController {
-  private static heartbeatPeriodMs = 1000;
-  private static keepAliveTimeoutMs = 2000;
-  private static reconnectPeriodMs = 1000;
-
-  private socket: WebSocket | undefined;
-  private initPacket: WledInitParameters;
-  private keepAlive: NodeJS.Timeout | undefined;
-  private heartbeat: NodeJS.Timer | undefined;
-  private reinit: NodeJS.Timeout | undefined;
-
-  private latestState: WledUpdateParameters | undefined;
-
-  constructor(initPacket: WledInitParameters) {
-    this.initPacket = initPacket;
-  }
-
-  public initialize(initPacket?: WledInitParameters): void {
-    if (initPacket) {
-      this.initPacket = initPacket;
-
-      if (this.initPacket.address === this.socket?.url) {
-        try {
-          this.socket?.send(buildWledInitializationPacket(this.initPacket));
-        } catch {
-          logger.error(`Failed to reinitialize ${this.initPacket.address}`);
-        }
-        return;
-      }
-    }
-
-    clearInterval(this.heartbeat);
-    clearTimeout(this.reinit);
-    clearTimeout(this.keepAlive);
-
-    if (this.initPacket.address === '') return;
-
-    try {
-      this.socket = new WebSocket(this.initPacket.address);
-    } catch {
-      logger.error(`Failed to create websocket for ${this.initPacket.address}`);
-      return;
-    }
-
-    this.socket.onopen = () => {
-      logger.info(`Connected to ${this.initPacket.address}`);
-      try {
-        this.socket?.send(buildWledInitializationPacket(this.initPacket));
-      } catch {
-        logger.error(`Failed to initialize ${this.initPacket.address}`);
-      }
-      this.startHeartbeat();
-
-      if (this.latestState) {
-        this.update(this.latestState);
-      }
-    };
-
-    this.socket.onerror = () => {
-      logger.error(`Failed to connect to ${this.initPacket.address}`);
-
-      // Attempt to reconnect
-      this.reinit = setTimeout(() => {
-        this.initialize();
-      }, WledController.reconnectPeriodMs);
-    };
-
-    this.socket.onmessage = () => {
-      clearTimeout(this.keepAlive);
-    };
-  }
-
-  private startHeartbeat(): void {
-    this.heartbeat = setInterval(() => {
-      // Send dummy message that the controller will respond to
-      try {
-        this.socket?.send('{}');
-      } catch {
-        logger.error(`Failed to send heartbeat to ${this.initPacket.address}`);
-      }
-
-      // Start keepalive
-      this.keepAlive = setTimeout(() => {
-        logger.info(`Disconnected from ${this.initPacket.address}`);
-
-        // If the keepalive is not cleared in time attempt to reinitialize
-        this.initialize();
-      }, WledController.keepAliveTimeoutMs);
-    }, WledController.heartbeatPeriodMs);
-  }
-
-  public update(update: WledUpdateParameters): void {
-    try {
-      this.socket?.send(buildWledSetColorPacket(update));
-    } catch {
-      logger.error(`Failed to send pattern to ${this.initPacket.address}`);
-    }
-
-    if (!this.latestState) {
-      this.latestState = update;
-    }
-    for (const newPattern of update.patterns) {
-      this.latestState.patterns =
-        this.latestState.patterns.filter(
-          (oldPattern) => oldPattern.segment != newPattern.segment
-        ) ?? [];
-
-      this.latestState.patterns!.push(newPattern);
-    }
-  }
 }
