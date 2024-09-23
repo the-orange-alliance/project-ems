@@ -53,6 +53,7 @@ export const MatchDetailInfo: FC<
         </Grid>
         <Grid item xs={12} sm={12} md={12}>
           <NexusScoresheet
+            side='both'
             state={match.details.redNexusState}
             alliance='red'
             onChange={(s) =>
@@ -142,6 +143,7 @@ export const MatchDetailInfo: FC<
         </Grid>
         <Grid item xs={12} sm={12} md={12}>
           <NexusScoresheet
+            side='both'
             state={match.details.blueNexusState}
             alliance='blue'
             onChange={(s) =>
