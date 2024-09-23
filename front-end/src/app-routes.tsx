@@ -1,4 +1,5 @@
 import { FC, LazyExoticComponent, ReactNode, lazy } from 'react';
+import THE_MAN from './assets/images/the_man.jpg';
 
 // Home route
 const HomeApp = lazy(() => import('./apps/index'));
@@ -130,6 +131,7 @@ export interface AppRoute {
   group: number;
   element: LazyExoticComponent<FC>;
   icon?: ReactNode;
+  image?: string;
   hidden?: boolean;
   routes?: AppRoute[];
   exact?: boolean;
@@ -293,8 +295,9 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/jb',
     group: 0,
     element: JBApp,
-    hidden: true,
-    hideAppbar: true
+    hidden: false,
+    hideAppbar: true,
+    image: THE_MAN
   },
   {
     name: 'Streaming',

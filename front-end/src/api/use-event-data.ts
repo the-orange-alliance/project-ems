@@ -23,8 +23,10 @@ export const patchEvent = async (
 ): Promise<void> => apiFetcher(`event/${eventKey}`, 'PATCH', event);
 
 export const useEvents = (): SWRResponse<Event[], ApiResponseError> =>
-  useSWR<Event[]>('event', (url) =>
-    apiFetcher(url, 'GET', undefined, eventZod.array().parse)
+  useSWR<Event[]>(
+    'event',
+    (url) => apiFetcher(url, 'GET', undefined, eventZod.array().parse),
+    { revalidateOnMount: true }
   );
 
 export const useEvent = (

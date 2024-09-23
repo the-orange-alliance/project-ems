@@ -33,13 +33,13 @@ const Settings: FC = () => {
     setFollowerMode(value);
     if (!value) {
       setLeaderApiHost('');
-      APIOptions.host = `http://${window.location.hostname}`;
+      APIOptions.host = `${window.location.hostname}`;
     }
   };
 
   const handleLeaderAddressChange = (value: string | number) => {
     setLeaderApiHost(value.toString());
-    APIOptions.host = value.toString();
+    APIOptions.host = `http://${value.toString()}`;
   };
 
   let followTimeout: any = null;
