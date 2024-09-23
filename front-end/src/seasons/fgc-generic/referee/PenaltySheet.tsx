@@ -1,10 +1,6 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import {
-  Alliance,
-  Match,
-  MatchDetailBase
-} from '@toa-lib/models';
+import { Alliance, Match, MatchDetailBase } from '@toa-lib/models';
 import { useRecoilValue } from 'recoil';
 import { matchOccurringAtom } from '@stores/recoil';
 import { NumberInput } from 'src/components/inputs/number-input';

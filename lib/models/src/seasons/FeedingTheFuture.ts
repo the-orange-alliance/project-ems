@@ -257,18 +257,12 @@ function calculateRankings(
       const isTie = match.redScore === match.blueScore;
 
       if (participant.station < 20) {
+        ranking.wins = ranking.wins + (redWin ? 1 : 0);
+        ranking.losses = ranking.losses + (redWin ? 0 : 1);
+        ranking.ties = ranking.ties + (isTie ? 1 : 0);
         // Red Alliance
-        if (
-          participant.cardStatus === CardStatus.RED_CARD ||
-          participant.noShow === CardStatus.YELLOW_CARD
-        ) {
-          scoresMap.set(participant.teamKey, [...scores, 0]);
-          ranking.losses = ranking.losses + 1;
-        } else {
+        if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.redScore]);
-          ranking.wins = ranking.wins + (redWin ? 1 : 0);
-          ranking.losses = ranking.losses + (redWin ? 0 : 1);
-          ranking.ties = ranking.ties + (isTie ? 1 : 0);
           ranking.foodSecuredPoints +=
             match.details.redFoodSecured * ScoreTable.FoodSecured;
           if (ranking.highestScore < match.redScore) {
@@ -278,18 +272,12 @@ function calculateRankings(
       }
 
       if (participant.station >= 20) {
+        ranking.wins = ranking.wins + (blueWin ? 1 : 0);
+        ranking.losses = ranking.losses + (blueWin ? 0 : 1);
+        ranking.ties = ranking.ties + (isTie ? 1 : 0);
         // Blue Alliance
-        if (
-          participant.cardStatus === CardStatus.RED_CARD ||
-          participant.noShow === CardStatus.YELLOW_CARD
-        ) {
-          scoresMap.set(participant.teamKey, [...scores, 0]);
-          ranking.losses = ranking.losses + 1;
-        } else {
+        if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
-          ranking.wins = ranking.wins + (blueWin ? 1 : 0);
-          ranking.losses = ranking.losses + (blueWin ? 0 : 1);
-          ranking.ties = ranking.ties + (isTie ? 1 : 0);
           ranking.foodSecuredPoints +=
             match.details.blueFoodSecured * ScoreTable.FoodSecured;
           if (ranking.highestScore < match.blueScore) {
@@ -297,6 +285,16 @@ function calculateRankings(
           }
         }
       }
+
+      // Handle white/red cards
+      if (participant.cardStatus === CardStatus.RED_CARD) {
+        // Indicate the score is -1 to signal that this score should not be counted.
+        scoresMap.set(participant.teamKey, [...scores, -1]);
+      } else if (participant.cardStatus === CardStatus.WHITE_CARD) {
+        // Indicate the score is 0. The team may drop this match.
+        scoresMap.set(participant.teamKey, [...scores, 0]);
+      }
+
       ranking.played = ranking.played + 1;
       rankingMap.set(participant.teamKey, ranking);
     }
@@ -310,9 +308,13 @@ function calculateRankings(
       ...rankingMap.get(key)
     } as SeasonRanking;
 
-    const lowestScore = ranking.played > 0 ? Math.min(...scores) : 0;
+    const qualifiedScores = scores.filter((s) => s >= 0);
+
+    const lowestScore = ranking.played > 0 ? Math.min(...qualifiedScores) : 0;
     const index = scores.findIndex((s) => s === lowestScore);
-    const newScores = scores.length > 1 ? scores.splice(index, 1) : scores;
+    const newScores = (
+      scores.length > 1 ? scores.splice(index, 1) : scores
+    ).map((score) => (score >= 0 ? score : 0));
     if (newScores.length > 0) {
       ranking.rankingScore = Number(
         (

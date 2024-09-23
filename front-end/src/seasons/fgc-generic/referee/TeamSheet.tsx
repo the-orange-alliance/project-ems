@@ -3,7 +3,12 @@ import { SetterOrUpdater, useRecoilState } from 'recoil';
 import Box from '@mui/material/Box';
 import ToggleButton from '@mui/material/ToggleButton';
 import Typography from '@mui/material/Typography';
-import { CardStatusUpdate, Match, MatchParticipant, MatchSocketEvent } from '@toa-lib/models';
+import {
+  CardStatusUpdate,
+  Match,
+  MatchParticipant,
+  MatchSocketEvent
+} from '@toa-lib/models';
 import { useSocket } from 'src/api/use-socket';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 import { matchOccurringAtom } from 'src/stores/recoil';
@@ -20,12 +25,20 @@ const TeamSheet: FC<Props> = ({ station }) => {
   ] = useRecoilState(matchOccurringAtom);
 
   const identifiers = useTeamIdentifiers();
-  const participant = match?.participants?.find(p => p.station === station);
+  const participant = match?.participants?.find((p) => p.station === station);
 
   const setParticipant = (participant: MatchParticipant) => {
     if (match && match.participants) {
       setMatch(
-        Object.assign({}, { ...match, participants: match.participants.map(p => (p.station === station ? participant : p)) })
+        Object.assign(
+          {},
+          {
+            ...match,
+            participants: match.participants.map((p) =>
+              p.station === station ? participant : p
+            )
+          }
+        )
       );
     }
   };
@@ -47,6 +60,10 @@ const TeamSheet: FC<Props> = ({ station }) => {
 
   const handleRed = () => {
     handleCardChange(participant?.cardStatus === 2 ? 0 : 2);
+  };
+
+  const handleWhite = () => {
+    handleCardChange(participant?.cardStatus === 3 ? 0 : 3);
   };
 
   return (
@@ -73,7 +90,7 @@ const TeamSheet: FC<Props> = ({ station }) => {
         <ToggleButton
           fullWidth
           value='yellowCard'
-          selected={participant?.cardStatus == 1}
+          selected={participant?.cardStatus === 1}
           onChange={handleYellow}
           color='warning'
         >
@@ -82,11 +99,20 @@ const TeamSheet: FC<Props> = ({ station }) => {
         <ToggleButton
           fullWidth
           value='redCard'
-          selected={participant?.cardStatus == 2}
+          selected={participant?.cardStatus === 2}
           onChange={handleRed}
           color='error'
         >
           Red Card
+        </ToggleButton>
+        <ToggleButton
+          fullWidth
+          value='whiteCard'
+          selected={participant?.cardStatus === 3}
+          onChange={handleWhite}
+          color='standard'
+        >
+          White Card
         </ToggleButton>
       </Box>
     </Box>
