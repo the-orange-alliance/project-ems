@@ -266,7 +266,21 @@ export class PacketManager {
       LedStripA.ALL_STRIPS,
       result
     );
-    applySetpointToMotors(0, MotorA.ALL_GOALS, result);
+
+    applySetpointToMotors(
+      this.fieldOptions.foodResetMotorSetpoint,
+      MotorA.ALL_GOALS,
+      result
+    );
+
+    this.actionQueue.set('resetFood', {
+      timestamp: Date.now() + this.fieldOptions.foodResetMotorDurationMs,
+      callback: () => {
+        const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+        applySetpointToMotors(0, MotorA.ALL_GOALS, result);
+        this.broadcastCallback(result);
+      }
+    });
 
     this.broadcastCallback(result);
   };
@@ -322,11 +336,6 @@ export class PacketManager {
     applyPatternToStrips(
       this.fieldOptions.allClearColor,
       LedStripA.ALL_STRIPS,
-      result
-    );
-    applySetpointToMotors(
-      this.fieldOptions.foodResetMotorSetpoint,
-      MotorA.ALL_GOALS,
       result
     );
 
@@ -759,6 +768,7 @@ export interface FieldOptions {
   foodProductionMotorSetpoint: number;
   foodProductionMotorDurationMs: number;
   foodResetMotorSetpoint: number;
+  foodResetMotorDurationMs: number;
   foodProductionDelayMs: number;
   rampBalancedHysteresisWindowMs: number;
   rampUnbalancedHysteresisWindowMs: number;
@@ -786,6 +796,7 @@ export const defaultFieldOptions: FieldOptions = {
   foodProductionMotorSetpoint: 1.0,
   foodProductionMotorDurationMs: 5000,
   foodResetMotorSetpoint: -0.5,
+  foodResetMotorDurationMs: 5000,
   foodProductionDelayMs: 5000,
   rampBalancedHysteresisWindowMs: 500,
   rampUnbalancedHysteresisWindowMs: 100,
