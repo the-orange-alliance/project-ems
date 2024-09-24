@@ -206,7 +206,7 @@ export const MatchDetailInfo: FC<
           <StateToggle
             title={<span>Field Balanced</span>}
             states={['N', 'Y']}
-            value={match.details.fieldBalanced}
+            value={match.details.fieldBalanced ? 1 : 0}
             onChange={(v) =>
               handleUpdates({
                 target: { name: 'fieldBalanced', value: v }

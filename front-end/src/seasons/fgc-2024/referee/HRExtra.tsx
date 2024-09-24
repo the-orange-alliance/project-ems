@@ -8,7 +8,6 @@ import {
   MatchState,
   NumberAdjustment
 } from '@toa-lib/models';
-import { NexusGoalState } from '@toa-lib/models/build/seasons/FeedingTheFuture';
 import { SetterOrUpdater, useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/use-socket';
 import { NumberInput } from 'src/components/inputs/number-input';
@@ -142,7 +141,7 @@ const HeadRefereeExtra: React.FC = () => {
           <StateToggle
             title={<span>Field Balanced</span>}
             states={['Unbalanced', 'Balanced']}
-            value={match?.details?.fieldBalanced ?? 0}
+            value={match?.details?.fieldBalanced ? 1 : 0}
             onChange={(v) => handleMatchDetailsUpdate('fieldBalanced', v)}
             fullWidth
             disabled={matchState !== MatchState.MATCH_COMPLETE}
