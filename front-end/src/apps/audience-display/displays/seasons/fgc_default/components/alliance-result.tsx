@@ -90,7 +90,7 @@ const TeamContainer = styled.div((props: { alliance: Alliance }) => ({
   gap: '8px',
   color: '#ffffff',
   fontSize: '2.75vh',
-  fontWeight: 'bold'
+  fontWeight: '600'
 }));
 
 interface AllianceTeamProps {
