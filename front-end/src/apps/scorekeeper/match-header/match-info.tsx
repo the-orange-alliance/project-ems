@@ -4,11 +4,15 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { MatchTimer } from 'src/components/util/match-timer';
 import { useRecoilValue } from 'recoil';
-import { matchStatusAtom } from 'src/stores/recoil';
+import {
+  matchStatusAtom,
+  scorekeeperAudioEnabledAtom
+} from 'src/stores/recoil';
 import { useSocket } from 'src/api/use-socket';
 
 export const MatchInfo: FC = () => {
   const matchState = useRecoilValue(matchStatusAtom);
+  const audioEnabled = useRecoilValue(scorekeeperAudioEnabledAtom);
   const [, connected] = useSocket();
   return (
     <Paper sx={{ height: '100%' }}>
@@ -22,7 +26,7 @@ export const MatchInfo: FC = () => {
         }}
       >
         <Typography align='center' variant='h4'>
-          <MatchTimer />
+          <MatchTimer audio={audioEnabled} />
         </Typography>
         <Typography gutterBottom align='center' variant='body1'>
           {matchState}

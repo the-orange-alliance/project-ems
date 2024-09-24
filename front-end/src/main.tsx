@@ -27,6 +27,8 @@ if (getFromLocalStorage('followerMode', false)) {
   console.warn(
     `FOLLOWER MODE DETECTED: SETTING API HOST FROM LOCAL STORAGE\n${APIOptions.host}`
   );
+} else {
+  APIOptions.host = `http://${window.location.hostname}`;
 }
 APIOptions.port = 8080;
 SocketOptions.host = window.location.hostname;

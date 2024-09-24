@@ -37,8 +37,8 @@ export const useSocket = (): [
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     /* @ts-ignore */
     socket = createSocket(token);
-    identify();
     initEvents();
+    void identify();
   };
 
   const identify = useRecoilCallback(({ snapshot, set }) => async () => {
@@ -107,10 +107,10 @@ export const useSocket = (): [
 
   const initEvents = () => {
     if (socket) {
+      socket.emit('rooms', ['match', 'fcs', 'frc-fms']);
       socket.on('connect', () => {
         setConnected(true);
         console.log('CONNECTED');
-        socket?.emit('rooms', ['match', 'fcs', 'frc-fms']);
       });
       socket.on('disconnect', (reason) => {
         console.log('DISCONNECT', reason);

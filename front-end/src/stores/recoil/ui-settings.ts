@@ -44,6 +44,11 @@ export const syncApiKeyAtom = atom<string>({
   default: '',
   effects: [localStorageEffect('syncApiKey')]
 });
+export const scorekeeperAudioEnabledAtom = atom<boolean>({
+  key: 'ui.scorekeeperAudioEnabledAtom',
+  default: false,
+  effects: [localStorageEffect('syncApiKey')]
+});
 
 /**
  * @section UI STATE
