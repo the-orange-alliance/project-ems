@@ -171,7 +171,9 @@ const HeadRefereeExtra: React.FC = () => {
           <NexusScoresheet
             alliance='blue'
             state={match?.details?.blueNexusState}
-            onChange={(v) => handleMatchDetailsUpdate('blueNexusState', v)}
+            onChange={(goal, state) =>
+              handleMatchDetailsUpdate(`blueNexusState.${goal}` as any, state)
+            }
             scorekeeperView
             side='near'
           />
@@ -180,7 +182,9 @@ const HeadRefereeExtra: React.FC = () => {
           <NexusScoresheet
             alliance='red'
             state={match?.details?.redNexusState}
-            onChange={(v) => handleMatchDetailsUpdate('redNexusState', v)}
+            onChange={(goal, state) =>
+              handleMatchDetailsUpdate(`redNexusState.${goal}` as any, state)
+            }
             scorekeeperView
             side='near'
           />
