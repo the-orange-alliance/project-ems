@@ -1,7 +1,13 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
-import { Alliance, MatchState } from '@toa-lib/models';
-import { Checkbox, Grid, Stack, Typography } from '@mui/material';
+import {
+  Alliance,
+  applySetpointToMotors,
+  FieldControlUpdatePacket,
+  MatchState,
+  Motor
+} from '@toa-lib/models';
+import { Button, Checkbox, Grid, Stack, Typography } from '@mui/material';
 import styled from '@emotion/styled';
 import {
   AllianceNexusGoalState,
@@ -10,6 +16,8 @@ import {
 } from '@toa-lib/models/build/seasons/FeedingTheFuture';
 import { useRecoilValue } from 'recoil';
 import { matchStateAtom } from 'src/stores/recoil';
+import { MotorA } from '@toa-lib/models/build/fcs/FeedingTheFutureFCS';
+import { sendFCSPacket } from 'src/api/use-socket';
 
 interface NexusScoresheetProps {
   state?: AllianceNexusGoalState;
@@ -26,6 +34,7 @@ interface NexusScoresheetProps {
   ) => void;
   side: 'near' | 'far' | 'both';
   scorekeeperView?: boolean;
+  allowForcePush?: boolean;
 }
 
 const StairGoal = styled(Box)((props: { alliance: Alliance }) => ({
@@ -52,8 +61,30 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
   onChange,
   onOpposingChange,
   side,
-  scorekeeperView
+  scorekeeperView,
+  allowForcePush
 }) => {
+  const cancelQueue = useRef<any[]>([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      cancelQueue.current = cancelQueue.current.filter((c) => {
+        if (c.time < Date.now()) {
+          c.callback();
+          return false;
+        }
+        return true;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      // cancel anything in the queue
+      cancelQueue.current.forEach((c) => c.callback());
+      cancelQueue.current = [];
+    };
+  });
+
   // If we're not passed in a state, we'll use the default state and disable the sheet
   if (!state) {
     state = { ...defaultNexusGoalState };
@@ -78,6 +109,48 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
     }
   };
 
+  const onForceRelease = (
+    alliance: Alliance,
+    goal: keyof AllianceNexusGoalState
+  ) => {
+    if (!allowForcePush) return;
+    // create packet to send to FCS
+    const packetOn: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+    const packetOff: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+
+    // get motors for the goal
+    let Motors: Motor[] = [];
+    if (alliance === 'red') {
+      // If the alliance is red and we're updaing the side goals, return the blue side goals. otherwise, return the red center goals
+      // this is because the red ref is scoring for the blue side goals and the red center goals.
+      Motors = goal.startsWith('CW')
+        ? MotorA.BLUE_SIDE_GOALS
+        : MotorA.RED_CENTER_GOALS;
+    } else {
+      // opposite of above
+      Motors = goal.startsWith('CW')
+        ? MotorA.RED_SIDE_GOALS
+        : MotorA.BLUE_CENTER_GOALS;
+    }
+
+    // get number off end of motor
+    const motorNumber = parseInt(goal.slice(2)) - 1; // -1 because soren indexed these stupid goals at 1
+    const motor = Motors[motorNumber];
+
+    // apply setpoint to motor
+    applySetpointToMotors(1, [motor], packetOn);
+    applySetpointToMotors(0, [motor], packetOff);
+
+    // send on packet to FCS
+    sendFCSPacket(packetOn);
+
+    // add packetoff socket request to cancel queue
+    cancelQueue.current.push({
+      time: Date.now() + 3000,
+      callback: () => sendFCSPacket(packetOff)
+    });
+  };
+
   return (
     <>
       {!scorekeeperView && (
@@ -90,6 +163,9 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
               state={opposingState}
               onGoalChange={onGoalChange}
               alliance={alliance === 'red' ? 'blue' : 'red'} // intentionally inverted
+              onForceRelease={(g) =>
+                onForceRelease(alliance ? 'blue' : 'red', g)
+              }
             />
             <Typography
               variant='h6'
@@ -128,6 +204,7 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
           alliance={alliance}
           side={side}
           fullWidth={scorekeeperView}
+          onForceRelease={(g) => onForceRelease(alliance, g)}
         />
         {/* Placeholder for better alignment */}
         <SideText variant='h6'>&nbsp;</SideText>
@@ -144,6 +221,7 @@ interface GoalGridProps {
     state: NexusGoalState
   ) => void;
   alliance: Alliance;
+  onForceRelease?: (goal: keyof AllianceNexusGoalState) => void;
 }
 
 interface CenterGoalGridProps extends GoalGridProps {
@@ -155,8 +233,14 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
   disabled,
   state,
   onGoalChange,
-  alliance
+  alliance,
+  onForceRelease
 }) => {
+  const onForceReleaseLocal = (goal: keyof AllianceNexusGoalState) => {
+    if (!onForceRelease) return;
+    onForceRelease(goal);
+  };
+
   /*
    * Stair-step goals
    * Blue steps down, red steps up.  We'll reverse the row to handle that.  CSS hax
@@ -172,6 +256,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           disabled={disabled}
           state={state.CW1}
           onChange={(s) => onGoalChange('CW1', s)}
+          onForceRelease={() => onForceReleaseLocal('CW1')}
         />
       </StairGoal>
       <StairGoal alliance={alliance} sx={{ height: '100%' }}>
@@ -179,6 +264,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           disabled={disabled}
           state={state.CW2}
           onChange={(s) => onGoalChange('CW2', s)}
+          onForceRelease={() => onForceReleaseLocal('CW2')}
         />
       </StairGoal>
 
@@ -188,6 +274,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           disabled={disabled}
           state={state.CW3}
           onChange={(s) => onGoalChange('CW3', s)}
+          onForceRelease={() => onForceReleaseLocal('CW3')}
         />
       </StairGoal>
       <StairGoal alliance={alliance} sx={{ height: '80%' }}>
@@ -195,6 +282,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           disabled={disabled}
           state={state.CW4}
           onChange={(s) => onGoalChange('CW4', s)}
+          onForceRelease={() => onForceReleaseLocal('CW4')}
         />
       </StairGoal>
 
@@ -204,6 +292,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           disabled={disabled}
           state={state.CW5}
           onChange={(s) => onGoalChange('CW5', s)}
+          onForceRelease={() => onForceReleaseLocal('CW5')}
         />
       </StairGoal>
       <StairGoal alliance={alliance} sx={{ height: '60%' }}>
@@ -211,6 +300,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           disabled={disabled}
           state={state.CW6}
           onChange={(s) => onGoalChange('CW6', s)}
+          onForceRelease={() => onForceReleaseLocal('CW6')}
         />
       </StairGoal>
     </Stack>
@@ -223,7 +313,8 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
   onGoalChange,
   alliance,
   side,
-  fullWidth
+  fullWidth,
+  onForceRelease
 }) => {
   /*
    * Center-field 3x2 goal.
@@ -234,6 +325,12 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
    */
   const directionBlue = side === 'far' ? 'row' : 'row-reverse';
   const directionRed = side === 'far' ? 'row-reverse' : 'row';
+
+  const onForceReleaseLocal = (goal: keyof AllianceNexusGoalState) => {
+    if (!onForceRelease) return;
+    onForceRelease(goal);
+  };
+
   return (
     <Grid
       container
@@ -247,6 +344,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               disabled={disabled}
               state={state.EC1}
               onChange={(s) => onGoalChange('EC1', s)}
+              onForceRelease={() => onForceReleaseLocal('EC1')}
             />
           </CenterGoal>
           <CenterGoal item xs={fullWidth ? 4 : 2} alliance={alliance}>
@@ -254,6 +352,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               disabled={disabled}
               state={state.EC2}
               onChange={(s) => onGoalChange('EC2', s)}
+              onForceRelease={() => onForceReleaseLocal('EC2')}
             />
           </CenterGoal>
           <CenterGoal item xs={fullWidth ? 4 : 2} alliance={alliance}>
@@ -261,6 +360,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               disabled={disabled}
               state={state.EC3}
               onChange={(s) => onGoalChange('EC3', s)}
+              onForceRelease={() => onForceReleaseLocal('EC3')}
             />
           </CenterGoal>
         </>
@@ -273,6 +373,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               disabled={disabled}
               state={state.EC6}
               onChange={(s) => onGoalChange('EC6', s)}
+              onForceRelease={() => onForceReleaseLocal('EC6')}
             />
           </CenterGoal>
           <CenterGoal item xs={2} alliance={alliance}>
@@ -280,6 +381,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               disabled={disabled}
               state={state.EC5}
               onChange={(s) => onGoalChange('EC5', s)}
+              onForceRelease={() => onForceReleaseLocal('EC5')}
             />
           </CenterGoal>
           <CenterGoal item xs={2} alliance={alliance}>
@@ -287,6 +389,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               disabled={disabled}
               state={state.EC4}
               onChange={(s) => onGoalChange('EC4', s)}
+              onForceRelease={() => onForceReleaseLocal('EC4')}
             />
           </CenterGoal>
         </>
@@ -300,6 +403,7 @@ interface GoalToggleProps {
   state: NexusGoalState;
   onChange?: (goal: NexusGoalState) => void;
   single?: boolean;
+  onForceRelease?: () => void;
 }
 
 const BallCheckbox = styled(Checkbox)(
@@ -324,7 +428,8 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
   disabled,
   state,
   onChange,
-  single
+  single,
+  onForceRelease
 }) => {
   const matchState = useRecoilValue(matchStateAtom);
 
@@ -373,44 +478,66 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
     }
   };
 
+  const onForceReleaseLocal = () => {
+    if (!onForceRelease) return;
+    onForceRelease();
+  };
+
   return (
-    <Stack
-      sx={{
-        height: '100%',
-        width: '100%',
-        border:
-          matchState === MatchState.MATCH_IN_PROGRESS &&
+    <>
+      {NexusGoalState.Produced === state && (
+        <Box sx={{ position: 'relative', top: '45%', height: 0, px: 1 }}>
+          <Button
+            variant='contained'
+            fullWidth
+            sx={{
+              backgroundColor: 'orange',
+              ':hover': { backgroundColor: 'darkred' }
+            }}
+            onClick={onForceReleaseLocal}
+          >
+            Force Release
+          </Button>
+        </Box>
+      )}
+      <Stack
+        sx={{
+          height: '100%',
+          width: '100%',
+          border:
+            matchState === MatchState.MATCH_IN_PROGRESS &&
             state === NexusGoalState.Produced
-            ? '5px dashed orange'
-            : undefined
-      }}
-      direction={single ? 'row' : 'column'}
-      flexGrow={1}
-      justifyContent={'center'}
-    >
-      <BallCheckbox
-        ball='blue'
-        disabled={disabled}
-        checked={
-          state === NexusGoalState.BlueOnly ||
-          state === NexusGoalState.Full ||
-          state === NexusGoalState.Produced
-        }
-        onChange={toggleBlue}
-        single={single?.toString()}
-      />
-      <BallCheckbox
-        ball='green'
-        disabled={disabled}
-        checked={
-          state === NexusGoalState.GreenOnly ||
-          state === NexusGoalState.Full ||
-          state === NexusGoalState.Produced
-        }
-        onChange={toggleGreen}
-        single={single?.toString()}
-      />
-    </Stack>
+              ? '5px dashed orange'
+              : undefined
+        }}
+        direction={single ? 'row' : 'column'}
+        flexGrow={1}
+        justifyContent={'center'}
+      >
+        <BallCheckbox
+          ball='blue'
+          disabled={disabled}
+          checked={
+            state === NexusGoalState.BlueOnly ||
+            state === NexusGoalState.Full ||
+            state === NexusGoalState.Produced
+          }
+          onChange={toggleBlue}
+          single={single?.toString()}
+        />
+        <BallCheckbox
+          ball='green'
+          disabled={disabled}
+          checked={
+            state === NexusGoalState.GreenOnly ||
+            state === NexusGoalState.Full ||
+            state === NexusGoalState.Produced
+          }
+          onChange={toggleGreen}
+          single={single?.toString()}
+        />
+      </Stack>
+    </>
   );
 };
 
