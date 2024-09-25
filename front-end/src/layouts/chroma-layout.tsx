@@ -15,7 +15,13 @@ export const ChromaLayout: FC<Props> = ({ children }) => {
       <style>
         {`
           body {
-            background: ${chromaKey}
+            background: ${
+              chromaKey
+                ? chromaKey.startsWith('#')
+                  ? chromaKey
+                  : `#${chromaKey}`
+                : '#00000000'
+            };
           }
         `}
       </style>
