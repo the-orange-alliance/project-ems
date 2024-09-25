@@ -102,12 +102,9 @@ export const Breakdown: ResultsBreakdown<MatchDetails>[] = [
     icon: <Lock fontSize='inherit' />,
     title: 'Food Secured Points',
     color: '#000000',
-    resultCalc: (match, alliance) => {
+    resultCalc: (match) => {
       if (!match.details) return '0';
-      const [redFoodSecured, blueFoodSecured] = getFoodSecuredPoints(
-        match.details
-      );
-      const pts = alliance === 'red' ? redFoodSecured : blueFoodSecured;
+      const pts = getFoodSecuredPoints(match.details);
       return pts > 0 ? `+${pts}` : `${pts}`;
     }
   },

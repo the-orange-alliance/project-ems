@@ -71,32 +71,6 @@ const TeleScoreSheet: FC<Props> = ({
     );
   };
 
-  const handleFoodSecuredChange = (
-    newValue: number,
-    manuallyTyped: boolean
-  ) => {
-    if (manuallyTyped) {
-      onMatchDetailsUpdate(
-        alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
-        newValue
-      );
-    }
-  };
-
-  const handleFoodSecuredDecrement = () => {
-    onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
-      -1
-    );
-  };
-
-  const handleFoodSecuredIncrement = () => {
-    onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
-      1
-    );
-  };
-
   const getBalanceStatus = (station: number): number | undefined => {
     switch (station) {
       case 11:
@@ -181,26 +155,6 @@ const TeleScoreSheet: FC<Props> = ({
           onChange={handleResevoirChange}
           onIncrement={handleResevoirIncrement}
           onDecrement={handleResevoirDecrement}
-        />
-      </Grid>
-      <Grid item xs={12} md={6} lg={6}>
-        <Typography
-          variant='h6'
-          textAlign='center'
-          sx={{ textTransform: 'capitalize' }}
-        >
-          {alliance} Food Secured
-        </Typography>
-        <NumberInput
-          value={
-            alliance === 'red'
-              ? match.details.redFoodSecured
-              : match.details.blueFoodSecured
-          }
-          textFieldDisabled
-          onChange={handleFoodSecuredChange}
-          onIncrement={handleFoodSecuredIncrement}
-          onDecrement={handleFoodSecuredDecrement}
         />
       </Grid>
       <Grid item xs={12}>
