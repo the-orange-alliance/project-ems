@@ -160,6 +160,8 @@ export class PacketManager {
   private actionQueue = new Map<string, Action>();
   private matchInProgress: boolean = false;
 
+  private previousBalanced = true;
+
   public constructor(
     fieldOptions: FieldOptions,
     broadcastCallback: (update: FieldControlUpdatePacket) => void,
@@ -322,11 +324,10 @@ export class PacketManager {
       LedStripA.ALL_RED_GOALS,
       result
     );
-    applyPatternToStrips(
-      this.fieldOptions.matchEndRampColor,
-      [LedStripA.RAMP],
-      result
-    );
+
+    // Don't apply pattern to ramp. Keep current state and allow future updates
+    // directly from digital input
+
     applySetpointToMotors(0, MotorA.ALL_GOALS, result);
 
     this.broadcastCallback(result);
@@ -567,12 +568,6 @@ export class PacketManager {
       'blue',
       broadcast
     );
-
-    this.handleRampStateChange(
-      previousDetails.fieldBalanced,
-      currentDetails.fieldBalanced,
-      broadcast
-    );
   };
 
   private handleGoalStateChange = (
@@ -622,44 +617,38 @@ export class PacketManager {
     broadcast(result);
   };
 
-  private handleRampStateChange = (
-    previousBalanced: number,
-    currentBalanced: number,
-    broadcast: (update: FieldControlUpdatePacket) => void
-  ) => {
-    if (currentBalanced === previousBalanced) return;
+  public handleDigitalInputs = (packet: DigitalInputsResult) => {
+    const balanced = (packet.hubs[RevHub.CENTER_CONTROL_HUB] & 0x1) !== 1;
 
-    // clearTimeout(this.timers.get('ramp'));
+    if (balanced === this.previousBalanced) return;
+
     this.actionQueue.delete('ramp');
 
-    const hysteresisWindowMs = currentBalanced
+    const hysteresisWindowMs = balanced
       ? this.fieldOptions.rampBalancedHysteresisWindowMs
       : this.fieldOptions.rampUnbalancedHysteresisWindowMs;
 
     this.actionQueue.set('ramp', {
       timestamp: Date.now() + hysteresisWindowMs,
       callback: () => {
+        if (this.matchInProgress) {
+          this.matchEmitter.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, {
+            key: 'fieldBalanced',
+            value: balanced
+          } satisfies ItemUpdate);
+        }
+
         const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
         applyPatternToStrips(
-          currentBalanced
+          balanced
             ? this.fieldOptions.rampBalancedColor
             : this.fieldOptions.rampUnbalancedColor,
           [LedStripA.RAMP],
           result
         );
-        broadcast(result);
+        this.broadcastCallback(result);
       }
     });
-  };
-
-  public handleDigitalInputs = (packet: DigitalInputsResult) => {
-    if (!this.matchInProgress) return;
-
-    const balanced = (packet.hubs[RevHub.CENTER_CONTROL_HUB] & 0x1) !== 1;
-    this.matchEmitter.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, {
-      key: 'fieldBalanced',
-      value: balanced
-    } satisfies ItemUpdate);
   };
 
   runFoodProductionSequence = (
