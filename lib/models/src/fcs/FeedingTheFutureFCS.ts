@@ -255,6 +255,7 @@ export class PacketManager {
       LedStripA.ALL_STRIPS,
       result
     );
+    applySetpointToMotors(0, MotorA.ALL_GOALS, result);
 
     this.broadcastCallback(result);
   };
@@ -613,9 +614,8 @@ export class PacketManager {
       currentState !== NexusGoalState.Full &&
       previousState === NexusGoalState.Full
     ) {
-      // // Cancel timer if there is one
-      // clearTimeout(this.timers.get(goal));
-      this.actionQueue.delete(goal);
+      // Cancel timer if there is one
+      this.actionQueue.delete(goal + ':leds');
     }
 
     // Broadcast update
