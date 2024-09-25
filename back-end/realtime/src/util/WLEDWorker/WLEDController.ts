@@ -15,6 +15,7 @@ export class WledController {
     private reinit: NodeJS.Timeout | undefined;
 
     private latestState: WledUpdateParameters | undefined;
+    private connected = false;
 
     constructor(initPacket: WledInitParameters) {
         this.initPacket = initPacket;
@@ -23,15 +24,7 @@ export class WledController {
     public initialize(initPacket?: WledInitParameters): void {
         if (initPacket) {
             this.initPacket = initPacket;
-
-            if (this.initPacket.address === this.socket?.url) {
-                try {
-                    this.socket?.send(buildWledInitializationPacket(this.initPacket));
-                } catch (e) {
-                    logger.error(`Failed to reinitialize ${this.initPacket.address}: ${e}`);
-                }
-                return;
-            }
+            if (this.initPacket.address === this.socket?.url && this.connected) return;
         }
 
         clearInterval(this.heartbeat);
@@ -48,6 +41,7 @@ export class WledController {
         }
 
         this.socket.onopen = () => {
+            this.connected = true;
             logger.info(`Connected to ${this.initPacket.address}`);
             try {
                 this.socket?.send(buildWledInitializationPacket(this.initPacket));
@@ -86,6 +80,7 @@ export class WledController {
 
             // Start keepalive
             this.keepAlive = setTimeout(() => {
+                this.connected = false;
                 logger.info(`Disconnected from ${this.initPacket.address}`);
 
                 // If the keepalive is not cleared in time attempt to reinitialize
