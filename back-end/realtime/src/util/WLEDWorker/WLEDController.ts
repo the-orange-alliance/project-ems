@@ -9,8 +9,8 @@ import WebSocket from 'ws';
 export class WledController {
   private static heartbeatPeriodMs = 500;
   private static keepAlivePeriodMs = 500;
-  private static reconnectPeriodMs = 1000;
-  private static keepAliveTimeoutMs = 1000;
+  private static reconnectPeriodMs = 1250;
+  private static keepAliveTimeoutMs = 1250;
 
   private socket: WebSocket | null;
   private initPacket: WledInitParameters;
@@ -66,6 +66,11 @@ export class WledController {
     this.socket.onclose = () => {
       logger.error(`${this.getName()} disconnected`);
       this.connected = false;
+      // If the keepalive loop is running, clear it
+      if (this.keepAlive) {
+        clearInterval(this.keepAlive);
+        this.keepAlive = null;
+      }
       // Attempt to reconnect once the socket has closed
       setTimeout(() => this.initialize(), WledController.reconnectPeriodMs);
     }
