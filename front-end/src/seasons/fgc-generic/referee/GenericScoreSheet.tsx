@@ -22,8 +22,6 @@ import Tab from '@mui/material/Tab';
 import { TabPanel } from 'src/components/util/tab-panel';
 import TeamSheet from 'src/seasons/fgc-generic/referee/TeamSheet';
 import PenaltySheet from 'src/seasons/fgc-generic/referee/PenaltySheet';
-import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state-to-recoil';
-import { SyncOnPrestart } from 'src/components/sync-effects/sync-on-prestart';
 
 // forever hail the generic types
 
@@ -135,8 +133,6 @@ const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
         width: '100%'
       }}
     >
-      <SyncMatchStateToRecoil />
-      <SyncOnPrestart />
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <Typography variant='h5' sx={{ textAlign: 'center' }}>
           {alliance === 'red' ? 'Red' : 'Blue'} Alliance

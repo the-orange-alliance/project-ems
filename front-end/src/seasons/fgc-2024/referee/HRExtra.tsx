@@ -12,8 +12,6 @@ import { SetterOrUpdater, useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/use-socket';
 import { NumberInput } from 'src/components/inputs/number-input';
 import { StateToggle } from 'src/components/inputs/state-toggle';
-import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state-to-recoil';
-import { SyncOnPrestart } from 'src/components/sync-effects/sync-on-prestart';
 import { matchOccurringAtom, matchStateAtom } from 'src/stores/recoil';
 import NexusScoresheet from '../nexus-sheets/nexus-scoresheet';
 import { ConnectionChip } from 'src/components/util/connection-chip';
@@ -113,8 +111,6 @@ const HeadRefereeExtra: React.FC = () => {
         width: '100%'
       }}
     >
-      <SyncMatchStateToRecoil />
-      <SyncOnPrestart />
       <Stack direction='row' className='center' spacing={1}>
         <ConnectionChip />
         <MatchChip match={match} />

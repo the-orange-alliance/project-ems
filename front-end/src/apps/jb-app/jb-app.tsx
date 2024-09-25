@@ -5,8 +5,6 @@ import { ChromaLayout } from 'src/layouts/chroma-layout';
 import { useRecoilValue } from 'recoil';
 import { MatchTimer } from 'src/components/util/match-timer';
 import { matchOccurringAtom } from 'src/stores/recoil';
-import { SyncMatchOccurringToRecoil } from 'src/components/sync-effects/sync-match-occurring-to-recoil';
-import { SyncOnPrestart } from 'src/components/sync-effects/sync-on-prestart';
 
 export const JBApp: FC = () => {
   const match = useRecoilValue(matchOccurringAtom);
@@ -27,8 +25,6 @@ export const JBApp: FC = () => {
 
   return (
     <ChromaLayout>
-      <SyncMatchOccurringToRecoil />
-      <SyncOnPrestart />
       <div className='jb-container'>
         <div>{time.toFormat('ttt')}</div>
         <div>{match?.name}</div>

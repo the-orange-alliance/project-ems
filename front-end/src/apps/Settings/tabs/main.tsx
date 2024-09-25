@@ -5,6 +5,7 @@ import {
   darkModeAtom,
   followerModeEnabledAtom,
   leaderApiHostAtom,
+  scorekeeperAudioEnabledAtom,
   teamIdentifierAtom
 } from 'src/stores/recoil';
 import { SwitchSetting } from '../components/switch-setting';
@@ -27,9 +28,12 @@ const MainSettingsTab: FC = () => {
     followerModeEnabledAtom
   );
   const [leaderApiHost, setLeaderApiHost] = useRecoilState(leaderApiHostAtom);
+  const [fieldControl, setFieldControl] = useActiveFields();
+  const [enableScorekeeperAudio, setScorekeeperAudioEnabled] = useRecoilState(
+    scorekeeperAudioEnabledAtom
+  );
 
   const tournament = useCurrentTournament();
-  const [fieldControl, setFieldControl] = useActiveFields();
   const downloadRelease = useGitHubDownload();
 
   const handleFieldChange = (value: string[]) => {
@@ -141,6 +145,12 @@ const MainSettingsTab: FC = () => {
         name='Check For Updates'
         buttonText='Check Now'
         onClick={download}
+        inline
+      />
+      <SwitchSetting
+        name='Scorekeeper Audio'
+        value={enableScorekeeperAudio}
+        onChange={setScorekeeperAudioEnabled}
         inline
       />
     </Box>
