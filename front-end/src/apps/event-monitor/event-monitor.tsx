@@ -4,17 +4,21 @@ import {
   CardContent,
   CardHeader,
   Grid,
+  IconButton,
+  Menu,
+  MenuItem,
   Typography
 } from '@mui/material';
+import { useMatchAll } from 'src/api/use-match-data';
+import { useTeamIdentifiersForEventKey } from 'src/hooks/use-team-identifier';
+import { DateTime } from 'luxon';
 import { FC, useEffect, useState } from 'react';
 import { DefaultLayout } from 'src/layouts/default-layout';
 import { MatchSocketEvent, MatchKey } from '@toa-lib/models';
 import { io } from 'socket.io-client';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
-import { useMatchAll } from 'src/api/use-match-data';
-import { useTeamIdentifiersForEventKey } from 'src/hooks/use-team-identifier';
-import { DateTime } from 'luxon';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 interface MonitorCardProps {
   field: number;
@@ -27,6 +31,16 @@ const MonitorCard: FC<MonitorCardProps> = ({ field, url }) => {
   const [status, setStatus] = useState('STANDBY');
   const { data: match } = useMatchAll(key);
   const identifiers = useTeamIdentifiersForEventKey(key?.eventKey);
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   useEffect(() => {
     const socket = createSocket();
     socket.on('connect', handleConnect);
@@ -77,6 +91,17 @@ const MonitorCard: FC<MonitorCardProps> = ({ field, url }) => {
   };
   return (
     <Card>
+      <Menu
+        id={`field-${field}-menu`}
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        MenuListProps={{
+          'aria-labelledby': `field-${field}-menu`
+        }}
+      >
+        <MenuItem onClick={handleClose}>Refresh</MenuItem>
+      </Menu>
       <CardHeader
         title={`Field ${field}`}
         subheader={
@@ -92,6 +117,16 @@ const MonitorCard: FC<MonitorCardProps> = ({ field, url }) => {
           ) : (
             <ErrorIcon color='error' />
           )
+        }
+        action={
+          <IconButton
+            aria-controls={open ? `field-${field}-menu` : undefined}
+            aria-haspopup='true'
+            aria-expanded={open ? 'true' : undefined}
+            onClick={handleClick}
+          >
+            <MoreVertIcon />
+          </IconButton>
         }
       />
       <CardContent>

@@ -81,7 +81,7 @@ export const useMatchAll = (
 ): SWRResponse<Match<any>, ApiResponseError> =>
   useSWR<Match<any>>(
     key ? `match/all/${key.eventKey}/${key.tournamentKey}/${key.id}` : '',
-    (url) => apiFetcher(url, 'GET', undefined, matchZod.parse),
+    (url) => apiFetcher(url, 'GET'),
     {
       revalidateOnFocus: false
     }

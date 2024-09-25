@@ -93,7 +93,7 @@ export const Breakdown: ResultsBreakdown<MatchDetails>[] = [
       // This may be slightly off due to rounding errors? please no one complain...
       // ideally, we should calc this in the backend and pass it up.  OR.... we omit the "(+n)" part of the score display
       // TODO: revisit?
-      const totalAdded = totalPoints * mult - totalPoints;
+      const totalAdded = Math.round(totalPoints * mult) - totalPoints;
 
       return `x${mult} (+${totalAdded})`;
     }

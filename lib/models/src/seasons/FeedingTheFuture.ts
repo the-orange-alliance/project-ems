@@ -30,6 +30,7 @@ export const ScoreTable = {
  */
 const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
   calculateRankings,
+  calculateRankingPoints,
   calculatePlayoffsRankings,
   calculateScore,
   detailsToJson,
@@ -427,6 +428,13 @@ export function calculatePlayoffsRankings(
   return rankings;
 }
 
+export function calculateRankingPoints(details: MatchDetails): MatchDetails {
+  const deepCopy = JSON.parse(JSON.stringify(details)) as MatchDetails;
+  const nBalanced = getBalancedRobots(details);
+  deepCopy.coopertition = nBalanced < 5 ? 0 : nBalanced >= 6 ? 2 : 1;
+  return deepCopy;
+}
+
 export function calculateScore(match: Match<MatchDetails>): [number, number] {
   const { details } = match;
   if (!details) return [0, 0];
@@ -514,7 +522,15 @@ export function getBalancedRobots(details: MatchDetails): number {
 }
 
 export function getCoopertitionPoints(details: MatchDetails): number {
-  return ScoreTable.Coopertition(getBalancedRobots(details));
+  switch (details.coopertition) {
+    case 0:
+      return 0;
+    case 1:
+      return 15;
+    case 2:
+      return 30;
+  }
+  return 0;
 }
 
 function compareRankings(a: SeasonRanking, b: SeasonRanking): number {
