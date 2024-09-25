@@ -100,6 +100,10 @@ export const useSocket = (): [
         );
       });
 
+      socket.on('refresh-client', () => {
+        window.location.reload();
+      });
+
       socket.emit('identify', idMsg);
     }
     // set(currentTournamentFieldsAtom, [])
@@ -175,6 +179,10 @@ export async function sendUpdateSocketClient(
 
 export async function requestClientIdentification(data: any): Promise<void> {
   socket?.emit('identify-client', data);
+}
+
+export async function requestClientRefresh(data: any): Promise<void> {
+  socket?.emit('refresh-client', data);
 }
 
 export async function requestAllClientsIdentification(data: {

@@ -84,6 +84,13 @@ io.on("connection", (socket) => {
     socketToIdentify?.emit("identify-client", data);
   });
 
+  socket.on("refresh-client", async (data: any) => {
+    // Find socket
+    const socketToIdentify = io.sockets.sockets.get(data.lastSocketId);
+    // Emit message
+    socketToIdentify?.emit("refresh-client", data);
+  });
+
   socket.on("identify-all-clients", async (data) => {
     try {
       // Get all devices from api

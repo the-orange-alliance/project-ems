@@ -24,9 +24,11 @@ import {
 import {
   requestAllClientsIdentification,
   requestClientIdentification,
+  requestClientRefresh,
   sendUpdateSocketClient
 } from 'src/api/use-socket';
 import {
+  Cached,
   ChevronLeft,
   Delete,
   Refresh,
@@ -88,6 +90,10 @@ export const AudienceDisplayManager: FC = () => {
     requestClientIdentification(data);
   };
 
+  const requestClientToRefresh = (data: any) => {
+    requestClientRefresh(data);
+  };
+
   const deleteDevice = (id: string) => {
     deleteSocketClient(id);
     const cpy = [...clients];
@@ -145,6 +151,7 @@ export const AudienceDisplayManager: FC = () => {
               <TableCell>Field Numbers</TableCell>
               <TableCell>Follower Mode Enabled</TableCell>
               <TableCell>Identify</TableCell>
+              <TableCell>Force Reload</TableCell>
               <TableCell>Delete</TableCell>
             </TableRow>
           </TableHead>
@@ -172,6 +179,16 @@ export const AudienceDisplayManager: FC = () => {
                     }}
                   >
                     <RemoveRedEye />
+                  </IconButton>
+                </TableCell>
+                <TableCell>
+                  <IconButton
+                    onClick={(e) => {
+                      requestClientRefresh(client);
+                      e.stopPropagation();
+                    }}
+                  >
+                    <Cached />
                   </IconButton>
                 </TableCell>
                 <TableCell>
