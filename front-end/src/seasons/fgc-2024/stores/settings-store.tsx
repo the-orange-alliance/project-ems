@@ -44,12 +44,6 @@ export const matchEndBlueNexusGoalColorAtom = atom<string>({
   effects: [localStorageEffect('ftf.matchEndBlueNexusGoalColor')]
 });
 
-export const matchEndRampColorAtom = atom<string>({
-  key: 'ftf.matchEndRampColor',
-  default: FeedingTheFutureFCS.defaultFieldOptions.matchEndRampColor,
-  effects: [localStorageEffect('ftf.matchEndRampColor')]
-});
-
 export const redWledWebSocketAddressAtom = atom<string>({
   key: 'ftf.redWledWebSocketAddress',
   default: FeedingTheFutureFCS.defaultFieldOptions.redWledWebSocketAddress,
@@ -167,7 +161,6 @@ export const fieldOptionsSelector: RecoilValueReadOnly<FeedingTheFutureFCS.Field
         fieldFaultColor: get(fieldFaultColorAtom),
         matchEndRedNexusGoalColor: get(matchEndRedNexusGoalColorAtom),
         matchEndBlueNexusGoalColor: get(matchEndBlueNexusGoalColorAtom),
-        matchEndRampColor: get(matchEndRampColorAtom),
         redWledWebSocketAddress: get(redWledWebSocketAddressAtom),
         blueWledWebSocketAddress: get(blueWledWebSocketAddressAtom),
         centerWledWebSocketAddress: get(centerWledWebSocketAddressAtom),

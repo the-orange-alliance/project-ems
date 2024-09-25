@@ -19,7 +19,6 @@ import {
   goalGreenOnlyColorAtom,
   goalLedLengthAtom,
   matchEndBlueNexusGoalColorAtom,
-  matchEndRampColorAtom,
   matchEndRedNexusGoalColorAtom,
   prepareFieldColorAtom,
   rampBalancedColorAtom,
@@ -49,9 +48,6 @@ export const Settings: FC = () => {
     useRecoilState(matchEndRedNexusGoalColorAtom);
   const [matchEndBlueNexusGoalColor, setMatchEndBlueNexusGoalColor] =
     useRecoilState(matchEndBlueNexusGoalColorAtom);
-  const [matchEndRampColor, setMatchEndRampColor] = useRecoilState(
-    matchEndRampColorAtom
-  );
   const [redWledWebSocketAddress, setRedWledWebSocketAddress] = useRecoilState(
     redWledWebSocketAddressAtom
   );
@@ -151,13 +147,6 @@ export const Settings: FC = () => {
         name='Match End Blue Nexus Goal Color'
         value={matchEndBlueNexusGoalColor}
         onChange={setMatchEndBlueNexusGoalColor}
-        format='string'
-        inline
-      />
-      <ColorSetting
-        name='Match End Ramp Color'
-        value={matchEndRampColor}
-        onChange={setMatchEndRampColor}
         format='string'
         inline
       />
