@@ -16,8 +16,14 @@ interface NexusScoresheetProps {
   opposingState?: AllianceNexusGoalState;
   disabled?: boolean;
   alliance: Alliance;
-  onChange?: (state: AllianceNexusGoalState) => void;
-  onOpposingChange?: (state: AllianceNexusGoalState) => void;
+  onChange?: (
+    goal: keyof AllianceNexusGoalState,
+    state: NexusGoalState
+  ) => void;
+  onOpposingChange?: (
+    goal: keyof AllianceNexusGoalState,
+    state: NexusGoalState
+  ) => void;
   side: 'near' | 'far' | 'both';
   scorekeeperView?: boolean;
 }
@@ -64,14 +70,11 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
   ) => {
     if (goal.startsWith('CW')) {
       if (!onOpposingChange) return;
-      onOpposingChange({
-        ...opposingState,
-        [goal]: newState
-      } as AllianceNexusGoalState);
+      onOpposingChange(goal, newState);
     } else {
       // Center Field
       if (!onChange) return;
-      onChange({ ...state, [goal]: newState } as AllianceNexusGoalState);
+      onChange(goal, newState);
     }
   };
 

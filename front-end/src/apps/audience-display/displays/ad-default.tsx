@@ -115,8 +115,8 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
         <AbsolouteLocator bottom={0} left={0}>
           <SlideInBottom
             in={id === Displays.MATCH_PREVIEW}
-            duration={0.75}
-            inDelay={0.25}
+            duration={1.25}
+            inDelay={0.75}
           >
             <displays.matchPreviewStream
               event={event}
@@ -145,8 +145,8 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
         <AbsolouteLocator bottom={0} left={0}>
           <SlideInBottom
             in={id === Displays.MATCH_START}
-            duration={0.75}
-            inDelay={0.25}
+            duration={1.25}
+            inDelay={0.75}
           >
             <displays.matchPlayStream
               event={event}
@@ -175,8 +175,8 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
         <AbsolouteLocator top={0} left={0}>
           <SlideInLeft
             in={id === Displays.MATCH_RESULTS}
-            duration={0.75}
-            inDelay={0.25}
+            duration={1.25}
+            inDelay={0.75}
           >
             <displays.matchResultsStream
               event={event}

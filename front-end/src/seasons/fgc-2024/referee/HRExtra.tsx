@@ -8,7 +8,6 @@ import {
   MatchState,
   NumberAdjustment
 } from '@toa-lib/models';
-import { NexusGoalState } from '@toa-lib/models/build/seasons/FeedingTheFuture';
 import { SetterOrUpdater, useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/use-socket';
 import { NumberInput } from 'src/components/inputs/number-input';
@@ -142,7 +141,7 @@ const HeadRefereeExtra: React.FC = () => {
           <StateToggle
             title={<span>Field Balanced</span>}
             states={['Unbalanced', 'Balanced']}
-            value={match?.details?.fieldBalanced ?? 0}
+            value={match?.details?.fieldBalanced ? 1 : 0}
             onChange={(v) => handleMatchDetailsUpdate('fieldBalanced', v)}
             fullWidth
             disabled={matchState !== MatchState.MATCH_COMPLETE}
@@ -172,7 +171,9 @@ const HeadRefereeExtra: React.FC = () => {
           <NexusScoresheet
             alliance='blue'
             state={match?.details?.blueNexusState}
-            onChange={(v) => handleMatchDetailsUpdate('blueNexusState', v)}
+            onChange={(goal, state) =>
+              handleMatchDetailsUpdate(`blueNexusState.${goal}` as any, state)
+            }
             scorekeeperView
             side='near'
           />
@@ -181,7 +182,9 @@ const HeadRefereeExtra: React.FC = () => {
           <NexusScoresheet
             alliance='red'
             state={match?.details?.redNexusState}
-            onChange={(v) => handleMatchDetailsUpdate('redNexusState', v)}
+            onChange={(goal, state) =>
+              handleMatchDetailsUpdate(`redNexusState.${goal}` as any, state)
+            }
             scorekeeperView
             side='near'
           />

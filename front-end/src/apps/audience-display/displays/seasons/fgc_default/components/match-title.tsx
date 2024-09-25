@@ -48,10 +48,7 @@ const MatchTitle = ({
         <Grid item xs={0.2}></Grid>
         <Item item xs={2.3} />
         <Grid item xs={7}>
-          <Stack
-            sx={{ height: '100%', marginTop: '-2px' }}
-            justifyContent={'center'}
-          >
+          <Stack sx={{ height: '100%' }} justifyContent={'center'}>
             <div>{match.name}</div>
             <div>Field {match.fieldNumber}</div>
           </Stack>

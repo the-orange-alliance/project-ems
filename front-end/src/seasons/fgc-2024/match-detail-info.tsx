@@ -5,6 +5,10 @@ import { Grid, TextField } from '@mui/material';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 import NexusScoresheet from './nexus-sheets/nexus-scoresheet';
 import { StateToggle } from 'src/components/inputs/state-toggle';
+import {
+  AllianceNexusGoalState,
+  NexusGoalState
+} from '@toa-lib/models/build/seasons/FeedingTheFuture';
 
 export const MatchDetailInfo: FC<
   MatchDetailInfoProps<FeedingTheFuture.MatchDetails>
@@ -13,6 +17,21 @@ export const MatchDetailInfo: FC<
   if (!match || !match.details || !match.participants) return null;
   const redAlliance = match.participants.filter((p) => p.station < 20);
   const blueAlliance = match.participants.filter((p) => p.station >= 20);
+
+  const updateNexus = (
+    alliance: 'red' | 'blue',
+    goal: keyof AllianceNexusGoalState,
+    state: NexusGoalState
+  ) => {
+    if (!match.details) return;
+    handleUpdates({
+      target: {
+        name: `${alliance}NexusState`,
+        value: { ...match.details[`${alliance}NexusState`], [goal]: state }
+      }
+    } as any);
+  };
+
   return (
     <>
       {/* RED ALLIANCE */}
@@ -55,12 +74,10 @@ export const MatchDetailInfo: FC<
           <NexusScoresheet
             side='both'
             state={match.details.redNexusState}
+            opposingState={match.details.blueNexusState}
             alliance='red'
-            onChange={(s) =>
-              handleUpdates({
-                target: { name: 'redNexusState', value: s }
-              } as any)
-            }
+            onChange={(goal, state) => updateNexus('red', goal, state)}
+            onOpposingChange={(goal, state) => updateNexus('blue', goal, state)}
           />
         </Grid>
         {/* RED ALLIANCE BALANCE STATUS */}
@@ -145,12 +162,10 @@ export const MatchDetailInfo: FC<
           <NexusScoresheet
             side='both'
             state={match.details.blueNexusState}
+            opposingState={match.details.redNexusState}
             alliance='blue'
-            onChange={(s) =>
-              handleUpdates({
-                target: { name: 'blueNexusState', value: s }
-              } as any)
-            }
+            onChange={(goal, state) => updateNexus('blue', goal, state)}
+            onOpposingChange={(goal, state) => updateNexus('red', goal, state)}
           />
         </Grid>
         {/* BLUE ALLIANCE BALANCE STATUS */}
@@ -206,7 +221,7 @@ export const MatchDetailInfo: FC<
           <StateToggle
             title={<span>Field Balanced</span>}
             states={['N', 'Y']}
-            value={match.details.fieldBalanced}
+            value={match.details.fieldBalanced ? 1 : 0}
             onChange={(v) =>
               handleUpdates({
                 target: { name: 'fieldBalanced', value: v }

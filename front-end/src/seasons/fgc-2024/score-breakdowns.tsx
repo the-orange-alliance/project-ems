@@ -45,6 +45,7 @@ export const RedScoreBreakdown: FC<
       <Grid item xs={12} sm={12} md={12}>
         <NexusScoresheet
           state={match?.details?.redNexusState}
+          opposingState={match?.details?.blueNexusState}
           disabled
           alliance='red'
           side='both'
@@ -142,6 +143,7 @@ export const BlueScoreBreakdown: FC<
       <Grid item xs={12} sm={12} md={12}>
         <NexusScoresheet
           state={match?.details?.blueNexusState}
+          opposingState={match?.details?.redNexusState}
           disabled
           alliance='blue'
           side='both'
