@@ -255,6 +255,7 @@ export class PacketManager {
       LedStripA.ALL_STRIPS,
       result
     );
+    applySetpointToMotors(0, MotorA.ALL_GOALS, result);
 
     this.broadcastCallback(result);
   };
