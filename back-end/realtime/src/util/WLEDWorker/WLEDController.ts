@@ -54,6 +54,7 @@ export class WledController {
       } catch (e) {
         logger.error(`${this.getName()} failed to initialize: ${e}`);
       }
+
       this.startHeartbeat();
       this.startKeepalive();
 
@@ -62,8 +63,14 @@ export class WledController {
       }
     };
 
+    this.socket.onclose = () => {
+      logger.info(`${this.getName()} disconnected`);
+      this.connected = false;
+      // Attempt to reconnect once the socket has closed
+      setTimeout(() => this.initialize(), WledController.reconnectPeriodMs);
+    }
+
     this.socket.onerror = (e: WebSocket.ErrorEvent) => {
-      // Just log an error, the keepalive will handle the reconnection.
       logger.error(`${this.getName()} failed to connect: ${e.error}`);
     };
 
@@ -78,7 +85,7 @@ export class WledController {
       try {
         this.socket?.send('{}');
       } catch {
-        logger.warn(`${this.initPacket.address} failed to send heartbeat`);
+        logger.warn(`${this.getName()} failed to send heartbeat`);
       }
       if (!this.connected && this.heartbeat) {
         logger.info(`${this.getName()} clearing heartbeat`);
@@ -136,6 +143,6 @@ export class WledController {
   private getName(): string {
     const name = this.initPacket.address.replace(/(ws:\/\/)|(\/ws)/g, '');
     const parts = name.split('-');
-    return name.substring(parts[0].length, parts.length - 1);
+    return name.replace(parts[0] + '-', '');
   }
 }
