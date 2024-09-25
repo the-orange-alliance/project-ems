@@ -50,6 +50,7 @@ export const NumberInput: FC<Props> = ({
         value={value}
         type='number'
         disabled={disabled || textFieldDisabled}
+        sx={{ minWidth: '75px' }}
       />
       <Button variant='contained' onClick={increment} disabled={disabled}>
         +

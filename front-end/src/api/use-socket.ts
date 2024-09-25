@@ -13,6 +13,7 @@ import {
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { connectSocketClient } from './use-socket-data';
 import { v4 as uuidv4 } from 'uuid';
+import { useRef } from 'react';
 
 let socket: Socket | null = null;
 
@@ -31,6 +32,7 @@ export const useSocket = (): [
 ] => {
   const [connected, setConnected] = useRecoilState(socketConnectedAtom);
   const { showSnackbar } = useSnackbar();
+  const idMsgRef = useRef<any>({});
 
   const setupSocket = (token: string) => {
     if (socket) return;
@@ -59,7 +61,7 @@ export const useSocket = (): [
         localStorage.setItem('persistantClientId', persistantClientId);
       }
 
-      const idMsg: any = {
+      idMsgRef.current = {
         currentUrl: window.location.href,
         fieldNumbers: fields.map((d: any) => d.field).join(','),
         followerMode: followerModeEnabled ? 1 : 0,
@@ -68,7 +70,7 @@ export const useSocket = (): [
       };
 
       if (persistantClientId) {
-        idMsg.persistantClientId = persistantClientId;
+        idMsgRef.current.persistantClientId = persistantClientId;
       }
 
       socket.on('settings', (data) => {
@@ -88,6 +90,7 @@ export const useSocket = (): [
 
       socket.on('identify-response', (data) => {
         connectSocketClient(data);
+        idMsgRef.current = data;
         localStorage.setItem('persistantClientId', data.persistantClientId);
       });
 
@@ -100,17 +103,33 @@ export const useSocket = (): [
         );
       });
 
-      socket.emit('identify', idMsg);
+      socket.on('refresh-client', () => {
+        window.location.reload();
+      });
+
+      socket.io.on('reconnect', (a) => {
+        console.log(`Reconnected after ${a} attempts`);
+        idMsgRef.current = {
+          currentUrl: window.location.href,
+          fieldNumbers: fields.map((d: any) => d.field).join(','),
+          followerMode: followerModeEnabled ? 1 : 0,
+          followerApiHost: leaderApiHost,
+          audienceDisplayChroma: (chromaKey ?? '').replaceAll('"', '')
+        };
+        socket?.emit('identify', idMsgRef.current);
+      });
+
+      socket.emit('identify', idMsgRef.current);
     }
     // set(currentTournamentFieldsAtom, [])
   });
 
   const initEvents = () => {
     if (socket) {
-      socket.emit('rooms', ['match', 'fcs', 'frc-fms']);
       socket.on('connect', () => {
         setConnected(true);
         console.log('CONNECTED');
+        socket?.emit('rooms', ['match', 'fcs', 'frc-fms']);
       });
       socket.on('disconnect', (reason) => {
         console.log('DISCONNECT', reason);
@@ -175,6 +194,10 @@ export async function sendUpdateSocketClient(
 
 export async function requestClientIdentification(data: any): Promise<void> {
   socket?.emit('identify-client', data);
+}
+
+export async function requestClientRefresh(data: any): Promise<void> {
+  socket?.emit('refresh-client', data);
 }
 
 export async function requestAllClientsIdentification(data: {

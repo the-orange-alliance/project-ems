@@ -13,13 +13,27 @@ const ScaledDiv = styled.div`
   margin-left: 1em;
 `;
 
-export const MatchResultsStream: FC<DisplayProps> = ({ match, ranks }) => {
+export const MatchResultsStream: FC<DisplayProps> = ({
+  match,
+  ranks,
+  teams
+}) => {
   return (
     <ScaledDiv>
       <Stack sx={{ width: '30vw' }} spacing={5}>
         <MatchTitle match={match} noMargin />
-        <AllianceResult alliance='red' match={match} ranks={ranks} />
-        <AllianceResult alliance='blue' match={match} ranks={ranks} />
+        <AllianceResult
+          alliance='red'
+          match={match}
+          ranks={ranks}
+          teams={teams}
+        />
+        <AllianceResult
+          alliance='blue'
+          match={match}
+          ranks={ranks}
+          teams={teams}
+        />
       </Stack>
     </ScaledDiv>
   );

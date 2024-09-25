@@ -79,7 +79,7 @@ const ScoreContainer = styled.div((props: { alliance: Alliance }) => ({
   lineHeight: '5vh'
 }));
 
-export const MatchPlay: FC<DisplayProps> = ({ match }) => {
+export const MatchPlay: FC<DisplayProps> = ({ match, teams }) => {
   return (
     <BGImage>
       <Container spacing={5}>
@@ -93,6 +93,7 @@ export const MatchPlay: FC<DisplayProps> = ({ match }) => {
           <AlliancePlay
             alliance='red'
             participants={match.participants ?? []}
+            teams={teams}
             fullHeight
           />
           <ScoreContainer alliance='red'>{match.redScore}</ScoreContainer>
@@ -100,6 +101,7 @@ export const MatchPlay: FC<DisplayProps> = ({ match }) => {
           <AlliancePlay
             alliance='blue'
             participants={match.participants ?? []}
+            teams={teams}
             invert
             fullHeight
           />

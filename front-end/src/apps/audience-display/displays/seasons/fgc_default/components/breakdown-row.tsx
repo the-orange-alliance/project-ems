@@ -17,6 +17,11 @@ const RowContainer = styled(Grid)((props: { color: string }) => ({
   color: props.color
 }));
 
+const RowItem = styled(Grid)(() => ({
+  display: 'flex',
+  alignItems: 'center'
+}));
+
 const BreakdownRow = ({ breakdown: b, match, alliance }: BreakdownRowProps) => {
   return (
     <RowContainer
@@ -25,20 +30,33 @@ const BreakdownRow = ({ breakdown: b, match, alliance }: BreakdownRowProps) => {
       sx={{ height: '100%' }}
       color={b.color}
     >
-      <Grid item xs={1.5} sx={{ textAlign: 'center' }} alignContent={'center'}>
+      <RowItem
+        item
+        xs={1.5}
+        sx={{
+          textAlign: 'center',
+          justifyContent: 'center'
+        }}
+      >
         {b.icon}
-      </Grid>
-      <Grid
+      </RowItem>
+      <RowItem
         item
         xs={7.5}
-        sx={{ borderRight: '.2em solid #00000060', textTransform: 'uppercase' }}
-        alignContent={'center'}
+        sx={{
+          borderRight: '.2em solid #00000060',
+          textTransform: 'uppercase'
+        }}
       >
         {b.title}
-      </Grid>
-      <Grid item xs={3} alignContent={'center'} sx={{ textAlign: 'center' }}>
+      </RowItem>
+      <RowItem
+        item
+        xs={3}
+        sx={{ textAlign: 'center', justifyContent: 'center' }}
+      >
         {b.resultCalc(match, alliance)}
-      </Grid>
+      </RowItem>
     </RowContainer>
   );
 };
