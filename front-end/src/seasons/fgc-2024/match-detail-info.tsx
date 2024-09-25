@@ -40,7 +40,7 @@ export const MatchDetailInfo: FC<
         spacing={3}
         sx={{ border: '2px solid red', borderRadius: '1rem', mb: 4, p: 1 }}
       >
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={6}>
           <TextField
             label='Red Resevoir Conserved'
             value={match.details.redResevoirConserved}
@@ -50,23 +50,13 @@ export const MatchDetailInfo: FC<
             onChange={handleUpdates}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={6}>
           <TextField
             label='Red Food Produced'
             value={match.details.redFoodProduced}
             type='number'
             fullWidth
             name='redFoodProduced'
-            onChange={handleUpdates}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <TextField
-            label='Red Food Secured'
-            value={match.details.redFoodSecured}
-            type='number'
-            fullWidth
-            name='redFoodSecured'
             onChange={handleUpdates}
           />
         </Grid>
@@ -128,7 +118,7 @@ export const MatchDetailInfo: FC<
         spacing={3}
         sx={{ border: '2px solid blue', borderRadius: '1rem', mb: 4, p: 1 }}
       >
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={6}>
           <TextField
             label='Blue Resevoir Conserved'
             value={match.details.blueResevoirConserved}
@@ -138,23 +128,13 @@ export const MatchDetailInfo: FC<
             onChange={handleUpdates}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={6}>
           <TextField
             label='Blue Food Produced'
             value={match.details.blueFoodProduced}
             type='number'
             fullWidth
             name='blueFoodProduced'
-            onChange={handleUpdates}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <TextField
-            label='Blue Food Secured'
-            value={match.details.blueFoodSecured}
-            type='number'
-            fullWidth
-            name='blueFoodSecured'
             onChange={handleUpdates}
           />
         </Grid>
@@ -217,7 +197,7 @@ export const MatchDetailInfo: FC<
         sx={{ border: '2px solid purple', borderRadius: '1rem', mb: 1, p: 1 }}
       >
         {/* COOPERTITION */}
-        <Grid item xs={12}>
+        <Grid item xs={6}>
           <StateToggle
             title={<span>Field Balanced</span>}
             states={['N', 'Y']}
@@ -228,6 +208,16 @@ export const MatchDetailInfo: FC<
               } as any)
             }
             fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={6}>
+          <TextField
+            label='Food Secured'
+            value={match.details.foodSecured}
+            type='number'
+            fullWidth
+            name='foodSecured'
+            onChange={handleUpdates}
           />
         </Grid>
       </Grid>

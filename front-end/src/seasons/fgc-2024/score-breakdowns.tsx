@@ -34,8 +34,8 @@ export const RedScoreBreakdown: FC<
       </Grid>
       <Grid item xs={12} sm={4} md={4}>
         <TextField
-          label='Red Food Secured'
-          value={match?.details?.redFoodSecured ?? 0}
+          label='Food Secured'
+          value={match?.details?.foodSecured ?? 0}
           type='number'
           fullWidth
           disabled
@@ -131,8 +131,8 @@ export const BlueScoreBreakdown: FC<
       </Grid>
       <Grid item xs={12} sm={4} md={4}>
         <TextField
-          label='Blue Food Secured'
-          value={match?.details?.blueFoodSecured ?? 0}
+          label='Food Secured'
+          value={match?.details?.foodSecured ?? 0}
           type='number'
           fullWidth
           disabled

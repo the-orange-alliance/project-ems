@@ -101,6 +101,23 @@ const HeadRefereeExtra: React.FC = () => {
     );
   };
 
+  const handleFoodSecuredChange = (
+    newValue: number,
+    manuallyTyped: boolean
+  ) => {
+    if (manuallyTyped) {
+      handleMatchDetailsUpdate('foodSecured', newValue);
+    }
+  };
+
+  const handleFoodSecuredDecrement = () => {
+    handleMatchDetailsUpdate('foodSecured', -1);
+  };
+
+  const handleFoodSecuredIncrement = () => {
+    handleMatchDetailsUpdate('foodSecured', 1);
+  };
+
   return (
     <Paper
       sx={{
@@ -183,6 +200,22 @@ const HeadRefereeExtra: React.FC = () => {
             }
             scorekeeperView
             side='near'
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <Typography
+            variant='h6'
+            textAlign='center'
+            sx={{ textTransform: 'capitalize' }}
+          >
+            Food Secured
+          </Typography>
+          <NumberInput
+            value={match?.details?.foodSecured ?? 0}
+            textFieldDisabled
+            onChange={handleFoodSecuredChange}
+            onIncrement={handleFoodSecuredIncrement}
+            onDecrement={handleFoodSecuredDecrement}
           />
         </Grid>
       </Grid>
