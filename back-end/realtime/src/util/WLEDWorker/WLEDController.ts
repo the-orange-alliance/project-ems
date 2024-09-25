@@ -64,7 +64,7 @@ export class WledController {
     };
 
     this.socket.onclose = () => {
-      logger.info(`${this.getName()} disconnected`);
+      logger.error(`${this.getName()} disconnected`);
       this.connected = false;
       // Attempt to reconnect once the socket has closed
       setTimeout(() => this.initialize(), WledController.reconnectPeriodMs);
