@@ -102,7 +102,9 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
         );
     }
   }
-  const afterMatch = matchState > MatchState.MATCH_IN_PROGRESS;
+  const afterMatchBeforeScore =
+    matchState > MatchState.MATCH_IN_PROGRESS &&
+    matchState < MatchState.RESULTS_POSTED;
 
   const showPreviewFull =
     layout[0] === LayoutMode.FULL || layout[1] === LayoutMode.FULL;
@@ -116,7 +118,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {showPreviewFull && (
         <AbsolouteLocator top={0} left={0}>
           <FadeInOut
-            in={id === Displays.MATCH_PREVIEW || afterMatch}
+            in={id === Displays.MATCH_PREVIEW || afterMatchBeforeScore}
             duration={0.5}
           >
             <displays.matchPreview
@@ -149,7 +151,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {layout[1] === LayoutMode.FULL && (
         <AbsolouteLocator top={0} left={0}>
           <FadeInOut
-            in={id === Displays.MATCH_START && !afterMatch}
+            in={id === Displays.MATCH_START && !afterMatchBeforeScore}
             duration={0.5}
           >
             <displays.matchPlay
@@ -164,7 +166,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {layout[1] === LayoutMode.STREAM && (
         <AbsolouteLocator bottom={0} left={0}>
           <SlideInBottom
-            in={id === Displays.MATCH_START && !afterMatch}
+            in={id === Displays.MATCH_START && !afterMatchBeforeScore}
             duration={1.25}
             inDelay={0.75}
           >
