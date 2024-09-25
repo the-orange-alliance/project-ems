@@ -23,15 +23,7 @@ export class WledController {
     public initialize(initPacket?: WledInitParameters): void {
         if (initPacket) {
             this.initPacket = initPacket;
-
-            if (this.initPacket.address === this.socket?.url) {
-                try {
-                    this.socket?.send(buildWledInitializationPacket(this.initPacket));
-                } catch (e) {
-                    logger.error(`Failed to reinitialize ${this.initPacket.address}: ${e}`);
-                }
-                return;
-            }
+            if (this.initPacket.address === this.socket?.url) return;
         }
 
         clearInterval(this.heartbeat);
