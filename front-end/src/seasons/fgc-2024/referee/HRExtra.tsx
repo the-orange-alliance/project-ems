@@ -111,11 +111,11 @@ const HeadRefereeExtra: React.FC = () => {
   };
 
   const handleFoodSecuredDecrement = () => {
-    handleMatchDetailsUpdate('foodSecured', -1);
+    handleMatchDetailsAdjustment('foodSecured', -1);
   };
 
   const handleFoodSecuredIncrement = () => {
-    handleMatchDetailsUpdate('foodSecured', 1);
+    handleMatchDetailsAdjustment('foodSecured', 1);
   };
 
   return (

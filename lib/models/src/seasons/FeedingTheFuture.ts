@@ -436,21 +436,24 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
   const [redFoodProduced, blueFoodProduced] = getFoodProducedPoints(details);
   const foodSecuredPoints = getFoodSecuredPoints(details);
   const coopertitionPoints = getCoopertitionPoints(details);
-  const redScore =
+  const redEnergyPoints = Math.round(
     (redResevoirPoints + redNexusPoints + redFoodProduced) *
-      ScoreTable.BalanceMultiplier(nBalanced) +
-    foodSecuredPoints +
-    coopertitionPoints;
-  const blueScore =
+      ScoreTable.BalanceMultiplier(nBalanced)
+  );
+  const redScore = redEnergyPoints + foodSecuredPoints + coopertitionPoints;
+  const blueEnergyPoints = Math.round(
     (blueResevoirPoints + blueNexusPoints + blueFoodProduced) *
-      ScoreTable.BalanceMultiplier(nBalanced) +
-    foodSecuredPoints +
-    coopertitionPoints;
+      ScoreTable.BalanceMultiplier(nBalanced)
+  );
+  const blueScore = blueEnergyPoints + foodSecuredPoints + coopertitionPoints;
   const redPenalty = Math.round(match.redMinPen * ScoreTable.Foul * redScore);
   const bluePenalty = Math.round(
     match.blueMinPen * ScoreTable.Foul * blueScore
   );
-  return [redScore + bluePenalty, blueScore + redPenalty];
+  return [
+    Math.round(redScore + bluePenalty),
+    Math.round(blueScore + redPenalty)
+  ];
 }
 
 export function getResevoirPoints(details: MatchDetails): [number, number] {
