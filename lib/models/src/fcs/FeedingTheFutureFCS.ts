@@ -158,7 +158,8 @@ export class PacketManager {
   private broadcastCallback: (update: FieldControlUpdatePacket) => void;
   private matchEmitter: EventEmitter;
   private actionQueue = new Map<string, Action>();
-  private matchInProgress: boolean = false;
+  private matchState: 'prestart' | 'in progress' | 'ended' | 'aborted' =
+    'prestart';
 
   private previousBalanced = true;
 
@@ -249,7 +250,7 @@ export class PacketManager {
   };
 
   public handleAbort = (): void => {
-    this.matchInProgress = false;
+    this.matchState = 'aborted';
 
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
@@ -289,7 +290,7 @@ export class PacketManager {
   };
 
   public handleMatchStart = (): void => {
-    this.matchInProgress = true;
+    this.matchState = 'in progress';
 
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
@@ -311,7 +312,7 @@ export class PacketManager {
   };
 
   public handleMatchEnd = (): void => {
-    this.matchInProgress = false;
+    this.matchState = 'ended';
 
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
@@ -349,7 +350,7 @@ export class PacketManager {
     currentDetails: FeedingTheFuture.MatchDetails,
     broadcast: (update: FieldControlUpdatePacket) => void
   ) => {
-    if (!this.matchInProgress) return;
+    if (this.matchState !== 'in progress') return;
 
     this.handleGoalStateChange(
       previousDetails.redNexusState.CW1,
@@ -631,22 +632,24 @@ export class PacketManager {
     this.actionQueue.set('ramp', {
       timestamp: Date.now() + hysteresisWindowMs,
       callback: () => {
-        if (this.matchInProgress) {
+        if (this.matchState === 'in progress') {
           this.matchEmitter.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, {
             key: 'fieldBalanced',
             value: balanced
           } satisfies ItemUpdate);
         }
 
-        const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-        applyPatternToStrips(
-          balanced
-            ? this.fieldOptions.rampBalancedColor
-            : this.fieldOptions.rampUnbalancedColor,
-          [LedStripA.RAMP],
-          result
-        );
-        this.broadcastCallback(result);
+        if (this.matchState !== 'prestart' && this.matchState !== 'aborted') {
+          const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+          applyPatternToStrips(
+            balanced
+              ? this.fieldOptions.rampBalancedColor
+              : this.fieldOptions.rampUnbalancedColor,
+            [LedStripA.RAMP],
+            result
+          );
+          this.broadcastCallback(result);
+        }
       }
     });
   };
@@ -660,7 +663,7 @@ export class PacketManager {
     const steps = 10;
 
     const recurse = (count: number) => {
-      if (!this.matchInProgress) return;
+      if (this.matchState !== 'in progress') return;
 
       // Base state. Food production is over, dispense food and update lights
       if (count === 0) {
