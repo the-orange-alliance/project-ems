@@ -11,9 +11,7 @@ export const buildWledInitializationPacket = (
     ps: 0,
     seg: packet.segments.map((segment) => ({
       start: segment.start,
-      stop: segment.stop,
-      col: [0],
-      fx: 0
+      stop: segment.stop
     }))
   };
 
