@@ -1,111 +1,141 @@
-import { WledInitParameters, WledUpdateParameters } from "@toa-lib/models";
-import logger from "../Logger.js";
-import { buildWledInitializationPacket, buildWledSetColorPacket } from "../WLEDHelper.js";
-import WebSocket from "ws";
+import { WledInitParameters, WledUpdateParameters } from '@toa-lib/models';
+import logger from '../Logger.js';
+import {
+  buildWledInitializationPacket,
+  buildWledSetColorPacket
+} from '../WLEDHelper.js';
+import WebSocket from 'ws';
 
 export class WledController {
-    private static heartbeatPeriodMs = 1000;
-    private static keepAliveTimeoutMs = 2000;
-    private static reconnectPeriodMs = 1000;
+  private static heartbeatPeriodMs = 500;
+  private static keepAlivePeriodMs = 500;
+  private static reconnectPeriodMs = 1000;
+  private static keepAliveTimeoutMs = 1000;
 
-    private socket: WebSocket | undefined;
-    private initPacket: WledInitParameters;
-    private keepAlive: NodeJS.Timeout | undefined;
-    private heartbeat: NodeJS.Timer | undefined;
-    private reinit: NodeJS.Timeout | undefined;
+  private socket: WebSocket | null;
+  private initPacket: WledInitParameters;
+  private keepAlive: NodeJS.Timer | null;
+  private heartbeat: NodeJS.Timer | null;
 
-    private latestState: WledUpdateParameters | undefined;
-    private connected = false;
+  private latestState: WledUpdateParameters | undefined;
+  private connected = false;
 
-    constructor(initPacket: WledInitParameters) {
-        this.initPacket = initPacket;
+  private lastTimestamp: number | null;
+
+  constructor(initPacket: WledInitParameters) {
+    this.initPacket = initPacket;
+    this.keepAlive = null;
+    this.heartbeat = null;
+    this.socket = null;
+    this.lastTimestamp = null;
+  }
+
+  public initialize(initPacket?: WledInitParameters): void {
+    if (initPacket) {
+      this.initPacket = initPacket;
+      if (this.initPacket.address === this.socket?.url && this.connected)
+        return;
     }
 
-    public initialize(initPacket?: WledInitParameters): void {
-        if (initPacket) {
-            this.initPacket = initPacket;
-            if (this.initPacket.address === this.socket?.url && this.connected) return;
-        }
+    if (this.initPacket.address === '') return;
 
+    try {
+      this.socket = new WebSocket(this.initPacket.address);
+    } catch (e) {
+      logger.error(`${this.getName()} failed to create websocket: ${e}`);
+      return;
+    }
+
+    this.socket.onopen = () => {
+      this.connected = true;
+      logger.info(`${this.getName()} === connected ===`);
+      try {
+        this.socket?.send(buildWledInitializationPacket(this.initPacket));
+      } catch (e) {
+        logger.error(`${this.getName()} failed to initialize: ${e}`);
+      }
+      this.startHeartbeat();
+      this.startKeepalive();
+
+      if (this.latestState) {
+        this.update(this.latestState);
+      }
+    };
+
+    this.socket.onerror = (e: WebSocket.ErrorEvent) => {
+      // Just log an error, the keepalive will handle the reconnection.
+      logger.error(`${this.getName()} failed to connect: ${e.error}`);
+    };
+
+    this.socket.onmessage = () => {
+      this.lastTimestamp = Date.now();
+    };
+  }
+
+  private startHeartbeat(): void {
+    this.heartbeat = setInterval(() => {
+      // Send dummy message that the controller will respond to
+      try {
+        this.socket?.send('{}');
+      } catch {
+        logger.warn(`${this.initPacket.address} failed to send heartbeat`);
+      }
+      if (!this.connected && this.heartbeat) {
+        logger.info(`${this.getName()} clearing heartbeat`);
         clearInterval(this.heartbeat);
-        clearTimeout(this.reinit);
-        clearTimeout(this.keepAlive);
+        this.heartbeat = null;
+      }
+    }, WledController.heartbeatPeriodMs);
+  }
 
-        if (this.initPacket.address === '') return;
+  private startKeepalive(): void {
+    this.keepAlive = setInterval(() => {
+      if (!this.lastTimestamp) return null;
+      if (
+        Date.now() - this.lastTimestamp >=
+        WledController.keepAliveTimeoutMs
+      ) {
+        logger.error(`${this.getName()} keepalive timeout`);
+        this.connected = false;
+        this.socket?.terminate();
 
-        try {
-            this.socket = new WebSocket(this.initPacket.address);
-        } catch (e) {
-            logger.error(`Failed to create websocket for ${this.initPacket.address}: ${e}`);
-            return;
+        setTimeout(() => {
+          logger.info(`${this.getName()} attempting to reinitialize`);
+          this.initialize();
+        }, WledController.reconnectPeriodMs);
+
+        if (this.keepAlive) {
+          logger.info(`${this.getName()} clearing keepalive`);
+          clearInterval(this.keepAlive);
+          this.keepAlive = null;
         }
+      }
+    }, WledController.keepAlivePeriodMs);
+  }
 
-        this.socket.onopen = () => {
-            this.connected = true;
-            logger.info(`Connected to ${this.initPacket.address}`);
-            try {
-                this.socket?.send(buildWledInitializationPacket(this.initPacket));
-            } catch (e) {
-                logger.error(`Failed to initialize ${this.initPacket.address}: ${e}`);
-            }
-            this.startHeartbeat();
-
-            if (this.latestState) {
-                this.update(this.latestState);
-            }
-        };
-
-        this.socket.onerror = (e) => {
-            logger.error(`Failed to connect to ${this.initPacket.address}: ${e}`);
-
-            // Attempt to reconnect
-            this.reinit = setTimeout(() => {
-                this.initialize();
-            }, WledController.reconnectPeriodMs);
-        };
-
-        this.socket.onmessage = () => {
-            clearTimeout(this.keepAlive);
-        };
+  public update(update: WledUpdateParameters): void {
+    try {
+      this.socket?.send(buildWledSetColorPacket(update));
+    } catch {
+      logger.error(`${this.getName()} failed to send pattern update`);
     }
 
-    private startHeartbeat(): void {
-        this.heartbeat = setInterval(() => {
-            // Send dummy message that the controller will respond to
-            try {
-                this.socket?.send('{}');
-            } catch {
-                logger.error(`Failed to send heartbeat to ${this.initPacket.address}`);
-            }
-
-            // Start keepalive
-            this.keepAlive = setTimeout(() => {
-                this.connected = false;
-                logger.info(`Disconnected from ${this.initPacket.address}`);
-
-                // If the keepalive is not cleared in time attempt to reinitialize
-                this.initialize();
-            }, WledController.keepAliveTimeoutMs);
-        }, WledController.heartbeatPeriodMs);
+    if (!this.latestState) {
+      this.latestState = update;
     }
+    for (const newPattern of update.patterns) {
+      this.latestState.patterns =
+        this.latestState.patterns.filter(
+          (oldPattern) => oldPattern.segment != newPattern.segment
+        ) ?? [];
 
-    public update(update: WledUpdateParameters): void {
-        try {
-            this.socket?.send(buildWledSetColorPacket(update));
-        } catch {
-            logger.error(`Failed to send pattern to ${this.initPacket.address}`);
-        }
-
-        if (!this.latestState) {
-            this.latestState = update;
-        }
-        for (const newPattern of update.patterns) {
-            this.latestState.patterns =
-                this.latestState.patterns.filter(
-                    (oldPattern) => oldPattern.segment != newPattern.segment
-                ) ?? [];
-
-            this.latestState.patterns!.push(newPattern);
-        }
+      this.latestState.patterns!.push(newPattern);
     }
+  }
+
+  private getName(): string {
+    const name = this.initPacket.address.replace(/(ws:\/\/)|(\/ws)/g, '');
+    const parts = name.split('-');
+    return name.substring(parts[0].length, parts.length - 1);
+  }
 }
