@@ -1,9 +1,18 @@
 import { FC } from 'react';
 import { DisplayModeProps } from 'src/apps/audience-display/displays';
 import { useRecoilValue } from 'recoil';
-import { matchOccurringAtom, matchOccurringRanksAtom } from 'src/stores/recoil';
+import {
+  matchOccurringAtom,
+  matchOccurringRanksAtom,
+  matchStateAtom
+} from 'src/stores/recoil';
 import { useEvent } from 'src/api/use-event-data';
-import { AudienceScreens, Displays, LayoutMode } from '@toa-lib/models';
+import {
+  AudienceScreens,
+  Displays,
+  LayoutMode,
+  MatchState
+} from '@toa-lib/models';
 import { getDisplays } from './displays';
 import {
   FadeInOut,
@@ -20,6 +29,7 @@ import { useTeamsForEvent } from 'src/api/use-team-data';
 export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
   const match = useRecoilValue(matchOccurringAtom);
   const ranks = useRecoilValue(matchOccurringRanksAtom);
+  const matchState = useRecoilValue(matchStateAtom);
   const [searchParams] = useSearchParams();
 
   const { data: teams } = useTeamsForEvent(match?.eventKey);
@@ -92,6 +102,12 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
         );
     }
   }
+  const afterMatchBeforeScore =
+    matchState > MatchState.MATCH_IN_PROGRESS &&
+    matchState < MatchState.RESULTS_POSTED;
+
+  const showPreviewFull =
+    layout[0] === LayoutMode.FULL || layout[1] === LayoutMode.FULL;
 
   return (
     <>
@@ -99,9 +115,12 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {id === Displays.BLANK && <></>}
 
       {/* Displays.MATCH_PREVIEW */}
-      {layout[0] === LayoutMode.FULL && (
+      {showPreviewFull && (
         <AbsolouteLocator top={0} left={0}>
-          <FadeInOut in={id === Displays.MATCH_PREVIEW} duration={0.5}>
+          <FadeInOut
+            in={id === Displays.MATCH_PREVIEW || afterMatchBeforeScore}
+            duration={0.5}
+          >
             <displays.matchPreview
               event={event}
               match={match}
@@ -131,7 +150,10 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {/* Displays.MATCH_START */}
       {layout[1] === LayoutMode.FULL && (
         <AbsolouteLocator top={0} left={0}>
-          <FadeInOut in={id === Displays.MATCH_START} duration={0.5}>
+          <FadeInOut
+            in={id === Displays.MATCH_START && !afterMatchBeforeScore}
+            duration={0.5}
+          >
             <displays.matchPlay
               event={event}
               match={match}
@@ -144,7 +166,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {layout[1] === LayoutMode.STREAM && (
         <AbsolouteLocator bottom={0} left={0}>
           <SlideInBottom
-            in={id === Displays.MATCH_START}
+            in={id === Displays.MATCH_START && !afterMatchBeforeScore}
             duration={1.25}
             inDelay={0.75}
           >
