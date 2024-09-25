@@ -109,6 +109,13 @@ export const useSocket = (): [
 
       socket.io.on('reconnect', (a) => {
         console.log(`Reconnected after ${a} attempts`);
+        idMsgRef.current = {
+          currentUrl: window.location.href,
+          fieldNumbers: fields.map((d: any) => d.field).join(','),
+          followerMode: followerModeEnabled ? 1 : 0,
+          followerApiHost: leaderApiHost,
+          audienceDisplayChroma: (chromaKey ?? '').replaceAll('"', '')
+        };
         socket?.emit('identify', idMsgRef.current);
       });
 
