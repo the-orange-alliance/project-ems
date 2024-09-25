@@ -5,7 +5,11 @@ import {
   MatchSocketEvent,
   MatchState
 } from '@toa-lib/models';
-import { matchOccurringAtom, socketConnectedAtom } from 'src/stores/recoil';
+import {
+  currentTournamentKeyAtom,
+  matchOccurringAtom,
+  socketConnectedAtom
+} from 'src/stores/recoil';
 import { patchMatch, patchMatchParticipants } from 'src/api/use-match-data';
 import { DateTime } from 'luxon';
 import { once, sendPrestart, sendUpdate } from 'src/api/use-socket';
@@ -54,6 +58,7 @@ export const usePrestartCallback = () => {
             }
           };
           set(matchOccurringAtom, currentMatch);
+          set(currentTournamentKeyAtom, currentMatch.tournamentKey);
         }
         fieldControl?.prestartField?.();
         // Once we recieve the prestart response, immediately send update to load socket with match
