@@ -686,7 +686,7 @@ export class PacketManager {
         this.broadcastCallback(result);
 
         // Stop motor after the configured duration
-        this.actionQueue.set(goal, {
+        this.actionQueue.set(goal + ':motor', {
           timestamp:
             Date.now() + this.fieldOptions.foodProductionMotorDurationMs,
           callback: () => {
@@ -735,7 +735,7 @@ export class PacketManager {
       );
       this.broadcastCallback(result);
 
-      this.actionQueue.set(goal, {
+      this.actionQueue.set(goal + ':leds', {
         timestamp:
           Date.now() +
           Math.floor(this.fieldOptions.foodProductionDelayMs / steps),
