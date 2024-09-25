@@ -8,8 +8,6 @@ import {
 } from '@toa-lib/models';
 import Room from './Room.js';
 import Match from './Match.js';
-import { defaultMatchDetails } from '@toa-lib/models/build/seasons/FeedingTheFuture.js';
-import { PacketManager } from '@toa-lib/models/build/fcs/FeedingTheFutureFCS.js';
 import { Worker } from 'worker_threads';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -27,13 +25,13 @@ export default class FCS extends Room {
   // private wledControllers: Record<string, WledController> = {};
   private wledControllers: Record<string, Worker> = {};
   private previousMatchDetails: FeedingTheFuture.MatchDetails =
-    defaultMatchDetails;
-  private packetManager: PacketManager;
+    FeedingTheFuture.defaultMatchDetails;
+  private packetManager: FeedingTheFutureFCS.PacketManager;
 
   public constructor(server: Server, matchRoom: Match) {
     super(server, 'fcs');
 
-    this.packetManager = new PacketManager(
+    this.packetManager = new FeedingTheFutureFCS.PacketManager(
       FeedingTheFutureFCS.defaultFieldOptions,
       this.broadcastFcsUpdate,
       matchRoom.localEmitter
@@ -77,7 +75,7 @@ export default class FCS extends Room {
           match.details,
           this.broadcastFcsUpdate
         );
-        this.previousMatchDetails = { ...match.details };
+        this.previousMatchDetails = JSON.parse(JSON.stringify(match.details));
       }
     );
   }
