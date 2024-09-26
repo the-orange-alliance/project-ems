@@ -13,7 +13,7 @@ export const buildWledInitializationPacket = (
       start: segment.start,
       stop: segment.stop,
       col: [0],
-      fx: 9
+      fx: 0
     }))
   };
 
