@@ -40,7 +40,9 @@ export default class FCS extends Room {
     // Connect to wled websocket servers if there are wleds
     Object.entries(this.packetManager.getInitPacket().wleds).forEach((wled) => {
       const isProd = environment.get().nodeEnv === 'production';
-      const path = isProd ? `${__dirname}/worker/index.js` : join(__dirname, "../../build/util/WLEDWorker/worker.js");
+      const path = isProd
+        ? `${__dirname}/worker/index.js`
+        : join(__dirname, '../../build/util/WLEDWorker/worker.js');
       logger.verbose(`Creating WLED worker for ${wled[0]} at ${path}`);
       this.wledControllers[wled[0]] = new Worker(path, { workerData: wled[1] });
       // this.wledControllers[wled[0]] = new WledController(wled[1]);
@@ -105,7 +107,10 @@ export default class FCS extends Room {
         Object.entries(this.packetManager.getInitPacket().wleds).forEach(
           (wled) => {
             // this.wledControllers[wled[0]].initialize(wled[1]);
-            this.wledControllers[wled[0]].postMessage({ type: "initialize", data: wled[1] });
+            this.wledControllers[wled[0]].postMessage({
+              type: 'initialize',
+              data: wled[1]
+            });
           }
         );
       }
@@ -122,7 +127,10 @@ export default class FCS extends Room {
     // Handle wleds
     Object.entries(update.wleds).forEach((wled) => {
       // this.wledControllers[wled[0]].update(wled[1]);
-      this.wledControllers[wled[0]].postMessage({ type: "update", data: wled[1] });
+      this.wledControllers[wled[0]].postMessage({
+        type: 'update',
+        data: wled[1]
+      });
     });
 
     // Update this.latestFcsStatus AFTER sending out the new update

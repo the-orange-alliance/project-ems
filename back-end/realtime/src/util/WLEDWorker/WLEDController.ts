@@ -75,7 +75,7 @@ export class WledController {
       }
       // Attempt to reconnect once the socket has closed
       setTimeout(() => this.initialize(), WledController.reconnectPeriodMs);
-    }
+    };
 
     this.socket.onerror = (e: WebSocket.ErrorEvent) => {
       logger.error(`${this.getName()} failed to connect: ${e.error}`);
@@ -106,7 +106,7 @@ export class WledController {
   private startKeepalive(): void {
     logger.info(`${this.getName()} starting keepalive`);
     this.keepAlive = setInterval(() => {
-      if (!this.connected) return
+      if (!this.connected) return;
       if (!this.lastTimestamp) return;
       if (
         Date.now() - this.lastTimestamp >=
