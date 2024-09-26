@@ -46,7 +46,9 @@ export class WledController {
       return;
     }
 
-    this.socket.onopen = () => {
+    this.socket.onopen = (e: WebSocket.Event) => {
+      if (!this.socket) return;
+      if (this.socket.readyState === 0) return;
       this.connected = true;
       logger.info(`${this.getName()} === connected ===`);
       try {
@@ -85,6 +87,7 @@ export class WledController {
   }
 
   private startHeartbeat(): void {
+    logger.info(`${this.getName()} starting heartbeat`);
     this.heartbeat = setInterval(() => {
       // Send dummy message that the controller will respond to
       try {
@@ -101,8 +104,10 @@ export class WledController {
   }
 
   private startKeepalive(): void {
+    logger.info(`${this.getName()} starting keepalive`);
     this.keepAlive = setInterval(() => {
-      if (!this.lastTimestamp) return null;
+      if (!this.connected) return
+      if (!this.lastTimestamp) return;
       if (
         Date.now() - this.lastTimestamp >=
         WledController.keepAliveTimeoutMs
@@ -111,16 +116,16 @@ export class WledController {
         this.connected = false;
         this.socket?.terminate();
 
-        setTimeout(() => {
-          logger.info(`${this.getName()} attempting to reinitialize`);
-          this.initialize();
-        }, WledController.reconnectPeriodMs);
-
         if (this.keepAlive) {
           logger.info(`${this.getName()} clearing keepalive`);
           clearInterval(this.keepAlive);
           this.keepAlive = null;
         }
+
+        setTimeout(() => {
+          logger.info(`${this.getName()} attempting to reinitialize`);
+          this.initialize();
+        }, WledController.reconnectPeriodMs);
       }
     }, WledController.keepAlivePeriodMs);
   }
