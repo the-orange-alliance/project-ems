@@ -74,7 +74,7 @@ export const MatchDetailInfo: FC<
         <Grid item xs={12} sm={6} md={4}>
           <StateToggle
             title={<span>{identifiers[redAlliance[0].teamKey]} Balanced</span>}
-            states={['N', 'Y']}
+            states={['Flr', 'Rmp', 'Pltfm']}
             value={match.details.redRobotOneParked}
             onChange={(v) =>
               handleUpdates({
@@ -87,7 +87,7 @@ export const MatchDetailInfo: FC<
         <Grid item xs={12} sm={6} md={4}>
           <StateToggle
             title={<span>{identifiers[redAlliance[1].teamKey]} Balanced</span>}
-            states={['N', 'Y']}
+            states={['Flr', 'Rmp', 'Pltfm']}
             value={match.details.redRobotTwoParked}
             onChange={(v) =>
               handleUpdates({
@@ -100,7 +100,7 @@ export const MatchDetailInfo: FC<
         <Grid item xs={12} sm={6} md={4}>
           <StateToggle
             title={<span>{identifiers[redAlliance[2].teamKey]} Balanced</span>}
-            states={['N', 'Y']}
+            states={['Flr', 'Rmp', 'Pltfm']}
             value={match.details.redRobotThreeParked}
             onChange={(v) =>
               handleUpdates({
@@ -152,7 +152,7 @@ export const MatchDetailInfo: FC<
         <Grid item xs={12} sm={6} md={4}>
           <StateToggle
             title={<span>{identifiers[blueAlliance[0].teamKey]} Balanced</span>}
-            states={['N', 'Y']}
+            states={['Flr', 'Rmp', 'Pltfm']}
             value={match.details.blueRobotOneParked}
             onChange={(v) =>
               handleUpdates({
@@ -165,7 +165,7 @@ export const MatchDetailInfo: FC<
         <Grid item xs={12} sm={6} md={4}>
           <StateToggle
             title={<span>{identifiers[blueAlliance[1].teamKey]} Balanced</span>}
-            states={['N', 'Y']}
+            states={['Flr', 'Rmp', 'Pltfm']}
             value={match.details.blueRobotTwoParked}
             onChange={(v) =>
               handleUpdates({
@@ -178,7 +178,7 @@ export const MatchDetailInfo: FC<
         <Grid item xs={12} sm={6} md={4}>
           <StateToggle
             title={<span>{identifiers[blueAlliance[2].teamKey]} Balanced</span>}
-            states={['N', 'Y']}
+            states={['Flr', 'Rmp', 'Pltfm']}
             value={match.details.blueRobotThreeParked}
             onChange={(v) =>
               handleUpdates({
@@ -200,7 +200,7 @@ export const MatchDetailInfo: FC<
         <Grid item xs={6}>
           <StateToggle
             title={<span>Field Balanced</span>}
-            states={['N', 'Y']}
+            states={['Flr', 'Rmp', 'Pltfm']}
             value={match.details.fieldBalanced ? 1 : 0}
             onChange={(v) =>
               handleUpdates({
