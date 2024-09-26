@@ -66,6 +66,7 @@ export const MatchDetailInfo: FC<
             state={match.details.redNexusState}
             opposingState={match.details.blueNexusState}
             alliance='red'
+            editMode
             onChange={(goal, state) => updateNexus('red', goal, state)}
             onOpposingChange={(goal, state) => updateNexus('blue', goal, state)}
           />
@@ -144,6 +145,7 @@ export const MatchDetailInfo: FC<
             state={match.details.blueNexusState}
             opposingState={match.details.redNexusState}
             alliance='blue'
+            editMode
             onChange={(goal, state) => updateNexus('blue', goal, state)}
             onOpposingChange={(goal, state) => updateNexus('red', goal, state)}
           />
