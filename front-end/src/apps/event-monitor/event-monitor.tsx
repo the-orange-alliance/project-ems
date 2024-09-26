@@ -1,8 +1,12 @@
 import {
+  Box,
   Card,
   CardActions,
   CardContent,
   CardHeader,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Grid,
   IconButton,
   Link,
@@ -15,7 +19,7 @@ import { useTeamIdentifiersForEventKey } from 'src/hooks/use-team-identifier';
 import { DateTime } from 'luxon';
 import { FC, useEffect, useState } from 'react';
 import { DefaultLayout } from 'src/layouts/default-layout';
-import { MatchSocketEvent, MatchKey } from '@toa-lib/models';
+import { MatchSocketEvent, MatchKey, Match } from '@toa-lib/models';
 import { io } from 'socket.io-client';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
@@ -87,6 +91,8 @@ const MonitorCard: FC<MonitorCardProps> = ({
     setStatus('COMMITTED');
   };
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   const createSocket = (autoConnect: boolean = false, token: string = '') => {
     return io(`ws://${address}:${realtimePort}`, {
       rejectUnauthorized: false,
@@ -96,171 +102,202 @@ const MonitorCard: FC<MonitorCardProps> = ({
     });
   };
   return (
-    <Card>
-      <Menu
-        id={`field-${field}-menu`}
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        MenuListProps={{
-          'aria-labelledby': `field-${field}-menu`
+    <>
+      <Card
+        onClick={() => {
+          setDialogOpen(true);
         }}
+        style={{ cursor: 'pointer' }}
       >
-        <MenuItem>
-          <Link href={`http://${address}`}>Open</Link>
-        </MenuItem>
-        <MenuItem onClick={handleClose}>Refresh</MenuItem>
-      </Menu>
-      <CardHeader
-        title={`Field ${field}`}
-        subheader={
-          connected
-            ? match
-              ? `${match?.name} - ${status}`
-              : status
-            : 'OFFLINE'
-        }
-        avatar={
-          connected ? (
-            <CheckCircleIcon color='success' />
+        <Menu
+          id={`field-${field}-menu`}
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          MenuListProps={{
+            'aria-labelledby': `field-${field}-menu`
+          }}
+        >
+          <MenuItem>
+            <Link href={`http://${address}`}>Open</Link>
+          </MenuItem>
+          <MenuItem onClick={handleClose}>Refresh</MenuItem>
+        </Menu>
+        <CardHeader
+          title={`Field ${field}`}
+          subheader={
+            connected
+              ? match
+                ? `${match?.name} - ${status}`
+                : status
+              : 'OFFLINE'
+          }
+          avatar={
+            connected ? (
+              <CheckCircleIcon color='success' />
+            ) : (
+              <ErrorIcon color='error' />
+            )
+          }
+          action={
+            <IconButton
+              aria-controls={open ? `field-${field}-menu` : undefined}
+              aria-haspopup='true'
+              aria-expanded={open ? 'true' : undefined}
+              onClick={handleClick}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          }
+        />
+        <CardContent>
+          <MatchDetails key={field} match={match} identifiers={identifiers} />
+        </CardContent>
+        <CardActions>
+          <Typography variant='body2' sx={{ marginLeft: 'auto' }}>
+            {match
+              ? DateTime.now() <= DateTime.fromISO(match.startTime)
+                ? DateTime.now()
+                    .diff(DateTime.fromISO(match.scheduledTime))
+                    .shiftTo('hours', 'minutes')
+                    .toFormat(`h'h' m'm' 'behind'`)
+                : DateTime.fromISO(match.scheduledTime)
+                    .diff(DateTime.now())
+                    .shiftTo('hours', 'minutes')
+                    .toFormat(`h'h' m'm' 'ahead'`)
+              : ''}
+          </Typography>
+        </CardActions>
+      </Card>
+      <Dialog
+        open={dialogOpen}
+        onClose={() => {
+          setDialogOpen(false);
+        }}
+        fullWidth={true}
+        maxWidth={'lg'}
+      >
+        <DialogTitle>{`Field ${field}`}</DialogTitle>
+        <DialogContent>
+          <MatchDetails key={field} match={match} identifiers={identifiers} />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+interface MatchDetailsProps {
+  match: Match<any> | undefined;
+  identifiers: Record<number, string>;
+}
+
+const MatchDetails: FC<MatchDetailsProps> = ({ match, identifiers }) => {
+  return (
+    <Grid container>
+      <Grid item xs={4}>
+        <Typography align='left' className='red'>
+          {match && match.participants ? (
+            <>
+              <span
+                className={`flag-icon flag-icon-${match.participants[0].team?.countryCode}`}
+              />{' '}
+              {identifiers[match?.participants?.[0].teamKey]}
+            </>
           ) : (
-            <ErrorIcon color='error' />
-          )
-        }
-        action={
-          <IconButton
-            aria-controls={open ? `field-${field}-menu` : undefined}
-            aria-haspopup='true'
-            aria-expanded={open ? 'true' : undefined}
-            onClick={handleClick}
-          >
-            <MoreVertIcon />
-          </IconButton>
-        }
-      />
-      <CardContent>
-        <Grid container>
-          <Grid item xs={4}>
-            <Typography align='left' className='red'>
-              {match && match.participants ? (
-                <>
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[0].team?.countryCode}`}
-                  />{' '}
-                  {identifiers[match?.participants?.[0].teamKey]}
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-          <Grid item xs={4} />
-          <Grid item xs={4}>
-            <Typography align='right' className='blue'>
-              {match && match.participants ? (
-                <>
-                  {identifiers[match?.participants?.[3].teamKey]}{' '}
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[3].team?.countryCode}`}
-                  />
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={4}>
-            <Typography align='left' className='red'>
-              {match && match.participants ? (
-                <>
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[1].team?.countryCode}`}
-                  />{' '}
-                  {identifiers[match?.participants?.[1].teamKey]}
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-          <Grid item xs={4}>
-            <Typography align='center'>vs.</Typography>
-          </Grid>
-          <Grid item xs={4}>
-            <Typography align='right' className='blue'>
-              {match && match.participants ? (
-                <>
-                  {identifiers[match?.participants?.[4].teamKey]}{' '}
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[4].team?.countryCode}`}
-                  />
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={4}>
-            <Typography align='left' className='red'>
-              {match && match.participants ? (
-                <>
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[2].team?.countryCode}`}
-                  />{' '}
-                  {identifiers[match?.participants?.[2].teamKey]}
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-          <Grid item xs={4} />
-          <Grid item xs={4}>
-            <Typography align='right' className='blue'>
-              {match && match.participants ? (
-                <>
-                  {identifiers[match?.participants?.[5].teamKey]}{' '}
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[5].team?.countryCode}`}
-                  />
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={4}>
-            <Typography align='center' className='red'>
-              {match ? match.redScore : '--'}
-            </Typography>
-          </Grid>
-          <Grid item xs={4} />
-          <Grid item xs={4}>
-            <Typography align='center' className='blue'>
-              {match ? match.blueScore : '--'}
-            </Typography>
-          </Grid>
-        </Grid>
-      </CardContent>
-      <CardActions>
-        <Typography variant='body2' sx={{ marginLeft: 'auto' }}>
-          {match
-            ? DateTime.now() <= DateTime.fromISO(match.startTime)
-              ? DateTime.now()
-                  .diff(DateTime.fromISO(match.scheduledTime))
-                  .shiftTo('hours', 'minutes')
-                  .toFormat(`h'h' m'm' 'behind'`)
-              : DateTime.fromISO(match.scheduledTime)
-                  .diff(DateTime.now())
-                  .shiftTo('hours', 'minutes')
-                  .toFormat(`h'h' m'm' 'ahead'`)
-            : ''}
+            '---'
+          )}
         </Typography>
-      </CardActions>
-    </Card>
+      </Grid>
+      <Grid item xs={4} />
+      <Grid item xs={4}>
+        <Typography align='right' className='blue'>
+          {match && match.participants ? (
+            <>
+              {identifiers[match?.participants?.[3].teamKey]}{' '}
+              <span
+                className={`flag-icon flag-icon-${match.participants[3].team?.countryCode}`}
+              />
+            </>
+          ) : (
+            '---'
+          )}
+        </Typography>
+      </Grid>
+
+      <Grid item xs={4}>
+        <Typography align='left' className='red'>
+          {match && match.participants ? (
+            <>
+              <span
+                className={`flag-icon flag-icon-${match.participants[1].team?.countryCode}`}
+              />{' '}
+              {identifiers[match?.participants?.[1].teamKey]}
+            </>
+          ) : (
+            '---'
+          )}
+        </Typography>
+      </Grid>
+      <Grid item xs={4}>
+        <Typography align='center'>vs.</Typography>
+      </Grid>
+      <Grid item xs={4}>
+        <Typography align='right' className='blue'>
+          {match && match.participants ? (
+            <>
+              {identifiers[match?.participants?.[4].teamKey]}{' '}
+              <span
+                className={`flag-icon flag-icon-${match.participants[4].team?.countryCode}`}
+              />
+            </>
+          ) : (
+            '---'
+          )}
+        </Typography>
+      </Grid>
+
+      <Grid item xs={4}>
+        <Typography align='left' className='red'>
+          {match && match.participants ? (
+            <>
+              <span
+                className={`flag-icon flag-icon-${match.participants[2].team?.countryCode}`}
+              />{' '}
+              {identifiers[match?.participants?.[2].teamKey]}
+            </>
+          ) : (
+            '---'
+          )}
+        </Typography>
+      </Grid>
+      <Grid item xs={4} />
+      <Grid item xs={4}>
+        <Typography align='right' className='blue'>
+          {match && match.participants ? (
+            <>
+              {identifiers[match?.participants?.[5].teamKey]}{' '}
+              <span
+                className={`flag-icon flag-icon-${match.participants[5].team?.countryCode}`}
+              />
+            </>
+          ) : (
+            '---'
+          )}
+        </Typography>
+      </Grid>
+
+      <Grid item xs={4}>
+        <Typography align='center' className='red'>
+          {match ? match.redScore : '--'}
+        </Typography>
+      </Grid>
+      <Grid item xs={4} />
+      <Grid item xs={4}>
+        <Typography align='center' className='blue'>
+          {match ? match.blueScore : '--'}
+        </Typography>
+      </Grid>
+    </Grid>
   );
 };
 
