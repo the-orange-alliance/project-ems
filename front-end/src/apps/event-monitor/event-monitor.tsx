@@ -163,19 +163,31 @@ const MonitorCard: FC<MonitorCardProps> = ({
           <MatchDetails key={field} match={match} identifiers={identifiers} />
         </CardContent>
         <CardActions>
-          <Typography variant='body2' sx={{ marginLeft: 'auto' }}>
-            {match
-              ? DateTime.now() <= DateTime.fromISO(match.startTime)
-                ? DateTime.now()
-                    .diff(DateTime.fromISO(match.scheduledTime))
-                    .shiftTo('hours', 'minutes')
-                    .toFormat(`h'h' m'm' 'behind'`)
-                : DateTime.fromISO(match.scheduledTime)
-                    .diff(DateTime.now())
-                    .shiftTo('hours', 'minutes')
-                    .toFormat(`h'h' m'm' 'ahead'`)
-              : ''}
-          </Typography>
+          {match ? (
+            DateTime.now() >= DateTime.fromISO(match.scheduledTime) ? (
+              <Typography
+                variant='body2'
+                sx={{ marginLeft: 'auto' }}
+                color={'red'}
+              >
+                {DateTime.now()
+                  .diff(DateTime.fromISO(match.scheduledTime))
+                  .shiftTo('hours', 'minutes')
+                  .toFormat(`h'h' m'm' 'behind'`)}
+              </Typography>
+            ) : (
+              <Typography
+                variant='body2'
+                sx={{ marginLeft: 'auto' }}
+                color='green'
+              >
+                {DateTime.fromISO(match.scheduledTime)
+                  .diff(DateTime.now())
+                  .shiftTo('hours', 'minutes')
+                  .toFormat(`h'h' m'm' 'ahead'`)}
+              </Typography>
+            )
+          ) : null}
         </CardActions>
       </Card>
       <Dialog
