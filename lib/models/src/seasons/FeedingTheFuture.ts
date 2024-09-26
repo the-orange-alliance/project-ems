@@ -487,6 +487,7 @@ export function getNexusPoints(details: MatchDetails): [number, number] {
         red += 1;
         break;
       case NexusGoalState.Full:
+      case NexusGoalState.Produced:
         red += 2;
         break;
     }
@@ -497,6 +498,7 @@ export function getNexusPoints(details: MatchDetails): [number, number] {
         blue += 1;
         break;
       case NexusGoalState.Full:
+      case NexusGoalState.Produced:
         blue += 2;
         break;
     }
