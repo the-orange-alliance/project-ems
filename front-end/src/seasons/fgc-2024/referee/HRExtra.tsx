@@ -172,6 +172,7 @@ const HeadRefereeExtra: React.FC = () => {
             }
             scorekeeperView
             side='near'
+            allowForceRelease
           />
         </Grid>
         <Grid item xs={6}>
@@ -183,6 +184,7 @@ const HeadRefereeExtra: React.FC = () => {
             }
             scorekeeperView
             side='near'
+            allowForceRelease
           />
         </Grid>
       </Grid>

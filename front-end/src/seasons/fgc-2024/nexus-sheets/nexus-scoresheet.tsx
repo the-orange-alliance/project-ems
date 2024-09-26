@@ -34,7 +34,7 @@ interface NexusScoresheetProps {
   ) => void;
   side: 'near' | 'far' | 'both';
   scorekeeperView?: boolean;
-  allowForcePush?: boolean;
+  allowForceRelease?: boolean;
 }
 
 const StairGoal = styled(Box)((props: { alliance: Alliance }) => ({
@@ -62,7 +62,7 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
   onOpposingChange,
   side,
   scorekeeperView,
-  allowForcePush
+  allowForceRelease
 }) => {
   const cancelQueue = useRef<any[]>([]);
 
@@ -113,7 +113,8 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
     alliance: Alliance,
     goal: keyof AllianceNexusGoalState
   ) => {
-    if (!allowForcePush) return;
+    console.log(allowForceRelease);
+    if (!allowForceRelease) return;
     // create packet to send to FCS
     const packetOn: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     const packetOff: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
@@ -163,9 +164,8 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
               state={opposingState}
               onGoalChange={onGoalChange}
               alliance={alliance === 'red' ? 'blue' : 'red'} // intentionally inverted
-              onForceRelease={(g) =>
-                onForceRelease(alliance ? 'blue' : 'red', g)
-              }
+              onForceRelease={(g) => onForceRelease(alliance, g)}
+              allowForceRelease={!!allowForceRelease}
             />
             <Typography
               variant='h6'
@@ -205,6 +205,7 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
           side={side}
           fullWidth={scorekeeperView}
           onForceRelease={(g) => onForceRelease(alliance, g)}
+          allowForceRelease={!!allowForceRelease}
         />
         {/* Placeholder for better alignment */}
         <SideText variant='h6'>&nbsp;</SideText>
@@ -222,6 +223,7 @@ interface GoalGridProps {
   ) => void;
   alliance: Alliance;
   onForceRelease?: (goal: keyof AllianceNexusGoalState) => void;
+  allowForceRelease: boolean;
 }
 
 interface CenterGoalGridProps extends GoalGridProps {
@@ -234,7 +236,8 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
   state,
   onGoalChange,
   alliance,
-  onForceRelease
+  onForceRelease,
+  allowForceRelease
 }) => {
   const onForceReleaseLocal = (goal: keyof AllianceNexusGoalState) => {
     if (!onForceRelease) return;
@@ -257,6 +260,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           state={state.CW1}
           onChange={(s) => onGoalChange('CW1', s)}
           onForceRelease={() => onForceReleaseLocal('CW1')}
+          allowForceRelease={allowForceRelease}
         />
       </StairGoal>
       <StairGoal alliance={alliance} sx={{ height: '100%' }}>
@@ -265,6 +269,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           state={state.CW2}
           onChange={(s) => onGoalChange('CW2', s)}
           onForceRelease={() => onForceReleaseLocal('CW2')}
+          allowForceRelease={allowForceRelease}
         />
       </StairGoal>
 
@@ -275,6 +280,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           state={state.CW3}
           onChange={(s) => onGoalChange('CW3', s)}
           onForceRelease={() => onForceReleaseLocal('CW3')}
+          allowForceRelease={allowForceRelease}
         />
       </StairGoal>
       <StairGoal alliance={alliance} sx={{ height: '80%' }}>
@@ -283,6 +289,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           state={state.CW4}
           onChange={(s) => onGoalChange('CW4', s)}
           onForceRelease={() => onForceReleaseLocal('CW4')}
+          allowForceRelease={allowForceRelease}
         />
       </StairGoal>
 
@@ -293,6 +300,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           state={state.CW5}
           onChange={(s) => onGoalChange('CW5', s)}
           onForceRelease={() => onForceReleaseLocal('CW5')}
+          allowForceRelease={allowForceRelease}
         />
       </StairGoal>
       <StairGoal alliance={alliance} sx={{ height: '60%' }}>
@@ -301,6 +309,7 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
           state={state.CW6}
           onChange={(s) => onGoalChange('CW6', s)}
           onForceRelease={() => onForceReleaseLocal('CW6')}
+          allowForceRelease={allowForceRelease}
         />
       </StairGoal>
     </Stack>
@@ -314,7 +323,8 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
   alliance,
   side,
   fullWidth,
-  onForceRelease
+  onForceRelease,
+  allowForceRelease
 }) => {
   /*
    * Center-field 3x2 goal.
@@ -345,6 +355,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               state={state.EC1}
               onChange={(s) => onGoalChange('EC1', s)}
               onForceRelease={() => onForceReleaseLocal('EC1')}
+              allowForceRelease={allowForceRelease}
             />
           </CenterGoal>
           <CenterGoal item xs={fullWidth ? 4 : 2} alliance={alliance}>
@@ -353,6 +364,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               state={state.EC2}
               onChange={(s) => onGoalChange('EC2', s)}
               onForceRelease={() => onForceReleaseLocal('EC2')}
+              allowForceRelease={allowForceRelease}
             />
           </CenterGoal>
           <CenterGoal item xs={fullWidth ? 4 : 2} alliance={alliance}>
@@ -361,6 +373,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               state={state.EC3}
               onChange={(s) => onGoalChange('EC3', s)}
               onForceRelease={() => onForceReleaseLocal('EC3')}
+              allowForceRelease={allowForceRelease}
             />
           </CenterGoal>
         </>
@@ -374,6 +387,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               state={state.EC6}
               onChange={(s) => onGoalChange('EC6', s)}
               onForceRelease={() => onForceReleaseLocal('EC6')}
+              allowForceRelease={allowForceRelease}
             />
           </CenterGoal>
           <CenterGoal item xs={2} alliance={alliance}>
@@ -382,6 +396,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               state={state.EC5}
               onChange={(s) => onGoalChange('EC5', s)}
               onForceRelease={() => onForceReleaseLocal('EC5')}
+              allowForceRelease={allowForceRelease}
             />
           </CenterGoal>
           <CenterGoal item xs={2} alliance={alliance}>
@@ -390,6 +405,7 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
               state={state.EC4}
               onChange={(s) => onGoalChange('EC4', s)}
               onForceRelease={() => onForceReleaseLocal('EC4')}
+              allowForceRelease={allowForceRelease}
             />
           </CenterGoal>
         </>
@@ -404,6 +420,7 @@ interface GoalToggleProps {
   onChange?: (goal: NexusGoalState) => void;
   single?: boolean;
   onForceRelease?: () => void;
+  allowForceRelease: boolean;
 }
 
 const BallCheckbox = styled(Checkbox)(
@@ -429,7 +446,8 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
   state,
   onChange,
   single,
-  onForceRelease
+  onForceRelease,
+  allowForceRelease
 }) => {
   const matchState = useRecoilValue(matchStateAtom);
 
@@ -485,21 +503,24 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
 
   return (
     <>
-      {NexusGoalState.Produced === state && (
-        <Box sx={{ position: 'relative', top: '45%', height: 0, px: 1 }}>
-          <Button
-            variant='contained'
-            fullWidth
-            sx={{
-              backgroundColor: 'orange',
-              ':hover': { backgroundColor: 'darkred' }
-            }}
-            onClick={onForceReleaseLocal}
-          >
-            Force Release
-          </Button>
-        </Box>
-      )}
+      {NexusGoalState.Produced === state &&
+        allowForceRelease &&
+        matchState < MatchState.MATCH_COMPLETE && (
+          <Box sx={{ position: 'relative', top: '45%', height: 0, px: 1 }}>
+            <Button
+              variant='contained'
+              fullWidth
+              sx={{
+                backgroundColor: 'orange',
+                ':hover': { backgroundColor: 'darkred' },
+                zIndex: 40
+              }}
+              onClick={onForceReleaseLocal}
+            >
+              Force Release
+            </Button>
+          </Box>
+        )}
       <Stack
         sx={{
           height: '100%',
