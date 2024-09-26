@@ -106,6 +106,8 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
     matchState > MatchState.MATCH_IN_PROGRESS &&
     matchState < MatchState.RESULTS_POSTED;
 
+  const showRanks = matchState < MatchState.MATCH_IN_PROGRESS;
+
   const showPreviewFull =
     layout[0] === LayoutMode.FULL || layout[1] === LayoutMode.FULL;
 
@@ -124,7 +126,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
             <displays.matchPreview
               event={event}
               match={match}
-              ranks={ranks}
+              ranks={showRanks ? ranks : []}
               teams={teams}
             />
           </FadeInOut>
