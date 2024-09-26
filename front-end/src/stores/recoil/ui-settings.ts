@@ -49,7 +49,11 @@ export const scorekeeperAudioEnabledAtom = atom<boolean>({
   default: false,
   effects: [localStorageEffect('syncApiKey')]
 });
-
+export const monitorAddressesAtom = atom<string[]>({
+  key: 'ui.monitorAddressesAtom',
+  default: [],
+  effects: [localStorageEffect('monitorAddresses')]
+});
 /**
  * @section UI STATE
  * Recoil state management for global UI interactions

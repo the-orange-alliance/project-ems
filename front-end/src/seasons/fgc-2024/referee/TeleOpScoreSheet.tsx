@@ -51,7 +51,8 @@ const TeleScoreSheet: FC<Props> = ({
     // and decrements don't get lost
     if (manuallyTyped) {
       onMatchDetailsUpdate(
-        alliance === 'red' ? 'redResevoirConserved' : 'blueResevoirConserved',
+        // purposely reversed
+        alliance === 'blue' ? 'redResevoirConserved' : 'blueResevoirConserved',
         newValue
       );
     }
@@ -59,40 +60,16 @@ const TeleScoreSheet: FC<Props> = ({
 
   const handleResevoirDecrement = () => {
     onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redResevoirConserved' : 'blueResevoirConserved',
+      // intentionally reversed
+      alliance === 'blue' ? 'redResevoirConserved' : 'blueResevoirConserved',
       -1
     );
   };
 
   const handleResevoirIncrement = () => {
     onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redResevoirConserved' : 'blueResevoirConserved',
-      1
-    );
-  };
-
-  const handleFoodSecuredChange = (
-    newValue: number,
-    manuallyTyped: boolean
-  ) => {
-    if (manuallyTyped) {
-      onMatchDetailsUpdate(
-        alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
-        newValue
-      );
-    }
-  };
-
-  const handleFoodSecuredDecrement = () => {
-    onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
-      -1
-    );
-  };
-
-  const handleFoodSecuredIncrement = () => {
-    onMatchDetailsAdjustment(
-      alliance === 'red' ? 'redFoodSecured' : 'blueFoodSecured',
+      // intentionally reversed
+      alliance === 'blue' ? 'redResevoirConserved' : 'blueResevoirConserved',
       1
     );
   };
@@ -173,34 +150,14 @@ const TeleScoreSheet: FC<Props> = ({
         </Typography>
         <NumberInput
           value={
-            alliance === 'red'
-              ? match.details.redResevoirConserved
-              : match.details.blueResevoirConserved
+            alliance === 'red' // purposfully reserved
+              ? match.details.blueResevoirConserved
+              : match.details.redResevoirConserved
           }
           textFieldDisabled
           onChange={handleResevoirChange}
           onIncrement={handleResevoirIncrement}
           onDecrement={handleResevoirDecrement}
-        />
-      </Grid>
-      <Grid item xs={12} md={6} lg={6}>
-        <Typography
-          variant='h6'
-          textAlign='center'
-          sx={{ textTransform: 'capitalize' }}
-        >
-          {alliance} Food Secured
-        </Typography>
-        <NumberInput
-          value={
-            alliance === 'red'
-              ? match.details.redFoodSecured
-              : match.details.blueFoodSecured
-          }
-          textFieldDisabled
-          onChange={handleFoodSecuredChange}
-          onIncrement={handleFoodSecuredIncrement}
-          onDecrement={handleFoodSecuredDecrement}
         />
       </Grid>
       <Grid item xs={12}>

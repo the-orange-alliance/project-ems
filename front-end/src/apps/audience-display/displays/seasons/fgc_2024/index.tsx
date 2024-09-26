@@ -93,7 +93,7 @@ export const Breakdown: ResultsBreakdown<MatchDetails>[] = [
       // This may be slightly off due to rounding errors? please no one complain...
       // ideally, we should calc this in the backend and pass it up.  OR.... we omit the "(+n)" part of the score display
       // TODO: revisit?
-      const totalAdded = totalPoints * mult - totalPoints;
+      const totalAdded = Math.round(totalPoints * mult) - totalPoints;
 
       return `x${mult} (+${totalAdded})`;
     }
@@ -102,12 +102,9 @@ export const Breakdown: ResultsBreakdown<MatchDetails>[] = [
     icon: <Lock fontSize='inherit' />,
     title: 'Food Secured Points',
     color: '#000000',
-    resultCalc: (match, alliance) => {
+    resultCalc: (match) => {
       if (!match.details) return '0';
-      const [redFoodSecured, blueFoodSecured] = getFoodSecuredPoints(
-        match.details
-      );
-      const pts = alliance === 'red' ? redFoodSecured : blueFoodSecured;
+      const pts = getFoodSecuredPoints(match.details);
       return pts > 0 ? `+${pts}` : `${pts}`;
     }
   },

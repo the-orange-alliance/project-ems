@@ -158,7 +158,14 @@ export class PacketManager {
   private broadcastCallback: (update: FieldControlUpdatePacket) => void;
   private matchEmitter: EventEmitter;
   private actionQueue = new Map<string, Action>();
-  private matchInProgress: boolean = false;
+  private matchState:
+    | 'prestart'
+    | 'in progress'
+    | 'ended'
+    | 'aborted'
+    | 'all clear' = 'prestart';
+
+  private previousBalanced = true;
 
   public constructor(
     fieldOptions: FieldOptions,
@@ -247,7 +254,7 @@ export class PacketManager {
   };
 
   public handleAbort = (): void => {
-    this.matchInProgress = false;
+    this.matchState = 'aborted';
 
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
@@ -255,6 +262,7 @@ export class PacketManager {
       LedStripA.ALL_STRIPS,
       result
     );
+    applySetpointToMotors(0, MotorA.ALL_GOALS, result);
 
     this.broadcastCallback(result);
   };
@@ -286,7 +294,7 @@ export class PacketManager {
   };
 
   public handleMatchStart = (): void => {
-    this.matchInProgress = true;
+    this.matchState = 'in progress';
 
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
@@ -308,7 +316,7 @@ export class PacketManager {
   };
 
   public handleMatchEnd = (): void => {
-    this.matchInProgress = false;
+    this.matchState = 'ended';
 
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
@@ -321,17 +329,17 @@ export class PacketManager {
       LedStripA.ALL_RED_GOALS,
       result
     );
-    applyPatternToStrips(
-      this.fieldOptions.matchEndRampColor,
-      [LedStripA.RAMP],
-      result
-    );
+
+    // Don't apply pattern to ramp. Keep current state and allow future updates
+    // directly from digital input
+
     applySetpointToMotors(0, MotorA.ALL_GOALS, result);
 
     this.broadcastCallback(result);
   };
 
   public handleAllClear = (): void => {
+    this.matchState = 'all clear';
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
       this.fieldOptions.allClearColor,
@@ -347,7 +355,7 @@ export class PacketManager {
     currentDetails: FeedingTheFuture.MatchDetails,
     broadcast: (update: FieldControlUpdatePacket) => void
   ) => {
-    if (!this.matchInProgress) return;
+    if (this.matchState !== 'in progress') return;
 
     this.handleGoalStateChange(
       previousDetails.redNexusState.CW1,
@@ -566,12 +574,6 @@ export class PacketManager {
       'blue',
       broadcast
     );
-
-    this.handleRampStateChange(
-      previousDetails.fieldBalanced,
-      currentDetails.fieldBalanced,
-      broadcast
-    );
   };
 
   private handleGoalStateChange = (
@@ -613,53 +615,50 @@ export class PacketManager {
       currentState !== NexusGoalState.Full &&
       previousState === NexusGoalState.Full
     ) {
-      // // Cancel timer if there is one
-      // clearTimeout(this.timers.get(goal));
-      this.actionQueue.delete(goal);
+      // Cancel timer if there is one
+      this.actionQueue.delete(goal + ':leds');
     }
 
     // Broadcast update
     broadcast(result);
   };
 
-  private handleRampStateChange = (
-    previousBalanced: number,
-    currentBalanced: number,
-    broadcast: (update: FieldControlUpdatePacket) => void
-  ) => {
-    if (currentBalanced === previousBalanced) return;
+  public handleDigitalInputs = (packet: DigitalInputsResult) => {
+    const balanced = (packet.hubs[RevHub.CENTER_CONTROL_HUB] & 0x1) !== 1;
 
-    // clearTimeout(this.timers.get('ramp'));
+    if (balanced === this.previousBalanced) return;
+
     this.actionQueue.delete('ramp');
 
-    const hysteresisWindowMs = currentBalanced
+    const hysteresisWindowMs = balanced
       ? this.fieldOptions.rampBalancedHysteresisWindowMs
       : this.fieldOptions.rampUnbalancedHysteresisWindowMs;
 
     this.actionQueue.set('ramp', {
       timestamp: Date.now() + hysteresisWindowMs,
       callback: () => {
-        const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
-        applyPatternToStrips(
-          currentBalanced
-            ? this.fieldOptions.rampBalancedColor
-            : this.fieldOptions.rampUnbalancedColor,
-          [LedStripA.RAMP],
-          result
-        );
-        broadcast(result);
+        if (this.matchState === 'in progress') {
+          this.matchEmitter.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, {
+            key: 'fieldBalanced',
+            value: balanced
+          } satisfies ItemUpdate);
+        }
+
+        if (this.matchState === 'in progress' || this.matchState === 'ended') {
+          const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+          applyPatternToStrips(
+            balanced
+              ? this.fieldOptions.rampBalancedColor
+              : this.fieldOptions.rampUnbalancedColor,
+            [LedStripA.RAMP],
+            result
+          );
+          this.broadcastCallback(result);
+        }
       }
     });
-  };
 
-  public handleDigitalInputs = (packet: DigitalInputsResult) => {
-    if (!this.matchInProgress) return;
-
-    const balanced = (packet.hubs[RevHub.CENTER_CONTROL_HUB] & 0x1) !== 1;
-    this.matchEmitter.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, {
-      key: 'fieldBalanced',
-      value: balanced
-    } satisfies ItemUpdate);
+    this.previousBalanced = balanced;
   };
 
   runFoodProductionSequence = (
@@ -671,7 +670,7 @@ export class PacketManager {
     const steps = 10;
 
     const recurse = (count: number) => {
-      if (!this.matchInProgress) return;
+      if (this.matchState !== 'in progress') return;
 
       // Base state. Food production is over, dispense food and update lights
       if (count === 0) {
@@ -761,7 +760,6 @@ export interface FieldOptions {
   fieldFaultColor: string;
   matchEndRedNexusGoalColor: string;
   matchEndBlueNexusGoalColor: string;
-  matchEndRampColor: string;
   redWledWebSocketAddress: string;
   blueWledWebSocketAddress: string;
   centerWledWebSocketAddress: string;
@@ -789,7 +787,6 @@ export const defaultFieldOptions: FieldOptions = {
   fieldFaultColor: 'ff0000',
   matchEndRedNexusGoalColor: 'ff0000',
   matchEndBlueNexusGoalColor: '0000ff',
-  matchEndRampColor: 'ff00ff',
   redWledWebSocketAddress: '',
   blueWledWebSocketAddress: '',
   centerWledWebSocketAddress: '',

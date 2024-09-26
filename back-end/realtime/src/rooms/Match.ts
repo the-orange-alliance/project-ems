@@ -248,12 +248,12 @@ export default class Match extends Room {
       this.state >= MatchState.RESULTS_COMMITTED
     )
       return;
-    const [redScore, blueScore] = functions.calculateScore(this.match);
-    this.match.redScore = redScore;
-    this.match.blueScore = blueScore;
     if (functions.calculateRankingPoints) {
       this.match.details = functions.calculateRankingPoints(this.match.details);
     }
+    const [redScore, blueScore] = functions.calculateScore(this.match);
+    this.match.redScore = redScore;
+    this.match.blueScore = blueScore;
 
     // Emit the updated match to all clients
     this.emitToAll(MatchSocketEvent.UPDATE, this.match);

@@ -20,6 +20,22 @@ export const useTeamIdentifiers = (): Record<number, string> => {
   );
 };
 
+export const useTeamIdentifiersForEventKey = (
+  eventKey: string | null | undefined
+): Record<number, string> => {
+  const identifier = useRecoilValue(teamIdentifierAtom);
+  const { data: teams } = useTeamsForEvent(eventKey);
+  return useMemo(
+    () =>
+      teams
+        ? Object.fromEntries(
+            teams.map((t) => [t.teamKey, String(t[identifier])])
+          )
+        : {},
+    [teams, identifier]
+  );
+};
+
 export const useTeamIdentifierRecord = (
   teams: Team[]
 ): Record<number, string> => {

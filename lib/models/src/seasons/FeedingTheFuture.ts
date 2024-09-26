@@ -30,6 +30,7 @@ export const ScoreTable = {
  */
 const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
   calculateRankings,
+  calculateRankingPoints,
   calculatePlayoffsRankings,
   calculateScore,
   detailsToJson,
@@ -39,20 +40,19 @@ const functions: SeasonFunctions<MatchDetails, SeasonRanking> = {
 export interface MatchDetails extends MatchDetailBase {
   redResevoirConserved: number;
   redFoodProduced: number;
-  redFoodSecured: number;
   redRobotOneParked: number;
   redRobotTwoParked: number;
   redRobotThreeParked: number;
   redNexusState: AllianceNexusGoalState;
   blueResevoirConserved: number;
   blueFoodProduced: number;
-  blueFoodSecured: number;
   blueRobotOneParked: number;
   blueRobotTwoParked: number;
   blueRobotThreeParked: number;
   blueNexusState: AllianceNexusGoalState;
   coopertition: number;
   fieldBalanced: number;
+  foodSecured: number;
 }
 
 export enum NexusGoalState {
@@ -98,20 +98,19 @@ export const defaultMatchDetails: MatchDetails = {
   tournamentKey: '',
   redResevoirConserved: 0,
   redFoodProduced: 0,
-  redFoodSecured: 0,
   redRobotOneParked: 0,
   redRobotTwoParked: 0,
   redRobotThreeParked: 0,
   redNexusState: { ...defaultNexusGoalState },
   blueResevoirConserved: 0,
   blueFoodProduced: 0,
-  blueFoodSecured: 0,
   blueRobotOneParked: 0,
   blueRobotTwoParked: 0,
   blueRobotThreeParked: 0,
   blueNexusState: { ...defaultNexusGoalState },
   coopertition: 0,
-  fieldBalanced: 1
+  fieldBalanced: 1,
+  foodSecured: 0
 };
 
 export const isFeedingTheFutureDetails = (obj: unknown): obj is MatchDetails =>
@@ -264,7 +263,7 @@ function calculateRankings(
         if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.redScore]);
           ranking.foodSecuredPoints +=
-            match.details.redFoodSecured * ScoreTable.FoodSecured;
+            match.details.foodSecured * ScoreTable.FoodSecured;
           if (ranking.highestScore < match.redScore) {
             ranking.highestScore = match.redScore;
           }
@@ -279,7 +278,7 @@ function calculateRankings(
         if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
           ranking.foodSecuredPoints +=
-            match.details.blueFoodSecured * ScoreTable.FoodSecured;
+            match.details.foodSecured * ScoreTable.FoodSecured;
           if (ranking.highestScore < match.blueScore) {
             ranking.highestScore = match.blueScore;
           }
@@ -429,6 +428,13 @@ export function calculatePlayoffsRankings(
   return rankings;
 }
 
+export function calculateRankingPoints(details: MatchDetails): MatchDetails {
+  const deepCopy = JSON.parse(JSON.stringify(details)) as MatchDetails;
+  const nBalanced = getBalancedRobots(details);
+  deepCopy.coopertition = nBalanced < 5 ? 0 : nBalanced >= 6 ? 2 : 1;
+  return deepCopy;
+}
+
 export function calculateScore(match: Match<MatchDetails>): [number, number] {
   const { details } = match;
   if (!details) return [0, 0];
@@ -436,24 +442,26 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
   const [redResevoirPoints, blueResevoirPoints] = getResevoirPoints(details);
   const [redNexusPoints, blueNexusPoints] = getNexusPoints(details);
   const [redFoodProduced, blueFoodProduced] = getFoodProducedPoints(details);
-  const [redFoodSecuredPoints, blueFoodSecuredPoints] =
-    getFoodSecuredPoints(details);
+  const foodSecuredPoints = getFoodSecuredPoints(details);
   const coopertitionPoints = getCoopertitionPoints(details);
-  const redScore =
+  const redEnergyPoints = Math.round(
     (redResevoirPoints + redNexusPoints + redFoodProduced) *
-      ScoreTable.BalanceMultiplier(nBalanced) +
-    redFoodSecuredPoints +
-    coopertitionPoints;
-  const blueScore =
+      ScoreTable.BalanceMultiplier(nBalanced)
+  );
+  const redScore = redEnergyPoints + foodSecuredPoints + coopertitionPoints;
+  const blueEnergyPoints = Math.round(
     (blueResevoirPoints + blueNexusPoints + blueFoodProduced) *
-      ScoreTable.BalanceMultiplier(nBalanced) +
-    blueFoodSecuredPoints +
-    coopertitionPoints;
+      ScoreTable.BalanceMultiplier(nBalanced)
+  );
+  const blueScore = blueEnergyPoints + foodSecuredPoints + coopertitionPoints;
   const redPenalty = Math.round(match.redMinPen * ScoreTable.Foul * redScore);
   const bluePenalty = Math.round(
     match.blueMinPen * ScoreTable.Foul * blueScore
   );
-  return [redScore + bluePenalty, blueScore + redPenalty];
+  return [
+    Math.round(redScore + bluePenalty),
+    Math.round(blueScore + redPenalty)
+  ];
 }
 
 export function getResevoirPoints(details: MatchDetails): [number, number] {
@@ -497,11 +505,8 @@ export function getFoodProducedPoints(details: MatchDetails): [number, number] {
   ];
 }
 
-export function getFoodSecuredPoints(details: MatchDetails): [number, number] {
-  return [
-    details.redFoodSecured * ScoreTable.FoodSecured,
-    details.blueFoodSecured * ScoreTable.FoodSecured
-  ];
+export function getFoodSecuredPoints(details: MatchDetails): number {
+  return details.foodSecured * ScoreTable.FoodSecured;
 }
 
 export function getBalancedRobots(details: MatchDetails): number {
@@ -517,7 +522,15 @@ export function getBalancedRobots(details: MatchDetails): number {
 }
 
 export function getCoopertitionPoints(details: MatchDetails): number {
-  return ScoreTable.Coopertition(getBalancedRobots(details));
+  switch (details.coopertition) {
+    case 0:
+      return 0;
+    case 1:
+      return 15;
+    case 2:
+      return 30;
+  }
+  return 0;
 }
 
 function compareRankings(a: SeasonRanking, b: SeasonRanking): number {

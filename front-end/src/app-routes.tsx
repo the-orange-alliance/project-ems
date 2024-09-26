@@ -96,7 +96,6 @@ const RefereeApp = lazy(() =>
 const RedReferee = lazy(() =>
   import('./apps/referee').then((m) => ({ default: m.RedReferee }))
 );
-0;
 const BlueReferee = lazy(() =>
   import('./apps/referee').then((m) => ({ default: m.BlueReferee }))
 );
@@ -112,6 +111,11 @@ const AudienceDisplay = lazy(() =>
   import('./apps/audience-display').then((m) => ({
     default: m.AudienceDisplay
   }))
+);
+
+// Misc routes
+const EventMonitor = lazy(() =>
+  import('./apps/event-monitor').then((m) => ({ default: m.EventMonitor }))
 );
 
 // Unised Routes
@@ -320,6 +324,12 @@ const AppRoutes: AppRoute[] = [
     path: '/audience-display-manager',
     group: 0,
     element: AudienceDisplayManager
+  },
+  {
+    name: 'Event Monitor',
+    path: '/event-monitor',
+    group: 0,
+    element: EventMonitor
   }
   // {
   //   name: 'Account Manager',
