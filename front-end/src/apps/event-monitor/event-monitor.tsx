@@ -36,6 +36,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
   address,
   realtimePort
 }) => {
+  const webUrl = `http://${address}`;
+  const socketUrl = `ws://${address}:${realtimePort}`;
+
   const [connected, setConnected] = useState(false);
   const [key, setKey] = useState<MatchKey | null>(null);
   const [status, setStatus] = useState('STANDBY');
@@ -94,7 +97,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const createSocket = (autoConnect: boolean = false, token: string = '') => {
-    return io(`ws://${address}:${realtimePort}`, {
+    return io(socketUrl, {
       rejectUnauthorized: false,
       transports: ['websocket'],
       query: { token },
@@ -119,7 +122,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
           }}
         >
           <MenuItem>
-            <Link href={`http://${address}`}>Open</Link>
+            <Link href={webUrl}>Open</Link>
           </MenuItem>
           <MenuItem onClick={handleClose}>Refresh</MenuItem>
         </Menu>
@@ -190,7 +193,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
             <Grid item xs={12}>
               <Button
                 variant={'contained'}
-                href={`http://${address}/${match?.eventKey}`}
+                href={`${webUrl}/${match?.eventKey}`}
                 fullWidth
               >
                 Open
@@ -200,7 +203,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
               <Button
                 variant={'contained'}
                 color={'error'}
-                href={`http://${address}/${match?.eventKey}/referee/red`}
+                href={`${webUrl}/${match?.eventKey}/referee/red`}
                 fullWidth
               >
                 Red Referee
@@ -209,7 +212,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
             <Grid item xs={4}>
               <Button
                 variant={'contained'}
-                href={`http://${address}/${match?.eventKey}/referee/head`}
+                href={`${webUrl}/${match?.eventKey}/referee/head`}
                 fullWidth
               >
                 Head Referee
@@ -219,7 +222,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
               <Button
                 variant={'contained'}
                 color={'info'}
-                href={`http://${address}/${match?.eventKey}/referee/blue`}
+                href={`${webUrl}/${match?.eventKey}/referee/blue`}
                 fullWidth
               >
                 Blue Referee
