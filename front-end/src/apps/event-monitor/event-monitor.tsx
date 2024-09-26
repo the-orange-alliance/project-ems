@@ -11,6 +11,7 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Stack,
   Typography
 } from '@mui/material';
 import { useMatchAll } from 'src/api/use-match-data';
@@ -22,6 +23,7 @@ import { MatchSocketEvent, MatchKey, Match } from '@toa-lib/models';
 import { io } from 'socket.io-client';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 interface MonitorCardProps {
@@ -53,6 +55,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const handleClose = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     setAnchorEl(null);
+  };
+  const handleRefresh = () => {
+    console.log('Refresh but idk how to');
   };
 
   useEffect(() => {
@@ -105,6 +110,15 @@ const MonitorCard: FC<MonitorCardProps> = ({
       autoConnect
     });
   };
+
+  const getMatchStatus = (): string => {
+    return connected
+      ? match
+        ? `${match?.name} - ${status}`
+        : status
+      : 'OFFLINE';
+  };
+
   return (
     <>
       <Card
@@ -126,13 +140,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
         </Menu>
         <CardHeader
           title={`Field ${field}`}
-          subheader={
-            connected
-              ? match
-                ? `${match?.name} - ${status}`
-                : status
-              : 'OFFLINE'
-          }
+          subheader={getMatchStatus()}
           avatar={
             connected ? (
               <CheckCircleIcon color='success' />
@@ -178,9 +186,28 @@ const MonitorCard: FC<MonitorCardProps> = ({
         fullWidth={true}
         maxWidth={'lg'}
       >
-        <DialogTitle>{`Field ${field}`}</DialogTitle>
+        <DialogTitle display={'flex'} justifyContent={'space-between'}>
+          {`Field ${field}`}
+          <Button
+            color={'info'}
+            endIcon={<RefreshIcon />}
+            onClick={handleRefresh}
+          >
+            Refresh
+          </Button>
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} columns={12}>
+            <Grid item xs={12}>
+              <Stack direction={'row'} spacing={2}>
+                {connected ? (
+                  <CheckCircleIcon color='success' />
+                ) : (
+                  <ErrorIcon color='error' />
+                )}
+                <Typography>{getMatchStatus()}</Typography>
+              </Stack>
+            </Grid>
             <Grid item xs={12}>
               <MatchDetails
                 key={field}
