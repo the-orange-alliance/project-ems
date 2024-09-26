@@ -35,6 +35,7 @@ interface NexusScoresheetProps {
   side: 'near' | 'far' | 'both';
   scorekeeperView?: boolean;
   allowForceRelease?: boolean;
+  editMode?: boolean;
 }
 
 const StairGoal = styled(Box)((props: { alliance: Alliance }) => ({
@@ -62,7 +63,8 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
   onOpposingChange,
   side,
   scorekeeperView,
-  allowForceRelease
+  allowForceRelease,
+  editMode
 }) => {
   const cancelQueue = useRef<any[]>([]);
 
@@ -172,6 +174,7 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
               alliance={alliance === 'red' ? 'blue' : 'red'} // intentionally inverted
               onForceRelease={(g) => onForceRelease(alliance, g)}
               allowForceRelease={!!allowForceRelease}
+              editMode={editMode}
             />
             <Typography
               variant='h6'
@@ -212,6 +215,7 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
           fullWidth={scorekeeperView}
           onForceRelease={(g) => onForceRelease(alliance, g)}
           allowForceRelease={!!allowForceRelease}
+          editMode={editMode}
         />
         {/* Placeholder for better alignment */}
         <SideText variant='h6'>&nbsp;</SideText>
@@ -230,6 +234,7 @@ interface GoalGridProps {
   alliance: Alliance;
   onForceRelease?: (goal: keyof AllianceNexusGoalState) => void;
   allowForceRelease: boolean;
+  editMode?: boolean;
 }
 
 interface CenterGoalGridProps extends GoalGridProps {
@@ -427,6 +432,7 @@ interface GoalToggleProps {
   single?: boolean;
   onForceRelease?: () => void;
   allowForceRelease: boolean;
+  editMode?: boolean;
 }
 
 const BallCheckbox = styled(Checkbox)(
@@ -453,7 +459,8 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
   onChange,
   single,
   onForceRelease,
-  allowForceRelease
+  allowForceRelease,
+  editMode
 }) => {
   const matchState = useRecoilValue(matchStateAtom);
 
@@ -461,7 +468,8 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
   // after the match, we'll allow the toggles to be changed
   if (
     state === NexusGoalState.Produced &&
-    matchState < MatchState.MATCH_COMPLETE
+    matchState < MatchState.MATCH_COMPLETE &&
+    !editMode
   ) {
     disabled = true;
   }
@@ -511,7 +519,8 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
     <>
       {NexusGoalState.Produced === state &&
         allowForceRelease &&
-        matchState < MatchState.MATCH_COMPLETE && (
+        matchState < MatchState.MATCH_COMPLETE &&
+        !editMode && (
           <Box sx={{ position: 'relative', top: '35%', height: 0, px: 1 }}>
             <Button
               variant='contained'
@@ -535,7 +544,8 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
           width: '100%',
           border:
             matchState === MatchState.MATCH_IN_PROGRESS &&
-              state === NexusGoalState.Produced
+            state === NexusGoalState.Produced &&
+            !editMode
               ? '5px dashed orange'
               : undefined
         }}
