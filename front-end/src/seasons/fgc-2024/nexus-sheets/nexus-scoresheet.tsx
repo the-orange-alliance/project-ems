@@ -113,7 +113,6 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
     alliance: Alliance,
     goal: keyof AllianceNexusGoalState
   ) => {
-    console.log(allowForceRelease);
     if (!allowForceRelease) return;
     // create packet to send to FCS
     const packetOn: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
@@ -145,10 +144,17 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
     // send on packet to FCS
     sendFCSPacket(packetOn);
 
+    // filter out any previous requests for this goal
+    cancelQueue.current = cancelQueue.current.filter(
+      (c) => !(c.alliance === alliance && c.goal === goal)
+    );
+
     // add packetoff socket request to cancel queue
     cancelQueue.current.push({
       time: Date.now() + 3000,
-      callback: () => sendFCSPacket(packetOff)
+      callback: () => sendFCSPacket(packetOff),
+      alliance,
+      goal
     });
   };
 
@@ -506,18 +512,20 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
       {NexusGoalState.Produced === state &&
         allowForceRelease &&
         matchState < MatchState.MATCH_COMPLETE && (
-          <Box sx={{ position: 'relative', top: '45%', height: 0, px: 1 }}>
+          <Box sx={{ position: 'relative', top: '35%', height: 0, px: 1 }}>
             <Button
               variant='contained'
               fullWidth
               sx={{
                 backgroundColor: 'orange',
                 ':hover': { backgroundColor: 'darkred' },
-                zIndex: 40
+                zIndex: 40,
+                minWidth: 0
               }}
               onClick={onForceReleaseLocal}
+              onTouchStart={onForceReleaseLocal}
             >
-              Force Release
+              &nbsp;
             </Button>
           </Box>
         )}
@@ -527,7 +535,7 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
           width: '100%',
           border:
             matchState === MatchState.MATCH_IN_PROGRESS &&
-            state === NexusGoalState.Produced
+              state === NexusGoalState.Produced
               ? '5px dashed orange'
               : undefined
         }}

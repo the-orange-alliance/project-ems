@@ -146,7 +146,7 @@ const TeleScoreSheet: FC<Props> = ({
           textAlign='center'
           sx={{ textTransform: 'capitalize' }}
         >
-          {alliance} Resevoir Scored
+          {alliance === 'red' ? 'Blue' : 'Red'} Resevoir Scored
         </Typography>
         <NumberInput
           value={
