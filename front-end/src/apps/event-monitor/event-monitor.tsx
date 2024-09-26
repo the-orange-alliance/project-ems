@@ -5,6 +5,7 @@ import {
   CardHeader,
   Grid,
   IconButton,
+  Link,
   Menu,
   MenuItem,
   Typography
@@ -22,10 +23,15 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 interface MonitorCardProps {
   field: number;
-  url: string;
+  address: string;
+  realtimePort: number;
 }
 
-const MonitorCard: FC<MonitorCardProps> = ({ field, url }) => {
+const MonitorCard: FC<MonitorCardProps> = ({
+  field,
+  address,
+  realtimePort
+}) => {
   const [connected, setConnected] = useState(false);
   const [key, setKey] = useState<MatchKey | null>(null);
   const [status, setStatus] = useState('STANDBY');
@@ -82,7 +88,7 @@ const MonitorCard: FC<MonitorCardProps> = ({ field, url }) => {
   };
 
   const createSocket = (autoConnect: boolean = false, token: string = '') => {
-    return io(`ws://${url}`, {
+    return io(`ws://${address}:${realtimePort}`, {
       rejectUnauthorized: false,
       transports: ['websocket'],
       query: { token },
@@ -100,6 +106,9 @@ const MonitorCard: FC<MonitorCardProps> = ({ field, url }) => {
           'aria-labelledby': `field-${field}-menu`
         }}
       >
+        <MenuItem>
+          <Link href={`http://${address}`}>Open</Link>
+        </MenuItem>
         <MenuItem onClick={handleClose}>Refresh</MenuItem>
       </Menu>
       <CardHeader
@@ -258,21 +267,21 @@ const MonitorCard: FC<MonitorCardProps> = ({ field, url }) => {
 export const EventMonitor: FC = () => {
   return (
     <DefaultLayout title='Event Monitor'>
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={3}>
-          <MonitorCard field={1} url='192.168.80.111:8081' />
+      <Grid container spacing={3} columns={10}>
+        <Grid item md={2}>
+          <MonitorCard field={5} address='192.168.80.151' realtimePort={8081} />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <MonitorCard field={2} url='192.168.80.121:8081' />
+        <Grid item md={2}>
+          <MonitorCard field={4} address='192.168.80.141' realtimePort={8081} />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <MonitorCard field={3} url='192.168.80.131:8081' />
+        <Grid item md={2}>
+          <MonitorCard field={3} address='192.168.80.131' realtimePort={8081} />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <MonitorCard field={4} url='192.168.80.141:8081' />
+        <Grid item md={2}>
+          <MonitorCard field={2} address='192.168.80.121' realtimePort={8081} />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <MonitorCard field={5} url='192.168.80.151:8081' />
+        <Grid item md={2}>
+          <MonitorCard field={1} address='192.168.80.111' realtimePort={8081} />
         </Grid>
       </Grid>
     </DefaultLayout>
