@@ -98,6 +98,8 @@ export default class FCS extends Room {
 
     socket.on('fcs:allClear', this.packetManager.handleAllClear);
 
+    socket.on('fcs:awardsMode', this.packetManager.awardsMode);
+
     socket.on(
       'fcs:settings',
       (fieldOptions: FeedingTheFutureFCS.FieldOptions) => {

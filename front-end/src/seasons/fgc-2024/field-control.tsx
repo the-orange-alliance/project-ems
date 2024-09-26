@@ -49,6 +49,10 @@ export const useFieldControl =
       // console.log('onMatchUpdate', match);
     };
 
+    const awardsMode = () => {
+      socket?.emit('fcs:awardsMode');
+    };
+
     const updateFieldSettings = () => {
       socket?.emit('fcs:settings', fieldOptions);
       console.log('updateFieldSettings');
@@ -64,6 +68,7 @@ export const useFieldControl =
       commitScoresForField,
       postResultsForField,
       onMatchUpdate,
-      updateFieldSettings
+      updateFieldSettings,
+      awardsMode
     };
   };

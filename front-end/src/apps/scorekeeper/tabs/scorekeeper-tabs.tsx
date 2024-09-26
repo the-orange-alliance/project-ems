@@ -12,6 +12,7 @@ import { useMatchControl } from '../hooks/use-match-control';
 import { MatchState } from '@toa-lib/models';
 import { ScorekeeperDetails } from './scorekeeper-details';
 import { useActiveFieldNumbers } from 'src/components/sync-effects/sync-fields-to-recoil';
+import { ScorekeeperOptions } from './scorekeeper-options';
 
 interface Props {
   eventKey?: string;
@@ -53,6 +54,7 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
       <Tabs value={value} onChange={handleChange}>
         <Tab label='Schedule' />
         <Tab label='Score Details' />
+        <Tab label='Options' />
       </Tabs>
       <Divider />
       <TabPanel value={value} index={0}>
@@ -69,6 +71,9 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
       </TabPanel>
       <TabPanel value={value} index={1}>
         <ScorekeeperDetails />
+      </TabPanel>
+      <TabPanel value={value} index={2}>
+        <ScorekeeperOptions />
       </TabPanel>
     </Paper>
   );

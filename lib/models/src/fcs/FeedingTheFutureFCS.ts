@@ -338,6 +338,27 @@ export class PacketManager {
     this.broadcastCallback(result);
   };
 
+  public awardsMode = (): void => {
+    const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
+    applyPatternToStrips(
+      this.fieldOptions.matchEndBlueNexusGoalColor,
+      LedStripA.ALL_BLUE_GOALS,
+      result
+    );
+    applyPatternToStrips(
+      this.fieldOptions.matchEndRedNexusGoalColor,
+      LedStripA.ALL_RED_GOALS,
+      result
+    );
+    applyPatternToStrips(
+      this.fieldOptions.rampBalancedColor,
+      [LedStripA.RAMP],
+      result
+    );
+
+    this.broadcastCallback(result);
+  }
+
   public handleAllClear = (): void => {
     this.matchState = 'all clear';
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
