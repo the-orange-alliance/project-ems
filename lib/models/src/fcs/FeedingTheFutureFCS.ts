@@ -158,8 +158,12 @@ export class PacketManager {
   private broadcastCallback: (update: FieldControlUpdatePacket) => void;
   private matchEmitter: EventEmitter;
   private actionQueue = new Map<string, Action>();
-  private matchState: 'prestart' | 'in progress' | 'ended' | 'aborted' =
-    'prestart';
+  private matchState:
+    | 'prestart'
+    | 'in progress'
+    | 'ended'
+    | 'aborted'
+    | 'all clear' = 'prestart';
 
   private previousBalanced = true;
 
@@ -335,6 +339,7 @@ export class PacketManager {
   };
 
   public handleAllClear = (): void => {
+    this.matchState = 'all clear';
     const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
     applyPatternToStrips(
       this.fieldOptions.allClearColor,
@@ -639,7 +644,7 @@ export class PacketManager {
           } satisfies ItemUpdate);
         }
 
-        if (this.matchState !== 'prestart' && this.matchState !== 'aborted') {
+        if (this.matchState === 'in progress' || this.matchState === 'ended') {
           const result: FieldControlUpdatePacket = { hubs: {}, wleds: {} };
           applyPatternToStrips(
             balanced
@@ -652,6 +657,8 @@ export class PacketManager {
         }
       }
     });
+
+    this.previousBalanced = balanced;
   };
 
   runFoodProductionSequence = (
