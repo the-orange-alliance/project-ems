@@ -9,7 +9,6 @@ import {
   DialogTitle,
   Grid,
   IconButton,
-  Link,
   Menu,
   MenuItem,
   Typography
@@ -48,9 +47,11 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
   };
-  const handleClose = () => {
+  const handleClose = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
     setAnchorEl(null);
   };
 
@@ -121,9 +122,6 @@ const MonitorCard: FC<MonitorCardProps> = ({
             'aria-labelledby': `field-${field}-menu`
           }}
         >
-          <MenuItem>
-            <Link href={webUrl}>Open</Link>
-          </MenuItem>
           <MenuItem onClick={handleClose}>Refresh</MenuItem>
         </Menu>
         <CardHeader
