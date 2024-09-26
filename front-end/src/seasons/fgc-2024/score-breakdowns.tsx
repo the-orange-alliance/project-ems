@@ -55,7 +55,7 @@ export const RedScoreBreakdown: FC<
       {/* RED ALLIANCE BALANCE STATUS */}
       <Grid item xs={12} sm={6} md={4}>
         <StateToggle
-          title={<span>{identifiers[redAlliance[0].teamKey]} Balanced</span>}
+          title={<span>{identifiers[redAlliance[0].teamKey]} End Park</span>}
           states={['Flr', 'Rmp', 'Pltfm']}
           value={match?.details?.redRobotOneParked ?? 0}
           disabled
@@ -64,7 +64,7 @@ export const RedScoreBreakdown: FC<
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
         <StateToggle
-          title={<span>{identifiers[redAlliance[1].teamKey]} Balanced</span>}
+          title={<span>{identifiers[redAlliance[1].teamKey]} End Park</span>}
           states={['Flr', 'Rmp', 'Pltfm']}
           value={match?.details?.redRobotTwoParked ?? 0}
           disabled
@@ -73,7 +73,7 @@ export const RedScoreBreakdown: FC<
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
         <StateToggle
-          title={<span>{identifiers[redAlliance[2].teamKey]} Balanced</span>}
+          title={<span>{identifiers[redAlliance[2].teamKey]} End Park</span>}
           states={['Flr', 'Rmp', 'Pltfm']}
           value={match?.details?.redRobotThreeParked ?? 0}
           disabled
@@ -153,7 +153,7 @@ export const BlueScoreBreakdown: FC<
       {/* BLUE ALLIANCE BALANCE STATUS */}
       <Grid item xs={12} sm={6} md={4}>
         <StateToggle
-          title={<span>{identifiers[blueAlliance[0].teamKey]} Balanced</span>}
+          title={<span>{identifiers[blueAlliance[0].teamKey]} End Park</span>}
           states={['Flr', 'Rmp', 'Pltfm']}
           value={match?.details?.blueRobotOneParked ?? 0}
           disabled
@@ -162,7 +162,7 @@ export const BlueScoreBreakdown: FC<
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
         <StateToggle
-          title={<span>{identifiers[blueAlliance[1].teamKey]} Balanced</span>}
+          title={<span>{identifiers[blueAlliance[1].teamKey]} End Park</span>}
           states={['Flr', 'Rmp', 'Pltfm']}
           value={match?.details?.blueRobotTwoParked ?? 0}
           disabled
@@ -171,7 +171,7 @@ export const BlueScoreBreakdown: FC<
       </Grid>
       <Grid item xs={12} sm={6} md={4}>
         <StateToggle
-          title={<span>{identifiers[blueAlliance[2].teamKey]} Balanced</span>}
+          title={<span>{identifiers[blueAlliance[2].teamKey]} End Park</span>}
           states={['Flr', 'Rmp', 'Pltfm']}
           value={match?.details?.blueRobotThreeParked ?? 0}
           disabled
