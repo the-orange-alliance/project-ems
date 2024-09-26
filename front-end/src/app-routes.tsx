@@ -326,7 +326,7 @@ const AppRoutes: AppRoute[] = [
     element: AudienceDisplayManager
   },
   {
-    name: 'Event Monitor',
+    name: 'Jan App',
     path: '/event-monitor',
     group: 0,
     element: EventMonitor
