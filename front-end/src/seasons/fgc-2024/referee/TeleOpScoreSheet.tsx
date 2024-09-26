@@ -176,6 +176,7 @@ const TeleScoreSheet: FC<Props> = ({
           onOpposingChange={updateOpposingNexusState}
           alliance={alliance}
           side={'far'}
+          allowForceRelease
         />
       </Grid>
       {participants?.map((p) => {

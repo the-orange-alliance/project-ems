@@ -1,5 +1,10 @@
 import { createSocket } from '@toa-lib/client';
-import { Match, MatchKey, MatchSocketEvent } from '@toa-lib/models';
+import {
+  FieldControlUpdatePacket,
+  Match,
+  MatchKey,
+  MatchSocketEvent
+} from '@toa-lib/models';
 import { Socket } from 'socket.io-client';
 import { useRecoilCallback, useRecoilState } from 'recoil';
 
@@ -210,6 +215,12 @@ export async function sendUpdateFrcFmsSettings(
   hwFingerprint: string
 ): Promise<void> {
   socket?.emit('frc-fms:settings-update', { hwFingerprint });
+}
+
+export async function sendFCSPacket(
+  packet: FieldControlUpdatePacket
+): Promise<void> {
+  socket?.emit('fcs:update', packet);
 }
 
 export default socket;
