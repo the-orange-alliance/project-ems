@@ -1,5 +1,5 @@
 import {
-  Box,
+  Button,
   Card,
   CardActions,
   CardContent,
@@ -179,7 +179,53 @@ const MonitorCard: FC<MonitorCardProps> = ({
       >
         <DialogTitle>{`Field ${field}`}</DialogTitle>
         <DialogContent>
-          <MatchDetails key={field} match={match} identifiers={identifiers} />
+          <Grid container spacing={2} columns={12}>
+            <Grid item xs={12}>
+              <MatchDetails
+                key={field}
+                match={match}
+                identifiers={identifiers}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                variant={'contained'}
+                href={`http://${address}/${match?.eventKey}`}
+                fullWidth
+              >
+                Open
+              </Button>
+            </Grid>
+            <Grid item xs={4}>
+              <Button
+                variant={'contained'}
+                color={'error'}
+                href={`http://${address}/${match?.eventKey}/referee/red`}
+                fullWidth
+              >
+                Red Referee
+              </Button>
+            </Grid>
+            <Grid item xs={4}>
+              <Button
+                variant={'contained'}
+                href={`http://${address}/${match?.eventKey}/referee/head`}
+                fullWidth
+              >
+                Head Referee
+              </Button>
+            </Grid>
+            <Grid item xs={4}>
+              <Button
+                variant={'contained'}
+                color={'info'}
+                href={`http://${address}/${match?.eventKey}/referee/blue`}
+                fullWidth
+              >
+                Blue Referee
+              </Button>
+            </Grid>
+          </Grid>
         </DialogContent>
       </Dialog>
     </>
