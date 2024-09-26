@@ -62,6 +62,13 @@ export enum NexusGoalState {
   Full = 3,
   Produced = 4
 }
+
+export enum MatchEndRobotState {
+  FloorParked = 0,
+  RampParked = 1,
+  PlatformParked = 2
+}
+
 export interface AllianceNexusGoalState {
   CW1: NexusGoalState;
   CW2: NexusGoalState;
@@ -510,15 +517,21 @@ export function getFoodSecuredPoints(details: MatchDetails): number {
 }
 
 export function getBalancedRobots(details: MatchDetails): number {
-  return (
-    (details.redRobotOneParked +
-      details.redRobotTwoParked +
-      details.redRobotThreeParked +
-      details.blueRobotOneParked +
-      details.blueRobotTwoParked +
-      details.blueRobotThreeParked) *
-    details.fieldBalanced
-  );
+  let count = 0;
+  // Put everyone in an array
+  const states = [details.redRobotOneParked, details.redRobotTwoParked, details.redRobotThreeParked, details.blueRobotOneParked, details.blueRobotTwoParked, details.blueRobotThreeParked];
+  states.forEach((state) => {
+    if (state === MatchEndRobotState.PlatformParked) {
+    // Robots parked on the platform are ALWAYS considered balanced.
+      count += 1;
+    } else if (state === MatchEndRobotState.RampParked && details.fieldBalanced) {
+      // Otherwise, if they're ramp parked and the field is balanced, they're balanced.
+      count += 1;
+    }
+  });
+
+  // return the count
+  return count;
 }
 
 export function getCoopertitionPoints(details: MatchDetails): number {

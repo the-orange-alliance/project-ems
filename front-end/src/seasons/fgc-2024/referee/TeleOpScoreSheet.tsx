@@ -196,10 +196,10 @@ const TeleScoreSheet: FC<Props> = ({
                       className={`flag-icon flag-icon-${team.countryCode}`}
                     />
                   )}
-                  {identifiers[p.teamKey]}&nbsp;Parked
+                  &nbsp;{identifiers[p.teamKey]}&nbsp;Match-End Location
                 </span>
               }
-              states={['Not Parked', 'Parked']}
+              states={['Floor', 'Ramp', 'Platform']}
               value={getBalanceStatus(p.station) ?? 0}
               onChange={update}
               fullWidth
