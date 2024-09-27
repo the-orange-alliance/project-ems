@@ -19,12 +19,18 @@ import { useTeamIdentifiersForEventKey } from 'src/hooks/use-team-identifier';
 import { DateTime } from 'luxon';
 import { FC, useEffect, useState } from 'react';
 import { DefaultLayout } from 'src/layouts/default-layout';
-import { MatchSocketEvent, MatchKey, Match } from '@toa-lib/models';
+import {
+  MatchSocketEvent,
+  MatchKey,
+  Match,
+  FieldControlStatus
+} from '@toa-lib/models';
 import { io } from 'socket.io-client';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import WarningIcon from '@mui/icons-material/Warning';
 
 interface MonitorCardProps {
   field: number;
@@ -59,6 +65,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const handleRefresh = () => {
     console.log('Refresh but idk how to');
   };
+  const [fcsStatus, setFcsStatus] = useState<FieldControlStatus | null>(null);
 
   useEffect(() => {
     const socket = createSocket();
@@ -69,8 +76,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
     socket.on(MatchSocketEvent.ABORT, handleAbort);
     socket.on(MatchSocketEvent.END, handleEnd);
     socket.on(MatchSocketEvent.COMMIT, handleCommit);
+    socket.on('fcs:status', handleFcsStatus);
     socket.connect();
-    socket.emit('rooms', ['match']);
+    socket.emit('rooms', ['match', 'fcs']);
     return () => {
       socket.off(MatchSocketEvent.PRESTART, handlePrestart);
       socket.off(MatchSocketEvent.START, handleStart);
@@ -98,6 +106,10 @@ const MonitorCard: FC<MonitorCardProps> = ({
   };
   const handleCommit = () => {
     setStatus('COMMITTED');
+  };
+
+  const handleFcsStatus = (status: FieldControlStatus) => {
+    setFcsStatus(status);
   };
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -227,6 +239,24 @@ const MonitorCard: FC<MonitorCardProps> = ({
                 identifiers={identifiers}
               />
             </Grid>
+            {fcsStatus
+              ? Object.entries(fcsStatus.wleds).map((wled) => (
+                  <Grid item key={wled[0]}>
+                    <Stack direction={'row'} spacing={1}>
+                      {wled[1].connected ? (
+                        !wled[1].stickyLostConnection ? (
+                          <CheckCircleIcon color={'success'} />
+                        ) : (
+                          <WarningIcon color={'warning'} />
+                        )
+                      ) : (
+                        <ErrorIcon color='error' />
+                      )}
+                      <Typography>{`${wled[0]} wled`}</Typography>
+                    </Stack>
+                  </Grid>
+                ))
+              : null}
             <Grid item xs={12}>
               <Button variant={'contained'} href={`${webUrl}`} fullWidth>
                 Open
