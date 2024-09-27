@@ -136,13 +136,29 @@ const MonitorCard: FC<MonitorCardProps> = ({
       : 'OFFLINE';
   };
 
+  const getCardColor = (): string => {
+    if (!fcsStatus) return '#ffffff';
+
+    if (Object.entries(fcsStatus.wleds).some((wled) => !wled[1].connected)) {
+      return '#FAA0A0';
+    } else if (
+      Object.entries(fcsStatus.wleds).some(
+        (wled) => wled[1].stickyLostConnection
+      )
+    ) {
+      return '#FFFF8F';
+    } else {
+      return '#FFFFFF';
+    }
+  };
+
   return (
     <>
       <Card
         onClick={() => {
           setDialogOpen(true);
         }}
-        style={{ cursor: 'pointer' }}
+        style={{ cursor: 'pointer', backgroundColor: getCardColor() }}
       >
         <Menu
           id={`field-${field}-menu`}
