@@ -1,12 +1,17 @@
 import {
+  Button,
   Card,
   CardActions,
   CardContent,
   CardHeader,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Grid,
   IconButton,
   Menu,
   MenuItem,
+  Stack,
   Typography
 } from '@mui/material';
 import { useMatchAll } from 'src/api/use-match-data';
@@ -14,32 +19,54 @@ import { useTeamIdentifiersForEventKey } from 'src/hooks/use-team-identifier';
 import { DateTime } from 'luxon';
 import { FC, useEffect, useState } from 'react';
 import { DefaultLayout } from 'src/layouts/default-layout';
-import { MatchSocketEvent, MatchKey } from '@toa-lib/models';
-import { io } from 'socket.io-client';
+import {
+  MatchSocketEvent,
+  MatchKey,
+  Match,
+  FieldControlStatus
+} from '@toa-lib/models';
+import { io, Socket } from 'socket.io-client';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import WarningIcon from '@mui/icons-material/Warning';
 
 interface MonitorCardProps {
   field: number;
-  url: string;
+  address: string;
+  realtimePort: number;
 }
 
-const MonitorCard: FC<MonitorCardProps> = ({ field, url }) => {
+const MonitorCard: FC<MonitorCardProps> = ({
+  field,
+  address,
+  realtimePort
+}) => {
+  const webUrl = `http://${address}`;
+  const socketUrl = `ws://${address}:${realtimePort}`;
+
   const [connected, setConnected] = useState(false);
   const [key, setKey] = useState<MatchKey | null>(null);
   const [status, setStatus] = useState('STANDBY');
   const { data: match } = useMatchAll(key);
   const identifiers = useTeamIdentifiersForEventKey(key?.eventKey);
+  const [socket, setSocket] = useState<null | Socket>(null);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
   };
-  const handleClose = () => {
+  const handleClose = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
     setAnchorEl(null);
   };
+  const handleRefresh = () => {
+    console.log('Refresh but idk how to');
+  };
+  const [fcsStatus, setFcsStatus] = useState<FieldControlStatus | null>(null);
 
   useEffect(() => {
     const socket = createSocket();
@@ -50,8 +77,10 @@ const MonitorCard: FC<MonitorCardProps> = ({ field, url }) => {
     socket.on(MatchSocketEvent.ABORT, handleAbort);
     socket.on(MatchSocketEvent.END, handleEnd);
     socket.on(MatchSocketEvent.COMMIT, handleCommit);
+    socket.on('fcs:status', handleFcsStatus);
     socket.connect();
-    socket.emit('rooms', ['match']);
+    socket.emit('rooms', ['match', 'fcs']);
+    setSocket(socket);
     return () => {
       socket.off(MatchSocketEvent.PRESTART, handlePrestart);
       socket.off(MatchSocketEvent.START, handleStart);
@@ -81,198 +110,354 @@ const MonitorCard: FC<MonitorCardProps> = ({ field, url }) => {
     setStatus('COMMITTED');
   };
 
+  const handleFcsStatus = (status: FieldControlStatus) => {
+    setFcsStatus(status);
+  };
+  const handleFcsClearStatus = () => {
+    socket?.emit('fcs:clearStatus');
+  };
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   const createSocket = (autoConnect: boolean = false, token: string = '') => {
-    return io(`ws://${url}`, {
+    return io(socketUrl, {
       rejectUnauthorized: false,
       transports: ['websocket'],
       query: { token },
       autoConnect
     });
   };
+
+  const getMatchStatus = (): string => {
+    return connected
+      ? match
+        ? `${match?.name} - ${status}`
+        : status
+      : 'OFFLINE';
+  };
+
+  const getCardColor = (): string => {
+    if (!fcsStatus) return '#ffffff';
+
+    if (Object.entries(fcsStatus.wleds).some((wled) => !wled[1].connected)) {
+      return '#FAA0A0';
+    } else if (
+      Object.entries(fcsStatus.wleds).some(
+        (wled) => wled[1].stickyLostConnection
+      )
+    ) {
+      return '#FFFF8F';
+    } else {
+      return '#FFFFFF';
+    }
+  };
+
   return (
-    <Card>
-      <Menu
-        id={`field-${field}-menu`}
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        MenuListProps={{
-          'aria-labelledby': `field-${field}-menu`
+    <>
+      <Card
+        onClick={() => {
+          setDialogOpen(true);
         }}
+        style={{ cursor: 'pointer', backgroundColor: getCardColor() }}
       >
-        <MenuItem onClick={handleClose}>Refresh</MenuItem>
-      </Menu>
-      <CardHeader
-        title={`Field ${field}`}
-        subheader={
-          connected
-            ? match
-              ? `${match?.name} - ${status}`
-              : status
-            : 'OFFLINE'
-        }
-        avatar={
-          connected ? (
-            <CheckCircleIcon color='success' />
-          ) : (
-            <ErrorIcon color='error' />
-          )
-        }
-        action={
-          <IconButton
-            aria-controls={open ? `field-${field}-menu` : undefined}
-            aria-haspopup='true'
-            aria-expanded={open ? 'true' : undefined}
-            onClick={handleClick}
-          >
-            <MoreVertIcon />
-          </IconButton>
-        }
-      />
-      <CardContent>
-        <Grid container>
-          <Grid item xs={4}>
-            <Typography align='left' className='red'>
-              {match && match.participants ? (
-                <>
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[0].team?.countryCode}`}
-                  />{' '}
-                  {identifiers[match?.participants?.[0].teamKey]}
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-          <Grid item xs={4} />
-          <Grid item xs={4}>
-            <Typography align='right' className='blue'>
-              {match && match.participants ? (
-                <>
-                  {identifiers[match?.participants?.[3].teamKey]}{' '}
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[3].team?.countryCode}`}
-                  />
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={4}>
-            <Typography align='left' className='red'>
-              {match && match.participants ? (
-                <>
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[1].team?.countryCode}`}
-                  />{' '}
-                  {identifiers[match?.participants?.[1].teamKey]}
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-          <Grid item xs={4}>
-            <Typography align='center'>vs.</Typography>
-          </Grid>
-          <Grid item xs={4}>
-            <Typography align='right' className='blue'>
-              {match && match.participants ? (
-                <>
-                  {identifiers[match?.participants?.[4].teamKey]}{' '}
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[4].team?.countryCode}`}
-                  />
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={4}>
-            <Typography align='left' className='red'>
-              {match && match.participants ? (
-                <>
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[2].team?.countryCode}`}
-                  />{' '}
-                  {identifiers[match?.participants?.[2].teamKey]}
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-          <Grid item xs={4} />
-          <Grid item xs={4}>
-            <Typography align='right' className='blue'>
-              {match && match.participants ? (
-                <>
-                  {identifiers[match?.participants?.[5].teamKey]}{' '}
-                  <span
-                    className={`flag-icon flag-icon-${match.participants[5].team?.countryCode}`}
-                  />
-                </>
-              ) : (
-                '---'
-              )}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={4}>
-            <Typography align='center' className='red'>
-              {match ? match.redScore : '--'}
-            </Typography>
-          </Grid>
-          <Grid item xs={4} />
-          <Grid item xs={4}>
-            <Typography align='center' className='blue'>
-              {match ? match.blueScore : '--'}
-            </Typography>
-          </Grid>
-        </Grid>
-      </CardContent>
-      <CardActions>
-        <Typography variant='body2' sx={{ marginLeft: 'auto' }}>
-          {match
-            ? DateTime.now() <= DateTime.fromISO(match.startTime)
-              ? DateTime.now()
+        <Menu
+          id={`field-${field}-menu`}
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          MenuListProps={{
+            'aria-labelledby': `field-${field}-menu`
+          }}
+        >
+          <MenuItem onClick={handleClose}>Refresh</MenuItem>
+        </Menu>
+        <CardHeader
+          title={`Field ${field}`}
+          subheader={getMatchStatus()}
+          avatar={
+            connected ? (
+              <CheckCircleIcon color='success' />
+            ) : (
+              <ErrorIcon color='error' />
+            )
+          }
+          action={
+            <IconButton
+              aria-controls={open ? `field-${field}-menu` : undefined}
+              aria-haspopup='true'
+              aria-expanded={open ? 'true' : undefined}
+              onClick={handleClick}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          }
+        />
+        <CardContent>
+          <MatchDetails key={field} match={match} identifiers={identifiers} />
+        </CardContent>
+        <CardActions>
+          {match ? (
+            DateTime.now() >= DateTime.fromISO(match.scheduledTime) ? (
+              <Typography
+                variant='body2'
+                sx={{ marginLeft: 'auto' }}
+                color={'red'}
+              >
+                {DateTime.now()
                   .diff(DateTime.fromISO(match.scheduledTime))
                   .shiftTo('hours', 'minutes')
-                  .toFormat(`h'h' m'm' 'behind'`)
-              : DateTime.fromISO(match.scheduledTime)
+                  .toFormat(`h'h' m'm' 'behind'`)}
+              </Typography>
+            ) : (
+              <Typography
+                variant='body2'
+                sx={{ marginLeft: 'auto' }}
+                color='green'
+              >
+                {DateTime.fromISO(match.scheduledTime)
                   .diff(DateTime.now())
                   .shiftTo('hours', 'minutes')
-                  .toFormat(`h'h' m'm' 'ahead'`)
-            : ''}
+                  .toFormat(`h'h' m'm' 'ahead'`)}
+              </Typography>
+            )
+          ) : null}
+        </CardActions>
+      </Card>
+      <Dialog
+        open={dialogOpen}
+        onClose={() => {
+          setDialogOpen(false);
+        }}
+        fullWidth={true}
+        maxWidth={'lg'}
+      >
+        <DialogTitle display={'flex'} justifyContent={'space-between'}>
+          {`Field ${field}`}
+          <Stack direction={'row'} spacing={2}>
+            <Button onClick={handleFcsClearStatus}>Clear Status</Button>
+            <Button
+              color={'info'}
+              endIcon={<RefreshIcon />}
+              onClick={handleRefresh}
+            >
+              Refresh
+            </Button>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} columns={12}>
+            <Grid item xs={12}>
+              <Stack direction={'row'} spacing={2}>
+                {connected ? (
+                  <CheckCircleIcon color='success' />
+                ) : (
+                  <ErrorIcon color='error' />
+                )}
+                <Typography>{getMatchStatus()}</Typography>
+              </Stack>
+            </Grid>
+            <Grid item xs={12}>
+              <MatchDetails
+                key={field}
+                match={match}
+                identifiers={identifiers}
+              />
+            </Grid>
+            {fcsStatus
+              ? Object.entries(fcsStatus.wleds).map((wled) => (
+                  <Grid item key={wled[0]}>
+                    <Stack direction={'row'} spacing={1}>
+                      {wled[1].connected ? (
+                        !wled[1].stickyLostConnection ? (
+                          <CheckCircleIcon color={'success'} />
+                        ) : (
+                          <WarningIcon color={'warning'} />
+                        )
+                      ) : (
+                        <ErrorIcon color='error' />
+                      )}
+                      <Typography>{`${wled[0]} wled`}</Typography>
+                    </Stack>
+                  </Grid>
+                ))
+              : null}
+            <Grid item xs={12}>
+              <Button variant={'contained'} href={`${webUrl}`} fullWidth>
+                Open
+              </Button>
+            </Grid>
+            <Grid item xs={4}>
+              <Button
+                variant={'contained'}
+                color={'error'}
+                href={`${webUrl}/${match?.eventKey}/referee/red`}
+                disabled={match === undefined}
+                fullWidth
+              >
+                Red Referee
+              </Button>
+            </Grid>
+            <Grid item xs={4}>
+              <Button
+                variant={'contained'}
+                href={`${webUrl}/${match?.eventKey}/referee/head`}
+                disabled={match === undefined}
+                fullWidth
+              >
+                Head Referee
+              </Button>
+            </Grid>
+            <Grid item xs={4}>
+              <Button
+                variant={'contained'}
+                color={'info'}
+                href={`${webUrl}/${match?.eventKey}/referee/blue`}
+                disabled={match === undefined}
+                fullWidth
+              >
+                Blue Referee
+              </Button>
+            </Grid>
+          </Grid>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+interface MatchDetailsProps {
+  match: Match<any> | undefined;
+  identifiers: Record<number, string>;
+}
+
+const MatchDetails: FC<MatchDetailsProps> = ({ match, identifiers }) => {
+  return (
+    <Grid container>
+      <Grid item xs={4}>
+        <Typography align='left' className='red'>
+          {match && match.participants ? (
+            <>
+              <span
+                className={`flag-icon flag-icon-${match.participants[0].team?.countryCode}`}
+              />{' '}
+              {identifiers[match?.participants?.[0].teamKey]}
+            </>
+          ) : (
+            '---'
+          )}
         </Typography>
-      </CardActions>
-    </Card>
+      </Grid>
+      <Grid item xs={4} />
+      <Grid item xs={4}>
+        <Typography align='right' className='blue'>
+          {match && match.participants ? (
+            <>
+              {identifiers[match?.participants?.[3].teamKey]}{' '}
+              <span
+                className={`flag-icon flag-icon-${match.participants[3].team?.countryCode}`}
+              />
+            </>
+          ) : (
+            '---'
+          )}
+        </Typography>
+      </Grid>
+
+      <Grid item xs={4}>
+        <Typography align='left' className='red'>
+          {match && match.participants ? (
+            <>
+              <span
+                className={`flag-icon flag-icon-${match.participants[1].team?.countryCode}`}
+              />{' '}
+              {identifiers[match?.participants?.[1].teamKey]}
+            </>
+          ) : (
+            '---'
+          )}
+        </Typography>
+      </Grid>
+      <Grid item xs={4}>
+        <Typography align='center'>vs.</Typography>
+      </Grid>
+      <Grid item xs={4}>
+        <Typography align='right' className='blue'>
+          {match && match.participants ? (
+            <>
+              {identifiers[match?.participants?.[4].teamKey]}{' '}
+              <span
+                className={`flag-icon flag-icon-${match.participants[4].team?.countryCode}`}
+              />
+            </>
+          ) : (
+            '---'
+          )}
+        </Typography>
+      </Grid>
+
+      <Grid item xs={4}>
+        <Typography align='left' className='red'>
+          {match && match.participants ? (
+            <>
+              <span
+                className={`flag-icon flag-icon-${match.participants[2].team?.countryCode}`}
+              />{' '}
+              {identifiers[match?.participants?.[2].teamKey]}
+            </>
+          ) : (
+            '---'
+          )}
+        </Typography>
+      </Grid>
+      <Grid item xs={4} />
+      <Grid item xs={4}>
+        <Typography align='right' className='blue'>
+          {match && match.participants ? (
+            <>
+              {identifiers[match?.participants?.[5].teamKey]}{' '}
+              <span
+                className={`flag-icon flag-icon-${match.participants[5].team?.countryCode}`}
+              />
+            </>
+          ) : (
+            '---'
+          )}
+        </Typography>
+      </Grid>
+
+      <Grid item xs={4}>
+        <Typography align='center' className='red'>
+          {match ? match.redScore : '--'}
+        </Typography>
+      </Grid>
+      <Grid item xs={4} />
+      <Grid item xs={4}>
+        <Typography align='center' className='blue'>
+          {match ? match.blueScore : '--'}
+        </Typography>
+      </Grid>
+    </Grid>
   );
 };
 
 export const EventMonitor: FC = () => {
   return (
     <DefaultLayout title='Event Monitor'>
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={3}>
-          <MonitorCard field={1} url='192.168.80.111:8081' />
+      <Grid container spacing={3} columns={10}>
+        <Grid item md={2} xs={10}>
+          <MonitorCard field={5} address='192.168.80.151' realtimePort={8081} />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <MonitorCard field={2} url='192.168.80.121:8081' />
+        <Grid item md={2} xs={10}>
+          <MonitorCard field={4} address='192.168.80.141' realtimePort={8081} />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <MonitorCard field={3} url='192.168.80.131:8081' />
+        <Grid item md={2} xs={10}>
+          <MonitorCard field={3} address='192.168.80.131' realtimePort={8081} />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <MonitorCard field={4} url='192.168.80.141:8081' />
+        <Grid item md={2} xs={10}>
+          <MonitorCard field={2} address='192.168.80.121' realtimePort={8081} />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <MonitorCard field={5} url='192.168.80.151:8081' />
+        <Grid item md={2} xs={10}>
+          <MonitorCard field={1} address='192.168.80.111' realtimePort={8081} />
         </Grid>
       </Grid>
     </DefaultLayout>

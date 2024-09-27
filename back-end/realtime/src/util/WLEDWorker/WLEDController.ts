@@ -5,6 +5,7 @@ import {
   buildWledSetColorPacket
 } from '../WLEDHelper.js';
 import WebSocket from 'ws';
+import { EventEmitter } from 'node:events';
 
 export class WledController {
   private static heartbeatPeriodMs = 500;
@@ -22,12 +23,15 @@ export class WledController {
 
   private lastTimestamp: number | null;
 
+  public readonly eventEmitter: EventEmitter;
+
   constructor(initPacket: WledInitParameters) {
     this.initPacket = initPacket;
     this.keepAlive = null;
     this.heartbeat = null;
     this.socket = null;
     this.lastTimestamp = null;
+    this.eventEmitter = new EventEmitter();
   }
 
   public initialize(initPacket?: WledInitParameters): void {
@@ -50,6 +54,7 @@ export class WledController {
       if (!this.socket) return;
       if (this.socket.readyState === 0) return;
       this.connected = true;
+      this.emitStatus();
       logger.info(`${this.getName()} === connected ===`);
       try {
         this.socket?.send(buildWledInitializationPacket(this.initPacket));
@@ -68,6 +73,7 @@ export class WledController {
     this.socket.onclose = () => {
       logger.error(`${this.getName()} disconnected`);
       this.connected = false;
+      this.emitStatus();
       // If the keepalive loop is running, clear it
       if (this.keepAlive) {
         clearInterval(this.keepAlive);
@@ -75,7 +81,7 @@ export class WledController {
       }
       // Attempt to reconnect once the socket has closed
       setTimeout(() => this.initialize(), WledController.reconnectPeriodMs);
-    }
+    };
 
     this.socket.onerror = (e: WebSocket.ErrorEvent) => {
       logger.error(`${this.getName()} failed to connect: ${e.error}`);
@@ -106,7 +112,7 @@ export class WledController {
   private startKeepalive(): void {
     logger.info(`${this.getName()} starting keepalive`);
     this.keepAlive = setInterval(() => {
-      if (!this.connected) return
+      if (!this.connected) return;
       if (!this.lastTimestamp) return;
       if (
         Date.now() - this.lastTimestamp >=
@@ -114,6 +120,7 @@ export class WledController {
       ) {
         logger.error(`${this.getName()} keepalive timeout`);
         this.connected = false;
+        this.emitStatus();
         this.socket?.terminate();
 
         if (this.keepAlive) {
@@ -154,5 +161,11 @@ export class WledController {
     const name = this.initPacket.address.replace(/(ws:\/\/)|(\/ws)/g, '');
     const parts = name.split('-');
     return name.replace(parts[0] + '-', '');
+  }
+
+  private emitStatus(): void {
+    this.eventEmitter.emit('status', {
+      connected: this.connected
+    });
   }
 }
