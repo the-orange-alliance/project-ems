@@ -133,6 +133,13 @@ export default class FCS extends Room {
 
     socket.on('fcs:digitalInputs', this.packetManager.handleDigitalInputs);
 
+    socket.on('fcs:clearStatus', () => {
+      Object.entries(this.status.wleds).forEach((wled) => {
+        this.status.wleds[wled[0]].stickyLostConnection = false;
+      });
+      socket.emit('fcs:status', this.status);
+    });
+
     socket.emit('fcs:update', this.latestFcsStatus);
   }
 

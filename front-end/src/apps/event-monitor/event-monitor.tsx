@@ -25,7 +25,7 @@ import {
   Match,
   FieldControlStatus
 } from '@toa-lib/models';
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -51,6 +51,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const [status, setStatus] = useState('STANDBY');
   const { data: match } = useMatchAll(key);
   const identifiers = useTeamIdentifiersForEventKey(key?.eventKey);
+  const [socket, setSocket] = useState<null | Socket>(null);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -79,6 +80,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
     socket.on('fcs:status', handleFcsStatus);
     socket.connect();
     socket.emit('rooms', ['match', 'fcs']);
+    setSocket(socket);
     return () => {
       socket.off(MatchSocketEvent.PRESTART, handlePrestart);
       socket.off(MatchSocketEvent.START, handleStart);
@@ -110,6 +112,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
 
   const handleFcsStatus = (status: FieldControlStatus) => {
     setFcsStatus(status);
+  };
+  const handleFcsClearStatus = () => {
+    socket?.emit('fcs:clearStatus');
   };
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -212,13 +217,16 @@ const MonitorCard: FC<MonitorCardProps> = ({
       >
         <DialogTitle display={'flex'} justifyContent={'space-between'}>
           {`Field ${field}`}
-          <Button
-            color={'info'}
-            endIcon={<RefreshIcon />}
-            onClick={handleRefresh}
-          >
-            Refresh
-          </Button>
+          <Stack direction={'row'} spacing={2}>
+            <Button onClick={handleFcsClearStatus}>Clear Status</Button>
+            <Button
+              color={'info'}
+              endIcon={<RefreshIcon />}
+              onClick={handleRefresh}
+            >
+              Refresh
+            </Button>
+          </Stack>
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} columns={12}>
