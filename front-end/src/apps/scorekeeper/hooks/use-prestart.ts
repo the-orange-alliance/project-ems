@@ -73,7 +73,6 @@ export const usePrestartCallback = () => {
         set(currentTournamentKeyAtom, currentMatch.tournamentKey);
         fieldControl?.prestartField?.();
         // Once we recieve the prestart response, immediately send update to load socket with match
-        console.log(currentMatch);
         once(MatchSocketEvent.PRESTART, () => sendUpdate(currentMatch));
         // Send prestart to server
         sendPrestart({ eventKey, tournamentKey, id });
