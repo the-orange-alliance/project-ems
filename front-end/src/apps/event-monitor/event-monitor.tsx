@@ -23,7 +23,8 @@ import {
   MatchSocketEvent,
   MatchKey,
   Match,
-  FieldControlStatus
+  FieldControlStatus,
+  Team
 } from '@toa-lib/models';
 import { io, Socket } from 'socket.io-client';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -31,11 +32,13 @@ import ErrorIcon from '@mui/icons-material/Error';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import WarningIcon from '@mui/icons-material/Warning';
+import { useTeamsForEvent } from 'src/api/use-team-data';
 
 interface MonitorCardProps {
   field: number;
   address: string;
   realtimePort: number;
+  teams?: Team[];
 }
 
 const MonitorCard: FC<MonitorCardProps> = ({
@@ -441,23 +444,49 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, identifiers }) => {
 };
 
 export const EventMonitor: FC = () => {
+  const { data: teams } = useTeamsForEvent('FGC_2024-FGC-CMP');
   return (
     <DefaultLayout title='Event Monitor'>
       <Grid container spacing={3} columns={10}>
         <Grid item md={2} xs={10}>
-          <MonitorCard field={5} address='192.168.80.151' realtimePort={8081} />
+          <MonitorCard
+            field={5}
+            address='192.168.80.151'
+            realtimePort={8081}
+            teams={teams}
+          />
         </Grid>
         <Grid item md={2} xs={10}>
-          <MonitorCard field={4} address='192.168.80.141' realtimePort={8081} />
+          <MonitorCard
+            field={4}
+            address='192.168.80.141'
+            realtimePort={8081}
+            teams={teams}
+          />
         </Grid>
         <Grid item md={2} xs={10}>
-          <MonitorCard field={3} address='192.168.80.131' realtimePort={8081} />
+          <MonitorCard
+            field={3}
+            address='192.168.80.131'
+            realtimePort={8081}
+            teams={teams}
+          />
         </Grid>
         <Grid item md={2} xs={10}>
-          <MonitorCard field={2} address='192.168.80.121' realtimePort={8081} />
+          <MonitorCard
+            field={2}
+            address='192.168.80.121'
+            realtimePort={8081}
+            teams={teams}
+          />
         </Grid>
         <Grid item md={2} xs={10}>
-          <MonitorCard field={1} address='192.168.80.111' realtimePort={8081} />
+          <MonitorCard
+            field={1}
+            address='192.168.80.111'
+            realtimePort={8081}
+            teams={teams}
+          />
         </Grid>
       </Grid>
     </DefaultLayout>
