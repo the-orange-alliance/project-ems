@@ -170,6 +170,25 @@ const MonitorCard: FC<MonitorCardProps> = ({
     }
   };
 
+  const getFieldDelay = (): string => {
+    const now = DateTime.now().set({ second: 0, millisecond: 0 });
+    if (match) {
+      const scheduled = DateTime.fromISO(match.scheduledTime).set({
+        second: 0,
+        millisecond: 0
+      });
+      if (now > scheduled) {
+        return now.diff(scheduled).toFormat(`h'h' m'm' 'behind'`);
+      } else if (now < scheduled) {
+        return scheduled.diff(now).toFormat(`h'h' m'm' 'ahead'`);
+      } else {
+        return 'On Time';
+      }
+    } else {
+      return 'N/A';
+    }
+  };
+
   return (
     <>
       <Card
@@ -214,31 +233,13 @@ const MonitorCard: FC<MonitorCardProps> = ({
           <MatchDetails key={field} match={match} teams={teams} />
         </CardContent>
         <CardActions>
-          {match ? (
-            DateTime.now() >= DateTime.fromISO(match.scheduledTime) ? (
-              <Typography
-                variant='body2'
-                sx={{ marginLeft: 'auto' }}
-                color={'red'}
-              >
-                {DateTime.now()
-                  .diff(DateTime.fromISO(match.scheduledTime))
-                  .shiftTo('hours', 'minutes')
-                  .toFormat(`h'h' m'm' 'behind'`)}
-              </Typography>
-            ) : (
-              <Typography
-                variant='body2'
-                sx={{ marginLeft: 'auto' }}
-                color='green'
-              >
-                {DateTime.fromISO(match.scheduledTime)
-                  .diff(DateTime.now())
-                  .shiftTo('hours', 'minutes')
-                  .toFormat(`h'h' m'm' 'ahead'`)}
-              </Typography>
-            )
-          ) : null}
+          <Typography
+            variant='body2'
+            sx={{ marginLeft: 'auto' }}
+            color={getFieldDelay().includes('behind') ? 'error' : 'primary'}
+          >
+            {getFieldDelay()}
+          </Typography>
         </CardActions>
       </Card>
       <Dialog
