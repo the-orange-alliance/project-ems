@@ -31,6 +31,7 @@ export class WledController {
     this.heartbeat = null;
     this.socket = null;
     this.lastTimestamp = null;
+    this.eventEmitter = new EventEmitter();
   }
 
   public initialize(initPacket?: WledInitParameters): void {
