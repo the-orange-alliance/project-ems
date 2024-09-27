@@ -90,6 +90,11 @@ export interface WledUpdateParameters {
   patterns: LedPatternUpdateParameters[];
 }
 
+export interface WledStatus {
+  connected: boolean;
+  stickyLostConnection: boolean;
+}
+
 //-------------------------------------------
 // Field Control packets
 //-------------------------------------------
@@ -108,3 +113,7 @@ export type FieldControlUpdatePacket = FieldControlPacket<
   HubUpdateParameters,
   WledUpdateParameters
 >;
+
+export interface FieldControlStatus {
+  wleds: Record<string, WledStatus>;
+}
