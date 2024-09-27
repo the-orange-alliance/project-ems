@@ -52,8 +52,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const [connected, setConnected] = useState(false);
   const [key, setKey] = useState<MatchKey | null>(null);
   const [status, setStatus] = useState('STANDBY');
-  const { data: match, mutate } = useMatchAll(key);
+  const { data: currentMatch } = useMatchAll(key);
   const [socket, setSocket] = useState<null | Socket>(null);
+  const [match, setMatch] = useState<Match<any> | null>(null);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -94,6 +95,12 @@ const MonitorCard: FC<MonitorCardProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (currentMatch) {
+      setMatch(currentMatch);
+    }
+  }, [currentMatch]);
+
   const handleConnect = () => setConnected(true);
   const handleDisconnect = () => setConnected(false);
 
@@ -114,16 +121,11 @@ const MonitorCard: FC<MonitorCardProps> = ({
     setStatus('COMMITTED');
   };
   const handleUpdate = (update: Match<any>) => {
-    setStatus('IN PROGRESS');
     const newMatch = JSON.parse(JSON.stringify(update));
-    if (!match) {
-      setKey({
-        eventKey: update.eventKey,
-        tournamentKey: update.tournamentKey,
-        id: update.id
-      });
+    if (status === 'STANDBY') {
+      setStatus('IN PROGRESS');
     }
-    mutate(newMatch);
+    setMatch(newMatch);
   };
 
   const handleFcsStatus = (status: FieldControlStatus) => {
@@ -338,7 +340,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
 };
 
 interface MatchDetailsProps {
-  match: Match<any> | undefined;
+  match: Match<any> | null;
   teams: Team[] | undefined;
   expanded?: boolean;
 }
