@@ -186,7 +186,7 @@ const TeleScoreSheet: FC<Props> = ({
         };
 
         return (
-          <Grid item key={`${p.teamKey}-Balance`} xs={12} md={6} lg={6}>
+          <Grid item key={`${p.teamKey}-Balance`} xs={12} md={8} lg={6}>
             {/* The states attribute MUST match the order of the Balance enum */}
             <StateToggle
               title={
