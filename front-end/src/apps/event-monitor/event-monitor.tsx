@@ -15,7 +15,6 @@ import {
   Typography
 } from '@mui/material';
 import { useMatchAll } from 'src/api/use-match-data';
-import { useTeamIdentifiersForEventKey } from 'src/hooks/use-team-identifier';
 import { DateTime } from 'luxon';
 import { FC, useEffect, useState } from 'react';
 import { DefaultLayout } from 'src/layouts/default-layout';
@@ -44,7 +43,8 @@ interface MonitorCardProps {
 const MonitorCard: FC<MonitorCardProps> = ({
   field,
   address,
-  realtimePort
+  realtimePort,
+  teams
 }) => {
   const webUrl = `http://${address}`;
   const socketUrl = `ws://${address}:${realtimePort}`;
@@ -52,8 +52,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const [connected, setConnected] = useState(false);
   const [key, setKey] = useState<MatchKey | null>(null);
   const [status, setStatus] = useState('STANDBY');
-  const { data: match } = useMatchAll(key);
-  const identifiers = useTeamIdentifiersForEventKey(key?.eventKey);
+  const { data: match, mutate } = useMatchAll(key);
   const [socket, setSocket] = useState<null | Socket>(null);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -80,6 +79,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
     socket.on(MatchSocketEvent.ABORT, handleAbort);
     socket.on(MatchSocketEvent.END, handleEnd);
     socket.on(MatchSocketEvent.COMMIT, handleCommit);
+    socket.on(MatchSocketEvent.UPDATE, handleUpdate);
     socket.on('fcs:status', handleFcsStatus);
     socket.connect();
     socket.emit('rooms', ['match', 'fcs']);
@@ -90,6 +90,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
       socket.off(MatchSocketEvent.ABORT, handleAbort);
       socket.off(MatchSocketEvent.END, handleEnd);
       socket.off(MatchSocketEvent.COMMIT, handleCommit);
+      socket.off(MatchSocketEvent.UPDATE, handleUpdate);
     };
   }, []);
 
@@ -111,6 +112,18 @@ const MonitorCard: FC<MonitorCardProps> = ({
   };
   const handleCommit = () => {
     setStatus('COMMITTED');
+  };
+  const handleUpdate = (update: Match<any>) => {
+    setStatus('IN PROGRESS');
+    const newMatch = JSON.parse(JSON.stringify(update));
+    if (!match) {
+      setKey({
+        eventKey: update.eventKey,
+        tournamentKey: update.tournamentKey,
+        id: update.id
+      });
+    }
+    mutate(newMatch);
   };
 
   const handleFcsStatus = (status: FieldControlStatus) => {
@@ -196,7 +209,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
           }
         />
         <CardContent>
-          <MatchDetails key={field} match={match} identifiers={identifiers} />
+          <MatchDetails key={field} match={match} teams={teams} />
         </CardContent>
         <CardActions>
           {match ? (
@@ -260,11 +273,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
               </Stack>
             </Grid>
             <Grid item xs={12}>
-              <MatchDetails
-                key={field}
-                match={match}
-                identifiers={identifiers}
-              />
+              <MatchDetails key={field} match={match} teams={teams} expanded />
             </Grid>
             {fcsStatus
               ? Object.entries(fcsStatus.wleds).map((wled) => (
@@ -330,20 +339,27 @@ const MonitorCard: FC<MonitorCardProps> = ({
 
 interface MatchDetailsProps {
   match: Match<any> | undefined;
-  identifiers: Record<number, string>;
+  teams: Team[] | undefined;
+  expanded?: boolean;
 }
 
-const MatchDetails: FC<MatchDetailsProps> = ({ match, identifiers }) => {
+const MatchDetails: FC<MatchDetailsProps> = ({ match, teams, expanded }) => {
+  const participants = match?.participants?.map((p) => ({
+    ...p,
+    team: teams?.find((t) => t.teamKey === p.teamKey)
+  }));
   return (
     <Grid container>
       <Grid item xs={4}>
         <Typography align='left' className='red'>
-          {match && match.participants ? (
+          {participants ? (
             <>
               <span
-                className={`flag-icon flag-icon-${match.participants[0].team?.countryCode}`}
+                className={`flag-icon flag-icon-${participants?.[0].team?.countryCode}`}
               />{' '}
-              {identifiers[match?.participants?.[0].teamKey]}
+              {expanded
+                ? participants?.[0].team?.teamNameShort
+                : participants?.[0].team?.country}
             </>
           ) : (
             '---'
@@ -353,11 +369,13 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, identifiers }) => {
       <Grid item xs={4} />
       <Grid item xs={4}>
         <Typography align='right' className='blue'>
-          {match && match.participants ? (
+          {participants ? (
             <>
-              {identifiers[match?.participants?.[3].teamKey]}{' '}
+              {expanded
+                ? participants?.[3].team?.teamNameShort
+                : participants?.[3].team?.country}{' '}
               <span
-                className={`flag-icon flag-icon-${match.participants[3].team?.countryCode}`}
+                className={`flag-icon flag-icon-${participants?.[3].team?.countryCode}`}
               />
             </>
           ) : (
@@ -368,12 +386,14 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, identifiers }) => {
 
       <Grid item xs={4}>
         <Typography align='left' className='red'>
-          {match && match.participants ? (
+          {participants ? (
             <>
               <span
-                className={`flag-icon flag-icon-${match.participants[1].team?.countryCode}`}
+                className={`flag-icon flag-icon-${participants?.[1].team?.countryCode}`}
               />{' '}
-              {identifiers[match?.participants?.[1].teamKey]}
+              {expanded
+                ? participants?.[1].team?.teamNameShort
+                : participants?.[1].team?.country}
             </>
           ) : (
             '---'
@@ -385,11 +405,13 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, identifiers }) => {
       </Grid>
       <Grid item xs={4}>
         <Typography align='right' className='blue'>
-          {match && match.participants ? (
+          {participants ? (
             <>
-              {identifiers[match?.participants?.[4].teamKey]}{' '}
+              {expanded
+                ? participants?.[4].team?.teamNameShort
+                : participants?.[4].team?.country}{' '}
               <span
-                className={`flag-icon flag-icon-${match.participants[4].team?.countryCode}`}
+                className={`flag-icon flag-icon-${participants?.[4].team?.countryCode}`}
               />
             </>
           ) : (
@@ -400,12 +422,14 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, identifiers }) => {
 
       <Grid item xs={4}>
         <Typography align='left' className='red'>
-          {match && match.participants ? (
+          {participants ? (
             <>
               <span
-                className={`flag-icon flag-icon-${match.participants[2].team?.countryCode}`}
+                className={`flag-icon flag-icon-${participants?.[2].team?.countryCode}`}
               />{' '}
-              {identifiers[match?.participants?.[2].teamKey]}
+              {expanded
+                ? participants?.[2].team?.teamNameShort
+                : participants?.[2].team?.country}
             </>
           ) : (
             '---'
@@ -415,11 +439,13 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, identifiers }) => {
       <Grid item xs={4} />
       <Grid item xs={4}>
         <Typography align='right' className='blue'>
-          {match && match.participants ? (
+          {participants ? (
             <>
-              {identifiers[match?.participants?.[5].teamKey]}{' '}
+              {expanded
+                ? participants?.[5].team?.teamNameShort
+                : participants?.[5].team?.country}{' '}
               <span
-                className={`flag-icon flag-icon-${match.participants[5].team?.countryCode}`}
+                className={`flag-icon flag-icon-${participants[5].team?.countryCode}`}
               />
             </>
           ) : (
