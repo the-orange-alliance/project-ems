@@ -12,7 +12,10 @@ import {
 import { useSeasonFieldControl } from 'src/hooks/use-season-components';
 import { useMatchesForTournament } from 'src/api/use-match-data';
 import { useNextUnplayedMatch } from './use-next-unplayed-match';
-import { resultsSyncMatch } from 'src/api/use-results-sync';
+import {
+  resultsSyncMatch,
+  resultsSyncRankings
+} from 'src/api/use-results-sync';
 import { useSyncConfig } from 'src/hooks/use-sync-config';
 
 export const usePostResultsCallback = () => {
@@ -43,7 +46,7 @@ export const usePostResultsCallback = () => {
         }
 
         // Sync match online
-        const { success } = await resultsSyncMatch(
+        const { success: successMatch } = await resultsSyncMatch(
           match.eventKey,
           match.tournamentKey,
           match.id,
@@ -51,8 +54,15 @@ export const usePostResultsCallback = () => {
           apiKey
         );
 
+        const { success: successRankings } = await resultsSyncRankings(
+          match.eventKey,
+          match.tournamentKey,
+          platform,
+          apiKey
+        );
+
         // Update local match array with posted = 1
-        if (success && matches) {
+        if (successMatch && successRankings && matches) {
           const copy = [...matches];
           const index = copy.findIndex(
             (m) => m.id === match.id && m.tournamentKey === match.tournamentKey
