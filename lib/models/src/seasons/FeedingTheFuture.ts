@@ -319,7 +319,7 @@ function calculateRankings(
     const lowestScore = ranking.played > 0 ? Math.min(...qualifiedScores) : 0;
     const index = scores.findIndex((s) => s === lowestScore);
     const newScores = (
-      scores.length > 1 ? scores.splice(index, 1) : scores
+      scores.length > 1 ? scores.filter((_, i) => i !== index) : scores
     ).map((score) => (score >= 0 ? score : 0));
     if (newScores.length > 0) {
       ranking.rankingScore = Number(
@@ -521,12 +521,22 @@ export function getFoodSecuredPoints(details: MatchDetails): number {
 export function getBalancedRobots(details: MatchDetails): number {
   let count = 0;
   // Put everyone in an array
-  const states = [details.redRobotOneParked, details.redRobotTwoParked, details.redRobotThreeParked, details.blueRobotOneParked, details.blueRobotTwoParked, details.blueRobotThreeParked];
+  const states = [
+    details.redRobotOneParked,
+    details.redRobotTwoParked,
+    details.redRobotThreeParked,
+    details.blueRobotOneParked,
+    details.blueRobotTwoParked,
+    details.blueRobotThreeParked
+  ];
   states.forEach((state) => {
     if (state === MatchEndRobotState.PlatformParked) {
-    // Robots parked on the platform are ALWAYS considered balanced.
+      // Robots parked on the platform are ALWAYS considered balanced.
       count += 1;
-    } else if (state === MatchEndRobotState.RampParked && details.fieldBalanced) {
+    } else if (
+      state === MatchEndRobotState.RampParked &&
+      details.fieldBalanced
+    ) {
       // Otherwise, if they're ramp parked and the field is balanced, they're balanced.
       count += 1;
     }
