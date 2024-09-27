@@ -44,5 +44,5 @@ export const useRankingsForTournament = (
     eventKey && tournamentKey
       ? `ranking/${eventKey}/${tournamentKey}`
       : undefined,
-    (url) => apiFetcher(url, 'GET', undefined, rankingZod.array().parse)
+    (url) => apiFetcher(url, 'GET')
   );

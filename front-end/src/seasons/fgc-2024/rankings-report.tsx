@@ -31,16 +31,18 @@ export const RankingsReport: FC<
             </TableRow>
           </TableHead>
           <TableBody>
-            {rankings.map((r) => (
-              <TableRow key={`${r.eventKey}-${r.tournamentKey}-${r.teamKey}`}>
-                <TableCell>{r.rank}</TableCell>
-                <TableCell>{identifiers[r.teamKey]}</TableCell>
-                <TableCell>{r.played}</TableCell>
-                <TableCell>{r.rankingScore ?? 0}</TableCell>
-                <TableCell>{r.highestScore ?? 0}</TableCell>
-                <TableCell>{r.foodSecuredPoints ?? 0}</TableCell>
-              </TableRow>
-            ))}
+            {rankings
+              .sort((a, b) => a.rank - b.rank)
+              .map((r) => (
+                <TableRow key={`${r.eventKey}-${r.tournamentKey}-${r.teamKey}`}>
+                  <TableCell>{r.rank}</TableCell>
+                  <TableCell>{identifiers[r.teamKey]}</TableCell>
+                  <TableCell>{r.played}</TableCell>
+                  <TableCell>{r.rankingScore ?? 0}</TableCell>
+                  <TableCell>{r.highestScore ?? 0}</TableCell>
+                  <TableCell>{r.foodSecuredPoints ?? 0}</TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>
