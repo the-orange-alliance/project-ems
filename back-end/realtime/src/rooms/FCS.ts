@@ -98,7 +98,9 @@ export default class FCS extends Room {
   }
 
   public initializeEvents(socket: Socket): void {
+    // Emit init and status packets when a client connects
     socket.emit('fcs:init', this.packetManager.getInitPacket());
+    socket.emit('fcs:status', this.status);
 
     socket.on(
       'fcs:setFieldOptions',
