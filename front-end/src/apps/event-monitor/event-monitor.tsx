@@ -228,11 +228,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
               />
             </Grid>
             <Grid item xs={12}>
-              <Button
-                variant={'contained'}
-                href={`${webUrl}/${match?.eventKey}`}
-                fullWidth
-              >
+              <Button variant={'contained'} href={`${webUrl}`} fullWidth>
                 Open
               </Button>
             </Grid>
@@ -241,6 +237,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
                 variant={'contained'}
                 color={'error'}
                 href={`${webUrl}/${match?.eventKey}/referee/red`}
+                disabled={match === undefined}
                 fullWidth
               >
                 Red Referee
@@ -250,6 +247,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
               <Button
                 variant={'contained'}
                 href={`${webUrl}/${match?.eventKey}/referee/head`}
+                disabled={match === undefined}
                 fullWidth
               >
                 Head Referee
@@ -260,6 +258,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
                 variant={'contained'}
                 color={'info'}
                 href={`${webUrl}/${match?.eventKey}/referee/blue`}
+                disabled={match === undefined}
                 fullWidth
               >
                 Blue Referee
