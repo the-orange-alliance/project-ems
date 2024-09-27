@@ -390,19 +390,19 @@ export const EventMonitor: FC = () => {
   return (
     <DefaultLayout title='Event Monitor'>
       <Grid container spacing={3} columns={10}>
-        <Grid item md={2}>
+        <Grid item md={2} xs={10}>
           <MonitorCard field={5} address='192.168.80.151' realtimePort={8081} />
         </Grid>
-        <Grid item md={2}>
+        <Grid item md={2} xs={10}>
           <MonitorCard field={4} address='192.168.80.141' realtimePort={8081} />
         </Grid>
-        <Grid item md={2}>
+        <Grid item md={2} xs={10}>
           <MonitorCard field={3} address='192.168.80.131' realtimePort={8081} />
         </Grid>
-        <Grid item md={2}>
+        <Grid item md={2} xs={10}>
           <MonitorCard field={2} address='192.168.80.121' realtimePort={8081} />
         </Grid>
-        <Grid item md={2}>
+        <Grid item md={2} xs={10}>
           <MonitorCard field={1} address='192.168.80.111' realtimePort={8081} />
         </Grid>
       </Grid>
