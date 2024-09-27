@@ -28,7 +28,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
   const [matches, setMatches] = useRecoilState(
     matchesByEventKeyAtomFam(eventSchedule?.eventKey ?? '')
   );
-  const {apiKey, platform} = useSyncConfig();
+  const { apiKey, platform } = useSyncConfig();
   const [loading, setLoading] = useState(false);
   const { data: scheduleItems } = useScheduleItemsForTournament(
     eventSchedule?.eventKey,
@@ -68,7 +68,12 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
         matches,
         false
       );
-      await resultsSyncMatches(eventSchedule.eventKey, eventSchedule.tournamentKey, platform, apiKey);
+      await resultsSyncMatches(
+        eventSchedule.eventKey,
+        eventSchedule.tournamentKey,
+        platform,
+        apiKey
+      );
       showSnackbar('Matches saved successfully.');
       setLoading(false);
     } catch (e) {

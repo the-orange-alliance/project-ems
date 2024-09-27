@@ -9,6 +9,8 @@ import { Match, ScheduleItem, Team, Tournament } from '@toa-lib/models';
 import { Report } from './report-container';
 import { DateTime } from 'luxon';
 import { EventTournamentFieldsDropdown } from 'src/components/dropdowns/event-tournament-fields-dropdown';
+import { mkConfig, generateCsv, download } from 'export-to-csv';
+import { Button } from '@mui/material';
 
 interface Props {
   tournament: Tournament;
@@ -34,8 +36,31 @@ export const MatchReport: FC<Props> = ({
   const allianceSize = matches?.[0]?.participants?.length
     ? matches[0].participants.length / 2
     : 3;
-
   const changeFields = (newFields: number[]) => setFields(newFields);
+  const downloadCSV = () => {
+    const csvConfig = mkConfig({ useKeysAsHeaders: true });
+    const csv = generateCsv(csvConfig)(
+      fieldMatches.map((m) => ({
+        name: m.name,
+        field: m.fieldNumber,
+        time: DateTime.fromISO(m.scheduledTime).toLocaleString(
+          DateTime.DATETIME_FULL
+        ),
+        ...m.participants?.reduce(
+          (acc, p, i) => ({
+            ...acc,
+            [i < allianceSize
+              ? `Red ${i + 1}`
+              : `Blue ${i + 1 - allianceSize}`]: teams.find(
+              (t) => t.teamKey === p.teamKey
+            )?.teamNameShort
+          }),
+          {}
+        )
+      }))
+    );
+    download(csvConfig)(csv);
+  };
   return (
     <>
       <div className='no-print'>
@@ -43,6 +68,9 @@ export const MatchReport: FC<Props> = ({
           fields={fields}
           onChange={changeFields}
         />
+      </div>
+      <div>
+        <Button onClick={downloadCSV}>Greg CSV</Button>
       </div>
       <Report name={`${tournament.name} Match Schedule`}>
         <TableContainer>
