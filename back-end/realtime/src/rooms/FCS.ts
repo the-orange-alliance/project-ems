@@ -135,7 +135,8 @@ export default class FCS extends Room {
 
     socket.on('fcs:clearStatus', () => {
       Object.entries(this.status.wleds).forEach((wled) => {
-        this.status.wleds[wled[0]].stickyLostConnection = false;
+        this.status.wleds[wled[0]].stickyLostConnection =
+          !this.status.wleds[wled[0]].connected;
       });
       socket.emit('fcs:status', this.status);
     });
