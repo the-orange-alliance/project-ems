@@ -22,7 +22,7 @@ export const MatchSchedulerDropdown: FC<Props> = ({
     onChange(event.target.value);
 
   return (
-    <FormControl disabled={disabled}>
+    <FormControl disabled={disabled} sx={{ minWidth: 200 }}>
       <InputLabel>Match Scheduler</InputLabel>
       <Select
         value={value ?? 'standard'}
