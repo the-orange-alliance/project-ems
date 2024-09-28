@@ -1,6 +1,12 @@
 import { FC, useState } from 'react';
 import { RandomMatches } from '../match-gen/random-matches';
-import { EventSchedule, Match, RESULT_NOT_PLAYED } from '@toa-lib/models';
+import {
+  EventSchedule,
+  Match,
+  RESULT_NOT_PLAYED,
+  ScheduleItem,
+  Tournament
+} from '@toa-lib/models';
 import { useTeamsForEvent } from 'src/api/use-team-data';
 import { useCurrentTournament } from 'src/api/use-tournament-data';
 import { useScheduleItemsForTournament } from 'src/api/use-schedule-data';
@@ -16,6 +22,7 @@ import { matchesByEventKeyAtomFam } from 'src/stores/recoil';
 import { useSWRConfig } from 'swr';
 import { useSyncConfig } from 'src/hooks/use-sync-config';
 import { resultsSyncMatches } from 'src/api/use-results-sync';
+import { FixedMatches } from '../match-gen/fixed-matches';
 
 interface Props {
   eventSchedule?: EventSchedule;
@@ -100,7 +107,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
 
   return (
     <>
-      <RandomMatches
+      <MatchGen
         eventSchedule={eventSchedule}
         scheduleItems={scheduleItems}
         tournament={tournament}
@@ -117,4 +124,40 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
       )}
     </>
   );
+};
+
+interface MatchGenProps {
+  eventSchedule?: EventSchedule;
+  scheduleItems?: ScheduleItem[];
+  tournament?: Tournament;
+  onCreateMatches: (matches: Match<any>[]) => void;
+}
+
+const MatchGen: FC<MatchGenProps> = ({
+  eventSchedule,
+  scheduleItems,
+  tournament,
+  onCreateMatches
+}) => {
+  if (!eventSchedule) return <div>Please select a tournament.</div>;
+  switch (eventSchedule.type) {
+    case 'Round Robin':
+      return (
+        <FixedMatches
+          eventSchedule={eventSchedule}
+          scheduleItems={scheduleItems}
+          tournament={tournament}
+          onCreateMatches={onCreateMatches}
+        />
+      );
+    default:
+      return (
+        <RandomMatches
+          eventSchedule={eventSchedule}
+          scheduleItems={scheduleItems}
+          tournament={tournament}
+          onCreateMatches={onCreateMatches}
+        />
+      );
+  }
 };

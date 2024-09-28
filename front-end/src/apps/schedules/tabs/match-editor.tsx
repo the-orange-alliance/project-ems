@@ -35,6 +35,7 @@ export const MatchEditor: FC<Props> = ({ eventSchedule, savedMatches }) => {
         matches={savedMatches ?? []}
         teams={teams ?? []}
         onSelect={handleSelect}
+        colored
       />
     </Box>
   );

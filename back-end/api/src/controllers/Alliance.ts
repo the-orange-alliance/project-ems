@@ -24,14 +24,31 @@ router.get(
 );
 
 router.get(
-  '/:eventKey/:rank',
+  '/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { eventKey } = req.params;
+      const { eventKey, tournamentKey } = req.params;
       const db = await getDB(eventKey);
       const data = await db.selectAllWhere(
         'alliance',
-        `allianceRank = ${req.params.rank}`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+      );
+      res.send(data);
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.get(
+  '/:eventKey/:tournamentKey/:rank',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventKey, tournamentKey, rank } = req.params;
+      const db = await getDB(eventKey);
+      const data = await db.selectAllWhere(
+        'alliance',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND allianceRank = ${rank}`
       );
       if (!data) {
         return next(DataNotFoundError);
@@ -45,7 +62,7 @@ router.get(
 
 router.post(
   '/:eventKey',
-  validateBodyZ(allianceMemberZod),
+  validateBodyZ(allianceMemberZod.array()),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { eventKey } = req.params;
@@ -59,16 +76,33 @@ router.post(
 );
 
 router.patch(
-  '/:eventKey/:allianceKey',
+  '/:eventKey/:tournamentKey/:teamKey',
   validateBodyZ(allianceMemberZod),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { evnetKey, allianceKey } = req.params;
-      const db = await getDB(evnetKey);
+      const { eventKey, tournamentKey, teamKey } = req.params;
+      const db = await getDB(eventKey);
       await db.updateWhere(
         'alliance',
         req.body,
-        `allianceKey = "${req.params.allianceKey}"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND teamKey = "${teamKey}"`
+      );
+      res.status(200).send({});
+    } catch (e) {
+      return next(e);
+    }
+  }
+);
+
+router.delete(
+  '/:eventKey/:tournamentKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { eventKey, tournamentKey, teamKey } = req.params;
+      const db = await getDB(eventKey);
+      await db.deleteWhere(
+        'alliance',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
       );
       res.status(200).send({});
     } catch (e) {

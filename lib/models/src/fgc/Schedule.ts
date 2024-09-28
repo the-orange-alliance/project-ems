@@ -69,6 +69,16 @@ export namespace FGC2024 {
     }
     return newMatches;
   }
+  export const fgcAllianceOrder = [
+    [1, 9, 24],
+    [2, 10, 23],
+    [3, 11, 22],
+    [4, 12, 21],
+    [5, 13, 20],
+    [6, 14, 19],
+    [7, 15, 18],
+    [8, 16, 17]
+  ];
 }
 
 // We'll leave this in for scientific purposes, but it turns out I'm actually a genius and don't need this.

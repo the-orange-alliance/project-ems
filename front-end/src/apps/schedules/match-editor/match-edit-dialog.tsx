@@ -9,6 +9,7 @@ import {
   Tabs
 } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
+import { mutate } from 'swr';
 import { patchWholeMatch, useMatchAll } from 'src/api/use-match-data';
 import { TabPanel } from 'src/components/util/tab-panel';
 import { MatchInfoTab } from './match-info-tab';
@@ -18,6 +19,8 @@ import { MatchParticipantTab } from './match-participant-tab';
 import { MatchDetailTab } from './match-detail-tab';
 import { useSnackbar } from 'src/hooks/use-snackbar';
 import { sendCommitScores, sendPostResults } from 'src/api/use-socket';
+import { useModal } from '@ebay/nice-modal-react';
+import MatchRepostDialog from 'src/components/dialogs/match-repost-dialog';
 
 interface Props {
   open: boolean;
@@ -46,6 +49,7 @@ export const MatchEditDialog: FC<Props> = ({
     id: matchId
   });
   const { showSnackbar } = useSnackbar();
+  const repostModal = useModal(MatchRepostDialog);
   useEffect(() => {
     if (savedMatch) setMatch(savedMatch);
   }, [savedMatch, matchId, setMatch]);
@@ -54,11 +58,25 @@ export const MatchEditDialog: FC<Props> = ({
   };
   const updateMatch = async () => {
     if (!match) return;
+    try {
+      await patchWholeMatch(match);
+      onClose();
+      mutate(`match/${eventKey}/${tournamentKey}`);
+    } catch (e) {
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      showSnackbar('Error while uploading matches.', error);
+    }
+  };
+  const updateAndPost = async () => {
+    if (!match) return;
     const { eventKey, tournamentKey, id } = match;
     try {
+      const canRepost = await repostModal.show();
+      if (!canRepost) return;
       await patchWholeMatch(match);
       await sendCommitScores({ eventKey, tournamentKey, id });
       await sendPostResults();
+      mutate(`match/${eventKey}/${tournamentKey}`);
       onClose();
       // TODO - Sync results
     } catch (e) {
@@ -104,6 +122,9 @@ export const MatchEditDialog: FC<Props> = ({
             </TabPanel>
           </DialogContent>
           <DialogActions>
+            <Button onClick={updateAndPost} color='error'>
+              Update & Post
+            </Button>
             <Button onClick={updateMatch}>Update</Button>
             <Button onClick={handleCancel}>Cancel</Button>
           </DialogActions>

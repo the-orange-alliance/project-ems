@@ -7,7 +7,7 @@ export const allianceMemberZod = z.object({
   teamKey: z.number(),
   allianceNameLong: z.string(),
   allianceNameShort: z.string(),
-  isCaptain: z.coerce.boolean(),
+  isCaptain: z.number(),
   pickOrder: z.number()
 });
 
@@ -18,7 +18,7 @@ export const defaultAllianceMember: AllianceMember = {
   teamKey: -1,
   allianceNameLong: '',
   allianceNameShort: '',
-  isCaptain: false,
+  isCaptain: 0,
   pickOrder: -1
 };
 

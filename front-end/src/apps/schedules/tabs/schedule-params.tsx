@@ -1,6 +1,5 @@
 import { FC, useState } from 'react';
 import { ScheduleFooter } from '../schedule-footer';
-import { DefaultScheduleOptions } from '../options/default-options';
 import {
   EventSchedule,
   generateScheduleItems,
@@ -16,6 +15,8 @@ import { useSWRConfig } from 'swr';
 import { setApiStorage } from 'src/api/use-storage-data';
 import { ScheduleLayout } from '../schedule-layout';
 import { ScheduleTable } from 'src/components/tables/schedule-table';
+import { DefaultScheduleOptions } from '../tournaments/default-params';
+import { RoudnRobinScheduleOptions } from '../tournaments/round-robin-params';
 
 interface Props {
   eventSchedule?: EventSchedule;
@@ -58,7 +59,7 @@ export const ScheduleParams: FC<Props> = ({ eventSchedule, disabled }) => {
   };
   return !isLoading ? (
     <>
-      <DefaultScheduleOptions
+      <ScheduleOptions
         eventSchedule={eventSchedule}
         disabled={!canEdit}
         onChange={handleScheduleChange}
@@ -80,4 +81,36 @@ export const ScheduleParams: FC<Props> = ({ eventSchedule, disabled }) => {
   ) : (
     <PageLoader />
   );
+};
+
+interface ScheduleOptionsProps {
+  eventSchedule?: EventSchedule;
+  disabled?: boolean;
+  onChange: (eventSchedule: EventSchedule) => void;
+}
+
+export const ScheduleOptions: FC<ScheduleOptionsProps> = ({
+  eventSchedule,
+  disabled,
+  onChange
+}) => {
+  if (!eventSchedule) return <div>Please select a tournament.</div>;
+  switch (eventSchedule.type) {
+    case 'Round Robin':
+      return (
+        <RoudnRobinScheduleOptions
+          eventSchedule={eventSchedule}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+    default:
+      return (
+        <DefaultScheduleOptions
+          eventSchedule={eventSchedule}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+  }
 };
