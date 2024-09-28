@@ -55,9 +55,9 @@ export const usePrestartCallback = () => {
           match.participants
         );
 
-        if (!match.details) {
+        if (!currentMatch.details) {
           currentMatch = {
-            ...match,
+            ...currentMatch,
             details: {
               ...getDefaultMatchDetailsBySeasonKey(
                 match.eventKey.split('-')[0].toLowerCase()

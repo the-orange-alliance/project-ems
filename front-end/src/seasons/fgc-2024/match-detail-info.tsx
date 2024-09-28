@@ -202,7 +202,7 @@ export const MatchDetailInfo: FC<
         <Grid item xs={6}>
           <StateToggle
             title={<span>Field Balanced</span>}
-            states={['Flr', 'Rmp', 'Pltfm']}
+            states={['N', 'Y']}
             value={match.details.fieldBalanced ? 1 : 0}
             onChange={(v) =>
               handleUpdates({
