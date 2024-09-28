@@ -26,6 +26,7 @@ const TeamContainer = styled.div`
   font-size: 3vh;
   gap: 0.5em;
   padding: 0 0.5em;
+  line-height: 0.5;
 `;
 
 const TeamText = styled.div`

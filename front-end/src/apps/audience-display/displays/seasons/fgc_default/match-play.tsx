@@ -42,7 +42,7 @@ const TimerContainer = styled.div`
 
 const ScoreRow = muiStyled.styled(Stack)(() => ({
   marginTop: '-0.8rem !important',
-  height: '19vh',
+  height: '20vh',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
