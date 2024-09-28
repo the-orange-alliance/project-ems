@@ -53,6 +53,16 @@ export const matchOccurringAtom = atom<Match<any> | null>({
   default: null
 });
 
+// this "freezes" the match occuring atom when the display is set to results so it doesn't update anymore
+export const matchResultsMatchAtom = atom<Match<any> | null>({
+  key: 'eventState.matchResultsMatchAtom',
+  default: null
+});
+export const matchResultsRanksAtom = atom<Ranking[] | null>({
+  key: 'eventState.matchResultsRanksAtom',
+  default: null
+});
+
 export const matchOccurringRanksAtom = atom<Ranking[] | null>({
   key: 'eventState.matchOccurringRanksAtom',
   default: null

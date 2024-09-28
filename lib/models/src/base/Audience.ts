@@ -26,5 +26,6 @@ export enum AudienceScreens {
 export enum LayoutMode {
   OFF = 'o',
   STREAM = 's',
-  FULL = 'f'
+  FULL = 'f',
+  RESULTS = 'r'
 }
