@@ -4,6 +4,8 @@ import { useRecoilValue } from 'recoil';
 import {
   matchOccurringAtom,
   matchOccurringRanksAtom,
+  matchResultsMatchAtom,
+  matchResultsRanksAtom,
   matchStateAtom
 } from 'src/stores/recoil';
 import { useEvent } from 'src/api/use-event-data';
@@ -28,7 +30,9 @@ import { useTeamsForEvent } from 'src/api/use-team-data';
  */
 export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
   const match = useRecoilValue(matchOccurringAtom);
+  const matchResultsMatch = useRecoilValue(matchResultsMatchAtom);
   const ranks = useRecoilValue(matchOccurringRanksAtom);
+  const matchResultsRanks = useRecoilValue(matchResultsRanksAtom);
   const matchState = useRecoilValue(matchStateAtom);
   const [searchParams] = useSearchParams();
 
@@ -86,7 +90,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
         return (
           <displays.matchPlayStream
             event={event}
-            match={match}
+            match={matchResultsMatch ?? match}
             ranks={ranks}
             teams={teams}
           />
@@ -95,7 +99,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
         return (
           <displays.matchResultsStream
             event={event}
-            match={match}
+            match={matchResultsMatch ?? match}
             ranks={ranks}
             teams={teams}
           />
@@ -111,6 +115,25 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
   const showPreviewFull =
     layout[0] === LayoutMode.FULL || layout[1] === LayoutMode.FULL;
 
+  // show the stream results during the preview
+  const showStreamResultsDuringPreview =
+    layout[2] === LayoutMode.STREAM &&
+    layout[0] === LayoutMode.RESULTS &&
+    id === Displays.MATCH_PREVIEW;
+
+  // show the full results during the preview
+  const showFullResultsDuringPreview =
+    layout[2] === LayoutMode.FULL &&
+    layout[0] === LayoutMode.RESULTS &&
+    id === Displays.MATCH_PREVIEW;
+
+  // force hide the preview if we are showing the results
+  const forceHidePreview =
+    showStreamResultsDuringPreview || showFullResultsDuringPreview;
+
+  const resultsToUse = !matchResultsMatch ? match : matchResultsMatch;
+  const ranksToUse = !matchResultsRanks ? ranks : matchResultsRanks;
+
   return (
     <>
       {/* Displays.BLANK (show nothing) */}
@@ -120,7 +143,11 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {showPreviewFull && (
         <AbsolouteLocator top={0} left={0}>
           <FadeInOut
-            in={id === Displays.MATCH_PREVIEW || afterMatchBeforeScore}
+            in={
+              // if we are showing the preview full and we are not showing the results
+              (id === Displays.MATCH_PREVIEW && !forceHidePreview) ||
+              afterMatchBeforeScore
+            }
             duration={0.5}
           >
             <displays.matchPreview
@@ -135,7 +162,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {layout[0] === LayoutMode.STREAM && (
         <AbsolouteLocator bottom={0} left={0}>
           <SlideInBottom
-            in={id === Displays.MATCH_PREVIEW}
+            in={id === Displays.MATCH_PREVIEW && !forceHidePreview}
             duration={1.25}
             inDelay={0.75}
           >
@@ -185,27 +212,29 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
       {/* Displays.MATCH_RESULTS */}
       {layout[2] === LayoutMode.FULL && (
         <AbsolouteLocator top={0} left={0}>
-          <FadeInOut in={id === Displays.MATCH_RESULTS}>
+          <FadeInOut
+            in={id === Displays.MATCH_RESULTS || showFullResultsDuringPreview}
+          >
             <displays.matchResults
               event={event}
-              match={match}
-              ranks={ranks}
+              match={resultsToUse}
+              ranks={ranksToUse}
               teams={teams}
             />
           </FadeInOut>
         </AbsolouteLocator>
       )}
-      {layout[2] === LayoutMode.STREAM && (
+      {layout[2] === LayoutMode.STREAM && matchResultsMatch && (
         <AbsolouteLocator top={0} left={0}>
           <SlideInLeft
-            in={id === Displays.MATCH_RESULTS}
+            in={id === Displays.MATCH_RESULTS || showStreamResultsDuringPreview}
             duration={1.25}
             inDelay={0.75}
           >
             <displays.matchResultsStream
               event={event}
-              match={match}
-              ranks={ranks}
+              match={resultsToUse}
+              ranks={ranksToUse}
               teams={teams}
             />
           </SlideInLeft>
