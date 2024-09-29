@@ -17,12 +17,13 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
 import { ResultsBreakdown } from '../../../displays';
 import { Breakdown as Breakdown2024 } from '../../fgc_2024';
-import { Grid } from '@mui/material';
+import { Grid, Typography } from '@mui/material';
 import BreakdownRow from './breakdown-row';
 import { Block } from '@mui/icons-material';
 import { CardStatus } from '@toa-lib/models/build/seasons/FeedingTheFuture';
 import { CardStatus as CardStatusComponent } from './card-status';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data';
+import { useAllianceMember } from 'src/api/use-alliance-data';
 
 const Container = styled.div`
   display: flex;
@@ -129,6 +130,14 @@ const CardContainer = styled.div`
   margin-left: auto;
 `;
 
+const AllianceText = styled.div(() => ({
+  position: 'relative',
+  height: 0,
+  top: '-3vh',
+  paddingLeft: 2,
+  color: 'white'
+}));
+
 const AllianceTeam: FC<AllianceTeamProps> = ({
   alliance,
   team,
@@ -183,6 +192,12 @@ export const AllianceResult: FC<Props> = ({
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
   );
+  const [firstTeam] = allianceParticipants;
+  const firstTeamAlliance = useAllianceMember(
+    firstTeam.eventKey,
+    firstTeam.tournamentKey,
+    firstTeam.teamKey
+  );
   const teamsRecord = useMemo(
     () => (teams ? Object.fromEntries(teams.map((t) => [t.teamKey, t])) : {}),
     [teams]
@@ -223,6 +238,13 @@ export const AllianceResult: FC<Props> = ({
   return (
     <Container>
       <TopBanner src={alliance === 'red' ? RED_BANNER : BLUE_BANNER} />
+      <AllianceText>
+        {firstTeamAlliance && (
+          <Typography variant='h4' sx={{ fontWeight: 'bold' }}>
+            &nbsp;{firstTeamAlliance.allianceNameLong}
+          </Typography>
+        )}
+      </AllianceText>
       <AllianceContainer alliance={alliance} size={allianceParticipants.length}>
         {allianceParticipants.map((p) => {
           // TODO: this seems horribly inefficient
@@ -267,8 +289,8 @@ export const AllianceResult: FC<Props> = ({
           {showZeroScore
             ? 0
             : alliance === 'red'
-              ? match.redScore
-              : match.blueScore}
+            ? match.redScore
+            : match.blueScore}
         </ScoreText>
       </ScoreContainer>
     </Container>
