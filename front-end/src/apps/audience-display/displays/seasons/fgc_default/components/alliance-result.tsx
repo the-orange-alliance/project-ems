@@ -2,7 +2,14 @@ import styled from '@emotion/styled';
 import { FC, useMemo } from 'react';
 import RED_BANNER from '../assets/red-top-banner.png';
 import BLUE_BANNER from '../assets/blue-top-banner.png';
-import { Alliance, BLUE_STATION, Match, Ranking, Team } from '@toa-lib/models';
+import {
+  Alliance,
+  BLUE_STATION,
+  Match,
+  QUALIFICATION_LEVEL,
+  Ranking,
+  Team
+} from '@toa-lib/models';
 import { CountryFlag } from './country-flag';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
@@ -12,6 +19,8 @@ import { Breakdown as Breakdown2024 } from '../../fgc_2024';
 import { Grid } from '@mui/material';
 import BreakdownRow from './breakdown-row';
 import { Block } from '@mui/icons-material';
+import { CardStatus } from '@toa-lib/models/build/seasons/FeedingTheFuture';
+import { useCurrentTournament } from 'src/api/use-tournament-data';
 
 const Container = styled.div`
   display: flex;
@@ -150,6 +159,7 @@ export const AllianceResult: FC<Props> = ({
   ranks,
   teams
 }) => {
+  const tournament = useCurrentTournament();
   const participants = match.participants ?? [];
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
@@ -158,6 +168,13 @@ export const AllianceResult: FC<Props> = ({
     () => (teams ? Object.fromEntries(teams.map((t) => [t.teamKey, t])) : {}),
     [teams]
   );
+  const isPlayoffs = tournament
+    ? tournament.tournamentLevel > QUALIFICATION_LEVEL
+    : false;
+  const isAllianceRedCard =
+    allianceParticipants.filter((p) => p.cardStatus === CardStatus.RED_CARD)
+      .length >= 3;
+  const showZeroScore = isPlayoffs && isAllianceRedCard;
 
   // try to get breakdown sheet
   let breakdown: ResultsBreakdown<any>[] = [];
@@ -224,7 +241,11 @@ export const AllianceResult: FC<Props> = ({
       <ScoreContainer alliance={alliance}>
         <ScoreText>TOTAL:</ScoreText>
         <ScoreText>
-          {alliance === 'red' ? match.redScore : match.blueScore}
+          {showZeroScore
+            ? 0
+            : alliance === 'red'
+            ? match.redScore
+            : match.blueScore}
         </ScoreText>
       </ScoreContainer>
     </Container>

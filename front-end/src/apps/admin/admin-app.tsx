@@ -76,8 +76,8 @@ export const AdminApp: FC = () => {
       (t) => t.tournamentKey === tournamentKey
     );
     if (!tournament) return;
-    // FGC2023 SPECIFIC
-    if (tournamentKey === '2' || tournamentKey === '3') {
+    // FGC2024 SPECIFIC
+    if (tournamentKey === 't3' || tournamentKey === 't4') {
       await recalculatePlayoffsRankings(
         tournament.eventKey,
         tournament.tournamentKey

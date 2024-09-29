@@ -17,7 +17,10 @@ import {
   patchWholeMatch,
   useMatchesForTournament
 } from 'src/api/use-match-data';
-import { recalculateRankings } from 'src/api/use-ranking-data';
+import {
+  recalculatePlayoffsRankings,
+  recalculateRankings
+} from 'src/api/use-ranking-data';
 import { sendCommitScores } from 'src/api/use-socket';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components';
 
@@ -70,7 +73,11 @@ export const useCommitScoresCallback = () => {
 
         await patchWholeMatch(pending);
         // TODO - When to calculate rankings vs. playoff rankings?
-        await recalculateRankings(eventKey, tournamentKey);
+        if (tournamentKey === 't3' || tournamentKey === 't4') {
+          await recalculatePlayoffsRankings(eventKey, tournamentKey);
+        } else {
+          await recalculateRankings(eventKey, tournamentKey);
+        }
         fieldControl?.commitScoresForField?.();
         sendCommitScores({ eventKey, tournamentKey, id });
         setState(MatchState.RESULTS_COMMITTED);
