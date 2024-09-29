@@ -268,7 +268,7 @@ router.post(
 );
 
 router.post(
-  '/sync/aliances/:eventKey/:tournamentKey',
+  '/sync/alliances/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
     logger.info(
       environment.isProd()
