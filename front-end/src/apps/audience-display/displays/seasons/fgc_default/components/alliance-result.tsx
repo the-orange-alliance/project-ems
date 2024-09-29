@@ -12,6 +12,7 @@ import { Breakdown as Breakdown2024 } from '../../fgc_2024';
 import { Grid } from '@mui/material';
 import BreakdownRow from './breakdown-row';
 import { Block } from '@mui/icons-material';
+import { CardStatus } from '@toa-lib/models/build/seasons/FeedingTheFuture';
 
 const Container = styled.div`
   display: flex;
@@ -158,6 +159,12 @@ export const AllianceResult: FC<Props> = ({
     () => (teams ? Object.fromEntries(teams.map((t) => [t.teamKey, t])) : {}),
     [teams]
   );
+  const isPlayoffs =
+    match.tournamentKey === 't3' || match.tournamentKey === 't4';
+  const isAllianceRedCard =
+    allianceParticipants.filter((p) => p.cardStatus === CardStatus.RED_CARD)
+      .length >= 3;
+  const showZeroScore = isPlayoffs && isAllianceRedCard;
 
   // try to get breakdown sheet
   let breakdown: ResultsBreakdown<any>[] = [];
@@ -224,7 +231,11 @@ export const AllianceResult: FC<Props> = ({
       <ScoreContainer alliance={alliance}>
         <ScoreText>TOTAL:</ScoreText>
         <ScoreText>
-          {alliance === 'red' ? match.redScore : match.blueScore}
+          {showZeroScore
+            ? 0
+            : alliance === 'red'
+            ? match.redScore
+            : match.blueScore}
         </ScoreText>
       </ScoreContainer>
     </Container>

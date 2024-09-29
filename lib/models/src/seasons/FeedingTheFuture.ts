@@ -386,18 +386,18 @@ export function calculatePlayoffsRankings(
         ...(rankingMap.get(participant.teamKey) as SeasonRanking)
       };
 
-      if (participant.cardStatus === CardStatus.RED_CARD) {
-        ranking.played += 1;
-        rankingMap.set(participant.teamKey, ranking);
-        continue;
-      }
-
-      if (participant.station < 20) {
+      if (
+        participant.station < 20 &&
+        participant.cardStatus <= CardStatus.YELLOW_CARD
+      ) {
         ranking.rankingScore += match.redScore;
-      } else if (participant.station >= 20) {
+      } else if (
+        participant.station >= 20 &&
+        participant.cardStatus <= CardStatus.YELLOW_CARD
+      ) {
         ranking.rankingScore += match.blueScore;
       }
-
+      ranking.played += 1;
       rankingMap.set(participant.teamKey, ranking);
     }
   }
