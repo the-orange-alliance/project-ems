@@ -1,4 +1,5 @@
 import {
+  AllianceMember,
   MatchKey,
   reconcileMatchDetails,
   reconcileMatchParticipants,
@@ -140,6 +141,22 @@ export const postMatchResults = async (
   );
 };
 
+export const postAlliances = async (
+  alliances: AllianceMember[],
+  platform: SyncPlatform,
+  apiKey: string
+) => {
+  return await request(
+    '/upload/alliances',
+    {
+      method: 'POST',
+      body: JSON.stringify(alliances)
+    },
+    platform,
+    apiKey
+  );
+};
+
 router.post(
   '/sync/rankings/:eventKey/:tournamentKey',
   async (req: Request, res: Response, next: NextFunction) => {
@@ -247,6 +264,28 @@ router.post(
       apiKey
     );
     res.send({ succuess: teamsReq?.ok });
+  }
+);
+
+router.post(
+  '/sync/aliances/:eventKey/:tournamentKey',
+  async (req: Request, res: Response, next: NextFunction) => {
+    logger.info(
+      environment.isProd()
+        ? 'attempting to sync results'
+        : 'not syncing results'
+    );
+    if (!environment.isProd()) return res.send({ succuess: false });
+    const { eventKey, tournamentKey } = req.params;
+    const { platform, apiKey } = req.body;
+    const db = await getDB(eventKey);
+    const alliances = await db.selectAllWhere('alliance', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
+    const allianceReq = await postAlliances(
+      alliances,
+      platform,
+      apiKey
+    );
+    res.send({ succuess: allianceReq?.ok });
   }
 );
 
