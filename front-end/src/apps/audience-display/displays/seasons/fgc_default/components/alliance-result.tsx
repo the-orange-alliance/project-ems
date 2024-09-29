@@ -6,6 +6,7 @@ import {
   Alliance,
   BLUE_STATION,
   Match,
+  MatchParticipant,
   QUALIFICATION_LEVEL,
   Ranking,
   Team
@@ -21,6 +22,7 @@ import BreakdownRow from './breakdown-row';
 import { Block } from '@mui/icons-material';
 import { CardStatus } from '@toa-lib/models/build/seasons/FeedingTheFuture';
 import { useCurrentTournament } from 'src/api/use-tournament-data';
+import { CardStatus as CardStatusComponent } from './card-status';
 
 const Container = styled.div`
   display: flex;
@@ -105,6 +107,7 @@ const TeamContainer = styled.div((props: { alliance: Alliance }) => ({
 interface AllianceTeamProps {
   alliance: Alliance;
   team: Team;
+  station?: MatchParticipant;
   rank?: Ranking;
 }
 
@@ -120,7 +123,18 @@ const RankText = styled.div`
   text-align: center;
 `;
 
-const AllianceTeam: FC<AllianceTeamProps> = ({ alliance, team, rank }) => {
+const CardContainer = styled.div`
+  width: 3vh;
+  height: 3vh;
+  margin-left: auto;
+`;
+
+const AllianceTeam: FC<AllianceTeamProps> = ({
+  alliance,
+  team,
+  rank,
+  station
+}) => {
   const rankIcon = useMemo(() => {
     if (!rank) return null;
     if (rank.rankChange === 0) {
@@ -138,6 +152,11 @@ const AllianceTeam: FC<AllianceTeamProps> = ({ alliance, team, rank }) => {
       <div>{team.teamNameShort}</div>
       {rank && rankIcon && (
         <RankContainer>
+          {station && (
+            <CardContainer>
+              <CardStatusComponent cardStatus={station.cardStatus} />
+            </CardContainer>
+          )}
           <RankText>{rank.rank}</RankText>
           <RankText style={{ marginTop: '8px' }}>{rankIcon}</RankText>
         </RankContainer>
@@ -211,6 +230,7 @@ export const AllianceResult: FC<Props> = ({
               key={p.station}
               alliance={alliance}
               team={p.team ?? teamsRecord[p.teamKey]}
+              station={p}
               rank={rank}
             />
           );
@@ -244,8 +264,8 @@ export const AllianceResult: FC<Props> = ({
           {showZeroScore
             ? 0
             : alliance === 'red'
-            ? match.redScore
-            : match.blueScore}
+              ? match.redScore
+              : match.blueScore}
         </ScoreText>
       </ScoreContainer>
     </Container>
