@@ -2,7 +2,14 @@ import styled from '@emotion/styled';
 import { FC, useMemo } from 'react';
 import RED_BANNER from '../assets/red-top-banner.png';
 import BLUE_BANNER from '../assets/blue-top-banner.png';
-import { Alliance, BLUE_STATION, Match, Ranking, Team } from '@toa-lib/models';
+import {
+  Alliance,
+  BLUE_STATION,
+  Match,
+  QUALIFICATION_LEVEL,
+  Ranking,
+  Team
+} from '@toa-lib/models';
 import { CountryFlag } from './country-flag';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
@@ -13,6 +20,7 @@ import { Grid } from '@mui/material';
 import BreakdownRow from './breakdown-row';
 import { Block } from '@mui/icons-material';
 import { CardStatus } from '@toa-lib/models/build/seasons/FeedingTheFuture';
+import { useCurrentTournament } from 'src/api/use-tournament-data';
 
 const Container = styled.div`
   display: flex;
@@ -151,6 +159,7 @@ export const AllianceResult: FC<Props> = ({
   ranks,
   teams
 }) => {
+  const tournament = useCurrentTournament();
   const participants = match.participants ?? [];
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
@@ -159,8 +168,9 @@ export const AllianceResult: FC<Props> = ({
     () => (teams ? Object.fromEntries(teams.map((t) => [t.teamKey, t])) : {}),
     [teams]
   );
-  const isPlayoffs =
-    match.tournamentKey === 't3' || match.tournamentKey === 't4';
+  const isPlayoffs = tournament
+    ? tournament.tournamentLevel > QUALIFICATION_LEVEL
+    : false;
   const isAllianceRedCard =
     allianceParticipants.filter((p) => p.cardStatus === CardStatus.RED_CARD)
       .length >= 3;
