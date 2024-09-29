@@ -222,6 +222,16 @@ export const MatchDetailInfo: FC<
             onChange={handleUpdates}
           />
         </Grid>
+        <Grid item xs={12} sm={6} md={6}>
+          <TextField
+            label='Coopertiion'
+            value={match.details.coopertition}
+            type='number'
+            fullWidth
+            name='coopertition'
+            onChange={handleUpdates}
+          />
+        </Grid>
       </Grid>
     </>
   );

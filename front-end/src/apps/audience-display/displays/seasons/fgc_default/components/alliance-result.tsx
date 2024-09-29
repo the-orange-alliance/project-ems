@@ -21,8 +21,8 @@ import { Grid } from '@mui/material';
 import BreakdownRow from './breakdown-row';
 import { Block } from '@mui/icons-material';
 import { CardStatus } from '@toa-lib/models/build/seasons/FeedingTheFuture';
-import { useCurrentTournament } from 'src/api/use-tournament-data';
 import { CardStatus as CardStatusComponent } from './card-status';
+import { useTournamentsForEvent } from 'src/api/use-tournament-data';
 
 const Container = styled.div`
   display: flex;
@@ -178,7 +178,7 @@ export const AllianceResult: FC<Props> = ({
   ranks,
   teams
 }) => {
-  const tournament = useCurrentTournament();
+  const { data: tournaments } = useTournamentsForEvent(match.eventKey);
   const participants = match.participants ?? [];
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
@@ -186,6 +186,9 @@ export const AllianceResult: FC<Props> = ({
   const teamsRecord = useMemo(
     () => (teams ? Object.fromEntries(teams.map((t) => [t.teamKey, t])) : {}),
     [teams]
+  );
+  const tournament = tournaments?.find(
+    (teams) => teams.tournamentKey === match.tournamentKey
   );
   const isPlayoffs = tournament
     ? tournament.tournamentLevel > QUALIFICATION_LEVEL
