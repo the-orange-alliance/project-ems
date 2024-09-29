@@ -43,11 +43,13 @@ export const MatchPreviewStream: FC<DisplayProps> = ({ match, ranks }) => {
           alliance='red'
           participants={match.participants ?? []}
           ranks={ranks}
+          small
         />
         <AlliancePreview
           alliance='blue'
           participants={match.participants ?? []}
           ranks={ranks}
+          small
         />
       </Stack>
     </Container>

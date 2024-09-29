@@ -14,6 +14,15 @@ export const useAllianceMembers = (
     { revalidateOnFocus: false }
   );
 
+export const useAllianceMember = (
+  eventKey: string,
+  tournamentKey: string | null | undefined,
+  teamKey: number
+): AllianceMember | undefined => {
+  const { data: members } = useAllianceMembers(eventKey, tournamentKey);
+  return members?.find((m) => m.teamKey === teamKey);
+};
+
 export const postAllianceMembers = (
   eventKey: string,
   members: AllianceMember[]

@@ -8,6 +8,7 @@ import {
 import { FC, useMemo } from 'react';
 import { CountryFlag } from './country-flag';
 import { CardStatus } from './card-status';
+import { useAllianceMember } from 'src/api/use-alliance-data';
 
 const Container = styled.div((props: { alliance: Alliance }) => ({
   backgroundColor: props.alliance === 'red' ? '#ce2000' : '#5c88ff',
@@ -29,6 +30,18 @@ const TeamContainer = styled.div`
   line-height: 0.5;
 `;
 
+const AllianceText = styled.div((props: { invert?: boolean }) => ({
+  width: '100%',
+  color: '#ffffff',
+  display: 'flex',
+  alignItems: 'center',
+  flexDirection: !props.invert ? 'row-reverse' : 'row',
+  fontWeight: 'bold',
+  fontSize: '1.75vh',
+  gap: '0.5em',
+  padding: '0 0.5em',
+  lineHeight: '0.5'
+}));
 const TeamText = styled.div`
   width: 4vw;
 `;
@@ -82,6 +95,12 @@ export const AlliancePlay: FC<Props> = ({
   const allianceParticipants = participants.filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
   );
+  const [firstTeam] = allianceParticipants;
+  const firstTeamAlliance = useAllianceMember(
+    firstTeam.eventKey,
+    firstTeam.tournamentKey,
+    firstTeam.teamKey
+  );
   const teamsRecord = useMemo(
     () => (teams ? Object.fromEntries(teams.map((t) => [t.teamKey, t])) : {}),
     [teams]
@@ -116,6 +135,11 @@ export const AlliancePlay: FC<Props> = ({
           />
         );
       })}
+      {firstTeamAlliance && (
+        <AllianceText invert={invert}>
+          {firstTeamAlliance.allianceNameLong}
+        </AllianceText>
+      )}
     </Container>
   );
 };
