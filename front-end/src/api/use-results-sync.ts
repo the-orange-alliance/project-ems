@@ -51,6 +51,21 @@ export const resultsSyncRankings = (
     }
   );
 
+export const resultsSyncAlliances = (
+  eventKey: string,
+  tournamentKey: string,
+  platform: SyncPlatform,
+  apiKey: string
+): Promise<SyncResponse> =>
+  clientFetcher<SyncResponse>(
+    `results/sync/alliances/${eventKey}/${tournamentKey}`,
+    'POST',
+    {
+      platform,
+      apiKey
+    }
+  );
+
 export const resultsSyncTeams = (
   eventKey: string,
   platform: SyncPlatform,

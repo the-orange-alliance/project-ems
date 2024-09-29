@@ -30,7 +30,7 @@ export const Breakdown: ResultsBreakdown<MatchDetails>[] = [
         <img src={Resevoir} />
       </CustomIcon>
     ),
-    title: 'Resevoir Points',
+    title: 'Reservoir Points',
     color: '#000000',
     resultCalc: (match, alliance) => {
       if (!match.details) return '0';

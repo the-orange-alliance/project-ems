@@ -7,6 +7,7 @@ import {
   recalculatePlayoffsRankings
 } from 'src/api/use-ranking-data';
 import {
+  resultsSyncAlliances,
   resultsSyncMatches,
   resultsSyncRankings
 } from 'src/api/use-results-sync';
@@ -48,6 +49,11 @@ export const AdminApp: FC = () => {
   const syncRankings = async (): Promise<void> => {
     if (!tournamentKey) return;
     await resultsSyncRankings(eventKey, tournamentKey, platform, apiKey);
+  };
+
+  const syncAlliances = async (): Promise<void> => {
+    if (!tournamentKey) return;
+    await resultsSyncAlliances(eventKey, tournamentKey, platform, apiKey);
   };
 
   const handlePurge = async (): Promise<void> => {
@@ -109,6 +115,9 @@ export const AdminApp: FC = () => {
         </Button>
         <Button variant='contained' color='error' onClick={syncRankings}>
           Sync Rankings
+        </Button>
+        <Button variant='contained' color='error' onClick={syncAlliances}>
+          Sync Alliances
         </Button>
         <Button
           variant='contained'
