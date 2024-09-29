@@ -105,8 +105,8 @@ export const AlliancePlay: FC<Props> = ({
             }
       }
     >
-      {allianceParticipants.map((p) => {
-        if (!p.team && !teamsRecord[p.teamKey]) return null;
+      {allianceParticipants.map((p, i) => {
+        if ((!p.team && !teamsRecord[p.teamKey]) || i > 2) return null;
         return (
           <AllianceTeam
             key={p.station}
