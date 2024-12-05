@@ -31,7 +31,7 @@
     "@toa-lib/server": "file:../../lib/server",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
+    "express": "^4.21.2",
     "jsonwebtoken": "^9.0.1",
     "node-inline-worker": "^1.0.0",
     "passport": "^0.6.0",
