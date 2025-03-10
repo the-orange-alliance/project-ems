@@ -9,6 +9,15 @@
   "scripts": {
     "build": "tsc"
   },
+  "exports": {
+    ".": {
+      "default": "./build/index.js"
+    },
+    "./seasons": {
+      "types": "./src/seasons/index.ts",
+      "default": "./build/seasons/index.js"
+    }
+  },
   "devDependencies": {
     "@types/events": "^3.0.3",
     "@types/luxon": "^3.4.2",

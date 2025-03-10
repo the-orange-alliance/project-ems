@@ -10,7 +10,7 @@ This project is a monrepo and utilizes features from [turbrepo](https://turbo.bu
    b. Install turborepo via `npm install turbo --global`
    a. run `npm install` at the project root
 2. Build projects and packages
-   a. You can specify specific targets using turborepo (e.g. `turbo build --filter="./services/api"`)
+   a. You can specify specific targets using turborepo (e.g. `turbo run @toa-lib/models#build`)
 
 #### Build Status:
 

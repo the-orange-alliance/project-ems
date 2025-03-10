@@ -18,7 +18,7 @@ export const isArray = (arr: unknown): arr is any[] =>
  * Throw an Error such that the Typescript compiler will consider it a compile-time error to be able to throw it
  */
 export class UnreachableError extends Error {
-    constructor(value: never) {
-        super(`Unexpected value: ${JSON.stringify(value, null, 4)}`);
-    }
+  constructor(value: never) {
+    super(`Unexpected value: ${JSON.stringify(value, null, 4)}`);
+  }
 }

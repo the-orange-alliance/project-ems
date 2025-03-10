@@ -10,7 +10,7 @@ import {
 /**
  * Library file for using different passport strategies within EMS.
  */
-export const jwtStrategy = (secretOrKey: string | Buffer | undefined) =>
+export const jwtStrategy = (secretOrKey: string | Buffer) =>
   new JWTStrategy(
     {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
