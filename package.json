@@ -15,5 +15,8 @@
     "setup": "npm run install:lib && npm run build:lib && npm run install:backend && npm run install:frontend",
     "build:all": "npm run build:lib && npm run build:backend && cd ../../",
     "dist": "npm run build:lib && npm run build:backend && npm run build:frontend && xcopy .\\back-end\\api\\dist .\\bin\\api /E /R /Y && xcopy .\\back-end\\realtime\\dist .\\bin\\realtime /E /R /Y && xcopy .\\front-end\\dist .\\bin\\webapp /E /R /Y && cd bin/api && npm install sqlite3 --save"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.4"
   }
 }

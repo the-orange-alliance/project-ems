@@ -8,3 +8,4 @@ bin/webapp
 bin/*
 *.zip
 *.env
+dist/
