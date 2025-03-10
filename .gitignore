@@ -9,3 +9,4 @@ bin/*
 *.zip
 *.env
 dist/
+.turbo

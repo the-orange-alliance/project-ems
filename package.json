@@ -5,18 +5,16 @@
     "name": "Kyle Flynn",
     "url": "https://github.com/kyle-flynn"
   },
-  "scripts": {
-    "install:lib": "cd ./lib/models && npm install && cd ../client && npm install && cd ../server && npm install && cd ../../",
-    "build:lib": "cd ./lib/models && npm run build && npm link && cd ../client && npm run build && npm link && cd ../server && npm run build && npm link && cd ../../",
-    "build:backend": "cd ./back-end/api && npm run build && npm run dist && cd ../realtime && npm run build && npm run dist",
-    "build:frontend": "cd ./front-end && npm run build",
-    "install:backend": "cd back-end/api && npm install && cd ../realtime && npm install && cd ../../",
-    "install:frontend": "cd front-end && npm install && npm link @toa-lib/models && npm link @toa-lib/client && cd ../",
-    "setup": "npm run install:lib && npm run build:lib && npm run install:backend && npm run install:frontend",
-    "build:all": "npm run build:lib && npm run build:backend && cd ../../",
-    "dist": "npm run build:lib && npm run build:backend && npm run build:frontend && xcopy .\\back-end\\api\\dist .\\bin\\api /E /R /Y && xcopy .\\back-end\\realtime\\dist .\\bin\\realtime /E /R /Y && xcopy .\\front-end\\dist .\\bin\\webapp /E /R /Y && cd bin/api && npm install sqlite3 --save"
+  "repository": {
+    "url": "https://github.com/the-orange-alliance/project-ems.git"
   },
   "devDependencies": {
     "turbo": "^2.4.4"
-  }
+  },
+  "packageManager": "npm@10.8.2",
+  "workspaces": [
+    "apps/services/*",
+    "apps/web",
+    "libs/*"
+  ]
 }
