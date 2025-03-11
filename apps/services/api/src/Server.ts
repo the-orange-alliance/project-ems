@@ -51,7 +51,6 @@ app.use(
 );
 app.use(json({ limit: '50mb' }));
 app.use(parser.urlencoded({ extended: false, limit: '50mb' }));
-app.use(passport.initialize());
 
 // Setup passport config
 passport.use(jwtStrategy(env.get().jwtSecret));

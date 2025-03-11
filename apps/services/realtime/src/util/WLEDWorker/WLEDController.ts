@@ -1,11 +1,11 @@
-import { WledInitParameters, WledUpdateParameters } from '@toa-lib/models';
-import logger from '../Logger.js';
+import { WledInitParameters, WledUpdateParameters } from "@toa-lib/models";
+import logger from "../Logger.js";
 import {
   buildWledInitializationPacket,
-  buildWledSetColorPacket
-} from '../WLEDHelper.js';
-import WebSocket from 'ws';
-import { EventEmitter } from 'node:events';
+  buildWledSetColorPacket,
+} from "../WLEDHelper.js";
+import WebSocket from "ws";
+import { EventEmitter } from "node:events";
 
 export class WledController {
   private static heartbeatPeriodMs = 500;
@@ -15,8 +15,8 @@ export class WledController {
 
   private socket: WebSocket | null;
   private initPacket: WledInitParameters;
-  private keepAlive: NodeJS.Timer | null;
-  private heartbeat: NodeJS.Timer | null;
+  private keepAlive: NodeJS.Timeout | null;
+  private heartbeat: NodeJS.Timeout | null;
 
   private latestState: WledUpdateParameters | undefined;
   private connected = false;
@@ -41,7 +41,7 @@ export class WledController {
         return;
     }
 
-    if (this.initPacket.address === '') return;
+    if (this.initPacket.address === "") return;
 
     try {
       this.socket = new WebSocket(this.initPacket.address);
@@ -97,7 +97,7 @@ export class WledController {
     this.heartbeat = setInterval(() => {
       // Send dummy message that the controller will respond to
       try {
-        this.socket?.send('{}');
+        this.socket?.send("{}");
       } catch {
         logger.warn(`${this.getName()} failed to send heartbeat`);
       }
@@ -150,7 +150,7 @@ export class WledController {
     for (const newPattern of update.patterns) {
       this.latestState.patterns =
         this.latestState.patterns.filter(
-          (oldPattern) => oldPattern.segment != newPattern.segment
+          (oldPattern) => oldPattern.segment != newPattern.segment,
         ) ?? [];
 
       this.latestState.patterns!.push(newPattern);
@@ -158,14 +158,14 @@ export class WledController {
   }
 
   private getName(): string {
-    const name = this.initPacket.address.replace(/(ws:\/\/)|(\/ws)/g, '');
-    const parts = name.split('-');
-    return name.replace(parts[0] + '-', '');
+    const name = this.initPacket.address.replace(/(ws:\/\/)|(\/ws)/g, "");
+    const parts = name.split("-");
+    return name.replace(parts[0] + "-", "");
   }
 
   private emitStatus(): void {
-    this.eventEmitter.emit('status', {
-      connected: this.connected
+    this.eventEmitter.emit("status", {
+      connected: this.connected,
     });
   }
 }
