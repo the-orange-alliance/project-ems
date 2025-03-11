@@ -5,6 +5,10 @@
     "name": "Kyle Flynn",
     "url": "https://github.com/kyle-flynn"
   },
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo run dev api#start realtime#start"
+  },
   "repository": {
     "url": "https://github.com/the-orange-alliance/project-ems.git"
   },

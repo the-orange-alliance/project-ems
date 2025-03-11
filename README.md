@@ -11,6 +11,11 @@ This project is a monrepo and utilizes features from [turbrepo](https://turbo.bu
    a. run `npm install` at the project root
 2. Build projects and packages
    a. You can specify specific targets using turborepo (e.g. `turbo run @toa-lib/models#build`)
+   b. Running `turbo build` will build all apps and libraries.
+   c. It's recommended to use `npm run build` or `turbo build` as they are synonymous.
+3. Start developing
+   a. Execute the root-level dev command via `npm run dev`
+   b. This starts the `api`, `realtime` and `web` applications.
 
 #### Build Status:
 

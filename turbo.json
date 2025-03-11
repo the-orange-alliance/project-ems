@@ -1,6 +1,13 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
+    "prebuild": {
+      "dependsOn": [
+        "@toa-lib/models#build",
+        "@toa-lib/client#build",
+        "@toa-lib/server#build"
+      ]
+    },
     "build": {
       "outputs": ["dist/**", "build/**"]
     },
@@ -8,6 +15,11 @@
       "dependsOn": ["^check-types"]
     },
     "dev": {
+      "persistent": true,
+      "cache": false,
+      "dependsOn": ["prebuild", "api#build", "realtime#build"]
+    },
+    "start": {
       "persistent": true,
       "cache": false
     }
