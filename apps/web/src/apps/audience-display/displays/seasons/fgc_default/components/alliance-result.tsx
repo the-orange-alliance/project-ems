@@ -20,10 +20,12 @@ import { Breakdown as Breakdown2024 } from '../../fgc_2024';
 import { Grid, Typography } from '@mui/material';
 import BreakdownRow from './breakdown-row';
 import { Block } from '@mui/icons-material';
-import { CardStatus } from '@toa-lib/models/build/seasons/FeedingTheFuture';
+import { FeedingTheFuture } from '@toa-lib/models';
 import { CardStatus as CardStatusComponent } from './card-status';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data';
 import { useAllianceMember } from 'src/api/use-alliance-data';
+
+const { CardStatus } = FeedingTheFuture;
 
 const Container = styled.div`
   display: flex;
@@ -98,7 +100,6 @@ const TeamContainer = styled.div((props: { alliance: Alliance }) => ({
       : '2px solid #2e3190',
   display: 'flex',
   alignItems: 'center',
-  flexDirection: 'row',
   gap: '8px',
   color: '#ffffff',
   fontSize: '2.75vh',
@@ -130,13 +131,13 @@ const CardContainer = styled.div`
   margin-left: auto;
 `;
 
-const AllianceText = styled.div(() => ({
+const AllianceText = styled.div`
   position: 'relative',
   height: 0,
   top: '-3vh',
   paddingLeft: 2,
   color: 'white'
-}));
+`;
 
 const AllianceTeam: FC<AllianceTeamProps> = ({
   alliance,
@@ -156,7 +157,7 @@ const AllianceTeam: FC<AllianceTeamProps> = ({
   }, [rank]);
 
   return (
-    <TeamContainer alliance={alliance}>
+    <TeamContainer style={{ flexDirection: 'row' }} alliance={alliance}>
       <CountryFlag cc={team.countryCode} />
       <div>{team.teamNameShort}</div>
       {rank && rankIcon && (
@@ -289,8 +290,8 @@ export const AllianceResult: FC<Props> = ({
           {showZeroScore
             ? 0
             : alliance === 'red'
-            ? match.redScore
-            : match.blueScore}
+              ? match.redScore
+              : match.blueScore}
         </ScoreText>
       </ScoreContainer>
     </Container>

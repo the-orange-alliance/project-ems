@@ -1,14 +1,10 @@
 import { FC } from 'react';
 import { MatchDetailInfoProps } from '..';
-import { FeedingTheFuture } from '@toa-lib/models';
 import { Grid, TextField } from '@mui/material';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 import NexusScoresheet from './nexus-sheets/nexus-scoresheet';
 import { StateToggle } from 'src/components/inputs/state-toggle';
-import {
-  AllianceNexusGoalState,
-  NexusGoalState
-} from '@toa-lib/models/build/seasons/FeedingTheFuture';
+import { FeedingTheFuture } from '@toa-lib/models';
 
 export const MatchDetailInfo: FC<
   MatchDetailInfoProps<FeedingTheFuture.MatchDetails>
@@ -20,8 +16,8 @@ export const MatchDetailInfo: FC<
 
   const updateNexus = (
     alliance: 'red' | 'blue',
-    goal: keyof AllianceNexusGoalState,
-    state: NexusGoalState
+    goal: keyof FeedingTheFuture.AllianceNexusGoalState,
+    state: FeedingTheFuture.NexusGoalState
   ) => {
     if (!match.details) return;
     handleUpdates({

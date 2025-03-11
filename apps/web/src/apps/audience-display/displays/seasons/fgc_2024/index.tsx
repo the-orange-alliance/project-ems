@@ -1,20 +1,21 @@
 import { Lock, Restaurant, StarBorder } from '@mui/icons-material';
 import { ResultsBreakdown } from '../../displays';
-import {
+import { FeedingTheFuture } from '@toa-lib/models';
+import CoopertitionLogo from '../fgc_default/assets/Coopertition_Points.svg';
+import Resevoir from './assets/Resevoir.svg';
+import Nexus from './assets/Nexus.svg';
+import styled from '@emotion/styled';
+import { Icon } from '@mui/material';
+
+const {
   getBalancedRobots,
   getCoopertitionPoints,
   getFoodProducedPoints,
   getFoodSecuredPoints,
   getNexusPoints,
   getResevoirPoints,
-  MatchDetails,
   ScoreTable
-} from '@toa-lib/models/build/seasons/FeedingTheFuture';
-import CoopertitionLogo from '../fgc_default/assets/Coopertition_Points.svg';
-import Resevoir from './assets/Resevoir.svg';
-import Nexus from './assets/Nexus.svg';
-import styled from '@emotion/styled';
-import { Icon } from '@mui/material';
+} = FeedingTheFuture;
 
 const CustomIcon = styled(Icon)(() => {
   return {
@@ -23,7 +24,7 @@ const CustomIcon = styled(Icon)(() => {
   };
 });
 
-export const Breakdown: ResultsBreakdown<MatchDetails>[] = [
+export const Breakdown: ResultsBreakdown<FeedingTheFuture.MatchDetails>[] = [
   {
     icon: (
       <CustomIcon>

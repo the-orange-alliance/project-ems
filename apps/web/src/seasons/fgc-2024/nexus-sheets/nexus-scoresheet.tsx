@@ -9,28 +9,23 @@ import {
 } from '@toa-lib/models';
 import { Button, Checkbox, Grid, Stack, Typography } from '@mui/material';
 import styled from '@emotion/styled';
-import {
-  AllianceNexusGoalState,
-  defaultNexusGoalState,
-  NexusGoalState
-} from '@toa-lib/models/build/seasons/FeedingTheFuture';
+import { FeedingTheFuture, FeedingTheFutureFCS } from '@toa-lib/models';
 import { useRecoilValue } from 'recoil';
 import { matchStateAtom } from 'src/stores/recoil';
-import { MotorA } from '@toa-lib/models/build/fcs/FeedingTheFutureFCS';
 import { sendFCSPacket } from 'src/api/use-socket';
 
 interface NexusScoresheetProps {
-  state?: AllianceNexusGoalState;
-  opposingState?: AllianceNexusGoalState;
+  state?: FeedingTheFuture.AllianceNexusGoalState;
+  opposingState?: FeedingTheFuture.AllianceNexusGoalState;
   disabled?: boolean;
   alliance: Alliance;
   onChange?: (
-    goal: keyof AllianceNexusGoalState,
-    state: NexusGoalState
+    goal: keyof FeedingTheFuture.AllianceNexusGoalState,
+    state: FeedingTheFuture.NexusGoalState
   ) => void;
   onOpposingChange?: (
-    goal: keyof AllianceNexusGoalState,
-    state: NexusGoalState
+    goal: keyof FeedingTheFuture.AllianceNexusGoalState,
+    state: FeedingTheFuture.NexusGoalState
   ) => void;
   side: 'near' | 'far' | 'both';
   scorekeeperView?: boolean;
@@ -49,10 +44,10 @@ const CenterGoal = styled(Grid)((props: { alliance: Alliance }) => ({
   border: `3px solid ${props.alliance === 'red' ? 'red' : 'blue'}`
 }));
 
-const SideText = styled(Typography)(() => ({
-  textOrientation: 'sideways',
-  writingMode: 'vertical-lr'
-}));
+const SideText = styled(Typography)`
+  textorientation: sideways;
+  writingmode: vertical-lr;
+`;
 
 const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
   state,
@@ -89,17 +84,17 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
 
   // If we're not passed in a state, we'll use the default state and disable the sheet
   if (!state) {
-    state = { ...defaultNexusGoalState };
+    state = { ...FeedingTheFuture.defaultNexusGoalState };
     disabled = true;
   }
 
   if (!opposingState) {
-    opposingState = { ...defaultNexusGoalState };
+    opposingState = { ...FeedingTheFuture.defaultNexusGoalState };
   }
 
   const onGoalChange = (
-    goal: keyof AllianceNexusGoalState,
-    newState: NexusGoalState
+    goal: keyof FeedingTheFuture.AllianceNexusGoalState,
+    newState: FeedingTheFuture.NexusGoalState
   ) => {
     if (goal.startsWith('CW')) {
       if (!onOpposingChange) return;
@@ -113,7 +108,7 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
 
   const onForceRelease = (
     alliance: Alliance,
-    goal: keyof AllianceNexusGoalState
+    goal: keyof FeedingTheFuture.AllianceNexusGoalState
   ) => {
     if (!allowForceRelease) return;
     // create packet to send to FCS
@@ -126,13 +121,13 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
       // If the alliance is red and we're updaing the side goals, return the blue side goals. otherwise, return the red center goals
       // this is because the red ref is scoring for the blue side goals and the red center goals.
       Motors = goal.startsWith('CW')
-        ? MotorA.BLUE_SIDE_GOALS
-        : MotorA.RED_CENTER_GOALS;
+        ? FeedingTheFutureFCS.MotorA.BLUE_SIDE_GOALS
+        : FeedingTheFutureFCS.MotorA.RED_CENTER_GOALS;
     } else {
       // opposite of above
       Motors = goal.startsWith('CW')
-        ? MotorA.RED_SIDE_GOALS
-        : MotorA.BLUE_CENTER_GOALS;
+        ? FeedingTheFutureFCS.MotorA.RED_SIDE_GOALS
+        : FeedingTheFutureFCS.MotorA.BLUE_CENTER_GOALS;
     }
 
     // get number off end of motor
@@ -226,13 +221,15 @@ const NexusScoresheet: React.FC<NexusScoresheetProps> = ({
 
 interface GoalGridProps {
   disabled?: boolean;
-  state: AllianceNexusGoalState;
+  state: FeedingTheFuture.AllianceNexusGoalState;
   onGoalChange: (
-    goal: keyof AllianceNexusGoalState,
-    state: NexusGoalState
+    goal: keyof FeedingTheFuture.AllianceNexusGoalState,
+    state: FeedingTheFuture.NexusGoalState
   ) => void;
   alliance: Alliance;
-  onForceRelease?: (goal: keyof AllianceNexusGoalState) => void;
+  onForceRelease?: (
+    goal: keyof FeedingTheFuture.AllianceNexusGoalState
+  ) => void;
   allowForceRelease: boolean;
   editMode?: boolean;
 }
@@ -250,7 +247,9 @@ const StepGoalGrid: React.FC<GoalGridProps> = ({
   onForceRelease,
   allowForceRelease
 }) => {
-  const onForceReleaseLocal = (goal: keyof AllianceNexusGoalState) => {
+  const onForceReleaseLocal = (
+    goal: keyof FeedingTheFuture.AllianceNexusGoalState
+  ) => {
     if (!onForceRelease) return;
     onForceRelease(goal);
   };
@@ -347,7 +346,9 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
   const directionBlue = side === 'far' ? 'row' : 'row-reverse';
   const directionRed = side === 'far' ? 'row-reverse' : 'row';
 
-  const onForceReleaseLocal = (goal: keyof AllianceNexusGoalState) => {
+  const onForceReleaseLocal = (
+    goal: keyof FeedingTheFuture.AllianceNexusGoalState
+  ) => {
     if (!onForceRelease) return;
     onForceRelease(goal);
   };
@@ -427,8 +428,8 @@ const CenterGoalGrid: React.FC<CenterGoalGridProps> = ({
 
 interface GoalToggleProps {
   disabled?: boolean;
-  state: NexusGoalState;
-  onChange?: (goal: NexusGoalState) => void;
+  state: FeedingTheFuture.NexusGoalState;
+  onChange?: (goal: FeedingTheFuture.NexusGoalState) => void;
   single?: boolean;
   onForceRelease?: () => void;
   allowForceRelease: boolean;
@@ -467,7 +468,7 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
   // If the food has been produced, we'll disable the toggle during and before the match is complete
   // after the match, we'll allow the toggles to be changed
   if (
-    state === NexusGoalState.Produced &&
+    state === FeedingTheFuture.NexusGoalState.Produced &&
     matchState < MatchState.MATCH_COMPLETE &&
     !editMode
   ) {
@@ -478,17 +479,17 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
     if (!onChange) return;
 
     switch (state) {
-      case NexusGoalState.BlueOnly: // Blue only, toggle to empty
-        onChange(NexusGoalState.Empty);
+      case FeedingTheFuture.NexusGoalState.BlueOnly: // Blue only, toggle to empty
+        onChange(FeedingTheFuture.NexusGoalState.Empty);
         break;
-      case NexusGoalState.GreenOnly: // Green only, toggle to full
-        onChange(NexusGoalState.Full);
+      case FeedingTheFuture.NexusGoalState.GreenOnly: // Green only, toggle to full
+        onChange(FeedingTheFuture.NexusGoalState.Full);
         break;
-      case NexusGoalState.Full: // Full, toggle to green only
-        onChange(NexusGoalState.GreenOnly);
+      case FeedingTheFuture.NexusGoalState.Full: // Full, toggle to green only
+        onChange(FeedingTheFuture.NexusGoalState.GreenOnly);
         break;
       default: // Empty, toggle to blue only
-        onChange(NexusGoalState.BlueOnly);
+        onChange(FeedingTheFuture.NexusGoalState.BlueOnly);
     }
   };
 
@@ -496,17 +497,17 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
     if (!onChange) return;
 
     switch (state) {
-      case NexusGoalState.BlueOnly: // Blue only, toggle to full
-        onChange(NexusGoalState.Full);
+      case FeedingTheFuture.NexusGoalState.BlueOnly: // Blue only, toggle to full
+        onChange(FeedingTheFuture.NexusGoalState.Full);
         break;
-      case NexusGoalState.GreenOnly: // Green only, toggle to empty
-        onChange(NexusGoalState.Empty);
+      case FeedingTheFuture.NexusGoalState.GreenOnly: // Green only, toggle to empty
+        onChange(FeedingTheFuture.NexusGoalState.Empty);
         break;
-      case NexusGoalState.Full: // Full, toggle to blue only
-        onChange(NexusGoalState.BlueOnly);
+      case FeedingTheFuture.NexusGoalState.Full: // Full, toggle to blue only
+        onChange(FeedingTheFuture.NexusGoalState.BlueOnly);
         break;
       default: // Empty, toggle to green only
-        onChange(NexusGoalState.GreenOnly);
+        onChange(FeedingTheFuture.NexusGoalState.GreenOnly);
     }
   };
 
@@ -517,7 +518,7 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
 
   return (
     <>
-      {NexusGoalState.Produced === state &&
+      {FeedingTheFuture.NexusGoalState.Produced === state &&
         allowForceRelease &&
         matchState < MatchState.MATCH_COMPLETE &&
         !editMode && (
@@ -544,7 +545,7 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
           width: '100%',
           border:
             matchState === MatchState.MATCH_IN_PROGRESS &&
-            state === NexusGoalState.Produced &&
+            state === FeedingTheFuture.NexusGoalState.Produced &&
             !editMode
               ? '5px dashed orange'
               : undefined
@@ -557,9 +558,9 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
           ball='blue'
           disabled={disabled}
           checked={
-            state === NexusGoalState.BlueOnly ||
-            state === NexusGoalState.Full ||
-            state === NexusGoalState.Produced
+            state === FeedingTheFuture.NexusGoalState.BlueOnly ||
+            state === FeedingTheFuture.NexusGoalState.Full ||
+            state === FeedingTheFuture.NexusGoalState.Produced
           }
           onChange={toggleBlue}
           single={single?.toString()}
@@ -568,9 +569,9 @@ const GoalToggle: React.FC<GoalToggleProps> = ({
           ball='green'
           disabled={disabled}
           checked={
-            state === NexusGoalState.GreenOnly ||
-            state === NexusGoalState.Full ||
-            state === NexusGoalState.Produced
+            state === FeedingTheFuture.NexusGoalState.GreenOnly ||
+            state === FeedingTheFuture.NexusGoalState.Full ||
+            state === FeedingTheFuture.NexusGoalState.Produced
           }
           onChange={toggleGreen}
           single={single?.toString()}

@@ -15,10 +15,6 @@ import { useTeamsForEvent } from 'src/api/use-team-data';
 import { NumberInput } from 'src/components/inputs/number-input';
 import { StateToggle } from 'src/components/inputs/state-toggle';
 import NexusScoresheet from '../nexus-sheets/nexus-scoresheet';
-import {
-  AllianceNexusGoalState,
-  NexusGoalState
-} from '@toa-lib/models/build/seasons/FeedingTheFuture';
 
 interface Props {
   alliance: Alliance;
@@ -94,8 +90,8 @@ const TeleScoreSheet: FC<Props> = ({
   };
 
   const updateNexusState = (
-    goal: keyof AllianceNexusGoalState,
-    state: NexusGoalState
+    goal: keyof FeedingTheFuture.AllianceNexusGoalState,
+    state: FeedingTheFuture.NexusGoalState
   ) => {
     if (alliance === 'red') {
       onMatchDetailsUpdate(`redNexusState.${goal}` as any, state);
@@ -105,8 +101,8 @@ const TeleScoreSheet: FC<Props> = ({
   };
 
   const updateOpposingNexusState = (
-    goal: keyof AllianceNexusGoalState,
-    state: NexusGoalState
+    goal: keyof FeedingTheFuture.AllianceNexusGoalState,
+    state: FeedingTheFuture.NexusGoalState
   ) => {
     if (alliance === 'red') {
       onMatchDetailsUpdate(`blueNexusState.${goal}` as any, state);

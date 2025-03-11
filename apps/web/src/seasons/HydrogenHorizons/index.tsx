@@ -2,7 +2,6 @@ import { FC } from 'react';
 import { HydrogenHorizons } from '@toa-lib/models';
 import { ScoreBreakdownProps, SeasonComponents } from '..';
 import { Grid, Typography } from '@mui/material';
-import { isHydrogenHorizonsDetails } from '@toa-lib/models/build/seasons/HydrogenHorizons';
 import RefereeScoreSheet from '@seasons/HydrogenHorizons/referee/ScoreSheet';
 import { MatchDetailInfo } from './MatchDetailInfo';
 import { RankingsReport } from './reports/RankingsReport';
@@ -12,7 +11,7 @@ const RedScoreBreakdown: FC<
   ScoreBreakdownProps<HydrogenHorizons.MatchDetails>
 > = ({ match }) => {
   const someDetails = match?.details;
-  const details = isHydrogenHorizonsDetails(someDetails)
+  const details = HydrogenHorizons.isHydrogenHorizonsDetails(someDetails)
     ? someDetails
     : HydrogenHorizons.defaultMatchDetails;
   return (
@@ -49,7 +48,7 @@ const BlueScoreBreakdown: FC<
   ScoreBreakdownProps<HydrogenHorizons.MatchDetails>
 > = ({ match }) => {
   const someDetails = match?.details;
-  const details = isHydrogenHorizonsDetails(someDetails)
+  const details = HydrogenHorizons.isHydrogenHorizonsDetails(someDetails)
     ? someDetails
     : HydrogenHorizons.defaultMatchDetails;
   return (

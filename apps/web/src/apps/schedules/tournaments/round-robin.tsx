@@ -1,6 +1,10 @@
 import { Button, Grid } from '@mui/material';
-import { AllianceMember, EventSchedule, Team } from '@toa-lib/models';
-import { FGC2024 } from '@toa-lib/models/build/fgc/Schedule';
+import {
+  AllianceMember,
+  EventSchedule,
+  Team,
+  FGCSchedule
+} from '@toa-lib/models';
 import { FC, useEffect, useState } from 'react';
 import { mutate } from 'swr';
 import {
@@ -49,7 +53,7 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
   const removeAlliance = () => setAllianceRows(allianceRows - 1);
   const autoAssign = () => {
     if (!ranks || !teams) return;
-    const rankMap = FGC2024.fgcAllianceOrder;
+    const rankMap = FGCSchedule.FGC2024.fgcAllianceOrder;
     const teamKeys: (number | null)[] = [];
     for (let i = 0; i < allianceRows; i++) {
       for (let j = 0; j < ALLIANCE_SIZE; j++) {

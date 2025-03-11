@@ -8,10 +8,6 @@ import {
   MatchParticipant
 } from '@toa-lib/models';
 import { useRecoilValue } from 'recoil';
-import {
-  AlignmentStatus,
-  Proficiency
-} from '@toa-lib/models/build/seasons/HydrogenHorizons';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 import { matchOccurringAtom } from 'src/stores/recoil';
 import { useTeamsForEvent } from 'src/api/use-team-data';
@@ -93,14 +89,18 @@ const TeleScoreSheet: FC<Props> = ({
     );
   };
 
-  const handleAlignmentUpdate = (newValue: AlignmentStatus) => {
+  const handleAlignmentUpdate = (
+    newValue: HydrogenHorizons.AlignmentStatus
+  ) => {
     onMatchDetailsUpdate(
       alliance === 'red' ? 'redAlignment' : 'blueAlignment',
       newValue
     );
   };
 
-  const getProficiencyStatus = (station: number): Proficiency | undefined => {
+  const getProficiencyStatus = (
+    station: number
+  ): HydrogenHorizons.Proficiency | undefined => {
     switch (station) {
       case 11:
         return match.details?.redOneProficiency;
@@ -115,11 +115,14 @@ const TeleScoreSheet: FC<Props> = ({
       case 23:
         return match.details?.blueThreeProficiency;
       default:
-        return Proficiency.DEVELOPING;
+        return HydrogenHorizons.Proficiency.DEVELOPING;
     }
   };
 
-  const updateProficiency = (station: number, value: Proficiency) => {
+  const updateProficiency = (
+    station: number,
+    value: HydrogenHorizons.Proficiency
+  ) => {
     switch (station) {
       case 11:
         onMatchDetailsUpdate('redOneProficiency', value);
@@ -192,7 +195,7 @@ const TeleScoreSheet: FC<Props> = ({
       </Grid>
       {participants?.map((p) => {
         const team = teams?.find((t) => t.teamKey === p.teamKey);
-        const update = (value: Proficiency) => {
+        const update = (value: HydrogenHorizons.Proficiency) => {
           updateProficiency(p.station, value);
         };
 
@@ -211,7 +214,10 @@ const TeleScoreSheet: FC<Props> = ({
                 </span>
               }
               states={['Developing', 'Intermediate', 'Expert']}
-              value={getProficiencyStatus(p.station) ?? Proficiency.DEVELOPING}
+              value={
+                getProficiencyStatus(p.station) ??
+                HydrogenHorizons.Proficiency.DEVELOPING
+              }
               onChange={update}
               fullWidth
             />

@@ -5,9 +5,9 @@ import {
   Tournament,
   Match,
   createFixedMatches,
-  assignMatchTimes
+  assignMatchTimes,
+  FGCMatches
 } from '@toa-lib/models';
-import { FGC2023 } from '@toa-lib/models/build/fgc/Matches';
 import { FC, useState } from 'react';
 import { useAllianceMembers } from 'src/api/use-alliance-data';
 import { MatchSchedulerDropdown } from 'src/components/dropdowns/match-scheduler-dropdown';
@@ -31,7 +31,10 @@ export const FixedMatches: FC<Props> = ({
   const [gen, setGen] = useState('standard');
   const createMatches = () => {
     if (!scheduleItems || !alliances) return;
-    const map = gen === 'fgc_2023' ? FGC2023.RoundRobinMap : FGC2023.FinalsMap;
+    const map =
+      gen === 'fgc_2023'
+        ? FGCMatches.FGC2023.RoundRobinMap
+        : FGCMatches.FGC2023.FinalsMap;
     const matches = createFixedMatches(scheduleItems, alliances, map);
     onCreateMatches(assignMatchTimes(matches, scheduleItems));
   };
