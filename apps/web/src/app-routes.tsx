@@ -43,7 +43,7 @@ const ScorekeeperApp = lazy(() =>
 
 // Admin Routes
 const AdminApp = lazy(() =>
-  import('./apps/admin').then((m) => ({ default: m.AdminApp }))
+  import('./apps/admin-app').then((m) => ({ default: m.AdminApp }))
 );
 
 // Silly Routes
@@ -77,33 +77,33 @@ const QueueingManager = lazy(() =>
 
 // Report Routes
 const Reports = lazy(() =>
-  import('./apps/reports').then((m) => ({ default: m.Reports }))
+  import('./apps/report-app').then((m) => ({ default: m.Reports }))
 );
 // Settings Routes
 const SettingsApp = lazy(() =>
-  import('./apps/settings').then((m) => ({ default: m.SettingsApp }))
+  import('./apps/settings-app').then((m) => ({ default: m.SettingsApp }))
 );
 const GlobalSettingsApp = lazy(() =>
-  import('./apps/settings/global-settings').then((m) => ({
+  import('./apps/settings-app/global-settings').then((m) => ({
     default: m.GlobalSettingsApp
   }))
 );
 
 // Referee Routes
 const RefereeApp = lazy(() =>
-  import('./apps/referee').then((m) => ({ default: m.RefereeApp }))
+  import('./apps/referee-app').then((m) => ({ default: m.RefereeApp }))
 );
 const RedReferee = lazy(() =>
-  import('./apps/referee').then((m) => ({ default: m.RedReferee }))
+  import('./apps/referee-app').then((m) => ({ default: m.RedReferee }))
 );
 const BlueReferee = lazy(() =>
-  import('./apps/referee').then((m) => ({ default: m.BlueReferee }))
+  import('./apps/referee-app').then((m) => ({ default: m.BlueReferee }))
 );
 const HeadReferee = lazy(() =>
-  import('./apps/referee').then((m) => ({ default: m.HeadReferee }))
+  import('./apps/referee-app').then((m) => ({ default: m.HeadReferee }))
 );
 const HeadRefereeMin = lazy(() =>
-  import('./apps/referee').then((m) => ({ default: m.HeadRefereeMin }))
+  import('./apps/referee-app').then((m) => ({ default: m.HeadRefereeMin }))
 );
 
 // Audience Display Routes
