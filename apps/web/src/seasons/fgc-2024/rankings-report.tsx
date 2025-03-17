@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { FeedingTheFuture } from '@toa-lib/models';
 import { RankingsReportProps } from 'src/seasons';
-import { Report } from 'src/apps/reports/components/report-container';
+import { Report } from 'src/apps/report-app/components/report-container';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
 

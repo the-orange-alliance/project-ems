@@ -28,11 +28,11 @@ import {
   rampUnbalancedHysteresisWindowMsAtom,
   redWledWebSocketAddressAtom
 } from './stores/settings-store';
-import { NumberSetting } from 'src/apps/settings/components/number-setting';
+import { NumberSetting } from 'src/apps/settings-app/components/number-setting';
 import { useSocket } from 'src/api/use-socket';
 import { FeedingTheFutureFCS } from '@toa-lib/models';
-import { TextSetting } from 'src/apps/settings/components/text-setting';
-import { ColorSetting } from 'src/apps/settings/components/color-setting';
+import { TextSetting } from 'src/apps/settings-app/components/text-setting';
+import { ColorSetting } from 'src/apps/settings-app/components/color-setting';
 
 export const Settings: FC = () => {
   const [socket] = useSocket();
