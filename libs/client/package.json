@@ -9,6 +9,11 @@
   "scripts": {
     "build": "tsc"
   },
+  "exports": {
+    ".": {
+      "default": "./build/index.js"
+    }
+  },
   "devDependencies": {
     "@types/node": "^22.13.10",
     "@types/socket.io-client": "^3.0.0",
