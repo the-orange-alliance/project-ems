@@ -18,7 +18,7 @@ jobs:
 
       - name: Detect changes
         id: changed
-        uses: tj-actions/changed-files@v34
+        uses: tj-actions/changed-files@v46
         with:
           files: |
             apps/web/**
