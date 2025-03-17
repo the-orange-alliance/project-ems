@@ -40,7 +40,7 @@ const request = (
       ...options?.headers
     }
   });
-}
+};
 
 export const postRankings = async (
   eventKey: string,
@@ -130,7 +130,8 @@ export const postMatchResults = async (
     await db.updateWhere(
       'match',
       { uploaded: 1 },
-      `eventKey = "${info.eventKey}" AND tournamentKey = "${info.tournamentKey}" AND id = ${info.id}`)
+      `eventKey = "${info.eventKey}" AND tournamentKey = "${info.tournamentKey}" AND id = ${info.id}`
+    );
   }
 
   return await postRankings(
@@ -165,7 +166,10 @@ router.post(
         ? 'attempting to sync rankings'
         : 'not syncing ranking'
     );
-    if (!environment.isProd()) return res.send({ success: false });
+    if (!environment.isProd()) {
+      res.send({ success: false });
+      return;
+    }
     const { eventKey, tournamentKey } = req.params;
     const { platform, apiKey } = req.body;
     const rankingsReq = await postRankings(
@@ -186,7 +190,10 @@ router.post(
         ? 'attempting to sync results'
         : 'not syncing results'
     );
-    if (!environment.isProd()) return res.send({ succuess: false });
+    if (!environment.isProd()) {
+      res.send({ succuess: false });
+      return;
+    }
     const { eventKey, tournamentKey, id: idStr } = req.params;
     const id = parseInt(idStr);
     const { platform, apiKey } = req.body;
@@ -207,7 +214,10 @@ router.post(
         ? 'attempting to sync results'
         : 'not syncing results'
     );
-    if (!environment.isProd()) return res.send({ success: false });
+    if (!environment.isProd()) {
+      res.send({ success: false });
+      return;
+    }
     const { eventKey, tournamentKey } = req.params;
     const db = await getDB(eventKey);
     const matches = await db.selectAllWhere(
@@ -253,16 +263,15 @@ router.post(
         ? 'attempting to sync results'
         : 'not syncing results'
     );
-    if (!environment.isProd()) return res.send({ succuess: false });
+    if (!environment.isProd()) {
+      res.send({ succuess: false });
+      return;
+    }
     const { eventKey } = req.params;
     const db = await getDB(eventKey);
     const teams = await db.selectAll('team');
     const { platform, apiKey } = req.body;
-    const teamsReq = await postTeams(
-      teams,
-      platform,
-      apiKey
-    );
+    const teamsReq = await postTeams(teams, platform, apiKey);
     res.send({ succuess: teamsReq?.ok });
   }
 );
@@ -275,16 +284,18 @@ router.post(
         ? 'attempting to sync results'
         : 'not syncing results'
     );
-    if (!environment.isProd()) return res.send({ succuess: false });
+    if (!environment.isProd()) {
+      res.send({ succuess: false });
+      return;
+    }
     const { eventKey, tournamentKey } = req.params;
     const { platform, apiKey } = req.body;
     const db = await getDB(eventKey);
-    const alliances = await db.selectAllWhere('alliance', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
-    const allianceReq = await postAlliances(
-      alliances,
-      platform,
-      apiKey
+    const alliances = await db.selectAllWhere(
+      'alliance',
+      `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
     );
+    const allianceReq = await postAlliances(alliances, platform, apiKey);
     res.send({ succuess: allianceReq?.ok });
   }
 );
