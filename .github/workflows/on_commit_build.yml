@@ -25,10 +25,6 @@ jobs:
         run: |
           npm i
 
-      - name: Build libraries
+      - name: Turbo build
         run: |
-          npm run build:libs
-
-      - name: Build apps
-        run: |
-          npm run builds
+          npm run build
