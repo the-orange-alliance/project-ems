@@ -6,6 +6,7 @@
     "url": "https://github.com/kyle-flynn"
   },
   "scripts": {
+    "prebuild": "turbo run @toa-lib/client#build @toa-lib/server#build",
     "build": "turbo build",
     "dev": "turbo run dev api#start realtime#start"
   },
