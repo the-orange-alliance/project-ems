@@ -6,8 +6,7 @@
     "url": "https://github.com/kyle-flynn"
   },
   "scripts": {
-    "build:libs": "turbo run prebuild",
-    "build": "turbo run api#build realtime#build project-ems#build",
+    "build": "turbo build",
     "dev": "turbo run dev api#start realtime#start"
   },
   "repository": {

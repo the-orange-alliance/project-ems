@@ -1,15 +1,40 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
-    "prebuild": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "build/**"]
+    },
+    "@toa-lib/client#build": {
+      "dependsOn": ["@toa-lib/models#build"]
+    },
+    "@toa-lib/server#build": {
+      "dependsOn": ["@toa-lib/models#build"]
+    },
+    "frc-fms#build": {
+      "dependsOn": [
+        "@toa-lib/models#build",
+        "@toa-lib/models#build",
+        "@toa-lib/client#build",
+        "@toa-lib/server#build"
+      ]
+    },
+    "api#build": {
       "dependsOn": [
         "@toa-lib/models#build",
         "@toa-lib/client#build",
         "@toa-lib/server#build"
       ]
     },
-    "build": {
-      "outputs": ["dist/**", "build/**"]
+    "realtime#build": {
+      "dependsOn": [
+        "@toa-lib/models#build",
+        "@toa-lib/client#build",
+        "@toa-lib/server#build"
+      ]
+    },
+    "project-ems#build": {
+      "dependsOn": ["@toa-lib/models#build", "@toa-lib/client#build"]
     },
     "check-types": {
       "dependsOn": ["^check-types"]
@@ -17,7 +42,7 @@
     "dev": {
       "persistent": true,
       "cache": false,
-      "dependsOn": ["prebuild", "api#build", "realtime#build"]
+      "dependsOn": ["api#build", "realtime#build"]
     },
     "start": {
       "persistent": true,
