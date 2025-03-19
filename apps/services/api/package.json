@@ -1,7 +1,7 @@
 {
   "name": "api",
-  "version": "1.0.0",
-  "description": "Realtime service for EMS.",
+  "version": "3.0.0",
+  "description": "REST API service for EMS.",
   "main": "build/Server.js",
   "type": "module",
   "scripts": {
