@@ -6,16 +6,21 @@ Not your average scorekeeping software
 
 This project is a monrepo and utilizes features from [turbrepo](https://turbo.build/).
 
-1. Install dependencies
-   b. Install turborepo via `npm install turbo --global`
-   a. run `npm install` at the project root
-2. Build projects and packages
-   a. You can specify specific targets using turborepo (e.g. `turbo run @toa-lib/models#build`)
-   b. Running `turbo build` will build all apps and libraries.
-   c. It's recommended to use `npm run build` or `turbo build` as they are synonymous.
-3. Start developing
-   a. Execute the root-level dev command via `npm run dev`
-   b. This starts the `api`, `realtime` and `web` applications.
+## Install dependencies
+
+1. Install turborepo via `npm install turbo --global`
+2. run `npm install` at the project root
+
+## Build projects and packages
+
+1. You can specify specific targets using turborepo (e.g. `turbo run @toa-lib/models#build`)
+2. Running `turbo build` will build all apps and libraries.
+3. It's recommended to use `npm run build` or `turbo build` as they are synonymous.
+
+## Start developing
+
+1. Execute the root-level dev command via `npm run dev`
+2. This starts the `api`, `realtime` and `web` applications.
 
 #### Build Status:
 
