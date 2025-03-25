@@ -16,6 +16,22 @@
     "./seasons": {
       "types": "./src/seasons/index.ts",
       "default": "./build/seasons/index.js"
+    },
+    "./fms": {
+      "types": "./src/fms/index.ts",
+      "default": "./build/fms/index.js"
+    },
+    "./fgc": {
+      "types": "./src/fgc/index.ts",
+      "default": "./build/fgc/index.js"
+    },
+    "./fcs": {
+      "types": "./src/fcs/index.ts",
+      "default": "./build/fcs/index.js"
+    },
+    "./base": {
+      "types": "./src/base/index.ts",
+      "default": "./build/base/index.js"
     }
   },
   "devDependencies": {

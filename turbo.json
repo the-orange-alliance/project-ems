@@ -14,7 +14,6 @@
     "frc-fms#build": {
       "dependsOn": [
         "@toa-lib/models#build",
-        "@toa-lib/models#build",
         "@toa-lib/client#build",
         "@toa-lib/server#build"
       ]
