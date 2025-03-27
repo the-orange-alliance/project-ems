@@ -1,7 +1,7 @@
 import { MatchKey, MatchSocketEvent } from '@toa-lib/models';
 import { FC, useEffect } from 'react';
-import { useSocket } from 'src/api/use-socket';
-import * as Events from 'src/api/events';
+import { useSocket } from 'src/api/use-socket.js';
+import * as Events from 'src/api/events/index.js';
 
 export const ConnectionManager: FC = () => {
   const [socket, , setupSocket] = useSocket();

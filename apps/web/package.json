@@ -23,6 +23,7 @@
     "@toa-lib/models": "file:../../../../libs/models",
     "@vitejs/plugin-react": "^4.3.4",
     "export-to-csv": "^1.4.0",
+    "jotai": "^2.12.2",
     "luxon": "^3.5.0",
     "mui-color-input": "^4.0.1",
     "react": "^19.0.0",

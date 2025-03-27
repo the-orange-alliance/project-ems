@@ -1,7 +1,5 @@
 import { FC, useState, MouseEvent } from 'react';
-import Box from '@mui/material/Box';
-import { useRecoilState } from 'recoil';
-import { allFrcFmsAtom } from 'src/stores/NewRecoil';
+import { Box } from '@mui/material';
 import {
   Button,
   LinearProgress,
@@ -9,13 +7,14 @@ import {
   ListItemButton,
   Typography
 } from '@mui/material';
-import { FrcFmsSetting } from '../components/frc-fms-setting';
+import { FrcFmsSetting } from '../components/frc-fms-setting.js';
 import { FMSSettings } from '@toa-lib/models';
-import { postFrcFmsSettings } from 'src/api/use-fms-data';
-import { sendUpdateFrcFmsSettings, useSocket } from 'src/api/use-socket';
+import { postFrcFmsSettings } from 'src/api/use-fms-data.js';
+import { sendUpdateFrcFmsSettings, useSocket } from 'src/api/use-socket.js';
 
 const FrcFmsSettingsTab: FC = () => {
-  const [allFms, setAllFms] = useRecoilState(allFrcFmsAtom);
+  // TODO - @Soren you'll have to fix this sorry ¯\_(ツ)_/¯
+  const [allFms, setAllFms] = useState<any[]>([]);
   const [settingOpen, setSettingOpen] = useState<boolean>(false);
   const [currentSetting, setCurrentSetting] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);

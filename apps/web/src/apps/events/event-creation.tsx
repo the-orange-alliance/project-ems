@@ -1,11 +1,11 @@
 import { FC, useState } from 'react';
 import { Typography } from '@mui/material';
 import { Event } from '@toa-lib/models';
-import { postEvent, setupEventBase } from 'src/api/use-event-data';
-import { ViewReturn } from 'src/components/buttons/view-return';
-import { EventForm } from 'src/components/forms/event-form';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { PaperLayout } from 'src/layouts/paper-layout';
+import { postEvent, setupEventBase } from 'src/api/use-event-data.js';
+import { ViewReturn } from 'src/components/buttons/view-return.js';
+import { EventForm } from 'src/components/forms/event-form.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { useNavigate } from 'react-router-dom';
 
 export const EventCreation: FC = () => {
@@ -33,8 +33,10 @@ export const EventCreation: FC = () => {
       padding
       showSettings
     >
-      <ViewReturn title='Events' href='/' />
-      <EventForm loading={loading} onSubmit={onSubmit} />
+      <>
+        <ViewReturn title='Events' href='/' />
+        <EventForm loading={loading} onSubmit={onSubmit} />
+      </>
     </PaperLayout>
   );
 };

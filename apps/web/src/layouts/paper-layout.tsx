@@ -1,18 +1,15 @@
-import { FC, ReactNode, Suspense, useEffect } from 'react';
-import { useRecoilState } from 'recoil';
-import { Breakpoint } from '@mui/material';
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import Divider from '@mui/material/Divider';
-import Paper from '@mui/material/Paper';
-import { appbarConfigAtom } from '@stores/recoil';
+import { FC, JSX, Suspense, useEffect } from 'react';
+import { Breakpoint, Container, Divider, Paper } from '@mui/material';
+import { Box } from '@mui/material';
+import { appbarConfigAtom } from '@stores/state/index.js';
+import { useSetAtom } from 'jotai';
 
 interface Props {
   title?: string;
   titleLink?: string;
-  header?: ReactNode | string;
+  header?: JSX.Element | string;
   containerWidth?: Breakpoint | false;
-  children?: ReactNode;
+  children?: JSX.Element;
   padding?: boolean;
   showSettings?: boolean;
 }
@@ -26,7 +23,7 @@ export const PaperLayout: FC<Props> = ({
   padding,
   showSettings
 }: Props) => {
-  const [, updateAppbarConfig] = useRecoilState(appbarConfigAtom);
+  const updateAppbarConfig = useSetAtom(appbarConfigAtom);
 
   useEffect(() => {
     updateAppbarConfig({

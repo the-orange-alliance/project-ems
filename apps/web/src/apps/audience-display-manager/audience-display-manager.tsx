@@ -1,8 +1,6 @@
 import { FC, useEffect, useState } from 'react';
-import Typography from '@mui/material/Typography';
-import { PaperLayout } from 'src/layouts/paper-layout';
-import { useRecoilState, useResetRecoilState } from 'recoil';
-import { socketClientsSelector } from 'src/stores/NewRecoil';
+import { Typography } from '@mui/material';
+import { PaperLayout } from '@layouts/paper-layout.js';
 import {
   Button,
   Checkbox,
@@ -26,7 +24,7 @@ import {
   requestClientIdentification,
   requestClientRefresh,
   sendUpdateSocketClient
-} from 'src/api/use-socket';
+} from 'src/api/use-socket.js';
 import {
   Cached,
   ChevronLeft,
@@ -38,12 +36,13 @@ import {
 import {
   deleteSocketClient,
   updateSocketClient
-} from 'src/api/use-socket-data';
+} from 'src/api/use-socket-data.js';
 import { Link } from 'react-router-dom';
 
 export const AudienceDisplayManager: FC = () => {
-  const [clients, setClients] = useRecoilState(socketClientsSelector);
-  const resetClients = useResetRecoilState(socketClientsSelector);
+  // TODO - Sorry @Soren you'll need to fix this ¯\_(ツ)_/¯
+  const [clients, setClients] = useState<any[]>([]);
+  // const resetClients = useResetRecoilState(socketClientsSelector);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContext, setDialogContext] = useState<any>(null);
 
@@ -83,7 +82,7 @@ export const AudienceDisplayManager: FC = () => {
 
   const refreshClients = async () => {
     setClients([]);
-    resetClients();
+    // resetClients();
   };
 
   const requestClientToIdentify = (data: any) => {

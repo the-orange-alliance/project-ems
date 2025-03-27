@@ -1,12 +1,12 @@
 import { Routes, Route } from 'react-router-dom';
-import routes from './app-routes';
+import routes from './app-routes.js';
 import './utils.less';
-import { useSnackbar } from './hooks/use-snackbar';
+import { useSnackbar } from './hooks/use-snackbar.js';
 import { FC, ReactNode, Suspense } from 'react';
-import SyncEffects from './components/sync-effects/sync-effects';
-import PrimaryAppbar from './components/appbars/primary';
+import SyncEffects from './components/sync-effects/sync-effects.js';
+import PrimaryAppbar from './components/appbars/primary.js';
 import { LinearProgress } from '@mui/material';
-import { ConnectionManager } from './components/util/connection-manager';
+import { ConnectionManager } from './components/util/connection-manager.js';
 
 const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {
   return (

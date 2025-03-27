@@ -1,10 +1,10 @@
 import { FC } from 'react';
-import { useSyncUrlToRecoil } from 'src/hooks/use-sync-url';
-import { useSyncFieldsToRecoil } from 'src/components/sync-effects/sync-fields-to-recoil';
+import { useSyncUrlToRecoil } from 'src/hooks/use-sync-url.js';
+// import { useSyncFieldsToRecoil } from 'src/components/sync-effects/sync-fields-to-recoil.js';
 
 const SyncEffects: FC = () => {
   useSyncUrlToRecoil();
-  useSyncFieldsToRecoil();
+  // useSyncFieldsToRecoil();
   return null;
 };
 

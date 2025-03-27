@@ -1,2 +1,2 @@
-export * from './ui-settings';
-export * from './event-state';
+export * from './ui-settings.js';
+export * from './event-state.js';

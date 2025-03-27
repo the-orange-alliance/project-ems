@@ -1,7 +1,7 @@
 import { apiFetcher } from '@toa-lib/client';
 import { ApiResponseError, Event, eventZod } from '@toa-lib/models';
-import { useRecoilValue } from 'recoil';
-import { currentEventKeyAtom } from 'src/stores/recoil';
+import { useAtomValue } from 'jotai';
+import { eventKeyAtom } from 'src/stores/state/index.js';
 import useSWR, { SWRResponse } from 'swr';
 import useSWRImmutable from 'swr/immutable';
 
@@ -34,8 +34,8 @@ export const useEvent = (
 ): SWRResponse<Event> =>
   useSWRImmutable<Event>(
     eventKey && eventKey.length > 0 ? `event/${eventKey}` : undefined,
-    (url) => apiFetcher(url, 'GET', undefined, eventZod.parse)
+    (url: string) => apiFetcher(url, 'GET', undefined, eventZod.parse)
   );
 
 export const useCurrentEvent = (): SWRResponse<Event> =>
-  useEvent(useRecoilValue(currentEventKeyAtom));
+  useEvent(useAtomValue(eventKeyAtom));

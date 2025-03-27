@@ -6,19 +6,12 @@ import {
   MatchSocketEvent
 } from '@toa-lib/models';
 import { Socket } from 'socket.io-client';
-import { useRecoilCallback, useRecoilState } from 'recoil';
-
-import {
-  socketConnectedAtom,
-  followerModeEnabledAtom,
-  leaderApiHostAtom,
-  displayChromaKeyAtom,
-  activeFieldsAtom
-} from 'src/stores/recoil';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { connectSocketClient } from './use-socket-data';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { connectSocketClient } from './use-socket-data.js';
 import { v4 as uuidv4 } from 'uuid';
 import { useRef } from 'react';
+import { useAtom } from 'jotai';
+import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 
 let socket: Socket | null = null;
 
@@ -35,7 +28,7 @@ export const useSocket = (): [
   boolean,
   (token: string) => void
 ] => {
-  const [connected, setConnected] = useRecoilState(socketConnectedAtom);
+  const [connected, setConnected] = useAtom(isSocketConnectedAtom);
   const { showSnackbar } = useSnackbar();
   const idMsgRef = useRef<any>({});
 
@@ -48,14 +41,14 @@ export const useSocket = (): [
     void identify();
   };
 
-  const identify = useRecoilCallback(({ snapshot, set }) => async () => {
+  const identify = async () => {
     if (socket) {
-      const fields = await snapshot.getPromise(activeFieldsAtom);
-      const followerModeEnabled = await snapshot.getPromise(
-        followerModeEnabledAtom
-      );
-      const leaderApiHost = await snapshot.getPromise(leaderApiHostAtom);
-      const chromaKey = await snapshot.getPromise(displayChromaKeyAtom);
+      // const fields = await snapshot.getPromise(activeFieldsAtom);
+      // const followerModeEnabled = await snapshot.getPromise(
+      //   followerModeEnabledAtom
+      // );
+      // const leaderApiHost = await snapshot.getPromise(leaderApiHostAtom);
+      // const chromaKey = await snapshot.getPromise(displayChromaKeyAtom);
 
       // ID Message
       let persistantClientId = localStorage.getItem('persistantClientId');
@@ -67,11 +60,11 @@ export const useSocket = (): [
       }
 
       idMsgRef.current = {
-        currentUrl: window.location.href,
-        fieldNumbers: fields.map((d: any) => d.field).join(','),
-        followerMode: followerModeEnabled ? 1 : 0,
-        followerApiHost: leaderApiHost,
-        audienceDisplayChroma: (chromaKey ?? '').replaceAll('"', '')
+        currentUrl: window.location.href
+        // fieldNumbers: fields.map((d: any) => d.field).join(','),
+        // followerMode: followerModeEnabled ? 1 : 0,
+        // followerApiHost: leaderApiHost,
+        // audienceDisplayChroma: (chromaKey ?? '').replaceAll('"', '')
       };
 
       if (persistantClientId) {
@@ -80,16 +73,16 @@ export const useSocket = (): [
 
       socket.on('settings', (data) => {
         // TODO: Make this get the field names properly
-        set(
-          activeFieldsAtom,
-          data.fieldNumbers
-            .split(',')
-            .map((d: any) => ({ field: parseInt(d), name: `Field ${d}` }))
-        );
-        set(followerModeEnabledAtom, data.followerMode === 1);
+        // set(
+        //   activeFieldsAtom,
+        //   data.fieldNumbers
+        //     .split(',')
+        //     .map((d: any) => ({ field: parseInt(d), name: `Field ${d}` }))
+        // );
+        // set(followerModeEnabledAtom, data.followerMode === 1);
         // TODO: Setter for this may be broken, investigate this later
         // set(leaderApiHostAtom, data.followerApiHost);
-        set(displayChromaKeyAtom, data.audienceDisplayChroma);
+        // set(displayChromaKeyAtom, data.audienceDisplayChroma);
         localStorage.setItem('persistantClientId', data.persistantClientId);
       });
 
@@ -115,11 +108,11 @@ export const useSocket = (): [
       socket.io.on('reconnect', (a) => {
         console.log(`Reconnected after ${a} attempts`);
         idMsgRef.current = {
-          currentUrl: window.location.href,
-          fieldNumbers: fields.map((d: any) => d.field).join(','),
-          followerMode: followerModeEnabled ? 1 : 0,
-          followerApiHost: leaderApiHost,
-          audienceDisplayChroma: (chromaKey ?? '').replaceAll('"', '')
+          currentUrl: window.location.href
+          // fieldNumbers: fields.map((d: any) => d.field).join(','),
+          // followerMode: followerModeEnabled ? 1 : 0,
+          // followerApiHost: leaderApiHost,
+          // audienceDisplayChroma: (chromaKey ?? '').replaceAll('"', '')
         };
         socket?.emit('identify', idMsgRef.current);
       });
@@ -127,7 +120,7 @@ export const useSocket = (): [
       socket.emit('identify', idMsgRef.current);
     }
     // set(currentTournamentFieldsAtom, [])
-  });
+  };
 
   const initEvents = () => {
     if (socket) {

@@ -25,7 +25,8 @@ export default defineConfig({
       '@features': resolve(__dirname, './src/features'),
       '@layouts': resolve(__dirname, './src/layouts'),
       '@seasons': resolve(__dirname, './src/seasons'),
-      '@stores': resolve(__dirname, './src/stores')
+      '@stores': resolve(__dirname, './src/stores'),
+      '@api': resolve(__dirname, './src/api')
     }
   },
   optimizeDeps: {

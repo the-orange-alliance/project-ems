@@ -1,9 +1,9 @@
 import { FC, Suspense } from 'react';
-import Grid from '@mui/material/Grid';
-import { DefaultLayout } from '@layouts/default-layout';
-import { AppCard, AppCardProps } from 'src/components/util/app-card';
-import AppRoutes from 'src/app-routes';
-import { useCurrentEvent } from 'src/api/use-event-data';
+import { Grid } from '@mui/material';
+import { DefaultLayout } from '@layouts/default-layout.js';
+import { AppCard, AppCardProps } from '@components/util/app-card.js';
+import AppRoutes from '../app-routes.js';
+import { useCurrentEvent } from '@api/use-event-data.js';
 
 const GridAppCard = (props: AppCardProps) => (
   <Grid item xs={5} md={3}>

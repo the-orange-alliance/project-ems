@@ -1,15 +1,14 @@
 import { FC } from 'react';
-import Snackbar from '@mui/material/Snackbar';
-import Button from '@mui/material/Button';
-import { useRecoilState } from 'recoil';
-import {
-  snackbarErrorAtom,
-  snackbarMessageAtom,
-  snackbarOpenAtom,
-  snackbarUseShowAtom
-} from 'src/stores/recoil';
+import { Snackbar, Button } from '@mui/material';
 import { useModal } from '@ebay/nice-modal-react';
-import { ErrorDialog } from 'src/components/dialogs/error-dialog';
+import { ErrorDialog } from 'src/components/dialogs/error-dialog.js';
+import { useAtom } from 'jotai';
+import {
+  isSnackbarOpenAtom,
+  snackbarErrorMessageAtom,
+  snackbarMessageAtom,
+  isSnackbarDetailsShownAtom
+} from 'src/stores/state/index.js';
 
 /**
  * The goal is to have the following
@@ -33,10 +32,10 @@ const ModalButton: FC<{ message: string }> = ({ message }) => {
 };
 
 export const useSnackbar: SnackbarHook = () => {
-  const [open, setOpen] = useRecoilState(snackbarOpenAtom);
-  const [message, setMessage] = useRecoilState(snackbarMessageAtom);
-  const [useShow, setUseShow] = useRecoilState(snackbarUseShowAtom);
-  const [error, setError] = useRecoilState(snackbarErrorAtom);
+  const [open, setOpen] = useAtom(isSnackbarOpenAtom);
+  const [message, setMessage] = useAtom(snackbarMessageAtom);
+  const [useShow, setUseShow] = useAtom(isSnackbarDetailsShownAtom);
+  const [error, setError] = useAtom(snackbarErrorMessageAtom);
 
   const showSnackbar = (msg: string, detail?: string) => {
     setMessage(msg);

@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { Event, EventTypes } from '@toa-lib/models';
-import { UpgradedTable } from './upgraded-table';
+import { UpgradedTable } from './upgraded-table.js';
 import { DateTime } from 'luxon';
 
 interface Props {
@@ -14,8 +14,9 @@ const EventsTable: FC<Props> = ({ events, onSelect }) => {
       data={events}
       headers={['Key', 'Name', 'Type', 'Location', 'Date', 'Website']}
       renderRow={(e) => {
-        const eventType = EventTypes.find((t) => t.key === e.eventTypeKey)
-          ?.name;
+        const eventType = EventTypes.find(
+          (t) => t.key === e.eventTypeKey
+        )?.name;
         const location = [e.city, e.stateProv, e.country]
           .filter((str) => str.length > 0)
           .toString();

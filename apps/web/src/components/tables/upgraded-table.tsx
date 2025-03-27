@@ -1,22 +1,23 @@
-import { ReactNode } from 'react';
-import ButtonGroup from '@mui/material/ButtonGroup';
-import IconButton from '@mui/material/IconButton';
-import Paper from '@mui/material/Paper';
-import TableContainer from '@mui/material/TableContainer';
-import Table from '@mui/material/Table';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TableCell from '@mui/material/TableCell';
-import TableBody from '@mui/material/TableBody';
+import { JSX } from 'react';
+import {
+  ButtonGroup,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
+} from '@mui/material';
 
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
 interface Props<T> {
   data: T[];
   headers: string[];
   selected?: (row: T) => boolean;
-  renderRow: (row: T) => (string | number | ReactNode)[];
+  renderRow: (row: T) => (string | number | JSX.Element)[];
   onSelect?: (row: T) => void;
   onModify?: (row: T) => void;
   onDelete?: (row: T) => void;

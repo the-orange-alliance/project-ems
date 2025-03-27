@@ -1,26 +1,29 @@
 import { FC, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useRecoilValue } from 'recoil';
-import AppBar from '@mui/material/AppBar';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import { LoginButton } from 'src/components/buttons/login-button';
-import { LogoutButton } from 'src/components/buttons/logout-button';
-import { appbarConfigAtom, userAtom } from '@stores/recoil';
+import { LoginButton } from 'src/components/buttons/login-button.js';
+import { LogoutButton } from 'src/components/buttons/logout-button.js';
 import emsAvatar from '@assets/favicon.ico';
-
-import SettingsIcon from '@mui/icons-material/Settings';
-import FullscreenIcon from '@mui/icons-material/Fullscreen';
-import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Avatar,
+  Typography,
+  Button
+} from '@mui/material';
+import {
+  Settings as SettingsIcon,
+  Fullscreen as FullscreenIcon,
+  FullscreenExit as FullscreenExitIcon
+} from '@mui/icons-material';
+import { useAtomValue } from 'jotai';
+import { appbarConfigAtom, userAtom } from 'src/stores/state/ui.js';
 
 const PrimaryAppbar: FC = () => {
   const [fullscreen, setFullscreen] = useState(false);
   const { title, titleLink, showSettings, showFullscreen } =
-    useRecoilValue(appbarConfigAtom);
-  const user = useRecoilValue(userAtom);
+    useAtomValue(appbarConfigAtom);
+  const user = useAtomValue(userAtom);
 
   const requestFullscreen = () => {
     document.documentElement.requestFullscreen();

@@ -1,11 +1,9 @@
 import { ChangeEvent, FC, useEffect, useState } from 'react';
-import Grid from '@mui/material/Grid';
-import TextField from '@mui/material/TextField';
-import FormControl from '@mui/material/FormControl';
-import LoadingButton from '@mui/lab/LoadingButton';
-import { SeasonDropdown } from 'src/components/dropdowns/season-dropdown';
-import { EventTypeDropdown } from 'src/components/dropdowns/event-type-dropdown';
-import { DatePicker } from 'src/components/util/date-picker';
+import { Grid, TextField, FormControl } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
+import { SeasonDropdown } from 'src/components/dropdowns/season-dropdown.js';
+import { EventTypeDropdown } from 'src/components/dropdowns/event-type-dropdown.js';
+import { DatePicker } from 'src/components/util/date-picker.js';
 import { Event, defaultEvent } from '@toa-lib/models';
 
 const FormField: FC<{

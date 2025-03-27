@@ -1,18 +1,18 @@
 import { StrictMode, useMemo, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
-import { RecoilRoot, useRecoilValue } from 'recoil';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { Provider as ModalProvider } from '@ebay/nice-modal-react';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
-import { fgcTheme, frcTheme, ftcTheme } from './app-theme';
-import { darkModeAtom } from './stores/recoil';
+import { fgcTheme, frcTheme, ftcTheme } from './app-theme.js';
 import { APIOptions, SocketOptions } from '@toa-lib/client';
-import { getFromLocalStorage } from './stores/local-storage';
-import { AppContainer } from './App';
-import { useCurrentEvent } from './api/use-event-data';
+import { getFromLocalStorage } from './stores/local-storage.js';
+import { AppContainer } from './App.js';
+import { useCurrentEvent } from './api/use-event-data.js';
 import { CssBaseline } from '@mui/material';
+import { useAtomValue } from 'jotai';
+import { darkModeAtom } from './stores/state/ui.js';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
@@ -39,15 +39,15 @@ SocketOptions.host = window.location.hostname;
 SocketOptions.port = 8081;
 
 function Main() {
-  const darkMode = useRecoilValue(darkModeAtom);
+  const darkMode = useAtomValue(darkModeAtom);
   const eventKey = useCurrentEvent().data?.eventKey;
   const theme = !eventKey
     ? fgcTheme
     : eventKey.startsWith('FRC')
-    ? frcTheme
-    : eventKey.startsWith('FTC')
-    ? ftcTheme
-    : fgcTheme;
+      ? frcTheme
+      : eventKey.startsWith('FTC')
+        ? ftcTheme
+        : fgcTheme;
   return (
     <ThemeProvider theme={useMemo(() => theme(darkMode), [darkMode, eventKey])}>
       <CssBaseline />
@@ -61,13 +61,11 @@ function Main() {
 root.render(
   <StrictMode>
     <Suspense>
-      <RecoilRoot>
-        <BrowserRouter>
-          <LocalizationProvider dateAdapter={AdapterLuxon}>
-            <Main />
-          </LocalizationProvider>
-        </BrowserRouter>
-      </RecoilRoot>
+      <BrowserRouter>
+        <LocalizationProvider dateAdapter={AdapterLuxon}>
+          <Main />
+        </LocalizationProvider>
+      </BrowserRouter>
     </Suspense>
   </StrictMode>
 );

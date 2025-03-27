@@ -1,23 +1,23 @@
+import { useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSetRecoilState } from 'recoil';
 import {
-  currentEventKeyAtom,
-  currentTeamKeyAtom,
-  currentTournamentKeyAtom
-} from 'src/stores/recoil';
+  eventKeyAtom,
+  teamKeyAtom,
+  tournamentKeyAtom
+} from 'src/stores/state/event.js';
 
 export const useSyncUrlToRecoil = () => {
   const { eventKey, teamKey, tournamentKey } = useParams();
-  const setEventKey = useSetRecoilState(currentEventKeyAtom);
-  const setTeamKey = useSetRecoilState(currentTeamKeyAtom);
-  const setTournamentKey = useSetRecoilState(currentTournamentKeyAtom);
+  const setEventKey = useSetAtom(eventKeyAtom);
+  const setTeamKey = useSetAtom(teamKeyAtom);
+  const setTournamentKey = useSetAtom(tournamentKeyAtom);
   useEffect(() => {
     if (eventKey) {
       setEventKey(eventKey);
     }
     if (teamKey) {
-      setTeamKey(parseInt(teamKey));
+      setTeamKey(teamKey);
     }
     if (tournamentKey) {
       setTournamentKey(tournamentKey);

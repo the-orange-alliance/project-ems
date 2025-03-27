@@ -2,121 +2,121 @@ import { FC, LazyExoticComponent, ReactNode, lazy } from 'react';
 import THE_MAN from './assets/images/the_man.jpg';
 
 // Home route
-const HomeApp = lazy(() => import('./apps/index'));
+const HomeApp = lazy(() => import('./apps/index.js'));
 
 // Event routes
 const EventSelection = lazy(() =>
-  import('./apps/events').then((m) => ({ default: m.EventSelection }))
+  import('./apps/events/index.js').then((m) => ({ default: m.EventSelection }))
 );
 const EventCreation = lazy(() =>
-  import('./apps/events').then((m) => ({ default: m.EventCreation }))
+  import('./apps/events/index.js').then((m) => ({ default: m.EventCreation }))
 );
 const EventManager = lazy(() =>
-  import('./apps/events').then((m) => ({ default: m.EventManager }))
+  import('./apps/events/index.js').then((m) => ({ default: m.EventManager }))
 );
 
 // Team Routes
-const TeamManager = lazy(() =>
-  import('./apps/teams').then((m) => ({ default: m.TeamManager }))
-);
-const TeamEditor = lazy(() =>
-  import('./apps/teams').then((m) => ({ default: m.TeamEdior }))
-);
+// const TeamManager = lazy(() =>
+//   import('./apps/teams').then((m) => ({ default: m.TeamManager }))
+// );
+// const TeamEditor = lazy(() =>
+//   import('./apps/teams').then((m) => ({ default: m.TeamEdior }))
+// );
 
 // Tournament Routes
-const TournamentManager = lazy(() =>
-  import('./apps/tournaments').then((m) => ({ default: m.TournamentManager }))
-);
-const TournamentEditor = lazy(() =>
-  import('./apps/tournaments').then((m) => ({ default: m.TournamentEditor }))
-);
+// const TournamentManager = lazy(() =>
+//   import('./apps/tournaments').then((m) => ({ default: m.TournamentManager }))
+// );
+// const TournamentEditor = lazy(() =>
+//   import('./apps/tournaments').then((m) => ({ default: m.TournamentEditor }))
+// );
 
 // Schedule Routes
-const ScheduleManager = lazy(() =>
-  import('./apps/schedules').then((m) => ({ default: m.ScheduleManager }))
-);
+// const ScheduleManager = lazy(() =>
+//   import('./apps/schedules').then((m) => ({ default: m.ScheduleManager }))
+// );
 
 // Scorekeeper Routes
-const ScorekeeperApp = lazy(() =>
-  import('./apps/scorekeeper').then((m) => ({ default: m.ScorekeeperApp }))
-);
+// const ScorekeeperApp = lazy(() =>
+//   import('./apps/scorekeeper').then((m) => ({ default: m.ScorekeeperApp }))
+// );
 
 // Admin Routes
-const AdminApp = lazy(() =>
-  import('./apps/admin-app').then((m) => ({ default: m.AdminApp }))
-);
+// const AdminApp = lazy(() =>
+//   import('./apps/admin-app').then((m) => ({ default: m.AdminApp }))
+// );
 
 // Silly Routes
-const JBApp = lazy(() =>
-  import('./apps/jb-app').then((m) => ({ default: m.JBApp }))
-);
+// const JBApp = lazy(() =>
+//   import('./apps/jb-app').then((m) => ({ default: m.JBApp }))
+// );
 
 // Streaming Routes
-const Streaming = lazy(() =>
-  import('./apps/stream').then((m) => ({ default: m.StreamApp }))
-);
+// const Streaming = lazy(() =>
+//   import('./apps/stream').then((m) => ({ default: m.StreamApp }))
+// );
 
 // Audience Display Routes
-const AudienceDisplayManager = lazy(() =>
-  import('./apps/audience-display-manager').then((m) => ({
-    default: m.AudienceDisplayManager
-  }))
-);
+// const AudienceDisplayManager = lazy(() =>
+//   import('./apps/audience-display-manager').then((m) => ({
+//     default: m.AudienceDisplayManager
+//   }))
+// );
 
 // Field Monitor Routes
-const FrcFmsFieldMonitorApp = lazy(() =>
-  import('./apps/field-monitor').then((m) => ({
-    default: m.FrcFmsFieldMonitorApp
-  }))
-);
+// const FrcFmsFieldMonitorApp = lazy(() =>
+//   import('./apps/field-monitor').then((m) => ({
+//     default: m.FrcFmsFieldMonitorApp
+//   }))
+// );
 
 // Queueing Display Routes
-const QueueingManager = lazy(() =>
-  import('./apps/queueing').then((m) => ({ default: m.QueueingManager }))
-);
+// const QueueingManager = lazy(() =>
+//   import('./apps/queueing').then((m) => ({ default: m.QueueingManager }))
+// );
 
 // Report Routes
-const Reports = lazy(() =>
-  import('./apps/report-app').then((m) => ({ default: m.Reports }))
-);
-// Settings Routes
-const SettingsApp = lazy(() =>
-  import('./apps/settings-app').then((m) => ({ default: m.SettingsApp }))
-);
-const GlobalSettingsApp = lazy(() =>
-  import('./apps/settings-app/global-settings').then((m) => ({
-    default: m.GlobalSettingsApp
-  }))
-);
+// const Reports = lazy(() =>
+//   import('./apps/report-app').then((m) => ({ default: m.Reports }))
+// );
+// // Settings Routes
+// const SettingsApp = lazy(() =>
+//   import('./apps/settings-app').then((m) => ({ default: m.SettingsApp }))
+// );
+// const GlobalSettingsApp = lazy(() =>
+//   import('./apps/settings-app/global-settings').then((m) => ({
+//     default: m.GlobalSettingsApp
+//   }))
+// );
 
 // Referee Routes
-const RefereeApp = lazy(() =>
-  import('./apps/referee-app').then((m) => ({ default: m.RefereeApp }))
-);
-const RedReferee = lazy(() =>
-  import('./apps/referee-app').then((m) => ({ default: m.RedReferee }))
-);
-const BlueReferee = lazy(() =>
-  import('./apps/referee-app').then((m) => ({ default: m.BlueReferee }))
-);
-const HeadReferee = lazy(() =>
-  import('./apps/referee-app').then((m) => ({ default: m.HeadReferee }))
-);
-const HeadRefereeMin = lazy(() =>
-  import('./apps/referee-app').then((m) => ({ default: m.HeadRefereeMin }))
-);
+// const RefereeApp = lazy(() =>
+//   import('./apps/referee-app').then((m) => ({ default: m.RefereeApp }))
+// );
+// const RedReferee = lazy(() =>
+//   import('./apps/referee-app').then((m) => ({ default: m.RedReferee }))
+// );
+// const BlueReferee = lazy(() =>
+//   import('./apps/referee-app').then((m) => ({ default: m.BlueReferee }))
+// );
+// const HeadReferee = lazy(() =>
+//   import('./apps/referee-app').then((m) => ({ default: m.HeadReferee }))
+// );
+// const HeadRefereeMin = lazy(() =>
+//   import('./apps/referee-app').then((m) => ({ default: m.HeadRefereeMin }))
+// );
 
 // Audience Display Routes
-const AudienceDisplay = lazy(() =>
-  import('./apps/audience-display').then((m) => ({
-    default: m.AudienceDisplay
-  }))
-);
+// const AudienceDisplay = lazy(() =>
+//   import('./apps/audience-display').then((m) => ({
+//     default: m.AudienceDisplay
+//   }))
+// );
 
 // Misc routes
-const EventMonitor = lazy(() =>
-  import('./apps/event-monitor').then((m) => ({ default: m.EventMonitor }))
-);
+// const EventMonitor = lazy(() =>
+//   import('./apps/event-monitor').then((m) => ({ default: m.EventMonitor }))
+// );
 
 // Unised Routes
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
@@ -130,8 +130,7 @@ const EventMonitor = lazy(() =>
 //   () => import('./apps/SeasonSpecific/frc_2024/HumanPlayer')
 // );
 
-import HomeIcon from '@mui/icons-material/Home';
-import EventIcon from '@mui/icons-material/Event';
+import { Home as HomeIcon, Event as EventIcon } from '@mui/icons-material';
 export interface AppRoute {
   name: string;
   path: string;
@@ -176,161 +175,161 @@ const AppRoutes: AppRoute[] = [
     element: HomeApp,
     icon: <HomeIcon />,
     hidden: true
-  },
-  {
-    name: 'Team Manager',
-    path: '/:eventKey/team-manager',
-    group: 0,
-    element: TeamManager,
-    icon: <HomeIcon />
-  },
-  {
-    name: 'Team Editor',
-    path: '/:eventKey/team-manager/edit/:teamKey',
-    group: 0,
-    element: TeamEditor,
-    icon: <HomeIcon />,
-    hidden: true
-  },
-  {
-    name: 'Tournament Manager',
-    path: '/:eventKey/tournament-manager',
-    group: 0,
-    element: TournamentManager,
-    icon: <HomeIcon />
-  },
-  {
-    name: 'Tournament Editor',
-    path: '/:eventKey/tournament-manager/edit/:tournamentKey',
-    group: 0,
-    element: TournamentEditor,
-    icon: <HomeIcon />,
-    hidden: true
-  },
-  {
-    name: 'Schedule Manager',
-    path: '/:eventKey/schedule-manager',
-    group: 0,
-    element: ScheduleManager
-  },
-  {
-    name: 'Scorekeeper App',
-    path: '/:eventKey/scorekeeper',
-    group: 0,
-    element: ScorekeeperApp
-  },
-  {
-    name: 'Admin App',
-    path: '/:eventKey/admin',
-    group: 0,
-    element: AdminApp
-  },
-  {
-    name: 'Settings',
-    path: '/:eventKey/settings',
-    group: 0,
-    element: SettingsApp
-  },
-  {
-    name: 'Audience Display',
-    path: '/:eventKey/audience',
-    group: 0,
-    element: AudienceDisplay,
-    hideAppbar: true
-  },
-  {
-    name: 'Referee App',
-    path: '/:eventKey/referee',
-    group: 0,
-    element: RefereeApp
-  },
-  {
-    name: 'Red Referee Page',
-    path: '/:eventKey/referee/red',
-    group: 0,
-    element: RedReferee,
-    hidden: true
-  },
-  {
-    name: 'Blue Referee Page',
-    path: '/:eventKey/referee/blue',
-    group: 0,
-    element: BlueReferee,
-    hidden: true
-  },
-  {
-    name: 'Head Referee Page',
-    path: '/:eventKey/referee/head',
-    group: 0,
-    element: HeadReferee,
-    hidden: true
-  },
-  {
-    name: 'Head Referee Page',
-    path: '/:eventKey/referee/head-min',
-    group: 0,
-    element: HeadRefereeMin,
-    hidden: true
-  },
-  {
-    name: 'Reports App',
-    path: '/:eventKey/reports',
-    group: 0,
-    element: Reports
-  },
-  {
-    name: 'Settings',
-    path: '/:eventKey/settings',
-    group: 0,
-    element: SettingsApp
-  },
-  {
-    name: 'Settings',
-    path: '/global-settings',
-    group: 0,
-    element: GlobalSettingsApp,
-    hidden: true
-  },
-  {
-    name: 'FRC FMS Field Monitor',
-    path: '/frc/fms/fieldmonitor',
-    group: 0,
-    element: FrcFmsFieldMonitorApp,
-    hidden: true
-  },
-  {
-    name: 'Queueing Display',
-    path: '/:eventKey/queue-manager',
-    group: 0,
-    element: QueueingManager
-  },
-  {
-    name: 'JB App',
-    path: '/:eventKey/jb',
-    group: 0,
-    element: JBApp,
-    hidden: false,
-    hideAppbar: true,
-    image: THE_MAN
-  },
-  {
-    name: 'Streaming',
-    path: '/:eventKey/streaming',
-    group: 0,
-    element: Streaming
-  },
-  {
-    name: 'Audience Display Manager',
-    path: '/audience-display-manager',
-    group: 0,
-    element: AudienceDisplayManager
-  },
-  {
-    name: 'Jan App',
-    path: '/event-monitor',
-    group: 0,
-    element: EventMonitor
   }
+  // {
+  //   name: 'Team Manager',
+  //   path: '/:eventKey/team-manager',
+  //   group: 0,
+  //   element: TeamManager,
+  //   icon: <HomeIcon />
+  // },
+  // {
+  //   name: 'Team Editor',
+  //   path: '/:eventKey/team-manager/edit/:teamKey',
+  //   group: 0,
+  //   element: TeamEditor,
+  //   icon: <HomeIcon />,
+  //   hidden: true
+  // },
+  // {
+  //   name: 'Tournament Manager',
+  //   path: '/:eventKey/tournament-manager',
+  //   group: 0,
+  //   element: TournamentManager,
+  //   icon: <HomeIcon />
+  // },
+  // {
+  //   name: 'Tournament Editor',
+  //   path: '/:eventKey/tournament-manager/edit/:tournamentKey',
+  //   group: 0,
+  //   element: TournamentEditor,
+  //   icon: <HomeIcon />,
+  //   hidden: true
+  // },
+  // {
+  //   name: 'Schedule Manager',
+  //   path: '/:eventKey/schedule-manager',
+  //   group: 0,
+  //   element: ScheduleManager
+  // },
+  // {
+  //   name: 'Scorekeeper App',
+  //   path: '/:eventKey/scorekeeper',
+  //   group: 0,
+  //   element: ScorekeeperApp
+  // },
+  // {
+  //   name: 'Admin App',
+  //   path: '/:eventKey/admin',
+  //   group: 0,
+  //   element: AdminApp
+  // },
+  // {
+  //   name: 'Settings',
+  //   path: '/:eventKey/settings',
+  //   group: 0,
+  //   element: SettingsApp
+  // },
+  // {
+  //   name: 'Audience Display',
+  //   path: '/:eventKey/audience',
+  //   group: 0,
+  //   element: AudienceDisplay,
+  //   hideAppbar: true
+  // },
+  // {
+  //   name: 'Referee App',
+  //   path: '/:eventKey/referee',
+  //   group: 0,
+  //   element: RefereeApp
+  // },
+  // {
+  //   name: 'Red Referee Page',
+  //   path: '/:eventKey/referee/red',
+  //   group: 0,
+  //   element: RedReferee,
+  //   hidden: true
+  // },
+  // {
+  //   name: 'Blue Referee Page',
+  //   path: '/:eventKey/referee/blue',
+  //   group: 0,
+  //   element: BlueReferee,
+  //   hidden: true
+  // },
+  // {
+  //   name: 'Head Referee Page',
+  //   path: '/:eventKey/referee/head',
+  //   group: 0,
+  //   element: HeadReferee,
+  //   hidden: true
+  // },
+  // {
+  //   name: 'Head Referee Page',
+  //   path: '/:eventKey/referee/head-min',
+  //   group: 0,
+  //   element: HeadRefereeMin,
+  //   hidden: true
+  // },
+  // {
+  //   name: 'Reports App',
+  //   path: '/:eventKey/reports',
+  //   group: 0,
+  //   element: Reports
+  // },
+  // {
+  //   name: 'Settings',
+  //   path: '/:eventKey/settings',
+  //   group: 0,
+  //   element: SettingsApp
+  // },
+  // {
+  //   name: 'Settings',
+  //   path: '/global-settings',
+  //   group: 0,
+  //   element: GlobalSettingsApp,
+  //   hidden: true
+  // },
+  // {
+  //   name: 'FRC FMS Field Monitor',
+  //   path: '/frc/fms/fieldmonitor',
+  //   group: 0,
+  //   element: FrcFmsFieldMonitorApp,
+  //   hidden: true
+  // },
+  // {
+  //   name: 'Queueing Display',
+  //   path: '/:eventKey/queue-manager',
+  //   group: 0,
+  //   element: QueueingManager
+  // },
+  // {
+  //   name: 'JB App',
+  //   path: '/:eventKey/jb',
+  //   group: 0,
+  //   element: JBApp,
+  //   hidden: false,
+  //   hideAppbar: true,
+  //   image: THE_MAN
+  // },
+  // {
+  //   name: 'Streaming',
+  //   path: '/:eventKey/streaming',
+  //   group: 0,
+  //   element: Streaming
+  // },
+  // {
+  //   name: 'Audience Display Manager',
+  //   path: '/audience-display-manager',
+  //   group: 0,
+  //   element: AudienceDisplayManager
+  // },
+  // {
+  //   name: 'Jan App',
+  //   path: '/event-monitor',
+  //   group: 0,
+  //   element: EventMonitor
+  // }
   // {
   //   name: 'Account Manager',
   //   path: '/accounts',
