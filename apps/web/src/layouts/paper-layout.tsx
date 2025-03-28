@@ -1,6 +1,5 @@
 import { FC, JSX, Suspense, useEffect } from 'react';
-import { Breakpoint, Container, Divider, Paper } from '@mui/material';
-import { Box } from '@mui/material';
+import { Layout, Card, Divider, theme } from 'antd';
 import { appbarConfigAtom } from '@stores/state/index.js';
 import { useSetAtom } from 'jotai';
 
@@ -8,17 +7,19 @@ interface Props {
   title?: string;
   titleLink?: string;
   header?: JSX.Element | string;
-  containerWidth?: Breakpoint | false;
+  containerWidth?: number | string;
   children?: JSX.Element;
   padding?: boolean;
   showSettings?: boolean;
 }
 
+const { Content } = Layout;
+
 export const PaperLayout: FC<Props> = ({
   title,
   titleLink,
   header,
-  containerWidth,
+  containerWidth = '100%',
   children,
   padding,
   showSettings
@@ -34,28 +35,26 @@ export const PaperLayout: FC<Props> = ({
   }, []);
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Container
-        maxWidth={containerWidth || 'xl'}
-        sx={{ marginTop: (theme) => theme.spacing(12) }}
+    <Layout
+      style={{ display: 'flex', justifyContent: 'center', paddingTop: '48px' }}
+    >
+      <Content
+        style={{ maxWidth: containerWidth, width: '100%', padding: '0 16px' }}
       >
-        <Paper>
+        <Card>
           {header && (
             <>
-              <Box sx={{ padding: (theme) => theme.spacing(2) }}>{header}</Box>
+              <div>{header}</div>
               <Divider />
             </>
           )}
-          <Box
-            sx={{
-              padding: padding ? (theme) => theme.spacing(2) : 0,
-              position: 'relative'
-            }}
+          <div
+            style={{ padding: padding ? '16px' : '0', position: 'relative' }}
           >
             <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-          </Box>
-        </Paper>
-      </Container>
-    </Box>
+          </div>
+        </Card>
+      </Content>
+    </Layout>
   );
 };

@@ -16,12 +16,12 @@ const EventManager = lazy(() =>
 );
 
 // Team Routes
-// const TeamManager = lazy(() =>
-//   import('./apps/teams').then((m) => ({ default: m.TeamManager }))
-// );
-// const TeamEditor = lazy(() =>
-//   import('./apps/teams').then((m) => ({ default: m.TeamEdior }))
-// );
+const TeamManager = lazy(() =>
+  import('./apps/teams/index.js').then((m) => ({ default: m.TeamManager }))
+);
+const TeamEditor = lazy(() =>
+  import('./apps/teams/index.js').then((m) => ({ default: m.TeamEdior }))
+);
 
 // Tournament Routes
 // const TournamentManager = lazy(() =>
@@ -175,22 +175,22 @@ const AppRoutes: AppRoute[] = [
     element: HomeApp,
     icon: <HomeIcon />,
     hidden: true
+  },
+  {
+    name: 'Team Manager',
+    path: '/:eventKey/team-manager',
+    group: 0,
+    element: TeamManager,
+    icon: <HomeIcon />
+  },
+  {
+    name: 'Team Editor',
+    path: '/:eventKey/team-manager/edit/:teamKey',
+    group: 0,
+    element: TeamEditor,
+    icon: <HomeIcon />,
+    hidden: true
   }
-  // {
-  //   name: 'Team Manager',
-  //   path: '/:eventKey/team-manager',
-  //   group: 0,
-  //   element: TeamManager,
-  //   icon: <HomeIcon />
-  // },
-  // {
-  //   name: 'Team Editor',
-  //   path: '/:eventKey/team-manager/edit/:teamKey',
-  //   group: 0,
-  //   element: TeamEditor,
-  //   icon: <HomeIcon />,
-  //   hidden: true
-  // },
   // {
   //   name: 'Tournament Manager',
   //   path: '/:eventKey/tournament-manager',

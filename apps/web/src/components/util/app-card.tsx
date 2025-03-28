@@ -1,14 +1,11 @@
 import { FC } from 'react';
 import { Link } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
-import Typography from '@mui/material/Typography';
+import { Card, Typography } from 'antd';
+import { useAtomValue } from 'jotai';
 
 import firstLogo from 'src/assets/images/first-logo.png';
 import firstLogoDarkMode from 'src/assets/images/first-logo-reverse.png';
-import { useRecoilValue } from 'recoil';
-import { darkModeAtom } from 'src/stores/recoil';
+import { darkModeAtom } from 'src/stores/state/index.js';
 
 export interface AppCardProps {
   title: string;
@@ -17,60 +14,61 @@ export interface AppCardProps {
   imgSrc?: string;
 }
 
-export const AppCard: FC<AppCardProps> = ({
-  title,
-  to,
-  href,
-  imgSrc
-}: AppCardProps) => {
-  // Get the dark mode state
-  const darkMode = useRecoilValue(darkModeAtom);
+export const AppCard: FC<AppCardProps> = ({ title, to, href, imgSrc }) => {
+  const darkMode = useAtomValue(darkModeAtom);
 
-  // Calculate any extra props needed
-  const extraProps = to ? { component: Link, to } : href ? { href } : {};
-
-  return (
-    <Card
-      sx={{
+  const content = (
+    <div
+      style={{
         position: 'relative',
         width: '100%',
-        flexBasis: '10%',
-        '&::before': { content: '""', display: 'block', paddingTop: '100%' }
+        paddingTop: '100%'
       }}
     >
-      <CardActionArea
-        sx={{
+      <div
+        style={{
           position: 'absolute',
           top: 0,
           width: '100%',
           height: '100%',
-          padding: (theme) => theme.spacing(2),
-          flexDirection: 'column'
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 16
         }}
-        className='center'
-        {...extraProps}
       >
-        <Box
-          sx={{
+        <div
+          style={{
             width: '100%',
             height: '100%',
-            background: `url(${
-              imgSrc ? imgSrc : darkMode ? firstLogoDarkMode : firstLogo
-            }) center`,
+            backgroundImage: `url(${imgSrc ? imgSrc : darkMode ? firstLogoDarkMode : firstLogo})`,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
-            marginBottom: (theme) => theme.spacing(2)
+            backgroundPosition: 'center',
+            marginBottom: 16
           }}
         />
-        <Typography
-          align='center'
-          sx={{
-            width: '100%'
-          }}
-        >
+        <Typography.Text style={{ textAlign: 'center', width: '100%' }}>
           {title}
-        </Typography>
-      </CardActionArea>
+        </Typography.Text>
+      </div>
+    </div>
+  );
+
+  return (
+    <Card style={{ width: '100%', flexBasis: '10%' }} hoverable>
+      {to ? (
+        <Link to={to} style={{ display: 'block' }}>
+          {content}
+        </Link>
+      ) : href ? (
+        <a href={href} style={{ display: 'block' }}>
+          {content}
+        </a>
+      ) : (
+        content
+      )}
     </Card>
   );
 };

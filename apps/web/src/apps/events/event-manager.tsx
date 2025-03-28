@@ -1,8 +1,7 @@
 import { FC, useState } from 'react';
-import { Typography } from '@mui/material';
+import { Typography } from 'antd';
 import { Event } from '@toa-lib/models';
 import { patchEvent, useCurrentEvent } from 'src/api/use-event-data.js';
-import { ViewReturn } from 'src/components/buttons/view-return.js';
 import { EventForm } from 'src/components/forms/event-form.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
@@ -27,20 +26,16 @@ export const EventManager: FC = () => {
   return (
     <PaperLayout
       containerWidth='lg'
-      header={<Typography variant='h4'>Event Manager</Typography>}
+      header={<Typography.Title level={3}>Event Creation</Typography.Title>}
       title={`${initialEvent?.eventName} | Event Manager`}
       titleLink={`/${initialEvent?.eventKey}`}
-      padding
       showSettings
     >
-      <>
-        <ViewReturn title='Home' href={`/${initialEvent?.eventKey}`} />
-        <EventForm
-          initialEvent={initialEvent}
-          loading={loading}
-          onSubmit={onSubmit}
-        />
-      </>
+      <EventForm
+        initialEvent={initialEvent}
+        loading={loading}
+        onSubmit={onSubmit}
+      />
     </PaperLayout>
   );
 };

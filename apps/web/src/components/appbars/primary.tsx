@@ -3,23 +3,19 @@ import { Link } from 'react-router-dom';
 import { LoginButton } from 'src/components/buttons/login-button.js';
 import { LogoutButton } from 'src/components/buttons/logout-button.js';
 import emsAvatar from '@assets/favicon.ico';
+import { Layout, Avatar, Typography, Button, theme } from 'antd';
 import {
-  AppBar,
-  Toolbar,
-  IconButton,
-  Avatar,
-  Typography,
-  Button
-} from '@mui/material';
-import {
-  Settings as SettingsIcon,
-  Fullscreen as FullscreenIcon,
-  FullscreenExit as FullscreenExitIcon
-} from '@mui/icons-material';
+  SettingOutlined,
+  FullscreenOutlined,
+  FullscreenExitOutlined
+} from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 import { appbarConfigAtom, userAtom } from 'src/stores/state/ui.js';
 
+const { Header } = Layout;
+
 const PrimaryAppbar: FC = () => {
+  const { token } = theme.useToken();
   const [fullscreen, setFullscreen] = useState(false);
   const { title, titleLink, showSettings, showFullscreen } =
     useAtomValue(appbarConfigAtom);
@@ -35,73 +31,71 @@ const PrimaryAppbar: FC = () => {
   };
 
   return (
-    <AppBar position='fixed'>
-      <Toolbar>
-        <IconButton
-          component={Link}
-          to='/'
-          size='small'
-          sx={{ mr: 1, marginLeft: '-14px' }}
-        >
-          <Avatar
-            alt='Event Management System Logo'
-            src={emsAvatar}
-            sx={{ padding: '4px' }}
-          />
-        </IconButton>
-        {titleLink && (
-          <Typography
-            variant='h6'
-            noWrap
-            style={{ flexGrow: 1 }}
-            component={Link}
-            to={titleLink}
+    <Header
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 16px',
+        background: token.colorPrimary,
+        color: token.colorTextSecondary
+      }}
+    >
+      <Link to='/' style={{ display: 'flex', alignItems: 'center' }}>
+        <Avatar
+          src={emsAvatar}
+          alt='Event Management System Logo'
+          style={{ marginRight: '8px' }}
+          size='large'
+          shape='square'
+        />
+      </Link>
+      {titleLink ? (
+        <Link to={titleLink} style={{ flexGrow: 1 }}>
+          <Typography.Title
+            level={3}
+            style={{ color: token.colorTextSecondary, margin: 0 }}
           >
-            {title ? title : 'Event Management System'}
-          </Typography>
-        )}
-        {!titleLink && (
-          <Typography variant='h6' noWrap style={{ flexGrow: 1 }}>
-            {title ? title : 'Event Management System'}
-          </Typography>
-        )}
-        {user ? (
-          <>
-            <Button color='inherit'>Docs</Button>
-            <LogoutButton />
-            {showSettings && (
-              <IconButton
-                size='large'
-                edge='start'
-                color='inherit'
-                aria-label='open drawer'
-                sx={{ ml: 1, mr: 1 }}
-                component={Link}
-                to='/global-settings'
-              >
-                <SettingsIcon />
-              </IconButton>
-            )}
-            {showFullscreen && (
-              <IconButton
-                size='large'
-                edge='start'
-                color='inherit'
-                aria-label='open drawer'
-                sx={{ ml: 1, mr: 1 }}
-                onClick={fullscreen ? exitFullscreen : requestFullscreen}
-              >
-                {fullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-              </IconButton>
-            )}
-          </>
-        ) : (
-          <>
-            <LoginButton />
-          </>
-        )}
-      </Toolbar>
-    </AppBar>
+            {title || 'Event Management System'}
+          </Typography.Title>
+        </Link>
+      ) : (
+        <Typography.Title
+          level={3}
+          style={{ flexGrow: 1, margin: 0, color: token.colorTextSecondary }}
+        >
+          {title || 'Event Management System'}
+        </Typography.Title>
+      )}
+      {user ? (
+        <>
+          <Button type='link'>Docs</Button>
+          <LogoutButton />
+          {showSettings && (
+            <Button
+              type='text'
+              icon={<SettingOutlined />}
+              style={{ marginLeft: '8px' }}
+            >
+              {' '}
+              cdfgse cvx
+              <Link to='/global-settings' />
+            </Button>
+          )}
+          {showFullscreen && (
+            <Button
+              type='text'
+              icon={
+                fullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />
+              }
+              style={{ marginLeft: '8px' }}
+              onClick={fullscreen ? exitFullscreen : requestFullscreen}
+            />
+          )}
+        </>
+      ) : (
+        <LoginButton />
+      )}
+    </Header>
   );
 };
 

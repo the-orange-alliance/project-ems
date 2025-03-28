@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { Typography } from '@mui/material';
+import { Typography } from 'antd';
 import { Event } from '@toa-lib/models';
 import { postEvent, setupEventBase } from 'src/api/use-event-data.js';
 import { ViewReturn } from 'src/components/buttons/view-return.js';
@@ -29,14 +29,10 @@ export const EventCreation: FC = () => {
   return (
     <PaperLayout
       containerWidth='lg'
-      header={<Typography variant='h4'>Event Creation</Typography>}
-      padding
+      header={<Typography.Title level={3}>Event Creation</Typography.Title>}
       showSettings
     >
-      <>
-        <ViewReturn title='Events' href='/' />
-        <EventForm loading={loading} onSubmit={onSubmit} />
-      </>
+      <EventForm loading={loading} onSubmit={onSubmit} returnTo='/' />
     </PaperLayout>
   );
 };

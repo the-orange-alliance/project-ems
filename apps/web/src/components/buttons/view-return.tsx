@@ -1,28 +1,27 @@
-import { FC } from 'react';
-import { Button, Typography } from '@mui/material';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { SxProps, Theme } from '@mui/material';
+import { Button } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
 interface Props {
   title: string;
   onClick?: () => void;
   href?: string;
-  sx?: SxProps<Theme>;
+  className?: string;
 }
 
-export const ViewReturn: FC<Props> = ({ title, onClick, href, sx }) => {
-  const extraProps = href
-    ? { component: Link, to: href }
-    : onClick
-      ? { onClick: onClick }
-      : {};
-
-  return (
-    <Button sx={sx} {...extraProps}>
-      <ArrowBackIcon />
-      &nbsp;
-      <Typography>{title}</Typography>
+export const ViewReturn = ({ title, onClick, href, className }: Props) => {
+  const buttonContent = (
+    <Button
+      type='link'
+      className={className}
+      icon={<ArrowLeftOutlined />}
+      style={{ padding: 0 }}
+      size='large'
+      onClick={onClick}
+    >
+      {title}
     </Button>
   );
+
+  return href ? <Link to={href}>{buttonContent}</Link> : buttonContent;
 };

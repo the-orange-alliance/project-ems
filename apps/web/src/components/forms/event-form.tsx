@@ -1,10 +1,10 @@
 import { ChangeEvent, FC, useEffect, useState } from 'react';
-import { Grid, TextField, FormControl } from '@mui/material';
-import { LoadingButton } from '@mui/lab';
+import { Row, Col, Input, Form, Button, DatePicker } from 'antd';
 import { SeasonDropdown } from 'src/components/dropdowns/season-dropdown.js';
 import { EventTypeDropdown } from 'src/components/dropdowns/event-type-dropdown.js';
-import { DatePicker } from 'src/components/util/date-picker.js';
 import { Event, defaultEvent } from '@toa-lib/models';
+import dayjs from 'dayjs';
+import { ViewReturn } from '../buttons/view-return.js';
 
 const FormField: FC<{
   name: string;
@@ -15,19 +15,18 @@ const FormField: FC<{
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }> = ({ name, label, value, type, disabled, onChange }) => {
   return (
-    <Grid item xs={12} sm={6} md={4}>
-      <FormControl fullWidth>
-        <TextField
+    <Col xs={24} sm={12} md={8}>
+      <Form.Item label={label}>
+        <Input
           name={name}
-          label={label}
           value={value}
           onChange={onChange}
-          variant='standard'
           type={type ?? 'text'}
           disabled={disabled}
+          size='large'
         />
-      </FormControl>
-    </Grid>
+      </Form.Item>
+    </Col>
   );
 };
 
@@ -35,9 +34,15 @@ interface Props {
   initialEvent?: Event | null;
   onSubmit?: (event: Event) => void;
   loading?: boolean;
+  returnTo?: string;
 }
 
-export const EventForm: FC<Props> = ({ initialEvent, onSubmit, loading }) => {
+export const EventForm: FC<Props> = ({
+  initialEvent,
+  onSubmit,
+  loading,
+  returnTo
+}) => {
   const [event, setEvent] = useState({ ...(initialEvent ?? defaultEvent) });
 
   useEffect(() => {
@@ -50,12 +55,11 @@ export const EventForm: FC<Props> = ({ initialEvent, onSubmit, loading }) => {
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!event) return;
     const { type, name, value } = e.target;
-    setEvent({
-      ...event,
+    setEvent((prev) => ({
+      ...prev,
       [name]: type === 'number' ? parseInt(value) : value
-    });
+    }));
   };
 
   const handleSeasonChange = (seasonKey: string) => {
@@ -77,30 +81,9 @@ export const EventForm: FC<Props> = ({ initialEvent, onSubmit, loading }) => {
     });
   };
 
-  const handleKeyChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!event) return;
-    const { value } = e.target;
-    setEvent({ ...event, eventKey: value.toUpperCase() });
-  };
-
-  const handleEventTypeChange = (eventTypeKey: string) => {
-    if (!event) return;
-    setEvent({ ...event, eventTypeKey });
-  };
-
-  const handleStartChange = (startDate: string) => {
-    if (!event) return;
-    setEvent({ ...event, startDate });
-  };
-
-  const handleEndChange = (endDate: string) => {
-    if (!event) return;
-    setEvent({ ...event, endDate });
-  };
-
   return (
-    <div>
-      <Grid container spacing={3}>
+    <Form layout='vertical'>
+      <Row gutter={16}>
         <FormField
           name='eventName'
           label='Event Name'
@@ -108,26 +91,28 @@ export const EventForm: FC<Props> = ({ initialEvent, onSubmit, loading }) => {
           onChange={handleChange}
           disabled={loading}
         />
-        <Grid item xs={12} sm={6} md={4}>
-          <SeasonDropdown
-            value={event.seasonKey}
-            onChange={handleSeasonChange}
-            disabled={typeof initialEvent !== 'undefined' || loading}
-          />
-        </Grid>
+        <Col xs={24} sm={12} md={8}>
+          <Form.Item label='Season'>
+            <SeasonDropdown
+              value={event.seasonKey}
+              onChange={handleSeasonChange}
+              disabled={!!initialEvent || loading}
+            />
+          </Form.Item>
+        </Col>
         <FormField
           name='regionKey'
           label='Region'
           value={event.regionKey}
           onChange={handleRegionChange}
-          disabled={typeof initialEvent !== 'undefined' || loading}
+          disabled={!!initialEvent || loading}
         />
         <FormField
           name='eventKey'
           label='Event Key'
           value={event.eventKey}
-          onChange={handleKeyChange}
-          disabled={typeof initialEvent !== 'undefined' || loading}
+          onChange={handleChange}
+          disabled={!!initialEvent || loading}
         />
         <FormField
           name='divisionName'
@@ -136,29 +121,53 @@ export const EventForm: FC<Props> = ({ initialEvent, onSubmit, loading }) => {
           onChange={handleChange}
           disabled={loading}
         />
-        <Grid item xs={12} sm={6} md={4}>
-          <EventTypeDropdown
-            value={event.eventTypeKey}
-            onChange={handleEventTypeChange}
-            disabled={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <DatePicker
-            label='Start Date'
-            value={event.startDate}
-            onChange={handleStartChange}
-            disabled={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <DatePicker
-            label='End Date'
-            value={event.endDate}
-            onChange={handleEndChange}
-            disabled={loading}
-          />
-        </Grid>
+        <Col xs={24} sm={12} md={8}>
+          <Form.Item label='Event Type'>
+            <EventTypeDropdown
+              value={event.eventTypeKey}
+              onChange={(eventTypeKey) =>
+                setEvent((prev) => ({ ...prev, eventTypeKey }))
+              }
+              disabled={loading}
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+          <Form.Item label='Start Date'>
+            <DatePicker
+              value={dayjs(event.startDate)}
+              format={'dddd, DD MMMM YYYY, hh:mma'}
+              onChange={(startDate) =>
+                setEvent((prev) => ({
+                  ...prev,
+                  startDate: startDate?.toISOString()
+                }))
+              }
+              style={{ width: '100%' }}
+              showTime
+              disabled={loading}
+              size='large'
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} sm={12} md={8}>
+          <Form.Item label='End Date'>
+            <DatePicker
+              value={dayjs(event.endDate)}
+              format={'dddd, DD MMMM YYYY, hh:mma'}
+              showTime
+              onChange={(endDate) =>
+                setEvent((prev) => ({
+                  ...prev,
+                  endDate: endDate?.toISOString()
+                }))
+              }
+              style={{ width: '100%' }}
+              disabled={loading}
+              size='large'
+            />
+          </Form.Item>
+        </Col>
         <FormField
           name='venue'
           label='Venue'
@@ -187,18 +196,20 @@ export const EventForm: FC<Props> = ({ initialEvent, onSubmit, loading }) => {
           onChange={handleChange}
           disabled={loading}
         />
-        <Grid item xs={12}>
-          <LoadingButton
+      </Row>
+      <Row justify='space-between'>
+        <Col>{returnTo && <ViewReturn title='Back' href={returnTo} />}</Col>
+        <Col>
+          <Button
+            type='primary'
             loading={loading}
-            variant='contained'
             onClick={handleSubmit}
-            sx={{ float: 'right' }}
             disabled={loading}
           >
             {initialEvent ? 'Modify Event' : 'Create Event'}
-          </LoadingButton>
-        </Grid>
-      </Grid>
-    </div>
+          </Button>
+        </Col>
+      </Row>
+    </Form>
   );
 };

@@ -5,7 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { Provider as ModalProvider } from '@ebay/nice-modal-react';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
-import { fgcTheme, frcTheme, ftcTheme } from './app-theme.js';
+import { customfgcTheme, fgcTheme, frcTheme, ftcTheme } from './app-theme.js';
 import { APIOptions, SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/local-storage.js';
 import { AppContainer } from './App.js';
@@ -17,6 +17,7 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
+import { ConfigProvider, theme } from 'antd';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Error while trying to find document root.');
@@ -41,18 +42,33 @@ SocketOptions.port = 8081;
 function Main() {
   const darkMode = useAtomValue(darkModeAtom);
   const eventKey = useCurrentEvent().data?.eventKey;
-  const theme = !eventKey
+  const oldTheme = !eventKey
     ? fgcTheme
     : eventKey.startsWith('FRC')
       ? frcTheme
       : eventKey.startsWith('FTC')
         ? ftcTheme
         : fgcTheme;
+
+  const appTheme = customfgcTheme;
+
   return (
-    <ThemeProvider theme={useMemo(() => theme(darkMode), [darkMode, eventKey])}>
+    <ThemeProvider
+      theme={useMemo(() => oldTheme(darkMode), [darkMode, eventKey])}
+    >
       <CssBaseline />
       <ModalProvider>
-        <AppContainer />
+        <ConfigProvider theme={appTheme}>
+          <ConfigProvider
+            theme={{
+              algorithm: darkMode
+                ? [theme.darkAlgorithm, theme.compactAlgorithm]
+                : [theme.compactAlgorithm]
+            }}
+          >
+            <AppContainer />
+          </ConfigProvider>
+        </ConfigProvider>
       </ModalProvider>
     </ThemeProvider>
   );

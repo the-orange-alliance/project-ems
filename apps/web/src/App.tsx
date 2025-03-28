@@ -2,10 +2,9 @@ import { Routes, Route } from 'react-router-dom';
 import routes from './app-routes.js';
 import './utils.less';
 import { useSnackbar } from './hooks/use-snackbar.js';
-import { FC, ReactNode, Suspense } from 'react';
+import { FC, ReactNode } from 'react';
 import SyncEffects from './components/sync-effects/sync-effects.js';
 import PrimaryAppbar from './components/appbars/primary.js';
-import { LinearProgress } from '@mui/material';
 import { ConnectionManager } from './components/util/connection-manager.js';
 
 const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {
@@ -31,9 +30,7 @@ export function AppContainer() {
             element={
               <RouteWrapper>
                 {!route.hideAppbar && <PrimaryAppbar />}
-                <Suspense fallback={<LinearProgress color='secondary' />}>
-                  <route.element />
-                </Suspense>
+                <route.element />
               </RouteWrapper>
             }
           >
@@ -44,9 +41,7 @@ export function AppContainer() {
                 element={
                   <RouteWrapper>
                     {!route.hideAppbar && <PrimaryAppbar />}
-                    <Suspense fallback={<LinearProgress color='secondary' />}>
-                      <route.element />
-                    </Suspense>
+                    <route.element />
                   </RouteWrapper>
                 }
               />

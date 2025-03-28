@@ -21,7 +21,7 @@ export const DatePicker: FC<Props> = ({
 
   const handleChange = (newValue: DateTime | null) => {
     setDate(newValue);
-    onChange(newValue ? newValue.toISO() ?? '' : '');
+    onChange(newValue ? (newValue.toISO() ?? '') : '');
   };
 
   return (

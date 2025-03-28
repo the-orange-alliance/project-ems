@@ -1,41 +1,41 @@
-import { Add } from '@mui/icons-material';
-import { Fab, Typography } from '@mui/material';
+import { Typography } from 'antd';
 import { Event } from '@toa-lib/models';
 import { FC } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useEvents } from 'src/api/use-event-data.js';
-import { PageLoader } from 'src/components/loading/page-loader.js';
 import EventsTable from 'src/components/tables/events-table.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
+import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
+import { MoreButton } from 'src/components/buttons/more-button.js';
 
 export const EventSelection: FC = () => {
-  const { data: events } = useEvents();
+  const { data: events, isLoading } = useEvents();
   const navigate = useNavigate();
   const selectEvent = (event: Event) => navigate(`/${event.eventKey}`);
-  return events ? (
+  const createEvent = () => navigate('/create-event');
+  return (
     <PaperLayout
       containerWidth='lg'
-      header={<Typography variant='h4'>Event Selection</Typography>}
-      padding
+      header={
+        <TwoColumnHeader
+          left={<Typography.Title level={3}>Event Selection</Typography.Title>}
+          right={
+            <MoreButton
+              menuItems={[
+                { key: '1', label: <a onClick={createEvent}>Create Event</a> }
+              ]}
+            />
+          }
+        />
+      }
       showSettings
     >
       <>
-        <EventsTable events={events} onSelect={selectEvent} />
-        <Fab
-          sx={{ position: 'fixed', bottom: 16, right: 16 }}
-          color='primary'
-          component={Link}
-          to='/create-event'
-        >
-          <Add />
-        </Fab>
-      </>
-    </PaperLayout>
-  ) : (
-    <PaperLayout containerWidth='lg' padding showSettings>
-      <>
-        <PageLoader />
-        <div>Loading events...</div>
+        <EventsTable
+          events={events ?? []}
+          onSelect={selectEvent}
+          loading={isLoading}
+        />
       </>
     </PaperLayout>
   );

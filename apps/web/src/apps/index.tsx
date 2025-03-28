@@ -1,14 +1,14 @@
 import { FC, Suspense } from 'react';
-import { Grid } from '@mui/material';
+import { Row, Col } from 'antd';
 import { DefaultLayout } from '@layouts/default-layout.js';
 import { AppCard, AppCardProps } from '@components/util/app-card.js';
 import AppRoutes from '../app-routes.js';
 import { useCurrentEvent } from '@api/use-event-data.js';
 
-const GridAppCard = (props: AppCardProps) => (
-  <Grid item xs={5} md={3}>
+const ColAppCard = (props: AppCardProps) => (
+  <Col xs={10} md={6} lg={4}>
     <AppCard {...props} />
-  </Grid>
+  </Col>
 );
 
 const HomeApp: FC = () => {
@@ -18,7 +18,7 @@ const HomeApp: FC = () => {
     <Suspense>
       <DefaultLayout title='NO EVENT FOUND'>
         <div>
-          Could not load event details. Please refresh page or re-select the
+          Could not load event details. Please refresh the page or re-select the
           event.
         </div>
       </DefaultLayout>
@@ -26,21 +26,16 @@ const HomeApp: FC = () => {
   ) : (
     <Suspense>
       <DefaultLayout title={event?.eventName}>
-        <Grid
-          container
-          spacing={4}
-          columns={15}
-          sx={{ marginBottom: (theme) => theme.spacing(4) }}
-        >
+        <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
           {AppRoutes.filter((route) => !route.hidden).map((route, i) => (
-            <GridAppCard
+            <ColAppCard
               key={`route-${i}`}
               title={route.name}
               to={`${route.path.replaceAll(':eventKey', event?.eventKey)}`}
               imgSrc={route.image ? route.image : undefined}
             />
           ))}
-        </Grid>
+        </Row>
       </DefaultLayout>
     </Suspense>
   );

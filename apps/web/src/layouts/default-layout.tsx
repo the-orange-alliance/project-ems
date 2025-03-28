@@ -1,40 +1,43 @@
-import { FC, ReactNode, useEffect } from 'react';
-import { useRecoilState } from 'recoil';
-import { Breakpoint } from '@mui/material';
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import { appbarConfigAtom } from '@stores/recoil';
+import { FC, useEffect } from 'react';
+import { Layout, theme } from 'antd';
+import { appbarConfigAtom } from '@stores/state/index.js';
+import { useSetAtom } from 'jotai';
 
 interface Props {
   title?: string;
   titleLink?: string;
-  containerWidth?: Breakpoint | false;
-  children?: ReactNode;
+  containerWidth?: number | string;
+  children?: JSX.Element;
 }
+
+const { Content } = Layout;
 
 export const DefaultLayout: FC<Props> = ({
   title,
   titleLink,
-  containerWidth,
+  containerWidth = '100%',
   children
 }: Props) => {
-  const [, updateAppbarConfig] = useRecoilState(appbarConfigAtom);
+  const updateAppbarConfig = useSetAtom(appbarConfigAtom);
+  const { token } = theme.useToken();
 
   useEffect(() => {
-    updateAppbarConfig({
-      title,
-      titleLink
-    });
+    updateAppbarConfig({ title, titleLink });
   }, []);
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Container
-        maxWidth={containerWidth || 'xl'}
-        sx={{ marginTop: (theme) => theme.spacing(10) }}
+    <Layout
+      style={{ display: 'flex', justifyContent: 'center', paddingTop: '40px' }}
+    >
+      <Content
+        style={{
+          maxWidth: containerWidth,
+          width: '100%',
+          padding: '0 16px'
+        }}
       >
         {children}
-      </Container>
-    </Box>
+      </Content>
+    </Layout>
   );
 };

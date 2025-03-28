@@ -1,11 +1,5 @@
 import { FC } from 'react';
-import {
-  Select,
-  MenuItem,
-  SelectChangeEvent,
-  FormControl,
-  InputLabel
-} from '@mui/material';
+import { Select } from 'antd';
 import { Seasons } from '@toa-lib/models';
 
 interface Props {
@@ -15,19 +9,20 @@ interface Props {
 }
 
 export const SeasonDropdown: FC<Props> = ({ value, disabled, onChange }) => {
-  const handleChange = (event: SelectChangeEvent<string>) =>
-    onChange(event.target.value);
+  const handleChange = (value: string) => onChange(value);
 
   return (
-    <FormControl fullWidth disabled={disabled}>
-      <InputLabel>Season</InputLabel>
-      <Select value={value ?? ''} onChange={handleChange} variant='standard'>
-        {Seasons.map((s) => (
-          <MenuItem key={s.key} value={s.key}>
-            [{s.key.toUpperCase().replaceAll('_', ' ')}]&nbsp;{s.name}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+    <Select
+      value={value ?? ''}
+      onChange={handleChange}
+      disabled={disabled}
+      size='large'
+    >
+      {Seasons.map((s) => (
+        <Select.Option key={s.key} value={s.key}>
+          [{s.key.toUpperCase().replaceAll('_', ' ')}]&nbsp;{s.name}
+        </Select.Option>
+      ))}
+    </Select>
   );
 };
