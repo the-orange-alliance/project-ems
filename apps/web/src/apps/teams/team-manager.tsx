@@ -1,31 +1,35 @@
 import { useModal } from '@ebay/nice-modal-react';
-import { Typography } from '@mui/material';
+import { Typography } from 'antd';
 import { Team, defaultTeam } from '@toa-lib/models';
+import { useAtom } from 'jotai';
 import { ChangeEvent, FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRecoilState } from 'recoil';
-import { useCurrentEvent } from 'src/api/use-event-data';
-import { resultsSyncTeams } from 'src/api/use-results-sync';
-import { patchTeam, postTeams, useTeamsForEvent } from 'src/api/use-team-data';
-import { ViewReturn } from 'src/components/buttons/view-return';
-import { TeamRemovalDialog } from 'src/components/dialogs/team-removal-dialog';
-import { PageLoader } from 'src/components/loading/page-loader';
-import { TeamsTable } from 'src/components/tables/teams-table';
-import { SaveAddUploadLoadingFab } from 'src/components/util/save-upload-fab';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { useSyncConfig } from 'src/hooks/use-sync-config';
-import { PaperLayout } from 'src/layouts/paper-layout';
-import { getDifferences } from 'src/stores/array-utils';
-import { teamsByEventKeyAtomFam } from 'src/stores/recoil';
-import { parseTeamsFile } from 'src/util/file-parser';
+import { useCurrentEvent } from 'src/api/use-event-data.js';
+import { resultsSyncTeams } from 'src/api/use-results-sync.js';
+import {
+  patchTeam,
+  postTeams,
+  useTeamsForEvent
+} from 'src/api/use-team-data.js';
+import { TeamRemovalDialog } from 'src/components/dialogs/team-removal-dialog.js';
+import { PageLoader } from 'src/components/loading/page-loader.js';
+import { TeamsTable } from 'src/components/tables/teams-table.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { useSyncConfig } from 'src/hooks/use-sync-config.js';
+import { PaperLayout } from 'src/layouts/paper-layout.js';
+import { getDifferences } from 'src/stores/array-utils.js';
+import { teamsAtom } from 'src/stores/state/index.js';
+import { parseTeamsFile } from 'src/util/file-parser.js';
+import { MoreButton } from 'src/components/buttons/more-button.js';
+import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
 
 export const TeamManager: FC = () => {
-  const { data: event } = useCurrentEvent();
-  const { data: initialTeams } = useTeamsForEvent(event?.eventKey);
-  const { platform, apiKey } = useSyncConfig();
-  const [teams, setTeams] = useRecoilState(
-    teamsByEventKeyAtomFam(event?.eventKey ?? '')
+  const { data: event, isLoading: isLoadingEvent } = useCurrentEvent();
+  const { data: initialTeams, isLoading: isLoadingTeams } = useTeamsForEvent(
+    event?.eventKey
   );
+  const { platform, apiKey } = useSyncConfig();
+  const [teams, setTeams] = useAtom(teamsAtom);
   const [loading, setLoading] = useState(false);
 
   const { showSnackbar } = useSnackbar();
@@ -98,20 +102,32 @@ export const TeamManager: FC = () => {
   return event && initialTeams ? (
     <PaperLayout
       containerWidth='xl'
-      header={<Typography variant='h4'>Team Manager</Typography>}
+      header={
+        <TwoColumnHeader
+          left={<Typography.Title level={3}>Team Manager</Typography.Title>}
+          right={
+            <MoreButton
+              menuItems={[
+                { key: '1', label: <a onClick={handleSave}>Save Teams</a> },
+                { key: '2', label: <a onClick={handleAdd}>Add Team</a> }
+                // { key: '1', label: <a onClick={handleUpload}> Teams</a> }
+              ]}
+            />
+          }
+        />
+      }
       title={`${event.eventName} | Team Manager`}
       titleLink={`/${event.eventKey}`}
-      padding
       showSettings
     >
-      <ViewReturn title='Home' href={`/${event.eventKey}`} />
       <TeamsTable
         event={event}
         teams={teams}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        loading={isLoadingTeams || isLoadingEvent}
       />
-      <SaveAddUploadLoadingFab
+      {/* <SaveAddUploadLoadingFab
         onSave={handleSave}
         onAdd={handleAdd}
         onUpload={handleUpload}
@@ -122,7 +138,7 @@ export const TeamManager: FC = () => {
         addTooltip='Add Empty Team'
         uploadTooltip='Upload Teams from File'
         saveTooltip='Save Teams'
-      />
+      /> */}
     </PaperLayout>
   ) : (
     <PageLoader />

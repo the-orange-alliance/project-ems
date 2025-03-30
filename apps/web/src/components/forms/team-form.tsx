@@ -1,9 +1,7 @@
 import { FC, ChangeEvent, useState, useEffect } from 'react';
-import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
-import FormControl from '@mui/material/FormControl';
-import TextField from '@mui/material/TextField';
+import { Button, Form, Input, InputNumber, Row, Col } from 'antd';
 import { Team, defaultTeam } from '@toa-lib/models';
+import { ViewReturn } from '@components/buttons/view-return.js';
 
 const FormField: FC<{
   name: string;
@@ -14,19 +12,29 @@ const FormField: FC<{
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }> = ({ name, label, value, type, disabled, onChange }) => {
   return (
-    <Grid item xs={12} sm={6} md={4}>
-      <FormControl fullWidth>
-        <TextField
-          name={name}
-          label={label}
-          value={value}
-          onChange={onChange}
-          variant='standard'
-          disabled={disabled}
-          type={type ?? 'text'}
-        />
-      </FormControl>
-    </Grid>
+    <Col xs={24} sm={12} md={8}>
+      <Form.Item label={label} name={name}>
+        {type === 'number' ? (
+          <InputNumber
+            value={value as number}
+            onChange={(val) =>
+              onChange({
+                target: { name, value: val ?? '', type }
+              } as ChangeEvent<HTMLInputElement>)
+            }
+            disabled={disabled}
+            style={{ width: '100%' }}
+          />
+        ) : (
+          <Input
+            name={name}
+            value={value}
+            onChange={onChange}
+            disabled={disabled}
+          />
+        )}
+      </Form.Item>
+    </Col>
   );
 };
 
@@ -34,9 +42,15 @@ interface Props {
   initialTeam?: Team;
   loading?: boolean;
   onSubmit?: (team: Team) => void;
+  returnTo?: string;
 }
 
-export const TeamForm: FC<Props> = ({ initialTeam, loading, onSubmit }) => {
+export const TeamForm: FC<Props> = ({
+  initialTeam,
+  loading,
+  onSubmit,
+  returnTo
+}) => {
   const [team, setTeam] = useState({ ...(initialTeam ?? defaultTeam) });
 
   useEffect(() => {
@@ -54,8 +68,8 @@ export const TeamForm: FC<Props> = ({ initialTeam, loading, onSubmit }) => {
   };
 
   return (
-    <div>
-      <Grid container spacing={3}>
+    <Form layout='vertical' onFinish={handleSubmit}>
+      <Row gutter={[16, 16]}>
         <FormField
           name='teamKey'
           label='Team Key'
@@ -114,7 +128,7 @@ export const TeamForm: FC<Props> = ({ initialTeam, loading, onSubmit }) => {
         />
         <FormField
           name='countryCode'
-          label='countryCode'
+          label='Country Code'
           value={team.countryCode}
           onChange={handleChange}
           disabled={loading}
@@ -127,12 +141,20 @@ export const TeamForm: FC<Props> = ({ initialTeam, loading, onSubmit }) => {
           onChange={handleChange}
           disabled={loading}
         />
-        <Grid item xs={12} sm={6} md={3}>
-          <Button variant='contained' onClick={handleSubmit}>
+      </Row>
+      <Row justify='space-between'>
+        <Col>{returnTo && <ViewReturn title='Back' href={returnTo} />}</Col>
+        <Col>
+          <Button
+            type='primary'
+            loading={loading}
+            onClick={handleSubmit}
+            disabled={loading}
+          >
             {initialTeam ? 'Modify Team' : 'Create Team'}
           </Button>
-        </Grid>
-      </Grid>
-    </div>
+        </Col>
+      </Row>
+    </Form>
   );
 };
