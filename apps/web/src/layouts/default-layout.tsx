@@ -19,11 +19,12 @@ export const DefaultLayout: FC<Props> = ({
   children
 }: Props) => {
   const updateAppbarConfig = useSetAtom(appbarConfigAtom);
-  const { token } = theme.useToken();
 
   useEffect(() => {
-    updateAppbarConfig({ title, titleLink });
-  }, []);
+    if (title || titleLink) {
+      updateAppbarConfig({ title, titleLink });
+    }
+  }, [title, titleLink]);
 
   return (
     <Layout

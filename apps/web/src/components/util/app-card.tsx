@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Typography } from 'antd';
+import { Card, Skeleton, Typography } from 'antd';
 import { useAtomValue } from 'jotai';
 
 import firstLogo from 'src/assets/images/first-logo.png';
@@ -12,9 +12,16 @@ export interface AppCardProps {
   to?: string;
   href?: string;
   imgSrc?: string;
+  loading?: boolean;
 }
 
-export const AppCard: FC<AppCardProps> = ({ title, to, href, imgSrc }) => {
+export const AppCard: FC<AppCardProps> = ({
+  title,
+  to,
+  href,
+  imgSrc,
+  loading
+}) => {
   const darkMode = useAtomValue(darkModeAtom);
 
   const content = (
@@ -49,6 +56,7 @@ export const AppCard: FC<AppCardProps> = ({ title, to, href, imgSrc }) => {
             marginBottom: 16
           }}
         />
+
         <Typography.Text style={{ textAlign: 'center', width: '100%' }}>
           {title}
         </Typography.Text>
@@ -58,7 +66,9 @@ export const AppCard: FC<AppCardProps> = ({ title, to, href, imgSrc }) => {
 
   return (
     <Card style={{ width: '100%', flexBasis: '10%' }} hoverable>
-      {to ? (
+      {loading ? (
+        <Skeleton />
+      ) : to ? (
         <Link to={to} style={{ display: 'block' }}>
           {content}
         </Link>

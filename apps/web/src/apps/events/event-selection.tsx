@@ -1,6 +1,6 @@
 import { Typography } from 'antd';
 import { Event } from '@toa-lib/models';
-import { FC } from 'react';
+import { FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvents } from 'src/api/use-event-data.js';
 import EventsTable from 'src/components/tables/events-table.js';
@@ -9,9 +9,7 @@ import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
 import { MoreButton } from 'src/components/buttons/more-button.js';
 
 export const EventSelection: FC = () => {
-  const { data: events, isLoading } = useEvents();
   const navigate = useNavigate();
-  const selectEvent = (event: Event) => navigate(`/${event.eventKey}`);
   const createEvent = () => navigate('/create-event');
   return (
     <PaperLayout
@@ -30,13 +28,22 @@ export const EventSelection: FC = () => {
       }
       showSettings
     >
-      <>
-        <EventsTable
-          events={events ?? []}
-          onSelect={selectEvent}
-          loading={isLoading}
-        />
-      </>
+      <Suspense>
+        <App />
+      </Suspense>
     </PaperLayout>
+  );
+};
+
+const App: FC = () => {
+  const navigate = useNavigate();
+  const { data: events, isLoading } = useEvents();
+  const selectEvent = (event: Event) => navigate(`/${event.eventKey}`);
+  return (
+    <EventsTable
+      events={events ?? []}
+      onSelect={selectEvent}
+      loading={isLoading}
+    />
   );
 };

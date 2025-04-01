@@ -27,12 +27,10 @@ export const PaperLayout: FC<Props> = ({
   const updateAppbarConfig = useSetAtom(appbarConfigAtom);
 
   useEffect(() => {
-    updateAppbarConfig({
-      title,
-      titleLink,
-      showSettings: showSettings
-    });
-  }, []);
+    if (title || titleLink || showSettings) {
+      updateAppbarConfig({ title, titleLink, showSettings });
+    }
+  }, [title, titleLink]);
 
   return (
     <Layout
