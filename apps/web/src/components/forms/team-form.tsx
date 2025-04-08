@@ -13,26 +13,15 @@ const FormField: FC<{
 }> = ({ name, label, value, type, disabled, onChange }) => {
   return (
     <Col xs={24} sm={12} md={8}>
-      <Form.Item label={label} name={name}>
-        {type === 'number' ? (
-          <InputNumber
-            value={value as number}
-            onChange={(val) =>
-              onChange({
-                target: { name, value: val ?? '', type }
-              } as ChangeEvent<HTMLInputElement>)
-            }
-            disabled={disabled}
-            style={{ width: '100%' }}
-          />
-        ) : (
-          <Input
-            name={name}
-            value={value}
-            onChange={onChange}
-            disabled={disabled}
-          />
-        )}
+      <Form.Item label={label}>
+        <Input
+          name={name}
+          value={value}
+          onChange={onChange}
+          type={type ?? 'text'}
+          disabled={disabled}
+          size='large'
+        />
       </Form.Item>
     </Col>
   );
@@ -69,7 +58,7 @@ export const TeamForm: FC<Props> = ({
 
   return (
     <Form layout='vertical' onFinish={handleSubmit}>
-      <Row gutter={[16, 16]}>
+      <Row gutter={16}>
         <FormField
           name='teamKey'
           label='Team Key'

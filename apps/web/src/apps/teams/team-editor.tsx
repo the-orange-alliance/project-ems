@@ -1,22 +1,25 @@
 import { Typography } from '@mui/material';
 import { Team } from '@toa-lib/models';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCurrentEvent } from 'src/api/use-event-data.js';
 import { TeamForm } from 'src/components/forms/team-form.js';
 import { PageLoader } from 'src/components/loading/page-loader.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
+import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { teamKeyAtom, teamsAtom } from 'src/stores/state/index.js';
 
 export const TeamEdior: FC = () => {
-  const { data: event } = useCurrentEvent();
+  const {
+    state: { event, teams }
+  } = useEventState({ event: true, teams: true });
   const teamKey = useAtomValue(teamKeyAtom);
-  const [teams, setTeams] = useAtom(teamsAtom);
+  const setTeams = useSetAtom(teamsAtom);
   const team = teamKey
     ? teams.find((t) => t.teamKey === parseInt(teamKey))
     : undefined;
+
   const { showSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const onSubmit = async (team: Team) => {

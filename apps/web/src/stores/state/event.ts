@@ -1,4 +1,4 @@
-import { Team } from '@toa-lib/models';
+import { Event, Team, Tournament } from '@toa-lib/models';
 import { atom } from 'jotai';
 
 /**
@@ -12,4 +12,6 @@ export const matchIdAtom = atom<number | null>(null);
 /**
  * @section TEAM STATE - registered teams for an event
  */
+export const eventAtom = atom<Event | null>(null);
 export const teamsAtom = atom<Team[]>([]);
+export const tournamentsAtom = atom<Tournament[]>([]);

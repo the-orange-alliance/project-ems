@@ -26,7 +26,7 @@ router.get(
       if (data.length === 0) {
         res.send(DataNotFoundError);
       } else {
-        setTimeout(() => res.send(data[0]), 5000);
+        res.send(data[0]);
       }
     } catch (e) {
       return next(e);

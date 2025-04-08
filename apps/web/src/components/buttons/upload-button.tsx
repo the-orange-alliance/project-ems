@@ -1,8 +1,5 @@
-import { ChangeEvent, FC } from 'react';
-import Button from '@mui/material/Button';
-import Tooltip from '@mui/material/Tooltip';
-
-import UploadIcon from '@mui/icons-material/Upload';
+import { FC, ChangeEvent, useRef } from 'react';
+import { Button } from 'antd';
 
 interface Props {
   title: string;
@@ -10,16 +7,20 @@ interface Props {
 }
 
 export const UploadButton: FC<Props> = ({ title, onUpload }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
   return (
-    <Tooltip title={title}>
-      <Button
-        variant='contained'
-        component='label'
-        sx={{ padding: '6px', minWidth: '24px' }}
-      >
-        <input hidden accept='.csv' type='file' onChange={onUpload} />
-        <UploadIcon />
-      </Button>
-    </Tooltip>
+    <>
+      <a type='text' onClick={() => inputRef.current?.click()}>
+        {title}
+      </a>
+      <input
+        ref={inputRef}
+        hidden
+        type='file'
+        accept='.csv'
+        onChange={onUpload}
+      />
+    </>
   );
 };

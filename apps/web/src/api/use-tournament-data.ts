@@ -1,11 +1,8 @@
 import { apiFetcher, clientFetcher } from '@toa-lib/client';
 import { Tournament, tournamentZod } from '@toa-lib/models';
-import { useRecoilValue } from 'recoil';
-import {
-  currentEventKeyAtom,
-  currentTournamentKeyAtom
-} from 'src/stores/recoil';
-import useSWR from 'swr';
+import { useAtomValue } from 'jotai';
+import { eventKeyAtom, tournamentKeyAtom } from 'src/stores/state/event.js';
+import useSWR, { SWRConfiguration } from 'swr';
 
 export const postTournaments = async (
   tournaments: Tournament[]
@@ -18,16 +15,19 @@ export const patchTournament = async (tournament: Tournament): Promise<void> =>
     tournament
   );
 
-export const useTournamentsForEvent = (eventKey: string | null | undefined) =>
+export const useTournamentsForEvent = (
+  eventKey: string | null | undefined,
+  config?: SWRConfiguration
+) =>
   useSWR<Tournament[]>(
     eventKey ? `tournament/${eventKey}` : undefined,
     (url) => apiFetcher(url, 'GET', undefined, tournamentZod.array().parse),
-    { revalidateOnFocus: false }
+    config ?? { revalidateOnFocus: false }
   );
 
 export const useCurrentTournament = () => {
-  const eventKey = useRecoilValue(currentEventKeyAtom);
-  const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
+  const eventKey = useAtomValue(eventKeyAtom);
+  const tournamentKey = useAtomValue(tournamentKeyAtom);
   const { data: tournaments } = useTournamentsForEvent(eventKey);
   return tournaments?.find((t) => t.tournamentKey === tournamentKey);
 };

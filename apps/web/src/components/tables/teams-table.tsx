@@ -56,6 +56,7 @@ export const TeamsTable: FC<Props> = ({
         }}
         onModify={onEdit}
         onDelete={onDelete}
+        virtual
       />
     </Skeleton>
   );

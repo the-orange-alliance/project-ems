@@ -2,8 +2,7 @@ import { apiFetcher } from '@toa-lib/client';
 import { ApiResponseError, Event, eventZod } from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 import { eventKeyAtom } from 'src/stores/state/index.js';
-import useSWR, { SWRResponse } from 'swr';
-import useSWRImmutable from 'swr/immutable';
+import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
 
 export const setupEventBase = async (eventKey: string): Promise<void> =>
   apiFetcher(`event/setup/${eventKey}`, 'GET');
@@ -22,20 +21,26 @@ export const patchEvent = async (
   event: Event
 ): Promise<void> => apiFetcher(`event/${eventKey}`, 'PATCH', event);
 
-export const useEvents = (): SWRResponse<Event[], ApiResponseError> =>
+export const useEvents = (
+  config?: SWRConfiguration,
+  fetch: boolean = true
+): SWRResponse<Event[], ApiResponseError> =>
   useSWR<Event[]>(
-    'event',
+    fetch ? 'event' : undefined,
     (url) => apiFetcher(url, 'GET', undefined, eventZod.array().parse),
-    { revalidateOnMount: true }
+    config
   );
 
 export const useEvent = (
-  eventKey: string | null | undefined
+  eventKey: string | null | undefined,
+  config?: SWRConfiguration
 ): SWRResponse<Event> =>
-  useSWRImmutable<Event>(
+  useSWR<Event>(
     eventKey && eventKey.length > 0 ? `event/${eventKey}` : undefined,
-    (url: string) => apiFetcher(url, 'GET', undefined, eventZod.parse)
+    (url: string) => apiFetcher(url, 'GET', undefined, eventZod.parse),
+    config
   );
 
-export const useCurrentEvent = (): SWRResponse<Event> =>
-  useEvent(useAtomValue(eventKeyAtom));
+export const useCurrentEvent = (
+  config?: SWRConfiguration
+): SWRResponse<Event> => useEvent(useAtomValue(eventKeyAtom), config);

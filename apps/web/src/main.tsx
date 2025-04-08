@@ -1,4 +1,4 @@
-import { StrictMode, useMemo, Suspense } from 'react';
+import { StrictMode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -76,12 +76,10 @@ function Main() {
 
 root.render(
   <StrictMode>
-    <Suspense>
-      <BrowserRouter>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <Main />
-        </LocalizationProvider>
-      </BrowserRouter>
-    </Suspense>
+    <BrowserRouter>
+      <LocalizationProvider dateAdapter={AdapterLuxon}>
+        <Main />
+      </LocalizationProvider>
+    </BrowserRouter>
   </StrictMode>
 );

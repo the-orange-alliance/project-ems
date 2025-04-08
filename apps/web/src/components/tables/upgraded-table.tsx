@@ -6,6 +6,7 @@ interface Props<T> {
   data: T[];
   headers: string[];
   rowKey: keyof T;
+  virtual?: boolean;
   selected?: (row: T) => boolean;
   renderRow: (row: T) => (string | number | JSX.Element)[];
   onSelect?: (row: T) => void;
@@ -17,6 +18,7 @@ export const UpgradedTable = <T,>({
   data,
   headers,
   rowKey,
+  virtual,
   selected,
   renderRow,
   onSelect,
@@ -72,6 +74,11 @@ export const UpgradedTable = <T,>({
       })}
       pagination={false}
       bordered
+      virtual={virtual}
+      scroll={{
+        y: virtual ? window.innerHeight - 280 : undefined,
+        x: virtual ? 800 : undefined
+      }}
     />
   );
 };
