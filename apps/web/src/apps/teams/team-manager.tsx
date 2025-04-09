@@ -17,8 +17,10 @@ import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 import { UploadButton } from 'src/components/buttons/upload-button.js';
+import { useSWRConfig } from 'swr';
 
 export const TeamManager: FC = () => {
+  const { mutate } = useSWRConfig();
   const { loading: stateLoading, state } = useEventState({
     event: true,
     teams: true
@@ -57,6 +59,9 @@ export const TeamManager: FC = () => {
       }
       await resultsSyncTeams(event.eventKey, platform, apiKey);
 
+      await mutate(`teams/${event.eventKey}`);
+      setModifiedTeams([]);
+
       showSnackbar(
         `(${
           diffs.additions.length + diffs.edits.length
@@ -85,6 +90,12 @@ export const TeamManager: FC = () => {
     e.preventDefault();
     const importedTeams = await parseTeamsFile(files[0], event.eventKey);
     setModifiedTeams(importedTeams);
+  };
+
+  const handleRevert = async () => {
+    if (!event) return;
+    await mutate(`teams/${event.eventKey}`);
+    setModifiedTeams([]);
   };
 
   const handleEdit = (team: Team) => {
@@ -120,6 +131,10 @@ export const TeamManager: FC = () => {
                       onUpload={handleUpload}
                     />
                   )
+                },
+                {
+                  key: '4',
+                  label: <a onClick={handleRevert}>Revert Changes</a>
                 }
               ]}
             />
