@@ -1,3 +1,5 @@
+import { mergeWith, isArray } from 'lodash';
+
 export function replaceInArray<T>(
   items: T[],
   key: keyof T,
@@ -42,4 +44,37 @@ export function getDifferences<T>(
     (i) => !prevItems.includes(i) && !additions.includes(i)
   );
   return { additions, deletions, edits };
+}
+
+export function deepMerge<T>(target: T, source: T): T {
+  return mergeWith({}, target, source, (objValue, srcValue) => {
+    if (isArray(objValue) && isArray(srcValue)) {
+      return srcValue;
+    }
+  });
+}
+
+export function mergeWithTarget<T>(
+  source: T[] | undefined,
+  target: T[],
+  key: keyof T
+): T[] {
+  const sourceMap = new Map((source || []).map((item) => [item[key], item]));
+  const targetMap = new Map(target.map((item) => [item[key], item]));
+
+  const mergedIds = new Set([...sourceMap.keys(), ...targetMap.keys()]);
+  const mergedArray: T[] = [];
+
+  for (const id of mergedIds) {
+    const sourceItem = sourceMap.get(id);
+    const targetItem = targetMap.get(id);
+
+    if (sourceItem && targetItem) {
+      mergedArray.push(deepMerge(sourceItem, targetItem));
+    } else {
+      mergedArray.push(targetItem ?? sourceItem!);
+    }
+  }
+
+  return mergedArray;
 }

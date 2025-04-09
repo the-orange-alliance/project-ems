@@ -1,7 +1,7 @@
 import { useModal } from '@ebay/nice-modal-react';
 import { Typography } from 'antd';
 import { Team, defaultTeam } from '@toa-lib/models';
-import { ChangeEvent, FC, useState, useEffect, Suspense } from 'react';
+import { ChangeEvent, FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resultsSyncTeams } from 'src/api/use-results-sync.js';
 import { patchTeam, postTeams } from 'src/api/use-team-data.js';
@@ -23,35 +23,39 @@ export const TeamManager: FC = () => {
     event: true,
     teams: true
   });
-  const { platform, apiKey } = useSyncConfig();
-  const [teams, setTeams] = useState<Team[]>([]);
+  const {
+    setModifiedTeams,
+    local: { event, teams }
+  } = state;
 
+  const { platform, apiKey } = useSyncConfig();
   const { showSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const removeModal = useModal(TeamRemovalDialog);
 
-  useEffect(() => setTeams(state.teams), [state.teams]);
   useUpdateAppbar(
     {
-      title: state.event
-        ? `${state.event.eventName} | Team Manager`
-        : undefined,
-      titleLink: state.event ? `/${state.event.eventKey}` : undefined
+      title: event ? `${event.eventName} | Team Manager` : undefined,
+      titleLink: event ? `/${event.eventKey}` : undefined
     },
-    [state.event]
+    [event]
   );
 
   const handleSave = async () => {
     try {
-      if (!state.event) return;
-      const diffs = getDifferences(teams, state.teams, 'teamKey');
+      if (!event) return;
+      const diffs = getDifferences(
+        state.local.teams,
+        state.remote.teams,
+        'teamKey'
+      );
       if (diffs.additions.length > 0) {
-        await postTeams(state.event.eventKey, diffs.additions);
+        await postTeams(event.eventKey, diffs.additions);
       }
       for (const team of diffs.edits) {
         await patchTeam(team.eventKey, team.teamKey, team);
       }
-      await resultsSyncTeams(state.event.eventKey, platform, apiKey);
+      await resultsSyncTeams(event.eventKey, platform, apiKey);
 
       showSnackbar(
         `(${
@@ -65,10 +69,10 @@ export const TeamManager: FC = () => {
   };
 
   const handleAdd = () => {
-    if (!state.event) return;
-    const { eventKey } = state.event;
-    setTeams((prev) => [
-      { ...defaultTeam, eventKey, teamKey: teams.length + 1 },
+    if (!event) return;
+    const { eventKey } = event;
+    setModifiedTeams((prev) => [
+      { ...defaultTeam, eventKey, teamKey: state.staged.teams.length + 1 },
       ...prev
     ]);
   };
@@ -77,21 +81,21 @@ export const TeamManager: FC = () => {
     e: ChangeEvent<HTMLInputElement>
   ): Promise<void> => {
     const { files } = e.target;
-    if (!files || files.length <= 0 || !state.event) return;
+    if (!files || files.length <= 0 || !event) return;
     e.preventDefault();
-    const importedTeams = await parseTeamsFile(files[0], state.event.eventKey);
-    setTeams(importedTeams);
+    const importedTeams = await parseTeamsFile(files[0], event.eventKey);
+    setModifiedTeams(importedTeams);
   };
 
   const handleEdit = (team: Team) => {
-    if (!state.event) return;
-    navigate(`/${state.event.eventKey}/team-manager/edit/${team.teamKey}`);
+    if (!event) return;
+    navigate(`/${event.eventKey}/team-manager/edit/${team.teamKey}`);
   };
 
   const handleDelete = async (team: Team) => {
     const confirmRemove = await removeModal.show({ team });
     if (confirmRemove) {
-      setTeams((prevTeams) =>
+      setModifiedTeams((prevTeams) =>
         prevTeams.filter((t) => t.teamKey !== team.teamKey)
       );
     }
@@ -125,9 +129,9 @@ export const TeamManager: FC = () => {
       showSettings
     >
       <Suspense>
-        {state.event && (
+        {event && (
           <TeamsTable
-            event={state.event}
+            event={event}
             teams={teams}
             onEdit={handleEdit}
             onDelete={handleDelete}

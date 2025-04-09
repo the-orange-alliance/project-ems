@@ -1,4 +1,4 @@
-import { TeamManager } from './team-manager';
-import { TeamEdior } from './team-editor';
+import { TeamManager } from './team-manager.js';
+import { TeamEdior } from './team-editor.js';
 
 export { TeamManager, TeamEdior };

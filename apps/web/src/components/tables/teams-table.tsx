@@ -31,6 +31,7 @@ export const TeamsTable: FC<Props> = ({
           'Country Code',
           'Rookie Year'
         ]}
+        widths={[150, 100, 230, 280, 100, 100, 100]}
         renderRow={(t) => {
           const { eventName } = event;
           const location = [t.city, t.stateProv, t.country]

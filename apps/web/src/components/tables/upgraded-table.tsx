@@ -6,6 +6,7 @@ interface Props<T> {
   data: T[];
   headers: string[];
   rowKey: keyof T;
+  widths?: number[];
   virtual?: boolean;
   selected?: (row: T) => boolean;
   renderRow: (row: T) => (string | number | JSX.Element)[];
@@ -18,6 +19,7 @@ export const UpgradedTable = <T,>({
   data,
   headers,
   rowKey,
+  widths,
   virtual,
   selected,
   renderRow,
@@ -32,6 +34,7 @@ export const UpgradedTable = <T,>({
       title: header,
       dataIndex: index,
       key: `header-${index}`,
+      width: widths ? widths[index] : undefined,
       render: (_: any, record: T) => renderRow(record)[index]
     })),
     showActions && {

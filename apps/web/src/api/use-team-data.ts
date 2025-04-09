@@ -2,6 +2,10 @@ import { apiFetcher } from '@toa-lib/client';
 import { ApiResponseError, Team } from '@toa-lib/models';
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
 
+export const getTeams = async (
+  eventKey: string | null | undefined
+): Promise<Team[]> => apiFetcher(`teams/${eventKey}`, 'GET');
+
 export const postTeams = async (
   eventKey: string,
   teams: Team[]

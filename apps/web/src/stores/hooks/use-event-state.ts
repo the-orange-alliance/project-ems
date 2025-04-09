@@ -5,11 +5,15 @@ import { useEvent } from '@api/use-event-data.js';
 import {
   eventAtom,
   eventKeyAtom,
+  modifiedEventAtom,
+  modifiedTeamsAtom,
+  modifiedTournamentsAtom,
   teamsAtom,
   tournamentsAtom
 } from '@stores/state/event.js';
 import { useTeamsForEvent } from 'src/api/use-team-data.js';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data.js';
+import { deepMerge, mergeWithTarget } from '../array-utils.js';
 
 type StateConfig = {
   event?: boolean;
@@ -18,14 +22,30 @@ type StateConfig = {
   matches?: boolean;
 };
 
-interface EventState {
+interface State {
   event: Event | null;
   teams: Team[];
   tournaments: Tournament[];
 }
 
+interface EventState {
+  remote: State;
+  local: State;
+  staged: State;
+}
+
+interface EventSetters {
+  setModifiedEvent: (
+    event: Event | null | ((prev: Event | null) => Event | null)
+  ) => void;
+  setModifiedTeams: (teams: Team[] | ((prev: Team[]) => Team[])) => void;
+  setModifiedTournaments: (
+    teams: Tournament[] | ((prev: Tournament[]) => Tournament[])
+  ) => void;
+}
+
 interface EventStateHookResponse {
-  state: EventState;
+  state: EventState & EventSetters;
   loading: boolean;
 }
 
@@ -36,7 +56,13 @@ export const useEventState = (config: StateConfig): EventStateHookResponse => {
   const [teams, setTeams] = useAtom(teamsAtom);
   const [tournaments, setTournaments] = useAtom(tournamentsAtom);
 
-  const eventRequest = useEvent(config.event ? eventKey : undefined, {});
+  const [modifiedEvent, setModifiedEvent] = useAtom(modifiedEventAtom);
+  const [modifiedTeams, setModifiedTeams] = useAtom(modifiedTeamsAtom);
+  const [modifiedTournaments, setModifiedTournaments] = useAtom(
+    modifiedTournamentsAtom
+  );
+
+  const eventRequest = useEvent(config.event ? eventKey : undefined);
   const teamsRequest = useTeamsForEvent(
     config.teams ? event?.eventKey : undefined
   );
@@ -46,27 +72,53 @@ export const useEventState = (config: StateConfig): EventStateHookResponse => {
 
   useEffect(() => {
     if (eventRequest.data) {
-      setEvent(eventRequest.data);
+      const newEvent = deepMerge(eventRequest.data, modifiedEvent);
+      setEvent(newEvent);
     }
   }, [eventRequest.data]);
 
   useEffect(() => {
     if (teamsRequest.data) {
-      setTeams(teamsRequest.data);
+      const newTeams = mergeWithTarget(
+        teamsRequest.data,
+        modifiedTeams,
+        'teamKey'
+      );
+      setTeams(newTeams);
     }
-  }, [teamsRequest.data]);
+  }, [teamsRequest.data, modifiedTeams]);
 
   useEffect(() => {
     if (tournamentsRequest.data) {
-      setTournaments(tournamentsRequest.data);
+      const newTournaments = mergeWithTarget(
+        tournamentsRequest.data,
+        modifiedTournaments,
+        'tournamentKey'
+      );
+      setTournaments(newTournaments);
     }
   }, [tournamentsRequest.data]);
 
   return {
     state: {
-      event: config.event ? event : null,
-      teams: config.teams ? teams : [],
-      tournaments: config.tournaments ? tournaments : []
+      setModifiedEvent,
+      setModifiedTeams,
+      setModifiedTournaments,
+      local: {
+        event: event,
+        teams: teams,
+        tournaments: tournaments
+      },
+      remote: {
+        event: eventRequest.data ?? null,
+        teams: teamsRequest.data ?? [],
+        tournaments: tournamentsRequest.data ?? []
+      },
+      staged: {
+        event: modifiedEvent,
+        teams: modifiedTeams,
+        tournaments: modifiedTournaments
+      }
     },
     loading:
       eventRequest.isLoading ||

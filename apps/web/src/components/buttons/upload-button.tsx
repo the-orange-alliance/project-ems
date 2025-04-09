@@ -7,11 +7,16 @@ interface Props {
 }
 
 export const UploadButton: FC<Props> = ({ title, onUpload }) => {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleClick = () => {
+    if (!inputRef.current) return;
+    inputRef.current.click();
+  };
 
   return (
     <>
-      <a type='text' onClick={() => inputRef.current?.click()}>
+      <a type='text' onClick={handleClick}>
         {title}
       </a>
       <input

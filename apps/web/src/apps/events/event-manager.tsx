@@ -35,6 +35,7 @@ export const EventManager: FC = () => {
         initialEvent={initialEvent}
         loading={loading}
         onSubmit={onSubmit}
+        returnTo={`/${initialEvent?.eventKey}`}
       />
     </PaperLayout>
   );
