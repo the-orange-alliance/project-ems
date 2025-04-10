@@ -17,11 +17,9 @@ import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 import { UploadButton } from 'src/components/buttons/upload-button.js';
-import { useSWRConfig } from 'swr';
 
 export const TeamManager: FC = () => {
-  const { mutate } = useSWRConfig();
-  const { loading: stateLoading, state } = useEventState({
+  const { loading, state } = useEventState({
     event: true,
     teams: true
   });
@@ -59,7 +57,6 @@ export const TeamManager: FC = () => {
       }
       await resultsSyncTeams(event.eventKey, platform, apiKey);
 
-      await mutate(`teams/${event.eventKey}`);
       setModifiedTeams([]);
 
       showSnackbar(
@@ -94,7 +91,6 @@ export const TeamManager: FC = () => {
 
   const handleRevert = async () => {
     if (!event) return;
-    await mutate(`teams/${event.eventKey}`);
     setModifiedTeams([]);
   };
 
@@ -150,7 +146,7 @@ export const TeamManager: FC = () => {
             teams={teams}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            loading={stateLoading}
+            loading={loading}
           />
         )}
       </Suspense>

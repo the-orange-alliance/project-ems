@@ -1,48 +1,47 @@
-import { Typography } from '@mui/material';
+import { Typography } from 'antd';
 import { Tournament, defaultTournament } from '@toa-lib/models';
-import { FC, useEffect, useState } from 'react';
+import { FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRecoilState } from 'recoil';
-import { useCurrentEvent } from 'src/api/use-event-data';
 import {
   patchTournament,
-  postTournaments,
-  useTournamentsForEvent
-} from 'src/api/use-tournament-data';
-import { ViewReturn } from 'src/components/buttons/view-return';
-import { PageLoader } from 'src/components/loading/page-loader';
-import { TournamentTable } from 'src/components/tables/tournament-table';
-import { SaveAddUploadLoadingFab } from 'src/components/util/save-upload-fab';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { PaperLayout } from 'src/layouts/paper-layout';
-import { getDifferences } from 'src/stores/array-utils';
-import { tournamentsByEventKeyAtomFam } from 'src/stores/recoil';
+  postTournaments
+} from 'src/api/use-tournament-data.js';
+import { MoreButton } from 'src/components/buttons/more-button.js';
+import { TournamentTable } from 'src/components/tables/tournament-table.js';
+import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { PaperLayout } from 'src/layouts/paper-layout.js';
+import { getDifferences } from 'src/stores/array-utils.js';
+import { useEventState } from 'src/stores/hooks/use-event-state.js';
+import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 
 export const TournamentManager: FC = () => {
-  const { data: event } = useCurrentEvent();
-  const { data: initialTournaments } = useTournamentsForEvent(event?.eventKey);
+  const { loading, state } = useEventState({
+    event: true,
+    tournaments: true
+  });
+  const {
+    setModifiedTournaments,
+    local: { event, tournaments }
+  } = state;
 
-  const [tournaments, setTournaments] = useRecoilState(
-    tournamentsByEventKeyAtomFam(event?.eventKey ?? '')
-  );
-  const [loading, setLoading] = useState(false);
   const { showSnackbar } = useSnackbar();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!event) return;
-    if (initialTournaments && tournaments.length === 0) {
-      setTournaments(initialTournaments);
-    }
-  }, [initialTournaments]);
+  useUpdateAppbar(
+    {
+      title: event ? `${event.eventName} | Tournament Manager` : undefined,
+      titleLink: event ? `/${event.eventKey}` : undefined
+    },
+    [event]
+  );
 
   const handleSave = async () => {
-    setLoading(true);
     try {
-      if (!event || !initialTournaments) return;
+      if (!event) return;
       const diffs = getDifferences(
-        tournaments,
-        initialTournaments,
+        state.local.tournaments,
+        state.remote.tournaments,
         'tournamentKey'
       );
       if (diffs.additions.length > 0) {
@@ -51,7 +50,9 @@ export const TournamentManager: FC = () => {
       for (const tournament of diffs.edits) {
         await patchTournament(tournament);
       }
-      setLoading(false);
+
+      setModifiedTournaments([]);
+
       showSnackbar(
         `(${
           diffs.additions.length + diffs.edits.length
@@ -59,7 +60,6 @@ export const TournamentManager: FC = () => {
       );
     } catch (e) {
       const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      setLoading(false);
       showSnackbar('Error while uploading tournaments.', error);
     }
   };
@@ -67,7 +67,7 @@ export const TournamentManager: FC = () => {
   const handleAdd = () => {
     if (!event) return;
     const { eventKey } = event;
-    setTournaments((prev) => [
+    setModifiedTournaments((prev) => [
       ...prev,
       {
         ...defaultTournament,
@@ -78,37 +78,54 @@ export const TournamentManager: FC = () => {
     ]);
   };
 
+  const handleRevert = async () => {
+    if (!event) return;
+    setModifiedTournaments([]);
+  };
+
   const handleEdit = (tournament: Tournament) => {
     navigate(
       `/${event?.eventKey}/tournament-manager/edit/${tournament.tournamentKey}`
     );
   };
 
-  return event && initialTournaments ? (
+  return (
     <PaperLayout
       containerWidth='xl'
-      header={<Typography variant='h4'>Tournament Manager</Typography>}
-      title={`${event.eventKey} | Tournament Manager`}
-      titleLink={`/${event.eventKey}`}
-      padding
+      header={
+        <TwoColumnHeader
+          left={
+            <Typography.Title level={3}>Tournament Manager</Typography.Title>
+          }
+          right={
+            <MoreButton
+              menuItems={[
+                {
+                  key: '1',
+                  label: <a onClick={handleSave}>Save Tournaments</a>
+                },
+                { key: '2', label: <a onClick={handleAdd}>Add Tournament</a> },
+                {
+                  key: '3',
+                  label: <a onClick={handleRevert}>Revert Changes</a>
+                }
+              ]}
+            />
+          }
+        />
+      }
+      showSettings
     >
-      <ViewReturn title='Home' href={`/${event.eventKey}`} sx={{ mb: 1 }} />
-      <SaveAddUploadLoadingFab
-        loading={loading}
-        onAdd={handleAdd}
-        onSave={handleSave}
-        canAdd
-        canSave
-        addTooltip='Add Tournament'
-        saveTooltip='Save Tournaments'
-      />
-      <TournamentTable
-        event={event}
-        tournaments={tournaments}
-        onEdit={handleEdit}
-      />
+      <Suspense>
+        {event && (
+          <TournamentTable
+            event={event}
+            tournaments={tournaments}
+            onEdit={handleEdit}
+            loading={loading}
+          />
+        )}
+      </Suspense>
     </PaperLayout>
-  ) : (
-    <PageLoader />
   );
 };

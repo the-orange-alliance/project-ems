@@ -1,7 +1,8 @@
-import { Grid, FormControl, TextField, Button } from '@mui/material';
+import { Row, Col, Form, Input, Button } from 'antd';
 import { Tournament, defaultTournament } from '@toa-lib/models';
 import { FC, ChangeEvent, useState, useEffect } from 'react';
-import { TournamentDropdown } from '../dropdowns/tournament-level-dropdown';
+import { TournamentDropdown } from '../dropdowns/tournament-level-dropdown.js';
+import { ViewReturn } from '../buttons/view-return.js';
 
 const FormField: FC<{
   name: string;
@@ -12,19 +13,18 @@ const FormField: FC<{
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }> = ({ name, label, value, type, disabled, onChange }) => {
   return (
-    <Grid item xs={12} sm={6} md={4}>
-      <FormControl fullWidth>
-        <TextField
+    <Col xs={24} sm={12} md={8}>
+      <Form.Item label={label}>
+        <Input
           name={name}
-          label={label}
           value={value}
           onChange={onChange}
-          variant='standard'
           type={type ?? 'text'}
           disabled={disabled}
+          size='large'
         />
-      </FormControl>
-    </Grid>
+      </Form.Item>
+    </Col>
   );
 };
 
@@ -50,47 +50,39 @@ const Fields: FC<{
   };
 
   return (
-    <Grid
-      container
-      spacing={3}
-      sx={{ paddingTop: (theme) => theme.spacing(1) }}
-    >
+    <Row gutter={[24, 16]}>
       {tournament.fields.map((f: string, i: number) => {
         const onChange = (e: ChangeEvent<HTMLInputElement>) => {
           updateFieldName(i, e.target.value);
         };
         return (
-          <Grid key={`field-${i}`} item xs={12}>
-            <FormControl>
-              <TextField
+          <Col key={`field-${i}`} span={24}>
+            <Form.Item label={`Field ${i + 1}`}>
+              <Input
                 name='fieldName'
-                label='Field Name'
                 value={tournament.fields[i]}
-                variant='standard'
-                type='text'
                 disabled={disabled}
                 onChange={onChange}
               />
-            </FormControl>
-          </Grid>
+            </Form.Item>
+          </Col>
         );
       })}
-      <Grid item xs={6} md={3} lg={2}>
-        <Button variant='contained' fullWidth onClick={handleAdd}>
+      <Col xs={12} md={6} lg={4}>
+        <Button block onClick={handleAdd}>
           Add Field
         </Button>
-      </Grid>
-      <Grid item xs={6} md={3} lg={2}>
+      </Col>
+      <Col xs={12} md={6} lg={4}>
         <Button
-          variant='contained'
-          fullWidth
+          block
           onClick={handleRemove}
           disabled={tournament.fields.length <= 1}
         >
           Remove Field
         </Button>
-      </Grid>
-    </Grid>
+      </Col>
+    </Row>
   );
 };
 
@@ -98,14 +90,16 @@ interface Props {
   initialTournament?: Tournament;
   loading?: boolean;
   onSubmit: (tournament: Tournament) => void;
+  returnTo?: string;
 }
 
 export const TournamentForm: FC<Props> = ({
   initialTournament,
   loading,
-  onSubmit
+  onSubmit,
+  returnTo
 }) => {
-  const [tournament, setTournament] = useState({
+  const [tournament, setTournament] = useState<Tournament>({
     ...(initialTournament ?? defaultTournament)
   });
 
@@ -139,8 +133,8 @@ export const TournamentForm: FC<Props> = ({
   };
 
   return (
-    <>
-      <Grid container spacing={3}>
+    <Form layout='vertical'>
+      <Row gutter={[24, 24]}>
         <FormField
           name='tournamentKey'
           label='Tournament Key'
@@ -155,28 +149,35 @@ export const TournamentForm: FC<Props> = ({
           onChange={handleChange}
           disabled={loading}
         />
-        <Grid item xs={12} sm={6} md={4}>
-          <TournamentDropdown
-            fullWidth
-            value={tournament.tournamentLevel}
-            onChange={handleLevelChange}
-            disabled={loading}
-          />
-        </Grid>
-      </Grid>
+        <Col xs={24} sm={12} md={8}>
+          <Form.Item label='Tournament Level'>
+            <TournamentDropdown
+              fullWidth
+              value={tournament.tournamentLevel}
+              onChange={handleLevelChange}
+              disabled={loading}
+            />
+          </Form.Item>
+        </Col>
+      </Row>
       <Fields
         tournament={tournament}
         disabled={loading}
         onUpdate={handleFieldUpdate}
       />
-      <Button
-        variant='contained'
-        sx={{ marginTop: (theme) => theme.spacing(2) }}
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        Submit Changes
-      </Button>
-    </>
+      <Row justify='space-between'>
+        <Col>{returnTo && <ViewReturn title='Back' href={returnTo} />}</Col>
+        <Col>
+          <Button
+            type='primary'
+            loading={loading}
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {initialTournament ? 'Modify Tournament' : 'Create Tournament'}
+          </Button>
+        </Col>
+      </Row>
+    </Form>
   );
 };

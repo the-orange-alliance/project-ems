@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Event, Team, Tournament } from '@toa-lib/models';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEvent } from '@api/use-event-data.js';
@@ -62,6 +62,10 @@ export const useEventState = (config: StateConfig): EventStateHookResponse => {
     modifiedTournamentsAtom
   );
 
+  const prevEvent = useRef<Event | null>(null);
+  const prevTeams = useRef<Team[]>([]);
+  const prevTournaments = useRef<Tournament[]>([]);
+
   const eventRequest = useEvent(config.event ? eventKey : undefined);
   const teamsRequest = useTeamsForEvent(
     config.teams ? event?.eventKey : undefined
@@ -72,30 +76,53 @@ export const useEventState = (config: StateConfig): EventStateHookResponse => {
 
   useEffect(() => {
     if (eventRequest.data) {
-      const newEvent = deepMerge(eventRequest.data, modifiedEvent);
-      setEvent(newEvent);
+      if (!modifiedEvent && prevEvent.current) {
+        eventRequest.mutate(prevEvent.current);
+      } else {
+        const newEvent = deepMerge(eventRequest.data, modifiedEvent);
+        setEvent(newEvent);
+      }
+      prevEvent.current = modifiedEvent;
     }
   }, [eventRequest.data]);
 
   useEffect(() => {
     if (teamsRequest.data) {
-      const newTeams = mergeWithTarget(
-        teamsRequest.data,
-        modifiedTeams,
-        'teamKey'
-      );
-      setTeams(newTeams);
+      if (
+        modifiedTeams.length <= 0 &&
+        modifiedTeams.length !== prevTeams.current.length
+      ) {
+        teamsRequest.mutate(mergeWithTarget(teams, modifiedTeams, 'teamKey'));
+      } else {
+        const newTeams = mergeWithTarget(
+          teamsRequest.data,
+          modifiedTeams,
+          'teamKey'
+        );
+        setTeams(newTeams);
+      }
+      prevTeams.current = modifiedTeams;
     }
   }, [teamsRequest.data, modifiedTeams]);
 
   useEffect(() => {
     if (tournamentsRequest.data) {
-      const newTournaments = mergeWithTarget(
-        tournamentsRequest.data,
-        modifiedTournaments,
-        'tournamentKey'
-      );
-      setTournaments(newTournaments);
+      if (
+        modifiedTournaments.length <= 0 &&
+        modifiedTournaments.length !== prevTournaments.current.length
+      ) {
+        tournamentsRequest.mutate(
+          mergeWithTarget(tournaments, modifiedTournaments, 'tournamentKey')
+        );
+      } else {
+        const newTournaments = mergeWithTarget(
+          tournamentsRequest.data,
+          modifiedTournaments,
+          'tournamentKey'
+        );
+        setTournaments(newTournaments);
+      }
+      prevTournaments.current = modifiedTournaments;
     }
   }, [tournamentsRequest.data]);
 
