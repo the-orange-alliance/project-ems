@@ -81,6 +81,22 @@ CREATE TABLE IF NOT EXISTS "schedule" (
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey)
 );
 
+CREATE TABLE IF NOT EXISTS "schedule_params" (
+    "eventKey" VARCHAR(25) NOT NULL,
+    "tournamentKey" VARCHAR(25) NOT NULL,
+    "type" VARCHAR(100) NOT NULL,
+    "days" TEXT NOT NULL,
+    "matchConcurrency" REAL NOT NULL,
+    "teamKeys" TEXT NOT NULL,
+    "teamsPerAlliance": REAL NOT NULL,
+    "matchesPerTeam" REAL NOT NULL,
+    "cycleTime" REAL NOT NULL,
+    "hasPremiereField" INT NOT NULL,
+    "options": TEXT NOT NULL,
+    PRIMARY KEY (eventKey, tournamentKey),
+    UNIQUE (eventKey, tournamentKey)
+);
+
 CREATE TABLE IF NOT EXISTS "match" (
     "eventKey" VARCHAR(25) NOT NULL,
     "tournamentKey" VARCHAR(25) NOT NULL,

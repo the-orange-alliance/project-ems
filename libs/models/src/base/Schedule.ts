@@ -88,44 +88,43 @@ export const defaultScheduleItem: ScheduleItem = {
   isMatch: false
 };
 
-export interface EventSchedule {
+export interface ScheduleParams {
   eventKey: string;
   tournamentKey: string;
   type: TournamentType;
   days: Day[];
   matchConcurrency: number;
-  teams: Team[];
-  teamsParticipating: number;
-  teamsPerAlliance: number;
-  matchesPerTeam: number;
-  totalMatches: number;
+  teamKeys: number[];
   cycleTime: number;
   hasPremiereField: boolean;
-  playoffsOptions?: PlayoffsOptions;
+  options: ScheduleOptions;
 }
 
-export interface PlayoffsOptions {
-  rounds?: number;
+export interface ScheduleOptions {
   seriesType?: 1 | 3 | 5;
   allianceCount?: number;
+  rounds: number;
+  teamsPerAlliance: number;
 }
 
-export const defaultEventSchedule: EventSchedule = {
+export const defaultScheduleParams: ScheduleParams = {
   tournamentKey: '',
   eventKey: '',
   type: 'Test',
   days: [],
   matchConcurrency: 1,
-  teams: [],
-  teamsParticipating: 0,
-  teamsPerAlliance: 3,
-  matchesPerTeam: 5,
-  totalMatches: 0,
+  teamKeys: [],
   cycleTime: 5,
-  hasPremiereField: false
+  hasPremiereField: false,
+  options: {
+    rounds: 5,
+    teamsPerAlliance: 3
+  }
 };
 
-export function generateScheduleItems(schedule: EventSchedule): ScheduleItem[] {
+export function generateScheduleItems(
+  schedule: ScheduleParams
+): ScheduleItem[] {
   const scheduleItems: ScheduleItem[] = [];
   let totalMatches = 0;
   for (const day of schedule.days) {
@@ -190,7 +189,7 @@ interface ScheduleValidator {
 }
 
 export function getScheduleValidation(
-  schedule: EventSchedule | null | undefined
+  schedule: ScheduleParams | null | undefined
 ): ScheduleValidator {
   if (!schedule) {
     return {
@@ -256,7 +255,7 @@ export function getScheduleValidation(
   } else {
     validationMessage = '';
   }
-  if (schedule.teamsParticipating <= 0) {
+  if (schedule.teamKeys.length <= 0) {
     validationMessage = 'There are not enough teams for this schedule.';
     participantsSelected = false;
   }
@@ -270,43 +269,35 @@ export function getScheduleValidation(
   return { maxTotalMatches, remainingMatches, valid, validationMessage };
 }
 
-export function calculateTotalMatches(schedule: EventSchedule): number {
+export function calculateTotalMatches(schedule: ScheduleParams): number {
   const {
-    teamsParticipating,
-    matchesPerTeam,
-    teamsPerAlliance,
     type,
-    playoffsOptions
+    teamKeys,
+    options: { rounds, teamsPerAlliance, allianceCount, seriesType }
   } = schedule;
+  const teamsParticipating = teamKeys.length;
   switch (type) {
     case 'Practice':
-      return Math.ceil(
-        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
-      );
+      return Math.ceil((teamsParticipating * rounds) / (teamsPerAlliance * 2));
     case 'Qualification':
-      return Math.ceil(
-        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
-      );
+      return Math.ceil((teamsParticipating * rounds) / (teamsPerAlliance * 2));
     case 'Ranking':
-      return Math.ceil(
-        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
-      );
+      return Math.ceil((teamsParticipating * rounds) / (teamsPerAlliance * 2));
     case 'Round Robin':
-      if (!playoffsOptions?.allianceCount) return 0;
-      if (playoffsOptions?.rounds) {
-        return (playoffsOptions.allianceCount / 2) * playoffsOptions.rounds;
-      } else {
-        return (
-          (playoffsOptions.allianceCount / 2) *
-          (playoffsOptions.allianceCount - 1)
-        );
-      }
+      if (!allianceCount) return 0;
+      return (allianceCount / 2) * rounds;
+    // if (rounds) {
+    //   return (playoffsOptions.allianceCount / 2) * playoffsOptions.rounds;
+    // } else {
+    //   return (
+    //     (playoffsOptions.allianceCount / 2) *
+    //     (playoffsOptions.allianceCount - 1)
+    //   );
+    // }
     case 'Finals':
-      return playoffsOptions?.seriesType ?? 3; // Default to Bo3
+      return seriesType ?? 3; // Default to Bo3
     default:
-      return Math.ceil(
-        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
-      );
+      return Math.ceil((teamsParticipating * rounds) / (teamsPerAlliance * 2));
   }
 }
 

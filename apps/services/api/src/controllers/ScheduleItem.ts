@@ -88,7 +88,7 @@ router.patch(
       await db.updateWhere(
         'schedule',
         req.body,
-        `eventKey = "${eventKey}" AND tournamentKey = "${eventKey}" AND id = "${id}"`
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = "${id}"`
       );
       res.status(200).send({});
     } catch (e) {

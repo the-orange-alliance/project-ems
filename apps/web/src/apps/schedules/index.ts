@@ -1,3 +1,3 @@
-import { ScheduleManager } from './schedule-manager';
+import { ScheduleManager } from './schedule-manager.js';
 
 export { ScheduleManager };

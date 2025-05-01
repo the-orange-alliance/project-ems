@@ -1,8 +1,8 @@
 import { FC } from 'react';
-import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
+import { Select } from 'antd';
 import { Tournament } from '@toa-lib/models';
+
+const { Option } = Select;
 
 interface Props {
   tournaments: Tournament[] | null | undefined;
@@ -17,38 +17,33 @@ const TournamentDropdown: FC<Props> = ({
   fullWidth,
   onChange
 }) => {
-  const handleChange = (event: SelectChangeEvent) => {
-    onChange(event.target.value);
+  const handleChange = (selectedValue: string) => {
+    onChange(selectedValue);
   };
 
   // This resolves "uncontrolled" input becoming "controlled" error
-  if (!value) value = '__select__tournament__';
+  const resolvedValue = value ?? '__select__tournament__';
 
   return (
-    <FormControl
-      fullWidth={fullWidth}
-      variant='standard'
-      sx={{ m: 1, minWidth: 120 }}
+    <Select
+      style={{ width: fullWidth ? '100%' : 120, margin: 8 }}
+      value={resolvedValue}
+      onChange={handleChange}
+      disabled={!tournaments || tournaments.length === 0}
+      placeholder='Select A Tournament'
     >
-      <Select
-        value={value?.toString()}
-        onChange={handleChange}
-        label='Tournament'
-        disabled={!tournaments || tournaments.length === 0}
-      >
-        <MenuItem value='__select__tournament__' disabled>
-          Select A Tournament
-        </MenuItem>
-        {tournaments?.map((t) => (
-          <MenuItem
-            key={`${t.tournamentKey}-${t.tournamentKey}`}
-            value={t.tournamentKey}
-          >
-            {t.name}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+      <Option value='__select__tournament__' disabled>
+        Select A Tournament
+      </Option>
+      {tournaments?.map((t) => (
+        <Option
+          key={`${t.tournamentKey}-${t.tournamentKey}`}
+          value={t.tournamentKey}
+        >
+          {t.name}
+        </Option>
+      ))}
+    </Select>
   );
 };
 

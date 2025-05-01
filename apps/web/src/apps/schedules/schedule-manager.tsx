@@ -1,78 +1,51 @@
-import { Typography } from '@mui/material';
-import { FC, useEffect } from 'react';
-import { useRecoilState } from 'recoil';
-import { useCurrentEvent } from 'src/api/use-event-data';
-import { PageLoader } from 'src/components/loading/page-loader';
-import { TwoColumnHeader } from 'src/components/util/two-column-header';
-import { PaperLayout } from 'src/layouts/paper-layout';
-import { currentTournamentKeyAtom } from 'src/stores/recoil';
-import { ScheduleTabs } from './tabs/schedule-tabs';
-import { useScheduleForTournament } from 'src/api/use-schedule-data';
-import TournamentDropdown from 'src/components/dropdowns/tournament-dropdown';
-import { useTournamentsForEvent } from 'src/api/use-tournament-data';
-import { defaultEventSchedule, levelToType } from '@toa-lib/models';
-import { useMatchesForTournament } from 'src/api/use-match-data';
+import { Typography } from 'antd';
+import { FC, Suspense } from 'react';
+import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
+import { PaperLayout } from 'src/layouts/paper-layout.js';
+import { ScheduleTabs } from './tabs/schedule-tabs.js';
+import TournamentDropdown from 'src/components/dropdowns/tournament-dropdown.js';
+import { useAtom } from 'jotai';
+import { tournamentKeyAtom } from '@stores/state/event.js';
+import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
+import { useEventState } from 'src/stores/hooks/use-event-state.js';
+import { useScheduleParamsForTournament } from 'src/api/use-schedule-data.js';
 
 export const ScheduleManager: FC = () => {
-  const [tournamentKey, setTournamentKey] = useRecoilState(
-    currentTournamentKeyAtom
-  );
-  const { data: event } = useCurrentEvent();
-  const { data: tournaments } = useTournamentsForEvent(event?.eventKey);
+  const { state } = useEventState({
+    event: true,
+    tournaments: true,
+    matches: true
+  });
   const {
-    data: eventSchedule,
-    isLoading: isScheduleLoading,
-    mutate: mutateSchedule
-  } = useScheduleForTournament(event?.eventKey, tournamentKey);
-  const { data: matches } = useMatchesForTournament(
-    event?.eventKey,
-    tournamentKey
-  );
-  const hasMatches = eventSchedule && matches && matches.length > 0;
+    local: { event, tournaments },
+    remote: { matches }
+  } = state;
 
-  // Effect hook to create a new schedule if one doesn't exist
-  useEffect(() => {
-    if (
-      !isScheduleLoading &&
-      !eventSchedule &&
-      event &&
-      tournamentKey &&
-      tournaments
-    ) {
-      // TODO - What if we don't need to create one here?
-      const tournament = tournaments.find(
-        (t) => t.tournamentKey === tournamentKey
-      );
-      if (!tournament) return;
-      mutateSchedule({
-        ...defaultEventSchedule,
-        eventKey: event?.eventKey,
-        tournamentKey,
-        type: levelToType(tournament.tournamentLevel)
-      });
-    }
-  }, [
-    isScheduleLoading,
-    eventSchedule,
-    event,
+  const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
+
+  const { data: scheduleParams } = useScheduleParamsForTournament(
     tournamentKey,
-    tournaments,
-    mutateSchedule
-  ]);
+    event?.eventKey
+  );
+
+  useUpdateAppbar(
+    {
+      title: event ? `${event.eventName} | Tournament Manager` : undefined,
+      titleLink: event ? `/${event.eventKey}` : undefined
+    },
+    [event]
+  );
 
   const handleTournamentChange = (tournamentKey: string) => {
     setTournamentKey(tournamentKey);
   };
 
-  return event ? (
+  return (
     <PaperLayout
       containerWidth='xl'
-      title={`${event.eventName} | Schedule Manager`}
-      titleLink={`/${event.eventKey}`}
-      showSettings
       header={
         <TwoColumnHeader
-          left={<Typography variant='h4'>Schedule Manager</Typography>}
+          left={<Typography.Title level={3}>Schedule Manager</Typography.Title>}
           right={
             <TournamentDropdown
               tournaments={tournaments}
@@ -83,14 +56,14 @@ export const ScheduleManager: FC = () => {
         />
       }
     >
-      <ScheduleTabs
-        tournamentKey={tournamentKey}
-        eventSchedule={eventSchedule}
-        savedMatches={matches}
-        hasMatches={hasMatches}
-      />
+      <Suspense>
+        <ScheduleTabs
+          tournamentKey={tournamentKey}
+          eventSchedule={scheduleParams}
+          savedMatches={matches}
+          hasMatches={matches.length > 0}
+        />
+      </Suspense>
     </PaperLayout>
-  ) : (
-    <PageLoader />
   );
 };

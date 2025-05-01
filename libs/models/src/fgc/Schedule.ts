@@ -1,10 +1,4 @@
-import { DateTime } from 'luxon';
 import { Match } from '../base/Match.js';
-import {
-  EventSchedule,
-  generateScheduleItems as generateDefaultScheduleItems,
-  ScheduleItem
-} from '../base/Schedule.js';
 
 export namespace FGC2023 {
   // We can safely assume for FGC2023 there will be 5 fields.

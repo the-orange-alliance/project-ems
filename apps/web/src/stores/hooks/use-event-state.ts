@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { Event, Team, Tournament } from '@toa-lib/models';
+import { Event, Match, Team, Tournament } from '@toa-lib/models/base';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEvent } from '@api/use-event-data.js';
 import {
   eventAtom,
   eventKeyAtom,
+  matchesAtom,
   modifiedEventAtom,
+  modifiedMatchesAtom,
   modifiedTeamsAtom,
   modifiedTournamentsAtom,
   teamsAtom,
@@ -14,6 +16,7 @@ import {
 import { useTeamsForEvent } from 'src/api/use-team-data.js';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data.js';
 import { deepMerge, mergeWithTarget } from '../array-utils.js';
+import { useMatchesForEvent } from 'src/api/use-match-data.js';
 
 type StateConfig = {
   event?: boolean;
@@ -26,6 +29,7 @@ interface State {
   event: Event | null;
   teams: Team[];
   tournaments: Tournament[];
+  matches: Match<any>[];
 }
 
 interface EventState {
@@ -40,7 +44,10 @@ interface EventSetters {
   ) => void;
   setModifiedTeams: (teams: Team[] | ((prev: Team[]) => Team[])) => void;
   setModifiedTournaments: (
-    teams: Tournament[] | ((prev: Tournament[]) => Tournament[])
+    tournaments: Tournament[] | ((prev: Tournament[]) => Tournament[])
+  ) => void;
+  setModifiedMatches: (
+    matches: Match<any>[] | ((prev: Match<any>[]) => Match<any>[])
   ) => void;
 }
 
@@ -55,16 +62,19 @@ export const useEventState = (config: StateConfig): EventStateHookResponse => {
   const [event, setEvent] = useAtom(eventAtom);
   const [teams, setTeams] = useAtom(teamsAtom);
   const [tournaments, setTournaments] = useAtom(tournamentsAtom);
+  const [matches, setMatches] = useAtom(matchesAtom);
 
   const [modifiedEvent, setModifiedEvent] = useAtom(modifiedEventAtom);
   const [modifiedTeams, setModifiedTeams] = useAtom(modifiedTeamsAtom);
   const [modifiedTournaments, setModifiedTournaments] = useAtom(
     modifiedTournamentsAtom
   );
+  const [modifiedMatches, setModifiedMatches] = useAtom(modifiedMatchesAtom);
 
   const prevEvent = useRef<Event | null>(null);
   const prevTeams = useRef<Team[]>([]);
   const prevTournaments = useRef<Tournament[]>([]);
+  const prevMatches = useRef<Match<any>[]>([]);
 
   const eventRequest = useEvent(config.event ? eventKey : undefined);
   const teamsRequest = useTeamsForEvent(
@@ -72,6 +82,9 @@ export const useEventState = (config: StateConfig): EventStateHookResponse => {
   );
   const tournamentsRequest = useTournamentsForEvent(
     config.tournaments ? event?.eventKey : undefined
+  );
+  const matchesRequest = useMatchesForEvent(
+    config.matches ? event?.eventKey : undefined
   );
 
   useEffect(() => {
@@ -126,30 +139,54 @@ export const useEventState = (config: StateConfig): EventStateHookResponse => {
     }
   }, [tournamentsRequest.data]);
 
+  useEffect(() => {
+    if (matchesRequest.data) {
+      if (
+        modifiedMatches.length <= 0 &&
+        modifiedMatches.length !== prevMatches.current.length
+      ) {
+        matchesRequest.mutate(mergeWithTarget(matches, modifiedMatches, 'id'));
+      } else {
+        const newMatches = mergeWithTarget(
+          matchesRequest.data,
+          modifiedMatches,
+          'id'
+        );
+        setMatches(newMatches);
+      }
+      prevMatches.current = modifiedMatches;
+    }
+  }, [matchesRequest.data]);
+
   return {
     state: {
       setModifiedEvent,
       setModifiedTeams,
       setModifiedTournaments,
+      setModifiedMatches,
       local: {
         event: event,
         teams: teams,
-        tournaments: tournaments
+        tournaments: tournaments,
+        matches: matches
       },
       remote: {
         event: eventRequest.data ?? null,
         teams: teamsRequest.data ?? [],
-        tournaments: tournamentsRequest.data ?? []
+        tournaments: tournamentsRequest.data ?? [],
+        matches: matchesRequest.data ?? []
       },
       staged: {
         event: modifiedEvent,
         teams: modifiedTeams,
-        tournaments: modifiedTournaments
+        tournaments: modifiedTournaments,
+        matches: modifiedMatches
       }
     },
     loading:
       eventRequest.isLoading ||
       teamsRequest.isLoading ||
-      tournamentsRequest.isLoading
+      tournamentsRequest.isLoading ||
+      matchesRequest.isLoading
   };
 };
