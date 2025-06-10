@@ -18,7 +18,7 @@ export const MoreButton: FC<Props> = ({ menuItems }) => {
         size='large'
         shape='circle'
         icon={<MoreOutlined />}
-        style={{ border: 'none' }}
+        // style={{ border: 'none' }}
       />
     </Dropdown>
   );

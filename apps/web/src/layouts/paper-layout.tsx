@@ -1,5 +1,5 @@
 import { FC, JSX, Suspense, useEffect } from 'react';
-import { Layout, Card, Divider, theme } from 'antd';
+import { Layout, Card, Divider, theme, Typography } from 'antd';
 import { appbarConfigAtom } from '@stores/state/index.js';
 import { useSetAtom } from 'jotai';
 
@@ -34,7 +34,7 @@ export const PaperLayout: FC<Props> = ({
 
   return (
     <Layout
-      style={{ display: 'flex', justifyContent: 'center', paddingTop: '48px' }}
+      style={{ display: 'flex', justifyContent: 'center', paddingTop: '48px', minHeight: 'calc(100% - 56px)' }}
     >
       <Content
         style={{ maxWidth: containerWidth, width: '100%', padding: '0 16px' }}
@@ -42,7 +42,7 @@ export const PaperLayout: FC<Props> = ({
         <Card>
           {header && (
             <>
-              <div>{header}</div>
+              <Typography.Title level={2} style={{margin: '0.5em 0'}}>{header}</Typography.Title>
               <Divider />
             </>
           )}

@@ -16,7 +16,7 @@ export const EventSelection: FC = () => {
       containerWidth='lg'
       header={
         <TwoColumnHeader
-          left={<Typography.Title level={3}>Event Selection</Typography.Title>}
+          left={<Typography.Title level={3}style={{marginTop: "0.5em"}}>Event Selection</Typography.Title>}
           right={
             <MoreButton
               menuItems={[

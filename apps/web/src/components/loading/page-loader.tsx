@@ -1,11 +1,11 @@
-import { theme } from 'antd';
+import { Layout, theme } from 'antd';
 import { FC } from 'react';
 
 export const PageLoader: FC = () => {
   const { token } = theme.useToken();
 
   return (
-    <>
+    <Layout style={{ height: '100%' }}>
       <div
         style={{
           left: 0,
@@ -39,6 +39,6 @@ export const PageLoader: FC = () => {
           }
         `}
       </style>
-    </>
+    </Layout>
   );
 };

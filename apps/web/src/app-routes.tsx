@@ -83,15 +83,15 @@ const TournamentEditor = lazy(() =>
 // const Reports = lazy(() =>
 //   import('./apps/report-app').then((m) => ({ default: m.Reports }))
 // );
-// // Settings Routes
-// const SettingsApp = lazy(() =>
-//   import('./apps/settings-app').then((m) => ({ default: m.SettingsApp }))
-// );
-// const GlobalSettingsApp = lazy(() =>
-//   import('./apps/settings-app/global-settings').then((m) => ({
-//     default: m.GlobalSettingsApp
-//   }))
-// );
+// Settings Routes
+const SettingsApp = lazy(() =>
+  import('./apps/settings-app/index.js').then((m) => ({ default: m.SettingsApp }))
+);
+const GlobalSettingsApp = lazy(() =>
+  import('./apps/settings-app/global-settings.js').then((m) => ({
+    default: m.GlobalSettingsApp
+  }))
+);
 
 // Referee Routes
 // const RefereeApp = lazy(() =>
@@ -209,7 +209,7 @@ const AppRoutes: AppRoute[] = [
     element: TournamentEditor,
     icon: <HomeIcon />,
     hidden: true
-  }
+  },
   // {
   //   name: 'Schedule Manager',
   //   path: '/:eventKey/schedule-manager',
@@ -287,13 +287,13 @@ const AppRoutes: AppRoute[] = [
   //   group: 0,
   //   element: SettingsApp
   // },
-  // {
-  //   name: 'Settings',
-  //   path: '/global-settings',
-  //   group: 0,
-  //   element: GlobalSettingsApp,
-  //   hidden: true
-  // },
+  {
+    name: 'Global Settings',
+    path: '/global-settings',
+    group: 0,
+    element: GlobalSettingsApp,
+    hidden: false
+  },
   // {
   //   name: 'FRC FMS Field Monitor',
   //   path: '/frc/fms/fieldmonitor',

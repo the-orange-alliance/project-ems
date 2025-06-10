@@ -1,5 +1,5 @@
 import { createTheme } from '@mui/material/styles';
-import { ThemeConfig } from 'antd';
+import { theme, ThemeConfig } from 'antd';
 
 export const ftcTheme = (darkMode: boolean) =>
   createTheme({
@@ -49,14 +49,17 @@ export const fgcTheme = (darkMode: boolean) =>
     }
   });
 
-export const customfgcTheme: ThemeConfig = {
+export const customfgcTheme = (darkMode: boolean): ThemeConfig => ({
+  algorithm: darkMode
+    ? [theme.darkAlgorithm, theme.compactAlgorithm]
+    : [theme.compactAlgorithm],
   token: {
     colorPrimary: '#019b00',
-    colorPrimaryBg: '#ffffff',
-    colorBgBase: '#ffffff',
-    colorTextBase: '#000000',
-    colorText: '#000000',
-    colorTextSecondary: '#ffffff'
+    // colorPrimaryBg: '#ffffff',
+    // colorBgBase: '#ffffff',
+    colorTextBase: darkMode ? '#ffffff' : '#000000',
+    colorText: darkMode ? '#ffffff' : '#000000',
+    colorTextSecondary: darkMode ? '#000000' : '#ffffff'
   },
   components: {
     Skeleton: {
@@ -64,8 +67,8 @@ export const customfgcTheme: ThemeConfig = {
       gradientToColor: 'rgba(0, 0, 0, 0.15)'
     },
     Table: {
-      headerBg: '#e8e8e8',
-      rowHoverBg: '#f1f1f1'
+      headerBg: darkMode ? '#171717' : '#e8e8e8',
+      rowHoverBg: darkMode ? '#0d0d0d' : '#f1f1f1'
     },
     Button: {
       onlyIconSizeLG: '16px',
@@ -73,7 +76,7 @@ export const customfgcTheme: ThemeConfig = {
       colorLinkHover: '#82ce81'
     },
     Layout: {
-      bodyBg: '#f0f0f0'
+      // bodyBg: '#f0f0f0'
     }
   }
-};
+});

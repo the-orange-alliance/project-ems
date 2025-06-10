@@ -28,7 +28,7 @@ export const DefaultLayout: FC<Props> = ({
 
   return (
     <Layout
-      style={{ display: 'flex', justifyContent: 'center', paddingTop: '40px' }}
+      style={{ display: 'flex', justifyContent: 'center', paddingTop: '40px', height: 'calc(100% - 40px - 16px)' }}
     >
       <Content
         style={{

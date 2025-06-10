@@ -43,5 +43,21 @@ export const TeamKeys: TeamKey[] = [
   'teamNameShort'
 ];
 
+export const TeamKeysLables: Record<TeamKey, string> = {
+  city: 'City',
+  country: 'Country',
+  countryCode: 'Country Code',
+  robotName: 'Robot Name',
+  stateProv: 'State/Province',
+  teamKey: 'Team Key',
+  teamNameLong: 'Team Name (Long)',
+  teamNameShort: 'Team Name (Short)',
+  eventKey: 'Event Key',
+  teamNumber: 'Team Number',
+  rookieYear: 'Rookie Year',
+  cardStatus: 'Card Status',
+  hasCard: 'Has Card'
+};
+
 export type Team = z.infer<typeof teamZod>;
 type TeamKey = keyof Team;

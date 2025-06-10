@@ -1,7 +1,5 @@
 import { FC, ChangeEvent } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
+import { Button, Input, Space } from 'antd';
 
 interface Props {
   value: number;
@@ -34,27 +32,22 @@ export const NumberInput: FC<Props> = ({
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        gap: '20px',
-        justifyContent: 'center'
-      }}
+    <Space
+      direction="horizontal"
     >
-      <Button variant='contained' onClick={decrement} disabled={disabled}>
+      <Button onClick={decrement} disabled={disabled}>
         -
       </Button>
-      <TextField
+      <Input
         onChange={handleTypedChange}
         value={value}
         type='number'
         disabled={disabled || textFieldDisabled}
-        sx={{ minWidth: '75px' }}
+        style={{ minWidth: '75px' }}
       />
-      <Button variant='contained' onClick={increment} disabled={disabled}>
+      <Button onClick={increment} disabled={disabled}>
         +
       </Button>
-    </Box>
+    </Space>
   );
 };

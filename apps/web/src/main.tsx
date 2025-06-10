@@ -1,7 +1,6 @@
 import { StrictMode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { Provider as ModalProvider } from '@ebay/nice-modal-react';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
@@ -10,14 +9,10 @@ import { APIOptions, SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/local-storage.js';
 import { AppContainer } from './App.js';
 import { useCurrentEvent } from './api/use-event-data.js';
-import { CssBaseline } from '@mui/material';
 import { useAtomValue } from 'jotai';
 import { darkModeAtom } from './stores/state/ui.js';
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
 import { ConfigProvider, theme } from 'antd';
+import 'antd/dist/reset.css';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Error while trying to find document root.');
@@ -42,35 +37,22 @@ SocketOptions.port = 8081;
 function Main() {
   const darkMode = useAtomValue(darkModeAtom);
   const eventKey = useCurrentEvent().data?.eventKey;
-  const oldTheme = !eventKey
-    ? fgcTheme
-    : eventKey.startsWith('FRC')
-      ? frcTheme
-      : eventKey.startsWith('FTC')
-        ? ftcTheme
-        : fgcTheme;
+  //   !eventKey
+  //   ? fgcTheme
+  //   : eventKey.startsWith('FRC')
+  //     ? frcTheme
+  //     : eventKey.startsWith('FTC')
+  //       ? ftcTheme
+  //       : fgcTheme;
 
   const appTheme = customfgcTheme;
 
   return (
-    <ThemeProvider
-      theme={useMemo(() => oldTheme(darkMode), [darkMode, eventKey])}
-    >
-      <CssBaseline />
+    <ConfigProvider theme={useMemo(() => appTheme(darkMode), [darkMode, eventKey])}>
       <ModalProvider>
-        <ConfigProvider theme={appTheme}>
-          <ConfigProvider
-            theme={{
-              algorithm: darkMode
-                ? [theme.darkAlgorithm, theme.compactAlgorithm]
-                : [theme.compactAlgorithm]
-            }}
-          >
-            <AppContainer />
-          </ConfigProvider>
-        </ConfigProvider>
+        <AppContainer />
       </ModalProvider>
-    </ThemeProvider>
+    </ConfigProvider>
   );
 }
 

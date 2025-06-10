@@ -1,34 +1,26 @@
 import { FC } from 'react';
-import Box from '@mui/material/Box';
-import { useRecoilState } from 'recoil';
-import {
-  darkModeAtom,
-  followerModeEnabledAtom,
-  leaderApiHostAtom,
-  syncApiKeyAtom,
-  syncPlatformAtom,
-  teamIdentifierAtom
-} from 'src/stores/recoil';
-import { SwitchSetting } from './components/switch-setting';
-import { DropdownSetting } from './components/dropdown-setting';
-import { SyncPlatform, TeamKeys } from '@toa-lib/models';
-import { TextSetting } from './components/text-setting';
+import { SyncPlatform, TeamKeys, TeamKeysLables } from '@toa-lib/models';
 import { APIOptions } from '@toa-lib/client';
-import { updateSocketClient } from 'src/api/use-socket-data';
-import { DefaultLayout } from '@layouts/default-layout';
-import { Paper } from '@mui/material';
-import { ButtonSetting } from './components/button-setting';
+import { updateSocketClient } from 'src/api/use-socket-data.js';
+import { Space } from 'antd';
+import BooleanRow from 'src/components/settings/boolean-row.js';
+import { useAtom } from 'jotai';
+import { darkModeAtom, followerHostAtom, isFollowerAtom, syncApiKeyAtom, syncPlatformAtom, teamIdentifierAtom } from 'src/stores/state/ui.js';
+import DropdownRow from 'src/components/settings/dropdown-row.js';
+import { PaperLayout } from 'src/layouts/paper-layout.js';
+import ButtonRow from 'src/components/settings/button-row.js';
+import InputRow from 'src/components/settings/input-row.js';
 
 const Settings: FC = () => {
-  const [darkMode, setDarkMode] = useRecoilState(darkModeAtom);
+  const [darkMode, setDarkMode] = useAtom(darkModeAtom);
   const [teamIdentifier, setTeamIdentifier] =
-    useRecoilState(teamIdentifierAtom);
-  const [followerMode, setFollowerMode] = useRecoilState(
-    followerModeEnabledAtom
+    useAtom(teamIdentifierAtom);
+  const [followerMode, setFollowerMode] = useAtom(
+    isFollowerAtom
   );
-  const [leaderApiHost, setLeaderApiHost] = useRecoilState(leaderApiHostAtom);
-  const [syncPlatform, setSyncPlatform] = useRecoilState(syncPlatformAtom);
-  const [syncApiKey, setSyncApiKey] = useRecoilState(syncApiKeyAtom);
+  const [leaderApiHost, setLeaderApiHost] = useAtom(followerHostAtom);
+  const [syncPlatform, setSyncPlatform] = useAtom(syncPlatformAtom);
+  const [syncApiKey, setSyncApiKey] = useAtom(syncApiKeyAtom);
 
   const handleFollowerModeChange = (value: boolean) => {
     setFollowerMode(value);
@@ -72,68 +64,59 @@ const Settings: FC = () => {
   const handleClear = () => localStorage.clear();
 
   return (
-    <Box>
-      <SwitchSetting
-        name='Dark Mode'
+    <Space direction='vertical' style={{ width: '100%' }}>
+      <BooleanRow
+        title='Dark Mode'
         value={darkMode}
         onChange={setDarkMode}
-        inline
       />
-      <DropdownSetting
-        name='Team Identifier'
+      <DropdownRow
+        title='Team Identifier'
         value={teamIdentifier}
-        options={TeamKeys}
+        options={TeamKeys.map((key) => ({value: key, label: TeamKeysLables[key]}))}
         onChange={setTeamIdentifier}
-        inline
       />
-      <SwitchSetting
-        name='Follower Mode'
+      <BooleanRow
+        title='Follower Mode'
         value={followerMode}
         onChange={updateFollowerMode}
-        inline
       />
-      <TextSetting
-        name='Leader Api Host'
+      <InputRow
+        title='Leader Api Host'
         value={leaderApiHost}
         onChange={updateFollowerApiHost}
-        inline
-        disabled={!followerMode}
+                disabled={!followerMode}
       />
-      <DropdownSetting
-        name='Sync Platform'
+      <DropdownRow
+        title='Sync Platform'
         value={syncPlatform}
         options={[
-          SyncPlatform.DISABLED,
-          SyncPlatform.TBA,
-          SyncPlatform.FGC,
-          SyncPlatform.TOA
+          { value: SyncPlatform.TOA, label: 'The Orange Alliance' },
+          { value: SyncPlatform.TBA, label: 'The Blue Alliance' },
+          { value: SyncPlatform.FGC, label: 'FIRST Global API' },
+          { value: SyncPlatform.DISABLED, label: 'Disabled' },
         ]}
         onChange={setSyncPlatform}
-        inline
-      />
-      <TextSetting
-        name='Sync Key'
+              />
+      <InputRow
+        title='Sync Key'
         value={syncApiKey}
         onChange={(s) => setSyncApiKey(String(s))}
-        inline
       />
-      <ButtonSetting
-        name='Clear Cache'
+      <ButtonRow
+        title='Clear Cache'
         buttonText='Clear'
-        color='error'
+        color='danger'
         onClick={handleClear}
-        inline
       />
-    </Box>
+    </Space>
   );
 };
 
 export const GlobalSettingsApp: FC = () => {
   return (
-    <DefaultLayout>
-      <Paper sx={{ marginBottom: (theme) => theme.spacing(8) }}>
+    <PaperLayout header={'Global Settings'}>
         <Settings />
-      </Paper>
-    </DefaultLayout>
+    </PaperLayout>
   );
 };
