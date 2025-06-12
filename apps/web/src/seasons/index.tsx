@@ -9,10 +9,10 @@ import {
   Ranking
 } from '@toa-lib/models';
 import { FC, ChangeEvent } from 'react';
-import { chargedUpComponents } from './ChargedUp';
-import { hydrogenHorizonComponents } from './HydrogenHorizons';
-import { crescendoComponents } from './Crescendo';
-import { fgc2024Components } from './fgc-2024';
+import { chargedUpComponents } from './ChargedUp/index.js';
+import { hydrogenHorizonComponents } from './HydrogenHorizons/index.js';
+import { crescendoComponents } from './Crescendo/index.js';
+import { fgc2024Components } from './fgc-2024/index.js';
 
 const { HydrogenHorizonsSeason } = HydrogenHorizons;
 const { CrescendoSeason } = Crescendo;

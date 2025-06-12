@@ -1,13 +1,13 @@
 import { Button } from '@mui/material';
 import { User } from '@toa-lib/models';
+import { useSetAtom } from 'jotai';
 import { FC } from 'react';
-import { useSetRecoilState } from 'recoil';
-import { logout } from 'src/api/use-login-data';
-import useLocalStorage from 'src/stores/local-storage';
-import { userAtom } from 'src/stores/recoil';
+import { logout } from 'src/api/use-login-data.js';
+import useLocalStorage from 'src/stores/local-storage.js';
+import { userAtom } from 'src/stores/state/ui.js';
 
 export const LogoutButton: FC = () => {
-  const setUser = useSetRecoilState(userAtom);
+  const setUser = useSetAtom(userAtom);
   const [, setValue] = useLocalStorage<User | null>('currentUser', null);
 
   const handle = async () => {

@@ -1,84 +1,83 @@
 import { FC, useState } from 'react';
-import { PaperLayout } from 'src/layouts/paper-layout';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import { Tab } from '@mui/material';
-import { TabContext, TabList, TabPanel } from '@mui/lab';
-import AudienceDisplaySettingsTab from './tabs/audience';
-import MainSettingsTab from './tabs/main';
-import { useSeasonComponents } from 'src/hooks/use-season-components';
-import { TwoColumnHeader } from 'src/components/util/two-column-header';
-import { EventTournamentsDropdown } from 'src/components/dropdowns/event-tournaments-dropdown';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import {
-  currentEventKeyAtom,
-  currentTournamentKeyAtom
-} from 'src/stores/recoil';
+import { PaperLayout } from 'src/layouts/paper-layout.js';
+import AudienceDisplaySettingsTab from './tabs/audience.js';
+import MainSettingsTab from './tabs/main.js';
+import { useSeasonComponents } from 'src/hooks/use-season-components.js';
+import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
+import { EventTournamentsDropdown } from 'src/components/dropdowns/event-tournaments-dropdown.js';
 import { Tournament } from '@toa-lib/models';
-import FrcFmsSettingsTab from './tabs/frc-fms';
-import { ViewReturn } from 'src/components/buttons/view-return';
+import FrcFmsSettingsTab from './tabs/frc-fms.js';
+import { ViewReturn } from 'src/components/buttons/view-return.js';
+import { useAtom, useAtomValue } from 'jotai';
+import { eventKeyAtom, tournamentKeyAtom } from 'src/stores/state/event.js';
+import { Tabs, TabsProps, Typography } from 'antd';
+import GlobalSettings from './tabs/global-settings.js';
+import ErrorFallback from 'src/components/errors/error-boundary.js';
+import { ErrorBoundary } from 'react-error-boundary';
 // import FrcFmsSettingsTab from './tabs/frc-fms';
 
 export const SettingsApp: FC = () => {
-  const eventKey = useRecoilValue(currentEventKeyAtom);
-  const [tournamentKey, setTournamentKey] = useRecoilState(
-    currentTournamentKeyAtom
-  );
+  const eventKey = useAtomValue(eventKeyAtom);
+  const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
 
   const seasonComponents = useSeasonComponents();
-  const [tab, setTab] = useState<any>('0');
 
-  const isFrc = eventKey.toLowerCase().startsWith('frc');
+  const tabs: TabsProps['items'] = [
+      { label: 'Global', key: '0', children: <GlobalSettings /> }
+  ];
+  let header: JSX.Element = <Typography.Title level={2}>Settings</Typography.Title>;
 
   const handleTournamentChange = (tournament: Tournament | null) => {
     if (!tournament) return;
     setTournamentKey(tournament.tournamentKey);
   };
 
+  if (eventKey) {
+    header = (
+      <TwoColumnHeader
+        left={<Typography.Title level={2}>Settings</Typography.Title>}
+        right={
+          <EventTournamentsDropdown
+            eventKey={eventKey}
+            value={tournamentKey}
+            onChange={handleTournamentChange}
+          />
+        }
+      />
+    );
+
+    tabs.push(
+      { label: 'Event', key: '1', children: <MainSettingsTab /> },
+      { label: 'Audience Display', key: '2', children: <AudienceDisplaySettingsTab /> }
+    )
+
+    if (seasonComponents && seasonComponents.Settings) {
+      tabs.push( { 
+        label: 'Season', 
+        key: '3', 
+        children: (
+          <ErrorBoundary fallbackRender={(props) => <ErrorFallback {...props} />}>
+            <seasonComponents.Settings />
+          </ErrorBoundary>) 
+      } )
+    }
+
+    if (eventKey.toLowerCase().startsWith('frc')) {
+      tabs.push( { label: 'FRC FMS', key: '4', children: <FrcFmsSettingsTab /> } );
+    }
+  }
+
   return (
     <PaperLayout
-      header={
-        <TwoColumnHeader
-          left={<Typography variant='h4'>Settings</Typography>}
-          right={
-            <EventTournamentsDropdown
-              eventKey={eventKey}
-              value={tournamentKey}
-              onChange={handleTournamentChange}
-            />
-          }
-        />
-      }
+      header={header}
     >
-      <Paper sx={{ marginBottom: (theme) => theme.spacing(8) }}>
-        <ViewReturn title='Home' href={`/${eventKey}`} sx={{ m: 1 }} />
+        <ViewReturn title='Home' href={`../`} />
         {/* Tabs */}
-        <TabContext value={tab}>
-          <TabList onChange={(e, t) => setTab(t)}>
-            <Tab label='Main' value='0' />
-            <Tab label='Audience Display' value='1' />
-            <Tab label='Season' value='2' />
-            {isFrc && <Tab label='FRC FMS' value='3' />}
-          </TabList>
-          <TabPanel value='0'>
-            <MainSettingsTab />
-          </TabPanel>
-          <TabPanel value='1'>
-            <AudienceDisplaySettingsTab />
-          </TabPanel>
-          <TabPanel value='2'>
-            {seasonComponents && seasonComponents.Settings && (
-              <seasonComponents.Settings />
-            )}
-          </TabPanel>
-          <TabPanel value='3'>
-            <FrcFmsSettingsTab />
-          </TabPanel>
-        </TabContext>
-        <Typography variant='caption' sx={{ m: 1 }}>
+        <Tabs defaultActiveKey={'0'} items={tabs} />
+
+        <Typography.Text>
           ** Settings Save Automatically
-        </Typography>
-      </Paper>
+        </Typography.Text>
     </PaperLayout>
   );
 };

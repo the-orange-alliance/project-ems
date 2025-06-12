@@ -8,12 +8,13 @@ import {
   TextField
 } from '@mui/material';
 import { User } from '@toa-lib/models';
+import { useSetAtom } from 'jotai';
 import { ChangeEvent, FC, useEffect, useCallback, useState } from 'react';
 import { useSetRecoilState } from 'recoil';
-import { login } from 'src/api/use-login-data';
-import { useSocket } from 'src/api/use-socket';
-import useLocalStorage from 'src/stores/local-storage';
-import { userAtom } from 'src/stores/recoil';
+import { login } from 'src/api/use-login-data.js';
+import { useSocket } from 'src/api/use-socket.js';
+import useLocalStorage from 'src/stores/local-storage.js';
+import { userAtom } from 'src/stores/state/ui.js';
 
 interface Props {
   open: boolean;
@@ -22,7 +23,7 @@ interface Props {
 }
 
 export const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
-  const setUser = useSetRecoilState(userAtom);
+  const setUser = useSetAtom(userAtom)
   const [, setValue] = useLocalStorage<User | null>('currentUser', null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -56,8 +57,17 @@ export const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
     }
   }, [username, password]);
 
+  const dialogKeyUp = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter') {
+        submit();
+      }
+    },
+    [submit]
+  );
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='xs'>
+    <Dialog open={open} onClose={onClose} maxWidth='xs' onKeyUp={dialogKeyUp}>
       <DialogTitle
         sx={{
           backgroundColor: (theme) => theme.palette.primary.main,

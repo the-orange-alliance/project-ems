@@ -1,9 +1,7 @@
 import { FC, useEffect } from 'react';
-import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
 import { Tournament } from '@toa-lib/models';
-import { useTournamentsForEvent } from 'src/api/use-tournament-data';
+import { useTournamentsForEvent } from 'src/api/use-tournament-data.js';
+import { Select } from 'antd';
 
 interface Props {
   eventKey: string;
@@ -26,33 +24,23 @@ export const EventTournamentsDropdown: FC<Props> = ({
     }
   }, [tournaments]);
 
-  const handleChange = (event: SelectChangeEvent) => {
-    if (!tournaments) return;
-    onChange(
-      tournaments.find((t) => t.tournamentKey === event.target.value) ?? null
-    );
+  const handleChange = (_: string, option: any) => {
+    onChange(option ? option.tournament : null);
   };
 
+  const items = tournaments?.map((t) => ({
+    value: t.tournamentKey,
+    label: t.name,
+    key: t.tournamentKey,
+    tournament: t
+  })) || []
+
   return (
-    <FormControl
-      fullWidth={fullWidth}
-      variant='standard'
-      sx={{ m: 1, minWidth: 120 }}
-    >
-      <Select
-        value={value?.toString() ?? tournaments?.[0]?.tournamentKey}
-        onChange={handleChange}
-        label='Tournament'
-      >
-        {tournaments?.map((t) => (
-          <MenuItem
-            key={`${eventKey}-${t.tournamentKey}`}
-            value={t.tournamentKey}
-          >
-            {t.name}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+    <Select
+      value={value ?? tournaments?.[0]?.tournamentKey ?? null}
+      style={{ width: fullWidth ? '100%' : 'auto' }}
+      onChange={handleChange}
+      options={items}
+    />
   );
 };

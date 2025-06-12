@@ -27,4 +27,4 @@ export const appbarConfigAtom = atom<{
   titleLink?: string;
   showSettings?: boolean;
   showFullscreen?: boolean;
-}>({ title: 'Event Management System', showSettings: false });
+}>({ title: 'Event Management System', showSettings: true });

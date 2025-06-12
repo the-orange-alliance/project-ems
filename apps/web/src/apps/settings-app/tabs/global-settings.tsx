@@ -10,8 +10,9 @@ import DropdownRow from 'src/components/settings/dropdown-row.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import ButtonRow from 'src/components/settings/button-row.js';
 import InputRow from 'src/components/settings/input-row.js';
+import { useGitHubDownload } from '../util/use-github-download.js';
 
-const Settings: FC = () => {
+const GlobalSettings: FC = () => {
   const [darkMode, setDarkMode] = useAtom(darkModeAtom);
   const [teamIdentifier, setTeamIdentifier] =
     useAtom(teamIdentifierAtom);
@@ -21,6 +22,7 @@ const Settings: FC = () => {
   const [leaderApiHost, setLeaderApiHost] = useAtom(followerHostAtom);
   const [syncPlatform, setSyncPlatform] = useAtom(syncPlatformAtom);
   const [syncApiKey, setSyncApiKey] = useAtom(syncApiKeyAtom);
+  const downloadRelease = useGitHubDownload();
 
   const handleFollowerModeChange = (value: boolean) => {
     setFollowerMode(value);
@@ -59,6 +61,18 @@ const Settings: FC = () => {
         followerApiHost: value
       });
     }, 1000);
+  };
+  
+  const download = async () => {
+    try {
+      const releaseUrl = await downloadRelease();
+      const link = document.createElement('a');
+      link.download = 'ems-latest';
+      link.href = releaseUrl;
+      link.click();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleClear = () => localStorage.clear();
@@ -109,14 +123,21 @@ const Settings: FC = () => {
         color='danger'
         onClick={handleClear}
       />
+      <ButtonRow
+        title='Check For Updates'
+        buttonText='Check Now'
+        onClick={download}
+      />
     </Space>
   );
 };
 
+export default GlobalSettings;
+
 export const GlobalSettingsApp: FC = () => {
   return (
     <PaperLayout header={'Global Settings'}>
-        <Settings />
+        <GlobalSettings />
     </PaperLayout>
   );
 };

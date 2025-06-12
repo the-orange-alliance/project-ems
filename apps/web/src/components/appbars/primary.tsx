@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LoginButton } from 'src/components/buttons/login-button.js';
 import { LogoutButton } from 'src/components/buttons/logout-button.js';
 import emsAvatar from '@assets/favicon.ico';
@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 import { appbarConfigAtom, userAtom } from 'src/stores/state/ui.js';
+import { eventKeyAtom } from 'src/stores/state/event.js';
 
 const { Header } = Layout;
 
@@ -20,6 +21,20 @@ const PrimaryAppbar: FC = () => {
   const { title, titleLink, showSettings, showFullscreen } =
     useAtomValue(appbarConfigAtom);
   const user = useAtomValue(userAtom);
+  const eventKey = useAtomValue(eventKeyAtom);
+  const navigate = useNavigate();
+  
+  const navSettings = () => {
+    // get user's current location
+    const currentPath = window.location.pathname;
+    const split = currentPath.split('/');
+    // if they're currently in the path of an event, just make the URL still point to the event /settings.  It all goes to the same place
+    if (split.length > 1 && split[1] === eventKey) {
+      navigate(`/${eventKey}/settings`);
+    } else {
+      navigate('/settings');
+    }
+  }
 
   const requestFullscreen = () => {
     document.documentElement.requestFullscreen();
@@ -69,18 +84,15 @@ const PrimaryAppbar: FC = () => {
       {user ? (
         <>
           <Button type='link'>Docs</Button>
-          <LogoutButton />
-          {showSettings && (
-            <Button
-              type='text'
-              icon={<SettingOutlined />}
-              style={{ marginLeft: '8px' }}
-            >
-              {' '}
-              cdfgse cvx
-              <Link to='/global-settings' />
-            </Button>
-          )}
+
+          {/* Settings */}
+          <Button
+            icon={<SettingOutlined />}
+            style={{ marginLeft: '8px' }}
+            onClick={navSettings}
+          />
+
+          {/* Fullscreen Toggle */}
           {showFullscreen && (
             <Button
               type='text'
@@ -91,6 +103,9 @@ const PrimaryAppbar: FC = () => {
               onClick={fullscreen ? exitFullscreen : requestFullscreen}
             />
           )}
+          
+          {/* Logout */}
+          <LogoutButton />
         </>
       ) : (
         <LoginButton />

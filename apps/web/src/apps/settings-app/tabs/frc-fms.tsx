@@ -1,16 +1,9 @@
 import { FC, useState, MouseEvent } from 'react';
-import { Box } from '@mui/material';
-import {
-  Button,
-  LinearProgress,
-  List,
-  ListItemButton,
-  Typography
-} from '@mui/material';
 import { FrcFmsSetting } from '../components/frc-fms-setting.js';
 import { FMSSettings } from '@toa-lib/models';
 import { postFrcFmsSettings } from 'src/api/use-fms-data.js';
 import { sendUpdateFrcFmsSettings, useSocket } from 'src/api/use-socket.js';
+import { Button, List, Space, Spin, Typography } from 'antd';
 
 const FrcFmsSettingsTab: FC = () => {
   // TODO - @Soren you'll have to fix this sorry ¯\_(ツ)_/¯
@@ -58,53 +51,53 @@ const FrcFmsSettingsTab: FC = () => {
 
   if (!connected) {
     return (
-      <Box>
-        <Typography>Please login to edit FMS settings!</Typography>
-      </Box>
+      <Space direction='vertical' style={{ width: '100%' }}>
+        <Typography.Text>Please login to edit FMS settings!</Typography.Text>
+      </Space>
     );
   }
 
   return (
-    <Box>
-      {loading && <LinearProgress />}
+    <Space direction='vertical' style={{ width: '100%' }}>
+      {loading && <Spin />}
       <Typography>Select an FMS field set to edit its settings</Typography>
       <List>
         {allFms.map((fms, i) => (
-          <ListItemButton
+          <List.Item
             title={fms.hwFingerprint}
             onClick={() => openSetting(i)}
-            disabled={loading}
+            // disabled={loading}
             key={fms.hwFingerprint}
           >
-            <Box>
+            <Space>
               <Typography>
                 <b>
                   Field Set{' '}
                   {fms.hwFingerprint.substring(fms.hwFingerprint.length - 8)}
                 </b>
               </Typography>
-              <Typography sx={{ ml: 2 }}>
+              <Typography>
                 <b>Event:</b>{' '}
                 {fms.eventKey && fms.eventKey !== ''
                   ? fms.eventKey
                   : 'Unassigned'}
               </Typography>
-              <Typography sx={{ ml: 2 }}>
+              <Typography>
                 <b>Field #:</b>{' '}
                 {fms.fieldNumber < 0 ? 'Unasigned' : fms.fieldNumber}
               </Typography>
-              <Typography sx={{ ml: 2 }}>
+              <Typography>
                 <b>Last Registered:</b>{' '}
                 {new Date(fms.registeredAt).toDateString()}{' '}
                 {new Date(fms.registeredAt).toTimeString()}
               </Typography>
-            </Box>
-            <Box sx={{ marginLeft: 'auto' }}>
-              <Button variant='contained' onClick={(e) => identify(e, fms)}>
+            </Space>
+            <Space style={{ marginLeft: 'auto' }}>
+              <Button onClick={(e) => identify(e, fms)}>
                 Identify
               </Button>
-            </Box>
-          </ListItemButton>
+            </Space>
+          </List.Item>
         ))}
       </List>
       {error && <Typography color='error'>{error}</Typography>}
@@ -113,7 +106,7 @@ const FrcFmsSettingsTab: FC = () => {
         value={allFms[currentSetting]}
         onChange={onSettingChange}
       />
-    </Box>
+    </Space>
   );
 };
 

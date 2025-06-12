@@ -1,15 +1,15 @@
 import { FC } from 'react';
-import Box from '@mui/material/Box';
-import { useRecoilState } from 'recoil';
-import { displayChromaKeyAtom } from 'src/stores/recoil';
-import { TextSetting } from '../components/text-setting';
-import { updateSocketClient } from 'src/api/use-socket-data';
+import { updateSocketClient } from 'src/api/use-socket-data.js';
+import { Space } from 'antd';
+import ColorRow from 'src/components/settings/color-row.js';
+import { useAtom } from 'jotai';
+import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
 
 const AudienceDisplaySettingsTab: FC = () => {
-  const [chromaKey, setChromaKey] = useRecoilState(displayChromaKeyAtom);
+  const [chromaKey, setChromaKey] = useAtom(displayChromaKeyAtom);
   let timeout: any = null;
 
-  const update = (key: string | number) => {
+  const update = (key: string) => {
     setChromaKey(key);
 
     // Don't hammer the server with requests
@@ -22,14 +22,13 @@ const AudienceDisplaySettingsTab: FC = () => {
   };
 
   return (
-    <Box>
-      <TextSetting
-        name='Audience Display Chroma'
+    <Space direction='vertical' style={{ width: '100%' }}>
+      <ColorRow
+        title='Audience Display Chroma'
         value={chromaKey}
         onChange={update}
-        inline
       />
-    </Box>
+    </Space>
   );
 };
 

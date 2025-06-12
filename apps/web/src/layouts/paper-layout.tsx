@@ -8,7 +8,7 @@ interface Props {
   titleLink?: string;
   header?: JSX.Element | string;
   containerWidth?: number | string;
-  children?: JSX.Element;
+  children?: JSX.Element | JSX.Element[];
   padding?: boolean;
   showSettings?: boolean;
 }
@@ -40,9 +40,15 @@ export const PaperLayout: FC<Props> = ({
         style={{ maxWidth: containerWidth, width: '100%', padding: '0 16px' }}
       >
         <Card>
-          {header && (
+          {header && typeof header === "string" && (
             <>
               <Typography.Title level={2} style={{margin: '0.5em 0'}}>{header}</Typography.Title>
+              <Divider />
+            </>
+          )}
+          {header && typeof header !== "string" && (
+            <>
+              {header}
               <Divider />
             </>
           )}

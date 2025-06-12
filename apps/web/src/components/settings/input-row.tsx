@@ -1,7 +1,6 @@
 import { Input, Space, Typography } from "antd";
 import SettingsRow from "./settings-row.js";
 import { useState } from "react";
-import { validate } from "uuid";
 
 
 interface InputRowProps {

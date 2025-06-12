@@ -87,11 +87,6 @@ const TournamentEditor = lazy(() =>
 const SettingsApp = lazy(() =>
   import('./apps/settings-app/index.js').then((m) => ({ default: m.SettingsApp }))
 );
-const GlobalSettingsApp = lazy(() =>
-  import('./apps/settings-app/global-settings.js').then((m) => ({
-    default: m.GlobalSettingsApp
-  }))
-);
 
 // Referee Routes
 // const RefereeApp = lazy(() =>
@@ -281,18 +276,18 @@ const AppRoutes: AppRoute[] = [
   //   group: 0,
   //   element: Reports
   // },
-  // {
-  //   name: 'Settings',
-  //   path: '/:eventKey/settings',
-  //   group: 0,
-  //   element: SettingsApp
-  // },
   {
-    name: 'Global Settings',
-    path: '/global-settings',
+    name: 'Settings',
+    path: '/:eventKey/settings',
     group: 0,
-    element: GlobalSettingsApp,
-    hidden: false
+    element: SettingsApp
+  },
+  {
+    name: 'Settings', // point to same spot. centralized settings!
+    path: '/settings',
+    group: 0,
+    element: SettingsApp,
+    hidden: true
   },
   // {
   //   name: 'FRC FMS Field Monitor',
