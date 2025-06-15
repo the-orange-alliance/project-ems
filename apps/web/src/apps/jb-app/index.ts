@@ -1,3 +1,3 @@
-import { JBApp } from './jb-app';
+import { JBApp } from './jb-app.js';
 
 export { JBApp };

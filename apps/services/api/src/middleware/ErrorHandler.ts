@@ -19,7 +19,7 @@ const handleErrors = (
     res.status(error.code).send(JSON.stringify(error));
   } else {
     logger.error(
-      `${JSON.stringify(error)} (${req.method} - ${req.originalUrl})`
+      `${error} (${req.method} - ${req.originalUrl})`
     );
     res.status(500).send(JSON.stringify(error));
   }

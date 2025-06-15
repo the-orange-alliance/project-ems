@@ -12,6 +12,7 @@ export const followerHostAtom = atom<string>('');
 export const syncPlatformAtom = atom<SyncPlatform>(SyncPlatform.DISABLED);
 export const syncApiKeyAtom = atom<string>('');
 export const isAudioEnabledForScorekeeper = atom<boolean>(false);
+export const fieldsAtom = atom<string[]>([]);
 
 /**
  * @section UI STATE - internals

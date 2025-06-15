@@ -51,8 +51,10 @@ export const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
     } catch (e) {
       if (e instanceof Error) {
         setError(e.name);
+        setLoading(false);
       } else {
         setError('Error while trying to authenticate. Please try again.');
+        setLoading(false);
       }
     }
   }, [username, password]);

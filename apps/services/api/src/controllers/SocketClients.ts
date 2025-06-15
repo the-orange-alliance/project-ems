@@ -30,7 +30,7 @@ router.post(
       if (req.body.persistantClientId) {
         // Update
         req.body.connected = 1;
-        req.body.audienceDisplayChroma = req.body.audienceDisplayChroma.replaceAll('"', '')
+        req.body.audienceDisplayChroma = req.body.audienceDisplayChroma?.replaceAll('"', '')
         // Check if client already exists
         const client = await db.selectAllWhere(
           'socket_clients',

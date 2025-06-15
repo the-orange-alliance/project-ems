@@ -51,9 +51,9 @@ const TournamentEditor = lazy(() =>
 // );
 
 // Silly Routes
-// const JBApp = lazy(() =>
-//   import('./apps/jb-app').then((m) => ({ default: m.JBApp }))
-// );
+const JBApp = lazy(() =>
+  import('./apps/jb-app/jb-app.js').then((m) => ({ default: m.JBApp }))
+);
 
 // Streaming Routes
 // const Streaming = lazy(() =>
@@ -85,7 +85,9 @@ const TournamentEditor = lazy(() =>
 // );
 // Settings Routes
 const SettingsApp = lazy(() =>
-  import('./apps/settings-app/index.js').then((m) => ({ default: m.SettingsApp }))
+  import('./apps/settings-app/index.js').then((m) => ({
+    default: m.SettingsApp
+  }))
 );
 
 // Referee Routes
@@ -302,15 +304,15 @@ const AppRoutes: AppRoute[] = [
   //   group: 0,
   //   element: QueueingManager
   // },
-  // {
-  //   name: 'JB App',
-  //   path: '/:eventKey/jb',
-  //   group: 0,
-  //   element: JBApp,
-  //   hidden: false,
-  //   hideAppbar: true,
-  //   image: THE_MAN
-  // },
+  {
+    name: 'JB App',
+    path: '/:eventKey/jb',
+    group: 0,
+    element: JBApp,
+    hidden: false,
+    hideAppbar: true,
+    image: THE_MAN
+  },
   // {
   //   name: 'Streaming',
   //   path: '/:eventKey/streaming',

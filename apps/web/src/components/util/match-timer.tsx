@@ -10,7 +10,7 @@ import {
 import { Duration } from 'luxon';
 import { FC, useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { useSocket } from 'src/api/use-socket';
+import { useSocket } from 'src/api/use-socket.js';
 import {
   initAudio,
   MATCH_START,
@@ -19,14 +19,7 @@ import {
   MATCH_ABORT,
   MATCH_ENDGAME,
   MATCH_END
-} from 'src/apps/audience-display/audio';
-import {
-  matchOccurringAtom,
-  matchStateAtom,
-  matchTimeAtom,
-  matchTimeModeAtom,
-  timer
-} from 'src/stores/recoil';
+} from 'src/apps/audience-display/audio/index.js';
 
 const startAudio = initAudio(MATCH_START);
 const transitionAudio = initAudio(MATCH_TRANSITION);

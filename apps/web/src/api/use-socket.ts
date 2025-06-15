@@ -11,7 +11,8 @@ import { connectSocketClient } from './use-socket-data.js';
 import { v4 as uuidv4 } from 'uuid';
 import { useRef } from 'react';
 import { useAtom } from 'jotai';
-import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
+import { fieldsAtom, followerHostAtom, isFollowerAtom, isSocketConnectedAtom } from 'src/stores/state/ui.js';
+import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
 
 let socket: Socket | null = null;
 
@@ -43,12 +44,10 @@ export const useSocket = (): [
 
   const identify = async () => {
     if (socket) {
-      // const fields = await snapshot.getPromise(activeFieldsAtom);
-      // const followerModeEnabled = await snapshot.getPromise(
-      //   followerModeEnabledAtom
-      // );
-      // const leaderApiHost = await snapshot.getPromise(leaderApiHostAtom);
-      // const chromaKey = await snapshot.getPromise(displayChromaKeyAtom);
+      const [fields] = useAtom(fieldsAtom);
+      const [followerModeEnabled] = useAtom(isFollowerAtom);
+      const [leaderApiHost] = useAtom(followerHostAtom);
+      const [chromaKey] = useAtom(displayChromaKeyAtom);
 
       // ID Message
       let persistantClientId = localStorage.getItem('persistantClientId');
@@ -60,11 +59,11 @@ export const useSocket = (): [
       }
 
       idMsgRef.current = {
-        currentUrl: window.location.href
-        // fieldNumbers: fields.map((d: any) => d.field).join(','),
-        // followerMode: followerModeEnabled ? 1 : 0,
-        // followerApiHost: leaderApiHost,
-        // audienceDisplayChroma: (chromaKey ?? '').replaceAll('"', '')
+        currentUrl: window.location.href,
+        fieldNumbers: fields.join(','),
+        followerMode: followerModeEnabled ? 1 : 0,
+        followerApiHost: leaderApiHost,
+        audienceDisplayChroma: (chromaKey ?? '').replaceAll('"', '')
       };
 
       if (persistantClientId) {
@@ -108,11 +107,11 @@ export const useSocket = (): [
       socket.io.on('reconnect', (a) => {
         console.log(`Reconnected after ${a} attempts`);
         idMsgRef.current = {
-          currentUrl: window.location.href
-          // fieldNumbers: fields.map((d: any) => d.field).join(','),
-          // followerMode: followerModeEnabled ? 1 : 0,
-          // followerApiHost: leaderApiHost,
-          // audienceDisplayChroma: (chromaKey ?? '').replaceAll('"', '')
+          currentUrl: window.location.href,
+          fieldNumbers: fields.join(','),
+          followerMode: followerModeEnabled ? 1 : 0,
+          followerApiHost: leaderApiHost,
+          audienceDisplayChroma: (chromaKey ?? '').replaceAll('"', '')
         };
         socket?.emit('identify', idMsgRef.current);
       });

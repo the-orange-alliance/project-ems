@@ -1,13 +1,12 @@
 import { FC, useState, useEffect } from 'react';
 import { DateTime } from 'luxon';
 import './jb-app.less';
-import { ChromaLayout } from 'src/layouts/chroma-layout';
-import { useRecoilValue } from 'recoil';
-import { MatchTimer } from 'src/components/util/match-timer';
-import { matchOccurringAtom } from 'src/stores/recoil';
+import { MatchTimer } from 'src/components/util/match-timer.js';
+import { useAtomValue } from 'jotai';
+import { matchAtom } from 'src/stores/state/event.js';
 
 export const JBApp: FC = () => {
-  const match = useRecoilValue(matchOccurringAtom);
+  const match = useAtomValue(matchAtom);
   const [time, setTime] = useState<DateTime>(DateTime.now());
 
   const redScore = match?.redScore || 0;
@@ -24,23 +23,21 @@ export const JBApp: FC = () => {
   }, []);
 
   return (
-    <ChromaLayout>
-      <div className='jb-container'>
-        <div>{time.toFormat('ttt')}</div>
-        <div>{match?.name}</div>
-        <div>
-          <MatchTimer />
+    <div className='jb-container'>
+      <div>{time.toFormat('ttt')}</div>
+      <div>{match?.name}</div>
+      <div>
+        <MatchTimer />
+      </div>
+      <div className='jb-scores'>
+        <div className={`red ${redScore > blueScore ? 'winning' : ''}`}>
+          {redScore}
         </div>
-        <div className='jb-scores'>
-          <div className={`red ${redScore > blueScore ? 'winning' : ''}`}>
-            {redScore}
-          </div>
-          <div className={`blue ${redScore < blueScore ? 'winning' : ''}`}>
-            {blueScore}
-          </div>
+        <div className={`blue ${redScore < blueScore ? 'winning' : ''}`}>
+          {blueScore}
         </div>
       </div>
-    </ChromaLayout>
+    </div>
   );
 };
 

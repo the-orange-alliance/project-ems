@@ -11,7 +11,7 @@ import { AppContainer } from './App.js';
 import { useCurrentEvent } from './api/use-event-data.js';
 import { useAtomValue } from 'jotai';
 import { darkModeAtom } from './stores/state/ui.js';
-import { ConfigProvider, theme } from 'antd';
+import { ConfigProvider } from 'antd';
 import 'antd/dist/reset.css';
 
 const container = document.getElementById('root');
@@ -45,10 +45,10 @@ function Main() {
   //       ? ftcTheme
   //       : fgcTheme;
 
-  const appTheme = customfgcTheme;
-
   return (
-    <ConfigProvider theme={useMemo(() => appTheme(darkMode), [darkMode, eventKey])}>
+    <ConfigProvider
+      theme={useMemo(() => customfgcTheme(darkMode), [darkMode, eventKey])}
+    >
       <ModalProvider>
         <AppContainer />
       </ModalProvider>
