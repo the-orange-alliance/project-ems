@@ -1,20 +1,11 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  TextField
-} from '@mui/material';
 import { User } from '@toa-lib/models';
 import { useSetAtom } from 'jotai';
+import { userAtom } from 'src/stores/state/ui.js';
 import { ChangeEvent, FC, useEffect, useCallback, useState } from 'react';
-import { useSetRecoilState } from 'recoil';
 import { login } from 'src/api/use-login-data.js';
 import { useSocket } from 'src/api/use-socket.js';
 import useLocalStorage from 'src/stores/local-storage.js';
-import { userAtom } from 'src/stores/state/ui.js';
+import { Form, Input, Modal, Space, Typography } from 'antd';
 
 interface Props {
   open: boolean;
@@ -22,11 +13,17 @@ interface Props {
   onSubmit: () => void;
 }
 
+type FieldType = {
+  username?: string;
+  password?: string;
+};
+
 export const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
-  const setUser = useSetAtom(userAtom)
+  const setUser = useSetAtom(userAtom);
   const [, setValue] = useLocalStorage<User | null>('currentUser', null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [, , setupSocket] = useSocket();
@@ -35,6 +32,7 @@ export const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
     setUsername('');
     setPassword('');
     setError('');
+    setLoading(false);
   }, [open]);
 
   const updateUser = (event: ChangeEvent<HTMLInputElement>) =>
@@ -43,11 +41,13 @@ export const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
     setPassword(event.target.value);
   const submit = useCallback(async () => {
     try {
+      setLoading(true);
       const user = await login(username, password);
       setValue(user);
       setUser(user);
       setupSocket(user.token);
       onSubmit();
+      setLoading(false);
     } catch (e) {
       if (e instanceof Error) {
         setError(e.name);
@@ -67,55 +67,51 @@ export const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
   );
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='xs' onKeyUp={dialogKeyUp}>
-      <DialogTitle
-        sx={{
-          backgroundColor: (theme) => theme.palette.primary.main,
-          color: (theme) => theme.palette.common.white,
-          marginBottom: (theme) => theme.spacing(2)
-        }}
+    <Modal
+      open={open}
+      onClose={onClose}
+      title='Login'
+      okText='Login'
+      onOk={submit}
+      confirmLoading={loading}
+    >
+      <Space
+        direction='vertical'
+        size='large'
+        style={{ width: '100%' }}
+        onKeyUp={dialogKeyUp}
       >
-        Login
-      </DialogTitle>
-      <DialogContent>
-        <DialogContentText>
+        <Typography.Text>
           Login using the provided username/password combination given to you by
           your event staff.
-        </DialogContentText>
+        </Typography.Text>
         {error.length > 0 && (
-          <DialogContentText
-            sx={{ color: (theme) => theme.palette.error.main }}
-          >
-            {error}
-          </DialogContentText>
+          <Typography.Text type='danger'>{error}</Typography.Text>
         )}
-        <TextField
-          name='username'
-          type='text'
-          label='Username'
-          autoFocus
-          fullWidth
-          margin='dense'
-          variant='standard'
-          value={username}
-          onChange={updateUser}
-        />
-        <TextField
-          name='password'
-          type='password'
-          label='Password'
-          autoFocus
-          fullWidth
-          margin='dense'
-          variant='standard'
-          value={password}
-          onChange={updatePass}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={submit}>Login</Button>
-      </DialogActions>
-    </Dialog>
+        <Form
+          name='basic'
+          labelCol={{ span: 4 }}
+          wrapperCol={{ span: 20 }}
+          autoComplete='off'
+          disabled={loading}
+        >
+          <Form.Item<FieldType>
+            label='Username'
+            name='username'
+            rules={[{ required: true, message: 'Please input your username!' }]}
+          >
+            <Input value={username} onChange={updateUser} />
+          </Form.Item>
+
+          <Form.Item<FieldType>
+            label='Password'
+            name='password'
+            rules={[{ required: true, message: 'Please input your password!' }]}
+          >
+            <Input.Password value={password} onChange={updatePass} />
+          </Form.Item>
+        </Form>
+      </Space>
+    </Modal>
   );
 };
