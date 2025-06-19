@@ -18,6 +18,7 @@ import {
   isSocketConnectedAtom
 } from 'src/stores/state/ui.js';
 import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
+import { store } from 'src/main.js';
 
 let socket: Socket | null = null;
 
@@ -40,8 +41,6 @@ export const useSocket = (): [
 
   const setupSocket = (token: string) => {
     if (socket) return;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    /* @ts-ignore */
     socket = createSocket(token);
     initEvents();
     void identify();
@@ -49,10 +48,10 @@ export const useSocket = (): [
 
   const identify = async () => {
     if (socket) {
-      const [fields] = useAtom(fieldsAtom);
-      const [followerModeEnabled] = useAtom(isFollowerAtom);
-      const [leaderApiHost] = useAtom(followerHostAtom);
-      const [chromaKey] = useAtom(displayChromaKeyAtom);
+      const fields = store.get(fieldsAtom);
+      const followerModeEnabled = store.get(isFollowerAtom);
+      const leaderApiHost = store.get(followerHostAtom);
+      const chromaKey = store.get(displayChromaKeyAtom);
 
       // ID Message
       let persistantClientId = localStorage.getItem('persistantClientId');

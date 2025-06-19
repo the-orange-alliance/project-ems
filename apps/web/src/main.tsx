@@ -9,7 +9,7 @@ import { APIOptions, SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/local-storage.js';
 import { AppContainer } from './App.js';
 import { useCurrentEvent } from './api/use-event-data.js';
-import { useAtomValue } from 'jotai';
+import { createStore, Provider, useAtomValue } from 'jotai';
 import { darkModeAtom } from './stores/state/ui.js';
 import { ConfigProvider } from 'antd';
 import 'antd/dist/reset.css';
@@ -17,6 +17,7 @@ import 'antd/dist/reset.css';
 const container = document.getElementById('root');
 if (!container) throw new Error('Error while trying to find document root.');
 const root = createRoot(container);
+export const store = createStore();
 
 // Configure lib-ems
 if (getFromLocalStorage('followerMode', false)) {
@@ -59,9 +60,11 @@ function Main() {
 root.render(
   <StrictMode>
     <BrowserRouter>
-      <LocalizationProvider dateAdapter={AdapterLuxon}>
-        <Main />
-      </LocalizationProvider>
+      <Provider store={store}>
+        <LocalizationProvider dateAdapter={AdapterLuxon}>
+          <Main />
+        </LocalizationProvider>
+      </Provider>
     </BrowserRouter>
   </StrictMode>
 );
