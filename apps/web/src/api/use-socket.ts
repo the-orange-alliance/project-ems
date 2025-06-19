@@ -11,7 +11,12 @@ import { connectSocketClient } from './use-socket-data.js';
 import { v4 as uuidv4 } from 'uuid';
 import { useRef } from 'react';
 import { useAtom } from 'jotai';
-import { fieldsAtom, followerHostAtom, isFollowerAtom, isSocketConnectedAtom } from 'src/stores/state/ui.js';
+import {
+  fieldsAtom,
+  followerHostAtom,
+  isFollowerAtom,
+  isSocketConnectedAtom
+} from 'src/stores/state/ui.js';
 import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
 
 let socket: Socket | null = null;

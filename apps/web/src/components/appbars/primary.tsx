@@ -12,6 +12,7 @@ import {
 import { useAtomValue } from 'jotai';
 import { appbarConfigAtom, userAtom } from 'src/stores/state/ui.js';
 import { eventKeyAtom } from 'src/stores/state/event.js';
+import { ConnectionChip } from '../util/connection-chip.js';
 
 const { Header } = Layout;
 
@@ -23,7 +24,7 @@ const PrimaryAppbar: FC = () => {
   const user = useAtomValue(userAtom);
   const eventKey = useAtomValue(eventKeyAtom);
   const navigate = useNavigate();
-  
+
   const navSettings = () => {
     // get user's current location
     const currentPath = window.location.pathname;
@@ -34,7 +35,7 @@ const PrimaryAppbar: FC = () => {
     } else {
       navigate('/settings');
     }
-  }
+  };
 
   const requestFullscreen = () => {
     document.documentElement.requestFullscreen();
@@ -81,9 +82,10 @@ const PrimaryAppbar: FC = () => {
           {title || 'Event Management System'}
         </Typography.Title>
       )}
+      <ConnectionChip />
       {user ? (
         <>
-          <Button type='link'>Docs</Button>
+          {/* <Button type='link'>Docs</Button> */}
 
           {/* Settings */}
           <Button
@@ -103,7 +105,7 @@ const PrimaryAppbar: FC = () => {
               onClick={fullscreen ? exitFullscreen : requestFullscreen}
             />
           )}
-          
+
           {/* Logout */}
           <LogoutButton />
         </>

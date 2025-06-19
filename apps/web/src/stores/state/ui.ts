@@ -1,10 +1,25 @@
 import { SyncPlatform, Team, User } from '@toa-lib/models';
 import { atom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
 
 /**
  * @section UI STATE - settings
  */
-export const darkModeAtom = atom<boolean>(false);
+export const darkModeSettingAtom = atomWithStorage<'light' | 'dark' | 'system'>(
+  'colorTheme',
+  'system'
+);
+export const darkModeAtom = atom<boolean>((get) => {
+  const darkSetting = get(darkModeSettingAtom);
+  if (darkSetting === 'system') {
+    return (
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+    );
+  } else {
+    return darkSetting === 'dark';
+  }
+});
 export const userAtom = atom<User | null>(null);
 export const teamIdentifierAtom = atom<keyof Team>('teamKey');
 export const isFollowerAtom = atom<boolean>(false);
