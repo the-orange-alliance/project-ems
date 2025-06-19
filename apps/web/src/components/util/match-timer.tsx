@@ -7,9 +7,9 @@ import {
   TimerEventPayload,
   getSeasonKeyFromEventKey
 } from '@toa-lib/models';
+import { useAtom, useAtomValue } from 'jotai';
 import { Duration } from 'luxon';
 import { FC, useEffect } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
 import { useSocket } from 'src/api/use-socket.js';
 import {
   initAudio,
@@ -20,6 +20,13 @@ import {
   MATCH_ENDGAME,
   MATCH_END
 } from 'src/apps/audience-display/audio/index.js';
+import { matchAtom } from 'src/stores/state/event.js';
+import {
+  matchStateAtom,
+  matchTimeAtom,
+  matchTimeModeAtom,
+  timer
+} from 'src/stores/state/match.js';
 
 const startAudio = initAudio(MATCH_START);
 const transitionAudio = initAudio(MATCH_TRANSITION);
@@ -34,10 +41,10 @@ interface Props {
 }
 
 export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
-  const matchState = useRecoilValue(matchStateAtom);
-  const [time, setTime] = useRecoilState(matchTimeAtom);
-  const [modeTime, setModeTime] = useRecoilState(matchTimeModeAtom);
-  const currentMatch = useRecoilValue(matchOccurringAtom);
+  const matchState = useAtomValue(matchStateAtom);
+  const [time, setTime] = useAtom(matchTimeAtom);
+  const [modeTime, setModeTime] = useAtom(matchTimeModeAtom);
+  const currentMatch = useAtomValue(matchAtom);
   const [socket, connected] = useSocket();
 
   useEffect(() => {
