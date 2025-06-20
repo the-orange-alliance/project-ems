@@ -1,11 +1,11 @@
-import { Grid, TextField } from '@mui/material';
-import { calculateTotalMatches, EventSchedule } from '@toa-lib/models';
-import { ChangeEvent, FC, useEffect } from 'react';
+import { Row, Col, InputNumber } from 'antd';
+import { calculateTotalMatches, ScheduleParams } from '@toa-lib/models';
+import { FC, useEffect, useState } from 'react';
 
 interface Props {
-  eventSchedule?: EventSchedule;
+  eventSchedule?: ScheduleParams;
   disabled?: boolean;
-  onChange: (schedule: EventSchedule) => void;
+  onChange: (schedule: ScheduleParams) => void;
 }
 
 export const RoudnRobinScheduleOptions: FC<Props> = ({
@@ -13,106 +13,88 @@ export const RoudnRobinScheduleOptions: FC<Props> = ({
   disabled,
   onChange
 }) => {
+  const [totalMatches, setTotalMatches] = useState<number>(
+    eventSchedule ? calculateTotalMatches(eventSchedule) : 0
+  );
   useEffect(() => {
     if (!eventSchedule) return;
-    onChange({
-      ...eventSchedule,
-      totalMatches: calculateTotalMatches(eventSchedule)
-    });
-  }, [
-    eventSchedule?.matchesPerTeam,
-    eventSchedule?.teamsPerAlliance,
-    eventSchedule?.playoffsOptions
-  ]);
+    setTotalMatches(calculateTotalMatches(eventSchedule));
+  }, [eventSchedule?.matchesPerTeam, eventSchedule?.options]);
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (name: string, value: number | null) => {
     if (!eventSchedule) return;
-    const value = parseInt(event.target.value);
-    const { name } = event.target;
     onChange({
       ...eventSchedule,
-      [name]: value
+      [name]: value ?? 0
     });
   };
 
-  const handleRoundsChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleRoundsChange = (value: number | null) => {
     if (!eventSchedule) return;
-    const value = parseInt(event.target.value);
     onChange({
       ...eventSchedule,
-      playoffsOptions: {
-        ...eventSchedule.playoffsOptions,
-        rounds: value
+      options: {
+        ...eventSchedule.options,
+        rounds: value ?? 0
       }
     });
   };
 
   return (
-    <Grid
-      container
-      spacing={3}
-      sx={{ marginBottom: (theme) => theme.spacing(2) }}
-    >
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
+    <Row gutter={[24, 24]} style={{ marginBottom: 16 }}>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <div style={{ marginBottom: 4 }}>Match Concurrency</div>
+        <InputNumber
           name='matchConcurrency'
-          label='Match Concurrency'
           value={eventSchedule?.matchConcurrency}
           disabled={disabled}
-          fullWidth
-          onChange={handleChange}
-          type='number'
+          min={1}
+          style={{ width: '100%' }}
+          onChange={(value) => handleChange('matchConcurrency', value)}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <div style={{ marginBottom: 4 }}>Cycle Time</div>
+        <InputNumber
           name='cycleTime'
-          label='Cycle Time'
           value={eventSchedule?.cycleTime}
           disabled={disabled}
-          fullWidth
-          onChange={handleChange}
-          type='number'
+          min={0}
+          style={{ width: '100%' }}
+          onChange={(value) => handleChange('cycleTime', value)}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <div style={{ marginBottom: 4 }}>Rounds</div>
+        <InputNumber
           name='rounds'
-          label='Rounds'
-          value={eventSchedule?.playoffsOptions?.rounds}
+          value={eventSchedule?.options?.rounds}
           disabled={disabled}
-          fullWidth
+          min={0}
+          style={{ width: '100%' }}
           onChange={handleRoundsChange}
-          type='number'
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
-          label='Teams Scheduled'
-          value={eventSchedule?.teamsParticipating}
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <div style={{ marginBottom: 4 }}>Teams Scheduled</div>
+        <InputNumber
+          value={eventSchedule?.teamKeys.length}
           disabled
-          fullWidth
-          type='number'
+          style={{ width: '100%' }}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
-          label='Alliances Scheduled'
-          value={eventSchedule?.playoffsOptions?.allianceCount}
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <div style={{ marginBottom: 4 }}>Alliances Scheduled</div>
+        <InputNumber
+          value={eventSchedule?.options.allianceCount}
           disabled
-          fullWidth
-          type='number'
+          style={{ width: '100%' }}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
-          label='Total Matches'
-          value={eventSchedule?.totalMatches}
-          disabled
-          fullWidth
-          type='number'
-        />
-      </Grid>
-    </Grid>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <div style={{ marginBottom: 4 }}>Total Matches</div>
+        <InputNumber value={totalMatches} disabled style={{ width: '100%' }} />
+      </Col>
+    </Row>
   );
 };

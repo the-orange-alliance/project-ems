@@ -4,7 +4,7 @@ import {
   getSeasonKeyFromEventKey
 } from '@toa-lib/models';
 import { FC } from 'react';
-import { useComponents } from 'src/seasons';
+import { useComponents } from 'src/seasons/index.js';
 
 interface Props {
   match: Match<any>;

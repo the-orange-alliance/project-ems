@@ -1,13 +1,13 @@
-import { Box, Button, Grid } from '@mui/material';
-import { EventSchedule, defaultDay } from '@toa-lib/models';
+import { Button, Row, Col } from 'antd';
+import { ScheduleParams, defaultDay } from '@toa-lib/models';
 import { DateTime } from 'luxon';
 import { FC } from 'react';
-import { ScheduleDay } from './schedule-day';
+import { ScheduleDay } from './schedule-day.js';
 
 interface Props {
-  eventSchedule?: EventSchedule;
+  eventSchedule?: ScheduleParams;
   disabled?: boolean;
-  onChange: (schedule: EventSchedule) => void;
+  onChange: (schedule: ScheduleParams) => void;
 }
 
 export const ScheduleLayout: FC<Props> = ({
@@ -19,11 +19,11 @@ export const ScheduleLayout: FC<Props> = ({
     if (!eventSchedule) return;
     const startTime =
       eventSchedule.days.length > 0
-        ? DateTime.fromISO(
+        ? (DateTime.fromISO(
             eventSchedule.days[eventSchedule.days.length - 1].startTime
           )
             .plus({ days: 1 })
-            .toISO() ?? defaultDay.startTime
+            .toISO() ?? defaultDay.startTime)
         : defaultDay.startTime;
     const newDay = { ...defaultDay, id: eventSchedule.days.length, startTime };
     onChange({
@@ -39,7 +39,7 @@ export const ScheduleLayout: FC<Props> = ({
     });
   };
   return (
-    <Box>
+    <div>
       {eventSchedule?.days.map((d) => (
         <ScheduleDay
           key={`day-${d.id}`}
@@ -49,32 +49,24 @@ export const ScheduleLayout: FC<Props> = ({
           disabled={disabled}
         />
       ))}
-      <Grid
-        container
-        spacing={3}
-        sx={{ paddingTop: (theme) => theme.spacing(1) }}
-      >
-        <Grid item xs={6} md={3} lg={2}>
-          <Button
-            variant='contained'
-            fullWidth
-            disabled={disabled}
-            onClick={addDay}
-          >
+      <Row gutter={[24, 24]} style={{ paddingTop: 8 }}>
+        <Col xs={24} sm={12} md={6} lg={4}>
+          <Button type='primary' block disabled={disabled} onClick={addDay}>
             Add Day
           </Button>
-        </Grid>
-        <Grid item xs={6} md={3} lg={2}>
+        </Col>
+        <Col xs={24} sm={12} md={6} lg={4}>
           <Button
-            variant='contained'
-            fullWidth
+            type='primary'
+            danger
+            block
             disabled={disabled || !eventSchedule?.days.length}
             onClick={removeDay}
           >
             Remove Day
           </Button>
-        </Grid>
-      </Grid>
-    </Box>
+        </Col>
+      </Row>
+    </div>
   );
 };

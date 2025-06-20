@@ -1,19 +1,11 @@
-import {
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  TextField
-} from '@mui/material';
-import { EventSchedule, calculateTotalMatches } from '@toa-lib/models';
-import { ChangeEvent, FC, useEffect } from 'react';
+import { Row, Col, Form, Select, InputNumber } from 'antd';
+import { ScheduleParams, calculateTotalMatches } from '@toa-lib/models';
+import { FC, useEffect, useState } from 'react';
 
 interface Props {
-  eventSchedule?: EventSchedule;
+  eventSchedule?: ScheduleParams;
   disabled?: boolean;
-  onChange: (schedule: EventSchedule) => void;
+  onChange: (schedule: ScheduleParams) => void;
 }
 
 export const DefaultScheduleOptions: FC<Props> = ({
@@ -21,31 +13,25 @@ export const DefaultScheduleOptions: FC<Props> = ({
   disabled,
   onChange
 }) => {
+  const [totalMatches, setTotalMatches] = useState<number>(
+    eventSchedule ? calculateTotalMatches(eventSchedule) : 0
+  );
+
   useEffect(() => {
     if (!eventSchedule) return;
-    onChange({
-      ...eventSchedule,
-      totalMatches: calculateTotalMatches(eventSchedule)
-    });
-  }, [
-    eventSchedule?.matchesPerTeam,
-    eventSchedule?.teamsPerAlliance,
-    eventSchedule?.playoffsOptions
-  ]);
+    setTotalMatches(calculateTotalMatches(eventSchedule));
+  }, [eventSchedule?.matchesPerTeam, eventSchedule?.options]);
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleNumberChange = (name: string, value: number | null) => {
     if (!eventSchedule) return;
-    const value = parseInt(event.target.value);
-    const { name } = event.target;
     onChange({
       ...eventSchedule,
-      [name]: value
+      [name]: value ?? 0
     });
   };
 
-  const handleSelectChange = (event: SelectChangeEvent<boolean | number>) => {
+  const handleSelectChange = (name: string, value: number) => {
     if (!eventSchedule) return;
-    const { name, value } = event.target;
     onChange({
       ...eventSchedule,
       [name]: Boolean(value)
@@ -53,79 +39,98 @@ export const DefaultScheduleOptions: FC<Props> = ({
   };
 
   return (
-    <Grid
-      container
-      spacing={3}
-      sx={{ marginBottom: (theme) => theme.spacing(2) }}
-    >
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <FormControl fullWidth>
-          <InputLabel>Premiere Field</InputLabel>
+    <Row gutter={[24, 24]} style={{ marginBottom: 16 }}>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <Form.Item
+          label='Premiere Field'
+          labelCol={{ span: 24 }}
+          wrapperCol={{ span: 24 }}
+        >
           <Select
-            name='hasPremiereField'
-            label='Premiere Field?'
             value={eventSchedule?.hasPremiereField ? 1 : 0}
             disabled={disabled}
-            fullWidth
-            onChange={handleSelectChange}
-            type='number'
-          >
-            <MenuItem value={0}>No</MenuItem>
-            <MenuItem value={1}>Yes</MenuItem>
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
-          name='matchConcurrency'
+            onChange={(value) => handleSelectChange('hasPremiereField', value)}
+            options={[
+              { value: 0, label: 'No' },
+              { value: 1, label: 'Yes' }
+            ]}
+          />
+        </Form.Item>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <Form.Item
           label='Match Concurrency'
-          value={eventSchedule?.matchConcurrency}
-          disabled={disabled}
-          fullWidth
-          onChange={handleChange}
-          type='number'
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
-          name='cycleTime'
+          labelCol={{ span: 24 }}
+          wrapperCol={{ span: 24 }}
+        >
+          <InputNumber
+            name='matchConcurrency'
+            value={eventSchedule?.matchConcurrency}
+            disabled={disabled}
+            min={1}
+            style={{ width: '100%' }}
+            onChange={(value) => handleNumberChange('matchConcurrency', value)}
+          />
+        </Form.Item>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <Form.Item
           label='Cycle Time'
-          value={eventSchedule?.cycleTime}
-          disabled={disabled}
-          fullWidth
-          onChange={handleChange}
-          type='number'
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
-          name='matchesPerTeam'
+          labelCol={{ span: 24 }}
+          wrapperCol={{ span: 24 }}
+        >
+          <InputNumber
+            name='cycleTime'
+            value={eventSchedule?.cycleTime}
+            disabled={disabled}
+            min={0}
+            style={{ width: '100%' }}
+            onChange={(value) => handleNumberChange('cycleTime', value)}
+          />
+        </Form.Item>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <Form.Item
           label='Matches Per Team'
-          value={eventSchedule?.matchesPerTeam}
-          disabled={disabled}
-          fullWidth
-          onChange={handleChange}
-          type='number'
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
+          labelCol={{ span: 24 }}
+          wrapperCol={{ span: 24 }}
+        >
+          <InputNumber
+            name='matchesPerTeam'
+            value={eventSchedule?.matchesPerTeam}
+            disabled={disabled}
+            min={0}
+            style={{ width: '100%' }}
+            onChange={(value) => handleNumberChange('matchesPerTeam', value)}
+          />
+        </Form.Item>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <Form.Item
           label='Teams Scheduled'
-          value={eventSchedule?.teamsParticipating}
-          disabled
-          fullWidth
-          type='number'
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
+          labelCol={{ span: 24 }}
+          wrapperCol={{ span: 24 }}
+        >
+          <InputNumber
+            value={eventSchedule?.teamKeys.length}
+            disabled
+            style={{ width: '100%' }}
+          />
+        </Form.Item>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <Form.Item
           label='Total Matches'
-          value={eventSchedule?.totalMatches}
-          disabled
-          fullWidth
-          type='number'
-        />
-      </Grid>
-    </Grid>
+          labelCol={{ span: 24 }}
+          wrapperCol={{ span: 24 }}
+        >
+          <InputNumber
+            value={totalMatches}
+            disabled
+            style={{ width: '100%' }}
+          />
+        </Form.Item>
+      </Col>
+    </Row>
   );
 };

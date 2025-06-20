@@ -88,11 +88,10 @@ CREATE TABLE IF NOT EXISTS "schedule_params" (
     "days" TEXT NOT NULL,
     "matchConcurrency" REAL NOT NULL,
     "teamKeys" TEXT NOT NULL,
-    "teamsPerAlliance": REAL NOT NULL,
     "matchesPerTeam" REAL NOT NULL,
     "cycleTime" REAL NOT NULL,
     "hasPremiereField" INT NOT NULL,
-    "options": TEXT NOT NULL,
+    "options" TEXT NOT NULL,
     PRIMARY KEY (eventKey, tournamentKey),
     UNIQUE (eventKey, tournamentKey)
 );

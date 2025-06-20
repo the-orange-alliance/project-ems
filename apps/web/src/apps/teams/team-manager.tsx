@@ -1,5 +1,5 @@
 import { useModal } from '@ebay/nice-modal-react';
-import { Typography } from 'antd';
+import { Space, Typography } from 'antd';
 import { Team, defaultTeam } from '@toa-lib/models';
 import { ChangeEvent, FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,7 @@ import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 import { UploadButton } from 'src/components/buttons/upload-button.js';
+import { Shortcut } from 'src/components/util/shortcuts.js';
 
 export const TeamManager: FC = () => {
   const { loading, state } = useEventState({
@@ -118,7 +119,17 @@ export const TeamManager: FC = () => {
             <MoreButton
               menuItems={[
                 { key: '1', label: <a onClick={handleSave}>Save Teams</a> },
-                { key: '2', label: <a onClick={handleAdd}>Add Team</a> },
+                {
+                  key: '2',
+                  label: (
+                    <Shortcut
+                      action={handleAdd}
+                      shortcut='Alt + A'
+                      disableShortcut // disable the handler for the shortcut, but still render the button and accept clicks
+                      label='Add Team'
+                    />
+                  )
+                },
                 {
                   key: '3',
                   label: (
@@ -141,13 +152,17 @@ export const TeamManager: FC = () => {
     >
       <Suspense>
         {event && (
-          <TeamsTable
-            event={event}
-            teams={teams}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            loading={loading}
-          />
+          <Space direction='vertical' style={{ width: '100%' }}>
+            <Shortcut disableRender action={handleAdd} shortcut='alt + a' />
+            <Typography.Text>{teams.length} Teams</Typography.Text>
+            <TeamsTable
+              event={event}
+              teams={teams}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              loading={loading}
+            />
+          </Space>
         )}
       </Suspense>
     </PaperLayout>

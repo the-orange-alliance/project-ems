@@ -1,4 +1,4 @@
-import { scheduleItemZod, teamZod } from '@toa-lib/models';
+import { defaultScheduleParams, teamZod } from '@toa-lib/models';
 import { NextFunction, Response, Request, Router } from 'express';
 import { getDB } from '../db/EventDatabase.js';
 import { validateBodyZ } from '../middleware/BodyValidator.js';
@@ -39,7 +39,20 @@ router.get(
       if (!data) {
         return next(DataNotFoundError);
       }
-      res.send(data);
+      // Schedule params are stored as an array of objects, so we need to return the first item
+      if (data.length === 0) {
+        res.send({ ...defaultScheduleParams, eventKey, tournamentKey });
+        return;
+      } else {
+        const sp = data[0];
+        res.send({
+          ...sp,
+          teamKeys: JSON.parse(sp.teamKeys || '[]'),
+          days: JSON.parse(sp.days || '[]'),
+          options: JSON.parse(sp.options || '{}'),
+        });
+        return;
+      }
     } catch (e) {
       return next(e);
     }
@@ -76,15 +89,19 @@ router.delete(
 
 router.patch(
   '/:eventKey/:tournamentKey',
-  validateBodyZ(teamZod),
+  // TODO: Validate body with Zod schema
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { eventKey, tournamentKey, id } = req.params;
+      const { eventKey } = req.params;
       const db = await getDB(eventKey);
-      await db.updateWhere(
+      // convert to json
+      req.body.days = JSON.stringify(req.body.days);
+      req.body.teamKeys = JSON.stringify(req.body.teamKeys);
+      req.body.options = JSON.stringify(req.body.options);
+      await db.upsert(
         'schedule_params',
         req.body,
-        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+        ['eventKey', 'tournamentKey'],
       );
       res.status(200).send({});
     } catch (e) {

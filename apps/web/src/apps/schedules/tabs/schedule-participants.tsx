@@ -1,15 +1,17 @@
-import { EventSchedule } from '@toa-lib/models';
+import { ScheduleParams } from '@toa-lib/models';
 import { FC } from 'react';
-import { RoundRobinParticipants } from '../tournaments/round-robin';
-import { DefaultScheduleParticipants } from '../tournaments/default';
+import { RoundRobinParticipants } from '../tournaments/round-robin.js';
+import { DefaultScheduleParticipants } from '../tournaments/default.js';
 
 interface Props {
-  eventSchedule?: EventSchedule;
+  eventSchedule?: ScheduleParams;
+  onEventScheduleChange?: (schedule: ScheduleParams) => void;
   disabled?: boolean;
 }
 
 export const ScheduleParticipants: FC<Props> = ({
   eventSchedule,
+  onEventScheduleChange,
   disabled
 }) => {
   if (!eventSchedule) return <div>Please select a tournament.</div>;
@@ -18,6 +20,7 @@ export const ScheduleParticipants: FC<Props> = ({
       return (
         <RoundRobinParticipants
           eventSchedule={eventSchedule}
+          onEventScheduleChange={onEventScheduleChange}
           disabled={disabled}
         />
       );
@@ -25,6 +28,7 @@ export const ScheduleParticipants: FC<Props> = ({
       return (
         <DefaultScheduleParticipants
           eventSchedule={eventSchedule}
+          onEventScheduleChange={onEventScheduleChange}
           disabled={disabled}
         />
       );

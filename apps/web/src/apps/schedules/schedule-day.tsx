@@ -1,15 +1,23 @@
-import { Button, Divider, Grid, TextField, Typography } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers';
-import { Day, EventSchedule, defaultBreak } from '@toa-lib/models';
+import {
+  Row,
+  Col,
+  Typography,
+  InputNumber,
+  Button,
+  Divider,
+  DatePicker
+} from 'antd';
+import { Day, ScheduleParams, defaultBreak } from '@toa-lib/models';
 import { DateTime } from 'luxon';
 import { FC, useEffect, useState } from 'react';
-import { ScheduleBreak } from './schedule-break';
+import { ScheduleBreak } from './schedule-break.js';
+import dayjs from 'dayjs';
 
 interface Props {
-  eventSchedule: EventSchedule;
+  eventSchedule: ScheduleParams;
   id: number;
   disabled?: boolean;
-  onChange: (schedule: EventSchedule) => void;
+  onChange: (schedule: ScheduleParams) => void;
 }
 
 export const ScheduleDay: FC<Props> = ({
@@ -29,10 +37,10 @@ export const ScheduleDay: FC<Props> = ({
     setEndDate(endDateTime);
   }, [day.breaks]);
 
-  const changeMatches = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const changeMatches = (value: number | null) => {
     const dayWithoutEndTime = {
       ...day,
-      scheduledMatches: parseInt(event.target.value)
+      scheduledMatches: value ?? 0
     };
     const endDateTime = getEndDate(dayWithoutEndTime);
     const newDay = {
@@ -43,15 +51,18 @@ export const ScheduleDay: FC<Props> = ({
     updateScheduleDay(newDay);
   };
 
-  const changeStartTime = (newValue: DateTime | null) => {
-    const newTime = (newValue ? newValue : DateTime.now()).toISO();
+  const changeStartTime = (value: any) => {
+    // value is a moment object from antd DatePicker
+    const newTime = value
+      ? DateTime.fromJSDate(value.toDate()).toISO()
+      : DateTime.now().toISO();
     const dayWithoutEndTime = { ...day, startTime: newTime ?? '' };
     const endDateTime = getEndDate(dayWithoutEndTime);
     const newDay = {
       ...dayWithoutEndTime,
       endTime: endDateTime.toISO() ?? ''
     };
-    setStartDate(newValue);
+    setStartDate(newTime ? DateTime.fromISO(newTime) : null);
     setEndDate(endDateTime);
     updateScheduleDay(newDay);
   };
@@ -103,53 +114,48 @@ export const ScheduleDay: FC<Props> = ({
 
   return (
     <>
-      <Grid
-        container
-        spacing={3}
-        sx={{
-          paddingTop: (theme) => theme.spacing(1),
-          paddingBottom: (theme) => theme.spacing(1)
-        }}
+      <Row
+        gutter={[24, 24]}
+        style={{ paddingTop: 8, paddingBottom: 8 }}
+        align='middle'
       >
-        <Grid
-          item
-          xs={12}
-          sm={3}
-          md={3}
-          lg={2}
-          sx={{ display: 'flex', alignItems: 'center' }}
-        >
-          <Typography>Day {day.id}</Typography>
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={2}>
-          <TextField
-            label='Scheduled Matches'
+        <Col xs={24} sm={6} md={4} lg={2}>
+          <div style={{ marginBottom: 4 }}>Day</div>
+          <Typography.Text>{day.id}</Typography.Text>
+        </Col>
+        <Col xs={24} sm={8} md={6} lg={4}>
+          <div style={{ marginBottom: 4 }}>Scheduled Matches</div>
+          <InputNumber
+            style={{ width: '100%' }}
+            min={0}
             value={day.scheduledMatches}
             onChange={changeMatches}
-            type='number'
-            fullWidth
             disabled={disabled}
+            placeholder='Scheduled Matches'
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={4}>
-          <DateTimePicker
-            label='Start Date'
-            value={startDate}
+        </Col>
+        <Col xs={24} sm={12} md={8} lg={4}>
+          <div style={{ marginBottom: 4 }}>Start Date</div>
+          <DatePicker
+            showTime
+            value={startDate ? dayjs(startDate.toJSDate()) : null}
             onChange={changeStartTime}
-            slotProps={{ textField: { fullWidth: true } }}
+            style={{ width: '100%' }}
             disabled={disabled}
+            placeholder='Start Date'
           />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={4}>
-          <DateTimePicker
-            format=''
-            label='End Date'
-            value={endDate}
+        </Col>
+        <Col xs={24} sm={12} md={8} lg={4}>
+          <div style={{ marginBottom: 4 }}>End Date</div>
+          <DatePicker
+            showTime
+            value={endDate ? dayjs(endDate.toJSDate()) : null}
             disabled
-            slotProps={{ textField: { fullWidth: true } }}
+            style={{ width: '100%' }}
+            placeholder='End Date'
           />
-        </Grid>
-      </Grid>
+        </Col>
+      </Row>
       {day.breaks.map((dayBreak) => (
         <ScheduleBreak
           key={`day-${id}-break-${dayBreak.id}`}
@@ -160,34 +166,25 @@ export const ScheduleDay: FC<Props> = ({
           disabled={disabled}
         />
       ))}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={2} lg={2}>
-          <Button
-            variant='contained'
-            fullWidth
-            onClick={addBreak}
-            disabled={disabled}
-          >
+      <Row gutter={[24, 24]}>
+        <Col xs={24} md={4} lg={2}>
+          <Button type='primary' block onClick={addBreak} disabled={disabled}>
             Add Break
           </Button>
-        </Grid>
-        <Grid item xs={12} md={2} lg={2}>
+        </Col>
+        <Col xs={24} md={4} lg={2}>
           <Button
-            variant='contained'
-            fullWidth
+            type='primary'
+            block
+            danger
             disabled={day.breaks.length <= 0 || disabled}
             onClick={removeBreak}
           >
             Remove Break
           </Button>
-        </Grid>
-      </Grid>
-      <Divider
-        sx={{
-          marginTop: (theme) => theme.spacing(1),
-          marginBottom: (theme) => theme.spacing(1)
-        }}
-      />
+        </Col>
+      </Row>
+      <Divider style={{ marginTop: 8, marginBottom: 8 }} />
     </>
   );
 };

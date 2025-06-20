@@ -1,4 +1,4 @@
-import { Button, Typography } from '@mui/material';
+import { Button, Typography } from 'antd';
 import { FC } from 'react';
 
 interface Props {
@@ -13,19 +13,20 @@ export const ScheduleFooter: FC<Props> = ({
   onGenerateSchedule
 }) => {
   return (
-    <>
-      <Button
-        variant='contained'
-        sx={{
-          marginTop: (theme) => theme.spacing(2),
-          marginBottom: (theme) => theme.spacing(2)
-        }}
-        onClick={onGenerateSchedule}
-        disabled={disabled}
-      >
-        Generate Schedule
-      </Button>
-      <Typography>{message}</Typography>
-    </>
+    <div style={{ width: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button
+          type='primary'
+          style={{ marginTop: 16, marginBottom: 8 }}
+          onClick={onGenerateSchedule}
+          disabled={disabled}
+        >
+          Generate Schedule
+        </Button>
+      </div>
+      <div style={{ textAlign: 'right', marginBottom: 16 }}>
+        <Typography.Text>{message}</Typography.Text>
+      </div>
+    </div>
   );
 };

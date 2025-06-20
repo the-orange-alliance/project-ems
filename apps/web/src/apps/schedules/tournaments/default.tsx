@@ -1,59 +1,48 @@
-import { Box, Button } from '@mui/material';
-import { EventSchedule, Team } from '@toa-lib/models';
+import { Button } from 'antd';
+import { ScheduleParams, Team } from '@toa-lib/models';
 import { FC } from 'react';
-import { useTeamsForEvent } from 'src/api/use-team-data';
-import { PageLoader } from 'src/components/loading';
-import { ParticipantTable } from 'src/components/tables/participant-table';
-import { useSWRConfig } from 'swr';
+import { useTeamsForEvent } from 'src/api/use-team-data.js';
+import { PageLoader } from 'src/components/loading/page-loader.js';
+import { ParticipantTable } from 'src/components/tables/participant-table.js';
 
 interface Props {
-  eventSchedule: EventSchedule;
+  eventSchedule: ScheduleParams;
+  onEventScheduleChange?: (eventSchedule: ScheduleParams) => void;
   disabled?: boolean;
 }
 
 export const DefaultScheduleParticipants: FC<Props> = ({
   eventSchedule,
+  onEventScheduleChange,
   disabled
 }) => {
-  const { mutate } = useSWRConfig();
   const { data: teams, isLoading } = useTeamsForEvent(eventSchedule.eventKey);
   const canEdit = !disabled && eventSchedule;
   const toggleScheduledTeam = (t: Team) => {
     if (!teams) return;
-    const isScheduled = eventSchedule.teams.find(
-      (eventTeam) => t.teamKey === eventTeam.teamKey
-    );
+    const isScheduled = eventSchedule.teamKeys.includes(t.teamKey);
     const newTeams = isScheduled
-      ? eventSchedule.teams.filter(
-          (eventTeam) => eventTeam.teamKey !== t.teamKey
-        )
-      : [...eventSchedule.teams, t];
-    mutate(
-      `storage/${eventSchedule.eventKey}_${eventSchedule.tournamentKey}.json`,
-      {
-        ...eventSchedule,
-        teams: newTeams,
-        teamsParticipating: newTeams.length
-      }
-    );
+      ? eventSchedule.teamKeys.filter((eventTeam) => eventTeam !== t.teamKey)
+      : [...eventSchedule.teamKeys, t.teamKey];
+    onEventScheduleChange?.({
+      ...eventSchedule,
+      teamKeys: newTeams
+    });
   };
   const toggleAll = () => {
     if (!teams) return;
-    const newTeams = eventSchedule.teams.length > 0 ? [] : teams;
-    mutate(
-      `storage/${eventSchedule.eventKey}_${eventSchedule.tournamentKey}.json`,
-      {
-        ...eventSchedule,
-        teams: newTeams,
-        teamsParticipating: newTeams.length
-      }
-    );
+    const newTeams = teams.map((t) => t.teamKey);
+    const toggleOn = eventSchedule.teamKeys.length < teams.length;
+    onEventScheduleChange?.({
+      ...eventSchedule,
+      teamKeys: toggleOn ? newTeams : []
+    });
   };
   return !isLoading ? (
-    <Box>
+    <div>
       <Button
-        sx={{ marginBottom: (theme) => theme.spacing(2) }}
-        variant='contained'
+        style={{ marginBottom: 16 }}
+        type='primary'
         onClick={toggleAll}
         disabled={!canEdit}
       >
@@ -61,11 +50,11 @@ export const DefaultScheduleParticipants: FC<Props> = ({
       </Button>
       <ParticipantTable
         teams={teams ?? []}
-        scheduledTeams={eventSchedule.teams}
+        scheduledTeams={eventSchedule.teamKeys}
         disabled={!canEdit}
         onChange={toggleScheduledTeam}
       />
-    </Box>
+    </div>
   ) : (
     <PageLoader />
   );

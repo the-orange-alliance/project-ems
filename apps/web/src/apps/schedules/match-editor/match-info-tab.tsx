@@ -1,4 +1,4 @@
-import { Grid, TextField } from '@mui/material';
+import { Row, Col, Input, InputNumber } from 'antd';
 import {
   Match,
   getFunctionsBySeasonKey,
@@ -12,9 +12,8 @@ interface Props {
 }
 
 export const MatchInfoTab: FC<Props> = ({ match, onUpdate }) => {
-  const handleUpdates = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, name, type } = e.target;
-    const typedValue = type === 'number' ? parseInt(value) : value;
+  const handleUpdates = (name: string, value: string | number | null) => {
+    const typedValue = typeof value === 'number' ? value : value;
     const newMatch = { ...match, [name]: typedValue };
     const seasonKey = getSeasonKeyFromEventKey(match.eventKey);
     const functions = getFunctionsBySeasonKey(seasonKey);
@@ -23,104 +22,104 @@ export const MatchInfoTab: FC<Props> = ({ match, onUpdate }) => {
     onUpdate({ ...newMatch, redScore, blueScore });
   };
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12} sm={6} md={6}>
-        <TextField
-          label='Tournament ID'
+    <Row gutter={[24, 24]}>
+      <Col xs={24} sm={12} md={12}>
+        <div style={{ marginBottom: 4 }}>Tournament ID</div>
+        <Input
           value={match?.tournamentKey}
           disabled
-          fullWidth
+          style={{ width: '100%' }}
           name='matchKey'
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={6}>
-        <TextField
-          label='Match ID'
+      </Col>
+      <Col xs={24} sm={12} md={12}>
+        <div style={{ marginBottom: 4 }}>Match ID</div>
+        <Input
           value={match?.id}
           disabled
-          fullWidth
+          style={{ width: '100%' }}
           name='matchDetailKey'
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={6}>
-        <TextField
-          label='Match Name'
+      </Col>
+      <Col xs={24} sm={12} md={12}>
+        <div style={{ marginBottom: 4 }}>Match Name</div>
+        <Input
           value={match?.name}
-          fullWidth
+          style={{ width: '100%' }}
           name='name'
-          onChange={handleUpdates}
+          onChange={(e) => handleUpdates('name', e.target.value)}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={3}>
-        <TextField
-          label='Red Fouls'
+      </Col>
+      <Col xs={24} sm={12} md={6}>
+        <div style={{ marginBottom: 4 }}>Red Fouls</div>
+        <InputNumber
           value={match?.redMinPen}
-          type='number'
-          fullWidth
+          style={{ width: '100%' }}
           name='redMinPen'
-          onChange={handleUpdates}
+          min={0}
+          onChange={(value) => handleUpdates('redMinPen', value)}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={3}>
-        <TextField
-          label='Blue Fouls'
+      </Col>
+      <Col xs={24} sm={12} md={6}>
+        <div style={{ marginBottom: 4 }}>Blue Fouls</div>
+        <InputNumber
           value={match?.blueMinPen}
-          type='number'
-          fullWidth
+          style={{ width: '100%' }}
           name='blueMinPen'
-          onChange={handleUpdates}
+          min={0}
+          onChange={(value) => handleUpdates('blueMinPen', value)}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={3}>
-        <TextField
-          label='Red Score'
+      </Col>
+      <Col xs={24} sm={12} md={6}>
+        <div style={{ marginBottom: 4 }}>Red Score</div>
+        <InputNumber
           value={match?.redScore}
-          type='number'
-          fullWidth
+          style={{ width: '100%' }}
           name='redScore'
-          onChange={handleUpdates}
+          min={0}
+          onChange={(value) => handleUpdates('redScore', value)}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={3}>
-        <TextField
-          label='Blue Score'
+      </Col>
+      <Col xs={24} sm={12} md={6}>
+        <div style={{ marginBottom: 4 }}>Blue Score</div>
+        <InputNumber
           value={match?.blueScore}
-          type='number'
-          fullWidth
+          style={{ width: '100%' }}
           name='blueScore'
-          onChange={handleUpdates}
+          min={0}
+          onChange={(value) => handleUpdates('blueScore', value)}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={3}>
-        <TextField
-          label='Red Tech Fouls'
+      </Col>
+      <Col xs={24} sm={12} md={6}>
+        <div style={{ marginBottom: 4 }}>Red Tech Fouls</div>
+        <InputNumber
           value={match?.redMajPen}
-          type='number'
-          fullWidth
+          style={{ width: '100%' }}
           name='redMajPen'
-          onChange={handleUpdates}
+          min={0}
+          onChange={(value) => handleUpdates('redMajPen', value)}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={3}>
-        <TextField
-          label='Blue Tech Fouls'
+      </Col>
+      <Col xs={24} sm={12} md={6}>
+        <div style={{ marginBottom: 4 }}>Blue Tech Fouls</div>
+        <InputNumber
           value={match?.blueMajPen}
-          type='number'
-          fullWidth
+          style={{ width: '100%' }}
           name='blueMajPen'
-          onChange={handleUpdates}
+          min={0}
+          onChange={(value) => handleUpdates('blueMajPen', value)}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={3}>
-        <TextField
-          label='Field Number'
+      </Col>
+      <Col xs={24} sm={12} md={6}>
+        <div style={{ marginBottom: 4 }}>Field Number</div>
+        <InputNumber
           value={match?.fieldNumber}
-          type='number'
-          fullWidth
+          style={{ width: '100%' }}
           name='fieldNumber'
-          onChange={handleUpdates}
+          min={0}
+          onChange={(value) => handleUpdates('fieldNumber', value)}
         />
-      </Grid>
-    </Grid>
+      </Col>
+    </Row>
   );
 };

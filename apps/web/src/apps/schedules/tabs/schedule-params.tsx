@@ -1,31 +1,35 @@
 import { FC, useState } from 'react';
-import { ScheduleFooter } from '../schedule-footer';
+import { ScheduleFooter } from '../schedule-footer.js';
 import {
-  EventSchedule,
   generateScheduleItems,
-  getScheduleValidation
+  getScheduleValidation,
+  ScheduleParams as EventScheduleParams
 } from '@toa-lib/models';
-import { PageLoader } from 'src/components/loading';
+import { PageLoader } from 'src/components/loading/index.js';
 import {
-  deleteSchedule,
-  postSchedule,
+  deleteScheduleItems,
+  postScheduleItems,
   useScheduleItemsForTournament
-} from 'src/api/use-schedule-data';
-import { useSWRConfig } from 'swr';
-import { setApiStorage } from 'src/api/use-storage-data';
-import { ScheduleLayout } from '../schedule-layout';
-import { ScheduleTable } from 'src/components/tables/schedule-table';
-import { DefaultScheduleOptions } from '../tournaments/default-params';
-import { RoudnRobinScheduleOptions } from '../tournaments/round-robin-params';
+} from 'src/api/use-schedule-data.js';
+import { setApiStorage } from 'src/api/use-storage-data.js';
+import { ScheduleLayout } from '../schedule-layout.js';
+import { ScheduleTable } from 'src/components/tables/schedule-table.js';
+import { DefaultScheduleOptions } from '../tournaments/default-params.js';
+import { RoudnRobinScheduleOptions } from '../tournaments/round-robin-params.js';
+import { Divider } from 'antd';
 
 interface Props {
-  eventSchedule?: EventSchedule;
+  eventSchedule?: EventScheduleParams;
+  onEventScheduleChange?: (eventSchedule: EventScheduleParams) => void;
   disabled?: boolean;
 }
 
-export const ScheduleParams: FC<Props> = ({ eventSchedule, disabled }) => {
+export const ScheduleParams: FC<Props> = ({
+  eventSchedule,
+  disabled,
+  onEventScheduleChange
+}) => {
   const [loading, setLoading] = useState(false);
-  const { mutate } = useSWRConfig();
   const {
     data: scheduleItems,
     isLoading,
@@ -36,34 +40,35 @@ export const ScheduleParams: FC<Props> = ({ eventSchedule, disabled }) => {
   );
   const { valid, validationMessage } = getScheduleValidation(eventSchedule);
   const canEdit = !disabled && eventSchedule && !loading;
-  const handleScheduleChange = (schedule: EventSchedule) => {
+  const handleScheduleChange = (schedule: EventScheduleParams) => {
     if (!eventSchedule) return;
-    mutate(
-      `storage/${eventSchedule.eventKey}_${eventSchedule.tournamentKey}.json`,
-      schedule,
-      { revalidate: false }
-    );
+    onEventScheduleChange?.(schedule);
   };
   const generateSchedule = async () => {
     if (!eventSchedule) return;
     setLoading(true);
     const scheduleItems = generateScheduleItems(eventSchedule);
-    await deleteSchedule(eventSchedule.eventKey, eventSchedule.tournamentKey);
+    await deleteScheduleItems(
+      eventSchedule.eventKey,
+      eventSchedule.tournamentKey
+    );
     await setApiStorage(
       `${eventSchedule.eventKey}_${eventSchedule.tournamentKey}.json`,
       eventSchedule
     );
-    await postSchedule(scheduleItems);
+    await postScheduleItems(scheduleItems);
     mutateScheduleItems(scheduleItems);
     setLoading(false);
   };
   return !isLoading ? (
     <>
+      <Divider>Tournament Schedule Configurations</Divider>
       <ScheduleOptions
         eventSchedule={eventSchedule}
         disabled={!canEdit}
         onChange={handleScheduleChange}
       />
+      <Divider>Tournament Day Configurations</Divider>
       <ScheduleLayout
         eventSchedule={eventSchedule}
         disabled={!canEdit}
@@ -84,9 +89,9 @@ export const ScheduleParams: FC<Props> = ({ eventSchedule, disabled }) => {
 };
 
 interface ScheduleOptionsProps {
-  eventSchedule?: EventSchedule;
+  eventSchedule?: EventScheduleParams;
   disabled?: boolean;
-  onChange: (eventSchedule: EventSchedule) => void;
+  onChange: (eventSchedule: EventScheduleParams) => void;
 }
 
 export const ScheduleOptions: FC<ScheduleOptionsProps> = ({

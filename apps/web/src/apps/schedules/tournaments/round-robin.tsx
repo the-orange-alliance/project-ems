@@ -1,29 +1,30 @@
-import { Button, Grid } from '@mui/material';
+import { Row, Col, Button } from 'antd';
 import {
   AllianceMember,
-  EventSchedule,
+  ScheduleParams,
   Team,
   FGCSchedule
 } from '@toa-lib/models';
 import { FC, useEffect, useState } from 'react';
-import { mutate } from 'swr';
 import {
   deleteAllianceMembers,
   postAllianceMembers,
   useAllianceMembers
-} from 'src/api/use-alliance-data';
-import { useRankingsForTournament } from 'src/api/use-ranking-data';
-import { useTeamsForEvent } from 'src/api/use-team-data';
-import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team';
-import { useSnackbar } from 'src/hooks/use-snackbar';
+} from 'src/api/use-alliance-data.js';
+import { useRankingsForTournament } from 'src/api/use-ranking-data.js';
+import { useTeamsForEvent } from 'src/api/use-team-data.js';
+import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
 
 interface ParticipantsProps {
-  eventSchedule: EventSchedule;
+  eventSchedule: ScheduleParams;
+  onEventScheduleChange?: (eventSchedule: ScheduleParams) => void;
   disabled?: boolean;
 }
 const ALLIANCE_SIZE = 4;
 export const RoundRobinParticipants: FC<ParticipantsProps> = ({
-  eventSchedule
+  eventSchedule,
+  onEventScheduleChange
 }) => {
   const { data: alliances } = useAllianceMembers(
     eventSchedule.eventKey,
@@ -97,17 +98,14 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
       }
       await postAllianceMembers(eventKey, allianceMembers);
 
-      mutate(
-        `storage/${eventSchedule.eventKey}_${eventSchedule.tournamentKey}.json`,
-        {
-          ...eventSchedule,
-          teams: teams.filter((t) => pickedTeamKeys.includes(t.teamKey)),
-          teamsParticipating: pickedTeamKeys.length,
-          playoffsOptions: {
-            allianceCount: allianceRows
-          }
+      onEventScheduleChange?.({
+        ...eventSchedule,
+        teamKeys: (pickedTeamKeys ?? []).filter((k) => k !== null) as number[],
+        options: {
+          ...eventSchedule.options,
+          allianceCount: allianceRows
         }
-      );
+      });
       setLoading(false);
       showSnackbar(`Successfully uploaded alliance members.`);
     } catch (e) {
@@ -117,7 +115,7 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
     }
   };
   return (
-    <Grid container spacing={3}>
+    <Row gutter={[24, 24]}>
       {Array.from({ length: allianceRows }).map((_, i) => {
         return Array.from({ length: ALLIANCE_SIZE }).map((__, j) => {
           const handleChange = (team: Team | null) => {
@@ -132,61 +130,52 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
             }
           };
           return (
-            <Grid item xs={12} sm={3} key={`alliance-${i + 1}-team-${j + 1}`}>
+            <Col
+              xs={24}
+              sm={12}
+              md={6}
+              lg={3}
+              key={`alliance-${i + 1}-team-${j + 1}`}
+            >
               <AutocompleteTeam
                 onChange={handleChange}
                 teamKey={pickedTeamKeys[i * ALLIANCE_SIZE + j]}
                 teams={teams}
               />
-            </Grid>
+            </Col>
           );
         });
       })}
-      <Grid item xs={6} sm={2}>
-        <Button
-          onClick={addAlliance}
-          variant='contained'
-          color='primary'
-          fullWidth
-          disabled={loading}
-        >
+      <Col xs={12} sm={6} md={4} lg={2}>
+        <Button onClick={addAlliance} type='primary' block disabled={loading}>
           Add Alliance
         </Button>
-      </Grid>
-      <Grid item xs={6} sm={2}>
+      </Col>
+      <Col xs={12} sm={6} md={4} lg={2}>
         <Button
           onClick={removeAlliance}
-          variant='contained'
-          color='primary'
-          fullWidth
+          type='primary'
+          block
           disabled={loading}
         >
           Remove Alliance
         </Button>
-      </Grid>
-      <Grid item xs={6} sm={2}>
-        <Button
-          onClick={autoAssign}
-          variant='contained'
-          color='primary'
-          fullWidth
-          disabled={loading}
-        >
+      </Col>
+      <Col xs={12} sm={6} md={4} lg={2}>
+        <Button onClick={autoAssign} type='primary' block disabled={loading}>
           Auto-Assign
         </Button>
-      </Grid>
-
-      <Grid item xs={6} sm={2}>
+      </Col>
+      <Col xs={12} sm={6} md={4} lg={2}>
         <Button
-          variant='contained'
-          color='primary'
-          fullWidth
+          type='primary'
+          block
           onClick={saveAlliances}
           disabled={hasDuplicates || loading}
         >
           Save Alliances
         </Button>
-      </Grid>
-    </Grid>
+      </Col>
+    </Row>
   );
 };

@@ -12,6 +12,7 @@ export const MoreButton: FC<Props> = ({ menuItems }) => {
       menu={{ items: menuItems }}
       trigger={['click']}
       placement='bottomRight'
+      forceRender
     >
       <Button
         variant='text'

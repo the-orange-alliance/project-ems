@@ -1,13 +1,13 @@
 import { Team } from '@toa-lib/models';
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { teamIdentifierAtom } from 'src/stores/recoil';
-import { currentEventKeyAtom } from 'src/stores/recoil';
-import { useTeamsForEvent } from 'src/api/use-team-data';
+import { useTeamsForEvent } from 'src/api/use-team-data.js';
+import { eventKeyAtom } from 'src/stores/state/event.js';
+import { teamIdentifierAtom } from 'src/stores/state/ui.js';
 
 export const useTeamIdentifiers = (): Record<number, string> => {
-  const identifier = useRecoilValue(teamIdentifierAtom);
-  const eventKey = useRecoilValue(currentEventKeyAtom);
+  const identifier = useAtomValue(teamIdentifierAtom);
+  const eventKey = useAtomValue(eventKeyAtom);
   const { data: teams } = useTeamsForEvent(eventKey);
   return useMemo(
     () =>
@@ -23,7 +23,7 @@ export const useTeamIdentifiers = (): Record<number, string> => {
 export const useTeamIdentifiersForEventKey = (
   eventKey: string | null | undefined
 ): Record<number, string> => {
-  const identifier = useRecoilValue(teamIdentifierAtom);
+  const identifier = useAtomValue(teamIdentifierAtom);
   const { data: teams } = useTeamsForEvent(eventKey);
   return useMemo(
     () =>
@@ -39,7 +39,7 @@ export const useTeamIdentifiersForEventKey = (
 export const useTeamIdentifierRecord = (
   teams: Team[]
 ): Record<number, string> => {
-  const identifier = useRecoilValue(teamIdentifierAtom);
+  const identifier = useAtomValue(teamIdentifierAtom);
   return useMemo(
     () =>
       Object.fromEntries(teams.map((t) => [t.teamKey, String(t[identifier])])),

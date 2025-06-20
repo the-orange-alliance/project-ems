@@ -1,11 +1,11 @@
 import { Team } from '@toa-lib/models';
 import { FC } from 'react';
-import { UpgradedTable } from './upgraded-table';
-import { Checkbox } from '@mui/material';
+import { UpgradedTable } from './upgraded-table.js';
+import { Checkbox } from 'antd';
 
 interface Props {
   teams: Team[];
-  scheduledTeams?: Team[];
+  scheduledTeams?: number[];
   disabled?: boolean;
   onChange?: (team: Team) => void;
 }
@@ -43,9 +43,7 @@ export const ParticipantTable: FC<Props> = ({
         return [
           <Checkbox
             key={`team-${t.teamKey}`}
-            checked={
-              scheduledTeams?.find((b) => b.teamKey === t.teamKey) !== undefined
-            }
+            checked={scheduledTeams?.includes(t.teamKey)}
             onChange={handleChange}
             disabled={disabled}
           />,
@@ -56,6 +54,7 @@ export const ParticipantTable: FC<Props> = ({
           flag
         ];
       }}
+      rowKey='teamKey'
     />
   );
 };

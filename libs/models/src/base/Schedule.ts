@@ -85,7 +85,7 @@ export const defaultScheduleItem: ScheduleItem = {
   day: 0,
   startTime: DateTime.now().toISO() ?? '',
   duration: 0,
-  isMatch: false
+  isMatch: false,
 };
 
 export interface ScheduleParams {
@@ -97,6 +97,7 @@ export interface ScheduleParams {
   teamKeys: number[];
   cycleTime: number;
   hasPremiereField: boolean;
+  matchesPerTeam: number;
   options: ScheduleOptions;
 }
 
@@ -116,6 +117,7 @@ export const defaultScheduleParams: ScheduleParams = {
   teamKeys: [],
   cycleTime: 5,
   hasPremiereField: false,
+  matchesPerTeam: 5,
   options: {
     rounds: 5,
     teamsPerAlliance: 3

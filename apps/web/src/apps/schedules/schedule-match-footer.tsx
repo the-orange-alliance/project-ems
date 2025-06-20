@@ -1,4 +1,4 @@
-import { Button } from '@mui/material';
+import { Button } from 'antd';
 import { FC } from 'react';
 
 interface Props {
@@ -8,12 +8,7 @@ interface Props {
 
 export const ScheduleMatchFooter: FC<Props> = ({ disabled, onClick }) => {
   return (
-    <Button
-      sx={{ marginTop: (theme) => theme.spacing(2) }}
-      variant='contained'
-      disabled={disabled}
-      onClick={onClick}
-    >
+    <Button style={{ marginTop: '2em' }} disabled={disabled} onClick={onClick}>
       Post Schedule
     </Button>
   );

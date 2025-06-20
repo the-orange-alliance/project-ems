@@ -1,15 +1,16 @@
-import { Box, Divider, Tab, Tabs } from '@mui/material';
-import { EventSchedule, Match } from '@toa-lib/models';
-import { FC, SyntheticEvent, useEffect, useState } from 'react';
-import { TabPanel } from 'src/components/util/tab-panel';
-import { ScheduleParticipants } from './schedule-participants';
-import { ScheduleParams } from './schedule-params';
-import { ScheduleMatches } from './schedule-matches';
-import { MatchEditor } from './match-editor';
+import { Tabs, Divider } from 'antd';
+import { ScheduleParams, Match } from '@toa-lib/models';
+import { FC, useEffect, useState } from 'react';
+import { TabPanel } from 'src/components/util/tab-panel.js';
+import { ScheduleParticipants } from './schedule-participants.js';
+import { ScheduleParams as EventScheduleParams } from './schedule-params.js';
+import { ScheduleMatches } from './schedule-matches.js';
+import { MatchEditor } from './match-editor.js';
 
 interface Props {
   tournamentKey: string | null;
-  eventSchedule?: EventSchedule;
+  eventSchedule?: ScheduleParams;
+  onEventScheduleChange?: (schedule: ScheduleParams) => void;
   savedMatches?: Match<any>[];
   hasMatches?: boolean;
 }
@@ -18,49 +19,74 @@ export const ScheduleTabs: FC<Props> = ({
   tournamentKey,
   eventSchedule,
   savedMatches,
-  hasMatches
+  hasMatches,
+  onEventScheduleChange
 }) => {
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState('0');
   useEffect(() => {
-    setValue(0);
+    setValue('0');
   }, [tournamentKey]);
 
-  const handleChange = (_: SyntheticEvent, newValue: number) =>
-    setValue(newValue);
-
-  return (
-    <Box sx={{ width: '100%' }}>
-      <Box>
-        <Tabs value={value} onChange={handleChange}>
-          <Tab label='Schedule Participants' />
-          <Tab label='Schedule Parameters' />
-          <Tab label='Schedule Matches' />
-          <Tab label='Match Editor' />
-        </Tabs>
-        <Divider />
-        <TabPanel value={value} index={0}>
+  const items = [
+    {
+      key: '0',
+      label: 'Schedule Participants',
+      children: (
+        <TabPanel value={parseInt(value)} index={0}>
           <ScheduleParticipants
             eventSchedule={eventSchedule}
+            onEventScheduleChange={onEventScheduleChange}
             disabled={hasMatches}
           />
         </TabPanel>
-        <TabPanel value={value} index={1}>
-          <ScheduleParams eventSchedule={eventSchedule} disabled={hasMatches} />
+      )
+    },
+    {
+      key: '1',
+      label: 'Schedule Parameters',
+      children: (
+        <TabPanel value={parseInt(value)} index={1}>
+          <EventScheduleParams
+            eventSchedule={eventSchedule}
+            onEventScheduleChange={onEventScheduleChange}
+            disabled={hasMatches}
+          />
         </TabPanel>
-        <TabPanel value={value} index={2}>
+      )
+    },
+    {
+      key: '2',
+      label: 'Schedule Matches',
+      children: (
+        <TabPanel value={parseInt(value)} index={2}>
           <ScheduleMatches
             eventSchedule={eventSchedule}
+            onEventScheduleChange={onEventScheduleChange}
             savedMatches={savedMatches}
             disabled={hasMatches}
           />
         </TabPanel>
-        <TabPanel value={value} index={3}>
+      )
+    },
+    {
+      key: '3',
+      label: 'Match Editor',
+      children: (
+        <TabPanel value={parseInt(value)} index={3}>
           <MatchEditor
             eventSchedule={eventSchedule}
+            onEventScheduleChange={onEventScheduleChange}
             savedMatches={savedMatches}
           />
         </TabPanel>
-      </Box>
-    </Box>
+      )
+    }
+  ];
+
+  return (
+    <div style={{ width: '100%' }}>
+      <Tabs activeKey={value} onChange={setValue} items={items} type='line' />
+      <Divider />
+    </div>
   );
 };

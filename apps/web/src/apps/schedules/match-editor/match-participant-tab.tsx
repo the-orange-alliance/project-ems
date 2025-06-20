@@ -1,13 +1,12 @@
-import { Grid, Typography } from '@mui/material';
+import { Row, Col, Typography } from 'antd';
 import { Match, MatchParticipant, Team } from '@toa-lib/models';
 import { FC } from 'react';
 import {
   FGCParticipantCardStatus,
   ParticipantCardStatus
-} from 'src/apps/scorekeeper/match-header/participant-card-status';
-import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team';
-
-import { replaceInArray } from 'src/stores/array-utils';
+} from 'src/apps/scorekeeper/match-header/participant-card-status.js';
+import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team.js';
+import { replaceInArray } from 'src/stores/array-utils.js';
 
 interface Props {
   match: Match<any>;
@@ -29,81 +28,81 @@ export const MatchParticipantTab: FC<Props> = ({ match, teams, onUpdate }) => {
     onUpdate({ ...match, participants });
   };
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12} sm={6} md={12}>
-        <Typography>Red Alliance</Typography>
-      </Grid>
-      {redAlliance?.map((p) => {
-        const changeTeam = (t: Team | null) => {
-          if (!t) return;
-          handleUpdate(t.teamKey, p);
-        };
-        const changeCard = (status: number) => {
-          handleUpdate(p.teamKey, { ...p, cardStatus: status });
-        };
-        return (
-          <>
-            <Grid key={p.station} item xs={12} sm={6}>
-              <AutocompleteTeam
-                teamKey={p.teamKey}
-                teams={teams}
-                onChange={changeTeam}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              {match.eventKey.startsWith('FGC') && (
-                <FGCParticipantCardStatus
-                  cardStatus={p.cardStatus}
-                  onChange={changeCard}
+    <>
+      <Row gutter={[24, 24]}>
+        <Col span={24}>
+          <Typography.Text strong>Red Alliance</Typography.Text>
+        </Col>
+        {redAlliance?.map((p) => {
+          const changeTeam = (t: Team | null) => {
+            if (!t) return;
+            handleUpdate(t.teamKey, p);
+          };
+          const changeCard = (status: number) => {
+            handleUpdate(p.teamKey, { ...p, cardStatus: status });
+          };
+          return (
+            <>
+              <Col xs={24} sm={12} key={`red-team-${p.station}`}>
+                <AutocompleteTeam
+                  teamKey={p.teamKey}
+                  teams={teams}
+                  onChange={changeTeam}
                 />
-              )}
-              {!match.eventKey.startsWith('FGC') && (
-                <ParticipantCardStatus
-                  cardStatus={p.cardStatus}
-                  onChange={changeCard}
+              </Col>
+              <Col xs={24} sm={12} key={`red-card-${p.station}`}>
+                {match.eventKey.startsWith('FGC') ? (
+                  <FGCParticipantCardStatus
+                    cardStatus={p.cardStatus}
+                    onChange={changeCard}
+                  />
+                ) : (
+                  <ParticipantCardStatus
+                    cardStatus={p.cardStatus}
+                    onChange={changeCard}
+                  />
+                )}
+              </Col>
+            </>
+          );
+        })}
+        <Col span={24} style={{ marginTop: 16 }}>
+          <Typography.Text strong>Blue Alliance</Typography.Text>
+        </Col>
+        {blueAlliance?.map((p) => {
+          const changeTeam = (t: Team | null) => {
+            if (!t) return;
+            handleUpdate(t.teamKey, p);
+          };
+          const changeCard = (status: number) => {
+            handleUpdate(p.teamKey, { ...p, cardStatus: status });
+          };
+          return (
+            <>
+              <Col xs={24} sm={12} key={`blue-team-${p.station}`}>
+                <AutocompleteTeam
+                  teamKey={p.teamKey}
+                  teams={teams}
+                  onChange={changeTeam}
                 />
-              )}
-            </Grid>
-          </>
-        );
-      })}
-      <Grid item xs={12} sm={12} md={12}>
-        <Typography>Blue Alliance</Typography>
-      </Grid>
-      {blueAlliance?.map((p) => {
-        const changeTeam = (t: Team | null) => {
-          if (!t) return;
-          handleUpdate(t.teamKey, p);
-        };
-        const changeCard = (status: number) => {
-          handleUpdate(p.teamKey, { ...p, cardStatus: status });
-        };
-        return (
-          <>
-            <Grid key={p.station} item xs={12} sm={6}>
-              <AutocompleteTeam
-                teamKey={p.teamKey}
-                teams={teams}
-                onChange={changeTeam}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              {match.eventKey.startsWith('FGC') && (
-                <FGCParticipantCardStatus
-                  cardStatus={p.cardStatus}
-                  onChange={changeCard}
-                />
-              )}
-              {!match.eventKey.startsWith('FGC') && (
-                <ParticipantCardStatus
-                  cardStatus={p.cardStatus}
-                  onChange={changeCard}
-                />
-              )}
-            </Grid>
-          </>
-        );
-      })}
-    </Grid>
+              </Col>
+              <Col xs={24} sm={12} key={`blue-card-${p.station}`}>
+                {match.eventKey.startsWith('FGC') ? (
+                  <FGCParticipantCardStatus
+                    cardStatus={p.cardStatus}
+                    onChange={changeCard}
+                  />
+                ) : (
+                  <ParticipantCardStatus
+                    cardStatus={p.cardStatus}
+                    onChange={changeCard}
+                  />
+                )}
+              </Col>
+            </>
+          );
+        })}
+      </Row>
+    </>
   );
 };

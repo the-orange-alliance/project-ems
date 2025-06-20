@@ -8,7 +8,12 @@ import { useAtom } from 'jotai';
 import { tournamentKeyAtom } from '@stores/state/event.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
-import { useScheduleParamsForTournament } from 'src/api/use-schedule-data.js';
+import {
+  patchScheduleParams,
+  useScheduleParamsForTournament
+} from 'src/api/use-schedule-data.js';
+import { ScheduleParams } from '@toa-lib/models';
+import { PageLoader } from 'src/components/loading/page-loader.js';
 
 export const ScheduleManager: FC = () => {
   const { state } = useEventState({
@@ -23,11 +28,14 @@ export const ScheduleManager: FC = () => {
 
   const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
 
-  const { data: scheduleParams } = useScheduleParamsForTournament(
-    tournamentKey,
-    event?.eventKey
-  );
+  const { data: scheduleParams, mutate: refetchScheduleParams } =
+    useScheduleParamsForTournament(event?.eventKey, tournamentKey);
 
+  const onScheduleParamsChange = (schedule: ScheduleParams) => {
+    patchScheduleParams(schedule).then(() => {
+      return refetchScheduleParams();
+    });
+  };
   useUpdateAppbar(
     {
       title: event ? `${event.eventName} | Tournament Manager` : undefined,
@@ -56,10 +64,11 @@ export const ScheduleManager: FC = () => {
         />
       }
     >
-      <Suspense>
+      <Suspense fallback={<PageLoader />}>
         <ScheduleTabs
           tournamentKey={tournamentKey}
           eventSchedule={scheduleParams}
+          onEventScheduleChange={onScheduleParamsChange}
           savedMatches={matches}
           hasMatches={matches.length > 0}
         />

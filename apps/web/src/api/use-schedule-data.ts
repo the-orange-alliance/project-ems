@@ -36,3 +36,12 @@ export const useScheduleParamsForTournament = (
       : undefined,
     (url: string) => apiFetcher<ScheduleParams>(url, 'GET')
   );
+
+export const patchScheduleParams = async (
+  params: ScheduleParams
+): Promise<void> =>
+  apiFetcher(
+    `schedule-params/${params.eventKey}/${params.tournamentKey}`,
+    'PATCH',
+    params
+  );

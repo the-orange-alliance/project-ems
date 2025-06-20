@@ -1,26 +1,17 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Tab,
-  Tabs
-} from '@mui/material';
+import { Modal, Tabs, Button, Divider } from 'antd';
 import { FC, useEffect, useState } from 'react';
 import { mutate } from 'swr';
-import { patchWholeMatch, useMatchAll } from 'src/api/use-match-data';
-import { TabPanel } from 'src/components/util/tab-panel';
-import { MatchInfoTab } from './match-info-tab';
-import { PageLoader } from 'src/components/loading/page-loader';
+import { patchWholeMatch, useMatchAll } from 'src/api/use-match-data.js';
+import { TabPanel } from 'src/components/util/tab-panel.js';
+import { MatchInfoTab } from './match-info-tab.js';
+import { PageLoader } from 'src/components/loading/page-loader.js';
 import { Match, Team } from '@toa-lib/models';
-import { MatchParticipantTab } from './match-participant-tab';
-import { MatchDetailTab } from './match-detail-tab';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { sendCommitScores, sendPostResults } from 'src/api/use-socket';
+import { MatchParticipantTab } from './match-participant-tab.js';
+import { MatchDetailTab } from './match-detail-tab.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { sendCommitScores, sendPostResults } from 'src/api/use-socket.js';
 import { useModal } from '@ebay/nice-modal-react';
-import MatchRepostDialog from 'src/components/dialogs/match-repost-dialog';
+import MatchRepostDialog from 'src/components/dialogs/match-repost-dialog.js';
 
 interface Props {
   open: boolean;
@@ -39,10 +30,9 @@ export const MatchEditDialog: FC<Props> = ({
   teams,
   onClose
 }) => {
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState('0');
   const [match, setMatch] = useState<Match<any> | null>(null);
-  const handleChange = (_: React.SyntheticEvent, newValue: number) =>
-    setValue(newValue);
+  const handleChange = (key: string) => setValue(key);
   const { data: savedMatch } = useMatchAll({
     eventKey,
     tournamentKey,
@@ -88,50 +78,72 @@ export const MatchEditDialog: FC<Props> = ({
     onClose();
   };
   return (
-    <Dialog open={open} onClose={handleCancel} maxWidth='sm' fullWidth>
-      <DialogTitle
-        sx={{
-          backgroundColor: (theme) => theme.palette.primary.main,
-          color: (theme) => theme.palette.common.white
-        }}
-      >
-        {match?.name}
-      </DialogTitle>
+    <Modal
+      open={open}
+      onCancel={handleCancel}
+      footer={null}
+      width={600}
+      title={
+        <div style={{ background: '#1677ff', color: '#fff', padding: 12 }}>
+          {match?.name}
+        </div>
+      }
+      destroyOnClose
+    >
       {match ? (
         <>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={value} onChange={handleChange}>
-              <Tab label='Info' />
-              <Tab label='Participants' />
-              <Tab label='Details' />
-            </Tabs>
-          </Box>
-          <DialogContent>
-            <TabPanel value={value} index={0}>
-              <MatchInfoTab match={match} onUpdate={handleUpdate} />
-            </TabPanel>
-            <TabPanel value={value} index={1}>
-              <MatchParticipantTab
-                teams={teams}
-                match={match}
-                onUpdate={handleUpdate}
-              />
-            </TabPanel>
-            <TabPanel value={value} index={2}>
-              <MatchDetailTab match={match} onUpdate={handleUpdate} />
-            </TabPanel>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={updateAndPost} color='error'>
+          <Tabs
+            activeKey={value}
+            onChange={handleChange}
+            items={[
+              {
+                key: '0',
+                label: 'Info',
+                children: (
+                  <TabPanel value={parseInt(value)} index={0}>
+                    <MatchInfoTab match={match} onUpdate={handleUpdate} />
+                  </TabPanel>
+                )
+              },
+              {
+                key: '1',
+                label: 'Participants',
+                children: (
+                  <TabPanel value={parseInt(value)} index={1}>
+                    <MatchParticipantTab
+                      teams={teams}
+                      match={match}
+                      onUpdate={handleUpdate}
+                    />
+                  </TabPanel>
+                )
+              },
+              {
+                key: '2',
+                label: 'Details',
+                children: (
+                  <TabPanel value={parseInt(value)} index={2}>
+                    <MatchDetailTab match={match} onUpdate={handleUpdate} />
+                  </TabPanel>
+                )
+              }
+            ]}
+            type='line'
+          />
+          <Divider />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button danger onClick={updateAndPost}>
               Update & Post
             </Button>
-            <Button onClick={updateMatch}>Update</Button>
+            <Button type='primary' onClick={updateMatch}>
+              Update
+            </Button>
             <Button onClick={handleCancel}>Cancel</Button>
-          </DialogActions>
+          </div>
         </>
       ) : (
         <PageLoader />
       )}
-    </Dialog>
+    </Modal>
   );
 };

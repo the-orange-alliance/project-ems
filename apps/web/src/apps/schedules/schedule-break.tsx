@@ -1,15 +1,14 @@
-import { Grid, TextField } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers';
-import { EventSchedule, DayBreak } from '@toa-lib/models';
+import { Row, Col, Input, InputNumber } from 'antd';
+import { ScheduleParams, DayBreak } from '@toa-lib/models';
 import { DateTime } from 'luxon';
 import { FC, useState } from 'react';
 
 interface Props {
-  eventSchedule: EventSchedule;
+  eventSchedule: ScheduleParams;
   dayId: number;
   breakId: number;
   disabled?: boolean;
-  onChange: (schedule: EventSchedule) => void;
+  onChange: (schedule: ScheduleParams) => void;
 }
 
 export const ScheduleBreak: FC<Props> = ({
@@ -24,11 +23,10 @@ export const ScheduleBreak: FC<Props> = ({
   const [startDate, setStartDate] = useState<DateTime | null>(DateTime.now());
   const [endDate, setEndDate] = useState<DateTime | null>(DateTime.now());
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = event.target;
+  const handleChange = (name: string, value: string | number | null) => {
     const newBreak = {
       ...dayBreak,
-      [name]: type === 'number' ? parseInt(value) : value
+      [name]: typeof value === 'number' ? value : (value ?? '')
     };
     const newStartTime = DateTime.fromISO(day.startTime).plus({
       minutes:
@@ -47,13 +45,10 @@ export const ScheduleBreak: FC<Props> = ({
   };
 
   const getEndDate = (dayBreak: DayBreak): DateTime => {
-    // First make the end date time by adding the duration to the start time
     const endDateTime = DateTime.fromISO(eventSchedule.days[dayId].endTime);
-    // Second create a new breaks array with the updated break
     const newBreaks = eventSchedule.days[dayId].breaks.map((b) =>
       b.id === breakId ? dayBreak : b
     );
-    // Third calculate the new breaks duration by subtracting the old breaks duration from the new breaks duration
     const oldBreaksDuration =
       day.breaks.length > 0
         ? day.breaks
@@ -87,63 +82,54 @@ export const ScheduleBreak: FC<Props> = ({
   };
 
   return (
-    <Grid
-      key={`day=${day.id}-break-${dayBreak.id}`}
-      container
-      spacing={3}
-      sx={{
-        paddingTop: (theme) => theme.spacing(1),
-        paddingBottom: (theme) => theme.spacing(2)
-      }}
-    >
-      <Grid item xs={12} sm={6} md={4} lg={2}>
-        <TextField
+    <Row gutter={[24, 24]} style={{ paddingTop: 8, paddingBottom: 16 }}>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <Input
           name='name'
-          label='Break Name'
+          placeholder='Break Name'
           value={dayBreak.name}
-          fullWidth
-          onChange={handleChange}
+          onChange={(e) => handleChange('name', e.target.value)}
           disabled={disabled}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={1}>
-        <TextField
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={2}>
+        <InputNumber
           name='afterMatch'
-          label='Match'
+          placeholder='Match'
           value={dayBreak.afterMatch}
-          fullWidth
-          onChange={handleChange}
-          type='number'
+          onChange={(value) => handleChange('afterMatch', value)}
+          min={0}
+          style={{ width: '100%' }}
           disabled={disabled}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={1}>
-        <TextField
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={2}>
+        <InputNumber
           name='duration'
-          label='Duration'
+          placeholder='Duration'
           value={dayBreak.duration}
-          fullWidth
-          onChange={handleChange}
-          type='number'
+          onChange={(value) => handleChange('duration', value)}
+          min={0}
+          style={{ width: '100%' }}
           disabled={disabled}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={4}>
-        <DateTimePicker
-          label='Start Date'
-          value={startDate}
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <Input
+          value={startDate ? startDate.toFormat('yyyy-MM-dd HH:mm') : ''}
           disabled
-          slotProps={{ textField: { fullWidth: true } }}
+          style={{ width: '100%' }}
+          placeholder='Start Date'
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={4}>
-        <DateTimePicker
-          label='End Date'
-          value={endDate}
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
+        <Input
+          value={endDate ? endDate.toFormat('yyyy-MM-dd HH:mm') : ''}
           disabled
-          slotProps={{ textField: { fullWidth: true } }}
+          style={{ width: '100%' }}
+          placeholder='End Date'
         />
-      </Grid>
-    </Grid>
+      </Col>
+    </Row>
   );
 };

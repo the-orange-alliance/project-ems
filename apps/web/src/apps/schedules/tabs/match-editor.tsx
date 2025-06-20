@@ -1,12 +1,12 @@
-import { Box } from '@mui/material';
-import { EventSchedule, Match } from '@toa-lib/models';
+import { ScheduleParams, Match } from '@toa-lib/models';
 import { FC, useState } from 'react';
-import { useTeamsForEvent } from 'src/api/use-team-data';
-import { MatchResultsTable } from 'src/components/tables/match-results-table';
-import { MatchEditDialog } from '../match-editor/match-edit-dialog';
+import { useTeamsForEvent } from 'src/api/use-team-data.js';
+import { MatchResultsTable } from 'src/components/tables/match-results-table.js';
+import { MatchEditDialog } from '../match-editor/match-edit-dialog.js';
 
 interface Props {
-  eventSchedule?: EventSchedule;
+  eventSchedule?: ScheduleParams;
+  onEventScheduleChange?: (schedule: ScheduleParams) => void;
   savedMatches?: Match<any>[];
 }
 
@@ -20,7 +20,7 @@ export const MatchEditor: FC<Props> = ({ eventSchedule, savedMatches }) => {
   };
   const handleClose = () => setOpen(false);
   return (
-    <Box>
+    <div>
       {eventSchedule && savedMatches && (
         <MatchEditDialog
           eventKey={eventSchedule.eventKey}
@@ -37,6 +37,6 @@ export const MatchEditor: FC<Props> = ({ eventSchedule, savedMatches }) => {
         onSelect={handleSelect}
         colored
       />
-    </Box>
+    </div>
   );
 };

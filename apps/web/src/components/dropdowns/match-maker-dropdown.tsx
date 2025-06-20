@@ -1,6 +1,5 @@
 import { FC } from 'react';
-import FormControl from '@mui/material/FormControl';
-import { InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
+import { Form, Select } from 'antd';
 
 interface Props {
   quality: string;
@@ -8,22 +7,21 @@ interface Props {
 }
 
 export const MatchMakerQualityDropdown: FC<Props> = ({ quality, onChange }) => {
-  const handleChange = (event: SelectChangeEvent<string>) => {
-    onChange(event.target.value);
+  const handleChange = (value: string) => {
+    onChange(value);
   };
 
   return (
-    <FormControl sx={{ minWidth: 180 }}>
-      <InputLabel>Match Maker Quality</InputLabel>
-      <Select
-        value={quality}
-        onChange={handleChange}
-        label='Match Maker Quality'
-      >
-        <MenuItem value='fair'>Fair</MenuItem>
-        <MenuItem value='good'>Good</MenuItem>
-        <MenuItem value='best'>Best</MenuItem>
+    <Form.Item
+      label='Match Maker Quality'
+      labelCol={{ span: 24 }}
+      style={{ minWidth: 180 }}
+    >
+      <Select value={quality} onChange={handleChange}>
+        <Select.Option value='fair'>Fair</Select.Option>
+        <Select.Option value='good'>Good</Select.Option>
+        <Select.Option value='best'>Best</Select.Option>
       </Select>
-    </FormControl>
+    </Form.Item>
   );
 };

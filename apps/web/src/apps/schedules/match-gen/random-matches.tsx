@@ -1,6 +1,6 @@
-import { Box, Button, CircularProgress, Divider } from '@mui/material';
+import { Button } from 'antd';
 import {
-  EventSchedule,
+  ScheduleParams,
   Match,
   ScheduleItem,
   Tournament,
@@ -8,12 +8,12 @@ import {
 } from '@toa-lib/models';
 import { FGCSchedule } from '@toa-lib/models';
 import { FC, useState } from 'react';
-import { createMatchSchedule } from 'src/api/use-match-data';
-import { MatchMakerQualityDropdown } from 'src/components/dropdowns/match-maker-dropdown';
-import { useSnackbar } from 'src/hooks/use-snackbar';
+import { createMatchSchedule } from 'src/api/use-match-data.js';
+import { MatchMakerQualityDropdown } from 'src/components/dropdowns/match-maker-dropdown.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
 
 interface Props {
-  eventSchedule?: EventSchedule;
+  eventSchedule?: ScheduleParams;
   scheduleItems?: ScheduleItem[];
   tournament?: Tournament;
   onCreateMatches: (matches: Match<any>[]) => void;
@@ -34,23 +34,16 @@ export const RandomMatches: FC<Props> = ({
       if (!eventSchedule) return;
       if (!tournament) return;
       if (!scheduleItems) return;
-      const {
-        eventKey,
-        tournamentKey,
-        matchesPerTeam,
-        teamsParticipating,
-        teamsPerAlliance
-      } = eventSchedule;
+      const { eventKey, tournamentKey, teamKeys } = eventSchedule;
       const { fieldCount: fields, name } = tournament;
-      const teamKeys = eventSchedule.teams.map((t) => t.teamKey);
       const matches = await createMatchSchedule({
         eventKey,
         tournamentKey,
         quality,
         fields,
-        matchesPerTeam,
-        teamsParticipating,
-        teamsPerAlliance,
+        matchesPerTeam: 5, // TODO: Make this configurable????
+        teamsParticipating: teamKeys.length,
+        teamsPerAlliance: eventSchedule.options.teamsPerAlliance,
         teamKeys,
         name
       });
@@ -71,22 +64,17 @@ export const RandomMatches: FC<Props> = ({
     }
   };
   return (
-    <Box>
+    <div>
       <MatchMakerQualityDropdown quality={quality} onChange={setQuality} />
       <Button
-        sx={{ marginTop: (theme) => theme.spacing(2), display: 'block' }}
-        variant='contained'
+        style={{ marginTop: 16, display: 'block', marginLeft: 'auto' }}
+        type='primary'
         disabled={loading}
         onClick={createMatches}
+        loading={loading}
       >
-        {loading ? <CircularProgress /> : <span>Create Match Schedule</span>}
+        Create Match Schedule
       </Button>
-      <Divider
-        sx={{
-          marginTop: (theme) => theme.spacing(2),
-          marginBottom: (theme) => theme.spacing(2)
-        }}
-      />
-    </Box>
+    </div>
   );
 };

@@ -36,9 +36,11 @@ const TournamentEditor = lazy(() =>
 );
 
 // Schedule Routes
-// const ScheduleManager = lazy(() =>
-//   import('./apps/schedules').then((m) => ({ default: m.ScheduleManager }))
-// );
+const ScheduleManager = lazy(() =>
+  import('./apps/schedules/index.js').then((m) => ({
+    default: m.ScheduleManager
+  }))
+);
 
 // Scorekeeper Routes
 // const ScorekeeperApp = lazy(() =>
@@ -207,12 +209,12 @@ const AppRoutes: AppRoute[] = [
     icon: <HomeIcon />,
     hidden: true
   },
-  // {
-  //   name: 'Schedule Manager',
-  //   path: '/:eventKey/schedule-manager',
-  //   group: 0,
-  //   element: ScheduleManager
-  // },
+  {
+    name: 'Schedule Manager',
+    path: '/:eventKey/schedule-manager',
+    group: 0,
+    element: ScheduleManager
+  },
   // {
   //   name: 'Scorekeeper App',
   //   path: '/:eventKey/scorekeeper',
@@ -312,7 +314,7 @@ const AppRoutes: AppRoute[] = [
     hidden: false,
     hideAppbar: true,
     image: THE_MAN
-  },
+  }
   // {
   //   name: 'Streaming',
   //   path: '/:eventKey/streaming',

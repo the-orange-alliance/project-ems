@@ -199,6 +199,31 @@ export class EventDatabase {
     }
   }
 
+  public async upsert<T>(
+    table: string,
+    values: Record<keyof NonNullable<T>, unknown>,
+    conflictColumns: string[]
+  ) {
+    try {
+      const columns = Object.keys(values);
+      const placeholders = columns.map(() => '?').join(', ');
+      const updateAssignments = columns
+        .filter((col) => !conflictColumns.includes(col))
+        .map((col) => `"${col}"=excluded."${col}"`)
+        .join(', ');
+      const query = `INSERT INTO ${table} (${columns
+        .map((c) => `"${c}"`)
+        .join(', ')}) VALUES (${placeholders}) ON CONFLICT(${conflictColumns
+        .map((c) => `"${c}"`)
+        .join(', ')}) DO UPDATE SET ${updateAssignments};`;
+      const valuesObj = values as Record<string, unknown>;
+      const params = columns.map((col) => valuesObj[col]);
+      return await this.db.all(query, params);
+    } catch (e) {
+      throw new ApiDatabaseError(table, e);
+    }
+  }
+
   /**
    * Internal async function to get a query from the sql/ directory in the api folder.
    * @param filePath - String that is the file's name or path if sub-folders exist.

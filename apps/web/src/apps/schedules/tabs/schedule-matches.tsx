@@ -1,40 +1,39 @@
 import { FC, useState } from 'react';
-import { RandomMatches } from '../match-gen/random-matches';
+import { RandomMatches } from '../match-gen/random-matches.js';
 import {
-  EventSchedule,
+  ScheduleParams,
   Match,
   RESULT_NOT_PLAYED,
   ScheduleItem,
   Tournament
 } from '@toa-lib/models';
-import { useTeamsForEvent } from 'src/api/use-team-data';
-import { useCurrentTournament } from 'src/api/use-tournament-data';
-import { useScheduleItemsForTournament } from 'src/api/use-schedule-data';
-import { ScheduleMatchFooter } from '../schedule-match-footer';
-import { MatchTable } from 'src/components/tables/matches-table';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { createRankings, deleteRankings } from 'src/api/use-ranking-data';
-import { deleteMatches, postMatchSchedule } from 'src/api/use-match-data';
+import { useTeamsForEvent } from 'src/api/use-team-data.js';
+import { useCurrentTournament } from 'src/api/use-tournament-data.js';
+import { useScheduleItemsForTournament } from 'src/api/use-schedule-data.js';
+import { ScheduleMatchFooter } from '../schedule-match-footer.js';
+import { MatchTable } from 'src/components/tables/matches-table.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { createRankings, deleteRankings } from 'src/api/use-ranking-data.js';
+import { deleteMatches, postMatchSchedule } from 'src/api/use-match-data.js';
 import { useModal } from '@ebay/nice-modal-react';
-import ScheduleRepostDialog from 'src/components/dialogs/schedule-repost-dialog';
-import { useRecoilState } from 'recoil';
-import { matchesByEventKeyAtomFam } from 'src/stores/recoil';
+import ScheduleRepostDialog from 'src/components/dialogs/schedule-repost-dialog.js';
 import { useSWRConfig } from 'swr';
-import { useSyncConfig } from 'src/hooks/use-sync-config';
-import { resultsSyncMatches } from 'src/api/use-results-sync';
-import { FixedMatches } from '../match-gen/fixed-matches';
+import { useSyncConfig } from 'src/hooks/use-sync-config.js';
+import { resultsSyncMatches } from 'src/api/use-results-sync.js';
+import { FixedMatches } from '../match-gen/fixed-matches.js';
+import { useAtom } from 'jotai';
+import { matchesAtom } from 'src/stores/state/event.js';
 
 interface Props {
-  eventSchedule?: EventSchedule;
+  eventSchedule?: ScheduleParams;
+  onEventScheduleChange?: (eventSchedule: ScheduleParams) => void;
   savedMatches?: Match<any>[];
   disabled?: boolean;
 }
 
 export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
   const { mutate } = useSWRConfig();
-  const [matches, setMatches] = useRecoilState(
-    matchesByEventKeyAtomFam(eventSchedule?.eventKey ?? '')
-  );
+  const [matches, setMatches] = useAtom(matchesAtom);
   const { apiKey, platform } = useSyncConfig();
   const [loading, setLoading] = useState(false);
   const { data: scheduleItems } = useScheduleItemsForTournament(
@@ -68,7 +67,10 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
           eventSchedule.tournamentKey
         );
       }
-      await createRankings(eventSchedule.tournamentKey, eventSchedule.teams);
+      await createRankings(
+        eventSchedule.tournamentKey,
+        teams?.filter((t) => eventSchedule.teamKeys.includes(t.teamKey)) ?? []
+      );
       await postMatchSchedule(eventSchedule.eventKey, matches);
       await mutate(
         `match/${eventSchedule.eventKey}/${eventSchedule.tournamentKey}`,
@@ -127,7 +129,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
 };
 
 interface MatchGenProps {
-  eventSchedule?: EventSchedule;
+  eventSchedule?: ScheduleParams;
   scheduleItems?: ScheduleItem[];
   tournament?: Tournament;
   onCreateMatches: (matches: Match<any>[]) => void;
