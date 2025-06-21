@@ -1,7 +1,7 @@
-import { FC, Suspense, useEffect } from 'react';
-import { Row, Col } from 'antd';
+import { FC, Suspense } from 'react';
+import { Row, Col, Divider } from 'antd';
 import { DefaultLayout } from '@layouts/default-layout.js';
-import { AppCard, AppCardProps } from '@components/util/app-card.js';
+import { AppCard, AppCardProps, AppRow } from '@components/util/app-card.js';
 import AppRoutes from '../app-routes.js';
 import { useCurrentEvent } from '@api/use-event-data.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
@@ -26,17 +26,36 @@ const App = () => {
   const { data: event, isLoading } = useCurrentEvent();
   useUpdateAppbar({ title: event ? event.eventName : undefined }, [event]);
   return (
-    <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-      {AppRoutes.filter((route) => !route.hidden).map((route, i) => (
-        <ColAppCard
-          key={`route-${i}`}
-          title={route.name}
-          to={`${route.path.replaceAll(':eventKey', event?.eventKey ?? '')}`}
-          imgSrc={route.image ? route.image : undefined}
-          loading={isLoading}
-        />
-      ))}
-    </Row>
+    <>
+      <Row gutter={[24, 24]} style={{ marginBottom: 16 }} justify={'center'}>
+        <Col
+          xs={24}
+          sm={20}
+          md={16}
+          style={{ width: '100%', marginBottom: 16 }}
+        >
+          {AppRoutes.filter((route) => route.eventOrder)
+            .sort((a, b) => (a.eventOrder ?? 0) - (b.eventOrder ?? 0))
+            .map((route) => (
+            <AppRow key={route.path} route={route} />
+          ))}
+        </Col>
+      </Row>
+      <Divider>Other Apps</Divider>
+      <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+        {AppRoutes.filter((route) => !route.hidden && !route.eventOrder).map(
+          (route, i) => (
+            <ColAppCard
+              key={`route-${i}`}
+              title={route.name}
+              to={`${route.path.replaceAll(':eventKey', event?.eventKey ?? '')}`}
+              imgSrc={route.image ? route.image : undefined}
+              loading={isLoading}
+            />
+          )
+        )}
+      </Row>
+    </>
   );
 };
 

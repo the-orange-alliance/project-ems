@@ -19,6 +19,11 @@ const EventManager = lazy(() =>
 const TeamManager = lazy(() =>
   import('./apps/teams/index.js').then((m) => ({ default: m.TeamManager }))
 );
+const TeamCountTag = lazy(() =>
+  import('./components/util/app-chips.js').then((m) => ({
+    default: m.TeamCountTag
+  }))
+);
 const TeamEditor = lazy(() =>
   import('./apps/teams/index.js').then((m) => ({ default: m.TeamEdior }))
 );
@@ -27,6 +32,11 @@ const TeamEditor = lazy(() =>
 const TournamentManager = lazy(() =>
   import('./apps/tournaments/index.js').then((m) => ({
     default: m.TournamentManager
+  }))
+);
+const TournamentCountTag = lazy(() =>
+  import('./components/util/app-chips.js').then((m) => ({
+    default: m.TournamentCountTag
   }))
 );
 const TournamentEditor = lazy(() =>
@@ -133,18 +143,26 @@ const SettingsApp = lazy(() =>
 //   () => import('./apps/SeasonSpecific/frc_2024/HumanPlayer')
 // );
 
-import { Home as HomeIcon, Event as EventIcon } from '@mui/icons-material';
+import {
+  CalendarOutlined,
+  CompassOutlined,
+  ControlOutlined,
+  FormOutlined,
+  TeamOutlined
+} from '@ant-design/icons';
 export interface AppRoute {
-  name: string;
-  path: string;
-  group: number;
-  element: LazyExoticComponent<FC>;
-  icon?: ReactNode;
-  image?: string;
-  hidden?: boolean;
-  routes?: AppRoute[];
-  exact?: boolean;
-  hideAppbar?: boolean;
+  name: string; // Name of the route, used for display in menus
+  path: string; // Path of the route, can include parameters like :eventKey
+  group: number; // Grouping number for sorting routes, lower numbers appear first
+  element: LazyExoticComponent<FC>; // React component to render for this route
+  icon?: ReactNode; // Icon to display in menus, optional
+  image?: string; // Image src to displai in in the app card, optional
+  hidden?: boolean; // Whether the route should be hidden from menus
+  routes?: AppRoute[]; // Sub-routes for nested routing, optional
+  exact?: boolean; // Whether the route should match exactly, optional
+  eventOrder?: number; // Order to show in the event flow list
+  eventListRenderer?: LazyExoticComponent<FC>; // Custom renderer for event list, can show data like team count, tournament count, etc.
+  hideAppbar?: boolean; // Whether to hide the appbar for this route, optional
 }
 
 const AppRoutes: AppRoute[] = [
@@ -153,7 +171,6 @@ const AppRoutes: AppRoute[] = [
     path: '/',
     group: 0,
     element: EventSelection,
-    icon: <EventIcon />,
     hidden: true
   },
   {
@@ -161,59 +178,63 @@ const AppRoutes: AppRoute[] = [
     path: '/create-event',
     group: 0,
     element: EventCreation,
-    icon: <EventIcon />,
     hidden: true
   },
   {
-    name: 'Event Manager',
+    name: 'Manage Event',
     path: '/:eventKey/event-manager',
     group: 0,
     element: EventManager,
-    icon: <EventIcon />
+    icon: <CalendarOutlined />,
+    eventOrder: 1
   },
   {
     name: 'Event Home',
     path: '/:eventKey',
     group: 0,
     element: HomeApp,
-    icon: <HomeIcon />,
     hidden: true
   },
   {
-    name: 'Team Manager',
+    name: 'Manage Teams',
     path: '/:eventKey/team-manager',
     group: 0,
     element: TeamManager,
-    icon: <HomeIcon />
+    icon: <TeamOutlined />,
+    eventListRenderer: TeamCountTag,
+    eventOrder: 2
   },
   {
     name: 'Team Editor',
     path: '/:eventKey/team-manager/edit/:teamKey',
     group: 0,
     element: TeamEditor,
-    icon: <HomeIcon />,
     hidden: true
   },
   {
-    name: 'Tournament Manager',
+    name: 'Manage Tournaments',
     path: '/:eventKey/tournament-manager',
     group: 0,
     element: TournamentManager,
-    icon: <HomeIcon />
+    icon: <CompassOutlined />,
+    eventListRenderer: TournamentCountTag,
+    eventOrder: 3
   },
   {
     name: 'Tournament Editor',
     path: '/:eventKey/tournament-manager/edit/:tournamentKey',
     group: 0,
     element: TournamentEditor,
-    icon: <HomeIcon />,
+    icon: <FormOutlined />,
     hidden: true
   },
   {
-    name: 'Schedule Manager',
+    name: 'Manage Schedules',
     path: '/:eventKey/schedule-manager',
     group: 0,
-    element: ScheduleManager
+    icon: <ControlOutlined />,
+    element: ScheduleManager,
+    eventOrder: 4
   },
   // {
   //   name: 'Scorekeeper App',

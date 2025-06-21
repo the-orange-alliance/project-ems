@@ -1,11 +1,13 @@
-import { FC } from 'react';
+import { FC, Suspense } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Skeleton, Typography } from 'antd';
+import { Button, Card, Col, Divider, Row, Skeleton, Typography } from 'antd';
 import { useAtomValue } from 'jotai';
 
 import firstLogo from 'src/assets/images/first-logo.png';
 import firstLogoDarkMode from 'src/assets/images/first-logo-reverse.png';
 import { darkModeAtom } from 'src/stores/state/index.js';
+import { AppRoute } from 'src/app-routes.js';
+import { useCurrentEvent } from 'src/api/use-event-data.js';
 
 export interface AppCardProps {
   title: string;
@@ -80,5 +82,52 @@ export const AppCard: FC<AppCardProps> = ({
         content
       )}
     </Card>
+  );
+};
+
+export const AppRow: FC<{ route: AppRoute }> = ({ route }) => {
+  const { data: event, isLoading } = useCurrentEvent();
+  return (
+    <Link
+      to={`${route.path.replaceAll(':eventKey', event?.eventKey ?? '')}`}
+      style={{ cursor: 'pointer' }}
+    >
+      <Row gutter={[24, 24]} style={{ marginBottom: 8 }}>
+        {!isLoading && (
+          <>
+            <Col style={{ marginRight: 'auto' }}>
+              <Typography.Title
+                level={4}
+                style={{ width: '100%', display: 'flex', alignItems: 'center' }}
+              >
+                {route.icon ? <>{route.icon}&nbsp;</> : null}
+                {route.name}
+              </Typography.Title>
+            </Col>
+            {route.eventListRenderer && (
+              <Col>
+                <Suspense fallback={<Skeleton active />}>
+                  <route.eventListRenderer />
+                </Suspense>
+              </Col>
+            )}
+            <Col>
+              <Button>Edit</Button>
+            </Col>
+          </>
+        )}
+        {isLoading && (
+          <>
+            <Col style={{ marginRight: 'auto' }}>
+              <Skeleton.Button active style={{ width: 200 }} />
+            </Col>
+            <Col>
+              <Skeleton.Button active style={{ width: 100 }} />
+            </Col>
+          </>
+        )}
+      </Row>
+      <Divider />
+    </Link>
   );
 };
