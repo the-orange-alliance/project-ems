@@ -1,4 +1,4 @@
-import { Button } from 'antd';
+import { Button, Row, Col } from 'antd';
 import {
   ScheduleParams,
   ScheduleItem,
@@ -39,15 +39,19 @@ export const FixedMatches: FC<Props> = ({
     onCreateMatches(assignMatchTimes(matches, scheduleItems));
   };
   return (
-    <div>
-      <MatchSchedulerDropdown onChange={setGen} value={gen} />
-      <Button
-        style={{ marginTop: 16, display: 'block' }}
-        type='primary'
-        onClick={createMatches}
-      >
-        Create Match Schedule
-      </Button>
-    </div>
+    <Row gutter={16}>
+      <Col xs={24} sm={12} md={20}>
+        <MatchSchedulerDropdown onChange={setGen} value={gen} />
+      </Col>
+      <Col xs={24} sm={12} md={4} style={{ marginTop: 14 }}>
+        <Button
+          type='primary'
+          onClick={createMatches}
+          style={{ width: '100%' }}
+        >
+          Create Match Schedule
+        </Button>
+      </Col>
+    </Row>
   );
 };

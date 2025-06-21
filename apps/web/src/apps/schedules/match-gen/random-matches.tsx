@@ -1,4 +1,4 @@
-import { Button } from 'antd';
+import { Button, Col, Row } from 'antd';
 import {
   ScheduleParams,
   Match,
@@ -64,17 +64,21 @@ export const RandomMatches: FC<Props> = ({
     }
   };
   return (
-    <div>
-      <MatchMakerQualityDropdown quality={quality} onChange={setQuality} />
-      <Button
-        style={{ marginTop: 16, display: 'block', marginLeft: 'auto' }}
-        type='primary'
-        disabled={loading}
-        onClick={createMatches}
-        loading={loading}
-      >
-        Create Match Schedule
-      </Button>
-    </div>
+    <Row gutter={16}>
+      <Col xs={24} sm={12} md={20}>
+        <MatchMakerQualityDropdown quality={quality} onChange={setQuality} />
+      </Col>
+      <Col xs={24} sm={12} md={4} style={{ marginTop: 14 }}>
+        <Button
+          type='primary'
+          disabled={loading}
+          onClick={createMatches}
+          loading={loading}
+          style={{ width: '100%' }}
+        >
+          Create Match Schedule
+        </Button>
+      </Col>
+    </Row>
   );
 };
