@@ -37,8 +37,8 @@ const App = () => {
           {AppRoutes.filter((route) => route.eventOrder)
             .sort((a, b) => (a.eventOrder ?? 0) - (b.eventOrder ?? 0))
             .map((route) => (
-            <AppRow key={route.path} route={route} />
-          ))}
+              <AppRow key={route.path} route={route} />
+            ))}
         </Col>
       </Row>
       <Divider>Other Apps</Divider>
