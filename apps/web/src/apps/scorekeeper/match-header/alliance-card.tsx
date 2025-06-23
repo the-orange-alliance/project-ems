@@ -1,4 +1,4 @@
-import { Grid, Paper, Typography } from '@mui/material';
+import { Card, Row, Col, Typography } from 'antd';
 import {
   Alliance,
   BLUE_STATION,
@@ -6,9 +6,9 @@ import {
   Team
 } from '@toa-lib/models';
 import { FC } from 'react';
-import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team';
-import { FGCParticipantCardStatus } from './participant-card-status';
-import CheckboxStatus from './checkbox-status';
+import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team.js';
+import { FGCParticipantCardStatus } from './participant-card-status.js';
+import CheckboxStatus from './checkbox-status.js';
 
 interface Props {
   teams?: Team[];
@@ -62,32 +62,40 @@ export const AllianceCard: FC<Props> = ({
   };
 
   return (
-    <Paper
+    <Card
       className={alliance === 'red' ? 'red-bg-imp' : 'blue-bg-imp'}
-      sx={{ paddingBottom: '8px', minHeight: '100%' }}
+      style={{ paddingBottom: 8, minHeight: '100%' }}
     >
-      <Grid container spacing={1} sx={{ padding: '8px' }}>
-        <Grid item md={4} sx={{ paddingTop: '4px !important' }}>
-          <Typography variant='body1' align='center'>
+      <Row style={{ marginBottom: 8 }}>
+        <Col md={4} style={{ paddingTop: 4 }}>
+          <Typography.Text
+            style={{ width: '100%', display: 'block', textAlign: 'center' }}
+          >
             Team
-          </Typography>
-        </Grid>
-        <Grid item md={4} sx={{ paddingTop: '4px !important' }}>
-          <Typography variant='body1' align='center'>
+          </Typography.Text>
+        </Col>
+        <Col md={4} style={{ paddingTop: 4 }}>
+          <Typography.Text
+            style={{ width: '100%', display: 'block', textAlign: 'center' }}
+          >
             Card Status
-          </Typography>
-        </Grid>
-        <Grid item md={2} sx={{ paddingTop: '4px !important' }}>
-          <Typography variant='body1' align='center'>
+          </Typography.Text>
+        </Col>
+        <Col md={2} style={{ paddingTop: 4 }}>
+          <Typography.Text
+            style={{ width: '100%', display: 'block', textAlign: 'center' }}
+          >
             No Show
-          </Typography>
-        </Grid>
-        <Grid item md={2} sx={{ paddingTop: '4px !important' }}>
-          <Typography variant='body1' align='center'>
+          </Typography.Text>
+        </Col>
+        <Col md={2} style={{ paddingTop: 4 }}>
+          <Typography.Text
+            style={{ width: '100%', display: 'block', textAlign: 'center' }}
+          >
             DQ
-          </Typography>
-        </Grid>
-      </Grid>
+          </Typography.Text>
+        </Col>
+      </Row>
       {allianceParticipants.map((p) => {
         const handleTeamChange = (team: Team | null) => {
           if (!team) return;
@@ -103,44 +111,44 @@ export const AllianceCard: FC<Props> = ({
           changeDisqualified(p.station, value);
         };
         return (
-          <Grid
+          <Row
             key={`${p.teamKey}-${p.station}`}
-            container
-            spacing={1}
-            sx={{ padding: '4px 12px 4px 12px' }}
+            gutter={8}
+            style={{ padding: '4px 12px' }}
+            align='middle'
           >
-            <Grid item md={4}>
+            <Col md={4}>
               <AutocompleteTeam
                 teams={teams}
                 teamKey={p.teamKey}
                 disabled={disabled}
                 onChange={handleTeamChange}
               />
-            </Grid>
-            <Grid item md={4}>
+            </Col>
+            <Col md={4}>
               <FGCParticipantCardStatus
                 cardStatus={p.cardStatus}
                 disabled={disabled}
                 onChange={handleCardChange}
               />
-            </Grid>
-            <Grid item md={2}>
+            </Col>
+            <Col md={2}>
               <CheckboxStatus
                 value={Boolean(p.noShow)}
                 disabled={disabled}
                 onChange={handleNoShowChange}
               />
-            </Grid>
-            <Grid item md={2}>
+            </Col>
+            <Col md={2}>
               <CheckboxStatus
                 value={Boolean(p.disqualified)}
                 disabled={disabled}
                 onChange={handleDisqualifiedChange}
               />
-            </Grid>
-          </Grid>
+            </Col>
+          </Row>
         );
       })}
-    </Paper>
+    </Card>
   );
 };

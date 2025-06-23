@@ -53,9 +53,11 @@ const ScheduleManager = lazy(() =>
 );
 
 // Scorekeeper Routes
-// const ScorekeeperApp = lazy(() =>
-//   import('./apps/scorekeeper').then((m) => ({ default: m.ScorekeeperApp }))
-// );
+const ScorekeeperApp = lazy(() =>
+  import('./apps/scorekeeper/index.js').then((m) => ({
+    default: m.ScorekeeperApp
+  }))
+);
 
 // Admin Routes
 // const AdminApp = lazy(() =>
@@ -148,6 +150,7 @@ import {
   CompassOutlined,
   ControlOutlined,
   FormOutlined,
+  RobotOutlined,
   TeamOutlined
 } from '@ant-design/icons';
 export interface AppRoute {
@@ -236,12 +239,14 @@ const AppRoutes: AppRoute[] = [
     element: ScheduleManager,
     eventOrder: 4
   },
-  // {
-  //   name: 'Scorekeeper App',
-  //   path: '/:eventKey/scorekeeper',
-  //   group: 0,
-  //   element: ScorekeeperApp
-  // },
+  {
+    name: 'Scorekeeper App',
+    path: '/:eventKey/scorekeeper',
+    group: 0,
+    element: ScorekeeperApp,
+    eventOrder: 5,
+    icon: <RobotOutlined />
+  },
   // {
   //   name: 'Admin App',
   //   path: '/:eventKey/admin',

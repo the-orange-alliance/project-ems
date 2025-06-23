@@ -1,14 +1,11 @@
-import { FeedingTheFuture, FeedingTheFutureFCS } from '@toa-lib/models';
-import { FieldControlCallbacks } from '..';
-import { useSocket } from 'src/api/use-socket';
-import { useRecoilValue } from 'recoil';
-import { fieldOptionsSelector } from './stores/settings-store';
+import { FeedingTheFuture } from '@toa-lib/models';
+import { FieldControlCallbacks } from '../index.js';
+import { useSocket } from 'src/api/use-socket.js';
 
 export const useFieldControl =
   (): FieldControlCallbacks<FeedingTheFuture.MatchDetails> => {
     const [socket] = useSocket();
-    const fieldOptions: FeedingTheFutureFCS.FieldOptions =
-      useRecoilValue(fieldOptionsSelector);
+    const fieldOptions = {}; // TODO: update for season
 
     const prestartField = () => {
       socket?.emit('fcs:test', { test: 'test' });

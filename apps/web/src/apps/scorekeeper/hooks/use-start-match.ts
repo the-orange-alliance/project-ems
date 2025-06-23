@@ -1,19 +1,21 @@
 import { useRecoilCallback } from 'recoil';
-import { useMatchControl } from './use-match-control';
-import { sendAbortMatch, sendStartMatch } from 'src/api/use-socket';
+import { useMatchControl } from './use-match-control.js';
+import { sendAbortMatch, sendStartMatch } from 'src/api/use-socket.js';
 import { MatchState } from '@toa-lib/models';
-import { socketConnectedAtom } from 'src/stores/recoil';
-import { useSeasonFieldControl } from 'src/hooks/use-season-components';
+import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { useModal } from '@ebay/nice-modal-react';
-import { AbortDialog } from 'src/components/dialogs/abort-dialog';
+import { AbortDialog } from 'src/components/dialogs/abort-dialog.js';
+import { useAtomCallback } from 'jotai/utils';
+import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
+import { useCallback } from 'react';
 
 export const useMatchStartCallback = () => {
   const { canStartMatch, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
-  return useRecoilCallback(
-    ({ snapshot }) =>
-      async () => {
-        const socketConnected = await snapshot.getPromise(socketConnectedAtom);
+  return useAtomCallback(
+    useCallback(
+      (get) => {
+        const socketConnected = get(isSocketConnectedAtom);
         if (!socketConnected) {
           throw new Error('Not connected to realtime service.');
         }
@@ -24,7 +26,8 @@ export const useMatchStartCallback = () => {
         sendStartMatch();
         setState(MatchState.MATCH_IN_PROGRESS);
       },
-    [canStartMatch, setState]
+      [canStartMatch, setState]
+    )
   );
 };
 

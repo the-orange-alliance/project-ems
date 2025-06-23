@@ -1,23 +1,31 @@
-import { FC, useEffect } from 'react';
-import { useCurrentEvent } from 'src/api/use-event-data';
-import { DefaultLayout } from '@layouts/default-layout';
-import { MatchControl } from './match-control/match-control';
-import { ScorekeeperTabs } from './tabs/scorekeeper-tabs';
-import { MatchHeader } from './match-header/match-header';
-import { useTeamsForEvent } from 'src/api/use-team-data';
-import { Box } from '@mui/material';
-import { useSeasonFieldControl } from 'src/hooks/use-season-components';
-import { useSocket } from 'src/api/use-socket';
+import { FC } from 'react';
+import { DefaultLayout } from '@layouts/default-layout.js';
+import { MatchControl } from './match-control/match-control.js';
+import { ScorekeeperTabs } from './tabs/scorekeeper-tabs.js';
+import { MatchHeader } from './match-header/match-header.js';
+import { Row } from 'antd';
+// import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
+// import { useSocket } from 'src/api/use-socket.js';
+import { useEventState } from 'src/stores/hooks/use-event-state.js';
+import { PageLoader } from 'src/components/loading/page-loader.js';
 
 export const ScorekeeperApp: FC = () => {
-  const { data: event } = useCurrentEvent();
-  const { data: teams } = useTeamsForEvent(event?.eventKey);
-  const [, connected] = useSocket();
-  const fieldControl = useSeasonFieldControl();
+  const {
+    loading,
+    state: {
+      local: { event, teams }
+    }
+  } = useEventState({ event: true, teams: true });
+  // const [, connected] = useSocket();
+  // const fieldControl = useSeasonFieldControl();
 
-  useEffect(() => {
-    if (connected) fieldControl?.updateFieldSettings?.();
-  }, [connected]);
+  // useEffect(() => {
+  //   if (connected) fieldControl?.updateFieldSettings?.();
+  // }, [connected]);
+
+  if (loading) {
+    return <PageLoader />;
+  }
 
   return (
     <>
@@ -26,15 +34,15 @@ export const ScorekeeperApp: FC = () => {
         title={`${event?.eventName} | Scorekeeper App`}
         titleLink={`/${event?.eventKey}`}
       >
-        <Box sx={{ marginBottom: (theme) => theme.spacing(3) }}>
+        <Row style={{ marginBottom: 24, width: '100%' }}>
           <MatchHeader teams={teams} />
-        </Box>
-        <Box sx={{ marginBottom: (theme) => theme.spacing(3) }}>
+        </Row>
+        <Row style={{ marginBottom: 24, width: '100%' }}>
           <MatchControl />
-        </Box>
-        <Box sx={{ marginBottom: (theme) => theme.spacing(3) }}>
+        </Row>
+        <Row style={{ marginBottom: 24 }}>
           <ScorekeeperTabs eventKey={event?.eventKey} />
-        </Box>
+        </Row>
       </DefaultLayout>
     </>
   );

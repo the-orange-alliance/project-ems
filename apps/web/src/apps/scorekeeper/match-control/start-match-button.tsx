@@ -1,13 +1,12 @@
-import { Button } from '@mui/material';
 import { FC, useState } from 'react';
-import { useMatchControl } from '../hooks/use-match-control';
+import { useMatchControl } from '../hooks/use-match-control.js';
 import {
   useAbortMatchCallback,
   useMatchStartCallback
-} from '../hooks/use-start-match';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { LoadingButton } from '@mui/lab';
-import { useSocket } from 'src/api/use-socket';
+} from '../hooks/use-start-match.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { Button } from 'antd';
+import { useSocket } from 'src/api/use-socket.js';
 
 export const StartMatchButton: FC = () => {
   const [loading, setLoading] = useState(false);
@@ -36,21 +35,21 @@ export const StartMatchButton: FC = () => {
     }
   };
   return canStartMatch ? (
-    <LoadingButton
-      fullWidth
-      color='error'
-      variant='contained'
+    <Button
+      type='primary'
+      danger
+      block
       onClick={sendStartMatch}
       disabled={!canStartMatch || loading || !connected}
       loading={loading}
     >
       Start Match
-    </LoadingButton>
+    </Button>
   ) : (
     <Button
-      fullWidth
-      color='error'
-      variant='contained'
+      type='primary'
+      danger
+      block
       onClick={sendAbortMatch}
       disabled={!canAbortMatch}
     >

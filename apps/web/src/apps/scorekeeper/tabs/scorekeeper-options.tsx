@@ -1,21 +1,21 @@
-import { Button, Stack } from '@mui/material';
+import { Button, Space } from 'antd';
 import { FC } from 'react';
-import { useSeasonFieldControl } from 'src/hooks/use-season-components';
+import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 
 export const ScorekeeperOptions: FC = () => {
   const fieldControl = useSeasonFieldControl();
 
   return (
-    <Stack spacing={2}>
-      <Button variant={'contained'} onClick={fieldControl?.clearField}>
+    <Space direction='vertical' size='middle' style={{ width: '100%' }}>
+      <Button type='primary' block onClick={fieldControl?.clearField}>
         Force Field Green
       </Button>
-      <Button variant={'contained'} onClick={fieldControl?.prepareField}>
+      <Button type='primary' block onClick={fieldControl?.prepareField}>
         Force Prep Field
       </Button>
-      <Button variant={'contained'} onClick={fieldControl?.awardsMode}>
+      <Button type='primary' block onClick={fieldControl?.awardsMode}>
         Awards Mode
       </Button>
-    </Stack>
+    </Space>
   );
 };

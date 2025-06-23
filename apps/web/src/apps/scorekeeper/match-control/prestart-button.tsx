@@ -1,24 +1,23 @@
-import { Button } from '@mui/material';
+import { Button } from 'antd';
 import { FC, useState } from 'react';
-import { useMatchControl } from '../hooks/use-match-control';
+import { useMatchControl } from '../hooks/use-match-control.js';
 import {
   useCancelPrestartCallback,
   usePrestartCallback
-} from '../hooks/use-prestart';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { LoadingButton } from '@mui/lab';
-import { ReplayDialog } from 'src/components/dialogs/replay-dialog';
+} from '../hooks/use-prestart.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { ReplayDialog } from 'src/components/dialogs/replay-dialog.js';
 import { useModal } from '@ebay/nice-modal-react';
-import { useRecoilValue } from 'recoil';
-import { matchOccurringAtom } from 'src/stores/recoil';
 import { RESULT_NOT_PLAYED } from '@toa-lib/models';
+import { useAtomValue } from 'jotai';
+import { matchAtom } from 'src/stores/state/event.js';
 
 export const PrestartButton: FC = () => {
   const [loading, setLoading] = useState(false);
-  const replayDialog = useModal(ReplayDialog);
-  const match = useRecoilValue(matchOccurringAtom);
   const { canPrestart, canCancelPrestart } = useMatchControl();
   const { showSnackbar } = useSnackbar();
+  const replayDialog = useModal(ReplayDialog);
+  const match = useAtomValue<any>(matchAtom);
   const prestart = usePrestartCallback();
   const cancelPrestart = useCancelPrestartCallback();
   const sendPrestart = async () => {
@@ -49,21 +48,21 @@ export const PrestartButton: FC = () => {
   return (
     <>
       {canPrestart ? (
-        <LoadingButton
-          fullWidth
-          color='warning'
-          variant='contained'
+        <Button
+          type='primary'
+          block
           onClick={sendPrestart}
           disabled={!canPrestart || loading}
           loading={loading}
+          style={{ backgroundColor: '#faad14', borderColor: '#faad14' }}
         >
           Prestart
-        </LoadingButton>
+        </Button>
       ) : (
         <Button
-          fullWidth
-          color='error'
-          variant='contained'
+          type='primary'
+          danger
+          block
           onClick={sendCancelPrestart}
           disabled={!canCancelPrestart}
         >

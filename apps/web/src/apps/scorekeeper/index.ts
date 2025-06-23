@@ -1,3 +1,3 @@
-import { ScorekeeperApp } from './scorekeeper-app';
+import { ScorekeeperApp } from './scorekeeper-app.js';
 
 export { ScorekeeperApp };

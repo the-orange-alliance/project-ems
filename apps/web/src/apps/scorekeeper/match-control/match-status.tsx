@@ -1,35 +1,43 @@
-import { Box, Chip, Divider, Paper, Typography } from '@mui/material';
 import { FC } from 'react';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { Card, Typography, Divider, Tag } from 'antd';
+import { CheckCircleOutlined } from '@ant-design/icons';
 
 export const MatchStatus: FC = () => {
   return (
-    <Paper sx={{ height: '100%' }}>
-      <Box
-        sx={{
-          padding: (theme) => theme.spacing(2),
+    <Card style={{ height: '100%' }}>
+      <div
+        style={{
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          padding: 16
         }}
       >
-        <Typography align='center'>Match Status</Typography>
-        <Chip
-          icon={<CheckCircleOutlineIcon />}
-          label='Match Started'
-          color='primary'
-          variant='outlined'
-        />
-      </Box>
-      <Divider />
-      <Box sx={{ padding: (theme) => theme.spacing(2) }}>
-        <Typography gutterBottom align='center' variant='body1'>
+        <Typography.Title
+          level={5}
+          style={{ textAlign: 'center', marginBottom: 16 }}
+        >
           Match Status
-        </Typography>
-        <Typography align='center' variant='h4'>
+        </Typography.Title>
+        <Tag
+          icon={<CheckCircleOutlined />}
+          color='blue'
+          style={{ alignSelf: 'center', marginBottom: 16 }}
+        >
+          Match Started
+        </Tag>
+      </div>
+      <Divider />
+      <div style={{ padding: 16 }}>
+        <Typography.Text
+          style={{ display: 'block', textAlign: 'center', marginBottom: 8 }}
+        >
+          Match Status
+        </Typography.Text>
+        <Typography.Title level={2} style={{ textAlign: 'center', margin: 0 }}>
           Match Countdown
-        </Typography>
-      </Box>
-    </Paper>
+        </Typography.Title>
+      </div>
+    </Card>
   );
 };

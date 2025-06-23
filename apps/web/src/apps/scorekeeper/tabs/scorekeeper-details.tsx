@@ -1,20 +1,20 @@
-import { Grid } from '@mui/material';
+import { Row, Col } from 'antd';
+import { useAtomValue } from 'jotai';
 import { FC } from 'react';
-import { useRecoilValue } from 'recoil';
-import { useSeasonComponents } from 'src/hooks/use-season-components';
-import { matchOccurringAtom } from 'src/stores/recoil';
+import { useSeasonComponents } from 'src/hooks/use-season-components.js';
+import { matchAtom } from 'src/stores/state/event.js';
 
 export const ScorekeeperDetails: FC = () => {
-  const match = useRecoilValue(matchOccurringAtom);
+  const match = useAtomValue(matchAtom);
   const seasonComponents = useSeasonComponents();
   return seasonComponents && match ? (
-    <Grid container spacing={3}>
-      <Grid item xs={12} sm={6}>
+    <Row gutter={[24, 24]}>
+      <Col xs={24} sm={12}>
         <seasonComponents.RedScoreBreakdown match={match} />
-      </Grid>
-      <Grid item xs={12} sm={6}>
+      </Col>
+      <Col xs={24} sm={12}>
         <seasonComponents.BlueScoreBreakdown match={match} />
-      </Grid>
-    </Grid>
+      </Col>
+    </Row>
   ) : null;
 };

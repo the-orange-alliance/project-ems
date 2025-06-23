@@ -1,12 +1,11 @@
-import { Button } from '@mui/material';
 import { FC, useState } from 'react';
-import { useMatchControl } from '../hooks/use-match-control';
+import { useMatchControl } from '../hooks/use-match-control.js';
 import {
   useClearFieldCallback,
   useCommitScoresCallback
-} from '../hooks/use-commit-scores';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { LoadingButton } from '@mui/lab';
+} from '../hooks/use-commit-scores.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { Button } from 'antd';
 
 export const CommitScoresButton: FC = () => {
   const [loading, setLoading] = useState(false);
@@ -34,23 +33,23 @@ export const CommitScoresButton: FC = () => {
     }
   };
   return canCommitScores ? (
-    <LoadingButton
-      fullWidth
-      color='success'
-      variant='contained'
+    <Button
+      type='primary'
+      block
       onClick={sendCommitScores}
       disabled={!canCommitScores || loading}
       loading={loading}
+      style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
     >
       Commit Scores
-    </LoadingButton>
+    </Button>
   ) : (
     <Button
-      fullWidth
-      color='success'
-      variant='contained'
+      type='primary'
+      block
       onClick={sendResetField}
       disabled={!canResetField}
+      style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
     >
       All Clear
     </Button>

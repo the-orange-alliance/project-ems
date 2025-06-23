@@ -1,30 +1,32 @@
 import { MatchState, QUALIFICATION_LEVEL } from '@toa-lib/models';
-import { useRecoilCallback, useRecoilValue } from 'recoil';
-import { useMatchControl } from './use-match-control';
-import { sendPostResults } from 'src/api/use-socket';
-import {
-  currentEventKeyAtom,
-  currentMatchIdAtom,
-  currentTournamentKeyAtom,
-  matchOccurringAtom,
-  socketConnectedAtom
-} from 'src/stores/recoil';
-import { useSeasonFieldControl } from 'src/hooks/use-season-components';
-import { useMatchesForTournament } from 'src/api/use-match-data';
-import { useNextUnplayedMatch } from './use-next-unplayed-match';
+import { useMatchControl } from './use-match-control.js';
+import { sendPostResults } from 'src/api/use-socket.js';
+import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
+import { useMatchesForTournament } from 'src/api/use-match-data.js';
+import { useNextUnplayedMatch } from './use-next-unplayed-match.js';
 import {
   resultsSyncAlliances,
   resultsSyncMatch,
   resultsSyncRankings
-} from 'src/api/use-results-sync';
-import { useSyncConfig } from 'src/hooks/use-sync-config';
-import { useCurrentTournament } from 'src/api/use-tournament-data';
+} from 'src/api/use-results-sync.js';
+import { useSyncConfig } from 'src/hooks/use-sync-config.js';
+import { useCurrentTournament } from 'src/api/use-tournament-data.js';
+import { useAtomValue } from 'jotai';
+import {
+  eventKeyAtom,
+  matchAtom,
+  matchIdAtom,
+  tournamentKeyAtom
+} from 'src/stores/state/event.js';
+import { useCallback } from 'react';
+import { useAtomCallback } from 'jotai/utils';
+import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 
 export const usePostResultsCallback = () => {
   const { canPostResults, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
-  const eventKey = useRecoilValue(currentEventKeyAtom);
-  const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
+  const eventKey = useAtomValue(eventKeyAtom);
+  const tournamentKey = useAtomValue(tournamentKeyAtom);
   const tournament = useCurrentTournament();
   const { data: matches, mutate: setMatches } = useMatchesForTournament(
     eventKey,
@@ -33,11 +35,11 @@ export const usePostResultsCallback = () => {
   const getNextUnplayed = useNextUnplayedMatch();
   const { apiKey, platform } = useSyncConfig();
 
-  return useRecoilCallback(
-    ({ snapshot, set }) =>
-      async () => {
-        const match = await snapshot.getPromise(matchOccurringAtom);
-        const socketConnected = await snapshot.getPromise(socketConnectedAtom);
+  return useAtomCallback(
+    useCallback(
+      async (get, set) => {
+        const match = get(matchAtom);
+        const socketConnected = get(isSocketConnectedAtom);
         if (!socketConnected) {
           throw new Error('Not connected to realtime service.');
         }
@@ -92,14 +94,15 @@ export const usePostResultsCallback = () => {
         // Set the current match to the next
         const next = await getNextUnplayed();
         if (next) {
-          set(currentMatchIdAtom, next.id);
-          set(matchOccurringAtom, next);
+          // Setthing this will auto-update the match atom
+          set(matchIdAtom, next.id);
         }
 
         fieldControl?.postResultsForField?.();
         sendPostResults();
         setState(MatchState.RESULTS_POSTED);
       },
-    [canPostResults, setState, matches, eventKey, tournamentKey, tournament]
+      [canPostResults, setState, matches, eventKey, tournamentKey, tournament]
+    )
   );
 };

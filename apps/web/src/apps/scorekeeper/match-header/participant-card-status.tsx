@@ -1,4 +1,4 @@
-import { Button } from '@mui/material';
+import { Button } from 'antd';
 import { FC, useCallback } from 'react';
 
 interface Props {
@@ -43,11 +43,12 @@ export const ParticipantCardStatus: FC<Props> = ({
   };
   return (
     <Button
-      variant='contained'
-      fullWidth
+      type='default'
+      block
       onClick={toggle}
       disabled={disabled}
       className={getClass()}
+      style={{ fontWeight: 600 }}
     >
       {renderText()}
     </Button>
@@ -94,11 +95,12 @@ export const FGCParticipantCardStatus: FC<Props> = ({
   };
   return (
     <Button
-      variant='contained'
-      fullWidth
+      type='default'
+      block
       onClick={toggle}
       disabled={disabled}
       className={getClass()}
+      style={{ fontWeight: 600 }}
     >
       {renderText()}
     </Button>

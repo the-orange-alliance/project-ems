@@ -1,8 +1,8 @@
-import { Button } from '@mui/material';
+import { Button } from 'antd';
 import { FC } from 'react';
-import { useMatchControl } from '../hooks/use-match-control';
+import { useMatchControl } from '../hooks/use-match-control.js';
 import { MatchState } from '@toa-lib/models';
-import { setDisplays } from 'src/api/use-socket';
+import { setDisplays } from 'src/api/use-socket.js';
 
 export const DisplaysButton: FC = () => {
   const { canSetDisplays, setState } = useMatchControl();
@@ -12,11 +12,11 @@ export const DisplaysButton: FC = () => {
   };
   return (
     <Button
-      fullWidth
-      color='info'
-      variant='contained'
+      type='primary'
+      block
       onClick={updateDisplays}
       disabled={!canSetDisplays}
+      style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
     >
       Set Displays
     </Button>

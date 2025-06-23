@@ -1,8 +1,8 @@
 import { FC, useState } from 'react';
-import { useMatchControl } from '../hooks/use-match-control';
-import { usePrepareFieldCallback } from '../hooks/use-prepare-field';
-import { useSnackbar } from 'src/hooks/use-snackbar';
-import { LoadingButton } from '@mui/lab';
+import { useMatchControl } from '../hooks/use-match-control.js';
+import { usePrepareFieldCallback } from '../hooks/use-prepare-field.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { Button } from 'antd';
 
 export const FieldPrepButton: FC = () => {
   const [loading, setLoading] = useState(false);
@@ -21,15 +21,15 @@ export const FieldPrepButton: FC = () => {
     }
   };
   return (
-    <LoadingButton
-      fullWidth
-      color='success'
-      variant='contained'
+    <Button
+      type='primary'
+      block
       onClick={sendPrepareField}
       disabled={!canPrepField || loading}
       loading={loading}
+      style={{ backgroundColor: '#faad14', borderColor: '#faad14' }}
     >
       Prep Field
-    </LoadingButton>
+    </Button>
   );
 };

@@ -75,7 +75,6 @@ export const useEventState = (config: StateConfig): EventStateHookResponse => {
   const prevTeams = useRef<Team[]>([]);
   const prevTournaments = useRef<Tournament[]>([]);
   const prevMatches = useRef<Match<any>[]>([]);
-
   const eventRequest = useEvent(config.event ? eventKey : undefined);
   const teamsRequest = useTeamsForEvent(
     config.teams ? event?.eventKey : undefined

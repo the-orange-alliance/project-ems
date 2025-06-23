@@ -1,11 +1,11 @@
-import { Grid } from '@mui/material';
 import { FC } from 'react';
-import { AllianceCard } from './alliance-card';
-import { useRecoilState } from 'recoil';
-import { matchOccurringAtom } from 'src/stores/recoil';
+import { Row, Col } from 'antd';
+import { AllianceCard } from './alliance-card.js';
 import { MatchParticipant, Team } from '@toa-lib/models';
-import { useMatchControl } from '../hooks/use-match-control';
-import { MatchInfo } from './match-info';
+import { useMatchControl } from '../hooks/use-match-control.js';
+import { MatchInfo } from './match-info.js';
+import { matchAtom } from 'src/stores/state/event.js';
+import { useAtom } from 'jotai';
 
 interface Props {
   teams?: Team[];
@@ -13,15 +13,15 @@ interface Props {
 
 export const MatchHeader: FC<Props> = ({ teams }) => {
   const { canPrestart, canResetField } = useMatchControl();
-  const [match, setMatch] = useRecoilState(matchOccurringAtom);
+  const [match, setMatch] = useAtom(matchAtom);
   const canEdit = canPrestart || canResetField;
   const handleParticipantChange = (participants: MatchParticipant[]) => {
     if (!match) return;
     setMatch({ ...match, participants });
   };
   return (
-    <Grid container spacing={1} sx={{ marginTop: (theme) => theme.spacing(2) }}>
-      <Grid item xs={12} sm={6} md={5}>
+    <Row gutter={8} style={{ marginTop: 16, width: '100%' }}>
+      <Col xs={24} sm={12} md={10}>
         <AllianceCard
           teams={teams}
           participants={match?.participants}
@@ -29,11 +29,11 @@ export const MatchHeader: FC<Props> = ({ teams }) => {
           disabled={!canEdit}
           handleChange={handleParticipantChange}
         />
-      </Grid>
-      <Grid item xs={12} sm={6} md={2} sx={{ paddingTop: '0 !important' }}>
+      </Col>
+      <Col xs={24} sm={12} md={4} style={{ paddingTop: 0 }}>
         <MatchInfo />
-      </Grid>
-      <Grid item xs={12} sm={6} md={5}>
+      </Col>
+      <Col xs={24} sm={12} md={10}>
         <AllianceCard
           teams={teams}
           participants={match?.participants}
@@ -41,7 +41,7 @@ export const MatchHeader: FC<Props> = ({ teams }) => {
           disabled={!canEdit}
           handleChange={handleParticipantChange}
         />
-      </Grid>
-    </Grid>
+      </Col>
+    </Row>
   );
 };

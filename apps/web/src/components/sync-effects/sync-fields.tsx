@@ -1,11 +1,11 @@
-import { useRecoilState, useSetRecoilState } from 'recoil';
-import { activeFieldsAtom } from 'src/stores/recoil';
+import { useAtom, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
-import { useCurrentTournament } from 'src/api/use-tournament-data';
-import useLocalStorage from 'src/stores/local-storage';
+import { useCurrentTournament } from 'src/api/use-tournament-data.js';
+import useLocalStorage from 'src/stores/local-storage.js';
+import { fieldsAtom } from 'src/stores/state/ui.js';
 
-export const useSyncFieldsToRecoil = () => {
-  const setActiveFields = useSetRecoilState(activeFieldsAtom);
+export const useSyncFields = () => {
+  const setActiveFields = useSetAtom(fieldsAtom);
   const tournament = useCurrentTournament();
   const [localStorageState, setLocalStorage] = useLocalStorage(
     `${tournament?.eventKey}-${tournament?.tournamentKey}`,
@@ -16,14 +16,17 @@ export const useSyncFieldsToRecoil = () => {
   useEffect(() => {
     if (!tournament) return;
 
-    // This is dumb, but resolves this issue for now.  Currently, the tournament resolves, 
+    // This is dumb, but resolves this issue for now.  Currently, the tournament resolves,
     // but the localStorageState doesn't update fast enough.
     // So, we'll fetch it manually and double-check JUST in case...
     const stored = localStorage.getItem(
       `${tournament.eventKey}-${tournament.tournamentKey}`
     );
     if (localStorageState) {
-      console.log('Setting active fields from local storage state:', localStorage);
+      console.log(
+        'Setting active fields from local storage state:',
+        localStorage
+      );
       setActiveFields(localStorageState);
     } else if (stored) {
       console.log('Setting active fields from local storage (manual):', stored);
@@ -39,7 +42,7 @@ export const useSyncFieldsToRecoil = () => {
 };
 
 export const useActiveFields = () => {
-  const [activeFields, setActiveFields] = useRecoilState(activeFieldsAtom);
+  const [activeFields, setActiveFields] = useAtom(fieldsAtom);
   const tournament = useCurrentTournament();
   const [, setLocalStorage] = useLocalStorage(
     `${tournament?.eventKey}-${tournament?.tournamentKey}`,
@@ -54,14 +57,16 @@ export const useActiveFields = () => {
 };
 
 export const useActiveFieldNumbers = () => {
-  const [activeFields, setActiveFields] = useRecoilState(activeFieldsAtom);
+  const [activeFields, setActiveFields] = useAtom(fieldsAtom);
   const tournament = useCurrentTournament();
   const [, setLocalStorage] = useLocalStorage(
     `${tournament?.eventKey}-${tournament?.tournamentKey}`,
     tournament?.fields
   );
   // Convert the fields to numbers
-  const numbers = activeFields.map((f) => (tournament?.fields.indexOf(f) ?? -2) + 1);
+  const numbers = activeFields.map(
+    (f) => (tournament?.fields.indexOf(f) ?? -2) + 1
+  );
   const set = (fields: number[]) => {
     if (!tournament) return;
     const names = fields.map((f) => tournament.fields[f - 1]);

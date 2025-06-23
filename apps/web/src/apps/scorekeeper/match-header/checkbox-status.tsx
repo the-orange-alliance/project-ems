@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Checkbox } from '@mui/material';
+import { Checkbox } from 'antd';
 
 interface Props {
   value: boolean;
@@ -16,7 +16,11 @@ const CheckboxStatus: FC<Props> = ({ value, disabled, onChange }) => {
       disabled={disabled}
       checked={value}
       onChange={toggle}
-      sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
     />
   );
 };

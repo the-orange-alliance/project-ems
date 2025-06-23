@@ -1,42 +1,50 @@
-import { Box, Chip, Paper, Typography } from '@mui/material';
+import { Card, Typography, Tag } from 'antd';
 import { FC } from 'react';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import { MatchTimer } from 'src/components/util/match-timer';
-import { useRecoilValue } from 'recoil';
 import {
-  matchStatusAtom,
-  scorekeeperAudioEnabledAtom
-} from 'src/stores/recoil';
-import { useSocket } from 'src/api/use-socket';
+  ExclamationCircleOutlined,
+  CheckCircleOutlined
+} from '@ant-design/icons';
+import { MatchTimer } from 'src/components/util/match-timer.js';
+import { useSocket } from 'src/api/use-socket.js';
+import { useAtomValue } from 'jotai';
+import { matchStatusAtom } from 'src/stores/state/match.js';
+import { isAudioEnabledForScorekeeper } from 'src/stores/state/ui.js';
 
 export const MatchInfo: FC = () => {
-  const matchState = useRecoilValue(matchStatusAtom);
-  const audioEnabled = useRecoilValue(scorekeeperAudioEnabledAtom);
+  const matchState = useAtomValue(matchStatusAtom);
+  const audioEnabled = useAtomValue(isAudioEnabledForScorekeeper);
   const [, connected] = useSocket();
   return (
-    <Paper sx={{ height: '100%' }}>
-      <Box
-        sx={{
-          padding: (theme) => theme.spacing(2),
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}
+    <Card
+      style={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 16
+      }}
+    >
+      <Typography.Title
+        level={3}
+        style={{ textAlign: 'center', marginBottom: 8 }}
       >
-        <Typography align='center' variant='h4'>
-          <MatchTimer audio={audioEnabled} />
-        </Typography>
-        <Typography gutterBottom align='center' variant='body1'>
-          {matchState}
-        </Typography>
-        <Chip
-          icon={connected ? <CheckCircleOutlineIcon /> : <ErrorOutlineIcon />}
-          label={connected ? 'Connected' : 'Not Connected'}
-          color={connected ? 'success' : 'error'}
-        />
-      </Box>
-    </Paper>
+        <MatchTimer audio={audioEnabled} />
+      </Typography.Title>
+      <Typography.Text
+        style={{ display: 'block', textAlign: 'center', marginBottom: 8 }}
+      >
+        {matchState}
+      </Typography.Text>
+      <Tag
+        icon={
+          connected ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />
+        }
+        color={connected ? 'success' : 'error'}
+        style={{ alignSelf: 'center', marginTop: 8 }}
+      >
+        {connected ? 'Connected' : 'Not Connected'}
+      </Tag>
+    </Card>
   );
 };

@@ -1,33 +1,33 @@
-import { Grid } from '@mui/material';
 import { FC } from 'react';
-import { PrestartButton } from './prestart-button';
-import { DisplaysButton } from './displays-button';
-import { FieldPrepButton } from './field-prep-button';
-import { StartMatchButton } from './start-match-button';
-import { CommitScoresButton } from './commit-scores-button';
-import { PostResultsButton } from './post-results-button';
+import { Row, Col } from 'antd';
+import { PrestartButton } from './prestart-button.js';
+import { DisplaysButton } from './displays-button.js';
+import { FieldPrepButton } from './field-prep-button.js';
+import { StartMatchButton } from './start-match-button.js';
+import { CommitScoresButton } from './commit-scores-button.js';
+import { PostResultsButton } from './post-results-button.js';
 
 export const MatchControl: FC = () => {
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
+    <Row gutter={[24, 24]} style={{ width: '100%' }}>
+      <Col xs={24} sm={12} md={8} lg={4}>
         <PrestartButton />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
         <DisplaysButton />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
         <FieldPrepButton />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
         <StartMatchButton />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
         <CommitScoresButton />
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={2}>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={4}>
         <PostResultsButton />
-      </Grid>
-    </Grid>
+      </Col>
+    </Row>
   );
 };

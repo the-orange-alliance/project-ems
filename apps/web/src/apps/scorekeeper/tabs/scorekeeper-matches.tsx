@@ -1,8 +1,8 @@
-import { Divider } from '@mui/material';
+import { Divider } from 'antd';
 import { Match, Team, Tournament } from '@toa-lib/models';
 import { FC } from 'react';
-import TournamentDropdown from 'src/components/dropdowns/tournament-dropdown';
-import { MatchResultsTable } from 'src/components/tables/match-results-table';
+import TournamentDropdown from 'src/components/dropdowns/tournament-dropdown.js';
+import { MatchResultsTable } from 'src/components/tables/match-results-table.js';
 
 interface Props {
   matches?: Match<any>[];

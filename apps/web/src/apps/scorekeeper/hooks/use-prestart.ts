@@ -1,32 +1,29 @@
-import { useRecoilCallback, useRecoilValue } from 'recoil';
-import { useMatchControl } from './use-match-control';
+import { useMatchControl } from './use-match-control.js';
 import {
   getDefaultMatchDetailsBySeasonKey,
   MatchSocketEvent,
   MatchState
 } from '@toa-lib/models';
-import {
-  currentEventKeyAtom,
-  currentTournamentKeyAtom,
-  matchOccurringAtom,
-  socketConnectedAtom
-} from 'src/stores/recoil';
-import { patchMatch, patchMatchParticipants } from 'src/api/use-match-data';
+import { patchMatch, patchMatchParticipants } from 'src/api/use-match-data.js';
 import { DateTime } from 'luxon';
-import { once, sendPrestart, sendUpdate } from 'src/api/use-socket';
-import { useSeasonFieldControl } from 'src/hooks/use-season-components';
-import { useTeamsForEvent } from 'src/api/use-team-data';
+import { once, sendPrestart, sendUpdate } from 'src/api/use-socket.js';
+import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
+import { matchAtom, teamsAtom } from 'src/stores/state/event.js';
+import { useAtomCallback } from 'jotai/utils';
+import { useCallback } from 'react';
+import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
+import { useAtomValue } from 'jotai';
 
 export const usePrestartCallback = () => {
   const { canPrestart, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
-  const event = useRecoilValue(currentEventKeyAtom);
-  const teams = useTeamsForEvent(event);
-  return useRecoilCallback(
-    ({ snapshot, set }) =>
-      async () => {
-        const match = await snapshot.getPromise(matchOccurringAtom);
-        const socketConnected = await snapshot.getPromise(socketConnectedAtom);
+  const teams = useAtomValue(teamsAtom);
+
+  return useAtomCallback(
+    useCallback(
+      async (get, set) => {
+        const match = get(matchAtom);
+        const socketConnected = get(isSocketConnectedAtom);
         if (!socketConnected) {
           throw new Error('Not connected to realtime service.');
         }
@@ -47,7 +44,7 @@ export const usePrestartCallback = () => {
         let currentMatch = { ...match };
         currentMatch.participants = currentMatch.participants?.map((p) => ({
           ...p,
-          team: p.team || teams.data?.find((t) => t.teamKey === p.teamKey)
+          team: p.team || teams?.find((t) => t.teamKey === p.teamKey)
         }));
 
         await patchMatchParticipants(
@@ -69,8 +66,8 @@ export const usePrestartCallback = () => {
           };
         }
 
-        set(matchOccurringAtom, currentMatch);
-        set(currentTournamentKeyAtom, currentMatch.tournamentKey);
+        // Set the match in the atom so that it can be used by the field control. It will update match/tourn/event ids if needed
+        set(matchAtom, currentMatch);
         fieldControl?.prestartField?.();
         // Once we recieve the prestart response, immediately send update to load socket with match
         once(MatchSocketEvent.PRESTART, () => sendUpdate(currentMatch));
@@ -78,18 +75,21 @@ export const usePrestartCallback = () => {
         sendPrestart({ eventKey, tournamentKey, id });
         setState(MatchState.PRESTART_COMPLETE);
       },
-    [canPrestart, setState, event, teams]
+      [canPrestart, setState, teams]
+    )
   );
 };
 
 export const useCancelPrestartCallback = () => {
   const { canCancelPrestart, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
-  return useRecoilCallback(() => async () => {
-    if (!canCancelPrestart) {
-      throw new Error('Attempted to cancel prestart when not allowed.');
-    }
-    fieldControl?.cancelPrestartForField?.();
-    setState(MatchState.PRESTART_READY);
-  });
+  return useAtomCallback(
+    useCallback(() => {
+      if (!canCancelPrestart) {
+        throw new Error('Attempted to cancel prestart when not allowed.');
+      }
+      fieldControl?.cancelPrestartForField?.();
+      setState(MatchState.PRESTART_READY);
+    }, [])
+  );
 };

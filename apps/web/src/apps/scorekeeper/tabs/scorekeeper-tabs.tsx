@@ -1,42 +1,43 @@
-import { Divider, Paper, Tab, Tabs } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
-import { TabPanel } from 'src/components/util/tab-panel';
-import { ScorekeeperMatches } from './scorekeeper-matches';
-import { useRecoilState, useSetRecoilState } from 'recoil';
-import { currentTournamentKeyAtom } from 'src/stores/recoil';
-import { useTournamentsForEvent } from 'src/api/use-tournament-data';
-import { useMatchesForTournament } from 'src/api/use-match-data';
-import { useTeamsForEvent } from 'src/api/use-team-data';
-import { currentMatchIdAtom, matchOccurringAtom } from 'src/stores/recoil';
-import { useMatchControl } from '../hooks/use-match-control';
+import { Tabs, Divider, Card } from 'antd';
+import { TabPanel } from 'src/components/util/tab-panel.js';
+import { ScorekeeperMatches } from './scorekeeper-matches.js';
+import { useMatchControl } from '../hooks/use-match-control.js';
 import { MatchState } from '@toa-lib/models';
-import { ScorekeeperDetails } from './scorekeeper-details';
-import { useActiveFieldNumbers } from 'src/components/sync-effects/sync-fields-to-recoil';
-import { ScorekeeperOptions } from './scorekeeper-options';
+import { ScorekeeperDetails } from './scorekeeper-details.js';
+import { useActiveFieldNumbers } from 'src/components/sync-effects/sync-fields.js';
+import { ScorekeeperOptions } from './scorekeeper-options.js';
+import { useAtom, useSetAtom } from 'jotai';
+import {
+  matchAtom,
+  matchIdAtom,
+  tournamentKeyAtom
+} from 'src/stores/state/event.js';
+import { useEventState } from 'src/stores/hooks/use-event-state.js';
 
 interface Props {
   eventKey?: string;
 }
 
-export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
+export const ScorekeeperTabs: FC<Props> = () => {
   const { canPrestart, setState } = useMatchControl();
-  const [tournamentKey, setTournamentKey] = useRecoilState(
-    currentTournamentKeyAtom
-  );
-  const [matchId, setMatchId] = useRecoilState(currentMatchIdAtom);
+  const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
+  const [matchId, setMatchId] = useAtom(matchIdAtom);
   const [value, setValue] = useState(0);
-  const setMatchOccurring = useSetRecoilState(matchOccurringAtom);
+  const setMatchOccurring = useSetAtom(matchAtom);
   const [activeFields] = useActiveFieldNumbers();
 
-  const { data: tournaments } = useTournamentsForEvent(eventKey);
-  const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
-  const { data: teams } = useTeamsForEvent(eventKey);
+  const {
+    state: {
+      local: { matches, teams, tournaments }
+    }
+  } = useEventState({ matches: true, teams: true, tournaments: true });
 
   useEffect(() => {
     setValue(0);
   }, [tournamentKey]);
-  const handleChange = (_: React.SyntheticEvent, newValue: number) =>
-    setValue(newValue);
+
+  const handleChange = (key: string) => setValue(Number(key));
   const handleTournamentChange = (key: string) => {
     setTournamentKey(key);
     setMatchId(null);
@@ -49,32 +50,56 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
     setMatchOccurring(matches.find((m) => m.id === id) ?? null);
     setState(MatchState.PRESTART_READY);
   };
+
   return (
-    <Paper sx={{ width: '100%' }}>
-      <Tabs value={value} onChange={handleChange}>
-        <Tab label='Schedule' />
-        <Tab label='Score Details' />
-        <Tab label='Options' />
-      </Tabs>
-      <Divider />
-      <TabPanel value={value} index={0}>
-        <ScorekeeperMatches
-          matches={matches?.filter((m) => activeFields.includes(m.fieldNumber))}
-          teams={teams}
-          tournaments={tournaments}
-          tournamentKey={tournamentKey}
-          selected={(match) => match.id === matchId}
-          onTournamentChange={handleTournamentChange}
-          onMatchSelect={handleMatchChange}
-          disabled={!canPrestart && matchId !== null}
-        />
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-        <ScorekeeperDetails />
-      </TabPanel>
-      <TabPanel value={value} index={2}>
-        <ScorekeeperOptions />
-      </TabPanel>
-    </Paper>
+    <Card style={{ width: '100%' }} bodyStyle={{ padding: 0 }}>
+      <Tabs
+        activeKey={String(value)}
+        size='large'
+        style={{ marginLeft: 8, marginRight: 8 }}
+        onChange={handleChange}
+        items={[
+          {
+            key: '0',
+            label: 'Schedule',
+            children: (
+              <TabPanel value={value} index={0}>
+                <ScorekeeperMatches
+                  matches={matches?.filter((m) =>
+                    activeFields.includes(m.fieldNumber)
+                  )}
+                  teams={teams}
+                  tournaments={tournaments}
+                  tournamentKey={tournamentKey}
+                  selected={(match) => match.id === matchId}
+                  onTournamentChange={handleTournamentChange}
+                  onMatchSelect={handleMatchChange}
+                  disabled={!canPrestart && matchId !== null}
+                />
+              </TabPanel>
+            )
+          },
+          {
+            key: '1',
+            label: 'Score Details',
+            children: (
+              <TabPanel value={value} index={1}>
+                <ScorekeeperDetails />
+              </TabPanel>
+            )
+          },
+          {
+            key: '2',
+            label: 'Options',
+            children: (
+              <TabPanel value={value} index={2}>
+                <ScorekeeperOptions />
+              </TabPanel>
+            )
+          }
+        ]}
+      />
+      <Divider style={{ margin: 0 }} />
+    </Card>
   );
 };

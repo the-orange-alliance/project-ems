@@ -1,16 +1,17 @@
-import { useRecoilCallback } from 'recoil';
-import { useMatchControl } from './use-match-control';
+import { useMatchControl } from './use-match-control.js';
 import { MatchState } from '@toa-lib/models';
-import { socketConnectedAtom } from 'src/stores/recoil';
-import { useSeasonFieldControl } from 'src/hooks/use-season-components';
+import { useAtomCallback } from 'jotai/utils';
+import { useCallback } from 'react';
+import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
+import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 
 export const usePrepareFieldCallback = () => {
   const { canPrepField, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
-  return useRecoilCallback(
-    ({ snapshot }) =>
-      async () => {
-        const socketConnected = await snapshot.getPromise(socketConnectedAtom);
+  return useAtomCallback(
+    useCallback(
+      (get) => {
+        const socketConnected = get(isSocketConnectedAtom);
         if (!socketConnected) {
           throw new Error('Not connected to realtime service.');
         }
@@ -20,6 +21,7 @@ export const usePrepareFieldCallback = () => {
         fieldControl?.prepareField?.();
         setState(MatchState.FIELD_READY);
       },
-    [canPrepField, setState]
+      [canPrepField, setState]
+    )
   );
 };

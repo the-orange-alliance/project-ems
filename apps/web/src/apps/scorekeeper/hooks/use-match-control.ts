@@ -1,6 +1,6 @@
 import { MatchState } from '@toa-lib/models';
-import { useRecoilState } from 'recoil';
-import { matchStateAtom } from 'src/stores/recoil';
+import { useAtom } from 'jotai';
+import { matchStateAtom } from 'src/stores/state/match.js';
 
 interface MatchControlState {
   canPrestart: boolean;
@@ -16,7 +16,7 @@ interface MatchControlState {
 }
 
 export const useMatchControl = (): MatchControlState => {
-  const [matchState, setState] = useRecoilState(matchStateAtom);
+  const [matchState, setState] = useAtom(matchStateAtom);
   switch (matchState) {
     case MatchState.MATCH_NOT_SELECTED:
       return {

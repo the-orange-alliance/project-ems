@@ -1,23 +1,24 @@
-import { useRecoilCallback, useRecoilValue } from 'recoil';
+import { useAtomValue } from 'jotai';
+import { useAtomCallback } from 'jotai/utils';
+import { useCallback } from 'react';
+import { useMatchesForTournament } from 'src/api/use-match-data.js';
+import { useActiveFieldNumbers } from 'src/components/sync-effects/sync-fields.js';
 import {
-  currentEventKeyAtom,
-  currentMatchIdAtom,
-  currentTournamentKeyAtom,
-  matchOccurringAtom
-} from 'src/stores/recoil';
-import { useMatchesForTournament } from 'src/api/use-match-data';
-import { useActiveFieldNumbers } from 'src/components/sync-effects/sync-fields-to-recoil';
+  eventKeyAtom,
+  matchAtom,
+  tournamentKeyAtom
+} from 'src/stores/state/event.js';
 
 export const useNextUnplayedMatch = () => {
-  const eventKey = useRecoilValue(currentEventKeyAtom);
-  const tournamentKey = useRecoilValue(currentTournamentKeyAtom);
+  const eventKey = useAtomValue(eventKeyAtom);
+  const tournamentKey = useAtomValue(tournamentKeyAtom);
   const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
   const [activeFields] = useActiveFieldNumbers();
 
-  return useRecoilCallback(
-    ({ snapshot }) =>
-      async () => {
-        const match = await snapshot.getPromise(matchOccurringAtom);
+  return useAtomCallback(
+    useCallback(
+      (get) => {
+        const match = get(matchAtom);
 
         if (!match) {
           return null;
@@ -39,6 +40,7 @@ export const useNextUnplayedMatch = () => {
         }
         return null;
       },
-    [matches, eventKey, tournamentKey, activeFields]
+      [matches, eventKey, tournamentKey, activeFields]
+    )
   );
 };
