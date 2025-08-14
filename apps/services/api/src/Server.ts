@@ -1,7 +1,8 @@
-import express, { Application, json } from 'express';
-import { createServer } from 'http';
-import cors from 'cors';
-import parser from 'body-parser';
+import Fastify from 'fastify';
+import fastifyCors from '@fastify/cors';
+import fastifyFormbody from '@fastify/formbody';
+import fastifySwagger from '@fastify/swagger';
+import fastifySwaggerUi from '@fastify/swagger-ui';
 import passport from 'passport';
 import {
   jwtStrategy,
@@ -24,9 +25,11 @@ import tournamentController from './controllers/Tournament.js';
 import frcFmsController from './controllers/FrcFms.js';
 import resultsController from './controllers/Results.js';
 import socketClientsController from './controllers/SocketClients.js';
-import { handleCatchAll, handleErrors } from './middleware/ErrorHandler.js';
 import logger from './util/Logger.js';
 import { initGlobal } from './db/EventDatabase.js';
+import { createJsonSchemaTransformObject, jsonSchemaTransform, serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import SchemaRef from './util/GlobalSchema.js';
+import { handleErrors, handleNotFound } from './middleware/ErrorHandler.js';
 
 // Setup our environment
 env.loadAndSetDefaults(process.env);
@@ -39,50 +42,87 @@ try {
   process.exit(1);
 }
 
-// Bind express to our http server
-const app: Application = express();
-const server = createServer(app);
+// Create Fastify instance
+const fastify = Fastify({ logger: false });
 
-// Setup and config express middleware
-app.use(
-  cors({
-    credentials: true,
-    origin: true
-  })
-);
-app.use(json({ limit: '50mb' }));
-app.use(parser.urlencoded({ extended: false, limit: '50mb' }));
+// Register Error handler for all routes
+fastify.setErrorHandler(handleErrors);
+fastify.setNotFoundHandler(handleNotFound);
+
+// Register plugins
+await fastify.register(fastifyCors, {
+  // Set to your frontend's URL if you need credentials, or use '*' if not
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+});
+await fastify.register(fastifyFormbody);
+
+// Register Zod as the type provider for Fastify
+fastify.setValidatorCompiler(validatorCompiler);
+fastify.setSerializerCompiler(serializerCompiler);
 
 // Setup passport config
 passport.use(jwtStrategy(env.get().jwtSecret));
 passport.use(localStrategy());
 
-// Define our route controllers
-app.use('/admin', adminController);
-app.use('/auth', authController);
-app.use('/event', eventController);
-app.use('/teams', teamController);
-app.use('/storage', storageController);
-app.use('/schedule-items', scheduleItemsController);
-app.use('/schedule-params', scheduleParamsController);
-app.use('/match', matchController);
-app.use('/ranking', rankingController);
-app.use('/alliance', allianceController);
-app.use('/tournament', tournamentController);
-app.use('/frc/fms', frcFmsController);
-app.use('/results', resultsController);
-app.use('/socketClients', socketClientsController);
-
-// Define root/testing paths
-app.get('/', requireAuth, (req, res) => {
-  res.send(req.headers);
+// Register Swagger for API documentation
+await fastify.register(fastifySwagger, {
+  openapi: {
+    info: {
+      title: `EMS ${env.get().serviceName}`,
+      description: `API documentation for the ${env.get().serviceName} service.`,
+      version: '1.0.0'
+    },
+    tags: [
+      { name: 'Events', description: 'Event related endpoints' },
+      { name: 'Teams', description: 'Team related endpoints' },
+      { name: 'Matches', description: 'Match related endpoints' },
+      { name: 'Rankings', description: 'Ranking related endpoints' },
+      { name: 'Alliances', description: 'Alliance related endpoints' },
+      { name: 'Tournaments', description: 'Tournament related endpoints' },
+      { name: 'FrcFms', description: 'FRC FMS related endpoints' },
+      { name: 'Results', description: 'Results related endpoints' },
+      { name: 'Schedule Items', description: 'Schedule item related endpoints' },
+      { name: 'Schedule Parameters', description: 'Schedule parameter related endpoints' },
+      { name: 'Storage', description: 'Storage related endpoints' },
+      { name: 'Auth', description: 'Authentication and authorization endpoints' },
+      { name: 'Admin', description: 'Admin related endpoints' },
+      { name: 'Sockets', description: 'Socket client related endpoints' }
+    ]
+  },
+  transform: jsonSchemaTransform,
+  transformObject: createJsonSchemaTransformObject({schemas: SchemaRef}),
 });
 
-// Define error middleware
-app.use(handleErrors);
-app.use(handleCatchAll);
+// Register Swagger UI
+await fastify.register(fastifySwaggerUi, {
+  routePrefix: '/docs'
+})
 
-// Passport serizliation
+// Define root/testing paths
+fastify.get('/', { preHandler: requireAuth }, async (request, reply) => {
+  reply.send(request.headers);
+});
+
+await fastify.register(adminController, { prefix: '/admin' });
+await fastify.register(allianceController, { prefix: '/alliance' });
+await fastify.register(authController, { prefix: '/auth' });
+await fastify.register(eventController, { prefix: '/event' });
+await fastify.register(frcFmsController, { prefix: '/frc/fms' });
+await fastify.register(matchController, { prefix: '/match' });
+await fastify.register(rankingController, { prefix: '/ranking' });
+await fastify.register(resultsController, { prefix: '/results' });
+await fastify.register(scheduleItemsController, { prefix: '/schedule-items' });
+await fastify.register(scheduleParamsController, { prefix: '/schedule-params' });
+await fastify.register(socketClientsController, { prefix: '/socketClients' });
+await fastify.register(storageController, { prefix: '/storage' });
+await fastify.register(teamController, { prefix: '/teams' });
+await fastify.register(tournamentController, { prefix: '/tournament' });
+
+
+// Passport serialization (optional, for sessions)
 passport.serializeUser((user, cb) => {
   console.log('serialize user', user);
   cb(null, (user as any).id);
@@ -95,19 +135,23 @@ passport.deserializeUser((id, cb) => {
 
 // Network variables
 const host = getIPv4();
+const port = parseInt(env.get().servicePort);
 
 // Start the server
-server.listen(
+fastify.listen(
   {
     host,
-    port: env.get().servicePort
+    port: isNaN(port) ? undefined : port
   },
-  () =>
+  (err, address) => {
+    if (err) {
+      logger.error(err);
+      process.exit(1);
+    }
     logger.info(
       `[${env.get().nodeEnv.charAt(0).toUpperCase()}][${env
         .get()
-        .serviceName.toUpperCase()}] Server started on ${host}:${
-        env.get().servicePort
-      }`
-    )
+        .serviceName.toUpperCase()}] Server started on ${host}:${port}`
+    );
+  }
 );

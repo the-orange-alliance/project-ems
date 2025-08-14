@@ -1,4 +1,6 @@
 import { ApiError } from '@toa-lib/models';
+import z, { ZodRawShape } from 'zod';
+import logger from './Logger.js';
 
 export const InvalidQueryError: ApiError = {
   code: 400,
@@ -55,3 +57,67 @@ export const SeasonFunctionsMissing: ApiError = {
   code: 500,
   message: 'Internal server error. Could not find season functions.'
 };
+
+export const GenericInternalServerError: ApiError = {
+  code: 500,
+  message: 'Internal server error.'
+};
+
+export const InternalServerError = (message?: unknown): ApiError => {
+  logger.error(
+    `Internal server error: ${message}\n${message instanceof Error ? message.stack : ''}`
+  );
+
+  return ({
+    code: 500,
+    message: `Internal server error. ${message ?? ''}`
+  });
+}
+
+type ApiErrors = typeof InvalidQueryError | typeof EmptyBodyError | typeof BodyNotValidError | typeof UnauthorizedError | typeof AuthenticationError | typeof AuthenticationNotLocalError | typeof AuthenticationInvalidError | typeof DataNotFoundError | typeof InvalidDataError | typeof RouteNotFound | typeof SeasonFunctionsMissing | typeof GenericInternalServerError;
+
+export const ApiErrorZod = z.object({
+  code: z.number(),
+  message: z.string()
+});
+
+const apiErrorToSchema = (error: ApiErrors) =>
+  z.object({
+    code: z.literal(error.code),
+    message: z.literal(error.message)
+  });
+
+
+export function errorableSchema<T extends z.ZodTypeAny, U extends ApiErrors = typeof GenericInternalServerError>(
+  successSchema: T,
+  ...errors: U[]
+):
+  // Return type is an intersection of the success schema and each error schema
+  ({
+    200: T;
+    500: ApiError;
+  } &
+  {
+    [K in U as `${K['code']}`]: ({
+      code: K['code'];
+      message: K['message'];
+    });
+  }) {
+  const errorSchemas = errors.reduce<Record<number, z.ZodTypeAny>>((acc, err) => {
+    acc[err.code] = apiErrorToSchema(err);
+    return acc;
+  }, {});
+  const combined = {
+    200: successSchema,
+    ...errorSchemas
+  } as any;
+
+  if (combined[500] === undefined) {
+    combined[500] = ApiErrorZod;
+  } else {
+    combined[500] = z.union([
+      combined[500], ApiErrorZod, z.any()
+    ]);
+  }
+  return combined;
+}

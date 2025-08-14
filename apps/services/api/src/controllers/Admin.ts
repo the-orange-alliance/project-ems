@@ -1,20 +1,25 @@
-import { NextFunction, Request, Response, Router } from 'express';
+import { FastifyInstance } from 'fastify';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { z } from 'zod';
 import { getDB } from '../db/EventDatabase.js';
+import { errorableSchema, InternalServerError } from '../util/Errors.js';
+import { EventKeyParams, EmptySchema } from '../util/GlobalSchema.js';
 
-const router = Router();
-
-router.delete(
-  '/purge/:eventKey',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { eventKey } = req.params;
-      const db = await getDB(eventKey);
-      await db.purgeAll();
-      res.status(200).send({});
-    } catch (e) {
-      return next(e);
+async function adminController(fastify: FastifyInstance) {
+  fastify.withTypeProvider<ZodTypeProvider>().delete(
+    '/purge/:eventKey',
+    { schema: { params: EventKeyParams, response: errorableSchema(EmptySchema), tags: ['Admin'] } },
+    async (request, reply) => {
+      try {
+        const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
+        const db = await getDB(eventKey);
+        await db.purgeAll();
+        reply.status(200).send({});
+      } catch (e) {
+        reply.send(InternalServerError(e));
+      }
     }
-  }
-);
+  );
+}
 
-export default router;
+export default adminController;

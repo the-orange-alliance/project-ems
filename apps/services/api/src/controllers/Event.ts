@@ -1,81 +1,98 @@
 import { eventZod, getSeasonKeyFromEventKey } from '@toa-lib/models';
-import { NextFunction, Response, Request, Router } from 'express';
+import { FastifyInstance} from 'fastify';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { getDB } from '../db/EventDatabase.js';
-import { validateBodyZ } from '../middleware/BodyValidator.js';
-import { DataNotFoundError } from '../util/Errors.js';
+import { z } from 'zod';
+import { DataNotFoundError, errorableSchema, GenericInternalServerError, InternalServerError } from '../util/Errors.js';
+import { EventKeyParams } from '../util/GlobalSchema.js';
 
-const router = Router();
+const eventsZod = z.array(eventZod);
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const db = await getDB('global');
-    const data = await db.selectAll('event');
-    res.send(data);
-  } catch (e) {
-    return next(e);
-  }
-});
-
-router.get(
-  '/:eventKey',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { eventKey } = req.params;
-      const db = await getDB('global');
-      const data = await db.selectAllWhere('event', `eventKey = "${eventKey}"`);
-      if (data.length === 0) {
-        res.send(DataNotFoundError);
-      } else {
-        res.send(data[0]);
+async function eventController(fastify: FastifyInstance) {
+  // Get all events
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    '/',
+    { schema: { response: errorableSchema<typeof eventsZod>(eventsZod), tags: ['Events'] } },
+    async (request, reply) => {
+      try {
+        const db = await getDB('global');
+        const data = await db.selectAll('event');
+        reply.send(data);
+      } catch (e) {
+        reply.send(InternalServerError(e));
       }
-    } catch (e) {
-      return next(e);
     }
-  }
-);
+  );
 
-router.post(
-  '/',
-  validateBodyZ(eventZod),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const db = await getDB('global');
-      await db.insertValue('event', [req.body]);
-      res.status(200).send({});
-    } catch (e) {
-      return next(e);
+  // Get event by key
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    '/:eventKey',
+    { schema: { params: EventKeyParams, response: errorableSchema<typeof eventZod, typeof DataNotFoundError>(eventZod, DataNotFoundError), tags: ['Events'] } },
+    async (request, reply) => {
+      try {
+        const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
+        const db = await getDB('global');
+        const data = await db.selectAllWhere('event', `eventKey = "${eventKey}"`);
+        if (data.length === 0) {
+          reply.send(DataNotFoundError);
+        } else {
+          reply.send(data[0]);
+        }
+      } catch (e) {
+        reply.send(InternalServerError(e));
+      }
     }
-  }
-);
+  );
 
-router.patch(
-  '/:eventKey',
-  validateBodyZ(eventZod),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { eventKey } = req.params;
-      const db = await getDB('global');
-      await db.updateWhere('event', req.body, `eventKey = "${eventKey}"`);
-      res.status(200).send({});
-    } catch (e) {
-      return next(e);
+  // Create event
+  fastify.withTypeProvider<ZodTypeProvider>().post(
+    '/',
+    { schema: { body: eventZod, response: errorableSchema(z.object({})), tags: ['Events'] } },
+    async (request, reply) => {
+      try {
+        const db = await getDB('global');
+        await db.insertValue('event', [request.body]);
+        reply.status(200).send({});
+      } catch (e) {
+        reply.send(InternalServerError(e));
+      }
     }
-  }
-);
+  );
 
-router.get(
-  '/setup/:eventKey',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { eventKey } = req.params;
-      const db = await getDB(eventKey);
-      await db.createEventBase();
-      await db.createEventGameSpecifics(getSeasonKeyFromEventKey(eventKey));
-      res.status(200).send({});
-    } catch (e) {
-      return next(e);
+  const emptyResponseSchema = z.object({});
+
+  // Update event
+  fastify.withTypeProvider<ZodTypeProvider>().patch(
+    '/:eventKey',
+    { schema: { params: EventKeyParams, body: eventZod, response: errorableSchema<typeof emptyResponseSchema>(emptyResponseSchema), tags: ['Events'] } },
+    async (request, reply) => {
+      try {
+        const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
+        const db = await getDB('global');
+        await db.updateWhere('event', request.body, `eventKey = "${eventKey}"`);
+        reply.status(200).send({});
+      } catch (e) {
+        reply.send(InternalServerError(e));
+      }
     }
-  }
-);
+  );
 
-export default router;
+  // Setup event
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    '/setup/:eventKey',
+    { schema: { params: EventKeyParams, response: errorableSchema<typeof emptyResponseSchema>(emptyResponseSchema), tags: ['Events'] } },
+    async (request, reply) => {
+      try {
+        const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
+        const db = await getDB(eventKey);
+        await db.createEventBase();
+        await db.createEventGameSpecifics(getSeasonKeyFromEventKey(eventKey));
+        reply.status(200).send({});
+      } catch (e) {
+        reply.send(InternalServerError(e));
+      }
+    }
+  );
+}
+
+export default eventController;

@@ -1,46 +1,79 @@
-import { isAppStoragePatch, isAppStoragePost } from '@toa-lib/models';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { z } from 'zod';
 import { getAll, setAll, setKey } from '@toa-lib/server';
-import { NextFunction, Request, Response, Router } from 'express';
-import { validateBody } from '../middleware/BodyValidator.js';
+import { errorableSchema } from '../util/Errors.js';
+import SchemaRef from '../util/GlobalSchema.js';
+import { ZodTypeProvider } from 'fastify-type-provider-zod';
 
-const router = Router();
+// Params schema for GET /:store
+const StorageParamsSchema = z.object({ store: z.string() });
 
-router.get(
-  '/:store',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = await getAll(req.params.store);
-      res.send(data);
-    } catch (e) {
-      return next(e);
+// POST body schema
+const StoragePostSchema = z.object({
+  file: z.string(),
+  data: z.record(z.unknown())
+});
+
+// PATCH body schema
+const StoragePatchSchema = z.object({
+  file: z.string(),
+  key: z.string(),
+  data: z.unknown()
+});
+
+// Response schema for GET /:store (unknown object)
+const StorageResponseSchema = z.record(z.unknown());
+
+type StorageParams = z.infer<typeof StorageParamsSchema>;
+type StoragePost = z.infer<typeof StoragePostSchema>;
+type StoragePatch = z.infer<typeof StoragePatchSchema>;
+
+export default async function StorageController(
+  fastify: FastifyInstance,
+  _opts: FastifyPluginOptions
+) {
+  fastify.withTypeProvider<ZodTypeProvider>().route({
+    method: 'GET',
+    url: '/:store',
+    schema: {
+      tags: ['Storage'],
+      params: StorageParamsSchema,
+      response: errorableSchema(StorageResponseSchema)
+    },
+    async handler(request) {
+      const { store } = request.params as StorageParams;
+      const data = await getAll(store);
+      return data;
     }
-  }
-);
+  });
 
-router.post(
-  '/',
-  validateBody(isAppStoragePost),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      await setAll(req.body.file, req.body.data);
-      res.status(200).send({});
-    } catch (e) {
-      return next(e);
+  fastify.withTypeProvider<ZodTypeProvider>().route({
+    method: 'POST',
+    url: '/',
+    schema: {
+      tags: ['Storage'],
+      body: StoragePostSchema,
+      response: errorableSchema(SchemaRef.EmptySchema)
+    },
+    async handler(request) {
+      const body = request.body as StoragePost;
+      await setAll(body.file, body.data);
+      return {};
     }
-  }
-);
+  });
 
-router.patch(
-  '/',
-  validateBody(isAppStoragePatch),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      await setKey(req.body.file, req.body.key, req.body.data);
-      res.status(200).send({});
-    } catch (e) {
-      return next(e);
+  fastify.withTypeProvider<ZodTypeProvider>().route({
+    method: 'PATCH',
+    url: '/',
+    schema: {
+      tags: ['Storage'],
+      body: StoragePatchSchema,
+      response: errorableSchema(SchemaRef.EmptySchema)
+    },
+    async handler(request) {
+      const body = request.body as StoragePatch;
+      await setKey(body.file, body.key, body.data);
+      return {};
     }
-  }
-);
-
-export default router;
+  });
+}

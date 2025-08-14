@@ -1,100 +1,101 @@
 import { scheduleItemZod, teamZod } from '@toa-lib/models';
-import { NextFunction, Response, Request, Router } from 'express';
+import { FastifyInstance } from 'fastify';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { z } from 'zod';
 import { getDB } from '../db/EventDatabase.js';
-import { validateBodyZ } from '../middleware/BodyValidator.js';
-import { DataNotFoundError } from '../util/Errors.js';
+import { errorableSchema, DataNotFoundError, InternalServerError } from '../util/Errors.js';
+import { EventKeyParams, EventTournamentKeyParams, EmptySchema } from '../util/GlobalSchema.js';
 
-const router = Router();
+const ScheduleItemArraySchema = z.array(scheduleItemZod);
 
-router.get(
-  '/:eventKey',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { eventKey } = req.params;
-      const db = await getDB(eventKey);
-      const data = await db.selectAllWhere(
-        'schedule',
-        `eventKey = '${eventKey}'`
-      );
-      if (!data) {
-        return next(DataNotFoundError);
+async function scheduleItemController(fastify: FastifyInstance) {
+  // Get all schedule items for event
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    '/:eventKey',
+    { schema: { params: EventKeyParams, response: errorableSchema(ScheduleItemArraySchema, DataNotFoundError), tags: ['Schedule Items'] } },
+    async (request, reply) => {
+      try {
+        const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
+        const db = await getDB(eventKey);
+        const data = await db.selectAllWhere('schedule', `eventKey = '${eventKey}'`);
+        if (!data) {
+          reply.send(DataNotFoundError);
+        } else {
+          reply.send(data);
+        }
+      } catch (e) {
+        reply.send(InternalServerError(e));
       }
-      res.send(data);
-    } catch (e) {
-      return next(e);
     }
-  }
-);
+  );
 
-router.get(
-  '/:eventKey/:tournamentKey',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { eventKey, tournamentKey } = req.params;
-      const db = await getDB(eventKey);
-      const data = await db.selectAllWhere(
-        'schedule',
-        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
-      );
-      if (!data) {
-        return next(DataNotFoundError);
+  // Get schedule items for event/tournament
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    '/:eventKey/:tournamentKey',
+    { schema: { params: EventTournamentKeyParams, response: errorableSchema(ScheduleItemArraySchema, DataNotFoundError), tags: ['Schedule Items'] } },
+    async (request, reply) => {
+      try {
+        const { eventKey, tournamentKey } = request.params as z.infer<typeof EventTournamentKeyParams>;
+        const db = await getDB(eventKey);
+        const data = await db.selectAllWhere('schedule', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
+        if (!data) {
+          reply.send(DataNotFoundError);
+        } else {
+          reply.send(data);
+        }
+      } catch (e) {
+        reply.send(InternalServerError(e));
       }
-      res.send(data);
-    } catch (e) {
-      return next(e);
     }
-  }
-);
+  );
 
-router.post(
-  '/',
-  validateBodyZ(scheduleItemZod.array()),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { eventKey } = req.body[0];
-      const db = await getDB(eventKey);
-      await db.insertValue('schedule', req.body);
-      res.status(200).send({});
-    } catch (e) {
-      return next(e);
+  // Insert schedule items
+  fastify.withTypeProvider<ZodTypeProvider>().post(
+    '/',
+    { schema: { body: ScheduleItemArraySchema, response: errorableSchema(EmptySchema), tags: ['Schedule Items'] } },
+    async (request, reply) => {
+      try {
+        const { eventKey } = request.body[0];
+        const db = await getDB(eventKey);
+        await db.insertValue('schedule', request.body);
+        reply.status(200).send({});
+      } catch (e) {
+        reply.send(InternalServerError(e));
+      }
     }
-  }
-);
+  );
 
-router.delete(
-  '/:eventKey/:tournamentKey',
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { eventKey, tournamentKey } = req.params;
-      const db = await getDB(eventKey);
-      await db.deleteWhere(
-        'schedule',
-        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
-      );
-      res.status(200).send({});
-    } catch (e) {
-      return next(e);
+  // Delete schedule items for event/tournament
+  fastify.withTypeProvider<ZodTypeProvider>().delete(
+    '/:eventKey/:tournamentKey',
+    { schema: { params: EventTournamentKeyParams, response: errorableSchema(EmptySchema), tags: ['Schedule Items'] } },
+    async (request, reply) => {
+      try {
+        const { eventKey, tournamentKey } = request.params as z.infer<typeof EventTournamentKeyParams>;
+        const db = await getDB(eventKey);
+        await db.deleteWhere('schedule', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
+        reply.status(200).send({});
+      } catch (e) {
+        reply.send(InternalServerError(e));
+      }
     }
-  }
-);
+  );
 
-router.patch(
-  '/:eventKey/:tournamentKey/:id',
-  validateBodyZ(teamZod),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { eventKey, tournamentKey, id } = req.params;
-      const db = await getDB(eventKey);
-      await db.updateWhere(
-        'schedule',
-        req.body,
-        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = "${id}"`
-      );
-      res.status(200).send({});
-    } catch (e) {
-      return next(e);
+  // Update schedule item
+  fastify.withTypeProvider<ZodTypeProvider>().patch(
+    '/:eventKey/:tournamentKey/:id',
+    { schema: { params: EventTournamentKeyParams.extend({ id: z.string() }), body: teamZod, response: errorableSchema(EmptySchema), tags: ['Schedule Items'] } },
+    async (request, reply) => {
+      try {
+        const { eventKey, tournamentKey, id } = request.params as z.infer<typeof EventTournamentKeyParams> & { id: string };
+        const db = await getDB(eventKey);
+        await db.updateWhere('schedule', request.body, `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = "${id}"`);
+        reply.status(200).send({});
+      } catch (e) {
+        reply.send(InternalServerError(e));
+      }
     }
-  }
-);
+  );
+}
 
-export default router;
+export default scheduleItemController;
