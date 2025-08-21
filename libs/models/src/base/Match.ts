@@ -142,6 +142,11 @@ export const matchZod: z.ZodSchema<Match<MatchDetailBase>> = z.object({
   details: matchKeyZod.optional()
 });
 
+// @ts-expect-error It's an object, who cares?
+export const matchWithDetailsZod = matchZod.extend({
+  details: z.union([matchKeyZod, z.any()]).optional()
+});
+
 export type MatchMakerParams = z.infer<typeof matchMakerParamsZod>;
 export type MatchKey = z.infer<typeof matchKeyZod>;
 export type MatchDetailBase = z.infer<typeof matchKeyZod>;

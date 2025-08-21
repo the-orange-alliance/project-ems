@@ -3,7 +3,6 @@ import {
   Match,
   MatchDetailBase,
   matchMakerParamsZod,
-  matchZod,
   matchParticipantZod,
   reconcileMatchParticipants,
   getFunctionsBySeasonKey
@@ -22,8 +21,9 @@ import {
 import logger from '../util/Logger.js';
 import { getDB, __dirname } from '../db/EventDatabase.js';
 import { EventKeyParams, EventTournamentKeyParams, EventTournamentIdParams, EmptySchema } from '../util/GlobalSchema.js';
+import { matchWithDetailsZod } from '@toa-lib/models/base';
 
-const MatchArraySchema = z.array(matchZod);
+const MatchArraySchema = z.array(matchWithDetailsZod);
 const MatchParticipantArraySchema = z.array(matchParticipantZod);
 
 async function matchController(fastify: FastifyInstance) {
@@ -123,7 +123,7 @@ async function matchController(fastify: FastifyInstance) {
   // Get full match details
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/all/:eventKey/:tournamentKey/:id',
-    { schema: { params: EventTournamentIdParams, response: errorableSchema(matchZod), tags: ['Matches'] } },
+    { schema: { params: EventTournamentIdParams, response: errorableSchema(matchWithDetailsZod), tags: ['Matches'] } },
     async (request, reply) => {
       try {
         const { eventKey, tournamentKey, id } = request.params as z.infer<typeof EventTournamentIdParams>;
@@ -195,17 +195,17 @@ async function matchController(fastify: FastifyInstance) {
   // Update match
   fastify.withTypeProvider<ZodTypeProvider>().patch(
     '/:eventKey/:tournamentKey/:id',
-    { schema: { params: EventTournamentIdParams, body: matchZod, response: errorableSchema(EmptySchema), tags: ['Matches'] } },
+    { schema: { params: EventTournamentIdParams, body: matchWithDetailsZod, response: errorableSchema(EmptySchema), tags: ['Matches'] } },
     async (request, reply) => {
       try {
         const { eventKey, tournamentKey, id } = request.params as z.infer<typeof EventTournamentIdParams>;
         const db = await getDB(eventKey);
-        const match = request.body;
+        const match = request.body as z.infer<typeof matchWithDetailsZod>;
         if (match.details) delete match.details;
         if (match.participants) delete match.participants;
         await db.updateWhere(
           'match',
-          request.body,
+          match,
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
         );
         reply.status(200).send({});

@@ -14,4 +14,4 @@ export * from './Ranking.js';
 export * from './Alliance.js';
 export * from './Tournament.js';
 export * from './BonusPeriod.js';
-export * from './Sync.js'
+export * from './Sync.js';

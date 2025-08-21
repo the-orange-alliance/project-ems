@@ -1,3 +1,4 @@
+import z from 'zod';
 import { AllianceMember } from '../base/Alliance.js';
 import { Match, MatchDetailBase } from '../base/Match.js';
 import { Ranking } from '../base/Ranking.js';
@@ -6,12 +7,14 @@ import { ChargedUpSeason } from './ChargedUp.js';
 import { CrescendoSeason } from './Crescendo.js';
 import { FeedingTheFutureSeason } from './FeedingTheFuture.js';
 import { HydrogenHorizonsSeason } from './HydrogenHorizons.js';
+import { EcoEquilibriumSeason } from './FGC25_EcoEquilibrium.js'
 
 export * from './CarbonCapture.js';
 export * from './ChargedUp.js';
 export * as HydrogenHorizons from './HydrogenHorizons.js';
 export * as Crescendo from './Crescendo.js';
 export * as FeedingTheFuture from './FeedingTheFuture.js';
+export * as EcoEquilibrium from './FGC25_EcoEquilibrium.js';
 
 export interface Season<T extends MatchDetailBase, J extends Ranking> {
   key: string;
@@ -26,7 +29,8 @@ export const Seasons: Season<any, any>[] = [
   ChargedUpSeason,
   HydrogenHorizonsSeason,
   CrescendoSeason,
-  FeedingTheFutureSeason
+  FeedingTheFutureSeason,
+  EcoEquilibriumSeason
 ];
 
 export interface SeasonFunctions<T extends MatchDetailBase, J extends Ranking> {
