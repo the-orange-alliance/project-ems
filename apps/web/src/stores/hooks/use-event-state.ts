@@ -136,7 +136,7 @@ export const useEventState = (config: StateConfig): EventStateHookResponse => {
       }
       prevTournaments.current = modifiedTournaments;
     }
-  }, [tournamentsRequest.data]);
+  }, [tournamentsRequest.data, modifiedTournaments]);
 
   useEffect(() => {
     if (matchesRequest.data) {

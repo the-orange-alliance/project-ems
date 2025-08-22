@@ -22,7 +22,7 @@ export const TournamentManager: FC = () => {
   });
   const {
     setModifiedTournaments,
-    local: { event, tournaments }
+    local: { event, tournaments },
   } = state;
 
   const { showSnackbar } = useSnackbar();
@@ -72,7 +72,7 @@ export const TournamentManager: FC = () => {
       {
         ...defaultTournament,
         eventKey,
-        tournamentKey: `t${prev.length + 1}`,
+        tournamentKey: `t${tournaments.length + 1}`,
         name: ''
       }
     ]);
