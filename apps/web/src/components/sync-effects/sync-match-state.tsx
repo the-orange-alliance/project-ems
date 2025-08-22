@@ -1,12 +1,14 @@
-import { MatchSocketEvent, MatchState } from '@toa-lib/models';
+import { MatchKey, MatchSocketEvent, MatchState } from '@toa-lib/models';
+import { useSetAtom } from 'jotai';
+import { useAtomCallback } from 'jotai/utils';
 import { FC, useEffect } from 'react';
-import { useSetRecoilState } from 'recoil';
-import { useSocket } from 'src/api/use-socket';
-import { matchStatusAtom, matchStateAtom } from 'src/stores/recoil';
+import { useSocket } from 'src/api/use-socket.js';
+import { eventKeyAtom, matchIdAtom, tournamentKeyAtom } from 'src/stores/state/event.js';
+import { matchStateAtom, matchStatusAtom } from 'src/stores/state/match.js';
 
-export const SyncMatchStateToRecoil: FC = () => {
-  const setState = useSetRecoilState(matchStateAtom);
-  const setMode = useSetRecoilState(matchStatusAtom);
+export const SyncMatchState: FC = () => {
+  const setState = useSetAtom(matchStateAtom);
+  const setMode = useSetAtom(matchStatusAtom);
   const [socket, connected] = useSocket();
 
   useEffect(() => {
@@ -33,10 +35,26 @@ export const SyncMatchStateToRecoil: FC = () => {
     };
   }, []);
 
-  const onMatchPrestart = () => {
-    setState(MatchState.PRESTART_COMPLETE);
-    setMode('PRESTART COMPLETE');
-  };
+  const onMatchPrestart = useAtomCallback(
+    (get, set) =>
+      (match: MatchKey) => {
+        setState(MatchState.PRESTART_COMPLETE);
+        setMode('PRESTART COMPLETE');
+
+        console.log("here??????")
+
+        // Validate that the correct match is selected, if not, update
+        if (get(matchIdAtom) !== match.id) {
+          set(matchIdAtom, match.id);
+        }
+        if (get(eventKeyAtom) !== match.eventKey) {
+          set(eventKeyAtom, match.eventKey);
+        }
+        if (get(tournamentKeyAtom) !== match.tournamentKey) {
+          set(tournamentKeyAtom, match.tournamentKey);
+        }
+      }
+  );
 
   const onMatchStart = () => {
     setState(MatchState.MATCH_IN_PROGRESS);

@@ -66,7 +66,7 @@ async function matchController(fastify: FastifyInstance) {
         logger.info('matchmaker complete - sending results');
         reply.send(matches);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -82,7 +82,7 @@ async function matchController(fastify: FastifyInstance) {
         const data = await db.selectAllWhere('match', `eventKey = "${eventKey}"`);
         reply.send(data);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -98,7 +98,7 @@ async function matchController(fastify: FastifyInstance) {
         const data = await db.selectAllWhere('match_participant', `eventKey = "${eventKey}"`);
         reply.send(data);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -115,7 +115,7 @@ async function matchController(fastify: FastifyInstance) {
         const participants = await db.selectAllWhere('match_participant', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
         reply.send(reconcileMatchParticipants(data, participants));
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -141,7 +141,7 @@ async function matchController(fastify: FastifyInstance) {
         match.details = parsedDetails;
         reply.send(match);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -161,7 +161,7 @@ async function matchController(fastify: FastifyInstance) {
           reply.send(data);
         }
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -187,7 +187,7 @@ async function matchController(fastify: FastifyInstance) {
         await db.insertValue('match_detail', details);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -210,7 +210,7 @@ async function matchController(fastify: FastifyInstance) {
         );
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -241,7 +241,7 @@ async function matchController(fastify: FastifyInstance) {
         );
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -266,7 +266,7 @@ async function matchController(fastify: FastifyInstance) {
         }
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -284,7 +284,7 @@ async function matchController(fastify: FastifyInstance) {
         await db.deleteWhere('match_detail', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );

@@ -14,12 +14,13 @@ import {
   tournamentKeyAtom
 } from 'src/stores/state/event.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
+import { useMatchesForTournament } from 'src/api/use-match-data.js';
 
 interface Props {
   eventKey?: string;
 }
 
-export const ScorekeeperTabs: FC<Props> = () => {
+export const ScorekeeperTabs: FC<Props> = ({eventKey}) => {
   const { canPrestart, setState } = useMatchControl();
   const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
   const [matchId, setMatchId] = useAtom(matchIdAtom);
@@ -32,6 +33,7 @@ export const ScorekeeperTabs: FC<Props> = () => {
       local: { matches, teams, tournaments }
     }
   } = useEventState({ matches: true, teams: true, tournaments: true });
+  const {data: tournamentMatches} = useMatchesForTournament(eventKey, tournamentKey)
 
   useEffect(() => {
     setValue(0);
@@ -41,18 +43,17 @@ export const ScorekeeperTabs: FC<Props> = () => {
   const handleTournamentChange = (key: string) => {
     setTournamentKey(key);
     setMatchId(null);
-    setMatchOccurring(null);
     setState(MatchState.MATCH_NOT_SELECTED);
   };
   const handleMatchChange = (id: number) => {
-    if (!matches) return null;
+    if (!tournamentMatches) return null;
     setMatchId(id);
-    setMatchOccurring(matches.find((m) => m.id === id) ?? null);
+    setMatchOccurring(tournamentMatches.find((m) => m.id === id) ?? null);
     setState(MatchState.PRESTART_READY);
   };
 
   return (
-    <Card style={{ width: '100%' }} bodyStyle={{ padding: 0 }}>
+    <Card style={{ width: '100%' }} styles={{body: { padding: 0 }}}>
       <Tabs
         activeKey={String(value)}
         size='large'
@@ -65,9 +66,7 @@ export const ScorekeeperTabs: FC<Props> = () => {
             children: (
               <TabPanel value={value} index={0}>
                 <ScorekeeperMatches
-                  matches={matches?.filter((m) =>
-                    activeFields.includes(m.fieldNumber)
-                  )}
+                  matches={tournamentMatches} // ?.filter((m) => activeFields.includes(m.fieldNumber) )}
                   teams={teams}
                   tournaments={tournaments}
                   tournamentKey={tournamentKey}

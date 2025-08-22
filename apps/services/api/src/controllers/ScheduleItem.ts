@@ -24,7 +24,7 @@ async function scheduleItemController(fastify: FastifyInstance) {
           reply.send(data);
         }
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -44,7 +44,7 @@ async function scheduleItemController(fastify: FastifyInstance) {
           reply.send(data);
         }
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -60,7 +60,7 @@ async function scheduleItemController(fastify: FastifyInstance) {
         await db.insertValue('schedule', request.body);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -76,7 +76,7 @@ async function scheduleItemController(fastify: FastifyInstance) {
         await db.deleteWhere('schedule', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -92,7 +92,7 @@ async function scheduleItemController(fastify: FastifyInstance) {
         await db.updateWhere('schedule', request.body, `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = "${id}"`);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );

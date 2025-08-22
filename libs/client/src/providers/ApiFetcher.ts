@@ -82,7 +82,7 @@ export const apiFetcher = async <T, Z extends ZodTypeDef = ZodTypeDef>(
     method,
     body: JSON.stringify(body),
     headers: {
-      'Content-Type': 'application/json'
+      ...(body ? { 'Content-Type': 'application/json' } : {})
     }
   });
 

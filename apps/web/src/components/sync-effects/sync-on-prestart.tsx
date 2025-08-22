@@ -10,14 +10,10 @@ import {
   matchZod,
   rankingZod
 } from '@toa-lib/models';
+import { useAtomCallback } from 'jotai/utils';
 import { FC, useEffect } from 'react';
-import { useRecoilCallback } from 'recoil';
-import { useSocket } from 'src/api/use-socket';
-import {
-  currentMatchIdAtom,
-  matchOccurringAtom,
-  matchOccurringRanksAtom
-} from 'src/stores/recoil';
+import { useSocket } from 'src/api/use-socket.js';
+import { matchAtom } from 'src/stores/state/event.js';
 
 export const SyncOnPrestart: FC = () => {
   const [socket, connected] = useSocket();
@@ -31,8 +27,8 @@ export const SyncOnPrestart: FC = () => {
       socket?.removeListener(MatchSocketEvent.PRESTART, handlePrestart);
     };
   }, []);
-  const handlePrestart = useRecoilCallback(
-    ({ set }) =>
+  const handlePrestart = useAtomCallback(
+    (get, set) =>
       async (key: MatchKey) => {
         const { eventKey, id, tournamentKey } = key;
         const match: Match<MatchDetailBase> = await apiFetcher(
@@ -63,9 +59,9 @@ export const SyncOnPrestart: FC = () => {
             participant.noShow = 0;
           }
         }
-        set(matchOccurringAtom, match);
-        set(currentMatchIdAtom, match.id);
-        set(matchOccurringRanksAtom, rankings);
+        set(matchAtom, match);
+        // TODO:: Revisit??????
+        // set(matchOccurringRanksAtom, rankings);
       }
   );
   return null;

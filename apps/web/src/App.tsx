@@ -7,6 +7,8 @@ import SyncEffects from './components/sync-effects/sync-effects.js';
 import PrimaryAppbar from './components/appbars/primary.js';
 import { ConnectionManager } from './components/util/connection-manager.js';
 import { PageLoader } from './components/loading/index.js';
+import ErrorFallback from './components/errors/error-boundary.js';
+import { ErrorBoundary } from 'react-error-boundary';
 
 const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {
   return (
@@ -23,37 +25,39 @@ export function AppContainer() {
     <>
       <AppSnackbar />
       <ConnectionManager />
-      <Routes>
-        {routes.map((route) => (
-          <Route
-            key={route.name}
-            path={route.path}
-            element={
-              <RouteWrapper>
-                {!route.hideAppbar && <PrimaryAppbar />}
-                <Suspense fallback={<PageLoader />}>
-                  <route.element />
-                </Suspense>
-              </RouteWrapper>
-            }
-          >
-            {route.routes?.map((subRoute) => (
-              <Route
-                key={subRoute.name}
-                path={subRoute.path}
-                element={
-                  <RouteWrapper>
-                    {!route.hideAppbar && <PrimaryAppbar />}
-                    <Suspense fallback={<PageLoader />}>
-                      <route.element />
-                    </Suspense>
-                  </RouteWrapper>
-                }
-              />
-            ))}
-          </Route>
-        ))}
-      </Routes>
+      <ErrorBoundary fallbackRender={(props) => <ErrorFallback {...props} />}>
+        <Routes>
+          {routes.map((route) => (
+            <Route
+              key={route.name}
+              path={route.path}
+              element={
+                <RouteWrapper>
+                  {!route.hideAppbar && <PrimaryAppbar />}
+                  <Suspense fallback={<PageLoader />}>
+                    <route.element />
+                  </Suspense>
+                </RouteWrapper>
+              }
+            >
+              {route.routes?.map((subRoute) => (
+                <Route
+                  key={subRoute.name}
+                  path={subRoute.path}
+                  element={
+                    <RouteWrapper>
+                      {!route.hideAppbar && <PrimaryAppbar />}
+                      <Suspense fallback={<PageLoader />}>
+                        <route.element />
+                      </Suspense>
+                    </RouteWrapper>
+                  }
+                />
+              ))}
+            </Route>
+          ))}
+        </Routes>
+      </ErrorBoundary>
     </>
   );
 }

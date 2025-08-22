@@ -53,7 +53,7 @@ async function authenticationController(fastify: FastifyInstance) {
               if (user.username === DEFAULT_ADMIN_USERNAME) {
                 // request.logIn(user, { session: false }, (err) => {
                 //   if (err) {
-                //     reply.send(InternalServerError(err));
+                //     reply.code(500).send(InternalServerError(err));
                 //     return resolve(null);
                 //   }
                   const userLogin: UserLoginResponse = { ...user, token: '' };
@@ -94,7 +94,7 @@ async function authenticationController(fastify: FastifyInstance) {
         const data = await db.selectAll('users');
         reply.send(data);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -110,7 +110,7 @@ async function authenticationController(fastify: FastifyInstance) {
         await db.setupUsers();
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );

@@ -84,7 +84,9 @@ export const ScheduleBreak: FC<Props> = ({
   return (
     <Row gutter={[24, 24]} style={{ paddingTop: 8, paddingBottom: 16 }}>
       <Col xs={24} sm={12} md={8} lg={4}>
+        <label style={{ display: 'block', marginBottom: 4 }} htmlFor={`break-name-${dayId}-${breakId}`}>Break Name</label>
         <Input
+          id={`break-name-${dayId}-${breakId}`}
           name='name'
           placeholder='Break Name'
           value={dayBreak.name}
@@ -93,7 +95,9 @@ export const ScheduleBreak: FC<Props> = ({
         />
       </Col>
       <Col xs={24} sm={12} md={8} lg={2}>
+        <label style={{ display: 'block', marginBottom: 4 }} htmlFor={`break-afterMatch-${dayId}-${breakId}`}>After Match</label>
         <InputNumber
+          id={`break-afterMatch-${dayId}-${breakId}`}
           name='afterMatch'
           placeholder='Match'
           value={dayBreak.afterMatch}
@@ -104,7 +108,9 @@ export const ScheduleBreak: FC<Props> = ({
         />
       </Col>
       <Col xs={24} sm={12} md={8} lg={2}>
+        <label style={{ display: 'block', marginBottom: 4 }} htmlFor={`break-duration-${dayId}-${breakId}`}>Duration (min)</label>
         <InputNumber
+          id={`break-duration-${dayId}-${breakId}`}
           name='duration'
           placeholder='Duration'
           value={dayBreak.duration}
@@ -115,7 +121,9 @@ export const ScheduleBreak: FC<Props> = ({
         />
       </Col>
       <Col xs={24} sm={12} md={8} lg={4}>
+        <label style={{ display: 'block', marginBottom: 4 }} htmlFor={`break-startDate-${dayId}-${breakId}`}>Start Time</label>
         <Input
+          id={`break-startDate-${dayId}-${breakId}`}
           value={startDate ? startDate.toFormat('yyyy-MM-dd HH:mm') : ''}
           disabled
           style={{ width: '100%' }}
@@ -123,7 +131,9 @@ export const ScheduleBreak: FC<Props> = ({
         />
       </Col>
       <Col xs={24} sm={12} md={8} lg={4}>
+        <label style={{ display: 'block', marginBottom: 4 }} htmlFor={`break-endDate-${dayId}-${breakId}`}>End Time</label>
         <Input
+          id={`break-endDate-${dayId}-${breakId}`}
           value={endDate ? endDate.toFormat('yyyy-MM-dd HH:mm') : ''}
           disabled
           style={{ width: '100%' }}

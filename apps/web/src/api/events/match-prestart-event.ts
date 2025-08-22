@@ -9,15 +9,11 @@ import {
   getSeasonKeyFromEventKey,
   getDefaultMatchDetailsBySeasonKey
 } from '@toa-lib/models';
-import { useRecoilCallback } from 'recoil';
-import {
-  matchOccurringAtom,
-  currentMatchIdAtom,
-  matchOccurringRanksAtom
-} from 'src/stores/recoil';
+import { useAtomCallback } from 'jotai/utils';
+import { matchAtom } from 'src/stores/state/event.js';
 
 export const usePrestartEvent = () => {
-  return useRecoilCallback(({ set }) => async (key: MatchKey) => {
+  return useAtomCallback((get, set) => async (key: MatchKey) => {
     const { eventKey, id, tournamentKey } = key;
     const match: Match<MatchDetailBase> = await apiFetcher(
       `match/all/${eventKey}/${tournamentKey}/${id}`,
@@ -47,8 +43,8 @@ export const usePrestartEvent = () => {
         participant.noShow = 0;
       }
     }
-    set(matchOccurringAtom, match);
-    set(currentMatchIdAtom, match.id);
-    set(matchOccurringRanksAtom, rankings);
+    set(matchAtom, match);
+    // TODO: revisit?????
+    // set(matchOccurringRanksAtom, rankings);
   });
 };

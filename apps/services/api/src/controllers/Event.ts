@@ -19,7 +19,7 @@ async function eventController(fastify: FastifyInstance) {
         const data = await db.selectAll('event');
         reply.send(data);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -39,7 +39,7 @@ async function eventController(fastify: FastifyInstance) {
           reply.send(data[0]);
         }
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -54,7 +54,7 @@ async function eventController(fastify: FastifyInstance) {
         await db.insertValue('event', [request.body]);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -72,7 +72,7 @@ async function eventController(fastify: FastifyInstance) {
         await db.updateWhere('event', request.body, `eventKey = "${eventKey}"`);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -89,7 +89,7 @@ async function eventController(fastify: FastifyInstance) {
         await db.createEventGameSpecifics(getSeasonKeyFromEventKey(eventKey));
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );

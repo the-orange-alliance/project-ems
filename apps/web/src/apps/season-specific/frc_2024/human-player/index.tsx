@@ -23,8 +23,8 @@ import {
   matchStatusAtom,
   timer
 } from 'src/stores/recoil';
-import { SyncMatchOccurringToRecoil } from 'src/components/sync-effects/sync-match-occurring-to-recoil';
-import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state-to-recoil';
+import { SyncMatchOccurringToRecoil } from 'src/components/sync-effects/sync-match-occurring.js';
+import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state.js';
 import { SyncMatchesToRecoil } from 'src/components/sync-effects/sync-matches-to-recoi';
 import { MatchTimer } from 'src/components/util/match-timer';
 

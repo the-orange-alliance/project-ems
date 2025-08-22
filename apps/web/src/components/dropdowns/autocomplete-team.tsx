@@ -1,10 +1,8 @@
-import { FC, SyntheticEvent } from 'react';
-import { useRecoilValue } from 'recoil';
-import Box from '@mui/material/Box';
-import Autocomplete from '@mui/material/Autocomplete';
-import TextField from '@mui/material/TextField';
-import { teamIdentifierAtom } from 'src/stores/recoil';
+import { FC } from 'react';
+import { Select } from 'antd';
 import { Team } from '@toa-lib/models';
+import { useAtomValue } from 'jotai';
+import { teamIdentifierAtom } from 'src/stores/state/ui.js';
 
 interface Props {
   teamKey: number | null;
@@ -21,56 +19,35 @@ export const AutocompleteTeam: FC<Props> = ({
   teams,
   onChange
 }) => {
-  const identifier = useRecoilValue(teamIdentifierAtom);
+  const identifier = useAtomValue(teamIdentifierAtom);
   const team = teams?.find((t) => t.teamKey === teamKey);
 
-  const handleChange = (e: SyntheticEvent, team: Team | null) => onChange(team);
-
   return (
-    <Autocomplete
-      fullWidth
-      disablePortal
+    <Select
+      showSearch
+      allowClear
+      value={teamKey ?? undefined}
       disabled={disabled}
-      value={team || null}
-      options={teams ?? []}
-      getOptionLabel={(option) => `${option[identifier]}`}
-      renderOption={(props, option) => (
-        <Box component='li' {...props}>
-          <span
-            className={
-              'flag-icon flag-icon-' + option.countryCode.toLowerCase()
-            }
-          ></span>
-          &nbsp;
-          <span>{option[identifier]}</span>
-        </Box>
-      )}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          inputProps={{
-            ...params.inputProps,
-            style: {
-              color: white ? '#ffffff' : '#000000'
-            }
-          }}
-          sx={{ padding: 0, margin: 0 }}
-        />
-      )}
-      onChange={handleChange}
-      sx={{
-        padding: 0,
-        '& fieldset': {
-          borderColor: white ? '#ffffff' : '#000000 !important'
-        },
-        '& input': {
-          padding: '0 !important'
-        },
-        '& .MuiOutlinedInput-root': {
-          paddingTop: '7px',
-          paddingBottom: '7px'
-        }
+      style={{ width: '100%', background: white ? '#fff' : undefined }}
+      placeholder="Select a team"
+      optionFilterProp="children"
+      onChange={(value) => {
+        const selected = teams?.find((t) => t.teamKey === value) || null;
+        onChange(selected);
       }}
-    />
+      filterOption={(input, option) => {
+        if (!option) return false;
+        const label = typeof option.children === 'string' ? option.children : '';
+        return label.toLowerCase().includes(input.toLowerCase());
+      }}
+    >
+      {(teams ?? []).map((option) => (
+        <Select.Option key={option.teamKey} value={option.teamKey}>
+          <span className={'flag-icon flag-icon-' + option.countryCode.toLowerCase()}></span>
+          &nbsp;
+          <span>{option[identifier as keyof typeof option]}</span>
+        </Select.Option>
+      ))}
+    </Select>
   );
 };

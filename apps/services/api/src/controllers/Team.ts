@@ -19,7 +19,7 @@ async function teamController(fastify: FastifyInstance) {
         const data = await db.selectAll('team');
         reply.send(data);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -39,7 +39,7 @@ async function teamController(fastify: FastifyInstance) {
           reply.send(data);
         }
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -55,7 +55,7 @@ async function teamController(fastify: FastifyInstance) {
         await db.insertValue('team', request.body);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -75,7 +75,7 @@ async function teamController(fastify: FastifyInstance) {
         );
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -98,7 +98,7 @@ async function teamController(fastify: FastifyInstance) {
           reply.send({});
         }
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );

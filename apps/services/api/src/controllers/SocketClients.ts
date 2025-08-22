@@ -1,4 +1,4 @@
-import { FastifyInstance} from 'fastify';
+import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { getDB } from '../db/EventDatabase.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,7 +10,11 @@ import { SuccessSchema } from '../util/GlobalSchema.js';
 const connectBodySchema = z.object({
   persistantClientId: z.string().nullable().optional(),
   connected: z.number().default(1),
-  audienceDisplayChroma: z.string().nullable().optional()
+  audienceDisplayChroma: z.string().nullable().optional(),
+  followerMode: z.number(),
+  followerApiHost: z.string().nullable().optional(),
+  fieldNumbers: z.string(),
+  lastSocketId: z.string()
 });
 
 const persistantClientParams = z.object({
@@ -46,7 +50,7 @@ async function socketClientsController(fastify: FastifyInstance) {
         const clients = await db.selectAll('socket_clients');
         reply.send(clients);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -65,7 +69,7 @@ async function socketClientsController(fastify: FastifyInstance) {
       try {
         const body = request.body as z.infer<typeof connectBodySchema>;
         const db = await getDB('global');
-        let result = body;
+        let result = { ...body, ipAddress: request.ip };
         if (body.persistantClientId) {
           result.connected = 1;
           if (result.audienceDisplayChroma) {
@@ -90,7 +94,7 @@ async function socketClientsController(fastify: FastifyInstance) {
         }
         reply.send(result);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -118,7 +122,7 @@ async function socketClientsController(fastify: FastifyInstance) {
         );
         reply.send({ success: true });
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -144,7 +148,7 @@ async function socketClientsController(fastify: FastifyInstance) {
         );
         reply.send({ success: true });
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -169,7 +173,7 @@ async function socketClientsController(fastify: FastifyInstance) {
         );
         reply.send({ success: true });
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );

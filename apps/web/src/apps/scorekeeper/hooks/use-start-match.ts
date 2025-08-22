@@ -1,4 +1,3 @@
-import { useRecoilCallback } from 'recoil';
 import { useMatchControl } from './use-match-control.js';
 import { sendAbortMatch, sendStartMatch } from 'src/api/use-socket.js';
 import { MatchState } from '@toa-lib/models';
@@ -35,7 +34,8 @@ export const useAbortMatchCallback = () => {
   const { canAbortMatch, setState } = useMatchControl();
   const abortModal = useModal(AbortDialog);
   const fieldControl = useSeasonFieldControl();
-  return useRecoilCallback(() => async () => {
+  return async () => {
+    console.log("here??????")
     if (!canAbortMatch) {
       throw new Error('Attempted to abort match when not allowed.');
     }
@@ -44,5 +44,5 @@ export const useAbortMatchCallback = () => {
     fieldControl?.abortField?.();
     sendAbortMatch();
     setState(MatchState.PRESTART_READY);
-  });
+  };
 };

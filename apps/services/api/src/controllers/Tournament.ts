@@ -29,7 +29,7 @@ async function tournamentController(fastify: FastifyInstance) {
           reply.send(data.map((t: any) => tournamentDatabaseZod.parse(t)));
         }
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -48,7 +48,7 @@ async function tournamentController(fastify: FastifyInstance) {
         );
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -68,7 +68,7 @@ async function tournamentController(fastify: FastifyInstance) {
         );
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );

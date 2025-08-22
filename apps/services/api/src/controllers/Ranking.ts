@@ -31,7 +31,7 @@ async function rankingController(fastify: FastifyInstance) {
         const teams = await db.selectAllWhere('team', `eventKey = "${eventKey}"`);
         reply.send(reconcileTeamRankings(teams, rankings));
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -48,7 +48,7 @@ async function rankingController(fastify: FastifyInstance) {
         const teams = await db.selectAllWhere('team', `eventKey = "${eventKey}"`);
         reply.send(reconcileTeamRankings(teams, rankings));
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -69,7 +69,7 @@ async function rankingController(fastify: FastifyInstance) {
         );
         reply.send(rankings);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -85,7 +85,7 @@ async function rankingController(fastify: FastifyInstance) {
         await db.insertValue('ranking', request.body);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -113,7 +113,7 @@ async function rankingController(fastify: FastifyInstance) {
         await db.insertValue('ranking', rankings);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -156,7 +156,7 @@ async function rankingController(fastify: FastifyInstance) {
           reply.send(rankings);
         }
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -172,7 +172,7 @@ async function rankingController(fastify: FastifyInstance) {
         await db.deleteWhere('ranking', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );

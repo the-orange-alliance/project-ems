@@ -1,9 +1,9 @@
 import { Match } from '@toa-lib/models';
-import { useRecoilCallback } from 'recoil';
-import { matchOccurringAtom } from 'src/stores/recoil';
+import { useAtomCallback } from 'jotai/utils';
+import { matchAtom } from 'src/stores/state/event.js';
 
 export const useMatchUpdateEvent = () => {
-  return useRecoilCallback(({ set }) => async (newMatch: Match<any>) => {
-    set(matchOccurringAtom, newMatch);
+    return useAtomCallback((get, set) => async (newMatch: Match<any>) => {
+    set(matchAtom, newMatch);
   });
 };

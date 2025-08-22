@@ -113,7 +113,7 @@ export function errorableSchema<T extends z.ZodTypeAny, U extends ApiErrors = ty
   } as any;
 
   if (combined[500] === undefined) {
-    combined[500] = ApiErrorZod;
+    combined[500] = z.union([ApiErrorZod, z.any()]);
   } else {
     combined[500] = z.union([
       combined[500], ApiErrorZod, z.any()

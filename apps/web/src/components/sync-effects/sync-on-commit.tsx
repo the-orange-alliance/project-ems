@@ -1,9 +1,8 @@
 import { apiFetcher } from '@toa-lib/client';
 import { MatchKey, MatchSocketEvent, rankingZod } from '@toa-lib/models';
+import { useAtomCallback } from 'jotai/utils';
 import { FC, useEffect } from 'react';
-import { useRecoilCallback } from 'recoil';
-import { useSocket } from 'src/api/use-socket';
-import { matchOccurringRanksAtom } from 'src/stores/recoil';
+import { useSocket } from 'src/api/use-socket.js';
 
 export const SyncOnCommit: FC = () => {
   const [socket, connected] = useSocket();
@@ -20,8 +19,8 @@ export const SyncOnCommit: FC = () => {
     };
   }, []);
 
-  const handleCommit = useRecoilCallback(
-    ({ set }) =>
+  const handleCommit = useAtomCallback(
+    (get, set) =>
       async ({ eventKey, tournamentKey, id }: MatchKey) => {
         const rankings = await apiFetcher(
           `ranking/${eventKey}/${tournamentKey}/${id}`,
@@ -29,7 +28,8 @@ export const SyncOnCommit: FC = () => {
           undefined,
           rankingZod.array().parse
         );
-        set(matchOccurringRanksAtom, rankings);
+        // TODO:: Revisit???????
+        // set(matchOccurringRanksAtom, rankings);
       }
   );
 

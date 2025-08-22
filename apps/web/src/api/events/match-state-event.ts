@@ -1,32 +1,35 @@
 import { MatchState } from '@toa-lib/models';
-import { useRecoilCallback } from 'recoil';
-import { matchStateAtom, matchStatusAtom } from 'src/stores/recoil';
+import { useSetAtom } from 'jotai';
+import { matchStateAtom, matchStatusAtom } from '../../stores/state/match.js';
 
 export const useMatchStateEvents = () => {
-  const handleMatchPrestart = useRecoilCallback(({ set }) => async () => {
-    set(matchStateAtom, MatchState.PRESTART_COMPLETE);
-    set(matchStatusAtom, 'PRESTART COMPLETE');
-  });
-  const handleMatchStart = useRecoilCallback(({ set }) => async () => {
-    set(matchStateAtom, MatchState.MATCH_IN_PROGRESS);
-    set(matchStatusAtom, 'MATCH STARTED');
-  });
-  const handleMatchEnd = useRecoilCallback(({ set }) => async () => {
-    set(matchStateAtom, MatchState.MATCH_COMPLETE);
-    set(matchStatusAtom, 'MATCH COMPLETE');
-  });
-  const handleMatchAbort = useRecoilCallback(({ set }) => async () => {
-    set(matchStateAtom, MatchState.MATCH_ABORTED);
-    set(matchStatusAtom, 'MATCH ABORTED');
-  });
-  const handleMatchTeleop = useRecoilCallback(({ set }) => async () => {
-    set(matchStateAtom, MatchState.MATCH_IN_PROGRESS);
-    set(matchStatusAtom, 'TELEOPERATED');
-  });
-  const handleMatchEndgame = useRecoilCallback(({ set }) => async () => {
-    set(matchStateAtom, MatchState.MATCH_IN_PROGRESS);
-    set(matchStatusAtom, 'ENDGAME');
-  });
+  const setMatchState = useSetAtom(matchStateAtom);
+  const setMatchStatus = useSetAtom(matchStatusAtom);
+
+  const handleMatchPrestart = () => {
+    setMatchState(MatchState.PRESTART_COMPLETE);
+    setMatchStatus('PRESTART COMPLETE');
+  };
+  const handleMatchStart = () => {
+    setMatchState(MatchState.MATCH_IN_PROGRESS);
+    setMatchStatus('MATCH STARTED');
+  };
+  const handleMatchEnd = () => {
+    setMatchState(MatchState.MATCH_COMPLETE);
+    setMatchStatus('MATCH COMPLETE');
+  };
+  const handleMatchAbort = () => {
+    setMatchState(MatchState.MATCH_ABORTED);
+    setMatchStatus('MATCH ABORTED');
+  };
+  const handleMatchTeleop = () => {
+    setMatchState(MatchState.MATCH_IN_PROGRESS);
+    setMatchStatus('TELEOPERATED');
+  };
+  const handleMatchEndgame = () => {
+    setMatchState(MatchState.MATCH_IN_PROGRESS);
+    setMatchStatus('ENDGAME');
+  };
   return {
     handleMatchPrestart,
     handleMatchStart,

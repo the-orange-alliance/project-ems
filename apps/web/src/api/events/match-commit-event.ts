@@ -1,11 +1,10 @@
 import { apiFetcher } from '@toa-lib/client';
 import { MatchKey, rankingZod } from '@toa-lib/models';
-import { useRecoilCallback } from 'recoil';
-import { matchOccurringRanksAtom } from 'src/stores/recoil';
+import { useAtomCallback } from 'jotai/utils';
 
 export const useCommitEvent = () => {
-  return useRecoilCallback(
-    ({ set }) =>
+  return useAtomCallback(
+    (get, set) =>
       async ({ eventKey, tournamentKey, id }: MatchKey) => {
         const rankings = await apiFetcher(
           `ranking/${eventKey}/${tournamentKey}/${id}`,
@@ -13,7 +12,9 @@ export const useCommitEvent = () => {
           undefined,
           rankingZod.array().parse
         );
-        set(matchOccurringRanksAtom, rankings);
+
+        // TODO::: REvisit?????
+        // set(matchOccurringRanksAtom, rankings);
       }
   );
 };

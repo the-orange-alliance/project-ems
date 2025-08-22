@@ -40,6 +40,8 @@ export const matchAtom = atom<Match<any> | null, any[], any>(
       set(eventKeyAtom, newMatch.eventKey);
       set(tournamentKeyAtom, newMatch.tournamentKey);
 
+      // This should probably use useMatcheForTournment.... since the /matches endpoint doesn't return participants??????
+
       // Get the matches array
       const matches = [...get(matchesAtom)];
       // Find the index of the match to update

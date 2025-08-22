@@ -113,6 +113,6 @@ export const useMatchParticipantsForEvent = (
 ): SWRResponse<MatchParticipant[], ApiResponseError> =>
   useSWR<MatchParticipant[]>(
     eventKey ? `match/participants/${eventKey}` : undefined,
-    (url) =>
+    (url: string) =>
       apiFetcher(url, 'GET', undefined, matchParticipantZod.array().parse)
   );

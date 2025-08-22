@@ -16,7 +16,7 @@ async function adminController(fastify: FastifyInstance) {
         await db.purgeAll();
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );

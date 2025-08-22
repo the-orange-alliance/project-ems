@@ -19,7 +19,7 @@ async function allianceController(fastify: FastifyInstance) {
         const data = await db.selectAllWhere('alliance', `eventKey = "${eventKey}"`);
         reply.send(data);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -35,7 +35,7 @@ async function allianceController(fastify: FastifyInstance) {
         const data = await db.selectAllWhere('alliance', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
         reply.send(data);
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -55,7 +55,7 @@ async function allianceController(fastify: FastifyInstance) {
           reply.send(data);
         }
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -71,7 +71,7 @@ async function allianceController(fastify: FastifyInstance) {
         await db.insertValue('alliance', request.body);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -91,7 +91,7 @@ async function allianceController(fastify: FastifyInstance) {
         );
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );
@@ -107,7 +107,7 @@ async function allianceController(fastify: FastifyInstance) {
         await db.deleteWhere('alliance', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
         reply.status(200).send({});
       } catch (e) {
-        reply.send(InternalServerError(e));
+        reply.code(500).send(InternalServerError(e));
       }
     }
   );

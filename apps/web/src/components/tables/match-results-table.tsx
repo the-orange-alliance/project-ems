@@ -1,7 +1,7 @@
 import { FC } from 'react';
-import { UpgradedTable } from './upgraded-table';
+import { UpgradedTable } from './upgraded-table.js';
 import { Match, RESULT_NOT_PLAYED, Team } from '@toa-lib/models';
-import { useTeamIdentifierRecord } from 'src/hooks/use-team-identifier';
+import { useTeamIdentifierRecord } from 'src/hooks/use-team-identifier.js';
 import { DateTime } from 'luxon';
 
 interface Props {
@@ -34,6 +34,7 @@ export const MatchResultsTable: FC<Props> = ({
   return (
     <UpgradedTable
       data={matches}
+      rowKey={'id'}
       headers={[
         'Name',
         'Field',
@@ -47,9 +48,9 @@ export const MatchResultsTable: FC<Props> = ({
       renderRow={(e) => {
         const participants = e.participants
           ? e.participants?.map((p) => {
-              const team = teams?.find((t) => t.teamKey === p.teamKey);
-              return team ? identifiers[p.teamKey] : p.teamKey;
-            })
+            const team = teams?.find((t) => t.teamKey === p.teamKey);
+            return team ? identifiers[p.teamKey] : p.teamKey;
+          })
           : [];
         return [
           e.name,
@@ -60,9 +61,7 @@ export const MatchResultsTable: FC<Props> = ({
           ...participants.map((p, i) => (
             <span
               key={`${e.eventKey}-${e.tournamentKey}-${e.id}-${i}`}
-              className={
-                colored ? (i >= allianceSize ? 'blue' : 'red') : undefined
-              }
+              className={colored ? (i >= allianceSize ? 'blue' : 'red') : undefined}
             >
               {p}
             </span>
@@ -80,7 +79,6 @@ export const MatchResultsTable: FC<Props> = ({
             {e.result > RESULT_NOT_PLAYED ? e.blueScore : '--'}
           </span>
         ];
-      }}
-    />
+      } }    />
   );
 };
