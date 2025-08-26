@@ -208,6 +208,14 @@ export default class Match extends Room {
         `committing scores for ${key.eventKey}-${key.tournamentKey}-${key.id}`
       );
     });
+    socket.on(MatchSocketEvent.TIMER, () => {
+      socket.emit(MatchSocketEvent.TIMER, {
+        modeTimeLeft: this.timer.modeTimeLeft,
+        mode: this.timer.mode,
+        inProgress: this.timer.inProgress(),
+        timeLeft: this.timer.timeLeft
+      });
+    });
 
     socket.on(MatchSocketEvent.BONUS_START, (bonusType: BonusPeriodConfig) => {
       // If a bonus period exists for this match, clear it

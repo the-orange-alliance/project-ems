@@ -59,6 +59,8 @@ export enum MatchSocketEvent {
   END = 'match:end',
   ABORT = 'match:abort',
 
+  TIMER = 'match:timer',
+
   BONUS_START = 'match:bonusStart',
   BONUS_END = 'match:bonusEnd'
 }
