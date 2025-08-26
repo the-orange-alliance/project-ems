@@ -30,7 +30,7 @@ export const ScorekeeperTabs: FC<Props> = ({eventKey}) => {
 
   const {
     state: {
-      local: { matches, teams, tournaments }
+      local: { teams, tournaments }
     }
   } = useEventState({ matches: true, teams: true, tournaments: true });
   const {data: tournamentMatches} = useMatchesForTournament(eventKey, tournamentKey)
@@ -47,7 +47,6 @@ export const ScorekeeperTabs: FC<Props> = ({eventKey}) => {
   };
   const handleMatchChange = (id: number) => {
     if (!tournamentMatches) return null;
-    setMatchId(id);
     setMatchOccurring(tournamentMatches.find((m) => m.id === id) ?? null);
     setState(MatchState.PRESTART_READY);
   };
@@ -66,7 +65,7 @@ export const ScorekeeperTabs: FC<Props> = ({eventKey}) => {
             children: (
               <TabPanel value={value} index={0}>
                 <ScorekeeperMatches
-                  matches={tournamentMatches} // ?.filter((m) => activeFields.includes(m.fieldNumber) )}
+                  matches={tournamentMatches?.filter((m) => activeFields.includes(m.fieldNumber) )}
                   teams={teams}
                   tournaments={tournaments}
                   tournamentKey={tournamentKey}

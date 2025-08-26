@@ -8,6 +8,7 @@ interface Props<T> {
   rowKey: keyof T;
   widths?: number[];
   virtual?: boolean;
+  disable?: boolean;
   selected?: (row: T) => boolean;
   renderRow: (row: T) => (string | number | JSX.Element)[];
   onSelect?: (row: T) => void;
@@ -21,6 +22,7 @@ export const UpgradedTable = <T,>({
   rowKey,
   widths,
   virtual,
+  disable,
   selected,
   renderRow,
   onSelect,
@@ -69,12 +71,13 @@ export const UpgradedTable = <T,>({
       columns={columns as any}
       dataSource={data}
       rowClassName={(record) =>
-        onSelect && selected?.(record) ? 'ant-table-row-selected' : ''
+        selected?.(record) ? 'ant-table-row-selected' : ''
       }
       onRow={(record) => ({
         onClick: () => onSelect?.(record),
-        className: onSelect ? 'mouse-click' : ''
+        className: onSelect ? 'mouse-click' : disable ? 'mouse-disable' : '',
       })}
+      rowHoverable={!disable}
       pagination={false}
       bordered
       virtual={virtual}

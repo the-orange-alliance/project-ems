@@ -3,6 +3,7 @@ import { UpgradedTable } from './upgraded-table.js';
 import { Match, RESULT_NOT_PLAYED, Team } from '@toa-lib/models';
 import { useTeamIdentifierRecord } from 'src/hooks/use-team-identifier.js';
 import { DateTime } from 'luxon';
+import { Checkbox } from 'antd';
 
 interface Props {
   matches: Match<any>[];
@@ -40,11 +41,13 @@ export const MatchResultsTable: FC<Props> = ({
         'Field',
         'Time',
         ...allianceHeaders,
+        'Uploaded',
         'Red Score',
         'Blue Score'
       ]}
       selected={selected}
       onSelect={disabled ? undefined : handleSelect}
+      disable={disabled}
       renderRow={(e) => {
         const participants = e.participants
           ? e.participants?.map((p) => {
@@ -66,6 +69,9 @@ export const MatchResultsTable: FC<Props> = ({
               {p}
             </span>
           )),
+          <span>
+            <Checkbox checked={!!e.uploaded} disabled />
+          </span>,
           <span
             key={`${e.eventKey}-${e.tournamentKey}-${e.id}`}
             className={colored ? 'red' : ''}

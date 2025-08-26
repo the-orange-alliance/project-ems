@@ -9,9 +9,11 @@ import { useSocket } from 'src/api/use-socket.js';
 import { useAtomValue } from 'jotai';
 import { matchStatusAtom } from 'src/stores/state/match.js';
 import { isAudioEnabledForScorekeeper } from 'src/stores/state/ui.js';
+import { matchAtom } from 'src/stores/state/index.js';
 
 export const MatchInfo: FC = () => {
   const matchState = useAtomValue(matchStatusAtom);
+  const match = useAtomValue(matchAtom);
   const audioEnabled = useAtomValue(isAudioEnabledForScorekeeper);
   const [, connected] = useSocket();
   return (
@@ -25,6 +27,9 @@ export const MatchInfo: FC = () => {
         padding: 16
       }}
     >
+      <Typography.Title style={{textAlign: 'center'}} level={4}>
+        {match ? match.name : 'No Match Selected'}
+      </Typography.Title>
       <Typography.Title
         level={3}
         style={{ textAlign: 'center', marginBottom: 8 }}
@@ -41,7 +46,7 @@ export const MatchInfo: FC = () => {
           connected ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />
         }
         color={connected ? 'success' : 'error'}
-        style={{ alignSelf: 'center', marginTop: 8 }}
+        style={{ alignSelf: 'center', marginTop: 8, width: '100%', textAlign: 'center' }}
       >
         {connected ? 'Connected' : 'Not Connected'}
       </Tag>

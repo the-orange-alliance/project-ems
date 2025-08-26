@@ -3,7 +3,7 @@ import { useAtomCallback } from 'jotai/utils';
 import { matchAtom } from 'src/stores/state/event.js';
 
 export const useMatchUpdateEvent = () => {
-    return useAtomCallback((get, set) => async (newMatch: Match<any>) => {
+  return useAtomCallback((get, set) => async (newMatch: Match<any>) => {
     set(matchAtom, newMatch);
   });
 };

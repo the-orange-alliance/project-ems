@@ -2,6 +2,7 @@ import {
   FGC_MATCH_CONFIG,
   FRC_MATCH_CONFIG,
   MatchKey,
+  MatchMode,
   MatchSocketEvent,
   MatchState,
   TimerEventPayload,
@@ -52,6 +53,9 @@ export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
       socket?.on(MatchSocketEvent.PRESTART, onPrestart);
       socket?.on(MatchSocketEvent.START, onStart);
       socket?.on(MatchSocketEvent.ABORT, onAbort);
+      socket?.on(MatchSocketEvent.TIMER, onTimer);
+
+      socket?.emit(MatchSocketEvent.TIMER);
 
       timer.on('timer:transition', onTransition);
       timer.on('timer:tele', onTele);
@@ -125,6 +129,22 @@ export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
   };
   const onEndgame = (payload: TimerEventPayload) => {
     if (audio && payload.allowAudio) endgameAudio.play();
+  };
+  const onTimer = ({
+    timeLeft,
+    modeTimeLeft,
+    mode,
+    inProgress
+  }: {
+    timeLeft: number;
+    modeTimeLeft: number;
+    mode: MatchMode;
+    inProgress: boolean;
+  }) => {
+    if (inProgress) timer.start();
+    timer.modeTimeLeft = modeTimeLeft;
+    timer.mode = mode;
+    timer.timeLeft = timeLeft;
   };
 
   const determineTimerConfig = (eventKeyLike: string) => {

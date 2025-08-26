@@ -8,7 +8,7 @@ export const matchStateAtom = atom<MatchState>(MatchState.MATCH_NOT_SELECTED);
 
 export const timer: MatchTimer = new MatchTimer();
 
-export const matchStatusAtom = atom<string>('NO MATCH SELECTED');
+export const matchStatusAtom = atom<string>('UNKNOWN');
 
 export const matchTimeAtom = atom(timer.timeLeft);
 

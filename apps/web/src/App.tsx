@@ -9,6 +9,8 @@ import { ConnectionManager } from './components/util/connection-manager.js';
 import { PageLoader } from './components/loading/index.js';
 import ErrorFallback from './components/errors/error-boundary.js';
 import { ErrorBoundary } from 'react-error-boundary';
+import { useSyncFields } from './components/sync-effects/sync-fields.js';
+import { useSyncInProgress } from './components/sync-effects/sync-in-progress.js';
 
 const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {
   return (
@@ -21,6 +23,11 @@ const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {
 
 export function AppContainer() {
   const { AppSnackbar } = useSnackbar();
+  useSyncFields();
+
+  // Hacky-hack, see details inside
+  useSyncInProgress();
+
   return (
     <>
       <AppSnackbar />
