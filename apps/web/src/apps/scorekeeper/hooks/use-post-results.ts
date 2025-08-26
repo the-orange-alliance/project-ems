@@ -79,14 +79,14 @@ export const usePostResultsCallback = () => {
           ).success;
         }
 
-        // Update local match array with posted = 1
-        if (successMatch && successRankings && matches && successAlliances) {
+        // Update local match array with posted = 1 if all were successful
+        if (matches) {
           const copy = [...matches];
           const index = copy.findIndex(
             (m) => m.id === match.id && m.tournamentKey === match.tournamentKey
           );
           if (index >= 0) {
-            copy[index] = { ...copy[index], uploaded: 1 };
+            copy[index] = { ...copy[index], uploaded: successMatch && successRankings && successAlliances ? 1 : 0 };
             setMatches(copy);
           }
         }

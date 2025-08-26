@@ -7,7 +7,7 @@ import {
   RESULT_RED_WIN,
   RESULT_TIE
 } from '@toa-lib/models';
-import { patchWholeMatch } from 'src/api/use-match-data.js';
+import { patchWholeMatch, useMatchesForTournament } from 'src/api/use-match-data.js';
 import {
   recalculatePlayoffsRankings,
   recalculateRankings
@@ -29,6 +29,7 @@ export const useCommitScoresCallback = () => {
   const fieldControl = useSeasonFieldControl();
   const eventKey = useAtomValue(eventKeyAtom);
   const tournamentKey = useAtomValue(tournamentKeyAtom);
+  const {data: tournMatches, mutate: updateTournMatches} = useMatchesForTournament(eventKey, tournamentKey);
 
   return useAtomCallback(
     useCallback(
@@ -80,8 +81,18 @@ export const useCommitScoresCallback = () => {
 
         // Update the match occurring atom
         set(matchAtom, pending);
+
+        // Find match in matches array
+        const matchIdx = tournMatches?.findIndex((m) => m.id === id && m.tournamentKey === tournamentKey && m.eventKey === eventKey);
+
+        // Update the match in the matches array if found
+        if (Array.isArray(tournMatches) && matchIdx !== undefined && matchIdx !== -1) {
+          const copy = [...tournMatches]
+          copy[matchIdx] = pending;
+          updateTournMatches(copy);
+        }
       },
-      [canCommitScores, setState, eventKey, tournamentKey]
+      [canCommitScores, setState, eventKey, tournamentKey, tournMatches]
     )
   );
 };
