@@ -4,7 +4,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { getDB } from '../db/EventDatabase.js';
 import { z } from 'zod';
 import { DataNotFoundError, errorableSchema, GenericInternalServerError, InternalServerError } from '../util/Errors.js';
-import { EventKeyParams } from '../util/GlobalSchema.js';
+import { EmptySchema, EventKeyParams } from '../util/GlobalSchema.js';
 
 const eventsZod = z.array(eventZod);
 
@@ -59,12 +59,10 @@ async function eventController(fastify: FastifyInstance) {
     }
   );
 
-  const emptyResponseSchema = z.object({});
-
   // Update event
   fastify.withTypeProvider<ZodTypeProvider>().patch(
     '/:eventKey',
-    { schema: { params: EventKeyParams, body: eventZod, response: errorableSchema<typeof emptyResponseSchema>(emptyResponseSchema), tags: ['Events'] } },
+    { schema: { params: EventKeyParams, body: eventZod, response: errorableSchema<typeof EmptySchema>(EmptySchema), tags: ['Events'] } },
     async (request, reply) => {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
@@ -80,7 +78,7 @@ async function eventController(fastify: FastifyInstance) {
   // Setup event
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/setup/:eventKey',
-    { schema: { params: EventKeyParams, response: errorableSchema<typeof emptyResponseSchema>(emptyResponseSchema), tags: ['Events'] } },
+    { schema: { params: EventKeyParams, response: errorableSchema<typeof EmptySchema>(EmptySchema), tags: ['Events'] } },
     async (request, reply) => {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
