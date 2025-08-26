@@ -1,8 +1,8 @@
-import { useDisplayEvent } from './display-event';
-import { useCommitEvent } from './match-commit-event';
-import { usePrestartEvent } from './match-prestart-event';
-import { useMatchStateEvents } from './match-state-event';
-import { useMatchUpdateEvent } from './match-update-event';
+import { useDisplayEvent } from './display-event.js';
+import { useCommitEvent } from './match-commit-event.js';
+import { usePrestartEvent } from './match-prestart-event.js';
+import { useMatchStateEvents } from './match-state-event.js';
+import { useMatchUpdateEvent } from './match-update-event.js';
 
 export {
   useDisplayEvent,

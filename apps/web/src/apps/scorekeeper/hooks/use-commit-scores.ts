@@ -22,6 +22,7 @@ import {
 import { useCallback } from 'react';
 import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 import { useAtomCallback } from 'jotai/utils';
+import { matchStateAtom } from 'src/stores/state/match.js';
 
 export const useCommitScoresCallback = () => {
   const { canCommitScores, setState } = useMatchControl();
@@ -86,15 +87,15 @@ export const useCommitScoresCallback = () => {
 };
 
 export const useClearFieldCallback = () => {
-  const { canResetField, setState } = useMatchControl();
+  const { canResetField } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
   return useAtomCallback(
-    useCallback(() => {
+    useCallback((get, set) => {
       if (!canResetField) {
         throw new Error('Attempted to clear field when not allowed.');
       }
       fieldControl?.clearField?.();
-      setState(MatchState.RESULTS_READY);
-    }, [])
+      set(matchStateAtom, MatchState.RESULTS_READY);
+    }, [canResetField])
   );
 };

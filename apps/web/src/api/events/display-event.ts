@@ -1,12 +1,6 @@
 import { Displays } from '@toa-lib/models';
-import { useRecoilCallback } from 'recoil';
-import {
-  displayIdAtom,
-  matchOccurringAtom,
-  matchOccurringRanksAtom,
-  matchResultsMatchAtom,
-  matchResultsRanksAtom
-} from 'src/stores/recoil';
+import { useAtomCallback } from 'jotai/utils';
+import { displayIdAtom } from 'src/stores/state/audience-display.js';
 
 export const useDisplayEvent = () => {
   // return useRecoilCallback(({ set, snapshot }) => async (id: number) => {
@@ -20,4 +14,12 @@ export const useDisplayEvent = () => {
   //   }
   //   set(displayIdAtom, id);
   // });
+
+  return useAtomCallback((get, set) => async (id: number) => {
+    // For match result, we store the currentMatchAtom to matchResultsMatchAtom to avoid the results screen updating when the match is updated.
+    // if (id === Displays.MATCH_RESULTS) {
+
+    // }
+    set(displayIdAtom, id);
+  });
 };
