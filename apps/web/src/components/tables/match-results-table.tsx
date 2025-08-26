@@ -47,6 +47,7 @@ export const MatchResultsTable: FC<Props> = ({
       ]}
       selected={selected}
       onSelect={disabled ? undefined : handleSelect}
+      disable={disabled}
       renderRow={(e) => {
         const participants = e.participants
           ? e.participants?.map((p) => {
