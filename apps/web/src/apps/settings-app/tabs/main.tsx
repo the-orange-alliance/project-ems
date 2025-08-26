@@ -6,9 +6,10 @@ import { useAtom } from 'jotai';
 import BooleanRow from 'src/components/settings/boolean-row.js';
 import DropdownRow from 'src/components/settings/dropdown-row.js';
 import { Space } from 'antd';
+import { useActiveFields } from 'src/components/sync-effects/sync-fields.js';
 
 const MainSettingsTab: FC = () => {
-  // const [fieldControl, setFieldControl] = useActiveFields();
+  const [fieldControl, setFieldControl] = useActiveFields();
   const [enableScorekeeperAudio, setScorekeeperAudioEnabled] = useAtom(
     isAudioEnabledForScorekeeper
   );
@@ -17,10 +18,11 @@ const MainSettingsTab: FC = () => {
 
   const handleFieldChange = (value: string[]) => {
     if (!tournament) return;
-    // setFieldControl(tournament.fields.filter((f) => value.includes(f)));
+    setFieldControl(tournament.fields.filter((f) => value.includes(f)));
   };
 
   let fieldIdTimeout: any = null;
+
   const updateFieldControl = (value: any[]) => {
     if (!tournament) return;
     handleFieldChange(value);
@@ -38,7 +40,7 @@ const MainSettingsTab: FC = () => {
     <Space direction='vertical' style={{ width: '100%' }}>
       <DropdownRow
         title='Field Control'
-        value={"TODO: Make this work"} // fieldControl.map((f) => f)}
+        value={fieldControl.map((f) => f)}
         options={tournament?.fields?.map((f) => ({label: f, value: f})) ?? []}
         onChange={updateFieldControl}
         multiple
