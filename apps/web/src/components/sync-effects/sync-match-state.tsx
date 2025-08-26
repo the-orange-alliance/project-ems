@@ -41,8 +41,6 @@ export const SyncMatchState: FC = () => {
         setState(MatchState.PRESTART_COMPLETE);
         setMode('PRESTART COMPLETE');
 
-        console.log("here??????")
-
         // Validate that the correct match is selected, if not, update
         if (get(matchIdAtom) !== match.id) {
           set(matchIdAtom, match.id);

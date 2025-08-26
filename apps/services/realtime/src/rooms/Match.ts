@@ -14,6 +14,8 @@ import {
   FGC_MATCH_CONFIG,
   BonusPeriodConfig,
   BonusPeriodSettings,
+  Displays,
+  MatchMode,
 } from "@toa-lib/models";
 import { EventEmitter } from "node:events";
 import { Server, Socket } from "socket.io";
@@ -53,30 +55,44 @@ export default class Match extends Room {
   public initializeEvents(socket: Socket): void {
     // Emit the last known display
     socket.emit(MatchSocketEvent.DISPLAY, this.displayID);
+
     // These are in case of mid-match disconnect/reconnects
     if (
       this.state >= MatchState.PRESTART_COMPLETE &&
-      this.state !== MatchState.MATCH_COMPLETE && // we never actually get into this state (in the socket server, anyway)
-      this.state !== MatchState.RESULTS_COMMITTED && // so instead we'll stop prestarting people here instead
-      this.key &&
-      !this.timer.inProgress()
+      this.state < MatchState.RESULTS_POSTED &&
+      this.key
     ) {
       // Send prestart information
       socket.emit(MatchSocketEvent.PRESTART, this.key);
-      socket.emit(MatchSocketEvent.DISPLAY, this.displayID);
     }
 
-    if (
-      (this.timer.inProgress() && this.match) ||
-      this.state === MatchState.MATCH_COMPLETE
-    ) {
+    // If timer is in progress, send match update and current timer mode
+    if (this.timer.inProgress() && this.match) {
       socket.emit(MatchSocketEvent.UPDATE, this.match);
-    } else if (this.timer.inProgress() && !this.match) {
-      logger.warn("no match data for this match - sending prestart");
-      socket.emit(MatchSocketEvent.PRESTART, this.key);
+      switch (this.timer.mode) {
+        case MatchMode.AUTONOMOUS:
+        case MatchMode.TRANSITION:
+          socket.emit(MatchSocketEvent.AUTONOMOUS);
+          break;
+        case MatchMode.TELEOPERATED:
+          socket.emit(MatchSocketEvent.TELEOPERATED);
+          break;
+        case MatchMode.ENDGAME:
+          socket.emit(MatchSocketEvent.ENDGAME);
+          break;
+      }
     }
 
+    // If match complete, send update and send match end event
+    if (this.state === MatchState.MATCH_COMPLETE) {
+      socket.emit(MatchSocketEvent.UPDATE, this.match);
+      socket.emit(MatchSocketEvent.END);
+    }
+
+    // if results committed, send update, end, and commit event
     if (this.state === MatchState.RESULTS_COMMITTED) {
+      socket.emit(MatchSocketEvent.UPDATE, this.match);
+      socket.emit(MatchSocketEvent.END);
       socket.emit(MatchSocketEvent.COMMIT, this.key);
     }
 
@@ -149,6 +165,9 @@ export default class Match extends Room {
     });
     socket.on(MatchSocketEvent.DISPLAY, (id: number) => {
       this.displayID = id;
+      if (id === Displays.MATCH_RESULTS) {
+        this.state = MatchState.RESULTS_POSTED
+      }
       this.emitToAll(MatchSocketEvent.DISPLAY, id);
     });
     socket.on(MatchSocketEvent.UPDATE, (match: MatchObj<any>) => {
@@ -224,8 +243,7 @@ export default class Match extends Room {
       } catch (e) {
         // Don't take down the server if a client tries to adjust a non-numeric value
         logger.error(
-          `Failed to adjust match details field ${numberAdjustment.key} (${
-            matchDetails[numberAdjustment.key]
+          `Failed to adjust match details field ${numberAdjustment.key} (${matchDetails[numberAdjustment.key]
           })`
         );
       }
