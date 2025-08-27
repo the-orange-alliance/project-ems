@@ -230,11 +230,17 @@ function calculateRankings(
         
         if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.redScore]);
-          ranking.protectionPoints += calcProtectionMultiplier(
-              match.details.redRobotOneParking,
-              match.details.redRobotTwoParking,
-              match.details.redRobotThreeParking
-            );
+          switch (participant.station) {
+            case 11:
+              ranking.protectionPoints += match.details.redRobotOneParking;
+              break;
+            case 12:
+              ranking.protectionPoints += match.details.redRobotTwoParking;
+              break;
+            case 13:
+              ranking.protectionPoints += match.details.redRobotThreeParking;
+              break;
+          }
           ranking.highestScore = Math.max(ranking.highestScore, match.redScore);
         }
       }
@@ -246,11 +252,17 @@ function calculateRankings(
         
         if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
-          ranking.protectionPoints += calcProtectionMultiplier(
-              match.details.blueRobotOneParking,
-              match.details.blueRobotTwoParking,
-              match.details.blueRobotThreeParking
-            );
+          switch (participant.station) {
+            case 21:
+              ranking.protectionPoints += match.details.blueRobotOneParking;
+              break;
+            case 22:
+              ranking.protectionPoints += match.details.blueRobotTwoParking;
+              break;
+            case 23:
+              ranking.protectionPoints += match.details.blueRobotThreeParking;
+              break;
+          }
           ranking.highestScore = Math.max(ranking.highestScore, match.blueScore);
         }
       }
