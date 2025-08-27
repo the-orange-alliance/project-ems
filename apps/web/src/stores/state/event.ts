@@ -56,6 +56,8 @@ export const matchAtom = atom<Match<any> | null, any[], any>(
       if (index >= 0) {
         matches[index] = newMatch;
         set(matchesAtom, matches);
+      } else {
+        set(matchesAtom, [...matches, newMatch]);
       }
 
       // finally, the end of this inefficient madness

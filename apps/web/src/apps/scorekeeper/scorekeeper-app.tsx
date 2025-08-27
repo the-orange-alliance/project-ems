@@ -8,7 +8,6 @@ import { Row } from 'antd';
 // import { useSocket } from 'src/api/use-socket.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { PageLoader } from 'src/components/loading/page-loader.js';
-import { SyncOnPrestart } from 'src/components/sync-effects/sync-on-prestart.js';
 
 export const ScorekeeperApp: FC = () => {
   const {

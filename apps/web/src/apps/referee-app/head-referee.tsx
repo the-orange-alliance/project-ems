@@ -1,10 +1,8 @@
 import { FC } from 'react';
 import { Box } from '@mui/material';
-import { useSeasonComponents } from 'src/hooks/use-season-components';
-import { RefereeLayout } from 'src/layouts/referee-layout';
-import { SyncMatchOccurringToRecoil } from 'src/components/sync-effects/sync-match-occurring.js';
-import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state.js';
-import { SyncMatchesToRecoil } from 'src/components/sync-effects/sync-matches-to-recoi';
+import { useSeasonComponents } from 'src/hooks/use-season-components.js';
+import { RefereeLayout } from 'src/layouts/referee-layout.js';
+import { useEventState } from 'src/stores/hooks/use-event-state.js';
 
 export const HeadReferee: FC = () => {
   const seasonComponents = useSeasonComponents();
@@ -17,9 +15,9 @@ export const HeadReferee: FC = () => {
 
   return (
     <RefereeLayout containerWidth='xl'>
-      <SyncMatchStateToRecoil />
+      {/* <SyncMatchStateToRecoil />
       <SyncMatchesToRecoil />
-      <SyncMatchOccurringToRecoil />
+      <SyncMatchOccurringToRecoil /> */}
       <Box
         sx={{ display: 'flex', flexDirection: 'column', gap: '16px', mb: 1 }}
       >

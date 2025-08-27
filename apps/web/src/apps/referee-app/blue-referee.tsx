@@ -1,17 +1,21 @@
 import { FC } from 'react';
-import { RefereeLayout } from 'src/layouts/referee-layout';
-import { useComponents } from '@seasons/index';
-import { useRecoilValue } from 'recoil';
-import { currentEventKeyAtom } from '@stores/recoil';
-import { useEvent } from 'src/api/use-event-data';
+import { RefereeLayout } from 'src/layouts/referee-layout.js';
+import { useComponents } from '@seasons/index.js';
+import { useAtomValue } from 'jotai';
+import { getSeasonKeyFromEventKey } from '@toa-lib/models';
+import { eventKeyAtom } from 'src/stores/state/event.js';
+import { useEventState } from 'src/stores/hooks/use-event-state.js';
 
 export const BlueReferee: FC = () => {
-  const eventKey = useRecoilValue(currentEventKeyAtom);
-  const { data: event } = useEvent(eventKey);
-  const seasonComponents = useComponents(event?.seasonKey);
-  if (!event) {
+  const eventKey = useAtomValue(eventKeyAtom);
+  if (!eventKey) {
     return 'No event selected';
-  } else if (!seasonComponents) {
+  }
+
+  const seasonKey = getSeasonKeyFromEventKey(eventKey);
+  const seasonComponents = useComponents(seasonKey);
+
+  if (!seasonComponents) {
     return 'Unknown season';
   } else {
     return (

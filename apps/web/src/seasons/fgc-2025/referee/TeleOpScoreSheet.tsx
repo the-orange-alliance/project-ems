@@ -67,6 +67,29 @@ const TeleScoreSheet: FC<Props> = ({
     );
   };
 
+  const handleEcosystemChange = (newValue: number, manuallyTyped: boolean) => {
+    if (manuallyTyped) {
+      onMatchDetailsUpdate(
+        alliance === 'blue' ? 'approximateBiodiversityBlueSideEcosystem' : 'approximateBiodiversityRedSideEcosystem',
+        newValue
+      );
+    }
+  };
+
+  const handleEcosystemIncrement = () => {
+    onMatchDetailsAdjustment(
+      alliance === 'blue' ? 'approximateBiodiversityBlueSideEcosystem' : 'approximateBiodiversityRedSideEcosystem',
+      1
+    );
+  };
+
+  const handleEcosystemDecrement = () => {
+    onMatchDetailsAdjustment(
+      alliance === 'blue' ? 'approximateBiodiversityBlueSideEcosystem' : 'approximateBiodiversityRedSideEcosystem',
+      -1
+    );
+  };
+
   const getParking = (station: number): number | undefined => {
     switch (station) {
       case 11:
@@ -113,7 +136,7 @@ const TeleScoreSheet: FC<Props> = ({
     <Row gutter={[24, 24]}>
       <Col xs={24} md={12} lg={12}>
         <Typography.Title level={5} style={{ textAlign: 'center', textTransform: 'capitalize', marginBottom: 16 }}>
-          {alliance === 'red' ? 'Blue' : 'Red'} Mitigator
+          {alliance === 'red' ? 'Red' : 'Blue'} Side Mitigator
         </Typography.Title>
         <NumberInput
           value={
@@ -127,13 +150,29 @@ const TeleScoreSheet: FC<Props> = ({
           onDecrement={handleMitigatorDecrement}
         />
       </Col>
+      <Col xs={24} md={12} lg={12}>
+        <Typography.Title level={5} style={{ textAlign: 'center', textTransform: 'capitalize', marginBottom: 16 }}>
+          Approx. {alliance === 'red' ? 'Red' : 'Blue'} Side Ecosystem
+        </Typography.Title>
+        <NumberInput
+          value={
+            alliance === 'red'
+              ? match.details.approximateBiodiversityRedSideEcosystem
+              : match.details.approximateBiodiversityBlueSideEcosystem
+          }
+          textFieldDisabled
+          onChange={handleEcosystemChange}
+          onIncrement={handleEcosystemIncrement}
+          onDecrement={handleEcosystemDecrement}
+        />
+      </Col>
       {participants?.map((p) => {
         const team = teams?.find((t) => t.teamKey === p.teamKey);
         const update = (value: number) => {
           updateParking(p.station, value);
         };
         return (
-          <Col key={`${p.teamKey}-Balance`} xs={24} md={12} lg={12}>
+          <Col key={`${p.teamKey}-Balance`} xs={24} sm={8}>
             <StateToggle
               title={
                 <span>

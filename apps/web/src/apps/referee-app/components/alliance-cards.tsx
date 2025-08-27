@@ -1,54 +1,52 @@
+
 import { FC } from 'react';
 import { Link } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
+import { Row, Col, Button } from 'antd';
 
 export const AllianceCards: FC = () => {
+  const buttonConfigs = [
+    {
+      to: './red',
+      className: 'red-bg-imp',
+      style: { height: '8em' },
+      label: 'Red Alliance'
+    },
+    {
+      to: './blue',
+      className: 'blue-bg-imp',
+      style: { height: '8em' },
+      label: 'Blue Alliance'
+    },
+    {
+      to: './head',
+      className: 'yellow-bg-imp',
+      style: { height: '8em' },
+      label: 'Head Referee'
+    },
+    {
+      to: './head-min',
+      className: 'purple-bg-imp',
+      style: { height: '8em', backgroundColor: 'purple' },
+      label: 'Head Ref Minimal'
+    }
+  ];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <Box sx={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
-        <Button
-          fullWidth
-          variant='contained'
-          className='red-bg-imp'
-          sx={{ height: '30em' }}
-          component={Link}
-          to='./red'
-        >
-          Red Alliance
-        </Button>
-        <Button
-          fullWidth
-          variant='contained'
-          className='blue-bg-imp'
-          sx={{ height: '30em' }}
-          component={Link}
-          to='./blue'
-        >
-          Blue Alliance
-        </Button>
-      </Box>
-      <Button
-        fullWidth
-        variant='contained'
-        className='yellow-bg-imp'
-        sx={{ height: '30em' }}
-        component={Link}
-        to='./head'
-      >
-        Head Referee
-      </Button>
-      <Button
-        fullWidth
-        variant='contained'
-        className='purple-bg-imp'
-        sx={{ height: '30em', backgroundColor: 'purple' }}
-        component={Link}
-        to='./head-min'
-      >
-        Head Ref Minimal
-      </Button>
-    </Box>
+    <Row gutter={[16, 16]} style={{ flexDirection: 'column', justifyContent: 'center', margin: '0 20px' }}>
+      {buttonConfigs.map(({ to, className, style, label }, idx) => (
+        <Col span={24} key={to}>
+          <Link to={to} style={{ width: '100%' }}>
+            <Button
+              block
+              type='primary'
+              className={className}
+              style={style}
+            >
+              {label}
+            </Button>
+          </Link>
+        </Col>
+      ))}
+    </Row>
   );
 };

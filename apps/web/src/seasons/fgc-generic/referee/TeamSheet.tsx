@@ -1,29 +1,21 @@
 import { FC } from 'react';
-import { SetterOrUpdater, useRecoilState } from 'recoil';
-import Box from '@mui/material/Box';
-import ToggleButton from '@mui/material/ToggleButton';
-import Typography from '@mui/material/Typography';
+import { Row, Col, Typography, Button } from 'antd';
 import {
   CardStatusUpdate,
-  Match,
   MatchParticipant,
   MatchSocketEvent
 } from '@toa-lib/models';
-import { useSocket } from 'src/api/use-socket';
-import { useTeamIdentifiers } from 'src/hooks/use-team-identifier';
-import { matchOccurringAtom } from 'src/stores/recoil';
-
+import { useSocket } from 'src/api/use-socket.js';
+import { useTeamIdentifiers } from 'src/hooks/use-team-identifier.js';
+import { matchAtom } from 'src/stores/state/event.js';
+import { useAtom } from 'jotai';
 interface Props {
   station: number;
 }
 
 const TeamSheet: FC<Props> = ({ station }) => {
   const [socket] = useSocket();
-  const [match, setMatch]: [
-    Match<any> | null,
-    SetterOrUpdater<Match<any> | null>
-  ] = useRecoilState(matchOccurringAtom);
-
+  const [match, setMatch] = useAtom(matchAtom)
   const identifiers = useTeamIdentifiers();
   const participant = match?.participants?.find((p) => p.station === station);
 
@@ -67,55 +59,47 @@ const TeamSheet: FC<Props> = ({ station }) => {
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-        alignItems: 'center'
-      }}
-    >
-      {participant && (
-        <Typography variant='h6'>{identifiers[participant.teamKey]}</Typography>
-      )}
-
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          gap: '8px',
-          width: '100%'
-        }}
-      >
-        <ToggleButton
-          fullWidth
-          value='yellowCard'
-          selected={participant?.cardStatus === 1}
-          onChange={handleYellow}
-          color='warning'
-        >
-          Yellow Card
-        </ToggleButton>
-        <ToggleButton
-          fullWidth
-          value='redCard'
-          selected={participant?.cardStatus === 2}
-          onChange={handleRed}
-          color='error'
-        >
-          Red Card
-        </ToggleButton>
-        <ToggleButton
-          fullWidth
-          value='whiteCard'
-          selected={participant?.cardStatus === 3}
-          onChange={handleWhite}
-          color='standard'
-        >
-          White Card
-        </ToggleButton>
-      </Box>
-    </Box>
+    <Row justify="center" style={{ width: '100%' }}>
+      <Col span={24} style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+        {participant && (
+          <Typography.Title level={5}>{identifiers[participant.teamKey]}</Typography.Title>
+        )}
+        <Row gutter={8} style={{ width: '100%' }}>
+          <Col flex={1}>
+            <Button
+              block
+              type={participant?.cardStatus === 1 ? 'primary' : 'default'}
+              danger={participant?.cardStatus === 1}
+              onClick={handleYellow}
+              style={{ backgroundColor: participant?.cardStatus === 1 ? '#faad14' : undefined, color: participant?.cardStatus === 1 ? '#fff' : undefined }}
+            >
+              Yellow Card
+            </Button>
+          </Col>
+          <Col flex={1}>
+            <Button
+              block
+              type={participant?.cardStatus === 2 ? 'primary' : 'default'}
+              danger={participant?.cardStatus === 2}
+              onClick={handleRed}
+              style={{ backgroundColor: participant?.cardStatus === 2 ? '#ff4d4f' : undefined, color: participant?.cardStatus === 2 ? '#fff' : undefined }}
+            >
+              Red Card
+            </Button>
+          </Col>
+          <Col flex={1}>
+            <Button
+              block
+              type={participant?.cardStatus === 3 ? 'primary' : 'default'}
+              onClick={handleWhite}
+              style={{ backgroundColor: participant?.cardStatus === 3 ? '#fff' : undefined, color: participant?.cardStatus === 3 ? '#000' : undefined, border: participant?.cardStatus === 3 ? '2px solid #d9d9d9' : undefined }}
+            >
+              White Card
+            </Button>
+          </Col>
+        </Row>
+      </Col>
+    </Row>
   );
 };
 

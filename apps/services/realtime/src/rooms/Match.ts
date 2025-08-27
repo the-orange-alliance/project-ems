@@ -64,11 +64,11 @@ export default class Match extends Room {
     ) {
       // Send prestart information
       socket.emit(MatchSocketEvent.PRESTART, this.key);
+      socket.emit(MatchSocketEvent.UPDATE, this.match);
     }
 
     // If timer is in progress, send match update and current timer mode
     if (this.timer.inProgress() && this.match) {
-      socket.emit(MatchSocketEvent.UPDATE, this.match);
       switch (this.timer.mode) {
         case MatchMode.AUTONOMOUS:
         case MatchMode.TRANSITION:
@@ -85,13 +85,11 @@ export default class Match extends Room {
 
     // If match complete, send update and send match end event
     if (this.state === MatchState.MATCH_COMPLETE) {
-      socket.emit(MatchSocketEvent.UPDATE, this.match);
       socket.emit(MatchSocketEvent.END);
     }
 
     // if results committed, send update, end, and commit event
     if (this.state === MatchState.RESULTS_COMMITTED) {
-      socket.emit(MatchSocketEvent.UPDATE, this.match);
       socket.emit(MatchSocketEvent.END);
       socket.emit(MatchSocketEvent.COMMIT, this.key);
     }

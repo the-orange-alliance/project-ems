@@ -105,21 +105,21 @@ const SettingsApp = lazy(() =>
 );
 
 // Referee Routes
-// const RefereeApp = lazy(() =>
-//   import('./apps/referee-app').then((m) => ({ default: m.RefereeApp }))
-// );
-// const RedReferee = lazy(() =>
-//   import('./apps/referee-app').then((m) => ({ default: m.RedReferee }))
-// );
-// const BlueReferee = lazy(() =>
-//   import('./apps/referee-app').then((m) => ({ default: m.BlueReferee }))
-// );
-// const HeadReferee = lazy(() =>
-//   import('./apps/referee-app').then((m) => ({ default: m.HeadReferee }))
-// );
-// const HeadRefereeMin = lazy(() =>
-//   import('./apps/referee-app').then((m) => ({ default: m.HeadRefereeMin }))
-// );
+const RefereeApp = lazy(() =>
+  import('./apps/referee-app/index.js').then((m) => ({ default: m.RefereeApp }))
+);
+const RedReferee = lazy(() =>
+  import('./apps/referee-app/index.js').then((m) => ({ default: m.RedReferee }))
+);
+const BlueReferee = lazy(() =>
+  import('./apps/referee-app/index.js').then((m) => ({ default: m.BlueReferee }))
+);
+const HeadReferee = lazy(() =>
+  import('./apps/referee-app/index.js').then((m) => ({ default: m.HeadReferee }))
+);
+const HeadRefereeMin = lazy(() =>
+  import('./apps/referee-app/index.js').then((m) => ({ default: m.HeadRefereeMin }))
+);
 
 // Audience Display Routes
 // const AudienceDisplay = lazy(() =>
@@ -149,6 +149,7 @@ import {
   CalendarOutlined,
   CompassOutlined,
   ControlOutlined,
+  FlagOutlined,
   FormOutlined,
   RobotOutlined,
   TeamOutlined
@@ -247,6 +248,42 @@ const AppRoutes: AppRoute[] = [
     eventOrder: 5,
     icon: <RobotOutlined />
   },
+  {
+    name: 'Referee App',
+    path: '/:eventKey/referee',
+    group: 0,
+    element: RefereeApp,
+    eventOrder: 6,
+    icon: <FlagOutlined />
+  },
+  {
+    name: 'Red Referee Page',
+    path: '/:eventKey/referee/red',
+    group: 0,
+    element: RedReferee,
+    hidden: true
+  },
+  {
+    name: 'Blue Referee Page',
+    path: '/:eventKey/referee/blue',
+    group: 0,
+    element: BlueReferee,
+    hidden: true
+  },
+  {
+    name: 'Head Referee Page',
+    path: '/:eventKey/referee/head',
+    group: 0,
+    element: HeadReferee,
+    hidden: true
+  },
+  {
+    name: 'Head Referee Page',
+    path: '/:eventKey/referee/head-min',
+    group: 0,
+    element: HeadRefereeMin,
+    hidden: true
+  },
   // {
   //   name: 'Admin App',
   //   path: '/:eventKey/admin',
@@ -265,40 +302,6 @@ const AppRoutes: AppRoute[] = [
   //   group: 0,
   //   element: AudienceDisplay,
   //   hideAppbar: true
-  // },
-  // {
-  //   name: 'Referee App',
-  //   path: '/:eventKey/referee',
-  //   group: 0,
-  //   element: RefereeApp
-  // },
-  // {
-  //   name: 'Red Referee Page',
-  //   path: '/:eventKey/referee/red',
-  //   group: 0,
-  //   element: RedReferee,
-  //   hidden: true
-  // },
-  // {
-  //   name: 'Blue Referee Page',
-  //   path: '/:eventKey/referee/blue',
-  //   group: 0,
-  //   element: BlueReferee,
-  //   hidden: true
-  // },
-  // {
-  //   name: 'Head Referee Page',
-  //   path: '/:eventKey/referee/head',
-  //   group: 0,
-  //   element: HeadReferee,
-  //   hidden: true
-  // },
-  // {
-  //   name: 'Head Referee Page',
-  //   path: '/:eventKey/referee/head-min',
-  //   group: 0,
-  //   element: HeadRefereeMin,
-  //   hidden: true
   // },
   // {
   //   name: 'Reports App',

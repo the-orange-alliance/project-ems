@@ -1,14 +1,12 @@
 import { FC, ReactNode, useEffect } from 'react';
-import { useRecoilState } from 'recoil';
-import { Breakpoint } from '@mui/material';
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import { appbarConfigAtom } from '@stores/recoil';
+import { useSetAtom } from 'jotai';
+import { appbarConfigAtom } from 'src/stores/state/ui.js';
+import { Layout, Row, Col } from 'antd';
 
 interface Props {
   title?: string;
   titleLink?: string;
-  containerWidth?: Breakpoint | false;
+  containerWidth?: string | false;
   children?: ReactNode;
 }
 
@@ -17,25 +15,32 @@ export const RefereeLayout: FC<Props> = ({
   titleLink,
   containerWidth,
   children
-}: Props) => {
-  const [, updateAppbarConfig] = useRecoilState(appbarConfigAtom);
+}) => {
+  const setAppbarConfig = useSetAtom(appbarConfigAtom);
 
   useEffect(() => {
-    updateAppbarConfig({
+    setAppbarConfig({
       title,
       titleLink,
       showFullscreen: true
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Container
-        maxWidth={containerWidth || 'xl'}
-        sx={{ marginTop: (theme) => theme.spacing(12) }}
-      >
-        {children}
-      </Container>
-    </Box>
+    <Layout style={{ minHeight: '100vh', display: 'flex' }}>
+      <Row justify='center' style={{ marginTop: 96 }}>
+        <Col
+          span={24}
+          style={{
+            maxWidth:
+              containerWidth === false ? '100%' : containerWidth || 1200,
+            width: '100%'
+          }}
+        >
+          {children}
+        </Col>
+      </Row>
+    </Layout>
   );
 };
