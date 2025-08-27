@@ -1,58 +1,72 @@
 import { FC, MouseEvent, ReactNode } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import ToggleButton from '@mui/material/ToggleButton';
+import { Card, Typography, Radio, Row, Col } from 'antd';
 
-interface Props {
+interface Props<T> {
   title: ReactNode | string;
-  states: string[];
-  value: number;
+  states: T[];
+  stateLabels?: string[];
+  value: T;
   fullWidth?: boolean;
   disabled?: boolean;
-  onChange?: (value: number) => void;
+  onChange?: (value: T) => void;
 }
 
-export const StateToggle: FC<Props> = ({
+export function StateToggle<T>({
   title,
   states,
+  stateLabels,
   value,
   fullWidth,
   disabled,
   onChange
-}) => {
-  const handleChange = (event: MouseEvent, newValue: number) => {
-    if (newValue != null) {
-      if (!onChange) return;
-      onChange(newValue);
+}: Props<T>) {
+  const handleChange = (e: any) => {
+    if (onChange) {
+      onChange(e.target.value);
     }
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-        width: '100%'
+    <Card
+      style={{
+        width: '100%',
+        margin: 0,
+        padding: 0,
+        border: 'none',
+        boxShadow: 'none'
       }}
+      styles={{ body: { padding: 0 } }}
     >
-      <Typography variant='h6' align='center'>
+      <Typography.Title
+        level={5}
+        style={{ textAlign: 'center', margin: 0, marginBottom: 8 }}
+      >
         {title}
-      </Typography>
-      <ToggleButtonGroup
+      </Typography.Title>
+      <Radio.Group
         value={value}
         onChange={handleChange}
-        fullWidth={fullWidth}
         disabled={disabled}
-        exclusive
+        style={{ width: '100%' }}
+        optionType='button'
+        buttonStyle='solid'
       >
-        {states.map((s, i) => (
-          <ToggleButton key={`${title}-${i}`} value={i} fullWidth={fullWidth}>
-            {s}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
-    </Box>
+        <Row gutter={8} style={{ width: '100%' }}>
+          {states.map((s, i) => (
+            <Col flex={fullWidth ? 'auto' : undefined} key={`${title}-${i}`}>
+              <Radio.Button
+                value={s}
+                style={{
+                  width: fullWidth ? '100%' : undefined,
+                  textAlign: 'center'
+                }}
+              >
+                {stateLabels ? stateLabels[i] : `${s}`}
+              </Radio.Button>
+            </Col>
+          ))}
+        </Row>
+      </Radio.Group>
+    </Card>
   );
-};
+}

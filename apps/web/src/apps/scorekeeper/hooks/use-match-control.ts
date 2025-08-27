@@ -12,6 +12,7 @@ interface MatchControlState {
   canResetField: boolean;
   canCommitScores: boolean;
   canPostResults: boolean;
+  canEditDetails: boolean
   setState: (state: MatchState) => void;
 }
 
@@ -29,6 +30,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: false,
         canCommitScores: false,
         canPostResults: false,
+        canEditDetails: false,
         setState
       };
     case MatchState.PRESTART_READY:
@@ -42,6 +44,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: false,
         canCommitScores: false,
         canPostResults: false,
+        canEditDetails: false,
         setState
       };
     case MatchState.PRESTART_COMPLETE:
@@ -55,6 +58,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: false,
         canCommitScores: false,
         canPostResults: false,
+        canEditDetails: false,
         setState
       };
     case MatchState.AUDIENCE_READY:
@@ -68,6 +72,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: false,
         canCommitScores: false,
         canPostResults: false,
+        canEditDetails: false,
         setState
       };
     case MatchState.FIELD_READY:
@@ -81,6 +86,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: false,
         canCommitScores: false,
         canPostResults: false,
+        canEditDetails: false,
         setState
       };
     case MatchState.MATCH_IN_PROGRESS:
@@ -94,6 +100,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: false,
         canCommitScores: false,
         canPostResults: false,
+        canEditDetails: false,
         setState
       };
     case MatchState.MATCH_COMPLETE:
@@ -107,6 +114,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: true,
         canCommitScores: false,
         canPostResults: false,
+        canEditDetails: true,
         setState
       };
     case MatchState.MATCH_ABORTED:
@@ -120,6 +128,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: false,
         canCommitScores: false,
         canPostResults: false,
+        canEditDetails: false,
         setState
       };
     case MatchState.RESULTS_READY:
@@ -133,6 +142,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: true,
         canCommitScores: true,
         canPostResults: false,
+        canEditDetails: false,
         setState
       };
     case MatchState.RESULTS_COMMITTED:
@@ -146,6 +156,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: false,
         canCommitScores: false,
         canPostResults: true,
+        canEditDetails: false,
         setState
       };
     case MatchState.RESULTS_POSTED:
@@ -159,6 +170,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: false,
         canCommitScores: false,
         canPostResults: false,
+        canEditDetails: false,
         setState
       };
     default:
@@ -172,6 +184,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: false,
         canCommitScores: false,
         canPostResults: false,
+        canEditDetails: false,
         setState
       };
   }

@@ -95,14 +95,12 @@ export const usePostResultsCallback = () => {
           
 
           // Find the next match that hasn't had results posted
-          console.log("finding match after", match.id, activeFields)
           const nextMatch = matches
             .filter((m) => activeFields.includes(m.fieldNumber))
             .sort((a, b) => a.id - b.id)
             .find((m) => m.id >= match.id && m.result < 0);
 
           if (nextMatch) {
-            console.log("nextMatch found:", nextMatch.id, nextMatch);
             set(matchIdAtom, nextMatch.id);
           }
         }

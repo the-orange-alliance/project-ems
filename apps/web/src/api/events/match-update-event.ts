@@ -1,9 +1,10 @@
 import { Match } from '@toa-lib/models';
-import { useAtomCallback } from 'jotai/utils';
+import { useSetAtom } from 'jotai';
 import { matchAtom } from 'src/stores/state/event.js';
 
 export const useMatchUpdateEvent = () => {
-  return useAtomCallback((get, set) => async (newMatch: Match<any>) => {
-    set(matchAtom, newMatch);
-  });
+  const setMatch = useSetAtom(matchAtom);
+  return (newMatch: Match<any>) => {
+    setMatch(newMatch);
+  };
 };

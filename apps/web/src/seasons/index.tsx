@@ -14,12 +14,12 @@ import { chargedUpComponents } from './ChargedUp/index.js';
 import { hydrogenHorizonComponents } from './HydrogenHorizons/index.js';
 import { crescendoComponents } from './Crescendo/index.js';
 import { fgc2024Components } from './fgc-2024/index.js';
-import { ecoEquilibriumComponents } from './EcoEquilibrium/index.js';
+import { fgc2025Components } from './fgc-2025/index.js';
 
 const { HydrogenHorizonsSeason } = HydrogenHorizons;
 const { CrescendoSeason } = Crescendo;
 const { FeedingTheFutureSeason } = FeedingTheFuture;
-const { EcoEquilibriumSeason} = EcoEquilibrium;
+const { EcoEquilibriumSeason } = EcoEquilibrium;
 
 // Add season components map here to be used in the function for later.
 const seasonComponents = new Map<string, SeasonComponents<any, any>>();
@@ -27,8 +27,11 @@ seasonComponents.set(ChargedUpSeason.key, chargedUpComponents);
 seasonComponents.set(HydrogenHorizonsSeason.key, hydrogenHorizonComponents);
 seasonComponents.set(CrescendoSeason.key, crescendoComponents);
 seasonComponents.set(FeedingTheFutureSeason.key, fgc2024Components);
-seasonComponents.set(EcoEquilibriumSeason.key, ecoEquilibriumComponents);
+seasonComponents.set(EcoEquilibriumSeason.key, fgc2025Components);
 
+/**
+ * @deprecated Use `ScoreBreakdownProps` instead.
+ */
 export interface MatchDetailInfoProps<T extends MatchDetailBase> {
   match?: Match<T>;
   handleUpdates: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -36,6 +39,8 @@ export interface MatchDetailInfoProps<T extends MatchDetailBase> {
 
 export interface ScoreBreakdownProps<T extends MatchDetailBase> {
   match?: Match<T>;
+  disabled?: boolean;
+  handleUpdates?: (key: keyof T, value: any) => void;
 }
 
 export interface RefereeScoreSheetProps {
@@ -65,9 +70,10 @@ export interface SeasonComponents<
   U extends Ranking
 > {
   Settings?: FC;
-  MatchDetailInfo: FC<MatchDetailInfoProps<T>>;
-  RedScoreBreakdown: FC<ScoreBreakdownProps<T>>;
-  BlueScoreBreakdown: FC<ScoreBreakdownProps<T>>;
+  MatchDetailInfo?: FC<MatchDetailInfoProps<T>>;
+  RedScoreBreakdown?: FC<ScoreBreakdownProps<T>>;
+  BlueScoreBreakdown?: FC<ScoreBreakdownProps<T>>;
+  CustomBreakdown?: FC<ScoreBreakdownProps<T>>;
   RefereeScoreSheet: FC<RefereeScoreSheetProps>;
   HeadRefExtrasSheet?: FC;
   RankingsReport?: FC<RankingsReportProps<U>>;

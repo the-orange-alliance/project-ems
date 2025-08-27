@@ -413,6 +413,8 @@ export function calculateRankingPoints(details: MatchDetails): MatchDetails {
   const copy = { ...details };
   copy.coopertition = ScoreTable.Coopertition(copy);
   copy.biodiversityDistributed = calculateBiodiversityDistributed(copy);
+  copy.redProtectionMultiplier = ScoreTable.ProtectionMultiplierRed(copy);
+  copy.blueProtectionMultiplier = ScoreTable.ProtectionMultiplierBlue(copy);
   return copy;
 }
 

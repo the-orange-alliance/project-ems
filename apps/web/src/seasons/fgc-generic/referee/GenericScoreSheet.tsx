@@ -1,8 +1,8 @@
 import { FC, SyntheticEvent, useState } from 'react';
-import { RefereeScoreSheetProps } from '@seasons/index';
-import { useSocket } from 'src/api/use-socket';
-import { SetterOrUpdater, useRecoilState } from 'recoil';
-import { matchOccurringAtom } from '@stores/recoil';
+import { RefereeScoreSheetProps } from '@seasons/index.js';
+import { useSocket } from 'src/api/use-socket.js';
+import { useAtom } from 'jotai';
+import { matchAtom } from 'src/stores/state/event.js';
 import {
   Match,
   MatchSocketEvent,
@@ -12,16 +12,11 @@ import {
   Alliance,
   MatchParticipant
 } from '@toa-lib/models';
-import Paper from '@mui/material/Paper';
-import Box from '@mui/material/Box';
-import { Stack, Typography } from '@mui/material';
-import { ConnectionChip } from 'src/components/util/connection-chip';
-import { MatchChip } from 'src/components/util/match-chip';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import { TabPanel } from 'src/components/util/tab-panel';
-import TeamSheet from 'src/seasons/fgc-generic/referee/TeamSheet';
-import PenaltySheet from 'src/seasons/fgc-generic/referee/PenaltySheet';
+import { Card, Typography, Tabs, Row, Col } from 'antd';
+import { ConnectionChip } from 'src/components/util/connection-chip.js';
+import { MatchChip } from 'src/components/util/match-chip.js';
+import TeamSheet from 'src/seasons/fgc-generic/referee/TeamSheet.js';
+import PenaltySheet from 'src/seasons/fgc-generic/referee/PenaltySheet.js';
 
 // forever hail the generic types
 
@@ -48,10 +43,7 @@ const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
   TeleopScoreSheet
 }: GenericScoreSheetProps<DetailsType>) => {
   const [socket] = useSocket();
-  const [match, setMatch]: [
-    Match<DetailsType> | null,
-    SetterOrUpdater<Match<DetailsType> | null>
-  ] = useRecoilState(matchOccurringAtom);
+  const [match, setMatch] = useAtom(matchAtom);
 
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -59,8 +51,8 @@ const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
     ?.filter((p) => (alliance === 'red' ? p.station < 20 : p.station >= 20))
     .slice(0, 3);
 
-  const handleChange = (event: SyntheticEvent, newValue: number) => {
-    setTabIndex(newValue);
+  const handleChange = (key: string) => {
+    setTabIndex(Number(key));
   };
 
   const handleMatchItemUpdate = <K extends keyof Match<DetailsType>>(
@@ -124,49 +116,78 @@ const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
   };
 
   return (
-    <Paper
-      sx={{
-        padding: (theme) => theme.spacing(2),
-        borderStyle: 'solid',
-        borderWidth: 'thick',
+    <Card
+      style={{
+        border: 'thick solid',
         borderColor: alliance === 'red' ? '#de1f1f' : '#1f85de',
-        width: '100%'
+        width: '100%',
+        padding: 16
       }}
+      styles={{ body: { padding: 0 } }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <Typography variant='h5' sx={{ textAlign: 'center' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          padding: 16
+        }}
+      >
+        <Typography.Title level={4} style={{ textAlign: 'center', margin: 0 }}>
           {alliance === 'red' ? 'Red' : 'Blue'} Alliance
-        </Typography>
-        <Stack direction='row' className='center' spacing={1}>
-          <ConnectionChip />
-          <MatchChip match={match} />
-        </Stack>
-        <Tabs value={tabIndex} onChange={handleChange} variant='fullWidth'>
-          <Tab label='TeleOp' />
-          <Tab label='Cards/Fouls' />
-        </Tabs>
-        <TabPanel value={tabIndex} index={0}>
-          <TeleopScoreSheet
-            alliance={alliance}
-            participants={participants}
-            onMatchDetailsAdjustment={handleMatchDetailsAdjustment}
-            onMatchDetailsUpdate={handleMatchDetailsUpdate}
-          />
-        </TabPanel>
-        <TabPanel value={tabIndex} index={1}>
-          {participants?.map((p) => (
-            <TeamSheet
-              key={`${p.eventKey}-${p.tournamentKey}-${p.station}`}
-              station={p.station}
-            />
-          ))}
-          <PenaltySheet<DetailsType>
-            alliance={alliance}
-            onMatchItemUpdate={handleMatchItemUpdate}
-          />
-        </TabPanel>
-      </Box>
-    </Paper>
+        </Typography.Title>
+        <Row
+          justify='center'
+          align='middle'
+          gutter={8}
+          style={{ marginBottom: 8 }}
+        >
+          <Col>
+            <ConnectionChip />
+          </Col>
+          <Col>
+            <MatchChip match={match} />
+          </Col>
+        </Row>
+        <Tabs
+          activeKey={String(tabIndex)}
+          onChange={handleChange}
+          type='card'
+          items={[
+            {
+              key: '0',
+              label: 'TeleOp',
+              children: (
+                <TeleopScoreSheet
+                  alliance={alliance}
+                  participants={participants}
+                  onMatchDetailsAdjustment={handleMatchDetailsAdjustment}
+                  onMatchDetailsUpdate={handleMatchDetailsUpdate}
+                />
+              )
+            },
+            {
+              key: '1',
+              label: 'Cards/Fouls',
+              children: (
+                <>
+                  {participants?.map((p) => (
+                    <TeamSheet
+                      key={`${p.eventKey}-${p.tournamentKey}-${p.station}`}
+                      station={p.station}
+                    />
+                  ))}
+                  <PenaltySheet<DetailsType>
+                    alliance={alliance}
+                    onMatchItemUpdate={handleMatchItemUpdate}
+                  />
+                </>
+              )
+            }
+          ]}
+        />
+      </div>
+    </Card>
   );
 };
 

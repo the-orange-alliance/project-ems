@@ -1,12 +1,12 @@
 import { FeedingTheFuture } from '@toa-lib/models';
-import { SeasonComponents } from '..';
-import ScoreSheet from './referee/ScoreSheet';
-import { MatchDetailInfo } from './match-detail-info';
-import { RedScoreBreakdown, BlueScoreBreakdown } from './score-breakdowns';
-import { RankingsReport } from './rankings-report';
-import { Settings } from './settings';
-import { useFieldControl } from './field-control';
-import HeadRefExtrasSheet from './referee/HRExtra';
+import { SeasonComponents } from '../index.js';
+import ScoreSheet from './referee/ScoreSheet.js';
+import { MatchDetailInfo } from './match-detail-info.js';
+import { RedScoreBreakdown, BlueScoreBreakdown } from './score-breakdowns.js';
+import { RankingsReport } from './rankings-report.js';
+import { Settings } from './settings.js';
+import { useFieldControl } from './field-control.js';
+import HeadRefExtrasSheet from './referee/HRExtra.js';
 
 export const fgc2024Components: SeasonComponents<
   FeedingTheFuture.MatchDetails,
