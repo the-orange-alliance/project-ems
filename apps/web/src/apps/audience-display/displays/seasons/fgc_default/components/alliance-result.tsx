@@ -24,6 +24,7 @@ import { FeedingTheFuture } from '@toa-lib/models';
 import { CardStatus as CardStatusComponent } from './card-status';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data';
 import { useAllianceMember } from 'src/api/use-alliance-data';
+import { BreakdownFGC25 } from '../../fgc_2025/index.js';
 
 const { CardStatus } = FeedingTheFuture;
 
@@ -221,6 +222,10 @@ export const AllianceResult: FC<Props> = ({
   switch (match.eventKey.split('-')[0]?.replace('FGC_', '')) {
     case '2024':
       breakdown = Breakdown2024;
+      break;
+    case '2025':
+      breakdown = BreakdownFGC25;
+      break;
   }
 
   const penaltyCalc = () => {

@@ -1,13 +1,13 @@
 import { FC, Suspense } from 'react';
-import { useRecoilValue } from 'recoil';
-import { ChromaLayout } from 'src/layouts/chroma-layout';
-import { currentEventKeyAtom } from 'src/stores/recoil';
-import { DisplaySwitcher } from './displays';
-import { displayIdAtom } from 'src/stores/recoil';
+import { ChromaLayout } from 'src/layouts/chroma-layout.js';
+import { DisplaySwitcher } from './displays/index.js';
+import { useAtomValue } from 'jotai';
+import { eventKeyAtom } from 'src/stores/state/event.js';
+import { displayIdAtom } from 'src/stores/state/audience-display.js';
 
 export const AudienceDisplay: FC = () => {
-  const eventKey = useRecoilValue(currentEventKeyAtom);
-  const displayId = useRecoilValue(displayIdAtom);
+  const eventKey = useAtomValue(eventKeyAtom);
+  const displayId = useAtomValue(displayIdAtom);
   return (
     <Suspense
       fallback={

@@ -1,9 +1,9 @@
 import { FC } from 'react';
-import { DisplayProps } from '../../displays';
+import { DisplayProps } from '../../displays.js';
 import FGC_BG from './assets/global-bg.png';
 import styled from '@emotion/styled';
-import { AllianceResult } from './components/alliance-result';
-import MatchTitle from './components/match-title';
+import { AllianceResult } from './components/alliance-result.js';
+import MatchTitle from './components/match-title.js';
 
 const Container = styled.div`
   background-image: url(${FGC_BG});

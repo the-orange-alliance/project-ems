@@ -1,26 +1,20 @@
+
 import { FC } from 'react';
-import { DisplayProps } from '../../displays';
-import styled from '@emotion/styled';
-import { AllianceResult } from './components/alliance-result';
-import MatchTitle from './components/match-title';
-import { Stack } from '@mui/material';
-
-// It ain't jank if it works
-const ScaledDiv = styled.div`
-  transform: scale(0.54);
-  transform-origin: top left;
-  margin-top: 1em;
-  margin-left: 1em;
-`;
-
-export const MatchResultsStream: FC<DisplayProps> = ({
-  match,
-  ranks,
-  teams
-}) => {
+import { DisplayProps } from '../../displays.js';
+import { AllianceResult } from './components/alliance-result.js';
+import MatchTitle from './components/match-title.js';
+import { Space } from 'antd';
+export const MatchResultsStream: FC<DisplayProps> = ({ match, ranks, teams }) => {
   return (
-    <ScaledDiv>
-      <Stack sx={{ width: '30vw' }} spacing={5}>
+    <div
+      style={{
+        transform: 'scale(0.54)',
+        transformOrigin: 'top left',
+        marginTop: '1em',
+        marginLeft: '1em'
+      }}
+    >
+      <Space direction="vertical" size={40} style={{ width: '30vw' }}>
         <MatchTitle match={match} noMargin />
         <AllianceResult
           alliance='red'
@@ -34,7 +28,7 @@ export const MatchResultsStream: FC<DisplayProps> = ({
           ranks={ranks}
           teams={teams}
         />
-      </Stack>
-    </ScaledDiv>
+      </Space>
+    </div>
   );
 };

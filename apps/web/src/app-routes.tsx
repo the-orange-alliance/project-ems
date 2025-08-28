@@ -122,11 +122,11 @@ const HeadRefereeMin = lazy(() =>
 );
 
 // Audience Display Routes
-// const AudienceDisplay = lazy(() =>
-//   import('./apps/audience-display').then((m) => ({
-//     default: m.AudienceDisplay
-//   }))
-// );
+const AudienceDisplay = lazy(() =>
+  import('./apps/audience-display/index.js').then((m) => ({
+    default: m.AudienceDisplay
+  }))
+);
 
 // Misc routes
 // const EventMonitor = lazy(() =>
@@ -296,13 +296,13 @@ const AppRoutes: AppRoute[] = [
   //   group: 0,
   //   element: SettingsApp
   // },
-  // {
-  //   name: 'Audience Display',
-  //   path: '/:eventKey/audience',
-  //   group: 0,
-  //   element: AudienceDisplay,
-  //   hideAppbar: true
-  // },
+  {
+    name: 'Audience Display',
+    path: '/:eventKey/audience',
+    group: 0,
+    element: AudienceDisplay,
+    hideAppbar: true
+  },
   // {
   //   name: 'Reports App',
   //   path: '/:eventKey/reports',

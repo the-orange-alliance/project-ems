@@ -1,21 +1,22 @@
 import { FC, ReactNode } from 'react';
-import { Box, Typography } from '@mui/material';
-import { useRecoilValue } from 'recoil';
-import { displayChromaKeyAtom, socketConnectedAtom } from 'src/stores/recoil';
+import { Typography } from 'antd';
+import { useAtomValue } from 'jotai';
+import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
+import { useSocket } from 'src/api/use-socket.js';
 
 interface Props {
   children?: ReactNode;
 }
 
 export const ChromaLayout: FC<Props> = ({ children }) => {
-  const chromaKey = useRecoilValue(displayChromaKeyAtom);
-  const connected = useRecoilValue(socketConnectedAtom);
+  const chromaKey = useAtomValue(displayChromaKeyAtom);
+  const [, connected] = useSocket();
   return (
-    <Box>
+    <div>
       {!connected && (
-        <Typography
-          variant='h5'
-          sx={{
+        <Typography.Title
+          level={5}
+          style={{
             position: 'absolute',
             top: 0,
             left: 0,
@@ -23,13 +24,12 @@ export const ChromaLayout: FC<Props> = ({ children }) => {
             textAlign: 'center',
             color: 'black',
             fontWeight: 'bold',
-            '-webkit-text-stroke': '.5px white'
+            WebkitTextStroke: '.5px white'
           }}
         >
           Socket Not Connected!
-        </Typography>
+        </Typography.Title>
       )}
-      {/* because mui is dumb */}
       <style>
         {`
           body {
@@ -43,16 +43,15 @@ export const ChromaLayout: FC<Props> = ({ children }) => {
           }
         `}
       </style>
-      <Box
-        // because I suck at css
-        sx={{
+      <div
+        style={{
           height: '100vh',
           width: '100vw',
           overflow: 'hidden'
         }}
       >
         {children}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };

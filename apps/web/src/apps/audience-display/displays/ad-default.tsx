@@ -1,42 +1,44 @@
 import { FC } from 'react';
-import { DisplayModeProps } from 'src/apps/audience-display/displays';
-import { useRecoilValue } from 'recoil';
-import {
-  matchOccurringAtom,
-  matchOccurringRanksAtom,
-  matchResultsMatchAtom,
-  matchResultsRanksAtom,
-  matchStateAtom
-} from 'src/stores/recoil';
-import { useEvent } from 'src/api/use-event-data';
+import { DisplayModeProps } from 'src/apps/audience-display/displays/index.js';
+import { useEvent } from 'src/api/use-event-data.js';
 import {
   AudienceScreens,
   Displays,
   LayoutMode,
   MatchState
 } from '@toa-lib/models';
-import { getDisplays } from './displays';
+import { getDisplays } from './displays.js';
 import {
   FadeInOut,
   SlideInBottom,
   SlideInLeft
-} from 'src/components/animations';
-import AbsolouteLocator from 'src/components/util/absoloute-locator';
+} from 'src/components/animations/index.js';
+import AbsolouteLocator from 'src/components/util/absoloute-locator.js';
 import { useSearchParams } from 'react-router-dom';
-import { useTeamsForEvent } from 'src/api/use-team-data';
+import { useAtomValue } from 'jotai';
+import { matchAtom } from 'src/stores/state/event.js';
+import { matchStateAtom } from 'src/stores/state/match.js';
+import { useEventState } from 'src/stores/hooks/use-event-state.js';
 
 /**
  * Classic audience display that handles all scenarios.
  */
 export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
-  const match = useRecoilValue(matchOccurringAtom);
-  const matchResultsMatch = useRecoilValue(matchResultsMatchAtom);
-  const ranks = useRecoilValue(matchOccurringRanksAtom);
-  const matchResultsRanks = useRecoilValue(matchResultsRanksAtom);
-  const matchState = useRecoilValue(matchStateAtom);
+  console.log(id)
+  const match = useAtomValue(matchAtom);
+  // const matchResultsMatch = useAtomValue(matchResultsMatchAtom);
+  const ranks = []; // useAtomValue(matchOccurringRanksAtom);
+  const matchResultsRanks = []; // useAtomValue(matchResultsRanksAtom);
+  const matchState = useAtomValue(matchStateAtom);
   const [searchParams] = useSearchParams();
 
-  const { data: teams } = useTeamsForEvent(match?.eventKey);
+  const {
+    state: {
+      remote: { teams }
+    }
+  } = useEventState({
+    teams: true
+  });
 
   // Pin a display
   const pin = searchParams.get('pin');
@@ -90,7 +92,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
         return (
           <displays.matchPlayStream
             event={event}
-            match={matchResultsMatch ?? match}
+            match={match}
             ranks={ranks}
             teams={teams}
           />
@@ -99,7 +101,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
         return (
           <displays.matchResultsStream
             event={event}
-            match={matchResultsMatch ?? match}
+            match={match}
             ranks={ranks}
             teams={teams}
           />
@@ -131,7 +133,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
   const forceHidePreview =
     showStreamResultsDuringPreview || showFullResultsDuringPreview;
 
-  const resultsToUse = !matchResultsMatch ? match : matchResultsMatch;
+  const resultsToUse = match;
   const ranksToUse = !matchResultsRanks ? ranks : matchResultsRanks;
 
   return (
@@ -224,7 +226,7 @@ export const AudDisplayDefault: FC<DisplayModeProps> = ({ id }) => {
           </FadeInOut>
         </AbsolouteLocator>
       )}
-      {layout[2] === LayoutMode.STREAM && matchResultsMatch && (
+      {layout[2] === LayoutMode.STREAM && resultsToUse && (
         <AbsolouteLocator top={0} left={0}>
           <SlideInLeft
             in={id === Displays.MATCH_RESULTS || showStreamResultsDuringPreview}

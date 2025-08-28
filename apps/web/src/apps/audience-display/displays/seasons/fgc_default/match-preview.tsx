@@ -1,10 +1,10 @@
 import { FC } from 'react';
-import { DisplayProps } from '../../displays';
+import { DisplayProps } from '../../displays.js';
 import styled from '@emotion/styled';
 import FGC_BG from './assets/global-bg.png';
 import FGC_LOGO from './assets/fg-logo-lg.png';
-import { AlliancePreview } from './components/alliance-preview';
-import MatchTitle from './components/match-title';
+import { AlliancePreview } from './components/alliance-preview.js';
+import MatchTitle from './components/match-title.js';
 
 const BGImage = styled.div`
   background-image: url(${FGC_BG});
