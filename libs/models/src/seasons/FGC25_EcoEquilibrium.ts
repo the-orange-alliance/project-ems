@@ -28,14 +28,14 @@ export const ScoreTable = {
   ProtectionMultiplierBlue: (details: MatchDetails) => calcProtectionMultiplier(details.blueRobotOneParking, details.blueRobotTwoParking, details.blueRobotThreeParking),
   Coopertition: (details: MatchDetails) => {
     const numParking = [
-      details.redRobotOneParking, 
-      details.redRobotTwoParking, 
-      details.redRobotThreeParking, 
-      details.blueRobotOneParking, 
-      details.blueRobotTwoParking, 
+      details.redRobotOneParking,
+      details.redRobotTwoParking,
+      details.redRobotThreeParking,
+      details.blueRobotOneParking,
+      details.blueRobotTwoParking,
       details.blueRobotThreeParking
     ].reduce((count, state) => count + ((state > 0) ? 1 : 0), 0);
-    
+
     return (numParking < 5 ? 0 : numParking >= 6 ? 30 : 15);
   },
   MajorFoul: 0.1, // Needs to be applied to other alliance to be calculated properly
@@ -227,7 +227,7 @@ function calculateRankings(
       if (participant.station < 20) {
         ranking.wins = ranking.wins + (redWin ? 1 : 0);
         ranking.losses = ranking.losses + (redWin ? 0 : 1);
-        
+
         if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.redScore]);
           switch (participant.station) {
@@ -249,7 +249,7 @@ function calculateRankings(
       if (participant.station >= 20) {
         ranking.wins = ranking.wins + (blueWin ? 1 : 0);
         ranking.losses = ranking.losses + (blueWin ? 0 : 1);
-        
+
         if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
           switch (participant.station) {
@@ -421,12 +421,50 @@ export function calculateBiodiversityDistributed(details: MatchDetails): number 
   );
 }
 
+export function calculateDistributionFactor(details: MatchDetails): number {
+  // Get the biodiversity unit counts for each of the three ecosystems
+  const biodiversityUnits = [
+    details.biodiversityUnitsRedSideEcosystem,
+    details.biodiversityUnitsBlueSideEcosystem,
+    details.biodiversityUnitsCenterEcosystem
+  ];
+
+  // Calculate the mean (average) of the biodiversity units
+  const sum = biodiversityUnits.reduce((a, b) => a + b, 0);
+  const mean = sum / biodiversityUnits.length;
+
+  // Calculate the variance
+  const variance = biodiversityUnits.reduce((sumOfSquares, value) => {
+    const diff = value - mean;
+    return sumOfSquares + diff * diff;
+  }, 0) / biodiversityUnits.length;
+
+  // Calculate the standard deviation (sigma)
+  const sigma = Math.sqrt(variance);
+
+  // Apply the logic from the achievement table
+  if (sigma > 0 && sigma <= 1) {
+    return DistributionFactor.Even;
+  } else if (sigma > 1 && sigma < 10) {
+    return DistributionFactor.SomewhatEven;
+  } else if (sigma >= 10 && sigma <= 60) {
+    return DistributionFactor.NotEven;
+  } else {
+    // This case covers sigma = 0 or sigma > 60.
+    // If sigma is 0, it means all values are the same, which falls into the 0 < sigma <= 1 range.
+    // However, if there are any barriers, the score is 0.5, which is handled below.
+    // The current table only goes up to sigma=60, so we default to the lowest score.
+    return DistributionFactor.NotEven;
+  }
+}
+
 export function calculateRankingPoints(details: MatchDetails): MatchDetails {
   const copy = { ...details };
   copy.coopertition = ScoreTable.Coopertition(copy);
   copy.biodiversityDistributed = calculateBiodiversityDistributed(copy);
   copy.redProtectionMultiplier = ScoreTable.ProtectionMultiplierRed(copy);
   copy.blueProtectionMultiplier = ScoreTable.ProtectionMultiplierBlue(copy);
+  copy.biodiversityDistributionFactor = calculateDistributionFactor(copy);
   return copy;
 }
 
