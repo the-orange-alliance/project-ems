@@ -256,7 +256,7 @@ export const CombinedBreakdown: FC<
         </Col>
 
         <Col xs={8}>
-          <Typography.Text>Real Red Side Ecosystem</Typography.Text>
+          <Typography.Text>Exact Red Side Ecosystem</Typography.Text>
           <Input
             value={match?.details?.biodiversityUnitsRedSideEcosystem ?? 0}
             type='number'
@@ -266,7 +266,7 @@ export const CombinedBreakdown: FC<
           />
         </Col>
         <Col xs={8}>
-          <Typography.Text>Real Center Ecosystem</Typography.Text>
+          <Typography.Text>Exact Center Ecosystem</Typography.Text>
           <Input
             value={match?.details?.biodiversityUnitsCenterEcosystem ?? 0}
             type='number'
@@ -276,7 +276,7 @@ export const CombinedBreakdown: FC<
           />
         </Col>
         <Col xs={8}>
-          <Typography.Text>Real Blue Side Ecosystem</Typography.Text>
+          <Typography.Text>Exact Blue Side Ecosystem</Typography.Text>
           <Input
             value={match?.details?.biodiversityUnitsBlueSideEcosystem ?? 0}
             type='number'
@@ -308,7 +308,7 @@ export const CombinedBreakdown: FC<
         </Col>
 
         <Col xs={12}>
-          <Typography.Text>Ecosystem Distribution Factor</Typography.Text>
+          <Typography.Text>Ecosystem Distribution Factor (Calculated)</Typography.Text>
           <StateToggle
             states={[
               EcoEquilibrium.DistributionFactor.NotEven,
@@ -324,10 +324,9 @@ export const CombinedBreakdown: FC<
               match?.details?.biodiversityDistributionFactor ??
               EcoEquilibrium.DistributionFactor.NotEven
             }
-            disabled={disabled}
+            disabled
             fullWidth
             title={undefined}
-            {...onChangeProps('biodiversityDistributionFactor', true)}
           />
         </Col>
         <Col xs={12}>

@@ -4,7 +4,8 @@ import {
   Alliance,
   EcoEquilibrium,
   Match,
-  MatchParticipant
+  MatchParticipant,
+  MatchState
 } from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 
@@ -13,6 +14,7 @@ import { useTeamsForEvent } from 'src/api/use-team-data.js';
 import { NumberInput } from 'src/components/inputs/number-input.js';
 import { StateToggle } from 'src/components/inputs/state-toggle.js';
 import { matchAtom } from 'src/stores/state/event.js';
+import { matchStateAtom } from 'src/stores/state/match.js';
 
 interface Props {
   alliance: Alliance;
@@ -33,9 +35,12 @@ const TeleScoreSheet: FC<Props> = ({
   onMatchDetailsAdjustment,
   onMatchDetailsUpdate
 }) => {
-  const match: Match<EcoEquilibrium.MatchDetails> | null = useAtomValue(matchAtom);
+  const match: Match<EcoEquilibrium.MatchDetails> | null =
+    useAtomValue(matchAtom);
   const { data: teams } = useTeamsForEvent(match?.eventKey ?? '');
   const identifiers = useTeamIdentifiers();
+  const matchState = useAtomValue(matchStateAtom);
+  const postMatch = matchState > MatchState.MATCH_IN_PROGRESS;
   if (!match || !match.details) return null;
 
   const handleMitigatorChange = (newValue: number, manuallyTyped: boolean) => {
@@ -45,7 +50,9 @@ const TeleScoreSheet: FC<Props> = ({
     if (manuallyTyped) {
       onMatchDetailsUpdate(
         // purposely reversed
-        alliance === 'blue' ? 'barriersInBlueMitigator' : 'barriersInRedMitigator',
+        alliance === 'blue'
+          ? 'barriersInBlueMitigator'
+          : 'barriersInRedMitigator',
         newValue
       );
     }
@@ -54,7 +61,9 @@ const TeleScoreSheet: FC<Props> = ({
   const handleMitigatorDecrement = () => {
     onMatchDetailsAdjustment(
       // intentionally reversed
-      alliance === 'blue' ? 'barriersInBlueMitigator' : 'barriersInRedMitigator',
+      alliance === 'blue'
+        ? 'barriersInBlueMitigator'
+        : 'barriersInRedMitigator',
       -1
     );
   };
@@ -62,30 +71,73 @@ const TeleScoreSheet: FC<Props> = ({
   const handleMitigatorIncrement = () => {
     onMatchDetailsAdjustment(
       // intentionally reversed
-      alliance === 'blue' ? 'barriersInBlueMitigator' : 'barriersInRedMitigator',
+      alliance === 'blue'
+        ? 'barriersInBlueMitigator'
+        : 'barriersInRedMitigator',
       1
     );
   };
 
-  const handleEcosystemChange = (newValue: number, manuallyTyped: boolean) => {
+  const handleEcosystemApproxChange = (
+    newValue: number,
+    manuallyTyped: boolean
+  ) => {
     if (manuallyTyped) {
       onMatchDetailsUpdate(
-        alliance === 'blue' ? 'approximateBiodiversityBlueSideEcosystem' : 'approximateBiodiversityRedSideEcosystem',
+        alliance === 'blue'
+          ? 'approximateBiodiversityBlueSideEcosystem'
+          : 'approximateBiodiversityRedSideEcosystem',
         newValue
       );
     }
   };
 
-  const handleEcosystemIncrement = () => {
+  const handleEcosystemApproxIncrement = () => {
     onMatchDetailsAdjustment(
-      alliance === 'blue' ? 'approximateBiodiversityBlueSideEcosystem' : 'approximateBiodiversityRedSideEcosystem',
+      alliance === 'blue'
+        ? 'approximateBiodiversityBlueSideEcosystem'
+        : 'approximateBiodiversityRedSideEcosystem',
       1
     );
   };
 
-  const handleEcosystemDecrement = () => {
+  const handleEcosystemApproxDecrement = () => {
     onMatchDetailsAdjustment(
-      alliance === 'blue' ? 'approximateBiodiversityBlueSideEcosystem' : 'approximateBiodiversityRedSideEcosystem',
+      alliance === 'blue'
+        ? 'approximateBiodiversityBlueSideEcosystem'
+        : 'approximateBiodiversityRedSideEcosystem',
+      -1
+    );
+  };
+
+  const handleEcosystemExactChange = (
+    newValue: number,
+    manuallyTyped: boolean
+  ) => {
+    if (manuallyTyped) {
+      onMatchDetailsUpdate(
+        alliance === 'blue'
+          ? 'biodiversityUnitsBlueSideEcosystem'
+          : 'biodiversityUnitsRedSideEcosystem',
+        newValue
+      );
+    }
+  };
+
+  const handleEcosystemExactIncrement = () => {
+    onMatchDetailsAdjustment(
+      alliance === 'blue'
+        ? 'biodiversityUnitsBlueSideEcosystem'
+        : 'biodiversityUnitsRedSideEcosystem',
+      1
+    );
+  };
+
+  const handleEcosystemExactDecrement = () => {
+    onMatchDetailsAdjustment(
+      alliance === 'blue'
+        ? 'biodiversityUnitsBlueSideEcosystem'
+        : 'biodiversityUnitsRedSideEcosystem',
       -1
     );
   };
@@ -134,8 +186,22 @@ const TeleScoreSheet: FC<Props> = ({
 
   return (
     <Row gutter={[24, 24]}>
-      <Col xs={24} md={12} lg={12}>
-        <Typography.Title level={5} style={{ textAlign: 'center', textTransform: 'capitalize', marginBottom: 16 }}>
+      <Col
+        xs={24}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}
+      >
+        <Typography.Title
+          level={5}
+          style={{
+            textAlign: 'center',
+            textTransform: 'capitalize',
+            marginBottom: 16
+          }}
+        >
           {alliance === 'red' ? 'Red' : 'Blue'} Side Mitigator
         </Typography.Title>
         <NumberInput
@@ -150,8 +216,22 @@ const TeleScoreSheet: FC<Props> = ({
           onDecrement={handleMitigatorDecrement}
         />
       </Col>
-      <Col xs={24} md={12} lg={12}>
-        <Typography.Title level={5} style={{ textAlign: 'center', textTransform: 'capitalize', marginBottom: 16 }}>
+      <Col
+        xs={24}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}
+      >
+        <Typography.Title
+          level={5}
+          style={{
+            textAlign: 'center',
+            textTransform: 'capitalize',
+            marginBottom: 16
+          }}
+        >
           Approx. {alliance === 'red' ? 'Red' : 'Blue'} Side Ecosystem
         </Typography.Title>
         <NumberInput
@@ -161,11 +241,43 @@ const TeleScoreSheet: FC<Props> = ({
               : match.details.approximateBiodiversityBlueSideEcosystem
           }
           textFieldDisabled
-          onChange={handleEcosystemChange}
-          onIncrement={handleEcosystemIncrement}
-          onDecrement={handleEcosystemDecrement}
+          onChange={handleEcosystemApproxChange}
+          onIncrement={handleEcosystemApproxIncrement}
+          onDecrement={handleEcosystemApproxDecrement}
+          disabled={postMatch}
         />
       </Col>
+      {postMatch && (
+        <Col
+          xs={24}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}
+        >
+          <Typography.Title
+            level={5}
+            style={{
+              textAlign: 'center',
+              textTransform: 'capitalize',
+              marginBottom: 16
+            }}
+          >
+            Exact {alliance === 'red' ? 'Red' : 'Blue'} Side Ecosystem
+          </Typography.Title>
+          <NumberInput
+            value={
+              alliance === 'red'
+                ? match.details.biodiversityUnitsRedSideEcosystem
+                : match.details.biodiversityUnitsBlueSideEcosystem
+            }
+            onChange={handleEcosystemExactChange}
+            onIncrement={handleEcosystemExactIncrement}
+            onDecrement={handleEcosystemExactDecrement}
+          />
+        </Col>
+      )}
       {participants?.map((p) => {
         const team = teams?.find((t) => t.teamKey === p.teamKey);
         const update = (value: number) => {
@@ -177,12 +289,20 @@ const TeleScoreSheet: FC<Props> = ({
               title={
                 <span>
                   {team && (
-                    <span className={`flag-icon flag-icon-${team.countryCode}`} />
+                    <span
+                      className={`flag-icon flag-icon-${team.countryCode}`}
+                    />
                   )}
                   &nbsp;{identifiers[p.teamKey]}&nbsp;Parking
                 </span>
               }
-              states={[EcoEquilibrium.MatchEndRobotState.Level0, EcoEquilibrium.MatchEndRobotState.Level1, EcoEquilibrium.MatchEndRobotState.Level2, EcoEquilibrium.MatchEndRobotState.Level3, EcoEquilibrium.MatchEndRobotState.Level4]}
+              states={[
+                EcoEquilibrium.MatchEndRobotState.Level0,
+                EcoEquilibrium.MatchEndRobotState.Level1,
+                EcoEquilibrium.MatchEndRobotState.Level2,
+                EcoEquilibrium.MatchEndRobotState.Level3,
+                EcoEquilibrium.MatchEndRobotState.Level4
+              ]}
               stateLabels={['L0', 'L1', 'L2', 'L3', 'L4']}
               value={getParking(p.station) ?? 0}
               onChange={update}

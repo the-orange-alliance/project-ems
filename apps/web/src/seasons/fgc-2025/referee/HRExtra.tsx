@@ -2,16 +2,20 @@ import {
   EcoEquilibrium,
   ItemUpdate,
   MatchSocketEvent,
+  MatchState,
   NumberAdjustment
 } from '@toa-lib/models';
 import { Row, Col, Typography, Card } from 'antd';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { useSocket } from 'src/api/use-socket.js';
 import { NumberInput } from 'src/components/inputs/number-input.js';
 import { matchAtom } from 'src/stores/state/event.js';
+import { matchStateAtom } from 'src/stores/state/match.js';
 const HeadRefereeExtra: React.FC = () => {
   const [socket] = useSocket();
   const [match, setMatch] = useAtom(matchAtom);
+  const matchState = useAtomValue(matchStateAtom);
+  const postMatch = matchState > MatchState.MATCH_IN_PROGRESS;
 
   const handleMatchDetailsUpdate = <
     K extends keyof EcoEquilibrium.MatchDetails
@@ -62,18 +66,44 @@ const HeadRefereeExtra: React.FC = () => {
     }
   };
 
-  const handleEcosystemChange = (newValue: number, manuallyTyped: boolean) => {
+  const handleEcosystemApproxChange = (
+    newValue: number,
+    manuallyTyped: boolean
+  ) => {
     if (manuallyTyped) {
-      handleMatchDetailsUpdate('approximateBiodiversityCenterEcosystem', newValue);
+      handleMatchDetailsUpdate(
+        'approximateBiodiversityCenterEcosystem',
+        newValue
+      );
     }
   };
 
-  const handleEcosystemIncrement = () => {
+  const handleEcosystemApproxIncrement = () => {
     handleMatchDetailsAdjustment('approximateBiodiversityCenterEcosystem', 1);
   };
 
-  const handleEcosystemDecrement = () => {
+  const handleEcosystemApproxDecrement = () => {
     handleMatchDetailsAdjustment('approximateBiodiversityCenterEcosystem', -1);
+  };
+
+  const handleEcosystemExactChange = (
+    newValue: number,
+    manuallyTyped: boolean
+  ) => {
+    if (manuallyTyped) {
+      handleMatchDetailsUpdate(
+        'biodiversityUnitsCenterEcosystem',
+        newValue
+      );
+    }
+  };
+
+  const handleEcosystemExactIncrement = () => {
+    handleMatchDetailsAdjustment('biodiversityUnitsCenterEcosystem', 1);
+  };
+
+  const handleEcosystemExactDecrement = () => {
+    handleMatchDetailsAdjustment('biodiversityUnitsCenterEcosystem', -1);
   };
 
   return (
@@ -87,7 +117,14 @@ const HeadRefereeExtra: React.FC = () => {
       styles={{ body: { padding: 0 } }}
     >
       <Row gutter={[24, 24]}>
-        <Col xs={24} md={12} lg={12}>
+        <Col
+          xs={24}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}
+        >
           <Typography.Title
             level={5}
             style={{
@@ -101,11 +138,42 @@ const HeadRefereeExtra: React.FC = () => {
           <NumberInput
             value={match?.details?.approximateBiodiversityCenterEcosystem || 0}
             textFieldDisabled
-            onChange={handleEcosystemChange}
-            onIncrement={handleEcosystemIncrement}
-            onDecrement={handleEcosystemDecrement}
+            disabled={postMatch}
+            onChange={handleEcosystemApproxChange}
+            onIncrement={handleEcosystemApproxIncrement}
+            onDecrement={handleEcosystemApproxDecrement}
           />
         </Col>
+        {postMatch && (
+          <Col
+            xs={24}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}
+          >
+            <Typography.Title
+              level={5}
+              style={{
+                textAlign: 'center',
+                textTransform: 'capitalize',
+                marginBottom: 16
+              }}
+            >
+              Exact Center Ecosystem
+            </Typography.Title>
+            <NumberInput
+              value={
+                match?.details?.biodiversityUnitsCenterEcosystem || 0
+              }
+              textFieldDisabled
+              onChange={handleEcosystemExactChange}
+              onIncrement={handleEcosystemExactIncrement}
+              onDecrement={handleEcosystemExactDecrement}
+            />
+          </Col>
+        )}
       </Row>
     </Card>
   );
