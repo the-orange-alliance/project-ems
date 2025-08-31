@@ -6,7 +6,6 @@ import {
 } from '../recoil-effects.js';
 import { clientFetcher } from '@toa-lib/client';
 import { setApiStorage } from 'src/api/use-storage-data.js';
-import { AppFlags, defaultFlags } from '../app-flags.js';
 
 /**
  * @section UI SETTINGS STATE
@@ -104,24 +103,4 @@ export const displayChromaKeyAtom = atom({
   key: 'chromaKeyAtom',
   default: '#ff00ff',
   effects: [localStorageQueryParamDefaultEffect('chromaKey')]
-});
-
-/**
- * @section FLAGS STATE
- * Recoil state management for application flags
- */
-export const appFlagsAtom = atom<AppFlags>({
-  key: 'appFlagsAtom_UNSTABLE',
-  default: selector<AppFlags>({
-    key: 'appFlagsAtomSelector_UNSTABLE',
-    get: async (): Promise<AppFlags> => {
-      try {
-        return await clientFetcher('storage/flags.json', 'GET');
-      } catch (e) {
-        // If the above fails, try creating the file and returning default flags.
-        setApiStorage('flags.json', defaultFlags);
-        return defaultFlags;
-      }
-    }
-  })
 });

@@ -1,3 +1,3 @@
-import { AdminApp } from './admin-app';
+import { AdminApp } from './admin-app.js';
 
 export { AdminApp };

@@ -65,9 +65,9 @@ const ScorekeeperApp = lazy(() =>
 );
 
 // Admin Routes
-// const AdminApp = lazy(() =>
-//   import('./apps/admin-app').then((m) => ({ default: m.AdminApp }))
-// );
+const AdminApp = lazy(() =>
+  import('./apps/admin-app/index.js').then((m) => ({ default: m.AdminApp }))
+);
 
 // Silly Routes
 const JBApp = lazy(() =>
@@ -296,12 +296,12 @@ const AppRoutes: AppRoute[] = [
     element: HeadRefereeMin,
     hidden: true
   },
-  // {
-  //   name: 'Admin App',
-  //   path: '/:eventKey/admin',
-  //   group: 0,
-  //   element: AdminApp
-  // },
+  {
+    name: 'Admin App',
+    path: '/:eventKey/admin',
+    group: 0,
+    element: AdminApp
+  },
   // {
   //   name: 'Settings',
   //   path: '/:eventKey/settings',
