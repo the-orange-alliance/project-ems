@@ -1,16 +1,11 @@
 import { FC, useState } from 'react';
-import TableContainer from '@mui/material/TableContainer';
-import Table from '@mui/material/Table';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TableCell from '@mui/material/TableCell';
-import TableBody from '@mui/material/TableBody';
+import { Button } from 'antd';
 import { Match, ScheduleItem, Team, Tournament } from '@toa-lib/models';
-import { Report } from './report-container';
+import { Report } from './report-container.js';
 import { DateTime } from 'luxon';
-import { EventTournamentFieldsDropdown } from 'src/components/dropdowns/event-tournament-fields-dropdown';
+import { EventTournamentFieldsDropdown } from 'src/components/dropdowns/event-tournament-fields-dropdown.js';
 import { mkConfig, generateCsv, download } from 'export-to-csv';
-import { Button } from '@mui/material';
+import { UpgradedTable } from 'src/components/tables/upgraded-table.js';
 
 interface Props {
   tournament: Tournament;
@@ -61,6 +56,61 @@ export const MatchReport: FC<Props> = ({
     );
     download(csvConfig)(csv);
   };
+
+  // Prepare data for UpgradedTable
+  const tableData = items
+    .filter((i) => !i.isMatch || fieldMatches.find((m) => m.name === i.name))
+    .map((i, index) => {
+      const m = fieldMatches.find((m) => m.name === i.name);
+      return {
+        id: i.id,
+        isMatch: i.isMatch,
+        match: m,
+        item: i,
+        tableIndex: index
+      };
+    });
+
+  // Dynamic headers based on alliance size
+  const headers = [
+    'Name',
+    'Field',
+    'Time',
+    ...Array.from({ length: allianceSize }, (_, i) => `Red ${i + 1}`),
+    ...Array.from({ length: allianceSize }, (_, i) => `Blue ${i + 1}`)
+  ];
+
+  const renderRow = (row: any) => {
+    const { isMatch, match: m, item: i } = row;
+
+    if (!isMatch) {
+      // For non-match items (breaks, etc.), span across all columns
+      return [i.name, '', '', ...Array(allianceSize * 2).fill('')];
+    }
+
+    const baseData = [
+      m?.name || '',
+      m?.fieldNumber || '',
+      m?.scheduledTime
+        ? DateTime.fromISO(m.scheduledTime).toLocaleString(
+            DateTime.DATETIME_FULL
+          )
+        : ''
+    ];
+
+    // Add participant data
+    const participantData = Array(allianceSize * 2).fill('');
+    m?.participants?.forEach((p: any, index: number) => {
+      const team = teams.find((t) => t.teamKey === p.teamKey);
+      const teamDisplay =
+        identifier && team ? team[identifier] : team?.teamKey || '';
+      const surrogateMarker = p.surrogate ? '*' : '';
+      participantData[index] = `${teamDisplay}${surrogateMarker}`;
+    });
+
+    return [...baseData, ...participantData];
+  };
+
   return (
     <>
       <div className='no-print'>
@@ -70,74 +120,17 @@ export const MatchReport: FC<Props> = ({
         />
       </div>
       <div>
-        <Button onClick={downloadCSV}>Greg CSV</Button>
+        <Button onClick={downloadCSV} className='no-print'>
+          Greg CSV
+        </Button>
       </div>
       <Report name={`${tournament.name} Match Schedule`}>
-        <TableContainer>
-          <Table size='small'>
-            <TableHead sx={{ backgroundColor: 'lightgrey' }}>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell size='small'>Field</TableCell>
-                <TableCell>Time</TableCell>
-                {matches?.[0]?.participants?.map((p, i) => (
-                  <TableCell key={`robot-${i}`}>
-                    {i < allianceSize
-                      ? `Red ${i + 1}`
-                      : `Blue ${i + 1 - allianceSize}`}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {items
-                .filter(
-                  (i) =>
-                    !i.isMatch || fieldMatches.find((m) => m.name === i.name)
-                )
-                .map((i) => {
-                  const m = fieldMatches.find((m) => m.name === i.name);
-                  if (i.isMatch) {
-                    return (
-                      <TableRow
-                        key={`${i.eventKey}-${i.tournamentKey}-${i.id}`}
-                      >
-                        <TableCell>{m?.name}</TableCell>
-                        <TableCell size='small'>{m?.fieldNumber}</TableCell>
-                        <TableCell>
-                          {DateTime.fromISO(
-                            m?.scheduledTime || ''
-                          ).toLocaleString(DateTime.DATETIME_FULL)}
-                        </TableCell>
-                        {m?.participants?.map((p) => {
-                          const team = teams.find(
-                            (t) => t.teamKey == p.teamKey
-                          );
-                          return (
-                            <TableCell
-                              key={`${p.eventKey}-${p.tournamentKey}-${p.id}-${p.teamKey}-${p.station}`}
-                              size='small'
-                            >
-                              {identifier && team
-                                ? team[identifier]
-                                : team?.teamKey}
-                              {p.surrogate ? '*' : ''}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    );
-                  } else {
-                    return (
-                      <TableRow key={i.id}>
-                        <TableCell colSpan={9}>{i.name}</TableCell>
-                      </TableRow>
-                    );
-                  }
-                })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <UpgradedTable
+          data={tableData}
+          headers={headers}
+          rowKey='tableIndex'
+          renderRow={renderRow}
+        />
       </Report>
     </>
   );

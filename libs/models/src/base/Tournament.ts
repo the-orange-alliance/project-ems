@@ -1,9 +1,11 @@
 import { z } from 'zod';
+import { tournamentTypeZod } from './Schedule.js';
 
 export const tournamentZod = z.object({
   eventKey: z.string(),
   tournamentKey: z.string(),
   tournamentLevel: z.number(),
+  tournamentType: tournamentTypeZod,
   fieldCount: z.number(),
   fields: z.array(z.string()),
   name: z.string()
@@ -19,6 +21,7 @@ export const tournamentDatabaseZod = z
     eventKey: z.string(),
     tournamentKey: z.string(),
     tournamentLevel: z.number(),
+    tournamentType: tournamentTypeZod,
     fieldCount: z.number(),
     fields: z.string(),
     name: z.string()
@@ -32,6 +35,7 @@ export const defaultTournament: Tournament = {
   eventKey: '',
   tournamentKey: '',
   tournamentLevel: 0,
+  tournamentType: 'Test',
   fieldCount: 1,
   fields: ['Field 1'],
   name: ''

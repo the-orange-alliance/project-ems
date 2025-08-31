@@ -32,6 +32,11 @@ export const ScheduleManager: FC = () => {
     useScheduleParamsForTournament(event?.eventKey, tournamentKey);
 
   const onScheduleParamsChange = (schedule: ScheduleParams) => {
+    const tournament = tournaments.find(
+      (t) => t.tournamentKey === tournamentKey
+    );
+    if (!tournament) return;
+    schedule.type = tournament.tournamentType;
     patchScheduleParams(schedule).then(() => {
       return refetchScheduleParams();
     });

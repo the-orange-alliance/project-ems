@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Reports } from './reports-app';
+import { Reports } from './reports-app.js';
 
 export interface ReportProps {
   eventKey: string | null | undefined;

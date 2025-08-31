@@ -75,7 +75,7 @@ export const UpgradedTable = <T,>({
       }
       onRow={(record) => ({
         onClick: () => onSelect?.(record),
-        className: onSelect ? 'mouse-click' : disable ? 'mouse-disable' : '',
+        className: onSelect ? 'mouse-click' : disable ? 'mouse-disable' : ''
       })}
       rowHoverable={!disable}
       pagination={false}

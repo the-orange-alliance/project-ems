@@ -1,54 +1,44 @@
 import { FC } from 'react';
-import TableContainer from '@mui/material/TableContainer';
-import Table from '@mui/material/Table';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TableCell from '@mui/material/TableCell';
-import TableBody from '@mui/material/TableBody';
 import { Team } from '@toa-lib/models';
-import { Report } from './report-container';
+import { Report } from './report-container.js';
+import { UpgradedTable } from 'src/components/tables/upgraded-table.js';
 
 interface Props {
   teams: Team[];
 }
 
 export const TeamsReport: FC<Props> = ({ teams }) => {
+  const headers = [
+    'Team Name (long)',
+    'Team Name (short)',
+    'Location',
+    'Country Code',
+    'Flag',
+    'Rookie Year'
+  ];
+
+  const renderRow = (team: Team) => [
+    team.teamNameLong,
+    team.teamNameShort,
+    [team.city, team.stateProv, team.country]
+      .filter((str) => str.length > 0)
+      .join(', '),
+    team.countryCode,
+    <span
+      key={`flag-${team.teamKey}`}
+      className={`flag-icon flag-border flag-icon-${team.countryCode.toLowerCase()}`}
+    />,
+    team.rookieYear
+  ];
+
   return (
     <Report name='Competing Teams'>
-      <TableContainer>
-        <Table size='small'>
-          <TableHead sx={{ backgroundColor: 'lightgrey' }}>
-            <TableRow>
-              <TableCell>Team Name (long)</TableCell>
-              <TableCell>Team Name (short)</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Country Code</TableCell>
-              <TableCell>Flag</TableCell>
-              <TableCell>Rookie Year</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {teams.map((t) => (
-              <TableRow key={t.teamKey}>
-                <TableCell>{t.teamNameLong}</TableCell>
-                <TableCell>{t.teamNameShort}</TableCell>
-                <TableCell>
-                  {[t.city, t.stateProv, t.country]
-                    .filter((str) => str.length > 0)
-                    .toString()}
-                </TableCell>
-                <TableCell>{t.countryCode}</TableCell>
-                <TableCell>
-                  <span
-                    className={`flag-icon flag-border flag-icon-${t.countryCode.toLowerCase()}`}
-                  />
-                </TableCell>
-                <TableCell>{t.rookieYear}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <UpgradedTable
+        data={teams}
+        headers={headers}
+        rowKey='teamKey'
+        renderRow={renderRow}
+      />
     </Report>
   );
 };

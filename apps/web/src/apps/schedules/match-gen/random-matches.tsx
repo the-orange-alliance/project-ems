@@ -50,7 +50,7 @@ export const RandomMatches: FC<Props> = ({
       onCreateMatches(
         assignMatchTimes(
           eventSchedule.hasPremiereField
-            ? FGCSchedule.FGC2024.assignFields(matches)
+            ? FGCSchedule.FGC2025.assignFields(matches)
             : matches,
           scheduleItems
         )

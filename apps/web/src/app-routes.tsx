@@ -39,6 +39,11 @@ const TournamentCountTag = lazy(() =>
     default: m.TournamentCountTag
   }))
 );
+const MatchCountTag = lazy(() =>
+  import('./components/util/app-chips.js').then((m) => ({
+    default: m.MatchCountTag
+  }))
+);
 const TournamentEditor = lazy(() =>
   import('./apps/tournaments/index.js').then((m) => ({
     default: m.TournamentEditor
@@ -60,9 +65,9 @@ const ScorekeeperApp = lazy(() =>
 );
 
 // Admin Routes
-// const AdminApp = lazy(() =>
-//   import('./apps/admin-app').then((m) => ({ default: m.AdminApp }))
-// );
+const AdminApp = lazy(() =>
+  import('./apps/admin-app/index.js').then((m) => ({ default: m.AdminApp }))
+);
 
 // Silly Routes
 const JBApp = lazy(() =>
@@ -94,9 +99,9 @@ const JBApp = lazy(() =>
 // );
 
 // Report Routes
-// const Reports = lazy(() =>
-//   import('./apps/report-app').then((m) => ({ default: m.Reports }))
-// );
+const Reports = lazy(() =>
+  import('./apps/report-app/index.js').then((m) => ({ default: m.Reports }))
+);
 // Settings Routes
 const SettingsApp = lazy(() =>
   import('./apps/settings-app/index.js').then((m) => ({
@@ -112,13 +117,19 @@ const RedReferee = lazy(() =>
   import('./apps/referee-app/index.js').then((m) => ({ default: m.RedReferee }))
 );
 const BlueReferee = lazy(() =>
-  import('./apps/referee-app/index.js').then((m) => ({ default: m.BlueReferee }))
+  import('./apps/referee-app/index.js').then((m) => ({
+    default: m.BlueReferee
+  }))
 );
 const HeadReferee = lazy(() =>
-  import('./apps/referee-app/index.js').then((m) => ({ default: m.HeadReferee }))
+  import('./apps/referee-app/index.js').then((m) => ({
+    default: m.HeadReferee
+  }))
 );
 const HeadRefereeMin = lazy(() =>
-  import('./apps/referee-app/index.js').then((m) => ({ default: m.HeadRefereeMin }))
+  import('./apps/referee-app/index.js').then((m) => ({
+    default: m.HeadRefereeMin
+  }))
 );
 
 // Audience Display Routes
@@ -237,6 +248,7 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/schedule-manager',
     group: 0,
     icon: <ControlOutlined />,
+    eventListRenderer: MatchCountTag,
     element: ScheduleManager,
     eventOrder: 4
   },
@@ -284,12 +296,12 @@ const AppRoutes: AppRoute[] = [
     element: HeadRefereeMin,
     hidden: true
   },
-  // {
-  //   name: 'Admin App',
-  //   path: '/:eventKey/admin',
-  //   group: 0,
-  //   element: AdminApp
-  // },
+  {
+    name: 'Admin App',
+    path: '/:eventKey/admin',
+    group: 0,
+    element: AdminApp
+  },
   // {
   //   name: 'Settings',
   //   path: '/:eventKey/settings',
@@ -303,12 +315,12 @@ const AppRoutes: AppRoute[] = [
     element: AudienceDisplay,
     hideAppbar: true
   },
-  // {
-  //   name: 'Reports App',
-  //   path: '/:eventKey/reports',
-  //   group: 0,
-  //   element: Reports
-  // },
+  {
+    name: 'Reports App',
+    path: '/:eventKey/reports',
+    group: 0,
+    element: Reports
+  },
   {
     name: 'Settings',
     path: '/:eventKey/settings',

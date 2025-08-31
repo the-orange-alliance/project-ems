@@ -1,24 +1,18 @@
 import { FC, ReactNode, useState } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { PaperLayout } from 'src/layouts/paper-layout';
-import { TwoColumnHeader } from 'src/components/util/two-column-header';
-import { GeneralReports } from './general-reports';
-import { ReportView } from './components/report-view';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { TournamentReports } from './tournament-reports';
-import {
-  currentEventKeyAtom,
-  currentTournamentKeyAtom
-} from 'src/stores/recoil';
-import { useTournamentsForEvent } from 'src/api/use-tournament-data';
-import TournamentDropdown from 'src/components/dropdowns/tournament-dropdown';
+import { Typography, Space } from 'antd';
+import { PaperLayout } from 'src/layouts/paper-layout.js';
+import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
+import { GeneralReports } from './general-reports.js';
+import { ReportView } from './components/report-view.js';
+import { useAtom, useAtomValue } from 'jotai';
+import { TournamentReports } from './tournament-reports.js';
+import { eventKeyAtom, tournamentKeyAtom } from 'src/stores/state/event.js';
+import { useTournamentsForEvent } from 'src/api/use-tournament-data.js';
+import TournamentDropdown from 'src/components/dropdowns/tournament-dropdown.js';
 
 export const Reports: FC = () => {
-  const eventKey = useRecoilValue(currentEventKeyAtom);
-  const [tournamentKey, setTournamentKey] = useRecoilState(
-    currentTournamentKeyAtom
-  );
+  const eventKey = useAtomValue(eventKeyAtom);
+  const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
   const { data: tournaments } = useTournamentsForEvent(eventKey);
   const tournament = tournaments?.find(
     (t) => t.tournamentKey === tournamentKey
@@ -39,7 +33,7 @@ export const Reports: FC = () => {
       containerWidth='xl'
       header={
         <TwoColumnHeader
-          left={<Typography variant='h4'>Reports</Typography>}
+          left={<Typography.Title level={4}>Reports</Typography.Title>}
           right={
             <TournamentDropdown
               tournaments={tournaments}
@@ -50,26 +44,30 @@ export const Reports: FC = () => {
         />
       }
     >
-      <Box sx={{ padding: (theme) => theme.spacing(3) }}>
+      <div style={{ padding: '24px' }}>
         {report ? (
           <ReportView onReturn={handleReturn}>{report}</ReportView>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <Typography variant='h4' gutterBottom>
+          <Space direction='vertical' size='large' style={{ width: '100%' }}>
+            <Typography.Title level={4}>
               {tournament?.name} Reports
-            </Typography>
-            <TournamentReports
-              eventKey={eventKey}
-              tournamentKey={tournamentKey}
-              onGenerate={handleReportUpdate}
-            />
+            </Typography.Title>
+            {!tournamentKey && <div>Please select a tournament first.</div>}
+            {tournamentKey && (
+              <TournamentReports
+                eventKey={eventKey}
+                tournamentKey={tournamentKey}
+                onGenerate={handleReportUpdate}
+              />
+            )}
+            <Typography.Title level={4}>General Reports</Typography.Title>
             <GeneralReports
               eventKey={eventKey}
               onGenerate={handleReportUpdate}
             />
-          </Box>
+          </Space>
         )}
-      </Box>
+      </div>
     </PaperLayout>
   );
 };

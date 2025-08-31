@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS "tournament" (
     "eventKey" VARCHAR(25) NOT NULL,
     "tournamentKey" VARCHAR(25) NOT NULL,
     "tournamentLevel" INT NOT NULL,
+    "tournamentType" VARCHAR(15) NOT NULL,
     "fieldCount" INT NOT NULL,
     "fields" VARCHAR(255),
     "name" VARCHAR(255),
