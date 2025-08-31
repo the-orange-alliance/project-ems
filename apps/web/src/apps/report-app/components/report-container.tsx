@@ -1,10 +1,8 @@
 import { FC, ReactNode } from 'react';
-import Box from '@mui/material/Box';
-import Divider from '@mui/material/Divider';
-import Typography from '@mui/material/Typography';
-import { useRecoilValue } from 'recoil';
-import { currentEventKeyAtom } from 'src/stores/recoil';
-import { useEvent } from 'src/api/use-event-data';
+import { Typography, Divider } from 'antd';
+import { useAtomValue } from 'jotai';
+import { eventKeyAtom } from 'src/stores/state/index.js';
+import { useEvent } from 'src/api/use-event-data.js';
 
 interface Props {
   name: string;
@@ -13,28 +11,30 @@ interface Props {
 }
 
 export const Report: FC<Props> = ({ name, children, pagebreak }) => {
-  const eventKey = useRecoilValue(currentEventKeyAtom);
+  const eventKey = useAtomValue(eventKeyAtom);
   const { data: event } = useEvent(eventKey);
 
   return (
-    <Box
-      sx={{
-        marginTop: (theme) => theme.spacing(2),
+    <div
+      style={{
+        marginTop: '16px',
         pageBreakAfter: pagebreak ? 'always' : 'avoid'
       }}
     >
-      <Typography align='center' variant='h4'>
+      <Typography.Title
+        level={2}
+        style={{ textAlign: 'center', marginBottom: '8px' }}
+      >
         {event?.eventName ?? ''}
-      </Typography>
-      <Typography align='center' variant='h5'>
+      </Typography.Title>
+      <Typography.Title
+        level={3}
+        style={{ textAlign: 'center', marginBottom: '16px' }}
+      >
         {name}
-      </Typography>
-      <Divider
-        sx={{
-          marginTop: (theme) => theme.spacing(2)
-        }}
-      />
+      </Typography.Title>
+      <Divider style={{ marginTop: '16px' }} />
       {children}
-    </Box>
+    </div>
   );
 };

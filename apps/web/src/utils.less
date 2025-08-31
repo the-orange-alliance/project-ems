@@ -126,6 +126,61 @@
   .no-print {
     display: none;
   }
+
+  .print-base {
+    background-color: white !important;
+    color: black !important;
+
+    * {
+      background-color: transparent !important;
+      color: black !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+
+    // Override common dark mode elements
+    .ant-table,
+    .ant-table-tbody > tr > td,
+    .ant-divider,
+    .ant-typography {
+      background-color: white !important;
+      color: black !important;
+      border-color: #d9d9d9 !important;
+      border-radius: 0 !important;
+    }
+
+    // Ensure borders are visible but not too dark
+    .ant-table-bordered .ant-table-thead > tr > th,
+    .ant-table-bordered .ant-table-tbody > tr > td {
+      border-color: #d9d9d9 !important;
+    }
+
+    .ant-table-thead > tr > th {
+      background-color: #f5f5f5 !important;
+      color: black !important;
+      border-radius: 0 !important;
+      border-color: #d9d9d9 !important;
+    }
+
+    // Make sure links are readable
+    a {
+      color: #1890ff !important;
+      text-decoration: underline !important;
+    }
+
+    // Override any custom background colors for print
+    .red-bg,
+    .red-bg-imp,
+    .blue-bg,
+    .blue-bg-imp,
+    .yellow-bg,
+    .purple-bg-imp,
+    .black-bg,
+    .black-bg-imp {
+      background-color: white !important;
+      color: black !important;
+    }
+  }
 }
 
 /* CSS OVERRIDES */

@@ -1,13 +1,8 @@
 import { FC, useMemo } from 'react';
-import TableContainer from '@mui/material/TableContainer';
-import Table from '@mui/material/Table';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TableCell from '@mui/material/TableCell';
-import TableBody from '@mui/material/TableBody';
 import { Match, Team } from '@toa-lib/models';
-import { Report } from './report-container';
+import { Report } from './report-container.js';
 import { DateTime } from 'luxon';
+import { UpgradedTable } from 'src/components/tables/upgraded-table.js';
 
 interface Props {
   teams: Team[];
@@ -39,54 +34,53 @@ export const MatchByTeamReport: FC<Props> = ({
     return newMap;
   }, [teams, matches]);
 
+  // Dynamic headers based on alliance size
+  const headers = [
+    'Name',
+    'Field',
+    'Time',
+    ...Array.from({ length: allianceSize }, (_, i) => `Red ${i + 1}`),
+    ...Array.from({ length: allianceSize }, (_, i) => `Blue ${i + 1}`)
+  ];
+
+  const renderRow = (match: Match<any>) => {
+    const baseData = [
+      match.name,
+      match.fieldNumber,
+      DateTime.fromISO(match.scheduledTime).toLocaleString(
+        DateTime.DATETIME_FULL
+      )
+    ];
+
+    // Add participant data
+    const participantData = Array(allianceSize * 2).fill('');
+    match.participants?.forEach((p: any, index: number) => {
+      const team = teams.find((t) => t.teamKey === p.teamKey);
+      const teamDisplay =
+        identifier && team ? team[identifier] : p.teamKey.toString();
+      participantData[index] = teamDisplay;
+    });
+
+    return [...baseData, ...participantData];
+  };
+
   return (
     <>
       {teams.map((t) => {
+        const teamMatches = teamsMap.get(t.teamKey) || [];
+
         return (
           <Report
             key={t.teamKey}
             name={`${t.teamNameLong} Match Schedule`}
             pagebreak
           >
-            <TableContainer>
-              <Table size='small'>
-                <TableHead sx={{ backgroundColor: 'lightgrey' }}>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell size='small'>Field</TableCell>
-                    <TableCell>Time</TableCell>
-                    {matches?.[0]?.participants?.map((p, i) => (
-                      <TableCell key={`robot-${i}`}>
-                        {i < allianceSize
-                          ? `Red ${i + 1}`
-                          : `Blue ${i + 1 - allianceSize}`}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {teamsMap.get(t.teamKey)?.map((m) => (
-                    <TableRow key={`${t.teamKey}-${m.id}`}>
-                      <TableCell>{m.name}</TableCell>
-                      <TableCell size='small'>{m.fieldNumber}</TableCell>
-                      <TableCell>
-                        {DateTime.fromISO(m.scheduledTime).toLocaleString(
-                          DateTime.DATETIME_FULL
-                        )}
-                      </TableCell>
-                      {m.participants?.map((p) => {
-                        const team = teams.find((t) => t.teamKey === p.teamKey);
-                        return (
-                          <TableCell key={`${p.id}-${p.station}`} size='small'>
-                            {identifier && team ? team[identifier] : p.teamKey}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <UpgradedTable
+              data={teamMatches}
+              headers={headers}
+              rowKey='id'
+              renderRow={renderRow}
+            />
           </Report>
         );
       })}

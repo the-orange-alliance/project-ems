@@ -99,9 +99,9 @@ const JBApp = lazy(() =>
 // );
 
 // Report Routes
-// const Reports = lazy(() =>
-//   import('./apps/report-app').then((m) => ({ default: m.Reports }))
-// );
+const Reports = lazy(() =>
+  import('./apps/report-app/index.js').then((m) => ({ default: m.Reports }))
+);
 // Settings Routes
 const SettingsApp = lazy(() =>
   import('./apps/settings-app/index.js').then((m) => ({
@@ -315,12 +315,12 @@ const AppRoutes: AppRoute[] = [
     element: AudienceDisplay,
     hideAppbar: true
   },
-  // {
-  //   name: 'Reports App',
-  //   path: '/:eventKey/reports',
-  //   group: 0,
-  //   element: Reports
-  // },
+  {
+    name: 'Reports App',
+    path: '/:eventKey/reports',
+    group: 0,
+    element: Reports
+  },
   {
     name: 'Settings',
     path: '/:eventKey/settings',

@@ -1,24 +1,23 @@
 import { FC } from 'react';
-import { useRecoilValue } from 'recoil';
-import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
-import { MatchReport } from './components/match-report';
-import { ReportProps } from '.';
-import { MatchByTeamReport } from './components/match-by-team-report';
-import { teamIdentifierAtom } from 'src/stores/recoil';
-import { useSeasonComponents } from 'src/hooks/use-season-components';
-import { useMatchesForTournament } from 'src/api/use-match-data';
-import { useTeamsForEvent } from 'src/api/use-team-data';
-import { useRankingsForTournament } from 'src/api/use-ranking-data';
-import { useScheduleItemsForTournament } from 'src/api/use-schedule-data';
-import { useCurrentTournament } from 'src/api/use-tournament-data';
+import { useAtomValue } from 'jotai';
+import { Button, Row, Col } from 'antd';
+import { MatchReport } from './components/match-report.js';
+import { ReportProps } from './index.js';
+import { MatchByTeamReport } from './components/match-by-team-report.js';
+import { teamIdentifierAtom } from 'src/stores/state/index.js';
+import { useSeasonComponents } from 'src/hooks/use-season-components.js';
+import { useMatchesForTournament } from 'src/api/use-match-data.js';
+import { useTeamsForEvent } from 'src/api/use-team-data.js';
+import { useRankingsForTournament } from 'src/api/use-ranking-data.js';
+import { useScheduleItemsForTournament } from 'src/api/use-schedule-data.js';
+import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 
 export const TournamentReports: FC<ReportProps> = ({
   eventKey,
   tournamentKey,
   onGenerate
 }) => {
-  const identifier = useRecoilValue(teamIdentifierAtom);
+  const identifier = useAtomValue(teamIdentifierAtom);
   const tournament = useCurrentTournament();
   const { data: matches } = useMatchesForTournament(eventKey, tournamentKey);
   const { data: teams } = useTeamsForEvent(eventKey);
@@ -60,26 +59,27 @@ export const TournamentReports: FC<ReportProps> = ({
   };
 
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <Button variant='contained' fullWidth onClick={generateScheduleReport}>
+    <Row gutter={[24, 24]}>
+      <Col xs={24} sm={12} md={8} lg={6}>
+        <Button type='primary' block onClick={generateScheduleReport}>
           Schedule Report
         </Button>
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <Button
-          variant='contained'
-          fullWidth
-          onClick={generateScheduleByTeamReport}
-        >
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={6}>
+        <Button type='primary' block onClick={generateScheduleByTeamReport}>
           Schedule By Team Report
         </Button>
-      </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
-        <Button variant='contained' fullWidth onClick={generateRankingReport}>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={6}>
+        <Button
+          type='primary'
+          block
+          onClick={generateRankingReport}
+          disabled={!seasonComponents?.RankingsReport}
+        >
           Ranking Report
         </Button>
-      </Grid>
-    </Grid>
+      </Col>
+    </Row>
   );
 };
