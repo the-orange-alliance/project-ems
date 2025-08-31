@@ -39,6 +39,11 @@ const TournamentCountTag = lazy(() =>
     default: m.TournamentCountTag
   }))
 );
+const MatchCountTag = lazy(() =>
+  import('./components/util/app-chips.js').then((m) => ({
+    default: m.MatchCountTag
+  }))
+);
 const TournamentEditor = lazy(() =>
   import('./apps/tournaments/index.js').then((m) => ({
     default: m.TournamentEditor
@@ -112,13 +117,19 @@ const RedReferee = lazy(() =>
   import('./apps/referee-app/index.js').then((m) => ({ default: m.RedReferee }))
 );
 const BlueReferee = lazy(() =>
-  import('./apps/referee-app/index.js').then((m) => ({ default: m.BlueReferee }))
+  import('./apps/referee-app/index.js').then((m) => ({
+    default: m.BlueReferee
+  }))
 );
 const HeadReferee = lazy(() =>
-  import('./apps/referee-app/index.js').then((m) => ({ default: m.HeadReferee }))
+  import('./apps/referee-app/index.js').then((m) => ({
+    default: m.HeadReferee
+  }))
 );
 const HeadRefereeMin = lazy(() =>
-  import('./apps/referee-app/index.js').then((m) => ({ default: m.HeadRefereeMin }))
+  import('./apps/referee-app/index.js').then((m) => ({
+    default: m.HeadRefereeMin
+  }))
 );
 
 // Audience Display Routes
@@ -237,6 +248,7 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/schedule-manager',
     group: 0,
     icon: <ControlOutlined />,
+    eventListRenderer: MatchCountTag,
     element: ScheduleManager,
     eventOrder: 4
   },

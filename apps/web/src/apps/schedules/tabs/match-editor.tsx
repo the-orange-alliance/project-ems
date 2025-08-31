@@ -21,6 +21,7 @@ export const MatchEditor: FC<Props> = ({ eventSchedule, savedMatches }) => {
   const handleClose = () => setOpen(false);
   return (
     <div>
+      {!eventSchedule && <div>Please select a tournament.</div>}
       {eventSchedule && savedMatches && (
         <MatchEditDialog
           eventKey={eventSchedule.eventKey}
@@ -31,12 +32,15 @@ export const MatchEditor: FC<Props> = ({ eventSchedule, savedMatches }) => {
           onClose={handleClose}
         />
       )}
-      <MatchResultsTable
-        matches={savedMatches ?? []}
-        teams={teams ?? []}
-        onSelect={handleSelect}
-        colored
-      />
+      {eventSchedule && (
+        <MatchResultsTable
+          disabled={!eventSchedule}
+          matches={savedMatches ?? []}
+          teams={teams ?? []}
+          onSelect={handleSelect}
+          colored
+        />
+      )}
     </div>
   );
 };

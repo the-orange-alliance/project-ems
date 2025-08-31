@@ -10,6 +10,7 @@ import {
   ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data.js';
+import { useMatchesForEvent } from 'src/api/use-match-data.js';
 
 export const TeamCountTag: FC = () => {
   const eventKey = useAtomValue(eventKeyAtom);
@@ -53,6 +54,29 @@ export const TournamentCountTag: FC = () => {
       style={{ fontSize: 'medium', padding: '4px' }}
     >
       {isLoading ? '' : total} Tournament{total === 1 ? '' : 's'}
+    </Tag>
+  );
+};
+
+export const MatchCountTag: FC = () => {
+  const eventKey = useAtomValue(eventKeyAtom);
+  const { data: matches, isLoading } = useMatchesForEvent(eventKey);
+  const total = matches?.length ?? 0;
+  return (
+    <Tag
+      color={isLoading ? 'warning' : total > 0 ? 'green' : 'red'}
+      icon={
+        isLoading ? (
+          <Spin />
+        ) : total > 0 ? (
+          <CheckCircleOutlined />
+        ) : (
+          <ExclamationCircleOutlined />
+        )
+      }
+      style={{ fontSize: 'medium', padding: '4px' }}
+    >
+      {isLoading ? '' : total} Match{total === 1 ? '' : 'es'}
     </Tag>
   );
 };

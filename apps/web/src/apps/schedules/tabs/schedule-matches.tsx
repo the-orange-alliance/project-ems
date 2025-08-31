@@ -115,7 +115,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
         tournament={tournament}
         onCreateMatches={handleCreateMatches}
       />
-      {matchesToDisplay.length > 0 && (
+      {eventSchedule && matchesToDisplay.length > 0 && (
         <>
           <MatchTable matches={matchesToDisplay} teams={teams} />
           <ScheduleMatchFooter

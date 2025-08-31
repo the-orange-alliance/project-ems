@@ -1,8 +1,9 @@
 import { Row, Col, Form, Input, Button } from 'antd';
-import { Tournament, defaultTournament } from '@toa-lib/models';
+import { Tournament, TournamentType, defaultTournament } from '@toa-lib/models';
 import { FC, ChangeEvent, useState, useEffect } from 'react';
 import { TournamentDropdown } from '../dropdowns/tournament-level-dropdown.js';
 import { ViewReturn } from '../buttons/view-return.js';
+import { TournamentTypesDropdown } from '../dropdowns/tournament-types-dropdown.js';
 
 const FormField: FC<{
   name: string;
@@ -13,7 +14,7 @@ const FormField: FC<{
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }> = ({ name, label, value, type, disabled, onChange }) => {
   return (
-    <Col xs={24} sm={12} md={8}>
+    <Col xs={24} sm={12} md={6}>
       <Form.Item label={label}>
         <Input
           name={name}
@@ -124,6 +125,13 @@ export const TournamentForm: FC<Props> = ({
     });
   };
 
+  const handleTypeChange = (tournamentType: TournamentType) => {
+    setTournament({
+      ...tournament,
+      tournamentType
+    });
+  };
+
   const handleFieldUpdate = (fields: string[]) => {
     setTournament({
       ...tournament,
@@ -149,12 +157,22 @@ export const TournamentForm: FC<Props> = ({
           onChange={handleChange}
           disabled={loading}
         />
-        <Col xs={24} sm={12} md={8}>
+        <Col xs={24} sm={12} md={6}>
           <Form.Item label='Tournament Level'>
             <TournamentDropdown
               fullWidth
               value={tournament.tournamentLevel}
               onChange={handleLevelChange}
+              disabled={loading}
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Form.Item label='Tournament Type'>
+            <TournamentTypesDropdown
+              fullWidth
+              value={tournament.tournamentType}
+              onChange={handleTypeChange}
               disabled={loading}
             />
           </Form.Item>

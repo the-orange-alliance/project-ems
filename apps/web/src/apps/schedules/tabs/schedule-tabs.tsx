@@ -31,6 +31,7 @@ export const ScheduleTabs: FC<Props> = ({
     {
       key: '0',
       label: 'Schedule Participants',
+      disabled: !eventSchedule,
       children: (
         <TabPanel value={parseInt(value)} index={0}>
           <ScheduleParticipants
@@ -44,6 +45,7 @@ export const ScheduleTabs: FC<Props> = ({
     {
       key: '1',
       label: 'Schedule Parameters',
+      disabled: !eventSchedule,
       children: (
         <TabPanel value={parseInt(value)} index={1}>
           <EventScheduleParams
@@ -57,6 +59,7 @@ export const ScheduleTabs: FC<Props> = ({
     {
       key: '2',
       label: 'Schedule Matches',
+      disabled: !eventSchedule,
       children: (
         <TabPanel value={parseInt(value)} index={2}>
           <ScheduleMatches
@@ -71,6 +74,7 @@ export const ScheduleTabs: FC<Props> = ({
     {
       key: '3',
       label: 'Match Editor',
+      disabled: !eventSchedule,
       children: (
         <TabPanel value={parseInt(value)} index={3}>
           <MatchEditor

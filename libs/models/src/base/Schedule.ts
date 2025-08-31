@@ -10,7 +10,6 @@ import {
   SEMIFINALS_LEVEL,
   TEST_LEVEL
 } from './Match.js';
-import { Team } from './Team.js';
 import { z } from 'zod';
 
 export const tournamentTypeZod = z.enum([
@@ -24,6 +23,37 @@ export const tournamentTypeZod = z.enum([
 ]);
 
 export type TournamentType = z.infer<typeof tournamentTypeZod>;
+
+export const TournamentTypes = [
+  {
+    key: 'Test',
+    name: 'Test'
+  },
+  {
+    key: 'Practice',
+    name: 'Practice'
+  },
+  {
+    key: 'Qualification',
+    name: 'Qualification'
+  },
+  {
+    key: 'Round Robin',
+    name: 'Round Robin'
+  },
+  {
+    key: 'Ranking',
+    name: 'Ranking'
+  },
+  {
+    key: 'Eliminations',
+    name: 'Eliminations'
+  },
+  {
+    key: 'Finals',
+    name: 'Finals'
+  }
+];
 
 export const DATE_FORMAT_MIN = 'dddd, MMMM Do YYYY, h:mm a';
 export const DATE_FORMAT_MIN_SHORT = 'ddd, MMMM Do YYYY, h:mm a';
@@ -85,7 +115,7 @@ export const defaultScheduleItem: ScheduleItem = {
   day: 0,
   startTime: DateTime.now().toISO() ?? '',
   duration: 0,
-  isMatch: false,
+  isMatch: false
 };
 
 export interface ScheduleParams {
@@ -275,16 +305,23 @@ export function calculateTotalMatches(schedule: ScheduleParams): number {
   const {
     type,
     teamKeys,
+    matchesPerTeam,
     options: { rounds, teamsPerAlliance, allianceCount, seriesType }
   } = schedule;
   const teamsParticipating = teamKeys.length;
   switch (type) {
     case 'Practice':
-      return Math.ceil((teamsParticipating * rounds) / (teamsPerAlliance * 2));
+      return Math.ceil(
+        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
+      );
     case 'Qualification':
-      return Math.ceil((teamsParticipating * rounds) / (teamsPerAlliance * 2));
+      return Math.ceil(
+        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
+      );
     case 'Ranking':
-      return Math.ceil((teamsParticipating * rounds) / (teamsPerAlliance * 2));
+      return Math.ceil(
+        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
+      );
     case 'Round Robin':
       if (!allianceCount) return 0;
       return (allianceCount / 2) * rounds;
@@ -299,7 +336,9 @@ export function calculateTotalMatches(schedule: ScheduleParams): number {
     case 'Finals':
       return seriesType ?? 3; // Default to Bo3
     default:
-      return Math.ceil((teamsParticipating * rounds) / (teamsPerAlliance * 2));
+      return Math.ceil(
+        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
+      );
   }
 }
 
