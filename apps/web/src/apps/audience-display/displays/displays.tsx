@@ -1,7 +1,8 @@
 import { FC } from 'react';
 import { Event, Match, MatchDetailBase, Ranking, Team } from '@toa-lib/models';
-import * as FRCDefault from './seasons/frc_default';
-import * as FGCDefault from './seasons/fgc_default';
+import * as FRCDefault from './seasons/frc_default/index.js';
+import * as FGCDefault from './seasons/fgc_default/index.js';
+import * as FGCModernDefault from './seasons/fgc_default_v2/index.js';
 
 export interface DisplayProps {
   event: Event;
@@ -37,11 +38,11 @@ export const frcDefault: SeasonDisplay = {
 
 export const fgcDefault: SeasonDisplay = {
   matchPreview: FGCDefault.MatchPreview,
-  matchPreviewStream: FGCDefault.MatchPreviewStream,
+  matchPreviewStream: FGCModernDefault.MatchPreviewStream,
   matchPlay: FGCDefault.MatchPlay,
   matchPlayStream: FGCDefault.MatchPlayStream,
-  matchResults: FGCDefault.MatchResults,
-  matchResultsStream: FGCDefault.MatchResultsStream
+  matchResults: FGCModernDefault.MatchResults,
+  matchResultsStream: FGCModernDefault.MatchResultsStream
 };
 
 // Map that contains all the displays for their seasons.
