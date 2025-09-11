@@ -1,0 +1,14 @@
+{
+  "name": "Event Management System",
+  "short_name": "EMS",
+  "start_url": ".",
+  "display": "fullscreen",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "type": "image/png",
+      "sizes": "512x512 192x192"
+    }
+  ]
+}
