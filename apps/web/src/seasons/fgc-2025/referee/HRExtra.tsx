@@ -1,5 +1,6 @@
 import {
   EcoEquilibrium,
+  EcoEquilibriumFCS,
   ItemUpdate,
   MatchSocketEvent,
   MatchState,
@@ -7,14 +8,46 @@ import {
 } from '@toa-lib/models';
 import { Row, Col, Typography, Card } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
+import { useEffect, useState } from 'react';
 import { useSocket } from 'src/api/use-socket.js';
 import { NumberInput } from 'src/components/inputs/number-input.js';
+import { StateToggle } from 'src/components/inputs/state-toggle.js';
 import { matchAtom } from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
 const HeadRefereeExtra: React.FC = () => {
   const [socket] = useSocket();
   const [match, setMatch] = useAtom(matchAtom);
   const matchState = useAtomValue(matchStateAtom);
+  const [ecosystemState, setEcosystemState] = useState<number>(0);
+
+  useEffect(() => {
+    const updateEcosystemState = (
+      s: EcoEquilibriumFCS.FGC25EcosystemUpdate
+    ) => {
+      if (s.ecosystem === EcoEquilibriumFCS.Ecosystem.Center) {
+        setEcosystemState(s.position);
+      }
+    };
+
+    socket?.on(
+      EcoEquilibriumFCS.FGC25SocketEvents.EcosystemUpdate,
+      updateEcosystemState
+    );
+    return () => {
+      socket?.off(
+        EcoEquilibriumFCS.FGC25SocketEvents.EcosystemUpdate,
+        updateEcosystemState
+      );
+    };
+  }, []);
+
+  const forceEcosystem = (newState: number) => {
+    socket?.emit(EcoEquilibriumFCS.FGC25SocketEvents.ForceEcosystemUpdate, {
+      ecosystem: EcoEquilibriumFCS.Ecosystem.Center,
+      position: newState
+    } as EcoEquilibriumFCS.FGC25EcosystemUpdate);
+  };
+
   const postMatch = matchState > MatchState.MATCH_IN_PROGRESS;
 
   const handleMatchDetailsUpdate = <
@@ -91,10 +124,7 @@ const HeadRefereeExtra: React.FC = () => {
     manuallyTyped: boolean
   ) => {
     if (manuallyTyped) {
-      handleMatchDetailsUpdate(
-        'biodiversityUnitsCenterEcosystem',
-        newValue
-      );
+      handleMatchDetailsUpdate('biodiversityUnitsCenterEcosystem', newValue);
     }
   };
 
@@ -164,9 +194,7 @@ const HeadRefereeExtra: React.FC = () => {
               Exact Center Ecosystem
             </Typography.Title>
             <NumberInput
-              value={
-                match?.details?.biodiversityUnitsCenterEcosystem || 0
-              }
+              value={match?.details?.biodiversityUnitsCenterEcosystem || 0}
               textFieldDisabled
               onChange={handleEcosystemExactChange}
               onIncrement={handleEcosystemExactIncrement}
@@ -174,6 +202,22 @@ const HeadRefereeExtra: React.FC = () => {
             />
           </Col>
         )}
+
+        <Col xs={24}>
+          <StateToggle
+            title='Force Center Ecosystem'
+            states={[0, 1, 2, 3]}
+            stateLabels={[
+              '3 Barriers Remain',
+              '2 Barriers Remains',
+              '1 Barrier Remains',
+              '0 Barriers Remain'
+            ]}
+            value={ecosystemState}
+            onChange={forceEcosystem}
+            fullWidth
+          />
+        </Col>
       </Row>
     </Card>
   );

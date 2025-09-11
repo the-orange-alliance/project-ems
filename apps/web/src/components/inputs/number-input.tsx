@@ -32,10 +32,12 @@ export const NumberInput: FC<Props> = ({
   };
 
   return (
-    <Space
-      direction="horizontal"
-    >
-      <Button onClick={decrement} disabled={disabled}>
+    <Space direction='horizontal'>
+      <Button
+        onClick={decrement}
+        disabled={disabled}
+        style={{ width: '5rem', height: '5rem', fontSize: '2rem' }}
+      >
         -
       </Button>
       <Input
@@ -43,9 +45,13 @@ export const NumberInput: FC<Props> = ({
         value={value}
         type='number'
         disabled={disabled || textFieldDisabled}
-        style={{ minWidth: '75px' }}
+        style={{ height: '5rem', fontSize: '2rem', textAlign: 'center' }}
       />
-      <Button onClick={increment} disabled={disabled}>
+      <Button
+        onClick={increment}
+        disabled={disabled}
+        style={{ width: '5rem', height: '5rem', fontSize: '2rem' }}
+      >
         +
       </Button>
     </Space>

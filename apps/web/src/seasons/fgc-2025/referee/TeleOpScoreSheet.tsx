@@ -1,8 +1,9 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { Row, Col, Typography } from 'antd';
 import {
   Alliance,
   EcoEquilibrium,
+  EcoEquilibriumFCS,
   Match,
   MatchParticipant,
   MatchState
@@ -15,7 +16,7 @@ import { NumberInput } from 'src/components/inputs/number-input.js';
 import { StateToggle } from 'src/components/inputs/state-toggle.js';
 import { matchAtom } from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
-
+import { useSocket } from 'src/api/use-socket.js';
 interface Props {
   alliance: Alliance;
   participants: MatchParticipant[] | undefined;
@@ -41,7 +42,46 @@ const TeleScoreSheet: FC<Props> = ({
   const identifiers = useTeamIdentifiers();
   const matchState = useAtomValue(matchStateAtom);
   const postMatch = matchState > MatchState.MATCH_IN_PROGRESS;
+  const [socket] = useSocket();
+  const [ecosystemState, setEcosystemState] = useState<number>(0);
+
+  useEffect(() => {
+    const updateEcosystemState = (
+      s: EcoEquilibriumFCS.FGC25EcosystemUpdate
+    ) => {
+      if (
+        (alliance === 'red' &&
+          s.ecosystem === EcoEquilibriumFCS.Ecosystem.RedSide) ||
+        (alliance === 'blue' &&
+          s.ecosystem === EcoEquilibriumFCS.Ecosystem.BlueSide)
+      ) {
+        setEcosystemState(s.position);
+      }
+    };
+
+    socket?.on(
+      EcoEquilibriumFCS.FGC25SocketEvents.EcosystemUpdate,
+      updateEcosystemState
+    );
+    return () => {
+      socket?.off(
+        EcoEquilibriumFCS.FGC25SocketEvents.EcosystemUpdate,
+        updateEcosystemState
+      );
+    };
+  }, []);
+
   if (!match || !match.details) return null;
+
+  const forceEcosystem = (newState: number) => {
+    socket?.emit(EcoEquilibriumFCS.FGC25SocketEvents.ForceEcosystemUpdate, {
+      ecosystem:
+        alliance === 'red'
+          ? EcoEquilibriumFCS.Ecosystem.RedSide
+          : EcoEquilibriumFCS.Ecosystem.BlueSide,
+      position: newState
+    } as EcoEquilibriumFCS.FGC25EcosystemUpdate);
+  };
 
   const handleMitigatorChange = (newValue: number, manuallyTyped: boolean) => {
     // If the new value was not manually typed (meaning that the increment or
@@ -279,6 +319,7 @@ const TeleScoreSheet: FC<Props> = ({
         </Col>
       )}
       {participants?.map((p) => {
+        if (p.station < 0) return null;
         const team = teams?.find((t) => t.teamKey === p.teamKey);
         const update = (value: number) => {
           updateParking(p.station, value);
@@ -311,6 +352,21 @@ const TeleScoreSheet: FC<Props> = ({
           </Col>
         );
       })}
+      <Col xs={24}>
+        <StateToggle
+          title={`Force ${alliance === 'red' ? 'Red' : 'Blue'} Side Ecosystem`}
+          states={[0, 1, 2, 3]}
+          stateLabels={[
+            '3 Barriers Remain',
+            '2 Barriers Remains',
+            '1 Barrier Remains',
+            '0 Barriers Remain'
+          ]}
+          value={ecosystemState}
+          onChange={forceEcosystem}
+          fullWidth
+        />
+      </Col>
     </Row>
   );
 };

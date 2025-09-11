@@ -21,6 +21,7 @@ import { EventEmitter } from "node:events";
 import { Server, Socket } from "socket.io";
 import logger from "../util/Logger.js";
 import Room from "./Room.js";
+import { FGC25EcosystemUpdate, FGC25SocketEvents } from "../../../../../libs/models/src/fcs/FGC25_EcoEquilibrium.js";
 
 export default class Match extends Room {
   private key: MatchKey | null;
@@ -228,6 +229,12 @@ export default class Match extends Room {
       this.bonuses.set(bonusType, { timeout: bonusTimeout, matchAtStartState: { ...this.match!, details: { ...this.match!.details! } } });
 
       this.broadcast().emit(MatchSocketEvent.BONUS_START, bonusType);
+    });
+
+    // Season-Specific
+    socket.on(FGC25SocketEvents.ForceEcosystemUpdate, (data: FGC25EcosystemUpdate): void => {
+      logger.info('fcs:forceEcosystemUpdate', data);
+      this.server.to("fcs").emit(FGC25SocketEvents.ForceEcosystemUpdate, data);
     });
   }
 
