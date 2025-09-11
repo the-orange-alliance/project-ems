@@ -23,9 +23,11 @@ export const SettingsApp: FC = () => {
   const seasonComponents = useSeasonComponents();
 
   const tabs: TabsProps['items'] = [
-      { label: 'Global', key: '0', children: <GlobalSettings /> }
+    { label: 'Global', key: '0', children: <GlobalSettings /> }
   ];
-  let header: JSX.Element = <Typography.Title level={2}>Settings</Typography.Title>;
+  let header: JSX.Element = (
+    <Typography.Title level={2}>Settings</Typography.Title>
+  );
 
   const handleTournamentChange = (tournament: Tournament | null) => {
     if (!tournament) return;
@@ -48,36 +50,43 @@ export const SettingsApp: FC = () => {
 
     tabs.push(
       { label: 'Event', key: '1', children: <MainSettingsTab /> },
-      { label: 'Audience Display', key: '2', children: <AudienceDisplaySettingsTab /> }
-    )
+      {
+        label: 'Audience Display',
+        key: '2',
+        children: <AudienceDisplaySettingsTab />
+      }
+    );
 
     if (seasonComponents && seasonComponents.Settings) {
-      tabs.push( { 
-        label: 'Season', 
-        key: '3', 
+      tabs.push({
+        label: 'Season',
+        key: '3',
         children: (
-          <ErrorBoundary fallbackRender={(props) => <ErrorFallback {...props} />}>
+          <ErrorBoundary
+            fallbackRender={(props) => <ErrorFallback {...props} />}
+          >
             <seasonComponents.Settings />
-          </ErrorBoundary>) 
-      } )
+          </ErrorBoundary>
+        )
+      });
     }
 
     if (eventKey.toLowerCase().startsWith('frc')) {
-      tabs.push( { label: 'FRC FMS', key: '4', children: <FrcFmsSettingsTab /> } );
+      tabs.push({
+        label: 'FRC FMS',
+        key: '4',
+        children: <FrcFmsSettingsTab />
+      });
     }
   }
 
   return (
-    <PaperLayout
-      header={header}
-    >
-        <ViewReturn title='Home' href={`../`} />
-        {/* Tabs */}
-        <Tabs defaultActiveKey={'0'} items={tabs} />
+    <PaperLayout header={header}>
+      <ViewReturn title='Home' href={`../`} />
+      {/* Tabs */}
+      <Tabs defaultActiveKey={'0'} items={tabs} />
 
-        <Typography.Text>
-          ** Settings Save Automatically
-        </Typography.Text>
+      <Typography.Text>** Settings Save Automatically</Typography.Text>
     </PaperLayout>
   );
 };
