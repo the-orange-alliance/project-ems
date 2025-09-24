@@ -1,3 +1,3 @@
-import { AudienceDisplay } from './audience-display';
+import { AudienceDisplay } from './audience-display.js';
 
 export { AudienceDisplay };

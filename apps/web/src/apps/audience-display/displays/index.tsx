@@ -1,5 +1,5 @@
-import { DisplaySwitcher, DisplayModeProps } from './display-switcher';
-import { DisplayProps } from './displays';
+import { DisplaySwitcher } from './display-switcher.js';
+import { DisplayProps } from './displays.js';
 
 export { DisplaySwitcher };
-export type { DisplayModeProps, DisplayProps };
+export type { DisplayProps };

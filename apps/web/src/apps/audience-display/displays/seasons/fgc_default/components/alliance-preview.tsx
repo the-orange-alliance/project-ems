@@ -9,9 +9,9 @@ import {
   Ranking,
   Team
 } from '@toa-lib/models';
-import { CountryFlag } from './country-flag';
+import { CountryFlag } from './country-flag.js';
 import { Typography } from '@mui/material';
-import { useAllianceMember } from 'src/api/use-alliance-data';
+import { useAllianceMember } from 'src/api/use-alliance-data.js';
 
 const Container = styled.div`
   width: 100%;

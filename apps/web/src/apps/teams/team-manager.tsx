@@ -80,6 +80,29 @@ export const TeamManager: FC = () => {
     ]);
   };
 
+  const handleAddTest = () => {
+    if (!event) return;
+    const { eventKey } = event;
+    // Array of random ISO 3-digit country codes to use for test teams
+    const countryCodes = [
+      'USA',
+      'CAN',
+      'GBR',
+      'AUS',
+      'DEU',
+      'FRA',
+      'ITA',
+      'ESP',
+      'NLD',
+      'SWE'
+    ];
+    const randCountry = countryCodes[Math.floor(Math.random() * countryCodes.length)];
+    setModifiedTeams((prev) => [
+      { ...defaultTeam, eventKey, teamKey: state.staged.teams.length + 1, countryCode: randCountry, teamNameShort: `Test ${prev.length + 1} (${randCountry})` },
+      ...prev
+    ]);
+  };
+
   const handleUpload = async (
     e: ChangeEvent<HTMLInputElement>
   ): Promise<void> => {
@@ -133,6 +156,17 @@ export const TeamManager: FC = () => {
                 {
                   key: '3',
                   label: (
+                    <Shortcut
+                      action={handleAddTest}
+                      shortcut='Alt + T'
+                      disableShortcut // disable the handler for the shortcut, but still render the button and accept clicks
+                      label='Add Test Team'
+                    />
+                  )
+                },
+                {
+                  key: '4',
+                  label: (
                     <UploadButton
                       title='Upload Teams'
                       onUpload={handleUpload}
@@ -140,7 +174,7 @@ export const TeamManager: FC = () => {
                   )
                 },
                 {
-                  key: '4',
+                  key: '5',
                   label: <a onClick={handleRevert}>Revert Changes</a>
                 }
               ]}

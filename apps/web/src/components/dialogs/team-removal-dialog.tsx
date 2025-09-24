@@ -39,7 +39,7 @@ export const TeamRemovalDialog = create(({ team }: Props) => {
         </div>
       }
       footer={[
-        <Button key='yes' type='primary' onClick={handleOk}>
+        <Button key='yes' type='primary' onClick={handleOk} autoFocus>
           Yes
         </Button>,
         <Button key='no' onClick={handleCancel}>

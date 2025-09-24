@@ -24,7 +24,7 @@ import { FeedingTheFuture } from '@toa-lib/models';
 import { CardStatus as CardStatusComponent } from './card-status';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data';
 import { useAllianceMember } from 'src/api/use-alliance-data';
-import { BreakdownFGC25 } from '../../fgc_2025/index.js';
+import { RegionalBreakdownFGC25 } from '../../fgc_2025/index.js';
 
 const { CardStatus } = FeedingTheFuture;
 
@@ -224,7 +224,7 @@ export const AllianceResult: FC<Props> = ({
       breakdown = Breakdown2024;
       break;
     case '2025':
-      breakdown = BreakdownFGC25;
+      breakdown = RegionalBreakdownFGC25;
       break;
   }
 
