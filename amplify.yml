@@ -1,22 +1,22 @@
 version: 1
 applications:
   - appRoot: .
-    # frontend:
-    #   phases:
-    #     preBuild:
-    #       commands:
-    #         - npm install
-    #     build:
-    #       commands:
-    #         - npx turbo run project-ems#build
-    #   artifacts:
-    #     baseDirectory: apps/web/dist
-    #     files:
-    #       - "**/*"
-    #   cache:
-    #     paths:
-    #       - node_modules/**/*
-    #       - .turbo/**/*
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm install
+        build:
+          commands:
+            - npx turbo run project-ems#build
+      artifacts:
+        baseDirectory: apps/web/dist
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
+          - .turbo/**/*
     backend:
       phases:
         build:
