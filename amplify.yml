@@ -1,0 +1,15 @@
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --omit=optional=false
+    build:
+      commands:
+        - turbo run project#ems-build
+  artifacts:
+    baseDirectory: apps/web/dist
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - apps/web/node_modules/**/*
