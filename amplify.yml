@@ -1,25 +1,25 @@
 version: 1
-applications:
-  - appRoot: apps/web
-    frontend:
-      phases:
-        preBuild:
-          commands:
-            - npm ci
-        build:
-          commands:
-            - npm run build
-      artifacts:
-        baseDirectory: dist
-        files:
-          - "**/*"
-      cache:
-        paths:
-          - node_modules/**/*
-  - appRoot: apps/services/api-amplify
-    backend:
-      phases:
-        build:
-          commands:
-            - npm ci
-            - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - ls -al
+        - cd ~/apps/web
+        - npm ci
+    build:
+      commands:
+        - turbo run project-ems#build
+  artifacts:
+    baseDirectory: dist
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - node_modules/**/*
+backend:
+  phases:
+    build:
+      commands:
+        - cd ~/apps/services/api-amplify
+        - npm ci
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
