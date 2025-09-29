@@ -1,15 +1,24 @@
-frontend:
-  phases:
-    preBuild:
-      commands:
-        - npm ci --omit=optional=false
-    build:
-      commands:
-        - turbo run project#ems-build
-  artifacts:
-    baseDirectory: apps/web/dist
-    files:
-      - "**/*"
-  cache:
-    paths:
-      - apps/web/node_modules/**/*
+version: 1
+applications:
+  - appRoot: apps/web
+    frontend:
+      phases:
+        preBuild:
+          commands: ["npx npm install"]
+        build:
+          commands: ["npx turbo run project-ems#build"]
+      artifacts:
+        baseDirectory: .
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - "node_modules/**/*"
+      buildPath: /
+  - appRoot: apps/services/api-amplify
+    backend:
+      phases:
+        build:
+        commands:
+          - npm ci --cache .npm --prefer-offline
+          - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
