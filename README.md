@@ -22,6 +22,12 @@ This project is a monrepo and utilizes features from [turbrepo](https://turbo.bu
 1. Execute the root-level dev command via `npm run dev`
 2. This starts the `api`, `realtime` and `web` applications.
 
+## AWS Amplify Gen 2 Support
+
+First grab the ems-admin IAM security credentials needed to login to AWS.
+
+Run `aws configure --profile ems-admin`
+
 #### Build Status:
 
 [![Test building EMS](https://github.com/the-orange-alliance/project-ems/actions/workflows/on_commit_build.yml/badge.svg)](https://github.com/the-orange-alliance/project-ems/actions/workflows/on_commit_build.yml)
