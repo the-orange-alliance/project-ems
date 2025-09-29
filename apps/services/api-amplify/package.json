@@ -1,4 +1,12 @@
 {
   "name": "ems-api-amplify",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "aws-amplify": "^6.15.6"
+  },
+  "devDependencies": {
+    "@aws-amplify/backend": "^1.16.1",
+    "@aws-amplify/backend-cli": "^1.8.0",
+    "aws-cdk-lib": "^2.204.0"
+  }
 }
