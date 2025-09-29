@@ -24,7 +24,7 @@ applications:
             - node -v
             - nvm install 20
             - npm install
-            - npx turbo run build:libs
+            - npm run build:libs
         build:
           commands:
             - cd apps/services/api-amplify
