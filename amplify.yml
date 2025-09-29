@@ -23,6 +23,8 @@ applications:
           commands:
             - node -v
             - nvm install 20
+            - npm ci --cache .npm --prefer-offline
+            - turbo run build:libs
         build:
           commands:
             - cd apps/services/api-amplify
