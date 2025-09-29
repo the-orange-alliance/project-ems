@@ -4,7 +4,7 @@ frontend:
     preBuild:
       commands:
         - ls -al
-        - cd ~/apps/web
+        - cd ../../web
         - npm ci
     build:
       commands:
@@ -20,6 +20,6 @@ backend:
   phases:
     build:
       commands:
-        - cd ~/apps/services/api-amplify
+        - cd apps/services/api-amplify
         - npm ci
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
