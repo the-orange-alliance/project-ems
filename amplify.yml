@@ -1,30 +1,27 @@
 version: 1
 applications:
-  - appRoot: apps/web
+  - appRoot: . # monorepo root
     frontend:
       phases:
         preBuild:
           commands:
-            - npm ci
+            - npm install
         build:
           commands:
-            - npm run build
+            # build only the web app with turbo
+            - npx turbo run project-ems#build
       artifacts:
-        baseDirectory: dist
+        baseDirectory: apps/web/dist
         files:
           - "**/*"
       cache:
         paths:
           - node_modules/**/*
-  - appRoot: apps/services/api-amplify
+          - .turbo/**/*
     backend:
       phases:
-        preBuild:
-          commands:
-            - npm ci
         build:
           commands:
+            # deploy only the amplify service with turbo
+            - cd apps/services/api-amplify
             - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
-      cache:
-        paths:
-          - node_modules/**/*
