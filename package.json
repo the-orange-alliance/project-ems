@@ -31,5 +31,8 @@
   ],
   "dependencies": {
     "aws-amplify": "^6.15.6"
+  },
+  "engine": {
+    "node": ">=20.0.0"
   }
 }
