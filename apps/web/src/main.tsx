@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { Provider as ModalProvider } from '@ebay/nice-modal-react';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
-import { customfgcTheme, fgcTheme, frcTheme, ftcTheme } from './app-theme.js';
+import { customfgcTheme } from './app-theme.js';
 import { APIOptions, SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/local-storage.js';
 import { AppContainer } from './App.js';
@@ -38,13 +38,6 @@ SocketOptions.port = 8081;
 function Main() {
   const darkMode = useAtomValue(darkModeAtom);
   const eventKey = useCurrentEvent().data?.eventKey;
-  //   !eventKey
-  //   ? fgcTheme
-  //   : eventKey.startsWith('FRC')
-  //     ? frcTheme
-  //     : eventKey.startsWith('FTC')
-  //       ? ftcTheme
-  //       : fgcTheme;
 
   return (
     <ConfigProvider
