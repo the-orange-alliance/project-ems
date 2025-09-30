@@ -1,7 +1,7 @@
 import { defineStorage } from "@aws-amplify/backend";
 
 export const storage = defineStorage({
-  name: "ems-storage",
+  name: "ems-online-storage",
   access: (allow) => ({
     "data/*": [
       allow.guest.to(["read"]),
