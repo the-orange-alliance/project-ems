@@ -28,6 +28,10 @@ First grab the ems-admin IAM security credentials needed to login to AWS.
 
 Run `aws configure --profile ems-admin`
 
+You might need to bootstrap your environment.
+
+Run `npx cdk bootstrap aws://102536421230/us-east-2 --profile ems-admin`
+
 #### Build Status:
 
 [![Test building EMS](https://github.com/the-orange-alliance/project-ems/actions/workflows/on_commit_build.yml/badge.svg)](https://github.com/the-orange-alliance/project-ems/actions/workflows/on_commit_build.yml)
