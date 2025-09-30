@@ -20,7 +20,7 @@
     "@octokit/core": "^6.1.4",
     "@toa-lib/client": "file:../../../../libs/client",
     "@toa-lib/models": "file:../../../../libs/models",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "4.2.1",
     "antd": "^5.24.5",
     "export-to-csv": "^1.4.0",
     "jotai": "^2.12.5",
