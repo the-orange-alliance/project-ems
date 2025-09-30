@@ -1,9 +1,7 @@
 import { StrictMode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import { LocalizationProvider } from '@mui/x-date-pickers';
 import { Provider as ModalProvider } from '@ebay/nice-modal-react';
-import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import { customfgcTheme } from './app-theme.js';
 import { APIOptions, SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/local-storage.js';
@@ -54,9 +52,7 @@ root.render(
   <StrictMode>
     <BrowserRouter>
       <Provider store={store}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <Main />
-        </LocalizationProvider>
+        <Main />
       </Provider>
     </BrowserRouter>
   </StrictMode>
