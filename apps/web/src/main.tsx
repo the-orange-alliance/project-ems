@@ -27,7 +27,8 @@ if (getFromLocalStorage('followerMode', false)) {
     `FOLLOWER MODE DETECTED: SETTING API HOST FROM LOCAL STORAGE\n${APIOptions.host}`
   );
 } else {
-  APIOptions.host = `http://${window.location.hostname}`;
+  const remoteUrl = import.meta.env.VITE_API_URL;
+  APIOptions.host = remoteUrl ?? `http://${window.location.hostname}`;
 }
 APIOptions.port = 8080;
 SocketOptions.host = window.location.hostname;
