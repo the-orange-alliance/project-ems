@@ -77,14 +77,17 @@ export const apiFetcher = async <T, Z extends ZodTypeDef = ZodTypeDef>(
   guard?: ZodType<T, Z>['parse']
 ): Promise<T> => {
   // NOTE - If options.host doesn't include http://, fetch() will put the host request URL onto it.
-  const request = await fetch(`${options.host}:${options.port}/${url}`, {
-    credentials: 'include',
-    method,
-    body: JSON.stringify(body),
-    headers: {
-      ...(body ? { 'Content-Type': 'application/json' } : {})
+  const request = await fetch(
+    `${options.host}${options.port.toString().length > 0 ? `:${options.port}` : ''}/${url}`,
+    {
+      credentials: 'include',
+      method,
+      body: JSON.stringify(body),
+      headers: {
+        ...(body ? { 'Content-Type': 'application/json' } : {})
+      }
     }
-  });
+  );
 
   const data = await request.json();
 
