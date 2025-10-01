@@ -34,7 +34,7 @@ const userPoolClient = new cognito.UserPoolClient(
  */
 const eventsLambda = new lambda.Function(emsStack, "api-events-fn", {
   runtime: lambda.Runtime.NODEJS_20_X,
-  handler: "index.handler",
+  handler: "handler.handler",
   code: lambda.Code.fromAsset("functions/api-events"), // your function dir
 });
 
