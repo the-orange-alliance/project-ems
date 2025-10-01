@@ -12,6 +12,7 @@ applications:
             - ls -al
             - pwd
             - ls -al apps/web
+            - ls -al apps/
       artifacts:
         baseDirectory: apps/web/dist
         files:
@@ -34,3 +35,4 @@ applications:
             - nvm use 20
             - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
             - cd ../../../
+            - pwd
