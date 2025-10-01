@@ -12,7 +12,7 @@ applications:
             - rm -rf apps/web/build
             - npx turbo run project-ems#build
       artifacts:
-        baseDirectory: apps/web/build
+        baseDirectory: /apps/web/build
         files:
           - "**/*"
       cache:
