@@ -8,9 +8,10 @@ applications:
             - npm install
         build:
           commands:
-            - ls -l apps/web
             - rm -rf apps/web/build
-            - npx turbo run project-ems#build
+            - cd apps/web
+            - npm run build
+            - ls -al
       artifacts:
         baseDirectory: /apps/web/build
         files:
