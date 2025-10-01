@@ -11,6 +11,7 @@ applications:
             - npx turbo run project-ems#build
             - ls -al
             - pwd
+            - ls -al apps/web/dist
       artifacts:
         baseDirectory: apps/web/dist
         files:
@@ -32,3 +33,4 @@ applications:
             - cd apps/services/api-amplify
             - nvm use 20
             - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+            - cd ../../../
