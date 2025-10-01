@@ -35,12 +35,13 @@ const eventsLambdaIntegration = new LambdaIntegration(
   backend.apiEventsFunction.resources.lambda,
 );
 
-const eventItemsPath = restApi.root.addResource("events");
+const eventsPath = restApi.root.addResource("events");
+const eventPath = eventsPath.addResource("{eventKey}");
 
-eventItemsPath.addMethod("GET", eventsLambdaIntegration);
-eventItemsPath.addMethod("POST", eventsLambdaIntegration);
-eventItemsPath.addMethod("PUT", eventsLambdaIntegration);
-eventItemsPath.addMethod("DELETE", eventsLambdaIntegration);
+eventsPath.addMethod("GET", eventsLambdaIntegration);
+eventsPath.addMethod("POST", eventsLambdaIntegration);
+eventPath.addMethod("PUT", eventsLambdaIntegration);
+eventPath.addMethod("DELETE", eventsLambdaIntegration);
 
 backend.addOutput({
   custom: {

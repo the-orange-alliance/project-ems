@@ -12,7 +12,8 @@
     "constructs": "^10.4.2",
     "esbuild": "^0.25.5",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@toa-lib/models": "file:../../../libs/models"
   },
   "engine": {
     "node": ">=20.0.0"
