@@ -9,6 +9,8 @@ applications:
         build:
           commands:
             - npx turbo run project-ems#build
+            - ls -al
+            - pwd
       artifacts:
         baseDirectory: apps/web/dist
         files:
