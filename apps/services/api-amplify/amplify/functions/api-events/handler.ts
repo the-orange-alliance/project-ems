@@ -7,8 +7,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyHandler } from "aws-lambda";
 import { Event, eventZod } from "@toa-lib/models";
 
 const s3 = new S3Client({ region: "us-east-2" });
-const BUCKET =
-  "amplify-dt9tnqan5956b-onl-emsonlinestoragebucketea-zuaqdjvdwmlx"; // injected by Amplify
+const BUCKET = process.env.STORAGE_BUCKET_NAME!;
 const FILE_KEY = "data/events.json";
 
 async function readEvents(): Promise<Event[]> {

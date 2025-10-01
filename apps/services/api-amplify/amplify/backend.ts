@@ -14,6 +14,15 @@ const backend = defineBackend({
   apiEventsFunction,
 });
 
+backend.storage.resources.bucket.grantReadWrite(
+  backend.apiEventsFunction.resources.lambda,
+);
+
+backend.apiEventsFunction.addEnvironment(
+  "STORAGE_BUCKET_NAME",
+  backend.storage.resources.bucket.bucketName,
+);
+
 const apiStack = backend.createStack("ems-online-api-stack");
 
 backend.stack.addDependency(apiStack);
