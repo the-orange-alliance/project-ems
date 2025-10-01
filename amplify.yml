@@ -8,11 +8,9 @@ applications:
             - npm install
         build:
           commands:
+            - ls -l apps/web
+            - rm -rf apps/web/build
             - npx turbo run project-ems#build
-            - ls -al
-            - pwd
-            - ls -al apps/web
-            - ls -al apps/
       artifacts:
         baseDirectory: apps/web/build
         files:
@@ -35,4 +33,3 @@ applications:
             - nvm use 20
             - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
             - cd ../../../
-            - pwd
