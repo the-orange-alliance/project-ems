@@ -1,29 +1,51 @@
 import { defineBackend } from "@aws-amplify/backend";
-import { storage } from "./storage/resource";
-import { auth } from "./auth/resource";
-import { apiEventsFunction } from "./functions/api-events/resource";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { Stack } from "aws-cdk-lib";
 
+const backend = defineBackend({});
+
+// Create one stack for everything
+const emsStack = backend.createStack("ems-online-stack");
+
 /**
- * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
+ * Storage (S3)
  */
-const backend = defineBackend({
-  storage,
-  auth,
-  apiEventsFunction,
+const bucket = new s3.Bucket(emsStack, "ems-storage");
+
+/**
+ * Auth (Cognito)
+ */
+const userPool = new cognito.UserPool(emsStack, "ems-user-pool", {
+  selfSignUpEnabled: true,
+});
+const userPoolClient = new cognito.UserPoolClient(
+  emsStack,
+  "ems-user-pool-client",
+  {
+    userPool,
+  },
+);
+
+/**
+ * Lambda function
+ */
+const eventsLambda = new lambda.Function(emsStack, "api-events-fn", {
+  runtime: lambda.Runtime.NODEJS_20_X,
+  handler: "index.handler",
+  code: lambda.Code.fromAsset("functions/api-events"), // your function dir
 });
 
-const stack = backend.createStack("ems-online-stack");
-
-backend.storage.resources.bucket.node.addDependency(stack);
-backend.apiEventsFunction.resources.lambda.node.addDependency(stack);
-
-const restApi = new RestApi(stack, "rest-api", {
+/**
+ * API Gateway
+ */
+const restApi = new RestApi(emsStack, "rest-api", {
   restApiName: "ems-rest-api",
   deploy: true,
   deployOptions: {
-    stageName: "dev", // TODO: make this configurable
+    stageName: "dev", // can make configurable
   },
   defaultCorsPreflightOptions: {
     allowOrigins: Cors.ALL_METHODS,
@@ -32,17 +54,17 @@ const restApi = new RestApi(stack, "rest-api", {
   },
 });
 
-const eventsLambdaIntegration = new LambdaIntegration(
-  backend.apiEventsFunction.resources.lambda,
-);
+const eventsLambdaIntegration = new LambdaIntegration(eventsLambda);
 
 const eventItemsPath = restApi.root.addResource("events");
-
 eventItemsPath.addMethod("GET", eventsLambdaIntegration);
 eventItemsPath.addMethod("POST", eventsLambdaIntegration);
 eventItemsPath.addMethod("PUT", eventsLambdaIntegration);
 eventItemsPath.addMethod("DELETE", eventsLambdaIntegration);
 
+/**
+ * Amplify Outputs
+ */
 backend.addOutput({
   custom: {
     API: {
@@ -51,6 +73,13 @@ backend.addOutput({
         region: Stack.of(restApi).region,
         apiName: restApi.restApiName,
       },
+    },
+    Auth: {
+      userPoolId: userPool.userPoolId,
+      userPoolClientId: userPoolClient.userPoolClientId,
+    },
+    Storage: {
+      bucketName: bucket.bucketName,
     },
   },
 });
