@@ -11,7 +11,7 @@ applications:
             - npx turbo run project-ems#build
             - ls -al
             - pwd
-            - ls -al apps/web/dist
+            - ls -al apps/web
       artifacts:
         baseDirectory: apps/web/dist
         files:
