@@ -14,9 +14,12 @@ const backend = defineBackend({
   apiEventsFunction,
 });
 
-const apiStack = backend.createStack("ems-api-stack");
+const stack = backend.createStack("ems-online-stack");
 
-const restApi = new RestApi(apiStack, "rest-api", {
+backend.storage.resources.bucket.node.addDependency(stack);
+backend.apiEventsFunction.resources.lambda.node.addDependency(stack);
+
+const restApi = new RestApi(stack, "rest-api", {
   restApiName: "ems-rest-api",
   deploy: true,
   deployOptions: {
