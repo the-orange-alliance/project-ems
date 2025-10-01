@@ -14,7 +14,7 @@ applications:
             - ls -al apps/web
             - ls -al apps/
       artifacts:
-        baseDirectory: apps/web/dist
+        baseDirectory: apps/web/build
         files:
           - "**/*"
       cache:

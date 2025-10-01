@@ -24,5 +24,9 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@toa-lib/client', '@toa-lib/models'],
     force: true /* Use this option when @toa-lib needs to be rebuilt for some weird reason. */
+  },
+  build: {
+    outDir: './build',
+    emptyOutDir: true
   }
 });
