@@ -10,6 +10,9 @@ applications:
           commands:
             - rm -rf apps/web/build
             - cd apps/web
+            - echo "VITE_BUILD_TYPE=$VITE_BUILD_TYPE" > .env
+            - echo "VITE_API_URL=$VITE_API_URL" >> .env
+            - cat .env
             - npm run build
             - ls -al
       artifacts:

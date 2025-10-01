@@ -28,6 +28,7 @@ if (getFromLocalStorage('followerMode', false)) {
   );
 } else {
   const remoteUrl = import.meta.env.VITE_API_URL;
+  console.log({ remoteUrl });
   APIOptions.host = remoteUrl ?? `http://${window.location.hostname}`;
 }
 APIOptions.port = 8080;
