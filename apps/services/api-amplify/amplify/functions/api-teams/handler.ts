@@ -9,7 +9,7 @@ import { getDefaultHeaders } from "../../util/default-headers";
 
 const s3 = new S3Client({ region: "us-east-2" });
 const BUCKET = process.env.STORAGE_BUCKET_NAME!;
-const FILE_KEY = "data/events.json";
+const FILE_KEY = "data/teams.json";
 
 async function readTeams(): Promise<Team[]> {
   try {
