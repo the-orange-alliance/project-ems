@@ -3,6 +3,7 @@ import { storage } from "./storage/resource";
 import { auth } from "./auth/resource";
 import { apiEventsFunction } from "./functions/api-events/resource";
 import { apiTeamsFunction } from "./functions/api-teams/resource";
+import { apiTournamentsFunction } from "./functions/api-tournaments/resource";
 import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { Stack } from "aws-cdk-lib";
 
@@ -14,6 +15,7 @@ const backend = defineBackend({
   auth,
   apiEventsFunction,
   apiTeamsFunction,
+  apiTournamentsFunction,
 });
 
 backend.storage.resources.bucket.grantReadWrite(
@@ -24,12 +26,21 @@ backend.storage.resources.bucket.grantReadWrite(
   backend.apiTeamsFunction.resources.lambda,
 );
 
+backend.storage.resources.bucket.grantReadWrite(
+  backend.apiTournamentsFunction.resources.lambda,
+);
+
 backend.apiEventsFunction.addEnvironment(
   "STORAGE_BUCKET_NAME",
   backend.storage.resources.bucket.bucketName,
 );
 
 backend.apiTeamsFunction.addEnvironment(
+  "STORAGE_BUCKET_NAME",
+  backend.storage.resources.bucket.bucketName,
+);
+
+backend.apiTournamentsFunction.addEnvironment(
   "STORAGE_BUCKET_NAME",
   backend.storage.resources.bucket.bucketName,
 );
@@ -59,11 +70,18 @@ const teamsLambdaIntegration = new LambdaIntegration(
   backend.apiTeamsFunction.resources.lambda,
 );
 
+const tournamentsLambdaIntegration = new LambdaIntegration(
+  backend.apiTournamentsFunction.resources.lambda,
+);
+
 const eventsPath = restApi.root.addResource("event");
 const eventPath = eventsPath.addResource("{eventKey}");
 
 const teamsPath = restApi.root.addResource("teams").addResource("{eventKey}");
 const teamPath = teamsPath.addResource("{teamKey}");
+
+const tournamentsPath = restApi.root.addResource("tournaments");
+const tournamentPath = tournamentsPath.addResource("{eventKey}");
 
 eventsPath.addMethod("GET", eventsLambdaIntegration);
 eventsPath.addMethod("POST", eventsLambdaIntegration);
@@ -75,6 +93,11 @@ teamsPath.addMethod("GET", teamsLambdaIntegration);
 teamsPath.addMethod("POST", teamsLambdaIntegration);
 teamPath.addMethod("PATCH", teamsLambdaIntegration);
 teamPath.addMethod("DELETE", teamsLambdaIntegration);
+
+tournamentsPath.addMethod("GET", tournamentsLambdaIntegration);
+tournamentsPath.addMethod("POST", tournamentsLambdaIntegration);
+tournamentPath.addMethod("PATCH", tournamentsLambdaIntegration);
+tournamentPath.addMethod("DELETE", tournamentsLambdaIntegration);
 
 backend.addOutput({
   custom: {
