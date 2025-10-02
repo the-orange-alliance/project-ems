@@ -80,7 +80,8 @@ const eventPath = eventsPath.addResource("{eventKey}");
 const teamsPath = restApi.root.addResource("teams").addResource("{eventKey}");
 const teamPath = teamsPath.addResource("{teamKey}");
 
-const tournamentsPath = restApi.root.addResource("tournaments");
+const tournamentsPath = restApi.root.addResource("tournament");
+const tournamentsForEventPath = tournamentsPath.addResource("{eventKey}");
 const tournamentPath = tournamentsPath.addResource("{eventKey}");
 
 eventsPath.addMethod("GET", eventsLambdaIntegration);
@@ -94,7 +95,7 @@ teamsPath.addMethod("POST", teamsLambdaIntegration);
 teamPath.addMethod("PATCH", teamsLambdaIntegration);
 teamPath.addMethod("DELETE", teamsLambdaIntegration);
 
-tournamentsPath.addMethod("GET", tournamentsLambdaIntegration);
+tournamentsForEventPath.addMethod("GET", tournamentsLambdaIntegration);
 tournamentsPath.addMethod("POST", tournamentsLambdaIntegration);
 tournamentPath.addMethod("PATCH", tournamentsLambdaIntegration);
 tournamentPath.addMethod("DELETE", tournamentsLambdaIntegration);
