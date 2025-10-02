@@ -3,7 +3,9 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "build/**"]
+      "outputs": ["dist/**", "build/**"],
+      "env": ["BUILD_TYPE", "API_URL"],
+      "inputs": ["$TURBO_DEFAULT$", "apps/web/.env.local", ".env"]
     },
     "@toa-lib/client#build": {
       "dependsOn": ["@toa-lib/models#build"]
@@ -41,7 +43,8 @@
     "dev": {
       "persistent": true,
       "cache": false,
-      "dependsOn": ["api#build", "realtime#build"]
+      "dependsOn": ["api#build", "realtime#build"],
+      "inputs": ["$TURBO_DEFAULT$", "apps/web/.env.local", ".env"]
     },
     "start": {
       "persistent": true,

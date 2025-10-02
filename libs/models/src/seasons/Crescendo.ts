@@ -1,4 +1,3 @@
-import { randomInt } from 'crypto';
 import { AllianceMember } from '../base/Alliance.js';
 import { Match, MatchDetailBase, RESULT_NOT_PLAYED } from '../base/Match.js';
 import { Ranking } from '../base/Ranking.js';
@@ -535,6 +534,6 @@ function compareRankings(a: SeasonRanking, b: SeasonRanking): number {
   } else if (a.avgAllianceStagePoints !== b.avgAllianceStagePoints) {
     return b.avgAllianceStagePoints - a.avgAllianceStagePoints;
   } else {
-    return randomInt(10) - randomInt(10);
+    return Math.random() - Math.random();
   }
 }

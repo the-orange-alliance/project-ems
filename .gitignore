@@ -10,3 +10,8 @@ bin/*
 *.env
 dist/
 .turbo
+
+# amplify
+.amplify
+amplify_outputs*
+amplifyconfiguration*

@@ -8,8 +8,7 @@ import {
 import { ZodTypeDef, ZodType } from 'zod';
 
 export const options = {
-  host: DEFAULT_API_HOST,
-  port: DEFAULT_API_PORT
+  host: DEFAULT_API_HOST
 };
 
 /**
@@ -27,7 +26,7 @@ export const clientFetcher = async <T>(
   guard?: TypeGuard<T>
 ): Promise<T> => {
   // NOTE - If options.host doesn't include http://, fetch() will put the host request URL onto it.
-  const request = await fetch(`${options.host}:${options.port}/${url}`, {
+  const request = await fetch(`${options.host}/${url}`, {
     credentials: 'include',
     method,
     body: JSON.stringify(body),
@@ -77,8 +76,7 @@ export const apiFetcher = async <T, Z extends ZodTypeDef = ZodTypeDef>(
   guard?: ZodType<T, Z>['parse']
 ): Promise<T> => {
   // NOTE - If options.host doesn't include http://, fetch() will put the host request URL onto it.
-  const request = await fetch(`${options.host}:${options.port}/${url}`, {
-    credentials: 'include',
+  const request = await fetch(`${options.host}/${url}`, {
     method,
     body: JSON.stringify(body),
     headers: {

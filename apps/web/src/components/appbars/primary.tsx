@@ -71,7 +71,8 @@ const PrimaryAppbar: FC = () => {
             level={3}
             style={{ color: token.colorTextSecondary, margin: 0 }}
           >
-            {title || 'Event Management System'}
+            {title ||
+              `Event Management System${import.meta.env.VITE_BUILD_TYPE === 'production' ? ' - online' : ''}`}
           </Typography.Title>
         </Link>
       ) : (
@@ -79,7 +80,8 @@ const PrimaryAppbar: FC = () => {
           level={3}
           style={{ flexGrow: 1, margin: 0, color: token.colorTextSecondary }}
         >
-          {title || 'Event Management System'}
+          {title ||
+            `Event Management System${import.meta.env.VITE_BUILD_TYPE === 'production' ? ' - online' : ''}`}
         </Typography.Title>
       )}
       <ConnectionChip />

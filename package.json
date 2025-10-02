@@ -14,7 +14,14 @@
     "url": "https://github.com/the-orange-alliance/project-ems.git"
   },
   "devDependencies": {
-    "turbo": "^2.4.4"
+    "@aws-amplify/backend": "^1.16.1",
+    "@aws-amplify/backend-cli": "^1.8.0",
+    "aws-cdk-lib": "^2.204.0",
+    "constructs": "^10.4.2",
+    "esbuild": "^0.25.10",
+    "tsx": "^4.20.6",
+    "turbo": "^2.4.4",
+    "typescript": "^5.9.2"
   },
   "packageManager": "npm@10.8.2",
   "workspaces": [
@@ -22,5 +29,10 @@
     "apps/web",
     "libs/*"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "aws-amplify": "^6.15.6"
+  },
+  "engine": {
+    "node": ">=20.0.0"
+  }
 }
