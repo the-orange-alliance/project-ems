@@ -5,6 +5,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { APIGatewayProxyEvent, APIGatewayProxyHandler } from "aws-lambda";
 import { Team, teamZod } from "@toa-lib/models";
+import { getDefaultHeaders } from "../../util/default-headers";
 
 const s3 = new S3Client({ region: "us-east-2" });
 const BUCKET = process.env.STORAGE_BUCKET_NAME!;
@@ -43,26 +44,57 @@ export const handler: APIGatewayProxyHandler = async (
   const teams = await readTeams();
   switch (method) {
     case "GET":
+      if (event.pathParameters?.eventKey) {
+        const eventKey = event.pathParameters.eventKey;
+        const filtered = teams.filter((ev) => ev.eventKey === eventKey);
+        return {
+          statusCode: 200,
+          body: JSON.stringify(filtered),
+          headers: { ...getDefaultHeaders() },
+        };
+      }
+
       return { statusCode: 200, body: JSON.stringify(teams) };
 
     case "POST":
       if (!body) {
-        return { statusCode: 400, body: "Bad Request: Missing body" };
+        return {
+          statusCode: 400,
+          body: "Bad Request: Missing body",
+          headers: { ...getDefaultHeaders() },
+        };
+      }
+
+      if (!event.pathParameters?.eventKey) {
+        return {
+          statusCode: 400,
+          body: "Bad Request: Missing eventKey",
+          headers: { ...getDefaultHeaders() },
+        };
       }
 
       teams.push(body);
       await writeTeams(teams);
-      return { statusCode: 200, body: JSON.stringify(teams) };
+      return {
+        statusCode: 200,
+        body: JSON.stringify(teams),
+        headers: { ...getDefaultHeaders() },
+      };
 
     case "PUT":
       if (!body) {
-        return { statusCode: 400, body: "Bad Request: Missing body" };
+        return {
+          statusCode: 400,
+          body: "Bad Request: Missing body",
+          headers: { ...getDefaultHeaders() },
+        };
       }
 
       if (!event.pathParameters?.eventKey || !event.pathParameters?.teamKey) {
         return {
           statusCode: 400,
           body: "Bad Request: Missing eventKey or teamKey",
+          headers: { ...getDefaultHeaders() },
         };
       }
 
@@ -73,13 +105,18 @@ export const handler: APIGatewayProxyHandler = async (
             : ev,
         ),
       );
-      return { statusCode: 200, body: JSON.stringify(body) };
+      return {
+        statusCode: 200,
+        body: JSON.stringify(body),
+        headers: { ...getDefaultHeaders() },
+      };
 
     case "DELETE":
       if (!event.pathParameters?.eventKey || !event.pathParameters?.teamKey) {
         return {
           statusCode: 400,
           body: "Bad Request: Missing eventKey or teamKey",
+          headers: { ...getDefaultHeaders() },
         };
       }
 
@@ -93,7 +130,10 @@ export const handler: APIGatewayProxyHandler = async (
       );
       return {
         statusCode: 200,
-        body: JSON.stringify({ deleted: { eventKey, teamKey } }),
+        body: JSON.stringify({
+          deleted: { eventKey, teamKey },
+          headers: { ...getDefaultHeaders() },
+        }),
       };
 
     default:

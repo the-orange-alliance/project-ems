@@ -45,7 +45,7 @@ const restApi = new RestApi(apiStack, "ems-online-rest-api", {
     stageName: "dev",
   },
   defaultCorsPreflightOptions: {
-    allowOrigins: Cors.ALL_METHODS,
+    allowOrigins: Cors.ALL_ORIGINS,
     allowMethods: Cors.ALL_METHODS,
     allowHeaders: Cors.DEFAULT_HEADERS,
   },
