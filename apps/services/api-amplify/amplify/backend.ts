@@ -59,7 +59,7 @@ const teamsLambdaIntegration = new LambdaIntegration(
   backend.apiTeamsFunction.resources.lambda,
 );
 
-const eventsPath = restApi.root.addResource("events");
+const eventsPath = restApi.root.addResource("event");
 const eventPath = eventsPath.addResource("{eventKey}");
 
 const teamsPath = restApi.root.addResource("teams").addResource("{eventKey}");
