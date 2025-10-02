@@ -68,12 +68,12 @@ const teamPath = teamsPath.addResource("{teamKey}");
 eventsPath.addMethod("GET", eventsLambdaIntegration);
 eventsPath.addMethod("POST", eventsLambdaIntegration);
 eventPath.addMethod("GET", eventsLambdaIntegration);
-eventPath.addMethod("PUT", eventsLambdaIntegration);
+eventPath.addMethod("PATCH", eventsLambdaIntegration);
 eventPath.addMethod("DELETE", eventsLambdaIntegration);
 
 teamsPath.addMethod("GET", teamsLambdaIntegration);
 teamsPath.addMethod("POST", teamsLambdaIntegration);
-teamPath.addMethod("PUT", teamsLambdaIntegration);
+teamPath.addMethod("PATCH", teamsLambdaIntegration);
 teamPath.addMethod("DELETE", teamsLambdaIntegration);
 
 backend.addOutput({

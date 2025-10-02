@@ -85,7 +85,7 @@ export const handler: APIGatewayProxyHandler = async (
         headers: { ...getDefaultHeaders() },
       };
 
-    case "PUT":
+    case "PATCH":
       if (!body) {
         return {
           statusCode: 400,
