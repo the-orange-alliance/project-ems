@@ -5,6 +5,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { APIGatewayProxyEvent, APIGatewayProxyHandler } from "aws-lambda";
 import { Event, eventZod } from "@toa-lib/models";
+import { getDefaultHeaders } from "../../util/default-headers";
 
 const s3 = new S3Client({ region: "us-east-2" });
 const BUCKET = process.env.STORAGE_BUCKET_NAME!;
@@ -46,28 +47,41 @@ export const handler: APIGatewayProxyHandler = async (
       return {
         statusCode: 200,
         body: JSON.stringify(events),
-        headers: {
-          "Access-Control-Allow-Origin": "*", // Restrict this to domains you trust
-          "Access-Control-Allow-Headers": "*", // Specify only the headers you need to allow
-        },
+        headers: { ...getDefaultHeaders() },
       };
 
     case "POST":
       if (!body) {
-        return { statusCode: 400, body: "Bad Request: Missing body" };
+        return {
+          statusCode: 400,
+          body: "Bad Request: Missing body",
+          headers: { ...getDefaultHeaders() },
+        };
       }
 
       events.push(body);
       await writeEvents(events);
-      return { statusCode: 200, body: JSON.stringify(events) };
+      return {
+        statusCode: 200,
+        body: JSON.stringify(events),
+        headers: { ...getDefaultHeaders() },
+      };
 
     case "PUT":
       if (!body) {
-        return { statusCode: 400, body: "Bad Request: Missing body" };
+        return {
+          statusCode: 400,
+          body: "Bad Request: Missing body",
+          headers: { ...getDefaultHeaders() },
+        };
       }
 
       if (!event.pathParameters?.eventKey) {
-        return { statusCode: 400, body: "Bad Request: Missing eventKey" };
+        return {
+          statusCode: 400,
+          body: "Bad Request: Missing eventKey",
+          headers: { ...getDefaultHeaders() },
+        };
       }
 
       await writeEvents(
@@ -77,15 +91,27 @@ export const handler: APIGatewayProxyHandler = async (
 
     case "DELETE":
       if (!event.pathParameters?.eventKey) {
-        return { statusCode: 400, body: "Bad Request: Missing eventKey" };
+        return {
+          statusCode: 400,
+          body: "Bad Request: Missing eventKey",
+          headers: { ...getDefaultHeaders() },
+        };
       }
 
       const eventKey = event.pathParameters.eventKey;
 
       await writeEvents(events.filter((ev) => ev.eventKey !== eventKey));
-      return { statusCode: 200, body: JSON.stringify({ deleted: eventKey }) };
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ deleted: eventKey }),
+        headers: { ...getDefaultHeaders() },
+      };
 
     default:
-      return { statusCode: 405, body: "Method Not Allowed" };
+      return {
+        statusCode: 405,
+        body: "Method Not Allowed",
+        headers: { ...getDefaultHeaders() },
+      };
   }
 };

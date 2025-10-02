@@ -77,7 +77,6 @@ export const apiFetcher = async <T, Z extends ZodTypeDef = ZodTypeDef>(
 ): Promise<T> => {
   // NOTE - If options.host doesn't include http://, fetch() will put the host request URL onto it.
   const request = await fetch(`${options.host}/${url}`, {
-    credentials: 'include',
     method,
     body: JSON.stringify(body),
     headers: {
