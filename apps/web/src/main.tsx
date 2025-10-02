@@ -28,10 +28,13 @@ if (getFromLocalStorage('followerMode', false)) {
   );
 } else {
   const remoteUrl = import.meta.env.VITE_API_URL;
-  console.log({ remoteUrl });
-  APIOptions.host = remoteUrl ?? `http://${window.location.hostname}`;
+  if (remoteUrl) {
+    console.warn(`VITE_API_URL DETECTED: SETTING API HOST TO ${remoteUrl}`);
+    APIOptions.host = remoteUrl;
+  } else {
+    APIOptions.host = `http://${window.location.hostname}`;
+  }
 }
-APIOptions.port = 8080;
 SocketOptions.host = window.location.hostname;
 SocketOptions.port = 8081;
 
