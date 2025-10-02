@@ -43,7 +43,14 @@ export const handler: APIGatewayProxyHandler = async (
   const events = await readEvents();
   switch (method) {
     case "GET":
-      return { statusCode: 200, body: JSON.stringify(events) };
+      return {
+        statusCode: 200,
+        body: JSON.stringify(events),
+        headers: {
+          "Access-Control-Allow-Origin": "*", // Restrict this to domains you trust
+          "Access-Control-Allow-Headers": "*", // Specify only the headers you need to allow
+        },
+      };
 
     case "POST":
       if (!body) {
