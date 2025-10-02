@@ -178,7 +178,7 @@ export interface AppRoute {
   eventOrder?: number; // Order to show in the event flow list
   eventListRenderer?: LazyExoticComponent<FC>; // Custom renderer for event list, can show data like team count, tournament count, etc.
   hideAppbar?: boolean; // Whether to hide the appbar for this route, optional
-  online?: boolean; // Whether the route appearas online, optional
+  online?: boolean; // Whether the route appears as online, optional
 }
 
 const AppRoutes: AppRoute[] = [
@@ -188,7 +188,7 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: EventSelection,
     hidden: true,
-    online: true,
+    online: true
   },
   {
     name: 'Event Creation',
@@ -196,7 +196,7 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: EventCreation,
     hidden: true,
-    online: true,
+    online: true
   },
   {
     name: 'Manage Event',
@@ -213,7 +213,7 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: HomeApp,
     hidden: true,
-    online: true,
+    online: true
   },
   {
     name: 'Manage Teams',
@@ -223,7 +223,7 @@ const AppRoutes: AppRoute[] = [
     icon: <TeamOutlined />,
     eventListRenderer: TeamCountTag,
     eventOrder: 2,
-    online: true,
+    online: true
   },
   {
     name: 'Team Editor',
@@ -231,7 +231,7 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: TeamEditor,
     hidden: true,
-    online: true,
+    online: true
   },
   {
     name: 'Manage Tournaments',
@@ -241,7 +241,7 @@ const AppRoutes: AppRoute[] = [
     icon: <CompassOutlined />,
     eventListRenderer: TournamentCountTag,
     eventOrder: 3,
-    online: true,
+    online: true
   },
   {
     name: 'Tournament Editor',
@@ -250,7 +250,7 @@ const AppRoutes: AppRoute[] = [
     element: TournamentEditor,
     icon: <FormOutlined />,
     hidden: true,
-    online: true,
+    online: true
   },
   {
     name: 'Manage Schedules',
@@ -260,7 +260,7 @@ const AppRoutes: AppRoute[] = [
     eventListRenderer: MatchCountTag,
     element: ScheduleManager,
     eventOrder: 4,
-    online: true,
+    online: true
   },
   {
     name: 'Scorekeeper App',

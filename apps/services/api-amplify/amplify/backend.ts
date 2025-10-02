@@ -67,6 +67,7 @@ const teamPath = teamsPath.addResource("{teamKey}");
 
 eventsPath.addMethod("GET", eventsLambdaIntegration);
 eventsPath.addMethod("POST", eventsLambdaIntegration);
+eventPath.addMethod("GET", eventsLambdaIntegration);
 eventPath.addMethod("PUT", eventsLambdaIntegration);
 eventPath.addMethod("DELETE", eventsLambdaIntegration);
 

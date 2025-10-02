@@ -29,10 +29,11 @@ const App = () => {
   const filteredRoutes = useMemo(
     () =>
       routes.filter((route) =>
-        buildType === 'production' ? route.online !== false : true
+        buildType === 'production' ? route.online === true : true
       ),
     [routes, buildType]
   );
+  console.log({ filteredRoutes });
   return (
     <>
       <Row gutter={[24, 24]} style={{ marginBottom: 16 }} justify={'center'}>

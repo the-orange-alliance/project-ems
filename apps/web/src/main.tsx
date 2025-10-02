@@ -32,7 +32,7 @@ if (getFromLocalStorage('followerMode', false)) {
     console.warn(`VITE_API_URL DETECTED: SETTING API HOST TO ${remoteUrl}`);
     APIOptions.host = remoteUrl;
   } else {
-    APIOptions.host = `http://${window.location.hostname}`;
+    APIOptions.host = `http://${window.location.hostname}:8080`;
   }
 }
 SocketOptions.host = window.location.hostname;

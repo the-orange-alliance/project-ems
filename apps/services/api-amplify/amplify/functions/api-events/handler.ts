@@ -44,6 +44,24 @@ export const handler: APIGatewayProxyHandler = async (
   const events = await readEvents();
   switch (method) {
     case "GET":
+      if (event.pathParameters?.eventKey) {
+        const eventKey = event.pathParameters.eventKey;
+        const ev = events.find((ev) => ev.eventKey === eventKey);
+        if (!ev) {
+          return {
+            statusCode: 404,
+            body: "Not Found",
+            headers: { ...getDefaultHeaders() },
+          };
+        }
+
+        return {
+          statusCode: 200,
+          body: JSON.stringify(ev),
+          headers: { ...getDefaultHeaders() },
+        };
+      }
+
       return {
         statusCode: 200,
         body: JSON.stringify(events),

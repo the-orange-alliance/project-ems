@@ -33,7 +33,7 @@ export function AppContainer() {
   const filteredRoutes = useMemo(
     () =>
       routes.filter((route) =>
-        buildType === 'production' ? route.online !== false : true
+        buildType === 'production' ? route.online === true : true
       ),
     [routes, buildType]
   );
