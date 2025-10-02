@@ -82,7 +82,7 @@ const teamPath = teamsPath.addResource("{teamKey}");
 
 const tournamentsPath = restApi.root.addResource("tournament");
 const tournamentsForEventPath = tournamentsPath.addResource("{eventKey}");
-const tournamentPath = tournamentsPath.addResource("{tournamentKey}");
+const tournamentPath = tournamentsForEventPath.addResource("{tournamentKey}");
 
 eventsPath.addMethod("GET", eventsLambdaIntegration);
 eventsPath.addMethod("POST", eventsLambdaIntegration);
