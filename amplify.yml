@@ -1,0 +1,39 @@
+version: 1
+applications:
+  - appRoot: .
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm install
+        build:
+          commands:
+            - rm -rf apps/web/build
+            - cd apps/web
+            - echo "VITE_BUILD_TYPE=$VITE_BUILD_TYPE" > .env
+            - echo "VITE_API_URL=$VITE_API_URL" >> .env
+            - cat .env
+            - npm run build
+            - ls -al
+      artifacts:
+        baseDirectory: /apps/web/build
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
+          - .turbo/**/*
+    backend:
+      phases:
+        preBuild:
+          commands:
+            - node -v
+            - nvm install 20
+            - npm install
+            - npm run build:libs
+        build:
+          commands:
+            - cd apps/services/api-amplify
+            - nvm use 20
+            - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+            - cd ../../../

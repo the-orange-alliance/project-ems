@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import routes from './app-routes.js';
 import './utils.less';
 import { useSnackbar } from './hooks/use-snackbar.js';
-import { FC, ReactNode, Suspense } from 'react';
+import { FC, ReactNode, Suspense, useMemo } from 'react';
 import SyncEffects from './components/sync-effects/sync-effects.js';
 import PrimaryAppbar from './components/appbars/primary.js';
 import { ConnectionManager } from './components/util/connection-manager.js';
@@ -28,13 +28,23 @@ export function AppContainer() {
   // Hacky-hack, see details inside
   useSyncInProgress();
 
+  const buildType = import.meta.env.VITE_BUILD_TYPE;
+
+  const filteredRoutes = useMemo(
+    () =>
+      routes.filter((route) =>
+        buildType === 'production' ? route.online === true : true
+      ),
+    [routes, buildType]
+  );
+
   return (
     <>
       <AppSnackbar />
       <ConnectionManager />
       <ErrorBoundary fallbackRender={(props) => <ErrorFallback {...props} />}>
         <Routes>
-          {routes.map((route) => (
+          {filteredRoutes.map((route) => (
             <Route
               key={route.name}
               path={route.path}

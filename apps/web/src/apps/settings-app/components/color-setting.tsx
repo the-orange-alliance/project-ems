@@ -1,6 +1,6 @@
-import { FormGroup, FormControlLabel, Typography } from '@mui/material';
-import { MuiColorInput } from 'mui-color-input';
-import { FC } from 'react';
+import { ColorPicker, Space, Typography } from 'antd';
+import { AggregationColor } from 'antd/es/color-picker/color.js';
+import { FC, CSSProperties } from 'react';
 
 interface Props {
   name: string;
@@ -23,38 +23,54 @@ export const ColorSetting: FC<Props> = ({
   disabled,
   format
 }) => {
-  const handleChange = (value: string) => {
-    onChange(format === 'string' ? value.substring(1, value.length) : value);
+  const handleChange = (value: AggregationColor) => {
+    onChange(value.toHex());
+  };
+
+  const containerStyle: CSSProperties = {
+    padding: '16px',
+    borderRadius: '4px',
+    transition: 'background-color 0.2s'
+  };
+
+  const hoverStyle: CSSProperties = {
+    ...containerStyle,
+    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+  };
+
+  const labelStyle: CSSProperties = {
+    fontWeight: 'bold',
+    marginRight: 'auto'
+  };
+
+  const colorPickerStyle: CSSProperties = {
+    width: fullWidth ? '100%' : '224px'
   };
 
   return (
-    <FormGroup
-      sx={{
-        '&:hover': {
-          backgroundColor: (theme) => theme.palette.action.hover
-        }
+    <div
+      style={containerStyle}
+      onMouseEnter={(e) => {
+        Object.assign(e.currentTarget.style, hoverStyle);
       }}
+      onMouseLeave={(e) => {
+        Object.assign(e.currentTarget.style, containerStyle);
+      }}
+      title={title}
     >
-      <FormControlLabel
-        control={
-          <MuiColorInput
-            format='hex'
-            value={format === 'string' ? `#${value}` : value}
-            onChange={handleChange}
-            fullWidth={fullWidth}
-            sx={{ m: 1, width: 224 }}
-          />
-        }
-        label={
-          <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-            {name}
-          </Typography>
-        }
-        labelPlacement={inline ? 'start' : 'top'}
-        sx={{ padding: (theme) => theme.spacing(2) }}
-        title={title}
-        disabled={disabled}
-      />
-    </FormGroup>
+      <Space
+        direction={inline ? 'horizontal' : 'vertical'}
+        style={{ width: '100%' }}
+      >
+        <Typography.Text style={labelStyle}>{name}</Typography.Text>
+        <ColorPicker
+          value={format === 'string' ? `#${value}` : value}
+          onChange={handleChange}
+          disabled={disabled}
+          style={colorPickerStyle}
+          showText
+        />
+      </Space>
+    </div>
   );
 };

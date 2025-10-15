@@ -1,10 +1,8 @@
 import { StrictMode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import { LocalizationProvider } from '@mui/x-date-pickers';
 import { Provider as ModalProvider } from '@ebay/nice-modal-react';
-import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
-import { customfgcTheme, fgcTheme, frcTheme, ftcTheme } from './app-theme.js';
+import { customfgcTheme } from './app-theme.js';
 import { APIOptions, SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/local-storage.js';
 import { AppContainer } from './App.js';
@@ -29,22 +27,20 @@ if (getFromLocalStorage('followerMode', false)) {
     `FOLLOWER MODE DETECTED: SETTING API HOST FROM LOCAL STORAGE\n${APIOptions.host}`
   );
 } else {
-  APIOptions.host = `http://${window.location.hostname}`;
+  const remoteUrl = import.meta.env.VITE_API_URL;
+  if (remoteUrl) {
+    console.warn(`VITE_API_URL DETECTED: SETTING API HOST TO ${remoteUrl}`);
+    APIOptions.host = remoteUrl;
+  } else {
+    APIOptions.host = `http://${window.location.hostname}:8080`;
+  }
 }
-APIOptions.port = 8080;
 SocketOptions.host = window.location.hostname;
 SocketOptions.port = 8081;
 
 function Main() {
   const darkMode = useAtomValue(darkModeAtom);
   const eventKey = useCurrentEvent().data?.eventKey;
-  //   !eventKey
-  //   ? fgcTheme
-  //   : eventKey.startsWith('FRC')
-  //     ? frcTheme
-  //     : eventKey.startsWith('FTC')
-  //       ? ftcTheme
-  //       : fgcTheme;
 
   return (
     <ConfigProvider
@@ -61,9 +57,7 @@ root.render(
   <StrictMode>
     <BrowserRouter>
       <Provider store={store}>
-        <LocalizationProvider dateAdapter={AdapterLuxon}>
-          <Main />
-        </LocalizationProvider>
+        <Main />
       </Provider>
     </BrowserRouter>
   </StrictMode>

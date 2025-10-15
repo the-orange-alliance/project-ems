@@ -178,6 +178,7 @@ export interface AppRoute {
   eventOrder?: number; // Order to show in the event flow list
   eventListRenderer?: LazyExoticComponent<FC>; // Custom renderer for event list, can show data like team count, tournament count, etc.
   hideAppbar?: boolean; // Whether to hide the appbar for this route, optional
+  online?: boolean; // Whether the route appears as online, optional
 }
 
 const AppRoutes: AppRoute[] = [
@@ -186,14 +187,16 @@ const AppRoutes: AppRoute[] = [
     path: '/',
     group: 0,
     element: EventSelection,
-    hidden: true
+    hidden: true,
+    online: true
   },
   {
     name: 'Event Creation',
     path: '/create-event',
     group: 0,
     element: EventCreation,
-    hidden: true
+    hidden: true,
+    online: true
   },
   {
     name: 'Manage Event',
@@ -201,14 +204,16 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: EventManager,
     icon: <CalendarOutlined />,
-    eventOrder: 1
+    eventOrder: 1,
+    online: true
   },
   {
     name: 'Event Home',
     path: '/:eventKey',
     group: 0,
     element: HomeApp,
-    hidden: true
+    hidden: true,
+    online: true
   },
   {
     name: 'Manage Teams',
@@ -217,14 +222,16 @@ const AppRoutes: AppRoute[] = [
     element: TeamManager,
     icon: <TeamOutlined />,
     eventListRenderer: TeamCountTag,
-    eventOrder: 2
+    eventOrder: 2,
+    online: true
   },
   {
     name: 'Team Editor',
     path: '/:eventKey/team-manager/edit/:teamKey',
     group: 0,
     element: TeamEditor,
-    hidden: true
+    hidden: true,
+    online: true
   },
   {
     name: 'Manage Tournaments',
@@ -233,7 +240,8 @@ const AppRoutes: AppRoute[] = [
     element: TournamentManager,
     icon: <CompassOutlined />,
     eventListRenderer: TournamentCountTag,
-    eventOrder: 3
+    eventOrder: 3,
+    online: true
   },
   {
     name: 'Tournament Editor',
@@ -241,7 +249,8 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: TournamentEditor,
     icon: <FormOutlined />,
-    hidden: true
+    hidden: true,
+    online: true
   },
   {
     name: 'Manage Schedules',
@@ -250,7 +259,8 @@ const AppRoutes: AppRoute[] = [
     icon: <ControlOutlined />,
     eventListRenderer: MatchCountTag,
     element: ScheduleManager,
-    eventOrder: 4
+    eventOrder: 4,
+    online: true
   },
   {
     name: 'Scorekeeper App',
