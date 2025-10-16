@@ -25,6 +25,7 @@ import tournamentController from './controllers/Tournament.js';
 import frcFmsController from './controllers/FrcFms.js';
 import resultsController from './controllers/Results.js';
 import socketClientsController from './controllers/SocketClients.js';
+import fcsController from './controllers/FCS.js';
 import logger from './util/Logger.js';
 import { initGlobal } from './db/EventDatabase.js';
 import { createJsonSchemaTransformObject, jsonSchemaTransform, serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
@@ -89,7 +90,8 @@ await fastify.register(fastifySwagger, {
       { name: 'Storage', description: 'Storage related endpoints' },
       { name: 'Auth', description: 'Authentication and authorization endpoints' },
       { name: 'Admin', description: 'Admin related endpoints' },
-      { name: 'Sockets', description: 'Socket client related endpoints' }
+      { name: 'Sockets', description: 'Socket client related endpoints' },
+      { name: 'FCS', description: 'FCS settings related endpoints' }
     ]
   },
   transform: jsonSchemaTransform,
@@ -110,6 +112,7 @@ await fastify.register(adminController, { prefix: '/admin' });
 await fastify.register(allianceController, { prefix: '/alliance' });
 await fastify.register(authController, { prefix: '/auth' });
 await fastify.register(eventController, { prefix: '/event' });
+await fastify.register(fcsController, { prefix: '/fcs' });
 await fastify.register(frcFmsController, { prefix: '/frc/fms' });
 await fastify.register(matchController, { prefix: '/match' });
 await fastify.register(rankingController, { prefix: '/ranking' });
