@@ -6,12 +6,12 @@ import {
   ExclamationCircleOutlined,
   WarningOutlined
 } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
-import { userAtom } from 'src/stores/state/ui.js';
+// import { useAtomValue } from 'jotai';
+// import { userAtom } from 'src/stores/state/ui.js';
 
 export const ConnectionChip: FC = () => {
   const [, connected] = useSocket();
-  const user = useAtomValue(userAtom);
+  const user = true; //  useAtomValue(userAtom);
 
   return (
     <Tag
