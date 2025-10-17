@@ -46,9 +46,7 @@ const TeleScoreSheet: FC<Props> = ({
   const [ecosystemState, setEcosystemState] = useState<number>(0);
 
   useEffect(() => {
-    const updateEcosystemState = (
-      s: EcoEquilibriumFCS.FGC25EcosystemUpdate
-    ) => {
+    const updateEcosystemState = (s: EcoEquilibriumFCS.EcosystemUpdate) => {
       if (
         (alliance === 'red' &&
           s.ecosystem === EcoEquilibriumFCS.Ecosystem.RedSide) ||
@@ -60,12 +58,12 @@ const TeleScoreSheet: FC<Props> = ({
     };
 
     socket?.on(
-      EcoEquilibriumFCS.FGC25SocketEvents.EcosystemUpdate,
+      EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
       updateEcosystemState
     );
     return () => {
       socket?.off(
-        EcoEquilibriumFCS.FGC25SocketEvents.EcosystemUpdate,
+        EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
         updateEcosystemState
       );
     };
@@ -74,13 +72,13 @@ const TeleScoreSheet: FC<Props> = ({
   if (!match || !match.details) return null;
 
   const forceEcosystem = (newState: number) => {
-    socket?.emit(EcoEquilibriumFCS.FGC25SocketEvents.ForceEcosystemUpdate, {
+    socket?.emit(EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate, {
       ecosystem:
         alliance === 'red'
           ? EcoEquilibriumFCS.Ecosystem.RedSide
           : EcoEquilibriumFCS.Ecosystem.BlueSide,
       position: newState
-    } as EcoEquilibriumFCS.FGC25EcosystemUpdate);
+    } as EcoEquilibriumFCS.EcosystemUpdate);
   };
 
   const handleMitigatorChange = (newValue: number, manuallyTyped: boolean) => {

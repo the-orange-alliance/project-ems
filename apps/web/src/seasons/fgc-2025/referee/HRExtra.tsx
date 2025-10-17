@@ -21,31 +21,29 @@ const HeadRefereeExtra: React.FC = () => {
   const [ecosystemState, setEcosystemState] = useState<number>(0);
 
   useEffect(() => {
-    const updateEcosystemState = (
-      s: EcoEquilibriumFCS.FGC25EcosystemUpdate
-    ) => {
+    const updateEcosystemState = (s: EcoEquilibriumFCS.EcosystemUpdate) => {
       if (s.ecosystem === EcoEquilibriumFCS.Ecosystem.Center) {
         setEcosystemState(s.position);
       }
     };
 
     socket?.on(
-      EcoEquilibriumFCS.FGC25SocketEvents.EcosystemUpdate,
+      EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
       updateEcosystemState
     );
     return () => {
       socket?.off(
-        EcoEquilibriumFCS.FGC25SocketEvents.EcosystemUpdate,
+        EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
         updateEcosystemState
       );
     };
   }, []);
 
   const forceEcosystem = (newState: number) => {
-    socket?.emit(EcoEquilibriumFCS.FGC25SocketEvents.ForceEcosystemUpdate, {
+    socket?.emit(EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate, {
       ecosystem: EcoEquilibriumFCS.Ecosystem.Center,
       position: newState
-    } as EcoEquilibriumFCS.FGC25EcosystemUpdate);
+    } as EcoEquilibriumFCS.EcosystemUpdate);
   };
 
   const postMatch = matchState > MatchState.MATCH_IN_PROGRESS;
