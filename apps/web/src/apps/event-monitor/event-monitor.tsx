@@ -1,23 +1,28 @@
 import {
   Button,
   Card,
-  CardActions,
-  CardContent,
-  CardHeader,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Grid,
-  IconButton,
-  Menu,
-  MenuItem,
-  Stack,
+  Col,
+  Dropdown,
+  Flex,
+  Input,
+  Modal,
+  Row,
+  Space,
   Typography
-} from '@mui/material';
-import { useMatchAll } from 'src/api/use-match-data';
+} from 'antd';
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  DeleteOutlined,
+  MoreOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  WarningOutlined
+} from '@ant-design/icons';
+import { useMatchAll } from '../../api/use-match-data.js';
 import { DateTime } from 'luxon';
 import { FC, useEffect, useState } from 'react';
-import { DefaultLayout } from 'src/layouts/default-layout';
+import { DefaultLayout } from '../../layouts/default-layout.js';
 import {
   MatchSocketEvent,
   MatchKey,
@@ -26,28 +31,36 @@ import {
   Team
 } from '@toa-lib/models';
 import { io, Socket } from 'socket.io-client';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import WarningIcon from '@mui/icons-material/Warning';
-import { useTeamsForEvent } from 'src/api/use-team-data';
+import { useEventState } from '../../stores/hooks/use-event-state.js';
+import { useAtomValue } from 'jotai';
+import { darkModeAtom } from '../../stores/state/ui.js';
+
+const { Text } = Typography;
+
+interface Monitor {
+  field: number;
+  address: string;
+  realtimePort: number;
+}
 
 interface MonitorCardProps {
   field: number;
   address: string;
   realtimePort: number;
   teams?: Team[];
+  onRemove?: () => void;
 }
 
 const MonitorCard: FC<MonitorCardProps> = ({
   field,
   address,
   realtimePort,
-  teams
+  teams,
+  onRemove
 }) => {
   const webUrl = `http://${address}`;
   const socketUrl = `ws://${address}:${realtimePort}`;
+  const darkMode = useAtomValue(darkModeAtom);
 
   const [connected, setConnected] = useState(false);
   const [key, setKey] = useState<MatchKey | null>(null);
@@ -56,16 +69,6 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const [socket, setSocket] = useState<null | Socket>(null);
   const [match, setMatch] = useState<Match<any> | null>(null);
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-    setAnchorEl(null);
-  };
   const handleRefresh = () => {
     console.log('Refresh but idk how to');
   };
@@ -155,18 +158,23 @@ const MonitorCard: FC<MonitorCardProps> = ({
   };
 
   const getCardColor = (): string => {
-    if (!fcsStatus) return '#ffffff';
+    if (!fcsStatus) {
+      return darkMode ? '#1f1f1f' : '#ffffff';
+    }
 
     if (Object.entries(fcsStatus.wleds).some((wled) => !wled[1].connected)) {
-      return '#FAA0A0';
+      // Error state - red background
+      return darkMode ? '#5c1f1f' : '#FAA0A0';
     } else if (
       Object.entries(fcsStatus.wleds).some(
         (wled) => wled[1].stickyLostConnection
       )
     ) {
-      return '#FFFF8F';
+      // Warning state - yellow background
+      return darkMode ? '#5c5c1f' : '#FFFF8F';
     } else {
-      return '#FFFFFF';
+      // Normal state
+      return darkMode ? '#1f1f1f' : '#FFFFFF';
     }
   };
 
@@ -189,6 +197,26 @@ const MonitorCard: FC<MonitorCardProps> = ({
     }
   };
 
+  const menuItems = [
+    {
+      key: 'refresh',
+      label: 'Refresh',
+      icon: <ReloadOutlined />,
+      onClick: handleRefresh
+    },
+    ...(onRemove
+      ? [
+          {
+            key: 'remove',
+            label: 'Remove Monitor',
+            icon: <DeleteOutlined />,
+            danger: true,
+            onClick: onRemove
+          }
+        ]
+      : [])
+  ];
+
   return (
     <>
       <Card
@@ -196,146 +224,146 @@ const MonitorCard: FC<MonitorCardProps> = ({
           setDialogOpen(true);
         }}
         style={{ cursor: 'pointer', backgroundColor: getCardColor() }}
-      >
-        <Menu
-          id={`field-${field}-menu`}
-          anchorEl={anchorEl}
-          open={open}
-          onClose={handleClose}
-          MenuListProps={{
-            'aria-labelledby': `field-${field}-menu`
-          }}
-        >
-          <MenuItem onClick={handleClose}>Refresh</MenuItem>
-        </Menu>
-        <CardHeader
-          title={`Field ${field}`}
-          subheader={getMatchStatus()}
-          avatar={
-            connected ? (
-              <CheckCircleIcon color='success' />
+        title={
+          <Space>
+            {connected ? (
+              <CheckCircleOutlined style={{ color: '#52c41a' }} />
             ) : (
-              <ErrorIcon color='error' />
-            )
-          }
-          action={
-            <IconButton
-              aria-controls={open ? `field-${field}-menu` : undefined}
-              aria-haspopup='true'
-              aria-expanded={open ? 'true' : undefined}
-              onClick={handleClick}
-            >
-              <MoreVertIcon />
-            </IconButton>
-          }
-        />
-        <CardContent>
-          <MatchDetails key={field} match={match} teams={teams} />
-        </CardContent>
-        <CardActions>
-          <Typography
-            variant='body2'
-            sx={{ marginLeft: 'auto' }}
-            color={getFieldDelay().includes('behind') ? 'error' : 'primary'}
+              <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+            )}
+            <Text strong>{`Field ${field}`}</Text>
+          </Space>
+        }
+        extra={
+          <Dropdown
+            menu={{ items: menuItems }}
+            placement='bottomRight'
+            trigger={['click']}
           >
-            {getFieldDelay()}
-          </Typography>
-        </CardActions>
-      </Card>
-      <Dialog
-        open={dialogOpen}
-        onClose={() => {
-          setDialogOpen(false);
-        }}
-        fullWidth={true}
-        maxWidth={'lg'}
-      >
-        <DialogTitle display={'flex'} justifyContent={'space-between'}>
-          {`Field ${field}`}
-          <Stack direction={'row'} spacing={2}>
-            <Button onClick={handleFcsClearStatus}>Clear Status</Button>
             <Button
-              color={'info'}
-              endIcon={<RefreshIcon />}
-              onClick={handleRefresh}
+              type='text'
+              icon={<MoreOutlined />}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                color: 'inherit'
+              }}
+            />
+          </Dropdown>
+        }
+      >
+        <Space direction='vertical' style={{ width: '100%' }}>
+          <Text>{getMatchStatus()}</Text>
+          <MatchDetails key={field} match={match} teams={teams} />
+          <Flex justify='flex-end'>
+            <Text
+              type={getFieldDelay().includes('behind') ? 'danger' : undefined}
             >
-              Refresh
-            </Button>
-          </Stack>
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} columns={12}>
-            <Grid item xs={12}>
-              <Stack direction={'row'} spacing={2}>
-                {connected ? (
-                  <CheckCircleIcon color='success' />
-                ) : (
-                  <ErrorIcon color='error' />
-                )}
-                <Typography>{getMatchStatus()}</Typography>
-              </Stack>
-            </Grid>
-            <Grid item xs={12}>
-              <MatchDetails key={field} match={match} teams={teams} expanded />
-            </Grid>
-            {fcsStatus
-              ? Object.entries(fcsStatus.wleds).map((wled) => (
-                  <Grid item key={wled[0]}>
-                    <Stack direction={'row'} spacing={1}>
-                      {wled[1].connected ? (
-                        !wled[1].stickyLostConnection ? (
-                          <CheckCircleIcon color={'success'} />
-                        ) : (
-                          <WarningIcon color={'warning'} />
-                        )
+              {getFieldDelay()}
+            </Text>
+          </Flex>
+        </Space>
+      </Card>
+      <Modal
+        title={
+          <Flex justify='space-between' align='center'>
+            <Text strong>{`Field ${field}`}</Text>
+            <Space>
+              <Button onClick={handleFcsClearStatus}>Clear Status</Button>
+              <Button
+                type='primary'
+                icon={<ReloadOutlined />}
+                onClick={handleRefresh}
+              >
+                Refresh
+              </Button>
+            </Space>
+          </Flex>
+        }
+        open={dialogOpen}
+        onCancel={() => setDialogOpen(false)}
+        footer={null}
+        width={800}
+      >
+        <Space direction='vertical' style={{ width: '100%' }}>
+          <Space>
+            {connected ? (
+              <CheckCircleOutlined style={{ color: '#52c41a' }} />
+            ) : (
+              <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+            )}
+            <Text>{getMatchStatus()}</Text>
+          </Space>
+
+          <MatchDetails key={field} match={match} teams={teams} expanded />
+
+          {fcsStatus && (
+            <Row gutter={[16, 16]}>
+              {Object.entries(fcsStatus.wleds).map((wled) => (
+                <Col key={wled[0]}>
+                  <Space>
+                    {wled[1].connected ? (
+                      !wled[1].stickyLostConnection ? (
+                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
                       ) : (
-                        <ErrorIcon color='error' />
-                      )}
-                      <Typography>{`${wled[0]} wled`}</Typography>
-                    </Stack>
-                  </Grid>
-                ))
-              : null}
-            <Grid item xs={12}>
-              <Button variant={'contained'} href={`${webUrl}`} fullWidth>
-                Open
-              </Button>
-            </Grid>
-            <Grid item xs={4}>
-              <Button
-                variant={'contained'}
-                color={'error'}
-                href={`${webUrl}/${match?.eventKey}/referee/red`}
-                disabled={match === undefined}
-                fullWidth
-              >
-                Red Referee
-              </Button>
-            </Grid>
-            <Grid item xs={4}>
-              <Button
-                variant={'contained'}
-                href={`${webUrl}/${match?.eventKey}/referee/head`}
-                disabled={match === undefined}
-                fullWidth
-              >
-                Head Referee
-              </Button>
-            </Grid>
-            <Grid item xs={4}>
-              <Button
-                variant={'contained'}
-                color={'info'}
-                href={`${webUrl}/${match?.eventKey}/referee/blue`}
-                disabled={match === undefined}
-                fullWidth
-              >
-                Blue Referee
-              </Button>
-            </Grid>
-          </Grid>
-        </DialogContent>
-      </Dialog>
+                        <WarningOutlined style={{ color: '#faad14' }} />
+                      )
+                    ) : (
+                      <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                    )}
+                    <Text>{`${wled[0]} wled`}</Text>
+                  </Space>
+                </Col>
+              ))}
+            </Row>
+          )}
+
+          <Space direction='vertical' style={{ width: '100%' }}>
+            <Button type='primary' href={`${webUrl}`} target='_blank' block>
+              Open
+            </Button>
+
+            <Row gutter={[8, 8]}>
+              <Col span={8}>
+                <Button
+                  danger
+                  href={`${webUrl}/${match?.eventKey}/referee/red`}
+                  disabled={match === undefined}
+                  target='_blank'
+                  block
+                >
+                  Red Referee
+                </Button>
+              </Col>
+              <Col span={8}>
+                <Button
+                  type='primary'
+                  href={`${webUrl}/${match?.eventKey}/referee/head`}
+                  disabled={match === undefined}
+                  target='_blank'
+                  block
+                >
+                  Head Referee
+                </Button>
+              </Col>
+              <Col span={8}>
+                <Button
+                  href={`${webUrl}/${match?.eventKey}/referee/blue`}
+                  disabled={match === undefined}
+                  target='_blank'
+                  block
+                  style={{
+                    backgroundColor: '#1890ff',
+                    borderColor: '#1890ff',
+                    color: 'white'
+                  }}
+                >
+                  Blue Referee
+                </Button>
+              </Col>
+            </Row>
+          </Space>
+        </Space>
+      </Modal>
     </>
   );
 };
@@ -351,10 +379,11 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, teams, expanded }) => {
     ...p,
     team: teams?.find((t) => t.teamKey === p.teamKey)
   }));
+
   return (
-    <Grid container>
-      <Grid item xs={4}>
-        <Typography align='left' className='red'>
+    <Row gutter={[8, 8]}>
+      <Col span={8}>
+        <Text className='red' style={{ color: '#ff4d4f' }}>
           {participants ? (
             <>
               <span
@@ -367,11 +396,11 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, teams, expanded }) => {
           ) : (
             '---'
           )}
-        </Typography>
-      </Grid>
-      <Grid item xs={4} />
-      <Grid item xs={4}>
-        <Typography align='right' className='blue'>
+        </Text>
+      </Col>
+      <Col span={8} />
+      <Col span={8} style={{ textAlign: 'right' }}>
+        <Text className='blue' style={{ color: '#1890ff' }}>
           {participants ? (
             <>
               {expanded
@@ -384,11 +413,11 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, teams, expanded }) => {
           ) : (
             '---'
           )}
-        </Typography>
-      </Grid>
+        </Text>
+      </Col>
 
-      <Grid item xs={4}>
-        <Typography align='left' className='red'>
+      <Col span={8}>
+        <Text className='red' style={{ color: '#ff4d4f' }}>
           {participants ? (
             <>
               <span
@@ -401,13 +430,13 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, teams, expanded }) => {
           ) : (
             '---'
           )}
-        </Typography>
-      </Grid>
-      <Grid item xs={4}>
-        <Typography align='center'>vs.</Typography>
-      </Grid>
-      <Grid item xs={4}>
-        <Typography align='right' className='blue'>
+        </Text>
+      </Col>
+      <Col span={8} style={{ textAlign: 'center' }}>
+        <Text>vs.</Text>
+      </Col>
+      <Col span={8} style={{ textAlign: 'right' }}>
+        <Text className='blue' style={{ color: '#1890ff' }}>
           {participants ? (
             <>
               {expanded
@@ -420,11 +449,11 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, teams, expanded }) => {
           ) : (
             '---'
           )}
-        </Typography>
-      </Grid>
+        </Text>
+      </Col>
 
-      <Grid item xs={4}>
-        <Typography align='left' className='red'>
+      <Col span={8}>
+        <Text className='red' style={{ color: '#ff4d4f' }}>
           {participants ? (
             <>
               <span
@@ -437,11 +466,11 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, teams, expanded }) => {
           ) : (
             '---'
           )}
-        </Typography>
-      </Grid>
-      <Grid item xs={4} />
-      <Grid item xs={4}>
-        <Typography align='right' className='blue'>
+        </Text>
+      </Col>
+      <Col span={8} />
+      <Col span={8} style={{ textAlign: 'right' }}>
+        <Text className='blue' style={{ color: '#1890ff' }}>
           {participants ? (
             <>
               {expanded
@@ -454,70 +483,149 @@ const MatchDetails: FC<MatchDetailsProps> = ({ match, teams, expanded }) => {
           ) : (
             '---'
           )}
-        </Typography>
-      </Grid>
+        </Text>
+      </Col>
 
-      <Grid item xs={4}>
-        <Typography align='center' className='red'>
+      <Col span={8} style={{ textAlign: 'center' }}>
+        <Text
+          strong
+          className='red'
+          style={{ color: '#ff4d4f', fontSize: '16px' }}
+        >
           {match ? match.redScore : '--'}
-        </Typography>
-      </Grid>
-      <Grid item xs={4} />
-      <Grid item xs={4}>
-        <Typography align='center' className='blue'>
+        </Text>
+      </Col>
+      <Col span={8} />
+      <Col span={8} style={{ textAlign: 'center' }}>
+        <Text
+          strong
+          className='blue'
+          style={{ color: '#1890ff', fontSize: '16px' }}
+        >
           {match ? match.blueScore : '--'}
-        </Typography>
-      </Grid>
-    </Grid>
+        </Text>
+      </Col>
+    </Row>
   );
 };
 
 export const EventMonitor: FC = () => {
-  const { data: teams } = useTeamsForEvent('FGC_2024-FGC-CMP');
+  const { state } = useEventState({ teams: true });
+  const { teams } = state.remote;
+
+  const [monitors, setMonitors] = useState<Monitor[]>([]);
+  const [inputValue, setInputValue] = useState('');
+
+  // Load monitors from localStorage on component mount
+  useEffect(() => {
+    const savedMonitors = localStorage.getItem('event-monitors');
+    if (savedMonitors) {
+      try {
+        const parsedMonitors = JSON.parse(savedMonitors);
+        setMonitors(parsedMonitors);
+      } catch (error) {
+        console.error('Error parsing monitors from localStorage:', error);
+        // Initialize with default monitors if parsing fails
+        initializeDefaultMonitors();
+      }
+    } else {
+      // Initialize with default monitors if none exist
+      initializeDefaultMonitors();
+    }
+  }, []);
+
+  const initializeDefaultMonitors = () => {
+    const defaultMonitors: Monitor[] = [
+      { field: 5, address: '192.168.80.151', realtimePort: 8081 },
+      { field: 4, address: '192.168.80.141', realtimePort: 8081 },
+      { field: 3, address: '192.168.80.131', realtimePort: 8081 },
+      { field: 2, address: '192.168.80.121', realtimePort: 8081 },
+      { field: 1, address: '192.168.80.111', realtimePort: 8081 }
+    ];
+    setMonitors(defaultMonitors);
+    localStorage.setItem('event-monitors', JSON.stringify(defaultMonitors));
+  };
+
+  // Save monitors to localStorage whenever monitors array changes
+  useEffect(() => {
+    if (monitors.length > 0) {
+      localStorage.setItem('event-monitors', JSON.stringify(monitors));
+    }
+  }, [monitors]);
+
+  const handleAddMonitor = () => {
+    const trimmedValue = inputValue.trim();
+    if (!trimmedValue) return;
+
+    // Generate next field number
+    const nextField =
+      monitors.length > 0 ? Math.max(...monitors.map((m) => m.field)) + 1 : 1;
+
+    const newMonitor: Monitor = {
+      field: nextField,
+      address: trimmedValue,
+      realtimePort: 8081 // Default port
+    };
+
+    setMonitors((prev) => [...prev, newMonitor]);
+    setInputValue('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleAddMonitor();
+    }
+  };
+
+  const handleRemoveMonitor = (address: string, field: number) => {
+    setMonitors((prev) =>
+      prev.filter(
+        (monitor) => !(monitor.address === address && monitor.field === field)
+      )
+    );
+  };
+
   return (
     <DefaultLayout title='Event Monitor'>
-      <Grid container spacing={3} columns={10}>
-        <Grid item md={2} xs={10}>
-          <MonitorCard
-            field={5}
-            address='192.168.80.151'
-            realtimePort={8081}
-            teams={teams}
-          />
-        </Grid>
-        <Grid item md={2} xs={10}>
-          <MonitorCard
-            field={4}
-            address='192.168.80.141'
-            realtimePort={8081}
-            teams={teams}
-          />
-        </Grid>
-        <Grid item md={2} xs={10}>
-          <MonitorCard
-            field={3}
-            address='192.168.80.131'
-            realtimePort={8081}
-            teams={teams}
-          />
-        </Grid>
-        <Grid item md={2} xs={10}>
-          <MonitorCard
-            field={2}
-            address='192.168.80.121'
-            realtimePort={8081}
-            teams={teams}
-          />
-        </Grid>
-        <Grid item md={2} xs={10}>
-          <MonitorCard
-            field={1}
-            address='192.168.80.111'
-            realtimePort={8081}
-            teams={teams}
-          />
-        </Grid>
-      </Grid>
+      <Space direction='vertical' style={{ width: '100%', marginBottom: 24 }}>
+        <Card title='Add Monitor' size='small'>
+          <Space.Compact style={{ width: '100%' }}>
+            <Input
+              placeholder='Enter IP address (e.g., 192.168.80.111)'
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+            />
+            <Button
+              type='primary'
+              icon={<PlusOutlined />}
+              onClick={handleAddMonitor}
+            >
+              Add
+            </Button>
+          </Space.Compact>
+        </Card>
+
+        <Text type='secondary'>
+          Current monitors: {monitors.map((m) => m.address).join(', ')}
+        </Text>
+      </Space>
+
+      <Row gutter={[24, 24]}>
+        {monitors.map((monitor) => (
+          <Col key={`${monitor.address}-${monitor.field}`} md={4} xs={24}>
+            <MonitorCard
+              field={monitor.field}
+              address={monitor.address}
+              realtimePort={monitor.realtimePort}
+              teams={teams}
+              onRemove={() =>
+                handleRemoveMonitor(monitor.address, monitor.field)
+              }
+            />
+          </Col>
+        ))}
+      </Row>
     </DefaultLayout>
   );
 };
