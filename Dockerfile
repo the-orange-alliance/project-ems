@@ -1,43 +1,49 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
-WORKDIR /
-COPY /back-end /back-end
-COPY /front-end /front-end
-COPY /lib /lib
-COPY /scripts /scripts
+# Install dependencies needed for some npm packages
+RUN apk add --no-cache python3 make g++
 
-# Install @toa-lib/models
-WORKDIR /lib/models
-RUN npm install
-RUN npm run build
-RUN npm link
+# Set working directory
+WORKDIR /app
 
-# Install @toa-lib/client
-WORKDIR /lib/client
-RUN npm install
-RUN npm link @toa-lib/models
-RUN npm run build
+# Copy package files first for better layer caching
+COPY package*.json ./
+COPY turbo.json ./
 
-# Install @toa-lib/server
-WORKDIR /lib/server
-RUN npm install
-RUN npm link @toa-lib/models
-RUN npm run build
+# Copy workspace package.json files for dependency resolution
+COPY libs/models/package*.json ./libs/models/
+COPY libs/client/package*.json ./libs/client/
+COPY libs/server/package*.json ./libs/server/
+COPY apps/services/api/package*.json ./apps/services/api/
+COPY apps/services/api-amplify/package*.json ./apps/services/api-amplify/
+COPY apps/services/frc-fms/package*.json ./apps/services/frc-fms/
+COPY apps/services/realtime/package*.json ./apps/services/realtime/
+COPY apps/web/package*.json ./apps/web/
 
-# Install @toa-lib/models
-WORKDIR /back-end/api
-RUN npm install
+# Install dependencies using npm workspaces
+RUN npm ci
 
-WORKDIR /back-end/realtime
-RUN npm install
+# Copy source code
+COPY libs/ ./libs/
+COPY apps/ ./apps/
 
-WORKDIR /front-end
-RUN npm install
+# Build using turbo following the dependency order from turbo.json
+# First build libraries in the correct order (models -> client & server)
+RUN npm run build:libs
 
+# Then build services that depend on libraries following turbo.json priorities
+RUN npm run build --workspace=api
+RUN npm run build --workspace=realtime
+# RUN npm run build --workspace=ems-frc-fms # not needed usually
+
+# Expose ports for development
+# 5173: Vite dev server (web app)
+# 8080: API service
+# 8081: Realtime service
 EXPOSE 5173/tcp
 EXPOSE 8080/tcp
 EXPOSE 8081/tcp
 
-# Run
-WORKDIR /
-RUN source /scripts/run.sh
+# Run the development command as defined in package.json
+# This runs: turbo run dev api#start realtime#start
+CMD ["npm", "run", "dev"]
