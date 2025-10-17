@@ -1,4 +1,4 @@
-export enum FGC25SocketEvents {
+export enum SocketEvents {
     EcosystemUpdate = "fcs:fgc25:ecosystemUpdate",
     ForceEcosystemUpdate = "fcs:fgc25:forceEcosystemUpdate",
 }
@@ -9,7 +9,7 @@ export enum Ecosystem {
     BlueSide = 2,
 }
 
-export interface FGC25EcosystemUpdate {
+export interface EcosystemUpdate {
     ecosystem: Ecosystem;
     position: 0 | 1 | 2 | 3;
 }

@@ -16,12 +16,12 @@ import {
   BonusPeriodSettings,
   Displays,
   MatchMode,
+  EcoEquilibriumFCS,
 } from "@toa-lib/models";
 import { EventEmitter } from "node:events";
 import { Server, Socket } from "socket.io";
 import logger from "../util/Logger.js";
 import Room from "./Room.js";
-import { FGC25EcosystemUpdate, FGC25SocketEvents } from "../../../../../libs/models/src/fcs/FGC25_EcoEquilibrium.js";
 
 export default class Match extends Room {
   private key: MatchKey | null;
@@ -29,7 +29,10 @@ export default class Match extends Room {
   private timer: MatchTimer;
   private state: MatchState;
   private displayID: number;
-  private bonuses: Map<BonusPeriodConfig, { matchAtStartState: MatchObj<any>, timeout: any }> = new Map();
+  private bonuses: Map<
+    BonusPeriodConfig,
+    { matchAtStartState: MatchObj<any>; timeout: any }
+  > = new Map();
   public readonly localEmitter: EventEmitter;
 
   public constructor(server: Server) {
@@ -45,11 +48,11 @@ export default class Match extends Room {
     // Needed for FCS room to send events here
     this.localEmitter.on(
       MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
-      this.onMatchUpdateDetailsItem
+      this.onMatchUpdateDetailsItem,
     );
     this.localEmitter.on(
       MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
-      this.onMatchAdjustNumber
+      this.onMatchAdjustNumber,
     );
   }
 
@@ -148,7 +151,9 @@ export default class Match extends Room {
       this.displayID = 2;
 
       // Get season key frome event key
-      const seasonKey = getSeasonKeyFromEventKey((this.key ?? { eventKey: '' }).eventKey);
+      const seasonKey = getSeasonKeyFromEventKey(
+        (this.key ?? { eventKey: "" }).eventKey,
+      );
 
       // Set match config based on season key
       const matchConfig = seasonKey.includes("frc")
@@ -159,13 +164,13 @@ export default class Match extends Room {
       // Start timer
       this.timer.start();
       logger.info(
-        `match started: ${this.key?.eventKey}-${this.key?.tournamentKey}-${this.key?.id}`
+        `match started: ${this.key?.eventKey}-${this.key?.tournamentKey}-${this.key?.id}`,
       );
     });
     socket.on(MatchSocketEvent.DISPLAY, (id: number) => {
       this.displayID = id;
       if (id === Displays.MATCH_RESULTS) {
-        this.state = MatchState.RESULTS_POSTED
+        this.state = MatchState.RESULTS_POSTED;
       }
       this.emitToAll(MatchSocketEvent.DISPLAY, id);
     });
@@ -181,30 +186,30 @@ export default class Match extends Room {
     });
     socket.on(
       MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
-      this.onMatchUpdateDetailsItem
+      this.onMatchUpdateDetailsItem,
     );
     socket.on(
       MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
-      this.onMatchAdjustNumber
+      this.onMatchAdjustNumber,
     );
     socket.on(
       MatchSocketEvent.UPDATE_CARD_STATUS,
       (teamCard: CardStatusUpdate) => {
         const participant = this.match?.participants?.find(
-          (participant) => participant.teamKey == teamCard.teamKey
+          (participant) => participant.teamKey == teamCard.teamKey,
         );
         if (participant) {
           participant.cardStatus = teamCard.cardStatus;
           this.handlePartiallyUpdatedMatch(this.match!);
         }
-      }
+      },
     );
     socket.on(MatchSocketEvent.COMMIT, (key: MatchKey) => {
       this.emitToAll(MatchSocketEvent.COMMIT, key);
       this.match = null;
       this.state = MatchState.RESULTS_COMMITTED;
       logger.info(
-        `committing scores for ${key.eventKey}-${key.tournamentKey}-${key.id}`
+        `committing scores for ${key.eventKey}-${key.tournamentKey}-${key.id}`,
       );
     });
     socket.on(MatchSocketEvent.TIMER, () => {
@@ -212,7 +217,7 @@ export default class Match extends Room {
         modeTimeLeft: this.timer.modeTimeLeft,
         mode: this.timer.mode,
         inProgress: this.timer.inProgress(),
-        timeLeft: this.timer.timeLeft
+        timeLeft: this.timer.timeLeft,
       });
     });
 
@@ -226,26 +231,39 @@ export default class Match extends Room {
       const bonusTimeout = setTimeout(() => {
         this.emitToAll(MatchSocketEvent.BONUS_END, bonusType);
       }, BonusPeriodSettings[bonusType].duration * 1000);
-      this.bonuses.set(bonusType, { timeout: bonusTimeout, matchAtStartState: { ...this.match!, details: { ...this.match!.details! } } });
+      this.bonuses.set(bonusType, {
+        timeout: bonusTimeout,
+        matchAtStartState: {
+          ...this.match!,
+          details: { ...this.match!.details! },
+        },
+      });
 
       this.broadcast().emit(MatchSocketEvent.BONUS_START, bonusType);
     });
 
     // Season-Specific
-    socket.on(FGC25SocketEvents.ForceEcosystemUpdate, (data: FGC25EcosystemUpdate): void => {
-      logger.info('fcs:forceEcosystemUpdate', data);
-      this.server.to("fcs").emit(FGC25SocketEvents.ForceEcosystemUpdate, data);
-    });
+    socket.on(
+      EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate,
+      (data: EcoEquilibriumFCS.EcosystemUpdate): void => {
+        logger.info("fcs:forceEcosystemUpdate", data);
+        this.server
+          .to("fcs")
+          .emit(EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate, data);
+      },
+    );
   }
 
   onMatchUpdateDetailsItem = (itemUpdate: ItemUpdate) => {
     const matchDetails = this.match?.details;
     if (matchDetails) {
-      const keys = itemUpdate.key.split('.');
-      keys.slice(0, -1).reduce((obj, key) => obj[key], matchDetails)[keys[keys.length - 1]] = itemUpdate.value;
+      const keys = itemUpdate.key.split(".");
+      keys.slice(0, -1).reduce((obj, key) => obj[key], matchDetails)[
+        keys[keys.length - 1]
+      ] = itemUpdate.value;
       this.handlePartiallyUpdatedMatch(this.match!);
     }
-  }
+  };
 
   onMatchAdjustNumber = (numberAdjustment: NumberAdjustment) => {
     const matchDetails = this.match?.details;
@@ -256,19 +274,20 @@ export default class Match extends Room {
       } catch (e) {
         // Don't take down the server if a client tries to adjust a non-numeric value
         logger.error(
-          `Failed to adjust match details field ${numberAdjustment.key} (${matchDetails[numberAdjustment.key]
-          })`
+          `Failed to adjust match details field ${numberAdjustment.key} (${
+            matchDetails[numberAdjustment.key]
+          })`,
         );
       }
     } else {
       logger.error(
-        `Failed to adjust match details field ${numberAdjustment.key} - match details not found`
+        `Failed to adjust match details field ${numberAdjustment.key} - match details not found`,
       );
     }
-  }
+  };
 
   private handlePartiallyUpdatedMatch(
-    partiallyUpdatedMatch: MatchObj<any>
+    partiallyUpdatedMatch: MatchObj<any>,
   ): void {
     this.match = { ...partiallyUpdatedMatch };
     const seasonKey = getSeasonKeyFromEventKey(partiallyUpdatedMatch.eventKey);
@@ -291,7 +310,12 @@ export default class Match extends Room {
 
     // Handle bonus shenanigans (Must happen AFTER the match data is updates, so that clients can see the updated match data when the bonus is ended)
     for (const [bonusType, bonus] of this.bonuses) {
-      if (BonusPeriodSettings[bonusType].autoEnd(bonus.matchAtStartState, this.match)) {
+      if (
+        BonusPeriodSettings[bonusType].autoEnd(
+          bonus.matchAtStartState,
+          this.match,
+        )
+      ) {
         clearTimeout(bonus.timeout);
         this.bonuses.delete(bonusType);
         this.emitToAll(MatchSocketEvent.BONUS_END, bonusType);
