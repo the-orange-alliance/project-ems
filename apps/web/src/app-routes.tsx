@@ -140,9 +140,11 @@ const AudienceDisplay = lazy(() =>
 );
 
 // Misc routes
-// const EventMonitor = lazy(() =>
-//   import('./apps/event-monitor').then((m) => ({ default: m.EventMonitor }))
-// );
+const EventMonitor = lazy(() =>
+  import('./apps/event-monitor/index.js').then((m) => ({
+    default: m.EventMonitor
+  }))
+);
 
 // Unised Routes
 // const AccountManager = lazy(() => import('./apps/AccountManager'));
@@ -365,6 +367,12 @@ const AppRoutes: AppRoute[] = [
     hidden: false,
     hideAppbar: true,
     image: THE_MAN
+  },
+  {
+    name: 'Jan App',
+    path: '/event-monitor',
+    group: 0,
+    element: EventMonitor
   }
   // {
   //   name: 'Streaming',
@@ -378,12 +386,6 @@ const AppRoutes: AppRoute[] = [
   //   group: 0,
   //   element: AudienceDisplayManager
   // },
-  // {
-  //   name: 'Jan App',
-  //   path: '/event-monitor',
-  //   group: 0,
-  //   element: EventMonitor
-  // }
   // {
   //   name: 'Account Manager',
   //   path: '/accounts',
