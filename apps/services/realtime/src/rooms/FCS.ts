@@ -32,9 +32,9 @@ export default class FCS extends Room {
       this.broadcast().emit('fcs:awardsMode');
     });
 
-    socket.on('fcs:settings', (): void => {
-      logger.info('fcs:settings');
-      // TODO
+    socket.on('fcs:settings', ({field, data}: {field: number, data: any}): void => {
+      logger.info('fcs:settings', field, data);
+      socket.to('fcs').emit('fcs:settings', {field, data});
     });
 
     socket.on('fcs:clearStatus', (): void => {
