@@ -10,7 +10,7 @@ async function fcsController(fastify: FastifyInstance) {
   // Get FCS settings for a specific field
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/settings/:field',
-    { schema: { params: z.object({ field: z.string(), data: z.any() }), response: errorableSchema(z.unknown()), tags: ['FCS'] } },
+    { schema: { params: z.object({ field: z.string() }), response: errorableSchema(z.unknown()), tags: ['FCS'] } },
     async (request, reply) => {
       try {
         const { field } = request.params;
