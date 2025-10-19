@@ -32,7 +32,7 @@ async function fcsController(fastify: FastifyInstance) {
   // Upsert FCS settings for a specific field
   fastify.withTypeProvider<ZodTypeProvider>().put(
     '/settings/:field',
-    { schema: { params: z.object({ field: z.string(), data: z.any() }), body: z.unknown(), response: errorableSchema(EmptySchema), tags: ['FCS'] } },
+    { schema: { params: z.object({ field: z.string() }), body: z.unknown(), response: errorableSchema(EmptySchema), tags: ['FCS'] } },
     async (request, reply) => {
       try {
         const { field } = request.params;
