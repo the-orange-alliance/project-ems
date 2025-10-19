@@ -1,5 +1,4 @@
 import { FC } from 'react';
-import { DisplayModeProps } from 'src/apps/audience-display/displays/index.js';
 import { useEvent } from 'src/api/use-event-data.js';
 import {
   AudienceScreens,
@@ -24,6 +23,11 @@ import { useEventState } from 'src/stores/hooks/use-event-state.js';
 /**
  * Classic audience display that handles all scenarios.
  */
+
+export interface DisplayModeProps {
+  id: Displays;
+  eventKey: string;
+}
 export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   const match = useAtomValue(matchAtom);
   // const matchResultsMatch = useAtomValue(matchResultsMatchAtom);
@@ -56,6 +60,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   if (!match || !event || !ranks || !displays) return null;
 
   // Handle "pinning" screens
+  console.log('PIN:', pin);
   if (pin && typeof pin === 'string') {
     switch (pin) {
       case AudienceScreens.PREVIEW:
@@ -96,6 +101,28 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
             ranks={ranks}
             teams={teams}
           />
+        );
+      case AudienceScreens.MATCH_MIN:
+        return displays.matchPlayMin ? (
+          <displays.matchPlayMin
+            event={event}
+            match={match}
+            ranks={ranks}
+            teams={teams}
+          />
+        ) : (
+          <>Not Implemented</>
+        );
+      case AudienceScreens.MATCH_PRODUCTION:
+        return displays.matchProduction ? (
+          <displays.matchProduction
+            event={event}
+            match={match}
+            ranks={ranks}
+            teams={teams}
+          />
+        ) : (
+          <>Not Implemented</>
         );
       case AudienceScreens.RESULTS_STREAM:
         return (
@@ -207,6 +234,26 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
               ranks={ranks}
               teams={teams}
             />
+          </SlideInBottom>
+        </AbsolouteLocator>
+      )}
+      {layout[1] === LayoutMode.MIN && (
+        <AbsolouteLocator bottom={0} left={0}>
+          <SlideInBottom
+            in={id === Displays.MATCH_START && !afterMatchBeforeScore}
+            duration={1.25}
+            inDelay={0.75}
+          >
+            {displays.matchPlayMin ? (
+              <displays.matchPlayMin
+                event={event}
+                match={match}
+                ranks={ranks}
+                teams={teams}
+              />
+            ) : (
+              <>Not Implemented</>
+            )}
           </SlideInBottom>
         </AbsolouteLocator>
       )}
