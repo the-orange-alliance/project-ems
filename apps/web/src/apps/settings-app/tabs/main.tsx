@@ -41,7 +41,7 @@ const MainSettingsTab: FC = () => {
       <DropdownRow
         title='Field Control'
         value={fieldControl.map((f) => f)}
-        options={tournament?.fields?.map((f) => ({label: f, value: f})) ?? []}
+        options={tournament?.fields?.map((f) => ({ label: f, value: f })) ?? []}
         onChange={updateFieldControl}
         multiple
       />
