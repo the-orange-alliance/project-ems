@@ -106,6 +106,10 @@ const WebhooksTab = () => {
       )
     },
     {
+      title: 'Error Count',
+      dataIndex: 'errorCount'
+    },
+    {
       title: 'Actions',
       render: (record: Webhook) => (
         <Button danger onClick={() => handleDelete(record.id!)}>
