@@ -2,6 +2,8 @@ import { Match, WebhookDb, WebhookEvent } from '@toa-lib/models';
 import fetch from 'node-fetch';
 import { getDB } from '../db/EventDatabase.js';
 
+const AbortController = globalThis.AbortController;
+
 export const EmitWebhooks = async (webhookEvent: WebhookEvent, match: Match<any>) => {
   const db = await getDB('global');
   const webhooks = (await db.selectAllWhere(
@@ -10,14 +12,20 @@ export const EmitWebhooks = async (webhookEvent: WebhookEvent, match: Match<any>
   )) as WebhookDb[];
   for (const webhook of webhooks) {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => {
+        controller.abort();
+      }, 2500); // 2.5 second timeout
       await fetch(webhook.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           event: webhookEvent,
           payload: match
-        })
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timeout);
     } catch (e) {
       console.error(`Failed to send prestart webhook to ${webhook.url}:`, e);
       const errorMessage = e instanceof Error ? e.message : 'Unknown error';
