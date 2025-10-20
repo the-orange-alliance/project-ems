@@ -45,7 +45,8 @@ export const fgcDefault: SeasonDisplay = {
   matchPlayStream: FGCDefault.MatchPlayStream,
   matchPlayMin: FGCDefault.MatchPlayMin,
   matchResults: FGCModernDefault.MatchResults,
-  matchResultsStream: FGCModernDefault.MatchResultsStream
+  matchResultsStream: FGCModernDefault.MatchResultsStream,
+  matchProduction: FGCDefault.MatchProduction
 };
 
 // Map that contains all the displays for their seasons.

@@ -107,7 +107,7 @@ const RightText = styled.div`
   margin-left: auto;
 `;
 
-export const MatchPlayMin: FC<DisplayProps> = ({ event, match, teams }) => {
+export const MatchPlayMin: FC<DisplayProps> = ({ event, match }) => {
   const matchParts = match.name.split(' ');
   const matchNumber = matchParts[matchParts.length - 1];
   const field = match.fieldNumber;

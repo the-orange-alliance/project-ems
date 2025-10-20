@@ -5,6 +5,7 @@ import { MatchPlayStream } from './match-play-stream.js';
 import { MatchResults } from './match-results.js';
 import { MatchResultsStream } from './match-results-stream.js';
 import { MatchPlayMin } from './match-play-min.js';
+import { MatchProduction } from './match-production-view.js';
 
 export {
   MatchPreview,
@@ -13,5 +14,6 @@ export {
   MatchPlayStream,
   MatchPlayMin,
   MatchResults,
-  MatchResultsStream
+  MatchResultsStream,
+  MatchProduction
 };

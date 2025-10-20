@@ -31,3 +31,14 @@ Build a custom flow.  `xyz` represents a 3-character string, where each characte
 #### Ex.
 - `?layout=fff` will show the "Full" screen display for preview, match, and results
 - `?layout=sos` will use the stream overlay for preview, show nothing for match, and stream overlay for results
+
+
+#### Other Notes:
+The "match-production" screen can be customized by setting custom CSS.  To change the styleing of the boxes... use a styling like below:
+```css
+.production-score-container {
+    font-size: 100px !important;
+    color: white !important;
+}
+```
+
