@@ -46,7 +46,11 @@ try {
 }
 
 // Create Fastify instance
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({
+  logger: env.get().NODE_ENV === 'production'
+    ? { level: 'warn' }
+    : { level: 'info' }
+});
 
 // Register Error handler for all routes
 fastify.setErrorHandler(handleErrors);
