@@ -4,7 +4,8 @@ import {
   ScheduleItem,
   Team,
   Tournament,
-  Match
+  Match,
+  Ranking
 } from '@toa-lib/models';
 import { atom } from 'jotai';
 
@@ -77,6 +78,7 @@ export const tournamentsAtom = atom<Tournament[]>([]);
 export const scheduleParamsAtom = atom<ScheduleParams[]>([]);
 export const scheduleItemsAtom = atom<ScheduleItem[]>([]);
 export const matchesAtom = atom<Match<any>[]>([]);
+export const matchOccurringRanksAtom = atom<Ranking[]>([]);
 
 /**
  * @section MODIFIED STATE - modified state for unsaved changes

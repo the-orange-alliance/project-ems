@@ -1,14 +1,19 @@
 import { Button } from 'antd';
 import { FC } from 'react';
 import { useMatchControl } from '../hooks/use-match-control.js';
-import { MatchState } from '@toa-lib/models';
+import { MatchState, WebhookEvent } from '@toa-lib/models';
 import { setDisplays } from 'src/api/use-socket.js';
+import { matchAtom } from 'src/stores/state/index.js';
+import { useAtomValue } from 'jotai';
+import { emitWebhook } from 'src/api/use-webhook-data.js';
 
 export const DisplaysButton: FC = () => {
   const { canSetDisplays, setState } = useMatchControl();
+  const match = useAtomValue(matchAtom);
   const updateDisplays = () => {
     setDisplays();
     setState(MatchState.AUDIENCE_READY);
+    emitWebhook(WebhookEvent.DISPLAYS_SET, match);
   };
   return (
     <Button

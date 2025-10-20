@@ -5,9 +5,13 @@ import {
   RESULT_BLUE_WIN,
   RESULT_NOT_PLAYED,
   RESULT_RED_WIN,
-  RESULT_TIE
+  RESULT_TIE,
+  WebhookEvent
 } from '@toa-lib/models';
-import { patchWholeMatch, useMatchesForTournament } from 'src/api/use-match-data.js';
+import {
+  patchWholeMatch,
+  useMatchesForTournament
+} from 'src/api/use-match-data.js';
 import {
   recalculatePlayoffsRankings,
   recalculateRankings
@@ -23,13 +27,15 @@ import { useCallback } from 'react';
 import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 import { useAtomCallback } from 'jotai/utils';
 import { matchStateAtom } from 'src/stores/state/match.js';
+import { emitWebhook } from 'src/api/use-webhook-data.js';
 
 export const useCommitScoresCallback = () => {
   const { canCommitScores, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
   const eventKey = useAtomValue(eventKeyAtom);
   const tournamentKey = useAtomValue(tournamentKeyAtom);
-  const {data: tournMatches, mutate: updateTournMatches} = useMatchesForTournament(eventKey, tournamentKey);
+  const { data: tournMatches, mutate: updateTournMatches } =
+    useMatchesForTournament(eventKey, tournamentKey);
 
   return useAtomCallback(
     useCallback(
@@ -83,14 +89,25 @@ export const useCommitScoresCallback = () => {
         set(matchAtom, pending);
 
         // Find match in matches array
-        const matchIdx = tournMatches?.findIndex((m) => m.id === id && m.tournamentKey === tournamentKey && m.eventKey === eventKey);
+        const matchIdx = tournMatches?.findIndex(
+          (m) =>
+            m.id === id &&
+            m.tournamentKey === tournamentKey &&
+            m.eventKey === eventKey
+        );
 
         // Update the match in the matches array if found
-        if (Array.isArray(tournMatches) && matchIdx !== undefined && matchIdx !== -1) {
-          const copy = [...tournMatches]
+        if (
+          Array.isArray(tournMatches) &&
+          matchIdx !== undefined &&
+          matchIdx !== -1
+        ) {
+          const copy = [...tournMatches];
           copy[matchIdx] = pending;
           updateTournMatches(copy);
         }
+
+        emitWebhook(WebhookEvent.COMMITTED, pending);
       },
       [canCommitScores, setState, eventKey, tournamentKey, tournMatches]
     )
@@ -101,12 +118,17 @@ export const useClearFieldCallback = () => {
   const { canResetField } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
   return useAtomCallback(
-    useCallback((get, set) => {
-      if (!canResetField) {
-        throw new Error('Attempted to clear field when not allowed.');
-      }
-      fieldControl?.clearField?.();
-      set(matchStateAtom, MatchState.RESULTS_READY);
-    }, [canResetField])
+    useCallback(
+      (get, set) => {
+        if (!canResetField) {
+          throw new Error('Attempted to clear field when not allowed.');
+        }
+        fieldControl?.clearField?.();
+        set(matchStateAtom, MatchState.RESULTS_READY);
+        const match = get(matchAtom); // Trigger matchAtom update
+        emitWebhook(WebhookEvent.ALL_CLEAR, match);
+      },
+      [canResetField]
+    )
   );
 };

@@ -15,3 +15,4 @@ export * from './Alliance.js';
 export * from './Tournament.js';
 export * from './BonusPeriod.js';
 export * from './Sync.js';
+export * from './Webhook.js';

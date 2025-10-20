@@ -18,6 +18,8 @@ export enum AudienceScreens {
   PREVIEW_STREAM = 'preview-stream',
   MATCH = 'match-full',
   MATCH_STREAM = 'match-stream',
+  MATCH_MIN = 'match-min',
+  MATCH_PRODUCTION = 'match-production',
   RESULTS = 'results-full',
   RESULTS_STREAM = 'results-stream',
   RANKINGS = 'rankings'
@@ -27,5 +29,6 @@ export enum LayoutMode {
   OFF = 'o',
   STREAM = 's',
   FULL = 'f',
-  RESULTS = 'r'
+  RESULTS = 'r',
+  MIN = 'm',
 }

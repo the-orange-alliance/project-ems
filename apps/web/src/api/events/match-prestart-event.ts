@@ -10,11 +10,12 @@ import {
   getDefaultMatchDetailsBySeasonKey
 } from '@toa-lib/models';
 import { useSetAtom } from 'jotai';
-import { matchAtom } from 'src/stores/state/event.js';
+import { matchAtom, matchOccurringRanksAtom } from 'src/stores/state/event.js';
 
 export const usePrestartEvent = () => {
-  const setMatch = useSetAtom(matchAtom)
-  
+  const setMatch = useSetAtom(matchAtom);
+  const setMatchRanks = useSetAtom(matchOccurringRanksAtom);
+
   return async (key: MatchKey) => {
     const { eventKey, id, tournamentKey } = key;
     const match: Match<MatchDetailBase> = await apiFetcher(
@@ -46,7 +47,6 @@ export const usePrestartEvent = () => {
       }
     }
     setMatch(match);
-    // TODO: revisit?????
-    // set(matchOccurringRanksAtom, rankings);
-  }
+    setMatchRanks(rankings);
+  };
 };

@@ -1,7 +1,19 @@
 export enum SocketEvents {
     EcosystemUpdate = "fcs:fgc25:ecosystemUpdate",
     ForceEcosystemUpdate = "fcs:fgc25:forceEcosystemUpdate",
+    AccelerationUpdate = "fcs:fgc25:accelerationUpdate",
+    BiodiversityDispensedUpdate = "fcs:fgc25:biodiversityDispensedUpdate",
 }
+
+export type AccelerationState = {
+    red: boolean,
+    blue: boolean,
+};
+
+export type BiodiversityDispensedState = {
+    red: number;
+    blue: number;
+};
 
 export enum Ecosystem {
     RedSide = 0,

@@ -6,9 +6,9 @@ import {
   Team
 } from '@toa-lib/models';
 import { FC, useMemo } from 'react';
-import { CountryFlag } from './country-flag';
-import { CardStatus } from './card-status';
-import { useAllianceMember } from 'src/api/use-alliance-data';
+import { CountryFlag } from './country-flag.js';
+import { CardStatus } from './card-status.js';
+import { useAllianceMember } from 'src/api/use-alliance-data.js';
 
 const Container = styled.div((props: { alliance: Alliance }) => ({
   backgroundColor: props.alliance === 'red' ? '#ce2000' : '#5c88ff',
