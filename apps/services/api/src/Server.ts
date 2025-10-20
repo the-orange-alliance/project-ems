@@ -31,6 +31,7 @@ import { initGlobal } from './db/EventDatabase.js';
 import { createJsonSchemaTransformObject, jsonSchemaTransform, serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import SchemaRef from './util/GlobalSchema.js';
 import { handleErrors, handleNotFound } from './middleware/ErrorHandler.js';
+import webhooksController from './controllers/Webhooks.js';
 
 // Setup our environment
 env.loadAndSetDefaults(process.env);
@@ -44,7 +45,7 @@ try {
 }
 
 // Create Fastify instance
-const fastify = Fastify({ logger: false });
+const fastify = Fastify({ logger: true });
 
 // Register Error handler for all routes
 fastify.setErrorHandler(handleErrors);
@@ -91,7 +92,8 @@ await fastify.register(fastifySwagger, {
       { name: 'Auth', description: 'Authentication and authorization endpoints' },
       { name: 'Admin', description: 'Admin related endpoints' },
       { name: 'Sockets', description: 'Socket client related endpoints' },
-      { name: 'FCS', description: 'FCS settings related endpoints' }
+      { name: 'FCS', description: 'FCS settings related endpoints' },
+      { name: 'Webhooks', description: 'Webhook related endpoints' }
     ]
   },
   transform: jsonSchemaTransform,
@@ -123,6 +125,7 @@ await fastify.register(socketClientsController, { prefix: '/socketClients' });
 await fastify.register(storageController, { prefix: '/storage' });
 await fastify.register(teamController, { prefix: '/teams' });
 await fastify.register(tournamentController, { prefix: '/tournament' });
+await fastify.register(webhooksController, { prefix: '/webhooks' });
 
 
 // Passport serialization (optional, for sessions)

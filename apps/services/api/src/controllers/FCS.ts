@@ -2,9 +2,9 @@ import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { getDB } from '../db/EventDatabase.js';
-import { EcoEquilibriumFCS, FGC25FCS } from '@toa-lib/models';
 import { errorableSchema, InternalServerError } from '../util/Errors.js';
 import { EmptySchema } from '../util/GlobalSchema.js';
+import { FGC25FCS } from '@toa-lib/models/fcs';
 
 async function fcsController(fastify: FastifyInstance) {
   // Get FCS settings for a specific field

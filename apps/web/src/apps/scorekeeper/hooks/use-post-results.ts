@@ -1,4 +1,4 @@
-import { MatchState, QUALIFICATION_LEVEL } from '@toa-lib/models';
+import { MatchState, QUALIFICATION_LEVEL, WebhookEvent } from '@toa-lib/models';
 import { useMatchControl } from './use-match-control.js';
 import { sendPostResults } from 'src/api/use-socket.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
@@ -22,6 +22,7 @@ import { useAtomCallback } from 'jotai/utils';
 import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 import { useActiveFieldNumbers } from 'src/components/sync-effects/sync-fields.js';
 import { matchStatusAtom } from 'src/stores/state/match.js';
+import { emitWebhook } from 'src/api/use-webhook-data.js';
 
 export const usePostResultsCallback = () => {
   const { canPostResults, setState } = useMatchControl();
@@ -88,11 +89,13 @@ export const usePostResultsCallback = () => {
             (m) => m.id === match.id && m.tournamentKey === match.tournamentKey
           );
           if (index >= 0) {
-            copy[index] = { ...copy[index], uploaded: successMatch && successRankings && successAlliances ? 1 : 0 };
+            copy[index] = {
+              ...copy[index],
+              uploaded:
+                successMatch && successRankings && successAlliances ? 1 : 0
+            };
             setMatches(copy);
           }
-          
-          
 
           // Find the next match that hasn't had results posted
           const nextMatch = matches
@@ -109,6 +112,7 @@ export const usePostResultsCallback = () => {
         sendPostResults();
         setState(MatchState.RESULTS_POSTED);
         setStatus('Ready for Prestart');
+        emitWebhook(WebhookEvent.SCORES_POSTED, match);
       },
       [canPostResults, setState, matches, eventKey, tournamentKey, tournament]
     )

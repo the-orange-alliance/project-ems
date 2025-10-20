@@ -2,7 +2,8 @@ import { useMatchControl } from './use-match-control.js';
 import {
   getDefaultMatchDetailsBySeasonKey,
   MatchSocketEvent,
-  MatchState
+  MatchState,
+  WebhookEvent
 } from '@toa-lib/models';
 import { patchMatch, patchMatchParticipants } from 'src/api/use-match-data.js';
 import { DateTime } from 'luxon';
@@ -13,6 +14,7 @@ import { useAtomCallback } from 'jotai/utils';
 import { useCallback } from 'react';
 import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 import { useAtomValue } from 'jotai';
+import { emitWebhook } from 'src/api/use-webhook-data.js';
 
 export const usePrestartCallback = () => {
   const { canPrestart, setState } = useMatchControl();
@@ -74,6 +76,7 @@ export const usePrestartCallback = () => {
         // Send prestart to server
         sendPrestart({ eventKey, tournamentKey, id });
         setState(MatchState.PRESTART_COMPLETE);
+        emitWebhook(WebhookEvent.PRESTARTED, match);
       },
       [canPrestart, setState, teams]
     )
