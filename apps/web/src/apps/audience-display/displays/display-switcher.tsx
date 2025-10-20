@@ -16,7 +16,7 @@ import {
 import AbsolouteLocator from 'src/components/util/absoloute-locator.js';
 import { useSearchParams } from 'react-router-dom';
 import { useAtomValue } from 'jotai';
-import { matchAtom } from 'src/stores/state/event.js';
+import { matchAtom, matchOccurringRanksAtom } from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 
@@ -31,7 +31,7 @@ export interface DisplayModeProps {
 export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   const match = useAtomValue(matchAtom);
   // const matchResultsMatch = useAtomValue(matchResultsMatchAtom);
-  const ranks: Ranking[] = []; // useAtomValue(matchOccurringRanksAtom);
+  const ranks = useAtomValue(matchOccurringRanksAtom);
   const matchResultsRanks: Ranking[] = []; // useAtomValue(matchResultsRanksAtom);
   const matchState = useAtomValue(matchStateAtom);
   const [searchParams] = useSearchParams();

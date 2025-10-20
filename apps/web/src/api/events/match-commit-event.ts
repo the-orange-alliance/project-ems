@@ -1,6 +1,7 @@
 import { apiFetcher } from '@toa-lib/client';
 import { MatchKey, rankingZod } from '@toa-lib/models';
 import { useAtomCallback } from 'jotai/utils';
+import { matchOccurringRanksAtom } from 'src/stores/state/event.js';
 
 export const useCommitEvent = () => {
   return useAtomCallback(
@@ -13,8 +14,7 @@ export const useCommitEvent = () => {
           rankingZod.array().parse
         );
 
-        // TODO::: REvisit?????
-        // set(matchOccurringRanksAtom, rankings);
+        set(matchOccurringRanksAtom, rankings);
       }
   );
 };

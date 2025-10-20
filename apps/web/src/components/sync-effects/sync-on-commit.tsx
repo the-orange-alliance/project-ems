@@ -3,6 +3,7 @@ import { MatchKey, MatchSocketEvent, rankingZod } from '@toa-lib/models';
 import { useAtomCallback } from 'jotai/utils';
 import { FC, useEffect } from 'react';
 import { useSocket } from 'src/api/use-socket.js';
+import { matchOccurringRanksAtom } from 'src/stores/state/event.js';
 
 export const SyncOnCommit: FC = () => {
   const [socket, connected] = useSocket();
@@ -28,8 +29,7 @@ export const SyncOnCommit: FC = () => {
           undefined,
           rankingZod.array().parse
         );
-        // TODO:: Revisit???????
-        // set(matchOccurringRanksAtom, rankings);
+        set(matchOccurringRanksAtom, rankings);
       }
   );
 

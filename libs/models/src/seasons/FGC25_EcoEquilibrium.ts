@@ -1,7 +1,7 @@
 import z from 'zod';
 import { AllianceMember } from '../base/Alliance.js';
-import { Match, MatchDetailBase, matchKeyZod } from '../base/Match.js';
-import { Ranking } from '../base/Ranking.js';
+import { Match, matchKeyZod } from '../base/Match.js';
+import { Ranking, rankingZod } from '../base/Ranking.js';
 import { isNonNullObject, isNumber } from '../types.js';
 import { Season, SeasonFunctions } from './index.js';
 
@@ -13,9 +13,13 @@ export enum CardStatus {
 }
 
 // Protection Multiplier is sum of robot park states + 1
-const calcProtectionMultiplier = (robot1: MatchEndRobotState, robot2: MatchEndRobotState, robot3: MatchEndRobotState): number => {
+const calcProtectionMultiplier = (
+  robot1: MatchEndRobotState,
+  robot2: MatchEndRobotState,
+  robot3: MatchEndRobotState
+): number => {
   return [robot1, robot2, robot3].reduce((count, state) => count + state, 1);
-}
+};
 
 /**
  * Score Table`
@@ -24,8 +28,18 @@ const calcProtectionMultiplier = (robot1: MatchEndRobotState, robot2: MatchEndRo
 export const ScoreTable = {
   ScoredBarrier: 1,
   BiodiversityUnit: 1,
-  ProtectionMultiplierRed: (details: MatchDetails) => calcProtectionMultiplier(details.redRobotOneParking, details.redRobotTwoParking, details.redRobotThreeParking),
-  ProtectionMultiplierBlue: (details: MatchDetails) => calcProtectionMultiplier(details.blueRobotOneParking, details.blueRobotTwoParking, details.blueRobotThreeParking),
+  ProtectionMultiplierRed: (details: MatchDetails) =>
+    calcProtectionMultiplier(
+      details.redRobotOneParking,
+      details.redRobotTwoParking,
+      details.redRobotThreeParking
+    ),
+  ProtectionMultiplierBlue: (details: MatchDetails) =>
+    calcProtectionMultiplier(
+      details.blueRobotOneParking,
+      details.blueRobotTwoParking,
+      details.blueRobotThreeParking
+    ),
   Coopertition: (details: MatchDetails) => {
     const numParking = [
       details.redRobotOneParking,
@@ -34,12 +48,12 @@ export const ScoreTable = {
       details.blueRobotOneParking,
       details.blueRobotTwoParking,
       details.blueRobotThreeParking
-    ].reduce((count, state) => count + ((state > 0) ? 1 : 0), 0);
+    ].reduce((count, state) => count + (state > 0 ? 1 : 0), 0);
 
-    return (numParking < 5 ? 0 : numParking >= 6 ? 30 : 15);
+    return numParking < 5 ? 0 : numParking >= 6 ? 30 : 15;
   },
   MajorFoul: 0.1, // Needs to be applied to other alliance to be calculated properly
-  MinorFoul: 0.05, // Needs to be applied to other alliance to be calculated properly
+  MinorFoul: 0.05 // Needs to be applied to other alliance to be calculated properly
 };
 
 /**
@@ -68,7 +82,7 @@ export enum MatchEndRobotState {
   Level1 = 0.125,
   Level2 = 0.25,
   Level3 = 0.375,
-  Level4 = 0.5,
+  Level4 = 0.5
 }
 
 export enum DistributionFactor {
@@ -88,28 +102,128 @@ export const FGC25MatchDetailsZod = matchKeyZod.extend({
   barriersInRedMitigator: z.number().int().min(0).default(0),
   barriersInBlueMitigator: z.number().int().min(0).default(0),
   // Biodiversity Units
-  biodiversityUnitsRedSideEcosystem: z.number().int().min(0).default(0).describe('Biodiversity units in the red side ecosystem.  These are GLOBAL ALLIANCE scoring units, not alliance specific.  Color is used to identify the side of the field.  This value is manually entered after the match is over. (Not used for live-updates in the match)'),
-  biodiversityUnitsCenterEcosystem: z.number().int().min(0).default(0).describe('Biodiversity units in the center ecosystem.  These are GLOBAL ALLIANCE scoring units, not alliance specific.  This value is manually entered after the match is over. (Not used for live-updates in the match)'),
-  biodiversityUnitsBlueSideEcosystem: z.number().int().min(0).default(0).describe('Biodiversity units in the blue side ecosystem.  These are GLOBAL ALLIANCE scoring units, not alliance specific.  Color is used to identify the side of the field.  This value is manually entered after the match is over. (Not used for live-updates in the match)'),
+  biodiversityUnitsRedSideEcosystem: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe(
+      'Biodiversity units in the red side ecosystem.  These are GLOBAL ALLIANCE scoring units, not alliance specific.  Color is used to identify the side of the field.  This value is manually entered after the match is over. (Not used for live-updates in the match)'
+    ),
+  biodiversityUnitsCenterEcosystem: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe(
+      'Biodiversity units in the center ecosystem.  These are GLOBAL ALLIANCE scoring units, not alliance specific.  This value is manually entered after the match is over. (Not used for live-updates in the match)'
+    ),
+  biodiversityUnitsBlueSideEcosystem: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe(
+      'Biodiversity units in the blue side ecosystem.  These are GLOBAL ALLIANCE scoring units, not alliance specific.  Color is used to identify the side of the field.  This value is manually entered after the match is over. (Not used for live-updates in the match)'
+    ),
   // Biodiversity Distribution
-  biodiversityDistributionFactor: z.nativeEnum(DistributionFactor).default(DistributionFactor.NotEven),
+  biodiversityDistributionFactor: z
+    .nativeEnum(DistributionFactor)
+    .default(DistributionFactor.NotEven),
   // Approximated biodiversity for live-updates in match
-  approximateBiodiversityRedSideEcosystem: z.number().int().min(0).default(0).describe('Approximated biodiversity in the red side ecosystem.  This is used for live-updates in the match to allow the on-field LEDs to be at the correct level. This value is not used for scoring, and cannot be expected to represent the total number of biodoversity units in the ecosystem.'),
-  approximateBiodiversityCenterEcosystem: z.number().int().min(0).default(0).describe('Approximated biodiversity in the center ecosystem.  This is used for live-updates in the match to allow the on-field LEDs to be at the correct level. This value is not used for scoring, and cannot be expected to represent the total number of biodoversity units in the ecosystem.'),
-  approximateBiodiversityBlueSideEcosystem: z.number().int().min(0).default(0).describe('Approximated biodiversity in the blue side ecosystem.  This is used for live-updates in the match to allow the on-field LEDs to be at the correct level. This value is not used for scoring, and cannot be expected to represent the total number of biodoversity units in the ecosystem.'),
+  approximateBiodiversityRedSideEcosystem: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe(
+      'Approximated biodiversity in the red side ecosystem.  This is used for live-updates in the match to allow the on-field LEDs to be at the correct level. This value is not used for scoring, and cannot be expected to represent the total number of biodoversity units in the ecosystem.'
+    ),
+  approximateBiodiversityCenterEcosystem: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe(
+      'Approximated biodiversity in the center ecosystem.  This is used for live-updates in the match to allow the on-field LEDs to be at the correct level. This value is not used for scoring, and cannot be expected to represent the total number of biodoversity units in the ecosystem.'
+    ),
+  approximateBiodiversityBlueSideEcosystem: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe(
+      'Approximated biodiversity in the blue side ecosystem.  This is used for live-updates in the match to allow the on-field LEDs to be at the correct level. This value is not used for scoring, and cannot be expected to represent the total number of biodoversity units in the ecosystem.'
+    ),
   // Red robot parking states
-  redRobotOneParking: z.nativeEnum(MatchEndRobotState).default(MatchEndRobotState.Level0).describe('Multiplier for the red robot one (station 11) parking state, level 0-4.'),
-  redRobotTwoParking: z.nativeEnum(MatchEndRobotState).default(MatchEndRobotState.Level0).describe('Multiplier for the red robot two (station 12) parking state, level 0-4.'),
-  redRobotThreeParking: z.nativeEnum(MatchEndRobotState).default(MatchEndRobotState.Level0).describe('Multiplier for the red robot three (station 13) parking state, level 0-4.'),
-  blueRobotOneParking: z.nativeEnum(MatchEndRobotState).default(MatchEndRobotState.Level0).describe('Multiplier for the blue robot one (station 21) parking state, level 0-4.'),
-  blueRobotTwoParking: z.nativeEnum(MatchEndRobotState).default(MatchEndRobotState.Level0).describe('Multiplier for the blue robot two (station 22) parking state, level 0-4.'),
-  blueRobotThreeParking: z.nativeEnum(MatchEndRobotState).default(MatchEndRobotState.Level0).describe('Multiplier for the blue robot three (station 23) parking state, level 0-4.'),
+  redRobotOneParking: z
+    .nativeEnum(MatchEndRobotState)
+    .default(MatchEndRobotState.Level0)
+    .describe(
+      'Multiplier for the red robot one (station 11) parking state, level 0-4.'
+    ),
+  redRobotTwoParking: z
+    .nativeEnum(MatchEndRobotState)
+    .default(MatchEndRobotState.Level0)
+    .describe(
+      'Multiplier for the red robot two (station 12) parking state, level 0-4.'
+    ),
+  redRobotThreeParking: z
+    .nativeEnum(MatchEndRobotState)
+    .default(MatchEndRobotState.Level0)
+    .describe(
+      'Multiplier for the red robot three (station 13) parking state, level 0-4.'
+    ),
+  blueRobotOneParking: z
+    .nativeEnum(MatchEndRobotState)
+    .default(MatchEndRobotState.Level0)
+    .describe(
+      'Multiplier for the blue robot one (station 21) parking state, level 0-4.'
+    ),
+  blueRobotTwoParking: z
+    .nativeEnum(MatchEndRobotState)
+    .default(MatchEndRobotState.Level0)
+    .describe(
+      'Multiplier for the blue robot two (station 22) parking state, level 0-4.'
+    ),
+  blueRobotThreeParking: z
+    .nativeEnum(MatchEndRobotState)
+    .default(MatchEndRobotState.Level0)
+    .describe(
+      'Multiplier for the blue robot three (station 23) parking state, level 0-4.'
+    ),
 
   // Calculated Values (values we always calculate ourselves, as they're dependent on other values in the match details)
-  coopertition: z.nativeEnum(CoopertitionBonus).default(CoopertitionBonus.None).describe('Coopertition bonus points.  This is a calculated value based on the parking states of all robots.'),
-  biodiversityDistributed: z.number().int().min(0).default(0).describe('Biodiversity distributed points.  This is a calculated value based on the biodiversity units in the ecosystems and the biodiversity distribution factor.'),
-  redProtectionMultiplier: z.number().min(1).max(1 + (MatchEndRobotState.Level4 * 3)).default(1).describe('Red alliance protection multiplier.  This is a calculated value based on the parking states of the red robots.'),
-  blueProtectionMultiplier: z.number().min(1).max(1 + (MatchEndRobotState.Level4 * 3)).default(1).describe('Blue alliance protection multiplier.  This is a calculated value based on the parking states of the blue robots.'),
+  coopertition: z
+    .nativeEnum(CoopertitionBonus)
+    .default(CoopertitionBonus.None)
+    .describe(
+      'Coopertition bonus points.  This is a calculated value based on the parking states of all robots.'
+    ),
+  biodiversityDistributed: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe(
+      'Biodiversity distributed points.  This is a calculated value based on the biodiversity units in the ecosystems and the biodiversity distribution factor.'
+    ),
+  redProtectionMultiplier: z
+    .number()
+    .min(1)
+    .max(1 + MatchEndRobotState.Level4 * 3)
+    .default(1)
+    .describe(
+      'Red alliance protection multiplier.  This is a calculated value based on the parking states of the red robots.'
+    ),
+  blueProtectionMultiplier: z
+    .number()
+    .min(1)
+    .max(1 + MatchEndRobotState.Level4 * 3)
+    .default(1)
+    .describe(
+      'Blue alliance protection multiplier.  This is a calculated value based on the parking states of the blue robots.'
+    )
 });
 
 export type MatchDetails = z.infer<typeof FGC25MatchDetailsZod>;
@@ -149,6 +263,12 @@ export interface SeasonRanking extends Ranking {
   highestScore: number;
   protectionPoints: number;
 }
+
+export const SeasonRankingSchema = rankingZod.extend({
+  rankingScore: z.number(),
+  highestScore: z.number(),
+  protectionPoints: z.number()
+});
 
 export const EcoEquilibriumSeason: Season<MatchDetails, SeasonRanking> = {
   key: 'fgc_2025',
@@ -263,7 +383,10 @@ function calculateRankings(
               ranking.protectionPoints += match.details.blueRobotThreeParking;
               break;
           }
-          ranking.highestScore = Math.max(ranking.highestScore, match.blueScore);
+          ranking.highestScore = Math.max(
+            ranking.highestScore,
+            match.blueScore
+          );
         }
       }
 
@@ -410,14 +533,15 @@ export function calculatePlayoffsRankings(
   return rankings;
 }
 
-export function calculateBiodiversityDistributed(details: MatchDetails): number {
+export function calculateBiodiversityDistributed(
+  details: MatchDetails
+): number {
   return Math.round(
-    (
-      (details.biodiversityUnitsRedSideEcosystem +
-        details.biodiversityUnitsCenterEcosystem +
-        details.biodiversityUnitsBlueSideEcosystem) *
-      ScoreTable.BiodiversityUnit
-    ) * details.biodiversityDistributionFactor
+    (details.biodiversityUnitsRedSideEcosystem +
+      details.biodiversityUnitsCenterEcosystem +
+      details.biodiversityUnitsBlueSideEcosystem) *
+      ScoreTable.BiodiversityUnit *
+      details.biodiversityDistributionFactor
   );
 }
 
@@ -434,10 +558,11 @@ export function calculateDistributionFactor(details: MatchDetails): number {
   const mean = sum / biodiversityUnits.length;
 
   // Calculate the variance
-  const variance = biodiversityUnits.reduce((sumOfSquares, value) => {
-    const diff = value - mean;
-    return sumOfSquares + diff * diff;
-  }, 0) / biodiversityUnits.length;
+  const variance =
+    biodiversityUnits.reduce((sumOfSquares, value) => {
+      const diff = value - mean;
+      return sumOfSquares + diff * diff;
+    }, 0) / biodiversityUnits.length;
 
   // Calculate the standard deviation (sigma)
   const sigma = Math.sqrt(variance);
@@ -475,7 +600,9 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
   const coopertitionPoints = ScoreTable.Coopertition(details);
 
   // Global Alliance Points
-  const barrierPoints = (details.barriersInRedMitigator + details.barriersInBlueMitigator) * ScoreTable.ScoredBarrier;
+  const barrierPoints =
+    (details.barriersInRedMitigator + details.barriersInBlueMitigator) *
+    ScoreTable.ScoredBarrier;
   const biodiversityDistributed = calculateBiodiversityDistributed(details);
   const globalPoints = barrierPoints + biodiversityDistributed;
 
@@ -484,14 +611,23 @@ export function calculateScore(match: Match<MatchDetails>): [number, number] {
   const protectionMultiplierBlue = ScoreTable.ProtectionMultiplierBlue(details);
 
   // Total Score
-  const redScore = (globalPoints * protectionMultiplierRed) + coopertitionPoints;
-  const blueScore = (globalPoints * protectionMultiplierBlue) + coopertitionPoints;
+  const redScore = globalPoints * protectionMultiplierRed + coopertitionPoints;
+  const blueScore =
+    globalPoints * protectionMultiplierBlue + coopertitionPoints;
 
   // Penalty
-  const redPenaltyMinor = Math.round((match.redMinPen * ScoreTable.MinorFoul) * redScore);
-  const redPenaltyMajor = Math.round((match.redMinPen * ScoreTable.MajorFoul) * redScore);
-  const bluePenaltyMinor = Math.round((match.blueMinPen * ScoreTable.MinorFoul) * blueScore);
-  const bluePenaltyMajor = Math.round((match.blueMinPen * ScoreTable.MajorFoul) * blueScore);
+  const redPenaltyMinor = Math.round(
+    match.redMinPen * ScoreTable.MinorFoul * redScore
+  );
+  const redPenaltyMajor = Math.round(
+    match.redMinPen * ScoreTable.MajorFoul * redScore
+  );
+  const bluePenaltyMinor = Math.round(
+    match.blueMinPen * ScoreTable.MinorFoul * blueScore
+  );
+  const bluePenaltyMajor = Math.round(
+    match.blueMinPen * ScoreTable.MajorFoul * blueScore
+  );
   return [
     Math.round(redScore + bluePenaltyMajor + bluePenaltyMinor),
     Math.round(blueScore + redPenaltyMajor + redPenaltyMinor)
