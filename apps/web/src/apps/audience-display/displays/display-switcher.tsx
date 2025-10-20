@@ -60,7 +60,6 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   if (!match || !event || !ranks || !displays) return null;
 
   // Handle "pinning" screens
-  console.log('PIN:', pin);
   if (pin && typeof pin === 'string') {
     switch (pin) {
       case AudienceScreens.PREVIEW:
