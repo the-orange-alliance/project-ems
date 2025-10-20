@@ -3,7 +3,6 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { getDB } from '../db/EventDatabase.js';
 import { errorableSchema, InternalServerError } from '../util/Errors.js';
-import { WebhookDbSchema } from '@toa-lib/models';
 import { EventKeyParams } from '../util/GlobalSchema.js';
 
 async function seasonSpecificController(fastify: FastifyInstance) {
