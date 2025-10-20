@@ -28,7 +28,8 @@ import {
   MatchKey,
   Match,
   FieldControlStatus,
-  Team
+  Team,
+  Displays
 } from '@toa-lib/models';
 import { io, Socket } from 'socket.io-client';
 import { useEventState } from '../../stores/hooks/use-event-state.js';
@@ -68,6 +69,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const { data: currentMatch } = useMatchAll(key);
   const [socket, setSocket] = useState<null | Socket>(null);
   const [match, setMatch] = useState<Match<any> | null>(null);
+  const [currentDisplay, setCurrentDisplay] = useState<Displays>(
+    Displays.BLANK
+  );
 
   const handleRefresh = () => {
     console.log('Refresh but idk how to');
@@ -84,6 +88,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
     socket.on(MatchSocketEvent.END, handleEnd);
     socket.on(MatchSocketEvent.COMMIT, handleCommit);
     socket.on(MatchSocketEvent.UPDATE, handleUpdate);
+    socket.on(MatchSocketEvent.DISPLAY, handleDisplay);
     socket.on('fcs:status', handleFcsStatus);
     socket.connect();
     socket.emit('rooms', ['match', 'fcs']);
@@ -95,6 +100,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
       socket.off(MatchSocketEvent.END, handleEnd);
       socket.off(MatchSocketEvent.COMMIT, handleCommit);
       socket.off(MatchSocketEvent.UPDATE, handleUpdate);
+      socket.off(MatchSocketEvent.DISPLAY, handleDisplay);
     };
   }, []);
 
@@ -106,6 +112,10 @@ const MonitorCard: FC<MonitorCardProps> = ({
 
   const handleConnect = () => setConnected(true);
   const handleDisconnect = () => setConnected(false);
+
+  const handleDisplay = (display: Displays) => {
+    setCurrentDisplay(display);
+  };
 
   const handlePrestart = (key: MatchKey) => {
     setKey(key);
@@ -177,6 +187,21 @@ const MonitorCard: FC<MonitorCardProps> = ({
       return darkMode ? '#1f1f1f' : '#FFFFFF';
     }
   };
+
+  const currentDisplayName =
+    currentDisplay === Displays.BLANK
+      ? 'Blank'
+      : currentDisplay === Displays.MATCH_PREVIEW
+        ? 'Match Preview'
+        : currentDisplay === Displays.MATCH_RESULTS
+          ? 'Match Results'
+          : currentDisplay === Displays.SPONSOR
+            ? 'Sponsor'
+            : currentDisplay === Displays.MATCH_START
+              ? 'In-Match'
+              : currentDisplay === Displays.RANKINGS
+                ? 'Rankings'
+                : 'Unknown';
 
   const getFieldDelay = (): string => {
     const now = DateTime.now().set({ second: 0, millisecond: 0 });
@@ -252,7 +277,15 @@ const MonitorCard: FC<MonitorCardProps> = ({
         }
       >
         <Space direction='vertical' style={{ width: '100%' }}>
-          <Text>{getMatchStatus()}</Text>
+          <Space
+            direction='horizontal'
+            style={{ width: '100%', justifyContent: 'space-between' }}
+          >
+            <Text>{getMatchStatus()}</Text>
+            <Text>
+              <i>{currentDisplayName}</i>
+            </Text>
+          </Space>
           <MatchDetails key={field} match={match} teams={teams} />
           <Flex justify='flex-end'>
             <Text
@@ -519,7 +552,21 @@ export const EventMonitor: FC = () => {
   // Load monitors from localStorage on component mount
   useEffect(() => {
     const savedMonitors = localStorage.getItem('event-monitors');
-    if (savedMonitors) {
+    const queryParamMonitors = new URLSearchParams(window.location.search).get(
+      'ips'
+    );
+    if (
+      queryParamMonitors &&
+      queryParamMonitors !== null &&
+      typeof queryParamMonitors === 'string'
+    ) {
+      const monitors = queryParamMonitors.split(',').map((address, index) => ({
+        field: index + 1,
+        address: address.trim(),
+        realtimePort: 8081
+      }));
+      setMonitors(monitors);
+    } else if (savedMonitors) {
       try {
         const parsedMonitors = JSON.parse(savedMonitors);
         setMonitors(parsedMonitors);
