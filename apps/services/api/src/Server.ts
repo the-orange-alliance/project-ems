@@ -32,6 +32,7 @@ import { createJsonSchemaTransformObject, jsonSchemaTransform, serializerCompile
 import SchemaRef from './util/GlobalSchema.js';
 import { handleErrors, handleNotFound } from './middleware/ErrorHandler.js';
 import webhooksController from './controllers/Webhooks.js';
+import seasonSpecificController from './controllers/SeasonSpecific.js';
 
 // Setup our environment
 env.loadAndSetDefaults(process.env);
@@ -93,7 +94,8 @@ await fastify.register(fastifySwagger, {
       { name: 'Admin', description: 'Admin related endpoints' },
       { name: 'Sockets', description: 'Socket client related endpoints' },
       { name: 'FCS', description: 'FCS settings related endpoints' },
-      { name: 'Webhooks', description: 'Webhook related endpoints' }
+      { name: 'Webhooks', description: 'Webhook related endpoints' },
+      { name: 'Season Specific', description: 'Season specific endpoints' }
     ]
   },
   transform: jsonSchemaTransform,
@@ -126,6 +128,7 @@ await fastify.register(storageController, { prefix: '/storage' });
 await fastify.register(teamController, { prefix: '/teams' });
 await fastify.register(tournamentController, { prefix: '/tournament' });
 await fastify.register(webhooksController, { prefix: '/webhooks' });
+await fastify.register(seasonSpecificController, { prefix: '/seasonSpecific' });
 
 
 // Passport serialization (optional, for sessions)
