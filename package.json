@@ -1,5 +1,5 @@
 {
-  "name": "project-ems",
+  "name": "ems",
   "private": true,
   "author": {
     "email": "kyleflynn.dev@gmail.com",
@@ -9,6 +9,7 @@
   "scripts": {
     "build:libs": "turbo run @toa-lib/client#build @toa-lib/server#build",
     "build": "turbo build",
+    "build:apps": "turbo run api#build realtime#build ems-web#build",
     "dev": "turbo run dev api#start realtime#start"
   },
   "repository": {

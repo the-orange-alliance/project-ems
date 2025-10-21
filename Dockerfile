@@ -3,8 +3,8 @@ FROM node:20-alpine
 # Install dependencies needed for some npm packages
 RUN apk add --no-cache python3 make g++
 
-# Set working directory to root
-WORKDIR /
+# Set working directory inside the image
+WORKDIR /workspace
 
 # Copy package files first for better layer caching
 COPY package.json package-lock.json ./
@@ -24,26 +24,23 @@ COPY apps/web/package.json ./apps/web/
 COPY libs/ ./libs/
 COPY apps/ ./apps/
 
-# Verify root package.json and workspaces are visible
-RUN node -e "try{console.log('root workdir:',process.cwd());const pkg=require('./package.json');console.log('workspaces:',pkg.workspaces);}catch(e){console.error('Failed to read root package.json',e);process.exit(1)}"
+# Remove lockfile to avoid mismatches with current workspace tree in container
+# RUN rm -f package-lock.json
 
-# Install dependencies for root and workspaces (force workspace mode)
-# Change echo string to invalidate layer cache when needed
-RUN npm install --workspaces --include-workspace-root --no-audit --no-fund && echo "workspace install complete"
-
-# Debug: Verify luxon is installed and resolvable for @toa-lib/models
-RUN node -e "try{require.resolve('luxon');console.log('luxon resolvable from root')}catch(e){console.log('luxon NOT resolvable from root')}"
-RUN node -e "try{console.log(require.resolve('luxon/package.json'))}catch(e){console.log('luxon package.json NOT resolvable')}"
-RUN npm ls luxon || echo "npm ls luxon failed (possibly due to peer issues)"
+# Install dependencies using lockfile (workspaces supported by pinned npm)
+RUN ls -al
+RUN test -f package-lock.json && echo "package-lock.json found" || (echo "package-lock.json missing" && exit 1)
+RUN npm ci --workspaces --include-workspace-root \
+	|| (echo "npm ci failed; generating workspace-aware lockfile" \
+			&& npm install --workspaces --include-workspace-root --package-lock-only --no-audit --no-fund \
+			&& npm ci --workspaces --include-workspace-root)
 
 # Build using turbo following the dependency order from turbo.json
 # First build libraries in the correct order (models -> client & server)
 RUN npm run build:libs
-
-# Then build services that depend on libraries following turbo.json priorities
+# Build selected apps/services as needed (api, realtime)
 RUN npm run build --workspace=api
 RUN npm run build --workspace=realtime
-# RUN npm run build --workspace=ems-frc-fms # not needed usually
 
 # Expose ports for development
 # 5173: Vite dev server (web app)
