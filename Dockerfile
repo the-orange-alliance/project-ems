@@ -3,6 +3,10 @@ FROM node:20-alpine
 # Install dependencies needed for some npm packages
 RUN apk add --no-cache python3 make g++
 
+# Align npm version with repository's packageManager to avoid lockfile format mismatches
+# package.json specifies: npm@11.6.1
+RUN npm i -g npm@11.6.1
+
 # Set working directory inside the image
 WORKDIR /workspace
 
@@ -28,12 +32,7 @@ COPY apps/ ./apps/
 # RUN rm -f package-lock.json
 
 # Install dependencies using lockfile (workspaces supported by pinned npm)
-RUN ls -al
-RUN test -f package-lock.json && echo "package-lock.json found" || (echo "package-lock.json missing" && exit 1)
-RUN npm ci --workspaces --include-workspace-root \
-	|| (echo "npm ci failed; generating workspace-aware lockfile" \
-			&& npm install --workspaces --include-workspace-root --package-lock-only --no-audit --no-fund \
-			&& npm ci --workspaces --include-workspace-root)
+RUN npm ci --workspaces --include-workspace-root
 
 # Build using turbo following the dependency order from turbo.json
 # First build libraries in the correct order (models -> client & server)

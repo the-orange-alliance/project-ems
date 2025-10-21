@@ -13,9 +13,9 @@
   "author": "Soren Zaiser, Kyle Flynn",
   "license": "GPL-2.0",
   "dependencies": {
-    "@toa-lib/client": "file:../../../../../libs/client",
-    "@toa-lib/models": "file:../../../../../libs/models",
-    "@toa-lib/server": "file:../../../../../libs/server",
+    "@toa-lib/client": "1.0.0",
+    "@toa-lib/models": "1.0.0",
+    "@toa-lib/server": "1.0.0",
     "@types/ssh2-streams": "^0.1.12",
     "appdata-path": "^1.0.0",
     "dotenv": "^16.4.7",

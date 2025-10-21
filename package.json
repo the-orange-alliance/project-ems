@@ -25,11 +25,14 @@
     "turbo": "^2.4.4",
     "typescript": "^5.9.2"
   },
-  "packageManager": "npm@10.8.2",
+  "packageManager": "npm@11.6.1",
   "workspaces": [
-    "apps/services/*",
-    "apps/web",
-    "libs/*"
+    "libs/models",
+    "libs/client",
+    "libs/server",
+    "apps/services/api",
+    "apps/services/realtime",
+    "apps/web"
   ],
   "dependencies": {
     "aws-amplify": "^6.15.6"
