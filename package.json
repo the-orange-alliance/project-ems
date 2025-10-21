@@ -31,7 +31,9 @@
     "libs/client",
     "libs/server",
     "apps/services/api",
+    "apps/services/api-amplify",
     "apps/services/realtime",
+    "apps/services/frc-fms",
     "apps/web"
   ],
   "dependencies": {

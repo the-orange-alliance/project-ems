@@ -28,15 +28,13 @@ COPY apps/web/package.json ./apps/web/
 COPY libs/ ./libs/
 COPY apps/ ./apps/
 
-# Remove lockfile to avoid mismatches with current workspace tree in container
-# RUN rm -f package-lock.json
-
 # Install dependencies using lockfile (workspaces supported by pinned npm)
 RUN npm ci --workspaces --include-workspace-root
 
 # Build using turbo following the dependency order from turbo.json
 # First build libraries in the correct order (models -> client & server)
 RUN npm run build:libs
+
 # Build selected apps/services as needed (api, realtime)
 RUN npm run build --workspace=api
 RUN npm run build --workspace=realtime
