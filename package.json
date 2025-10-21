@@ -1,5 +1,6 @@
 {
   "name": "project-ems",
+  "private": true,
   "author": {
     "email": "kyleflynn.dev@gmail.com",
     "name": "Kyle Flynn",
