@@ -1,0 +1,56 @@
+name: EMS CD - Deploy to AWS ECR
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required for AWS OIDC authentication
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Configure AWS credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::102536421230:role/GitHubActionsECRPush
+          aws-region: us-east-2
+
+      # Login to AWS ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Build and push backend image
+      - name: Build and push Backend Docker image
+        env:
+          ECR_REPOSITORY: 102536421230.dkr.ecr.us-east-2.amazonaws.com/ems-backend
+          IMAGE_TAG: latest
+        run: |
+          docker build --target backend -t $ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REPOSITORY:$IMAGE_TAG
+
+      # Build and push web image
+      - name: Build and push Web Docker image
+        env:
+          ECR_REPOSITORY: 102536421230.dkr.ecr.us-east-2.amazonaws.com/ems-web
+          IMAGE_TAG: latest
+        run: |
+          docker build --target web -t $ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REPOSITORY:$IMAGE_TAG
+
+      # Verify pushed images
+      - name: Verify Docker images
+        run: |
+          echo "✅ Backend Image: 102536421230.dkr.ecr.us-east-2.amazonaws.com/ems-backend:latest"
+          echo "✅ Web Image:     102536421230.dkr.ecr.us-east-2.amazonaws.com/ems-web:latest"
