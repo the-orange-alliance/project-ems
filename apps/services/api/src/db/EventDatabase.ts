@@ -1,4 +1,4 @@
-import { getAppData, environment as env, environment } from '@toa-lib/server';
+import { getAppData, environment as env } from '@toa-lib/server';
 import { AsyncDatabase } from 'promised-sqlite3';
 import { sep, join, dirname } from 'path';
 import { mkdir, readFile } from 'node:fs/promises';
@@ -6,7 +6,7 @@ import { ApiDatabaseError } from '@toa-lib/models';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
-export const __dirname = dirname(__filename);
+export let __dirname = dirname(__filename);
 
 const eventMap: Map<string, EventDatabase> = new Map();
 
@@ -23,6 +23,11 @@ export async function getDB(name: string): Promise<EventDatabase> {
 }
 
 export async function initGlobal(): Promise<void> {
+  const appRoot = env.get().appRoot;
+  if (appRoot) {
+    __dirname = appRoot;
+  }
+
   const globalDb = await getDB('global');
   await globalDb.initDatabase();
   const query = await globalDb.getQueryFromFile('create_global.sql');

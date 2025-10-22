@@ -25,7 +25,7 @@
     "turbo": "^2.4.4",
     "typescript": "^5.9.2"
   },
-  "packageManager": "npm@11.6.1",
+  "packageManager": "npm@11.6.2",
   "workspaces": [
     "libs/models",
     "libs/client",

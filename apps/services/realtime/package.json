@@ -5,7 +5,7 @@
   "main": "build/Server.js",
   "type": "module",
   "scripts": {
-    "start": "tsc -p . && set SERVICE_NAME=realtime && set SERVICE_PORT=8081 && node build/Server.js",
+    "start": "tsc -p . && node build/Server.js",
     "build": "tsc -p .",
     "dist": "npm run dist:index && npm run dist:worker",
     "dist:index": "ncc build build/Server.js -o dist",

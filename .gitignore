@@ -10,6 +10,7 @@ bin/*
 *.env
 dist/
 .turbo
+out/
 
 # amplify
 .amplify

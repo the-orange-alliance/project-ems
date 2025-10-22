@@ -1,78 +1,56 @@
-# ---------- 1. Base builder stage ----------
-FROM node:20-alpine AS builder
-
+# ---------- 1. Base Stage ----------
+FROM node:20-alpine AS base
 RUN apk add --no-cache python3 make g++ bash
-
-# Align npm version to repo's declared one
-RUN npm i -g npm@11.6.1
-
+RUN npm i -g npm@11.6.2 turbo
 WORKDIR /workspace
 
-# Copy core manifests first (to leverage Docker caching)
-COPY package*.json ./
-COPY turbo.json ./
+# ---------- 2. Build Stage ----------
+FROM base AS build
 
-# Copy workspace manifests
-COPY libs/models/package.json ./libs/models/
-COPY libs/client/package.json ./libs/client/
-COPY libs/server/package.json ./libs/server/
-COPY apps/services/api/package.json ./apps/services/api/
-COPY apps/services/api-amplify/package.json ./apps/services/api-amplify/
-COPY apps/services/frc-fms/package.json ./apps/services/frc-fms/
-COPY apps/services/realtime/package.json ./apps/services/realtime/
-COPY apps/web/package.json ./apps/web/
+# Copy only package manifests first for caching
+COPY package*.json turbo.json ./
+COPY libs ./libs
+COPY apps ./apps
 
-# Copy full source (needed for file: links)
-COPY libs/ ./libs/
-COPY apps/ ./apps/
+# Install all dependencies (Turbo will manage workspaces)
+RUN npm ci
 
-# Install all dependencies with workspace support
-RUN npm ci --workspaces --include-workspace-root
+# Build only what we need (api, realtime, web)
+RUN npx turbo run build --filter=api --filter=realtime --filter=ems-web
 
-# Build libraries first
-RUN npm run build:libs
-
-# Build backend and frontend workspaces
-RUN npm run build --workspace=api
-RUN npm run build --workspace=realtime
-RUN npm run build --workspace=ems-web
-
-
-# ---------- 2. Backend runtime image ----------
+# ---------- 3. Backend Runtime ----------
 FROM node:20-alpine AS backend
-
 WORKDIR /workspace
 ENV NODE_ENV=production
+ENV WORKDIR=/workspace/apps/services
 
-# Copy node_modules and built files from builder
-COPY --from=builder /workspace/node_modules ./node_modules
-COPY --from=builder /workspace/libs ./libs
-COPY --from=builder /workspace/apps/services/api/build ./apps/services/api/build
-COPY --from=builder /workspace/apps/services/realtime/build ./apps/services/realtime/build
-COPY --from=builder /workspace/apps/services/api/package.json ./apps/services/api/
-COPY --from=builder /workspace/apps/services/realtime/package.json ./apps/services/realtime/
+# Copy only the built backend and production dependencies
+COPY --from=build /workspace/apps/services/api/build ./apps/services/api/build
+COPY --from=build /workspace/apps/services/realtime/build ./apps/services/realtime/build
+COPY --from=build /workspace/node_modules ./node_modules
 
-# Expose backend ports
-EXPOSE 8080
-EXPOSE 8081
+# Copy any per-app node_modules (if not hoisted)
+COPY --from=build /workspace/apps/services/api/node_modules ./apps/services/api/node_modules
+COPY --from=build /workspace/apps/services/realtime/node_modules ./apps/services/realtime/node_modules
 
-# Start both API and Realtime servers concurrently
-CMD ["sh", "-c", "node apps/services/api/build/Server.js & node apps/services/realtime/build/Server.js & wait"]
+COPY --from=build /workspace/libs ./libs
 
+COPY --from=build /workspace/apps/services/api/bin ./apps/services/api/bin
+COPY --from=build /workspace/apps/services/api/sql ./apps/services/api/sql
 
-# ---------- 3. Web runtime image ----------
+COPY scripts/backend_entrypoint.sh ./scripts/backend_entrypoint.sh
+RUN chmod +x ./scripts/backend_entrypoint.sh
+
+EXPOSE 8080 8081
+ENTRYPOINT ["./scripts/backend_entrypoint.sh"]
+
+# ---------- 4. Web Runtime ----------
 FROM node:20-alpine AS web
-
-# Install serve globally for static hosting (could use nginx instead)
 RUN npm install -g serve@14.2.1
-
 WORKDIR /workspace
 
-# Copy built frontend from builder
-COPY --from=builder /workspace/apps/web/dist ./apps/web/dist
+# Copy only the built web app
+COPY --from=build /workspace/apps/web/dist ./apps/web/dist
 
-# Expose the Vite/Serve port
 EXPOSE 80
-
-# Serve the built frontend
 CMD ["serve", "-s", "apps/web/dist", "-l", "80"]

@@ -8,6 +8,7 @@ interface EnvironmentConfig {
   nodeEnv: string;
   resultsApiBaseUrl: string;
   resultsApiKey: string | null;
+  appRoot?: string;
 }
 
 /**
@@ -42,8 +43,8 @@ class Environment {
     return Environment._instance;
   }
 
-  public loadAndSetDefaults(env: any) {
-    dotenv.config();
+  public loadAndSetDefaults(env: any, path?: string) {
+    dotenv.config({ path });
 
     this.env.serviceName = env.SERVICE_NAME || 'api';
     this.env.serviceHost = /*env.SERVICE_HOST || */ '0.0.0.0';
@@ -53,6 +54,7 @@ class Environment {
     this.env.resultsApiBaseUrl =
       env.RESULTS_API_BASE_URL || 'https://api.first.global';
     this.env.resultsApiKey = env.RESULTS_API_KEY || null;
+    this.env.appRoot = env.APP_ROOT || undefined;
   }
 
   public get(): EnvironmentConfig {
