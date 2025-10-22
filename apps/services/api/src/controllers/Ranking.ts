@@ -1,4 +1,5 @@
 import {
+  EcoEquilibrium,
   getFunctionsBySeasonKey,
   getSeasonKeyFromEventKey,
   Ranking,
@@ -13,22 +14,46 @@ import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { getDB } from '../db/EventDatabase.js';
 import { z } from 'zod';
-import { SeasonFunctionsMissing, errorableSchema, DataNotFoundError, InternalServerError } from '../util/Errors.js';
-import { EmptySchema, EventKeyParams, EventTournamentIdParams, EventTournamentKeyParams } from '../util/GlobalSchema.js';
+import {
+  SeasonFunctionsMissing,
+  errorableSchema,
+  DataNotFoundError,
+  InternalServerError
+} from '../util/Errors.js';
+import {
+  EmptySchema,
+  EventKeyParams,
+  EventTournamentIdParams,
+  EventTournamentKeyParams
+} from '../util/GlobalSchema.js';
 
-const rankingZodArray = z.array(rankingZod);
+const rankingZodArray = z.array(
+  z.union([EcoEquilibrium.SeasonRankingSchema, rankingZod])
+);
 
 async function rankingController(fastify: FastifyInstance) {
   // Get rankings by eventKey
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/:eventKey',
-    { schema: { params: EventKeyParams, response: errorableSchema<typeof rankingZodArray>(rankingZodArray), tags: ['Rankings'] } },
+    {
+      schema: {
+        params: EventKeyParams,
+        response: errorableSchema<typeof rankingZodArray>(rankingZodArray),
+        tags: ['Rankings']
+      }
+    },
     async (request, reply) => {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
         const db = await getDB(eventKey);
-        const rankings = await db.selectAllWhere('ranking', `eventKey = "${eventKey}"`);
-        const teams = await db.selectAllWhere('team', `eventKey = "${eventKey}"`);
+        const rankings = await db.selectAllWhere(
+          'ranking',
+          `eventKey = "${eventKey}"`
+        );
+        const teams = await db.selectAllWhere(
+          'team',
+          `eventKey = "${eventKey}"`
+        );
         reply.send(reconcileTeamRankings(teams, rankings));
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
@@ -39,13 +64,27 @@ async function rankingController(fastify: FastifyInstance) {
   // Get rankings by eventKey and tournamentKey
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/:eventKey/:tournamentKey',
-    { schema: { params: EventTournamentKeyParams, response: errorableSchema<typeof rankingZodArray>(rankingZodArray), tags: ['Rankings'] } },
+    {
+      schema: {
+        params: EventTournamentKeyParams,
+        response: errorableSchema<typeof rankingZodArray>(rankingZodArray),
+        tags: ['Rankings']
+      }
+    },
     async (request, reply) => {
       try {
-        const { eventKey, tournamentKey } = request.params as z.infer<typeof EventTournamentKeyParams>;
+        const { eventKey, tournamentKey } = request.params as z.infer<
+          typeof EventTournamentKeyParams
+        >;
         const db = await getDB(eventKey);
-        const rankings = await db.selectAllWhere('ranking', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
-        const teams = await db.selectAllWhere('team', `eventKey = "${eventKey}"`);
+        const rankings = await db.selectAllWhere(
+          'ranking',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+        );
+        const teams = await db.selectAllWhere(
+          'team',
+          `eventKey = "${eventKey}"`
+        );
         reply.send(reconcileTeamRankings(teams, rankings));
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
@@ -56,10 +95,18 @@ async function rankingController(fastify: FastifyInstance) {
   // Get ranking details by eventKey, tournamentKey, and id
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/:eventKey/:tournamentKey/:id',
-    { schema: { params: EventTournamentIdParams, response: errorableSchema<typeof rankingZodArray>(rankingZodArray), tags: ['Rankings'] } },
+    {
+      schema: {
+        params: EventTournamentIdParams,
+        response: errorableSchema<typeof rankingZodArray>(rankingZodArray),
+        tags: ['Rankings']
+      }
+    },
     async (request, reply) => {
       try {
-        const { eventKey, tournamentKey, id } = request.params as z.infer<typeof EventTournamentIdParams>;
+        const { eventKey, tournamentKey, id } = request.params as z.infer<
+          typeof EventTournamentIdParams
+        >;
         const db = await getDB(eventKey);
         const rankings = await db.selectAllJoinWhereAdvanced(
           'ranking',
@@ -77,7 +124,13 @@ async function rankingController(fastify: FastifyInstance) {
   // Insert rankings
   fastify.withTypeProvider<ZodTypeProvider>().post(
     '/',
-    { schema: { body: z.array(rankingZod), response: errorableSchema(EmptySchema), tags: ['Rankings'] } },
+    {
+      schema: {
+        body: z.array(rankingZod),
+        response: errorableSchema(EmptySchema),
+        tags: ['Rankings']
+      }
+    },
     async (request, reply) => {
       try {
         const eventKey = request.body[0].eventKey;
@@ -93,7 +146,14 @@ async function rankingController(fastify: FastifyInstance) {
   // Create rankings for teams
   fastify.withTypeProvider<ZodTypeProvider>().post(
     '/create/:tournamentKey',
-    { schema: { params: z.object({ tournamentKey: z.string() }), body: z.array(teamZod), response: errorableSchema(EmptySchema), tags: ['Rankings'] } },
+    {
+      schema: {
+        params: z.object({ tournamentKey: z.string() }),
+        body: z.array(teamZod),
+        response: errorableSchema(EmptySchema),
+        tags: ['Rankings']
+      }
+    },
     async (request, reply) => {
       try {
         const { tournamentKey } = request.params as { tournamentKey: string };
@@ -121,18 +181,47 @@ async function rankingController(fastify: FastifyInstance) {
   // Calculate rankings
   fastify.withTypeProvider<ZodTypeProvider>().post(
     '/calculate/:eventKey/:tournamentKey',
-    { schema: { params: EventTournamentKeyParams, response: errorableSchema<typeof rankingZodArray>(rankingZodArray, SeasonFunctionsMissing), tags: ['Rankings'] } },
+    {
+      schema: {
+        params: EventTournamentKeyParams,
+        response: errorableSchema<typeof rankingZodArray>(
+          rankingZodArray,
+          SeasonFunctionsMissing
+        ),
+        tags: ['Rankings']
+      }
+    },
     async (request, reply) => {
       try {
-        const { eventKey, tournamentKey } = request.params as z.infer<typeof EventTournamentKeyParams>;
+        const { eventKey, tournamentKey } = request.params as z.infer<
+          typeof EventTournamentKeyParams
+        >;
         const { playoffs } = request.query as { playoffs?: string };
         const db = await getDB(eventKey);
-        const matches = await db.selectAllWhere('match', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
-        const participants = await db.selectAllWhere('match_participant', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
-        const details = await db.selectAllWhere('match_detail', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
-        const matchesWithParticipants = reconcileMatchParticipants(matches, participants);
-        const matchesWithDetails = reconcileMatchDetails(matchesWithParticipants, details);
-        const prevRankings = await db.selectAllWhere('ranking', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
+        const matches = await db.selectAllWhere(
+          'match',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+        );
+        const participants = await db.selectAllWhere(
+          'match_participant',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+        );
+        const details = await db.selectAllWhere(
+          'match_detail',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+        );
+        const matchesWithParticipants = reconcileMatchParticipants(
+          matches,
+          participants
+        );
+        const matchesWithDetails = reconcileMatchDetails(
+          matchesWithParticipants,
+          details
+        );
+        const prevRankings = await db.selectAllWhere(
+          'ranking',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+        );
         const seasonKey = getSeasonKeyFromEventKey(eventKey);
         const functions = getFunctionsBySeasonKey(seasonKey);
         if (!functions) {
@@ -140,18 +229,34 @@ async function rankingController(fastify: FastifyInstance) {
           return;
         }
         if (playoffs) {
-          const allianceMembers = await db.selectAllWhere('alliance', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
-          const rankings = functions.calculatePlayoffsRankings?.(matchesWithDetails, prevRankings, allianceMembers);
+          const allianceMembers = await db.selectAllWhere(
+            'alliance',
+            `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+          );
+          const rankings = functions.calculatePlayoffsRankings?.(
+            matchesWithDetails,
+            prevRankings,
+            allianceMembers
+          );
           if (rankings) {
-            await db.deleteWhere('ranking', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
+            await db.deleteWhere(
+              'ranking',
+              `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+            );
             await db.insertValue('ranking', rankings);
             reply.send(rankings);
           } else {
             reply.send([]);
           }
         } else {
-          const rankings = functions.calculateRankings(matchesWithDetails, prevRankings);
-          await db.deleteWhere('ranking', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
+          const rankings = functions.calculateRankings(
+            matchesWithDetails,
+            prevRankings
+          );
+          await db.deleteWhere(
+            'ranking',
+            `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+          );
           await db.insertValue('ranking', rankings);
           reply.send(rankings);
         }
@@ -164,12 +269,23 @@ async function rankingController(fastify: FastifyInstance) {
   // Delete rankings
   fastify.withTypeProvider<ZodTypeProvider>().delete(
     '/:eventKey/:tournamentKey',
-    { schema: { params: EventTournamentKeyParams, response: errorableSchema(EmptySchema), tags: ['Rankings'] } },
+    {
+      schema: {
+        params: EventTournamentKeyParams,
+        response: errorableSchema(EmptySchema),
+        tags: ['Rankings']
+      }
+    },
     async (request, reply) => {
       try {
-        const { eventKey, tournamentKey } = request.params as z.infer<typeof EventTournamentKeyParams>;
+        const { eventKey, tournamentKey } = request.params as z.infer<
+          typeof EventTournamentKeyParams
+        >;
         const db = await getDB(eventKey);
-        await db.deleteWhere('ranking', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
+        await db.deleteWhere(
+          'ranking',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+        );
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));

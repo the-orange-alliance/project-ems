@@ -2,7 +2,7 @@ import styled from '@emotion/styled';
 import { FC } from 'react';
 import FGC_LGO from '../assets/fg-logo-md.png';
 import { Alliance, Match } from '@toa-lib/models';
-import { MatchTimer } from 'src/components/util/match-timer';
+import { MatchTimer } from 'src/components/util/match-timer.js';
 
 const Container = styled.div`
   position: relative;

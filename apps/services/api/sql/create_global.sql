@@ -51,3 +51,19 @@ CREATE TABLE IF NOT EXISTS "fms_adv_net_cfg" (
     "registeredAt" VARCHAR(255) NOT NULL,
     PRIMARY KEY (hwFingerprint)
 );
+
+CREATE TABLE IF NOT EXISTS "fcs_settings" (
+  "field" TEXT PRIMARY KEY,
+  "data" TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "webhooks" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "url" TEXT NOT NULL,
+    "enabled" INT NOT NULL,
+    "subscribedEvent" TEXT NOT NULL,
+    "note" TEXT,
+    "lastErrorMessage" TEXT,
+    "lastErrorTime" TEXT,
+    "errorCount" INTEGER DEFAULT 0
+);

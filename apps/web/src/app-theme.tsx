@@ -73,7 +73,12 @@ export const customfgcTheme = (darkMode: boolean): ThemeConfig => ({
     Button: {
       onlyIconSizeLG: '16px',
       colorLink: '#019b00',
-      colorLinkHover: '#82ce81'
+      colorLinkHover: '#82ce81',
+      ...(darkMode && {
+        colorText: '#ffffff',
+        colorBgTextHover: 'rgba(255, 255, 255, 0.04)',
+        colorBgTextActive: 'rgba(255, 255, 255, 0.06)'
+      })
     },
     Layout: {
       // bodyBg: '#f0f0f0'

@@ -23,6 +23,8 @@ interface SeasonDisplay {
   matchPreviewStream: FC<DisplayProps>;
   matchPlay: FC<DisplayProps>;
   matchPlayStream: FC<DisplayProps>;
+  matchPlayMin?: FC<DisplayProps>;
+  matchProduction?: FC<DisplayProps>;
   matchResults: FC<DisplayProps>;
   matchResultsStream: FC<DisplayProps>;
 }
@@ -41,8 +43,10 @@ export const fgcDefault: SeasonDisplay = {
   matchPreviewStream: FGCModernDefault.MatchPreviewStream,
   matchPlay: FGCDefault.MatchPlay,
   matchPlayStream: FGCDefault.MatchPlayStream,
+  matchPlayMin: FGCDefault.MatchPlayMin,
   matchResults: FGCModernDefault.MatchResults,
-  matchResultsStream: FGCModernDefault.MatchResultsStream
+  matchResultsStream: FGCModernDefault.MatchResultsStream,
+  matchProduction: FGCDefault.MatchProduction
 };
 
 // Map that contains all the displays for their seasons.

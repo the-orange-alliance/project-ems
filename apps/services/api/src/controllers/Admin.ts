@@ -8,7 +8,13 @@ import { EventKeyParams, EmptySchema } from '../util/GlobalSchema.js';
 async function adminController(fastify: FastifyInstance) {
   fastify.withTypeProvider<ZodTypeProvider>().delete(
     '/purge/:eventKey',
-    { schema: { params: EventKeyParams, response: errorableSchema(EmptySchema), tags: ['Admin'] } },
+    {
+      schema: {
+        params: EventKeyParams,
+        response: errorableSchema(EmptySchema),
+        tags: ['Admin']
+      }
+    },
     async (request, reply) => {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;

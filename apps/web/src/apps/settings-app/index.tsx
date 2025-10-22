@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC } from 'react';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import AudienceDisplaySettingsTab from './tabs/audience.js';
 import MainSettingsTab from './tabs/main.js';
@@ -14,6 +14,7 @@ import { Tabs, TabsProps, Typography } from 'antd';
 import GlobalSettings from './tabs/global-settings.js';
 import ErrorFallback from 'src/components/errors/error-boundary.js';
 import { ErrorBoundary } from 'react-error-boundary';
+import WebhooksTab from './tabs/webhooks.js';
 // import FrcFmsSettingsTab from './tabs/frc-fms';
 
 export const SettingsApp: FC = () => {
@@ -78,6 +79,12 @@ export const SettingsApp: FC = () => {
         children: <FrcFmsSettingsTab />
       });
     }
+
+    tabs.push({
+      label: 'Webhooks',
+      key: '5',
+      children: <WebhooksTab />
+    });
   }
 
   return (
