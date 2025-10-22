@@ -11,6 +11,7 @@ FROM base AS build
 COPY package*.json turbo.json ./
 COPY libs ./libs
 COPY apps ./apps
+COPY scripts ./scripts
 
 # Install all dependencies (Turbo will manage workspaces)
 RUN npm ci
@@ -38,7 +39,7 @@ COPY --from=build /workspace/libs ./libs
 COPY --from=build /workspace/apps/services/api/bin ./apps/services/api/bin
 COPY --from=build /workspace/apps/services/api/sql ./apps/services/api/sql
 
-COPY scripts/backend_entrypoint.sh ./scripts/backend_entrypoint.sh
+COPY --from=build /workspace/scripts ./scripts
 RUN chmod +x ./scripts/backend_entrypoint.sh
 
 EXPOSE 8080 8081

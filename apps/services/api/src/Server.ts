@@ -55,9 +55,8 @@ try {
 
 // Create Fastify instance
 const fastify = Fastify({
-  logger: env.get().NODE_ENV === 'production'
-    ? { level: 'warn' }
-    : { level: 'info' }
+  logger:
+    env.get().nodeEnv === 'production' ? { level: 'warn' } : { level: 'info' }
 });
 
 // Register Error handler for all routes
