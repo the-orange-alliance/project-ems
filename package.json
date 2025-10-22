@@ -1,5 +1,6 @@
 {
-  "name": "project-ems",
+  "name": "ems",
+  "private": true,
   "author": {
     "email": "kyleflynn.dev@gmail.com",
     "name": "Kyle Flynn",
@@ -8,6 +9,7 @@
   "scripts": {
     "build:libs": "turbo run @toa-lib/client#build @toa-lib/server#build",
     "build": "turbo build",
+    "build:apps": "turbo run api#build realtime#build ems-web#build",
     "dev": "turbo run dev api#start realtime#start"
   },
   "repository": {
@@ -23,11 +25,16 @@
     "turbo": "^2.4.4",
     "typescript": "^5.9.2"
   },
-  "packageManager": "npm@10.8.2",
+  "packageManager": "npm@11.6.2",
   "workspaces": [
-    "apps/services/*",
-    "apps/web",
-    "libs/*"
+    "libs/models",
+    "libs/client",
+    "libs/server",
+    "apps/services/api",
+    "apps/services/api-amplify",
+    "apps/services/realtime",
+    "apps/services/frc-fms",
+    "apps/web"
   ],
   "dependencies": {
     "aws-amplify": "^6.15.6"

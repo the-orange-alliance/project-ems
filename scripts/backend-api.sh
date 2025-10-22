@@ -1,1 +1,0 @@
-cd back-end/api & npm start

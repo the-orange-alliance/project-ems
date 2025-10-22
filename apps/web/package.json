@@ -1,5 +1,5 @@
 {
-  "name": "project-ems",
+  "name": "ems-web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -18,8 +18,8 @@
     "@mui/icons-material": "^5.14.1",
     "@mui/material": "^5.14.1",
     "@octokit/core": "^6.1.4",
-    "@toa-lib/client": "file:../../../../libs/client",
-    "@toa-lib/models": "file:../../../../libs/models",
+    "@toa-lib/client": "1.0.0",
+    "@toa-lib/models": "1.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "antd": "^5.27.4",
     "export-to-csv": "^1.4.0",

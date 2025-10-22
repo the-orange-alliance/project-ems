@@ -1,43 +1,56 @@
-FROM node:18-alpine
+# ---------- 1. Base Stage ----------
+FROM node:20-alpine AS base
+RUN apk add --no-cache python3 make g++ bash
+RUN npm i -g npm@11.6.2 turbo
+WORKDIR /workspace
 
-WORKDIR /
-COPY /back-end /back-end
-COPY /front-end /front-end
-COPY /lib /lib
-COPY /scripts /scripts
+# ---------- 2. Build Stage ----------
+FROM base AS build
 
-# Install @toa-lib/models
-WORKDIR /lib/models
-RUN npm install
-RUN npm run build
-RUN npm link
+# Copy only package manifests first for caching
+COPY package*.json turbo.json ./
+COPY libs ./libs
+COPY apps ./apps
 
-# Install @toa-lib/client
-WORKDIR /lib/client
-RUN npm install
-RUN npm link @toa-lib/models
-RUN npm run build
+# Install all dependencies (Turbo will manage workspaces)
+RUN npm ci
 
-# Install @toa-lib/server
-WORKDIR /lib/server
-RUN npm install
-RUN npm link @toa-lib/models
-RUN npm run build
+# Build only what we need (api, realtime, web)
+RUN npx turbo run build --filter=api --filter=realtime --filter=ems-web
 
-# Install @toa-lib/models
-WORKDIR /back-end/api
-RUN npm install
+# ---------- 3. Backend Runtime ----------
+FROM node:20-alpine AS backend
+WORKDIR /workspace
+ENV NODE_ENV=production
+ENV WORKDIR=/workspace/apps/services
 
-WORKDIR /back-end/realtime
-RUN npm install
+# Copy only the built backend and production dependencies
+COPY --from=build /workspace/apps/services/api/build ./apps/services/api/build
+COPY --from=build /workspace/apps/services/realtime/build ./apps/services/realtime/build
+COPY --from=build /workspace/node_modules ./node_modules
 
-WORKDIR /front-end
-RUN npm install
+# Copy any per-app node_modules (if not hoisted)
+COPY --from=build /workspace/apps/services/api/node_modules ./apps/services/api/node_modules
+COPY --from=build /workspace/apps/services/realtime/node_modules ./apps/services/realtime/node_modules
 
-EXPOSE 5173/tcp
-EXPOSE 8080/tcp
-EXPOSE 8081/tcp
+COPY --from=build /workspace/libs ./libs
 
-# Run
-WORKDIR /
-RUN source /scripts/run.sh
+COPY --from=build /workspace/apps/services/api/bin ./apps/services/api/bin
+COPY --from=build /workspace/apps/services/api/sql ./apps/services/api/sql
+
+COPY scripts/backend_entrypoint.sh ./scripts/backend_entrypoint.sh
+RUN chmod +x ./scripts/backend_entrypoint.sh
+
+EXPOSE 8080 8081
+ENTRYPOINT ["./scripts/backend_entrypoint.sh"]
+
+# ---------- 4. Web Runtime ----------
+FROM node:20-alpine AS web
+RUN npm install -g serve@14.2.1
+WORKDIR /workspace
+
+# Copy only the built web app
+COPY --from=build /workspace/apps/web/dist ./apps/web/dist
+
+EXPOSE 80
+CMD ["serve", "-s", "apps/web/dist", "-l", "80"]

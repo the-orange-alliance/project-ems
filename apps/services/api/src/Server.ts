@@ -28,14 +28,22 @@ import socketClientsController from './controllers/SocketClients.js';
 import fcsController from './controllers/FCS.js';
 import logger from './util/Logger.js';
 import { initGlobal } from './db/EventDatabase.js';
-import { createJsonSchemaTransformObject, jsonSchemaTransform, serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import {
+  createJsonSchemaTransformObject,
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler
+} from 'fastify-type-provider-zod';
 import SchemaRef from './util/GlobalSchema.js';
 import { handleErrors, handleNotFound } from './middleware/ErrorHandler.js';
+import { join } from 'path';
 import webhooksController from './controllers/Webhooks.js';
 import seasonSpecificController from './controllers/SeasonSpecific.js';
 
 // Setup our environment
-env.loadAndSetDefaults(process.env);
+const workingDir = process.env.WORKDIR ?? '../';
+const path = join(workingDir, '/api/.env');
+env.loadAndSetDefaults(process.env, path);
 
 // App setup - if any of these fail the server should exit.
 try {
@@ -62,7 +70,7 @@ await fastify.register(fastifyCors, {
   origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 });
 await fastify.register(fastifyFormbody);
 
@@ -91,10 +99,19 @@ await fastify.register(fastifySwagger, {
       { name: 'Tournaments', description: 'Tournament related endpoints' },
       { name: 'FrcFms', description: 'FRC FMS related endpoints' },
       { name: 'Results', description: 'Results related endpoints' },
-      { name: 'Schedule Items', description: 'Schedule item related endpoints' },
-      { name: 'Schedule Parameters', description: 'Schedule parameter related endpoints' },
+      {
+        name: 'Schedule Items',
+        description: 'Schedule item related endpoints'
+      },
+      {
+        name: 'Schedule Parameters',
+        description: 'Schedule parameter related endpoints'
+      },
       { name: 'Storage', description: 'Storage related endpoints' },
-      { name: 'Auth', description: 'Authentication and authorization endpoints' },
+      {
+        name: 'Auth',
+        description: 'Authentication and authorization endpoints'
+      },
       { name: 'Admin', description: 'Admin related endpoints' },
       { name: 'Sockets', description: 'Socket client related endpoints' },
       { name: 'FCS', description: 'FCS settings related endpoints' },
@@ -103,13 +120,13 @@ await fastify.register(fastifySwagger, {
     ]
   },
   transform: jsonSchemaTransform,
-  transformObject: createJsonSchemaTransformObject({schemas: SchemaRef}),
+  transformObject: createJsonSchemaTransformObject({ schemas: SchemaRef })
 });
 
 // Register Swagger UI
 await fastify.register(fastifySwaggerUi, {
   routePrefix: '/docs'
-})
+});
 
 // Define root/testing paths
 fastify.get('/', { preHandler: requireAuth }, async (request, reply) => {
@@ -126,14 +143,15 @@ await fastify.register(matchController, { prefix: '/match' });
 await fastify.register(rankingController, { prefix: '/ranking' });
 await fastify.register(resultsController, { prefix: '/results' });
 await fastify.register(scheduleItemsController, { prefix: '/schedule-items' });
-await fastify.register(scheduleParamsController, { prefix: '/schedule-params' });
+await fastify.register(scheduleParamsController, {
+  prefix: '/schedule-params'
+});
 await fastify.register(socketClientsController, { prefix: '/socketClients' });
 await fastify.register(storageController, { prefix: '/storage' });
 await fastify.register(teamController, { prefix: '/teams' });
 await fastify.register(tournamentController, { prefix: '/tournament' });
 await fastify.register(webhooksController, { prefix: '/webhooks' });
 await fastify.register(seasonSpecificController, { prefix: '/seasonSpecific' });
-
 
 // Passport serialization (optional, for sessions)
 passport.serializeUser((user, cb) => {

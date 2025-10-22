@@ -5,8 +5,8 @@
   "main": "build/Server.js",
   "type": "module",
   "scripts": {
-    "start": "tsc && node build/Server.js",
-    "build": "tsc",
+    "start": "tsc -p . && node build/Server.js",
+    "build": "tsc -p .",
     "dist": "ncc build build/Server.js -e sqlite3 -o dist"
   },
   "author": "Kyle Flynn",
@@ -36,8 +36,8 @@
     "@fastify/helmet": "^13.0.1",
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
-    "@toa-lib/models": "file:../../../../../libs/models",
-    "@toa-lib/server": "file:../../../../../libs/server",
+    "@toa-lib/models": "1.0.0",
+    "@toa-lib/server": "1.0.0",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

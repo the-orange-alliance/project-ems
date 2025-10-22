@@ -7,9 +7,12 @@ import jwt from "jsonwebtoken";
 import { environment as env, getIPv4 } from "@toa-lib/server";
 import logger from "./util/Logger.js";
 import { assignRooms, initRooms, leaveRooms } from "./rooms/Rooms.js";
+import { join } from "path";
 
 // Setup our environment
-env.loadAndSetDefaults(process.env);
+const workingDir = process.env.WORKDIR ?? "../";
+const path = join(workingDir, "/realtime/.env");
+env.loadAndSetDefaults(process.env, path);
 
 // Bind socket.io to express to our http server
 const app: Application = express();
@@ -22,7 +25,7 @@ app.use(json());
 app.use(parser.urlencoded({ extended: false }));
 
 io.use((socket, next) => {
-  (socket as any).decoded = { id: 0, username: 'Bypassed', permissions: '*' };
+  (socket as any).decoded = { id: 0, username: "Bypassed", permissions: "*" };
   return next();
 
   // Disable auth for now
@@ -38,7 +41,7 @@ io.use((socket, next) => {
           (socket as any).decoded = decoded;
           next();
         }
-      }
+      },
     );
   } else {
     next(new Error("Authentication Error: no query token present"));
@@ -48,7 +51,7 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   const user = (socket as any).decoded;
   logger.info(
-    `user '${user.username}' (${socket.handshake.address}) connected and verified`
+    `user '${user.username}' (${socket.handshake.address}) connected and verified`,
   );
 
   socket.on("identify", async (data: any) => {
@@ -60,7 +63,7 @@ io.on("connection", (socket) => {
       // Send back IP and socket id
       socket.emit("identify-response", data);
     } catch (e) {
-      console.log('Failed to negotiate sockets settings', e);
+      console.log("Failed to negotiate sockets settings", e);
     }
   });
 
@@ -71,9 +74,8 @@ io.on("connection", (socket) => {
       const socketToUpdate = io.sockets.sockets.get(data.lastSocketId);
       // Update socket
       socketToUpdate?.emit("settings", data);
-
     } catch (e) {
-      console.log('Failed to update socket client', e);
+      console.log("Failed to update socket client", e);
     }
   });
 
@@ -103,26 +105,29 @@ io.on("connection", (socket) => {
         socketToIdentify?.emit("identify-client", client);
       });
     } catch (e) {
-      console.log('Failed to identify all clients', e);
+      console.log("Failed to identify all clients", e);
     }
-  })
+  });
 
   socket.on("rooms", (rooms: unknown) => {
-    if (Array.isArray(rooms) && rooms.every(room => typeof room === "string")) {
+    if (
+      Array.isArray(rooms) &&
+      rooms.every((room) => typeof room === "string")
+    ) {
       logger.info(
-        `user ${user.username} (${socket.handshake.address}) joining rooms ${rooms}`
+        `user ${user.username} (${socket.handshake.address}) joining rooms ${rooms}`,
       );
       assignRooms(rooms, socket);
     } else {
       logger.warn(
-        `user ${user.username} (${socket.handshake.address}) sent "rooms" event with invalid payload: ${rooms}`
+        `user ${user.username} (${socket.handshake.address}) sent "rooms" event with invalid payload: ${rooms}`,
       );
     }
   });
 
   socket.on("disconnect", (reason: string) => {
     logger.info(
-      `user ${user.username} (${socket.handshake.address}) disconnected: ${reason}`
+      `user ${user.username} (${socket.handshake.address}) disconnected: ${reason}`,
     );
     leaveRooms(socket);
   });
@@ -146,8 +151,9 @@ server.listen(
     logger.info(
       `[${env.get().nodeEnv.charAt(0).toUpperCase()}][${env
         .get()
-        .serviceName.toUpperCase()}] Server started on ${host}:${env.get().servicePort
-      }`
+        .serviceName.toUpperCase()}] Server started on ${host}:${
+        env.get().servicePort
+      }`,
     );
-  }
+  },
 );
