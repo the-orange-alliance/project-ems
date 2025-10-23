@@ -295,7 +295,7 @@ export const Settings: FC = () => {
 
         // Emit socket event to notify other clients
         if (socket) {
-          socket.emit('fcs:settings:update', {
+          socket.emit('fcs:settings', {
             field: parseInt(field.match(/\d+/)?.[0] ?? '', 10),
             data,
             timestamp: Date.now()
