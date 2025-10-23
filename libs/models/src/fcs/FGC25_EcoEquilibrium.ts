@@ -160,7 +160,7 @@ export type ConstantsType = {
     FlowControllerConstants: FlowControllerConstants;
 };
 
-export const constants: ConstantsType = Object.freeze({
+export const constants: ConstantsType = {
     kEStopDioChannel: 0,
     BallDispenserConstants: {
         kBlueOuttakeId: 4,
@@ -263,4 +263,4 @@ export const constants: ConstantsType = Object.freeze({
         CAN_REV_ID: 5,
         CAN_DEVICE_TYPE_FLEX: 2,
     }
-});
+};
