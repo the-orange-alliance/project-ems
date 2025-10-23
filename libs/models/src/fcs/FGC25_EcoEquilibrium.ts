@@ -64,15 +64,6 @@ export interface DispenserSettings {
 }
 
 export interface EcosystemSettings {
-  kBackWledAddress: string;
-  kBackWledSegment: number;
-
-  kBlueWledAddress: string;
-  kBlueWledSegment: number;
-
-  kRedWledAddress: string;
-  kRedWledSegment: number;
-
   kLedLength: number;
   kLedStart: number;
   kLedLowestScorablePosition: number;
@@ -102,9 +93,6 @@ export interface EcosystemSettings {
 }
 
 export interface AcceleratorSettings {
-  kBlueWledAddress: string;
-  kRedWledAddress: string;
-
   // LED strip is folded in half and effect is mirrored
   kLedLength: number;
   kLedStart: number;
@@ -122,14 +110,12 @@ export interface AcceleratorSettings {
 }
 
 export type SettingsType = {
-  kEStopDioChannel: number;
   dispenserSettings: DispenserSettings;
   ecosystemSettings: EcosystemSettings;
   acceleratorSettings: AcceleratorSettings;
 };
 
 export const DEFAULT_SETTINGS: SettingsType = {
-  kEStopDioChannel: 0,
   dispenserSettings: {
     tornado: {
       kUpTurboSpeed: 1.0,
@@ -144,15 +130,6 @@ export const DEFAULT_SETTINGS: SettingsType = {
     }
   },
   ecosystemSettings: {
-    kBackWledAddress: 'quad-ctr-field-1.local',
-    kBackWledSegment: 1,
-
-    kBlueWledAddress: 'quad-ctr-field-1.local',
-    kBlueWledSegment: 2,
-
-    kRedWledAddress: 'quad-ctr-field-1.local',
-    kRedWledSegment: 0,
-
     kLedLength: 61,
     kLedStart: 0,
     kLedLowestScorablePosition: 5,
@@ -181,9 +158,6 @@ export const DEFAULT_SETTINGS: SettingsType = {
     }
   },
   acceleratorSettings: {
-    kBlueWledAddress: 'uno-blue-field-1.local',
-    kRedWledAddress: 'uno-red-field-1.local',
-
     // LED strip is folded in half and effect is mirrored
     kLedLength: 71,
     kLedStart: 3,
