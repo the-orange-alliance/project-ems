@@ -51,6 +51,7 @@ export class PublicEcrCicdStack extends cdk.Stack {
     githubActionsRole.addToPolicy(
       new iam.PolicyStatement({
         actions: [
+          "sts:GetServiceBearerToken",
           "ecr-public:GetAuthorizationToken",
           "ecr-public:InitiateLayerUpload",
           "ecr-public:UploadLayerPart",
