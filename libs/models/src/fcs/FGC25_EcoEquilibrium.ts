@@ -41,7 +41,7 @@ export interface EcosystemUpdate {
 
 export interface AcceleratorUpdate {
   side: FieldSide;
-  status: AcceleratorStatus
+  status: AcceleratorStatus;
 }
 
 export interface DispenserUpdate {
