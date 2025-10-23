@@ -51,7 +51,7 @@ RUN npm install -g serve@14.2.1
 WORKDIR /workspace
 
 # Copy only the built web app
-COPY --from=build /workspace/apps/web/dist ./apps/web/dist
+COPY --from=build /workspace/apps/web/build ./apps/web/build
 
 EXPOSE 80
-CMD ["serve", "-s", "apps/web/dist", "-l", "80"]
+CMD ["serve", "-s", "apps/web/build", "-l", "80"]

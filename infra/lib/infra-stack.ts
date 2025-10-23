@@ -20,6 +20,12 @@ export class EcrCicdStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
+    new iam.OpenIdConnectProvider(this, "GitHubOIDCProvider", {
+      url: "https://token.actions.githubusercontent.com",
+      clientIds: ["sts.amazonaws.com"],
+      thumbprints: ["6938fd4d98bab03faadb97b34396831e3780aea1"],
+    });
+
     const oidcProviderArn = `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`;
     const githubOidcProvider =
       iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
