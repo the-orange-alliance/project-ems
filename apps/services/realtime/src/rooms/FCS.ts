@@ -58,7 +58,7 @@ export default class FCS extends Room {
 
     socket.on(
       EcoEquilibriumFCS.SocketEvents.AccelerationUpdate,
-      (data: EcoEquilibriumFCS.AccelerationState): void => {
+      (data: EcoEquilibriumFCS.AcceleratorUpdate): void => {
         logger.info("fcs:accelerationUpdate", data);
         this.server
           .to("match")
@@ -68,7 +68,7 @@ export default class FCS extends Room {
 
     socket.on(
       EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
-      (data: EcoEquilibriumFCS.BiodiversityDispensedState): void => {
+      (data: EcoEquilibriumFCS.DispenserUpdate): void => {
         logger.info("fcs:biodiversityDispensedUpdate", data);
         this.server
           .to("match")

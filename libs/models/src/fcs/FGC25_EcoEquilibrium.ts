@@ -5,14 +5,27 @@ export enum SocketEvents {
     BiodiversityDispensedUpdate = "fcs:fgc25:biodiversityDispensedUpdate",
 }
 
-export type AccelerationState = {
-    red: boolean,
-    blue: boolean,
-};
+export enum FieldSide {
+    Red = 0,
+    Blue = 1
+}
 
-export type BiodiversityDispensedState = {
-    red: number;
-    blue: number;
+export enum AcceleratorState {
+  Idle = 0,
+  Energizing = 1,
+  Deenergizing = 2,
+}
+
+export enum FlowRate {
+    Low = 0,
+    Medium = 1, 
+    High = 2,
+}
+
+export type AcceleratorStatus = {
+    state: AcceleratorState;
+    rate: FlowRate
+    progress: number;
 };
 
 export enum Ecosystem {
@@ -24,6 +37,16 @@ export enum Ecosystem {
 export interface EcosystemUpdate {
     ecosystem: Ecosystem;
     position: 0 | 1 | 2 | 3;
+}
+
+export interface AcceleratorUpdate {
+  side: FieldSide;
+  status: AcceleratorStatus;
+}
+
+export interface DispenserUpdate {
+  side: FieldSide;
+  biodiversityDispensed: number;
 }
 
 export enum ElevatorDirectionType {
