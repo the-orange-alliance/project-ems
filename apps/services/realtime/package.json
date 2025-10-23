@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "tsc -p . && node build/Server.js",
+    "dev": "set SERVICE_PORT=8081 && npm run start",
     "build": "tsc -p .",
     "dist": "npm run dist:index && npm run dist:worker",
     "dist:index": "ncc build build/Server.js -o dist",

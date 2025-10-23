@@ -1,28 +1,44 @@
 import { FC, useEffect, useState } from 'react';
 import { DisplayProps } from '../../displays.js';
 import { Row } from 'antd';
-import { EcoEquilibrium, EcoEquilibriumFCS, Match } from '@toa-lib/models';
+import {
+  EcoEquilibrium,
+  EcoEquilibriumFCS,
+  Match,
+  MatchState
+} from '@toa-lib/models';
 import { useSocket } from 'src/api/use-socket.js';
+import { useAtomValue } from 'jotai';
+import { matchStateAtom, matchStatusAtom } from 'src/stores/state/match.js';
 
-const ScoreContainer: FC<{ number: string; label: string }> = ({
-  number,
-  label
-}) => {
+const ScoreContainer: FC<{
+  number: string;
+  label: string;
+  wide?: boolean;
+  medium?: boolean;
+  bg?: string;
+  smallFont?: boolean;
+}> = ({ number, label, medium, wide, bg, smallFont }) => {
   return (
     <div>
       <div
         className='production-score-container'
         style={{
-          height: '250px',
-          width: '250px',
+          height: '200px',
+          width: wide
+            ? 'calc(100vw / 2) '
+            : medium
+              ? 'calc(100vw / 4)'
+              : '250px',
           border: '20px solid black',
-          padding: '20px',
           textAlign: 'center',
-          fontSize: '100px',
+          fontSize: smallFont ? '40px' : '140px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontFamily: 'Tomarik Brush'
+          fontFamily: 'Tomarik Brush',
+          backgroundColor: bg ? bg : undefined,
+          paddingBottom: '30px'
         }}
       >
         {number}
@@ -36,7 +52,7 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
   const matchParts = genericMatch.name.split(' ');
   const matchNumber = matchParts[matchParts.length - 1];
   const field = genericMatch.fieldNumber;
-  const [socket] = useSocket();
+  const [socket, socketConnected] = useSocket();
 
   const match = genericMatch as Match<EcoEquilibrium.MatchDetails>;
 
@@ -127,71 +143,117 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
 
   const dispenseRateStrings = ['Low', 'Medium', 'High'];
   const acceleratorStateStrings = ['Idle', 'Energizing', 'Deenergizing'];
+  const matchStateStrings: Record<MatchState, string> = {
+    [MatchState.AUDIENCE_READY]: 'Audience Ready',
+    [MatchState.FIELD_READY]: 'Field Ready',
+    [MatchState.MATCH_ABORTED]: 'Match Aborted',
+    [MatchState.MATCH_COMPLETE]: 'Match Complete',
+    [MatchState.MATCH_NOT_SELECTED]: 'Match Not Selected',
+    [MatchState.MATCH_READY]: 'Match Ready',
+    [MatchState.PRESTART_COMPLETE]: 'Prestart Complete',
+    [MatchState.PRESTART_READY]: 'Prestart Ready',
+    [MatchState.RESULTS_COMMITTED]: 'Results Committed',
+    [MatchState.RESULTS_POSTED]: 'Results Posted',
+    [MatchState.RESULTS_READY]: 'Results Ready',
+    [MatchState.MATCH_IN_PROGRESS]: 'Match In Progress'
+  };
+
+  const matchState = useAtomValue(matchStateAtom);
+  const matchStatus = useAtomValue(matchStatusAtom);
+
+  const matchString =
+    matchStateStrings[matchState].toLowerCase() === matchStatus.toLowerCase()
+      ? matchStateStrings[matchState]
+      : `${matchStateStrings[matchState]} \n (${matchStatus})`;
 
   return (
-    <Row>
-      <ScoreContainer number={matchNumber} label={`Match Number`} />
-      <ScoreContainer number={`${field}`} label={`Field`} />
-      <ScoreContainer
-        number={getRemainingFromLevel(redEcoLevel).toString()}
-        label={'Red Side Eco Barrier Remain'}
-      />
-      <ScoreContainer
-        number={getRemainingFromLevel(blueEcoLevel).toString()}
-        label={'Blue Side Eco Barrier Remain'}
-      />
-      <ScoreContainer
-        number={getRemainingFromLevel(centerEcoLevel).toString()}
-        label={'Center Eco Barrier Remain'}
-      />
-      <ScoreContainer
-        number={acceleratorStateStrings[redAcceleratorStatus.state]}
-        label={'Red Side Accelerator State'}
-      />
-      <ScoreContainer
-        number={dispenseRateStrings[redAcceleratorStatus.rate]}
-        label={'Red Side Dispense Rate'}
-      />
-      <ScoreContainer
-        number={`${redAcceleratorStatus.progress * 100}%`}
-        label={'Red Side Energizing Progress'}
-      />
-      <ScoreContainer
-        number={acceleratorStateStrings[blueAcceleratorStatus.state]}
-        label={'Blue Side Accelerator State'}
-      />
-      <ScoreContainer
-        number={dispenseRateStrings[blueAcceleratorStatus.rate]}
-        label={'Blue Side Dispense Rate'}
-      />
-      <ScoreContainer
-        number={`${blueAcceleratorStatus.progress * 100}%`}
-        label={'Blue Side Energizing Progress'}
-      />
-      <ScoreContainer
-        number={
-          match && match.details
-            ? match.details.barriersInRedMitigator.toString()
-            : ''
-        }
-        label={'Barriers Scored Red Mitigator'}
-      />
-      <ScoreContainer
-        number={
-          match && match.details
-            ? match.details.barriersInBlueMitigator.toString()
-            : ''
-        }
-        label={'Barriers Scored Blue Mitigator'}
-      />
-      <ScoreContainer
-        number={biodiversityDispensed.red.toString()}
-        label={'Red Side Biodiversity Dispensed'}
-      />
-      <ScoreContainer
-        number={biodiversityDispensed.blue.toString()}
-        label={'Blue Side Biodiversity Dispensed'}
-      />
-    </Row>
+    <>
+      <Row>
+        <ScoreContainer
+          number={socketConnected ? 'Y' : 'N'}
+          label={`Socket Connected`}
+          bg={socketConnected ? '#4caf50' : '#f44336'}
+        />
+        <ScoreContainer number={matchNumber} label={`Match Number`} />
+        <ScoreContainer number={`${field}`} label={`Field`} />
+        <ScoreContainer
+          number={matchString}
+          label={`Match State`}
+          medium
+          smallFont
+        />
+      </Row>
+      <Row>
+        <ScoreContainer
+          number={getRemainingFromLevel(redEcoLevel).toString()}
+          label={'Red Side Eco Barrier Remain'}
+        />
+        <ScoreContainer
+          number={getRemainingFromLevel(blueEcoLevel).toString()}
+          label={'Blue Side Eco Barrier Remain'}
+        />
+        <ScoreContainer
+          number={getRemainingFromLevel(centerEcoLevel).toString()}
+          label={'Center Eco Barrier Remain'}
+        />
+        <ScoreContainer
+          number={
+            match && match.details
+              ? match.details.barriersInRedMitigator.toString()
+              : ''
+          }
+          label={'Barriers Scored Red Mitigator'}
+        />
+        <ScoreContainer
+          number={
+            match && match.details
+              ? match.details.barriersInBlueMitigator.toString()
+              : ''
+          }
+          label={'Barriers Scored Blue Mitigator'}
+        />
+        <ScoreContainer
+          number={biodiversityDispensed.red.toString()}
+          label={'Red Side Biodiversity Dispensed'}
+        />
+        <ScoreContainer
+          number={biodiversityDispensed.blue.toString()}
+          label={'Blue Side Biodiversity Dispensed'}
+        />
+        <ScoreContainer
+          number={`${redAcceleratorStatus.progress * 100}%`}
+          medium
+          label={'Red Side Energizing Progress'}
+        />
+        <ScoreContainer
+          number={`${blueAcceleratorStatus.progress * 100}%`}
+          medium
+          label={'Blue Side Energizing Progress'}
+        />
+      </Row>
+
+      <Row style={{ width: '100vw', marginTop: '50px' }}>
+        <ScoreContainer
+          number={dispenseRateStrings[redAcceleratorStatus.rate]}
+          wide
+          label={'Red Side Dispense Rate'}
+        />
+        <ScoreContainer
+          number={dispenseRateStrings[blueAcceleratorStatus.rate]}
+          wide
+          label={'Blue Side Dispense Rate'}
+        />
+        <ScoreContainer
+          number={acceleratorStateStrings[redAcceleratorStatus.state]}
+          wide
+          label={'Red Side Accelerator State'}
+        />
+        <ScoreContainer
+          number={acceleratorStateStrings[blueAcceleratorStatus.state]}
+          wide
+          label={'Blue Side Accelerator State'}
+        />
+      </Row>
+    </>
   );
 };
