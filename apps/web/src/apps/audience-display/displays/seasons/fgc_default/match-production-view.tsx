@@ -40,8 +40,18 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
 
   const match = genericMatch as Match<EcoEquilibrium.MatchDetails>;
 
-  const [redAccelerating, setRedAccelerating] = useState(false);
-  const [blueAccelerating, setBlueAccelerating] = useState(false);
+  const [redAcceleratorStatus, setRedAcceleratorStatus] =
+    useState<EcoEquilibriumFCS.AcceleratorStatus>({
+      state: EcoEquilibriumFCS.AcceleratorState.Idle,
+      rate: EcoEquilibriumFCS.FlowRate.Low,
+      progress: 0
+    });
+  const [blueAcceleratorStatus, setBlueAcceleratorStatus] =
+    useState<EcoEquilibriumFCS.AcceleratorStatus>({
+      state: EcoEquilibriumFCS.AcceleratorState.Idle,
+      rate: EcoEquilibriumFCS.FlowRate.Low,
+      progress: 0
+    });
   const [redEcoLevel, setRedEcoLevel] = useState(0);
   const [blueEcoLevel, setBlueEcoLevel] = useState(0);
   const [centerEcoLevel, setCenterEcoLevel] = useState(0);
@@ -60,9 +70,26 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
     }
   };
 
-  const updateAcceleration = (payload: EcoEquilibriumFCS.AccelerationState) => {
-    setRedAccelerating(payload.red);
-    setBlueAccelerating(payload.blue);
+  const updateAcceleration = (payload: EcoEquilibriumFCS.AcceleratorUpdate) => {
+    if (payload.side === EcoEquilibriumFCS.FieldSide.Red) {
+      setRedAcceleratorStatus(payload.status);
+    } else if (payload.side === EcoEquilibriumFCS.FieldSide.Blue) {
+      setBlueAcceleratorStatus(payload.status);
+    }
+  };
+
+  const updateDispenser = (payload: EcoEquilibriumFCS.DispenserUpdate) => {
+    if (payload.side === EcoEquilibriumFCS.FieldSide.Red) {
+      setBiodiversityDispensed((prev) => ({
+        ...prev,
+        red: payload.biodiversityDispensed
+      }));
+    } else if (payload.side === EcoEquilibriumFCS.FieldSide.Blue) {
+      setBiodiversityDispensed((prev) => ({
+        ...prev,
+        blue: payload.biodiversityDispensed
+      }));
+    }
   };
 
   useEffect(() => {
@@ -74,7 +101,7 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
     );
     socket.on(
       EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
-      setBiodiversityDispensed
+      updateDispenser
     );
     return () => {
       socket.off(
@@ -87,7 +114,7 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
       );
       socket.off(
         EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
-        setBiodiversityDispensed
+        updateDispenser
       );
     };
   }, [socket]);
@@ -98,14 +125,13 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
     return math;
   };
 
+  const dispenseRateStrings = ['Low', 'Medium', 'High'];
+  const acceleratorStateStrings = ['Idle', 'Energizing', 'Deenergizing'];
+
   return (
     <Row>
       <ScoreContainer number={matchNumber} label={`Match Number`} />
       <ScoreContainer number={`${field}`} label={`Field`} />
-      <ScoreContainer
-        number={getRemainingFromLevel(redEcoLevel).toString()}
-        label={'Red Side Eco Barrier Remain'}
-      />
       <ScoreContainer
         number={getRemainingFromLevel(redEcoLevel).toString()}
         label={'Red Side Eco Barrier Remain'}
@@ -119,12 +145,28 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
         label={'Center Eco Barrier Remain'}
       />
       <ScoreContainer
-        number={redAccelerating ? 'YES' : 'NO'}
-        label={'Red Side Accelerating'}
+        number={acceleratorStateStrings[redAcceleratorStatus.state]}
+        label={'Red Side Accelerator State'}
       />
       <ScoreContainer
-        number={blueAccelerating ? 'YES' : 'NO'}
-        label={'Blue Side Accelerating'}
+        number={dispenseRateStrings[redAcceleratorStatus.rate]}
+        label={'Red Side Dispense Rate'}
+      />
+      <ScoreContainer
+        number={`${redAcceleratorStatus.progress * 100}%`}
+        label={'Red Side Energizing Progress'}
+      />
+      <ScoreContainer
+        number={acceleratorStateStrings[blueAcceleratorStatus.state]}
+        label={'Blue Side Accelerator State'}
+      />
+      <ScoreContainer
+        number={dispenseRateStrings[blueAcceleratorStatus.rate]}
+        label={'Blue Side Dispense Rate'}
+      />
+      <ScoreContainer
+        number={`${blueAcceleratorStatus.progress * 100}%`}
+        label={'Blue Side Energizing Progress'}
       />
       <ScoreContainer
         number={
