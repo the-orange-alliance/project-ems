@@ -1,8 +1,8 @@
 import * as cdk from "aws-cdk-lib";
-import { aws_ecr as ecr, aws_iam as iam } from "aws-cdk-lib";
+import { aws_iam as iam, aws_ecr as ecr } from "aws-cdk-lib";
 import { Construct } from "constructs";
 
-export class EcrCicdStack extends cdk.Stack {
+export class PublicEcrCicdStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -10,28 +10,25 @@ export class EcrCicdStack extends cdk.Stack {
     const repo = "project-ems";
     const branch = "main";
 
-    const backendRepo = new ecr.Repository(this, "BackendEcrRepo", {
+    // -------------------------------
+    // Create Public ECR Repositories
+    // -------------------------------
+    const backendRepo = new ecr.CfnPublicRepository(this, "BackendPublicRepo", {
       repositoryName: "ems-backend",
-      removalPolicy: cdk.RemovalPolicy.RETAIN, // keep on stack deletion
     });
 
-    const webRepo = new ecr.Repository(this, "WebEcrRepo", {
+    const webRepo = new ecr.CfnPublicRepository(this, "WebPublicRepo", {
       repositoryName: "ems-web",
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
-    new iam.OpenIdConnectProvider(this, "GitHubOIDCProvider", {
-      url: "https://token.actions.githubusercontent.com",
-      clientIds: ["sts.amazonaws.com"],
-      thumbprints: ["6938fd4d98bab03faadb97b34396831e3780aea1"],
-    });
+    // GitHub OIDC provider
+    const githubOidcProviderArn = `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`;
 
-    const oidcProviderArn = `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`;
     const githubOidcProvider =
       iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
         this,
         "GitHubOidcProvider",
-        oidcProviderArn,
+        githubOidcProviderArn,
       );
 
     const githubActionsPrincipal = new iam.WebIdentityPrincipal(
@@ -44,34 +41,48 @@ export class EcrCicdStack extends cdk.Stack {
       },
     );
 
+    // GitHub Actions role
     const githubActionsRole = new iam.Role(this, "GitHubActionsEcrPushRole", {
-      roleName: "GitHubActionsECRPush",
+      roleName: "GitHubActionsPublicECRPush",
       assumedBy: githubActionsPrincipal,
-      description: "Allows GitHub Actions to push Docker images to ECR",
+      description: "Allows GitHub Actions to push Docker images to public ECR",
     });
 
-    [backendRepo, webRepo].forEach((repo) => {
-      repo.grantPullPush(githubActionsRole);
-    });
-
-    // Also need permission to get the authorization token
     githubActionsRole.addToPolicy(
       new iam.PolicyStatement({
-        actions: ["ecr:GetAuthorizationToken"],
+        actions: [
+          "ecr-public:GetAuthorizationToken",
+          "ecr-public:InitiateLayerUpload",
+          "ecr-public:UploadLayerPart",
+          "ecr-public:CompleteLayerUpload",
+          "ecr-public:PutImage",
+          "ecr-public:DescribeRepositories",
+          "ecr-public:BatchGetImage",
+          "ecr-public:BatchCheckLayerAvailability",
+        ],
         resources: ["*"],
       }),
     );
 
-    new cdk.CfnOutput(this, "BackendEcrUri", {
-      value: backendRepo.repositoryUri,
+    // Outputs
+    new cdk.CfnOutput(this, "BackendPublicEcrUri", {
+      value: `public.ecr.aws/${this.account}/ems-backend`,
     });
 
-    new cdk.CfnOutput(this, "WebEcrUri", {
-      value: webRepo.repositoryUri,
+    new cdk.CfnOutput(this, "WebPublicEcrUri", {
+      value: `public.ecr.aws/${this.account}/ems-web`,
     });
 
     new cdk.CfnOutput(this, "GitHubActionsRoleArn", {
       value: githubActionsRole.roleArn,
+    });
+
+    new cdk.CfnOutput(this, "BackendPublicEcrArn", {
+      value: backendRepo.attrArn,
+    });
+
+    new cdk.CfnOutput(this, "WebPublicEcrArn", {
+      value: webRepo.attrArn,
     });
   }
 }
