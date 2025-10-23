@@ -18,7 +18,7 @@ async function fcsController(fastify: FastifyInstance) {
         const data = await db.selectAllWhere('fcs_settings', `field = "${field}"`);
         if (data.length === 0) {
           // Return default value for the field
-          const defaultValue = structuredClone(FGC25FCS.constants);
+          const defaultValue = structuredClone(FGC25FCS.DEFAULT_SETTINGS);
           reply.send(defaultValue);
         } else {
           reply.send(JSON.parse(data[0].data));

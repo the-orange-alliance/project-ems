@@ -349,29 +349,19 @@ export const Settings: FC = () => {
       data: localData?.kEStopDioChannel
     },
     {
-      key: 'BallDispenserConstants',
-      title: 'Ball Dispenser',
-      data: localData?.BallDispenserConstants
+      key: 'dispenserSettings',
+      title: 'Dispensers',
+      data: localData?.dispenserSettings
     },
     {
-      key: 'PillarConstants',
-      title: 'Pillars',
-      data: localData?.PillarConstants
+      key: 'ecosystemSettings',
+      title: 'Ecosystems',
+      data: localData?.ecosystemSettings
     },
     {
-      key: 'RopeDropConstants',
-      title: 'Rope Drop',
-      data: localData?.RopeDropConstants
-    },
-    {
-      key: 'FlowControllerConstants',
-      title: 'Flow Controllers',
-      data: localData?.FlowControllerConstants
-    },
-    {
-      key: 'FCSConstants',
-      title: 'FCS Controller',
-      data: localData?.FCSConstants
+      key: 'acceleratorSettings',
+      title: 'Accelerators',
+      data: localData?.acceleratorSettings
     }
   ];
 
