@@ -49,6 +49,10 @@ You can build these images via the 2 commands:
 
 These commands must be run from the repo root.
 
+### Using Docker-Compose
+
+Run `docker compose up -d --pull always` in the root directory to run both containers with their proper settings, including volume storage.
+
 ## AWS Amplify Gen 2 Support
 
 First grab the ems-admin IAM security credentials needed to login to AWS.

@@ -10,7 +10,7 @@ function getMacPath() {
 }
 
 function getLinuxPath() {
-  return join(homedir(), '.config;');
+  return join(homedir(), '.config');
 }
 
 function getPlatformPath() {
