@@ -113,9 +113,11 @@ export type SettingsType = {
   dispenserSettings: DispenserSettings;
   ecosystemSettings: EcosystemSettings;
   acceleratorSettings: AcceleratorSettings;
+  kEStopDioChannel: number;
 };
 
 export const DEFAULT_SETTINGS: SettingsType = {
+  kEStopDioChannel: 0,
   dispenserSettings: {
     tornado: {
       kUpTurboSpeed: 1.0,

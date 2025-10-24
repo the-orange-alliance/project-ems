@@ -16,6 +16,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { updateFcsData, useFcsData } from 'src/api/use-fcs-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 import { useSocket } from 'src/api/use-socket.js';
+import { FGC25FCS } from '@toa-lib/models';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -25,6 +26,7 @@ interface SettingFieldProps {
   value: any;
   onChange: (value: any) => void;
   type?: 'number' | 'string' | 'color' | 'boolean';
+  step?: number;
   description?: string;
 }
 
@@ -33,6 +35,7 @@ const SettingField: FC<SettingFieldProps> = ({
   value,
   onChange,
   type = 'number',
+  step = 0.01,
   description
 }) => {
   const renderInput = () => {
@@ -67,7 +70,7 @@ const SettingField: FC<SettingFieldProps> = ({
             value={value}
             onChange={onChange}
             style={{ width: '100%' }}
-            step={type === 'number' ? 0.01 : 1}
+            step={step}
           />
         );
     }
@@ -267,8 +270,10 @@ export const Settings: FC = () => {
   const tournament = useCurrentTournament();
   const [socket] = useSocket();
   const [selectedField, setSelectedField] = useState<string>('');
-  const { data: fcsData, mutate } = useFcsData(selectedField);
-  const [localData, setLocalData] = useState<any>(null);
+  const { data: fcsData, mutate } = useFcsData(
+    parseInt(selectedField.match(/\d+/)?.[0] ?? '', 10)
+  );
+  const [localData, setLocalData] = useState<FGC25FCS.SettingsType>();
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<number | null>(null);
 
@@ -288,15 +293,17 @@ export const Settings: FC = () => {
     async (field: string, data: any) => {
       if (!field || !data || isSaving) return;
 
+      const fieldNum = parseInt(field.match(/\d+/)?.[0] ?? '', 10);
+
       setIsSaving(true);
       try {
         // Save to API
-        await updateFcsData(field, data);
+        await updateFcsData(fieldNum, data);
 
         // Emit socket event to notify other clients
         if (socket) {
           socket.emit('fcs:settings', {
-            field: parseInt(field.match(/\d+/)?.[0] ?? '', 10),
+            field: fieldNum,
             data,
             timestamp: Date.now()
           });
@@ -326,7 +333,10 @@ export const Settings: FC = () => {
     [saveSettings]
   );
 
-  const handleDataChange = (section: string, value: any) => {
+  const handleDataChange = (
+    section: keyof FGC25FCS.SettingsType,
+    value: any
+  ) => {
     setLocalData((prev: any) => {
       const newData = { ...prev, [section]: value };
       if (selectedField) {
@@ -342,28 +352,41 @@ export const Settings: FC = () => {
       label: field
     })) || [];
 
+  // helper types
+  type SectionKey = keyof FGC25FCS.SettingsType;
+  type Section<K extends SectionKey> = {
+    key: K;
+    title: string;
+    data: FGC25FCS.SettingsType[K] | undefined;
+  };
+
+  // helper to preserve per-item key->data relationship when building the array
+  const makeSection = <K extends SectionKey>(s: Section<K>) => s;
+
   const sections = [
-    {
+    makeSection({
       key: 'kEStopDioChannel',
       title: 'Emergency Stop',
       data: localData?.kEStopDioChannel
-    },
-    {
+    }),
+    makeSection({
       key: 'dispenserSettings',
       title: 'Dispensers',
       data: localData?.dispenserSettings
-    },
-    {
+    }),
+    makeSection({
       key: 'ecosystemSettings',
       title: 'Ecosystems',
       data: localData?.ecosystemSettings
-    },
-    {
+    }),
+    makeSection({
       key: 'acceleratorSettings',
       title: 'Accelerators',
       data: localData?.acceleratorSettings
-    }
+    })
   ];
+
+  console.log(sections, localData);
 
   return (
     <div style={{ padding: 24 }}>
@@ -390,7 +413,7 @@ export const Settings: FC = () => {
             <Collapse defaultActiveKey={['emergency', 'ball-dispenser']} ghost>
               {sections.map(
                 (section) =>
-                  section.data && (
+                  typeof section.data !== 'undefined' && (
                     <Panel
                       header={section.title}
                       key={section.key
@@ -407,6 +430,7 @@ export const Settings: FC = () => {
                               onChange={(value) =>
                                 handleDataChange(section.key, value)
                               }
+                              step={1}
                               description='Digital I/O channel for emergency stop button'
                             />
                           </Col>
