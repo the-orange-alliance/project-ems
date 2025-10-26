@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import { SyncPlatform, TeamKeys, TeamKeysLables } from '@toa-lib/models';
 import { APIOptions } from '@toa-lib/client';
 import { updateSocketClient } from 'src/api/use-socket-data.js';
@@ -27,6 +27,8 @@ const GlobalSettings: FC = () => {
   const [syncPlatform, setSyncPlatform] = useAtom(syncPlatformAtom);
   const [syncApiKey, setSyncApiKey] = useAtom(syncApiKeyAtom);
   const downloadRelease = useGitHubDownload();
+  const timeoutRef1 = useRef<any>(null);
+  const timeoutRef = useRef<any>(null);
 
   const handleFollowerModeChange = (value: boolean) => {
     setFollowerMode(value);
@@ -41,26 +43,24 @@ const GlobalSettings: FC = () => {
     APIOptions.host = `http://${value.toString()}`;
   };
 
-  let followTimeout: any = null;
   const updateFollowerMode = (value: boolean) => {
     handleFollowerModeChange(value);
 
     // Don't hammer the server with requests
-    if (followTimeout !== null) clearTimeout(followTimeout);
-    followTimeout = setTimeout(() => {
+    if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
       updateSocketClient(localStorage.getItem('persistantClientId') ?? '', {
         followerMode: value ? 1 : 0
       });
     }, 1000);
   };
 
-  let leaderApiHostTimeout: any = null;
   const updateFollowerApiHost = (value: string | number) => {
     handleLeaderAddressChange(value);
 
     // Don't hammer the server with requests
-    if (leaderApiHostTimeout !== null) clearTimeout(leaderApiHostTimeout);
-    leaderApiHostTimeout = setTimeout(() => {
+    if (timeoutRef1.current !== null) clearTimeout(timeoutRef1.current);
+    timeoutRef1.current = setTimeout(() => {
       updateSocketClient(localStorage.getItem('persistantClientId') ?? '', {
         followerApiHost: value
       });

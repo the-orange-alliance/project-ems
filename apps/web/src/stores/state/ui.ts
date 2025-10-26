@@ -21,12 +21,24 @@ export const darkModeAtom = atom<boolean>((get) => {
   }
 });
 export const userAtom = atom<User | null>(null);
-export const teamIdentifierAtom = atom<keyof Team>('teamKey');
-export const isFollowerAtom = atom<boolean>(false);
-export const followerHostAtom = atom<string>('');
-export const syncPlatformAtom = atom<SyncPlatform>(SyncPlatform.DISABLED);
-export const syncApiKeyAtom = atom<string>('');
-export const isAudioEnabledForScorekeeper = atom<boolean>(false);
+export const teamIdentifierAtom = atomWithStorage<keyof Team>(
+  'teamIdentifier',
+  'teamKey'
+);
+export const isFollowerAtom = atomWithStorage<boolean>(
+  'leaderApiEnabled',
+  false
+);
+export const followerHostAtom = atomWithStorage<string>('leaderApiHost', '');
+export const syncPlatformAtom = atomWithStorage<SyncPlatform>(
+  'syncPlatform',
+  SyncPlatform.DISABLED
+);
+export const syncApiKeyAtom = atomWithStorage<string>('syncApiKey', '');
+export const isAudioEnabledForScorekeeper = atomWithStorage<boolean>(
+  'audioEnabled',
+  false
+);
 export const fieldsAtom = atom<string[]>([]);
 
 /**

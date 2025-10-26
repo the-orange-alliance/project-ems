@@ -41,7 +41,7 @@ const InputRow: React.FC<InputRowProps> = ({ title, defaultValue, disabled, onCh
                         defaultValue={defaultValue}
                         disabled={disabled}
                         status={!valid ? validState : undefined}
-                        onChange={handleChange}
+                        onChange={(e) => handleChange(e.target.value)}
                     />
                     {!valid && 
                         <Typography.Text type={validState === 'error' ? 'danger' : 'warning'}> 
