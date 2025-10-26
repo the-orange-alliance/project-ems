@@ -73,6 +73,8 @@ export interface EcosystemSettings {
   kScorableZoneColor: string;
   kScoredColor: string;
 
+  kStartingLevel: number;
+
   elevator: {
     kUpSpeed: number;
     kDownSpeed: number;
@@ -140,6 +142,8 @@ export const DEFAULT_SETTINGS: SettingsType = {
     kNegativeSpaceColor: '#ffffff',
     kScorableZoneColor: '#000000',
     kScoredColor: '#00ff00',
+
+    kStartingLevel: 3,
 
     elevator: {
       kUpSpeed: 0.1,
