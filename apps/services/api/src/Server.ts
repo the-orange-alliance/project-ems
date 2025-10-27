@@ -39,7 +39,7 @@ import { handleErrors, handleNotFound } from './middleware/ErrorHandler.js';
 import { join } from 'path';
 import webhooksController from './controllers/Webhooks.js';
 import seasonSpecificController from './controllers/SeasonSpecific.js';
-import { initS3Client } from './util/S3Backup.js';
+import { debouncedUploadDatabase, initS3Client } from './util/S3Backup.js';
 
 // Setup our environment
 const workingDir = process.env.WORKDIR ?? '../';
@@ -159,6 +159,17 @@ await fastify.register(teamController, { prefix: '/teams' });
 await fastify.register(tournamentController, { prefix: '/tournament' });
 await fastify.register(webhooksController, { prefix: '/webhooks' });
 await fastify.register(seasonSpecificController, { prefix: '/seasonSpecific' });
+
+// 🧩 Global hook: triggers after any mutating request
+fastify.addHook('onResponse', async (request) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+    const { eventKey } = (request.params as { eventKey?: string }) ?? {};
+
+    if (eventKey) {
+      debouncedUploadDatabase(eventKey);
+    }
+  }
+});
 
 // Passport serialization (optional, for sessions)
 passport.serializeUser((user, cb) => {

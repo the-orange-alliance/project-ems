@@ -1,8 +1,11 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import fs from 'fs/promises';
-import path from 'path';
-import { debounce } from 'lodash';
+import { sep } from 'path';
+import _ from 'lodash';
+import logger from './Logger.js';
+import { getAppData } from '@toa-lib/server';
 
+const bucket = process.env.BACKUP_BUCKET_NAME ?? 'ems-sqlite-backups';
 let s3: S3Client | null = null;
 
 export const initS3Client = () => {
@@ -14,20 +17,20 @@ export const initS3Client = () => {
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
       }
     });
+    logger.info('S3 Backup client initialized');
   }
 };
-
-const bucket = process.env.BACKUP_BUCKET_NAME ?? 'ems-sqlite-backups';
 
 /**
  * Upload the SQLite DB file to S3
  */
-async function uploadDatabase(dbPath: string) {
-  const fileBuffer = await fs.readFile(dbPath);
+async function uploadDatabase(eventKey: string) {
+  if (!s3) return;
+  const path = getAppData('ems') + sep + eventKey + '.db';
+  const fileBuffer = await fs.readFile(path);
+  const key = `backups/${eventKey}-${Date.now()}.sqlite`;
 
-  const key = `backups/${path.basename(dbPath)}-${Date.now()}.sqlite`;
-
-  await s3?.send(
+  await s3.send(
     new PutObjectCommand({
       Bucket: bucket,
       Key: key,
@@ -36,14 +39,14 @@ async function uploadDatabase(dbPath: string) {
     })
   );
 
-  console.log(`[Backup] Uploaded database to s3://${bucket}/${key}`);
+  logger.info(`[Backup] Uploaded database to s3://${bucket}/${key}`);
 }
 
 /**
  * Debounced version – runs once every 10 minutes (after last call)
  */
-export const debouncedUploadDatabase = debounce(
-  (dbPath: string) => uploadDatabase(dbPath),
+export const debouncedUploadDatabase = _.debounce(
+  (eventKey: string) => uploadDatabase(eventKey),
   1 * 60 * 1000, // 1 minutes debounce
   { trailing: true, leading: false }
 );
