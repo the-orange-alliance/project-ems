@@ -39,6 +39,7 @@ import { handleErrors, handleNotFound } from './middleware/ErrorHandler.js';
 import { join } from 'path';
 import webhooksController from './controllers/Webhooks.js';
 import seasonSpecificController from './controllers/SeasonSpecific.js';
+import { initS3Client } from './util/S3Backup.js';
 
 // Setup our environment
 const workingDir = process.env.WORKDIR ?? '../';
@@ -51,6 +52,13 @@ try {
 } catch (e) {
   logger.error(e);
   process.exit(1);
+}
+
+// Try to setup AWS S3 client if credentials are present
+try {
+  initS3Client();
+} catch (e) {
+  logger.warn('S3 Backup client not initialized:', e);
 }
 
 // Create Fastify instance
