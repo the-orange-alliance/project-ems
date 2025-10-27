@@ -1,6 +1,8 @@
 import { clientFetcher } from '@toa-lib/client';
 import { SyncPlatform } from '@toa-lib/models';
 
+const buildType = import.meta.env.VITE_BUILD_TYPE;
+
 interface SyncResponse {
   success: boolean;
 }
@@ -10,8 +12,11 @@ export const resultsSyncMatches = (
   tournamentKey: string,
   platform: SyncPlatform,
   apiKey: string
-): Promise<SyncResponse> =>
-  clientFetcher<SyncResponse>(
+): Promise<SyncResponse> => {
+  if (buildType === 'production') {
+    return Promise.resolve({ success: false });
+  }
+  return clientFetcher<SyncResponse>(
     `results/sync/matches/${eventKey}/${tournamentKey}`,
     'POST',
     {
@@ -19,6 +24,7 @@ export const resultsSyncMatches = (
       apiKey
     }
   );
+};
 
 export const resultsSyncMatch = (
   eventKey: string,
@@ -26,8 +32,11 @@ export const resultsSyncMatch = (
   id: number,
   platform: SyncPlatform,
   apiKey: string
-): Promise<SyncResponse> =>
-  clientFetcher<SyncResponse>(
+): Promise<SyncResponse> => {
+  if (buildType === 'production') {
+    return Promise.resolve({ success: false });
+  }
+  return clientFetcher<SyncResponse>(
     `results/sync/matches/${eventKey}/${tournamentKey}/${id}`,
     'POST',
     {
@@ -35,14 +44,18 @@ export const resultsSyncMatch = (
       apiKey
     }
   );
+};
 
 export const resultsSyncRankings = (
   eventKey: string,
   tournamentKey: string,
   platform: SyncPlatform,
   apiKey: string
-): Promise<SyncResponse> =>
-  clientFetcher<SyncResponse>(
+): Promise<SyncResponse> => {
+  if (buildType === 'production') {
+    return Promise.resolve({ success: false });
+  }
+  return clientFetcher<SyncResponse>(
     `results/sync/rankings/${eventKey}/${tournamentKey}`,
     'POST',
     {
@@ -50,14 +63,18 @@ export const resultsSyncRankings = (
       apiKey
     }
   );
+};
 
 export const resultsSyncAlliances = (
   eventKey: string,
   tournamentKey: string,
   platform: SyncPlatform,
   apiKey: string
-): Promise<SyncResponse> =>
-  clientFetcher<SyncResponse>(
+): Promise<SyncResponse> => {
+  if (buildType === 'production') {
+    return Promise.resolve({ success: false });
+  }
+  return clientFetcher<SyncResponse>(
     `results/sync/alliances/${eventKey}/${tournamentKey}`,
     'POST',
     {
@@ -65,13 +82,18 @@ export const resultsSyncAlliances = (
       apiKey
     }
   );
+};
 
 export const resultsSyncTeams = (
   eventKey: string,
   platform: SyncPlatform,
   apiKey: string
-): Promise<SyncResponse> =>
-  clientFetcher<SyncResponse>(`results/sync/teams/${eventKey}`, 'POST', {
+): Promise<SyncResponse> => {
+  if (buildType === 'production') {
+    return Promise.resolve({ success: false });
+  }
+  return clientFetcher<SyncResponse>(`results/sync/teams/${eventKey}`, 'POST', {
     platform,
     apiKey
   });
+};
