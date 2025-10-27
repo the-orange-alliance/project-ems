@@ -5,7 +5,7 @@ import _ from 'lodash';
 import logger from './Logger.js';
 import { getAppData } from '@toa-lib/server';
 
-const bucket = process.env.BACKUP_BUCKET_NAME ?? 'ems-sqlite-backups';
+let bucket: string | null = null;
 let s3: S3Client | null = null;
 
 export const initS3Client = () => {
@@ -17,6 +17,7 @@ export const initS3Client = () => {
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
       }
     });
+    bucket = process.env.BACKUP_BUCKET_NAME ?? null;
     logger.info('S3 Backup client initialized');
   }
 };
@@ -25,10 +26,11 @@ export const initS3Client = () => {
  * Upload the SQLite DB file to S3
  */
 async function uploadDatabase(eventKey: string) {
-  if (!s3) return;
+  if (!s3 || !bucket) return;
   const path = getAppData('ems') + sep + eventKey + '.db';
   const fileBuffer = await fs.readFile(path);
-  const key = `backups/${eventKey}-${Date.now()}.sqlite`;
+  const ts = new Date().toISOString().replace(/[:.]/g, '-'); // e.g. 2025-10-27T20-18-05-123Z
+  const key = `backups/${eventKey}-${ts}.sqlite`;
 
   await s3.send(
     new PutObjectCommand({
@@ -47,6 +49,6 @@ async function uploadDatabase(eventKey: string) {
  */
 export const debouncedUploadDatabase = _.debounce(
   (eventKey: string) => uploadDatabase(eventKey),
-  1 * 60 * 1000, // 1 minutes debounce
+  1 * 5 * 1000, // 1 minutes debounce
   { trailing: true, leading: false }
 );
