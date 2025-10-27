@@ -73,6 +73,8 @@ export interface EcosystemSettings {
   kScorableZoneColor: string;
   kScoredColor: string;
 
+  kStartingLevel: number;
+
   elevator: {
     kUpSpeed: number;
     kDownSpeed: number;
@@ -97,7 +99,8 @@ export interface AcceleratorSettings {
   kLedLength: number;
   kLedStart: number;
 
-  kFlowRateColor: string;
+  kMediumFlowRateColor: string;
+  kHighFlowRateColor: string;
   kNegativeSpaceColor: string;
 
   kLevel2Threshold: number;
@@ -109,7 +112,12 @@ export interface AcceleratorSettings {
   kGuaranteedPeriod: number;
 }
 
+export interface MatchStateColors {
+  kMatchEndColor: string;
+}
+
 export type SettingsType = {
+  matchStateColors: MatchStateColors;
   dispenserSettings: DispenserSettings;
   ecosystemSettings: EcosystemSettings;
   acceleratorSettings: AcceleratorSettings;
@@ -118,6 +126,9 @@ export type SettingsType = {
 
 export const DEFAULT_SETTINGS: SettingsType = {
   kEStopDioChannel: 0,
+  matchStateColors: {
+    kMatchEndColor: "#000000",
+  },
   dispenserSettings: {
     tornado: {
       kUpTurboSpeed: 1.0,
@@ -140,6 +151,8 @@ export const DEFAULT_SETTINGS: SettingsType = {
     kNegativeSpaceColor: '#ffffff',
     kScorableZoneColor: '#000000',
     kScoredColor: '#00ff00',
+
+    kStartingLevel: 3,
 
     elevator: {
       kUpSpeed: 0.1,
@@ -164,7 +177,8 @@ export const DEFAULT_SETTINGS: SettingsType = {
     kLedLength: 71,
     kLedStart: 3,
 
-    kFlowRateColor: '#ff00cc',
+    kMediumFlowRateColor: '#ffa500',
+    kHighFlowRateColor: '#00ff00',
     kNegativeSpaceColor: '#ffffff',
 
     kLevel2Threshold: 11,
