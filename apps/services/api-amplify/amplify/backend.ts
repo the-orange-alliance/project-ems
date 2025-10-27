@@ -6,8 +6,21 @@ import { apiTeamsFunction } from "./functions/api-teams/resource";
 import { apiTournamentsFunction } from "./functions/api-tournaments/resource";
 import { apiScheduleFunction } from "./functions/api-schedule/resource";
 import { apiScheduleParamsFunction } from "./functions/api-schedule-params/resource";
-import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
-import { Stack } from "aws-cdk-lib";
+import {
+  BasePathMapping,
+  Cors,
+  DomainName,
+  EndpointType,
+  LambdaIntegration,
+  RestApi,
+  SecurityPolicy,
+} from "aws-cdk-lib/aws-apigateway";
+import {
+  Stack,
+  aws_route53 as route53,
+  aws_certificatemanager as acm,
+  aws_route53_targets as route53Targets,
+} from "aws-cdk-lib";
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -82,6 +95,35 @@ const restApi = new RestApi(apiStack, "ems-online-rest-api", {
     allowMethods: Cors.ALL_METHODS,
     allowHeaders: Cors.DEFAULT_HEADERS,
   },
+});
+
+const hostedZone = route53.HostedZone.fromLookup(apiStack, "KyleFlynnDevZone", {
+  domainName: "kyleflynn.dev",
+});
+
+const certificate = new acm.Certificate(apiStack, "ApiCertificate", {
+  domainName: "api.global.kyleflynn.dev",
+  validation: acm.CertificateValidation.fromDns(hostedZone),
+});
+
+const customDomain = new DomainName(apiStack, "AmplifyApiDomain", {
+  domainName: "api.global.kyleflynn.dev",
+  certificate,
+  endpointType: EndpointType.REGIONAL,
+  securityPolicy: SecurityPolicy.TLS_1_2,
+});
+
+new BasePathMapping(apiStack, "AmplifyApiMapping", {
+  domainName: customDomain,
+  restApi,
+});
+
+new route53.ARecord(apiStack, "ApiCustomDomainAlias", {
+  zone: hostedZone,
+  recordName: "api.global",
+  target: route53.RecordTarget.fromAlias(
+    new route53Targets.ApiGatewayDomain(customDomain),
+  ),
 });
 
 const eventsLambdaIntegration = new LambdaIntegration(
@@ -172,6 +214,15 @@ backend.addOutput({
         region: Stack.of(restApi).region,
         apiName: restApi.restApiName,
       },
+    },
+  },
+});
+
+backend.addOutput({
+  custom: {
+    ApiDomain: {
+      url: `https://api.global.kyleflynn.dev`,
+      certificateArn: certificate.certificateArn,
     },
   },
 });

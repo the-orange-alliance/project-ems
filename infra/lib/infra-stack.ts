@@ -1,5 +1,5 @@
 import * as cdk from "aws-cdk-lib";
-import { aws_iam as iam, aws_ecr as ecr } from "aws-cdk-lib";
+import { aws_iam as iam, aws_ecr as ecr, aws_s3 as s3 } from "aws-cdk-lib";
 import { Construct } from "constructs";
 
 export class PublicEcrCicdStack extends cdk.Stack {
@@ -19,6 +19,14 @@ export class PublicEcrCicdStack extends cdk.Stack {
 
     const webRepo = new ecr.CfnPublicRepository(this, "WebPublicRepo", {
       repositoryName: "ems-web",
+    });
+
+    // -------------------------------
+    // Create bucket for backing up database snapshots
+    //--------------------------------
+    const bucket = new s3.Bucket(this, "BackupBucket", {
+      bucketName: "ems-backups-" + this.account + "-" + this.region,
+      versioned: true,
     });
 
     // GitHub OIDC provider
