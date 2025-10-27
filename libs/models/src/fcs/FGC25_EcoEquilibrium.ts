@@ -99,7 +99,8 @@ export interface AcceleratorSettings {
   kLedLength: number;
   kLedStart: number;
 
-  kFlowRateColor: string;
+  kMediumFlowRateColor: string;
+  kHighFlowRateColor: string;
   kNegativeSpaceColor: string;
 
   kLevel2Threshold: number;
@@ -112,6 +113,7 @@ export interface AcceleratorSettings {
 }
 
 export type SettingsType = {
+  kMatchEndColor: string;
   dispenserSettings: DispenserSettings;
   ecosystemSettings: EcosystemSettings;
   acceleratorSettings: AcceleratorSettings;
@@ -120,6 +122,7 @@ export type SettingsType = {
 
 export const DEFAULT_SETTINGS: SettingsType = {
   kEStopDioChannel: 0,
+  kMatchEndColor: "#000000",
   dispenserSettings: {
     tornado: {
       kUpTurboSpeed: 1.0,
@@ -168,7 +171,8 @@ export const DEFAULT_SETTINGS: SettingsType = {
     kLedLength: 71,
     kLedStart: 3,
 
-    kFlowRateColor: '#ff00cc',
+    kMediumFlowRateColor: '#ffa500',
+    kHighFlowRateColor: '#00ff00',
     kNegativeSpaceColor: '#ffffff',
 
     kLevel2Threshold: 11,
