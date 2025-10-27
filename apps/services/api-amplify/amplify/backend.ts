@@ -97,11 +97,12 @@ const restApi = new RestApi(apiStack, "ems-online-rest-api", {
   },
 });
 
-const hostedZone = route53.HostedZone.fromLookup(
+const hostedZone = route53.HostedZone.fromHostedZoneAttributes(
   backend.stack,
   "KyleFlynnDevZone",
   {
-    domainName: "kyleflynn.dev",
+    hostedZoneId: "Z04367765SQQQEXAMPLE",
+    zoneName: "kyleflynn.dev",
   },
 );
 

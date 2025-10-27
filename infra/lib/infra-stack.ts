@@ -29,6 +29,30 @@ export class PublicEcrCicdStack extends cdk.Stack {
       versioned: true,
     });
 
+    // -------------------------------
+    // Create IAM User and Roles
+    // -------------------------------
+    const backupUser = new iam.User(this, "BackupUser", {
+      userName: "ems-backup-bot",
+    });
+
+    // Attach policy to allow S3 access for backups
+    const backupPolicy = new iam.Policy(this, "BackupPolicy", {
+      statements: [
+        new iam.PolicyStatement({
+          actions: ["s3:PutObject", "s3:GetObject", "s3:ListBucket"],
+          resources: [bucket.bucketArn, `${bucket.bucketArn}/*`],
+        }),
+      ],
+    });
+
+    backupUser.attachInlinePolicy(backupPolicy);
+
+    // Create an access key for programmatic access (SDK, CLI, Docker)
+    const accessKey = new iam.CfnAccessKey(this, "BackupUserAccessKey", {
+      userName: backupUser.userName,
+    });
+
     // GitHub OIDC provider
     const githubOidcProviderArn = `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`;
 
@@ -92,6 +116,16 @@ export class PublicEcrCicdStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "WebPublicEcrArn", {
       value: webRepo.attrArn,
+    });
+
+    new cdk.CfnOutput(this, "BackupUserAccessKeyId", {
+      value: accessKey.ref,
+      description: "Access Key ID for ems-backup-bot",
+    });
+
+    new cdk.CfnOutput(this, "BackupUserSecretAccessKey", {
+      value: accessKey.attrSecretAccessKey,
+      description: "Secret Access Key for ems-backup-bot",
     });
   }
 }
