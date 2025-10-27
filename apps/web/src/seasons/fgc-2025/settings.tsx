@@ -370,6 +370,11 @@ export const Settings: FC = () => {
       data: localData?.kEStopDioChannel
     }),
     makeSection({
+      key: 'matchStateColors',
+      title: 'Match State Colors',
+      data: localData?.matchStateColors
+    }),
+    makeSection({
       key: 'dispenserSettings',
       title: 'Dispensers',
       data: localData?.dispenserSettings
