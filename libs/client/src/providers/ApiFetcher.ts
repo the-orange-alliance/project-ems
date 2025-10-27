@@ -27,7 +27,6 @@ export const clientFetcher = async <T>(
 ): Promise<T> => {
   // NOTE - If options.host doesn't include http://, fetch() will put the host request URL onto it.
   const request = await fetch(`${options.host}/${url}`, {
-    credentials: 'include',
     method,
     body: JSON.stringify(body),
     headers: {
