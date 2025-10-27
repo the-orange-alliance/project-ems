@@ -4,6 +4,8 @@ services:
   backend:
     container_name: ems-backend
     image: public.ecr.aws/k9n1l2c7/ems-backend:latest
+    env_file:
+      - .env
     ports:
       - "8080:8080"
       - "8081:8081"
