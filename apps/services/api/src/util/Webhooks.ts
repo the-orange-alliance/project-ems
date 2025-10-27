@@ -4,11 +4,14 @@ import { getDB } from '../db/EventDatabase.js';
 
 const AbortController = globalThis.AbortController;
 
-export const EmitWebhooks = async (webhookEvent: WebhookEvent, match: Match<any>) => {
+export const EmitWebhooks = async (
+  webhookEvent: WebhookEvent,
+  match: Match<any>
+) => {
   const db = await getDB('global');
   const webhooks = (await db.selectAllWhere(
     'webhooks',
-    `subscribedEvent = '${webhookEvent}' AND enabled = 1`
+    `subscribedEvent = '${webhookEvent}' AND enabled = 1 AND (field IS NULL OR field = ${match.fieldNumber})`
   )) as WebhookDb[];
   for (const webhook of webhooks) {
     try {
@@ -27,7 +30,7 @@ export const EmitWebhooks = async (webhookEvent: WebhookEvent, match: Match<any>
       });
       clearTimeout(timeout);
     } catch (e) {
-      console.error(`Failed to send prestart webhook to ${webhook.url}:`, e);
+      console.error(`Failed to send webhook to ${webhook.url}:`, e);
       const errorMessage = e instanceof Error ? e.message : 'Unknown error';
       const errorTime = new Date().toISOString();
       try {

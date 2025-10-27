@@ -65,5 +65,6 @@ CREATE TABLE IF NOT EXISTS "webhooks" (
     "note" TEXT,
     "lastErrorMessage" TEXT,
     "lastErrorTime" TEXT,
-    "errorCount" INTEGER DEFAULT 0
+    "errorCount" INTEGER DEFAULT 0,
+    "field" INTEGER
 );

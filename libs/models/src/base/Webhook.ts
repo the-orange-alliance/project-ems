@@ -26,7 +26,8 @@ export const WebhookDbSchema = z.object({
   note: z.string().nullable().optional(),
   lastErrorMessage: z.string().nullable().optional(),
   lastErrorTime: z.string().nullable().optional(),
-  errorCount: z.number().int().optional()
+  errorCount: z.number().int().optional(),
+  field: z.number().nullable().optional()
 });
 
 export type WebhookDb = z.infer<typeof WebhookDbSchema>;
