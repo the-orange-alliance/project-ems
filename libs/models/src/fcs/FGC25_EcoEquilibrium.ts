@@ -112,8 +112,12 @@ export interface AcceleratorSettings {
   kGuaranteedPeriod: number;
 }
 
-export type SettingsType = {
+export interface MatchStateColors {
   kMatchEndColor: string;
+}
+
+export type SettingsType = {
+  matchStateColors: MatchStateColors;
   dispenserSettings: DispenserSettings;
   ecosystemSettings: EcosystemSettings;
   acceleratorSettings: AcceleratorSettings;
@@ -122,7 +126,9 @@ export type SettingsType = {
 
 export const DEFAULT_SETTINGS: SettingsType = {
   kEStopDioChannel: 0,
-  kMatchEndColor: "#000000",
+  matchStateColors: {
+    kMatchEndColor: "#000000",
+  },
   dispenserSettings: {
     tornado: {
       kUpTurboSpeed: 1.0,
