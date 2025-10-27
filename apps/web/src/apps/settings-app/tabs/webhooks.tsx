@@ -106,6 +106,23 @@ const WebhooksTab = () => {
       )
     },
     {
+      title: 'Subscribed Field (Blank for All)',
+      dataIndex: 'field',
+      render: (text: string, record: Webhook, index: number) => (
+        <Input
+          value={text}
+          onChange={(e) => {
+            const { value } = e.target;
+            let parsed = value.trim() === '' ? null : parseInt(value, 10);
+            if (parsed !== null && isNaN(parsed)) {
+              parsed = null;
+            }
+            updateWebhook(index, 'field', parsed);
+          }}
+        />
+      )
+    },
+    {
       title: 'Error Count',
       dataIndex: 'errorCount'
     },

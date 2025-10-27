@@ -43,7 +43,6 @@ async function webhooksController(fastify: FastifyInstance) {
       try {
         const db = await getDB('global');
         const webhooks = await db.selectAll('webhooks');
-        console.log('Fetched webhooks:', webhooks);
         reply.status(200).send(webhooks);
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
