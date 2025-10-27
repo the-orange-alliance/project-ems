@@ -9,6 +9,7 @@ import {
   darkModeSettingAtom,
   followerHostAtom,
   isFollowerAtom,
+  remoteApiUrlAtom,
   syncApiKeyAtom,
   syncPlatformAtom,
   teamIdentifierAtom
@@ -26,6 +27,7 @@ const GlobalSettings: FC = () => {
   const [leaderApiHost, setLeaderApiHost] = useAtom(followerHostAtom);
   const [syncPlatform, setSyncPlatform] = useAtom(syncPlatformAtom);
   const [syncApiKey, setSyncApiKey] = useAtom(syncApiKeyAtom);
+  const [remoteUrl, setRemoteUrl] = useAtom(remoteApiUrlAtom);
   const downloadRelease = useGitHubDownload();
   const timeoutRef1 = useRef<any>(null);
   const timeoutRef = useRef<any>(null);
@@ -139,6 +141,11 @@ const GlobalSettings: FC = () => {
         title='Check For Updates'
         buttonText='Check Now'
         onClick={download}
+      />
+      <InputRow
+        title='Remote API URL'
+        value={remoteUrl}
+        onChange={(s) => setRemoteUrl(String(s))}
       />
     </Space>
   );

@@ -3,6 +3,7 @@ import { Tournament, defaultTournament } from '@toa-lib/models';
 import { FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  getTournaments,
   patchTournament,
   postTournaments
 } from 'src/api/use-tournament-data.js';
@@ -14,6 +15,9 @@ import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { getDifferences } from 'src/stores/array-utils.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
+import { APIOptions } from '@toa-lib/client';
+import { useAtomValue } from 'jotai';
+import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
 
 export const TournamentManager: FC = () => {
   const { loading, state } = useEventState({
@@ -22,11 +26,13 @@ export const TournamentManager: FC = () => {
   });
   const {
     setModifiedTournaments,
-    local: { event, tournaments },
+    local: { event, tournaments }
   } = state;
 
   const { showSnackbar } = useSnackbar();
   const navigate = useNavigate();
+
+  const remoteUrl = useAtomValue(remoteApiUrlAtom);
 
   useUpdateAppbar(
     {
@@ -89,6 +95,20 @@ export const TournamentManager: FC = () => {
     );
   };
 
+  const handleDownload = async () => {
+    try {
+      const previousUrl = APIOptions.host;
+      APIOptions.host = remoteUrl;
+      const tournaments = await getTournaments(event?.eventKey);
+      APIOptions.host = previousUrl;
+      setModifiedTournaments(tournaments);
+      showSnackbar(`(${tournaments.length}) Teams successfully downloaded`);
+    } catch (e) {
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      showSnackbar('Error while downloading teams.', error);
+    }
+  };
+
   return (
     <PaperLayout
       containerWidth='xl'
@@ -108,6 +128,10 @@ export const TournamentManager: FC = () => {
                 {
                   key: '3',
                   label: <a onClick={handleRevert}>Revert Changes</a>
+                },
+                {
+                  key: '4',
+                  label: <a onClick={handleDownload}>Download Tournaments</a>
                 }
               ]}
             />

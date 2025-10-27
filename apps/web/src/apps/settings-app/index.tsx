@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import AudienceDisplaySettingsTab from './tabs/audience.js';
 import MainSettingsTab from './tabs/main.js';
@@ -26,7 +26,7 @@ export const SettingsApp: FC = () => {
   const tabs: TabsProps['items'] = [
     { label: 'Global', key: '0', children: <GlobalSettings /> }
   ];
-  let header: JSX.Element = (
+  let header: ReactNode = (
     <Typography.Title level={2}>Settings</Typography.Title>
   );
 

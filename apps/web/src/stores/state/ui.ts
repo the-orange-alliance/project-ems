@@ -40,6 +40,7 @@ export const isAudioEnabledForScorekeeper = atomWithStorage<boolean>(
   false
 );
 export const fieldsAtom = atom<string[]>([]);
+export const remoteApiUrlAtom = atomWithStorage<string>('remoteApiUrl', '');
 
 /**
  * @section UI STATE - internals

@@ -2,6 +2,12 @@ import { apiFetcher } from '@toa-lib/client';
 import { ScheduleItem, ScheduleParams } from '@toa-lib/models';
 import useSWR from 'swr';
 
+export const getScheduleItems = async (
+  eventKey: string,
+  tournamentKey: string
+): Promise<ScheduleItem[]> =>
+  apiFetcher(`schedule-items/${eventKey}/${tournamentKey}`, 'GET');
+
 export const postScheduleItems = async (items: ScheduleItem[]): Promise<void> =>
   apiFetcher('schedule-items', 'POST', items);
 
@@ -25,6 +31,12 @@ export const useScheduleItemsForTournament = (
     (url) => apiFetcher(url, 'GET'),
     { revalidateOnFocus: false }
   );
+
+export const getScheduleParams = async (
+  eventKey: string,
+  tournamentKey: string
+): Promise<ScheduleParams> =>
+  apiFetcher(`schedule-params/${eventKey}/${tournamentKey}`, 'GET');
 
 export const useScheduleParamsForTournament = (
   eventKey: string | null | undefined,

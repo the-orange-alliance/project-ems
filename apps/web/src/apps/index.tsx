@@ -33,7 +33,7 @@ const App = () => {
       ),
     [routes, buildType]
   );
-  console.log({ filteredRoutes });
+
   return (
     <>
       <Row gutter={[24, 24]} style={{ marginBottom: 16 }} justify={'center'}>

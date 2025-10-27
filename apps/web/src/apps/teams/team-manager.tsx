@@ -4,7 +4,7 @@ import { Team, defaultTeam } from '@toa-lib/models';
 import { ChangeEvent, FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resultsSyncTeams } from 'src/api/use-results-sync.js';
-import { patchTeam, postTeams } from 'src/api/use-team-data.js';
+import { getTeams, patchTeam, postTeams } from 'src/api/use-team-data.js';
 import { TeamRemovalDialog } from 'src/components/dialogs/team-removal-dialog.js';
 import { TeamsTable } from 'src/components/tables/teams-table.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
@@ -18,6 +18,9 @@ import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 import { UploadButton } from 'src/components/buttons/upload-button.js';
 import { Shortcut } from 'src/components/util/shortcuts.js';
+import { APIOptions } from '@toa-lib/client';
+import { useAtomValue } from 'jotai';
+import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
 
 export const TeamManager: FC = () => {
   const { loading, state } = useEventState({
@@ -33,6 +36,8 @@ export const TeamManager: FC = () => {
   const { showSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const removeModal = useModal(TeamRemovalDialog);
+
+  const remoteUrl = useAtomValue(remoteApiUrlAtom);
 
   useUpdateAppbar(
     {
@@ -96,9 +101,16 @@ export const TeamManager: FC = () => {
       'NLD',
       'SWE'
     ];
-    const randCountry = countryCodes[Math.floor(Math.random() * countryCodes.length)];
+    const randCountry =
+      countryCodes[Math.floor(Math.random() * countryCodes.length)];
     setModifiedTeams((prev) => [
-      { ...defaultTeam, eventKey, teamKey: state.staged.teams.length + 1, countryCode: randCountry, teamNameShort: `Test ${prev.length + 1} (${randCountry})` },
+      {
+        ...defaultTeam,
+        eventKey,
+        teamKey: state.staged.teams.length + 1,
+        countryCode: randCountry,
+        teamNameShort: `Test ${prev.length + 1} (${randCountry})`
+      },
       ...prev
     ]);
   };
@@ -129,6 +141,20 @@ export const TeamManager: FC = () => {
       setModifiedTeams((prevTeams) =>
         prevTeams.filter((t) => t.teamKey !== team.teamKey)
       );
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      const previousUrl = APIOptions.host;
+      APIOptions.host = remoteUrl;
+      const teams = await getTeams(event?.eventKey);
+      APIOptions.host = previousUrl;
+      setModifiedTeams(teams);
+      showSnackbar(`(${teams.length}) Teams successfully downloaded`);
+    } catch (e) {
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      showSnackbar('Error while downloading teams.', error);
     }
   };
 
@@ -167,11 +193,12 @@ export const TeamManager: FC = () => {
                 {
                   key: '4',
                   label: (
-                    <UploadButton
-                      title='Upload Teams'
-                      onUpload={handleUpload}
-                    />
+                    <UploadButton title='Upload File' onUpload={handleUpload} />
                   )
+                },
+                {
+                  key: '6',
+                  label: <a onClick={handleDownload}>Download Teams</a>
                 },
                 {
                   key: '5',

@@ -40,6 +40,7 @@ COPY --from=build /workspace/apps/services/api/bin ./apps/services/api/bin
 COPY --from=build /workspace/apps/services/api/sql ./apps/services/api/sql
 
 COPY --from=build /workspace/scripts ./scripts
+RUN chmod +x /workspace/apps/services/api/bin/MatchMaker
 RUN chmod +x ./scripts/backend_entrypoint.sh
 
 EXPOSE 8080 8081
