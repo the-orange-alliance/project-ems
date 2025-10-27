@@ -2,7 +2,6 @@ import { FC, useState } from 'react';
 import { Typography } from 'antd';
 import { Event } from '@toa-lib/models';
 import { postEvent, setupEventBase } from 'src/api/use-event-data.js';
-import { ViewReturn } from 'src/components/buttons/view-return.js';
 import { EventForm } from 'src/components/forms/event-form.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
