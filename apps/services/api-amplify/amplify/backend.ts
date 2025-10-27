@@ -97,28 +97,32 @@ const restApi = new RestApi(apiStack, "ems-online-rest-api", {
   },
 });
 
-const hostedZone = route53.HostedZone.fromLookup(apiStack, "KyleFlynnDevZone", {
-  domainName: "kyleflynn.dev",
-});
+const hostedZone = route53.HostedZone.fromLookup(
+  backend.stack,
+  "KyleFlynnDevZone",
+  {
+    domainName: "kyleflynn.dev",
+  },
+);
 
-const certificate = new acm.Certificate(apiStack, "ApiCertificate", {
+const certificate = new acm.Certificate(backend.stack, "ApiCertificate", {
   domainName: "api.global.kyleflynn.dev",
   validation: acm.CertificateValidation.fromDns(hostedZone),
 });
 
-const customDomain = new DomainName(apiStack, "AmplifyApiDomain", {
+const customDomain = new DomainName(backend.stack, "AmplifyApiDomain", {
   domainName: "api.global.kyleflynn.dev",
   certificate,
   endpointType: EndpointType.REGIONAL,
   securityPolicy: SecurityPolicy.TLS_1_2,
 });
 
-new BasePathMapping(apiStack, "AmplifyApiMapping", {
+new BasePathMapping(backend.stack, "AmplifyApiMapping", {
   domainName: customDomain,
   restApi,
 });
 
-new route53.ARecord(apiStack, "ApiCustomDomainAlias", {
+new route53.ARecord(backend.stack, "ApiCustomDomainAlias", {
   zone: hostedZone,
   recordName: "api.global",
   target: route53.RecordTarget.fromAlias(
