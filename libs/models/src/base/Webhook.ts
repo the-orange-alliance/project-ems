@@ -9,8 +9,11 @@ export enum WebhookEvent {
   MATCH_STARTED = 'MATCH_STARTED', // { payload: Match }
   ALL_CLEAR = 'ALL_CLEAR', // { payload: Match }
   COMMITTED = 'COMMITTED', // { payload: Match }
-  SCORES_POSTED = 'SCORES_POSTED' // { payload: Match }
-}
+  SCORES_POSTED = 'SCORES_POSTED', // { payload: Match }
+  SCORES_POSTED_RED = 'SCORES_POSTED_RED', // { payload: Match }
+  SCORES_POSTED_BLUE = 'SCORES_POSTED_BLUE', // { payload: Match }
+  SCORES_POSTED_TIED = 'SCORES_POSTED_TIED' // { payload: Match }
+};
 
 export const SendWebhookSchema = z.object({
   event: z.nativeEnum(WebhookEvent),
