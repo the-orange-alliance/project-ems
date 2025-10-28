@@ -1,3 +1,4 @@
+import { useModal } from '@ebay/nice-modal-react';
 import {
   EcoEquilibrium,
   EcoEquilibriumFCS,
@@ -14,11 +15,13 @@ import { NumberInput } from 'src/components/inputs/number-input.js';
 import { StateToggle } from 'src/components/inputs/state-toggle.js';
 import { matchAtom } from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
+import { ForceConfirm } from './confirm-force-dialog.js';
 const HeadRefereeExtra: React.FC = () => {
   const [socket] = useSocket();
   const [match, setMatch] = useAtom(matchAtom);
   const matchState = useAtomValue(matchStateAtom);
   const [ecosystemState, setEcosystemState] = useState<number>(0);
+  const forceModal = useModal(ForceConfirm);
 
   useEffect(() => {
     const updateEcosystemState = (s: EcoEquilibriumFCS.EcosystemUpdate) => {
@@ -39,11 +42,13 @@ const HeadRefereeExtra: React.FC = () => {
     };
   }, []);
 
-  const forceEcosystem = (newState: number) => {
-    socket?.emit(EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate, {
-      ecosystem: EcoEquilibriumFCS.Ecosystem.Center,
-      position: newState
-    } as EcoEquilibriumFCS.EcosystemUpdate);
+  const forceEcosystem = async (newState: number) => {
+    if (await forceModal.show({ level: (newState + 1).toString() })) {
+      socket?.emit(EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate, {
+        ecosystem: EcoEquilibriumFCS.Ecosystem.Center,
+        position: newState
+      } as EcoEquilibriumFCS.EcosystemUpdate);
+    }
   };
 
   const postMatch = matchState > MatchState.MATCH_IN_PROGRESS;
@@ -205,10 +210,10 @@ const HeadRefereeExtra: React.FC = () => {
             title='Force Center Ecosystem'
             states={[0, 1, 2, 3]}
             stateLabels={[
-              '3 Barriers Remain',
-              '2 Barriers Remains',
-              '1 Barrier Remains',
-              '0 Barriers Remain'
+              '4 Barriers Remain',
+              '3 Barriers Remains',
+              '2 Barrier Remains',
+              '1/0 Barriers Remain'
             ]}
             value={ecosystemState}
             onChange={forceEcosystem}

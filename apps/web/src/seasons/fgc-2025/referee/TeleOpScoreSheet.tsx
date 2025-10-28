@@ -17,6 +17,8 @@ import { StateToggle } from 'src/components/inputs/state-toggle.js';
 import { matchAtom } from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
 import { useSocket } from 'src/api/use-socket.js';
+import { ForceConfirm } from './confirm-force-dialog.js';
+import { useModal } from '@ebay/nice-modal-react';
 interface Props {
   alliance: Alliance;
   participants: MatchParticipant[] | undefined;
@@ -44,6 +46,7 @@ const TeleScoreSheet: FC<Props> = ({
   const postMatch = matchState > MatchState.MATCH_IN_PROGRESS;
   const [socket] = useSocket();
   const [ecosystemState, setEcosystemState] = useState<number>(0);
+  const forceModal = useModal(ForceConfirm);
 
   useEffect(() => {
     const updateEcosystemState = (s: EcoEquilibriumFCS.EcosystemUpdate) => {
@@ -71,14 +74,16 @@ const TeleScoreSheet: FC<Props> = ({
 
   if (!match || !match.details) return null;
 
-  const forceEcosystem = (newState: number) => {
-    socket?.emit(EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate, {
-      ecosystem:
-        alliance === 'red'
-          ? EcoEquilibriumFCS.Ecosystem.RedSide
-          : EcoEquilibriumFCS.Ecosystem.BlueSide,
-      position: newState
-    } as EcoEquilibriumFCS.EcosystemUpdate);
+  const forceEcosystem = async (newState: number) => {
+    if (await forceModal.show({ level: (newState + 1).toString() })) {
+      socket?.emit(EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate, {
+        ecosystem:
+          alliance === 'red'
+            ? EcoEquilibriumFCS.Ecosystem.RedSide
+            : EcoEquilibriumFCS.Ecosystem.BlueSide,
+        position: newState
+      } as EcoEquilibriumFCS.EcosystemUpdate);
+    }
   };
 
   const handleMitigatorChange = (newValue: number, manuallyTyped: boolean) => {
@@ -355,10 +360,10 @@ const TeleScoreSheet: FC<Props> = ({
           title={`Force ${alliance === 'red' ? 'Red' : 'Blue'} Side Ecosystem`}
           states={[0, 1, 2, 3]}
           stateLabels={[
-            '3 Barriers Remain',
-            '2 Barriers Remains',
-            '1 Barrier Remains',
-            '0 Barriers Remain'
+            '4 Barriers Remain',
+            '3 Barriers Remains',
+            '2 Barrier Remains',
+            '1/0 Barriers Remain'
           ]}
           value={ecosystemState}
           onChange={forceEcosystem}
