@@ -12,7 +12,7 @@ interface MatchControlState {
   canResetField: boolean;
   canCommitScores: boolean;
   canPostResults: boolean;
-  canEditDetails: boolean
+  canEditDetails: boolean;
   setState: (state: MatchState) => void;
 }
 

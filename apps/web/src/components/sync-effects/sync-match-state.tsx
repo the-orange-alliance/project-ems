@@ -3,7 +3,11 @@ import { useSetAtom } from 'jotai';
 import { useAtomCallback } from 'jotai/utils';
 import { FC, useEffect } from 'react';
 import { useSocket } from 'src/api/use-socket.js';
-import { eventKeyAtom, matchIdAtom, tournamentKeyAtom } from 'src/stores/state/event.js';
+import {
+  eventKeyAtom,
+  matchIdAtom,
+  tournamentKeyAtom
+} from 'src/stores/state/event.js';
 import { matchStateAtom, matchStatusAtom } from 'src/stores/state/match.js';
 
 export const SyncMatchState: FC = () => {
@@ -35,24 +39,21 @@ export const SyncMatchState: FC = () => {
     };
   }, []);
 
-  const onMatchPrestart = useAtomCallback(
-    (get, set) =>
-      (match: MatchKey) => {
-        setState(MatchState.PRESTART_COMPLETE);
-        setMode('PRESTART COMPLETE');
+  const onMatchPrestart = useAtomCallback((get, set) => (match: MatchKey) => {
+    setState(MatchState.PRESTART_COMPLETE);
+    setMode('PRESTART COMPLETE');
 
-        // Validate that the correct match is selected, if not, update
-        if (get(matchIdAtom) !== match.id) {
-          set(matchIdAtom, match.id);
-        }
-        if (get(eventKeyAtom) !== match.eventKey) {
-          set(eventKeyAtom, match.eventKey);
-        }
-        if (get(tournamentKeyAtom) !== match.tournamentKey) {
-          set(tournamentKeyAtom, match.tournamentKey);
-        }
-      }
-  );
+    // Validate that the correct match is selected, if not, update
+    if (get(matchIdAtom) !== match.id) {
+      set(matchIdAtom, match.id);
+    }
+    if (get(eventKeyAtom) !== match.eventKey) {
+      set(eventKeyAtom, match.eventKey);
+    }
+    if (get(tournamentKeyAtom) !== match.tournamentKey) {
+      set(tournamentKeyAtom, match.tournamentKey);
+    }
+  });
 
   const onMatchStart = () => {
     setState(MatchState.MATCH_IN_PROGRESS);
