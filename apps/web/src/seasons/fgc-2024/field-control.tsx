@@ -9,41 +9,41 @@ export const useFieldControl =
 
     const prestartField = () => {
       socket?.emit('fcs:test', { test: 'test' });
-      console.log('prestartField');
+      // console.log('prestartField');
     };
 
     const cancelPrestartForField = () => {
-      console.log('cancelPrestartForField');
+      // console.log('cancelPrestartForField');
     };
 
     const prepareField = () => {
       socket?.emit('fcs:prepareField');
-      console.log('prepareField');
+      // console.log('prepareField');
     };
 
     const startField = () => {
-      console.log('startField');
+      // console.log('startField');
     };
 
     const abortField = () => {
-      console.log('abortField');
+      // console.log('abortField');
     };
 
     const clearField = () => {
       socket?.emit('fcs:allClear');
-      console.log('clearField');
+      // console.log('clearField');
     };
 
     const commitScoresForField = () => {
-      console.log('commitScoresForField');
+      // console.log('commitScoresForField');
     };
 
     const postResultsForField = () => {
-      console.log('postResultsForField');
+      // console.log('postResultsForField');
     };
 
     const onMatchUpdate = () => {
-      // console.log('onMatchUpdate', match);
+      // // console.log('onMatchUpdate', match);
     };
 
     const awardsMode = () => {
@@ -52,7 +52,7 @@ export const useFieldControl =
 
     const updateFieldSettings = () => {
       socket?.emit('fcs:settings', fieldOptions);
-      console.log('updateFieldSettings');
+      // console.log('updateFieldSettings');
     };
 
     return {
