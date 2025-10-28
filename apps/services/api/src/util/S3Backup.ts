@@ -49,6 +49,6 @@ async function uploadDatabase(eventKey: string) {
  */
 export const debouncedUploadDatabase = _.debounce(
   (eventKey: string) => uploadDatabase(eventKey),
-  1 * 5 * 1000, // 1 minutes debounce
+  5 * 60 * 1000, // 5 minutes debounce
   { trailing: true, leading: false }
 );
