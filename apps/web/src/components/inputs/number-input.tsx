@@ -25,12 +25,14 @@ export const NumberInput: FC<Props> = ({
   const handleTypedChange = (event: ChangeEvent<HTMLInputElement>) =>
     onChange(parseInt(event.target.value), true);
   const increment = () => {
+    if (value >= max!) return;
     let newValue = value + 1;
     if (max !== undefined && newValue > max) newValue = max;
     onIncrement?.(newValue);
     onChange(newValue, false);
   };
   const decrement = () => {
+    if (value <= min) return;
     let newValue = value - 1;
     if (min !== undefined && newValue < min) newValue = min;
     onDecrement?.(newValue);
