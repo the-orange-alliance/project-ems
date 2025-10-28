@@ -39,7 +39,7 @@ export interface SeasonFunctions<T extends MatchDetailBase, J extends Ranking> {
     prevRankings: J[],
     members: AllianceMember[]
   ) => J[];
-  calculateScore: (match: Match<T>) => [number, number];
+  calculateScore: (match: Match<T>, matchInProgress?: boolean) => [number, number];
   calculateRankingPoints?: (details: T) => T;
   calculateAutoScore?: (match: Match<T>) => [number, number];
   calculateTeleScore?: (match: Match<T>) => [number, number];

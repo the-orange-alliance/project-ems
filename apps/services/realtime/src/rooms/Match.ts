@@ -301,7 +301,10 @@ export default class Match extends Room {
     if (functions.calculateRankingPoints) {
       this.match.details = functions.calculateRankingPoints(this.match.details);
     }
-    const [redScore, blueScore] = functions.calculateScore(this.match);
+    const [redScore, blueScore] = functions.calculateScore(
+      this.match,
+      this.state === MatchState.MATCH_IN_PROGRESS,
+    );
     this.match.redScore = redScore;
     this.match.blueScore = blueScore;
 

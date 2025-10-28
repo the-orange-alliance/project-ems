@@ -593,11 +593,19 @@ export function calculateRankingPoints(details: MatchDetails): MatchDetails {
   return copy;
 }
 
-export function calculateScore(match: Match<MatchDetails>): [number, number] {
+export function calculateScore(match: Match<MatchDetails>, matchInProgress?: boolean): [number, number] {
   const { details } = match;
   if (!details) return [0, 0];
   // Coopertition Bonus Points
   const coopertitionPoints = ScoreTable.Coopertition(details);
+
+  // If match is in progress, do some crude math to turn the approx. biodiversity into scored biodiversity
+  if (matchInProgress) {
+    const ballsPerPixel = 8/5; // For every 5 pixels illuminated, there are 8 biodiversity units
+    details.biodiversityUnitsRedSideEcosystem = Math.floor(details.approximateBiodiversityRedSideEcosystem * ballsPerPixel);
+    details.biodiversityUnitsCenterEcosystem = Math.floor(details.approximateBiodiversityCenterEcosystem * ballsPerPixel);
+    details.biodiversityUnitsBlueSideEcosystem = Math.floor(details.approximateBiodiversityBlueSideEcosystem * ballsPerPixel);
+  }
 
   // Global Alliance Points
   const barrierPoints =
