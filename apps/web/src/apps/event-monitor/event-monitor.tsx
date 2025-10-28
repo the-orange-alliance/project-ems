@@ -165,7 +165,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
   };
 
   const getCardColor = (): string => {
-      return darkMode ? '#1f1f1f' : '#ffffff';
+    return darkMode ? '#1f1f1f' : '#ffffff';
   };
 
   const currentDisplayName =
@@ -273,6 +273,11 @@ const MonitorCard: FC<MonitorCardProps> = ({
             >
               {getFieldDelay()}
             </Text>
+          </Flex>
+          <Flex>
+            {seasonComponents && seasonComponents.FieldMonitorExtraMinimal ? (
+              <seasonComponents.FieldMonitorExtraMinimal />
+            ) : null}
           </Flex>
         </Space>
       </Card>

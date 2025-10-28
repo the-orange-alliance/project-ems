@@ -4,7 +4,7 @@ import { FGC25FCS } from '@toa-lib/models';
 import { Card, Tag, Flex, Typography } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 
-const StatusTag = ({
+export const StatusTag = ({
   connected,
   label
 }: {
