@@ -10,9 +10,7 @@ interface Props {
   stopAfterMatchEnd?: boolean;
 }
 
-export const SyncMatchOccurring: FC<Props> = ({
-  stopAfterMatchEnd
-}) => {
+export const SyncMatchOccurring: FC<Props> = ({ stopAfterMatchEnd }) => {
   const [socket, connected] = useSocket();
   const fieldControl = useSeasonFieldControl();
 
@@ -29,17 +27,16 @@ export const SyncMatchOccurring: FC<Props> = ({
   }, []);
 
   const onUpdate = useAtomCallback(
-    (get, set) =>
-      async (newMatch: Match<any>) => {
-        const state = await get(matchStateAtom);
-        if (stopAfterMatchEnd && state >= MatchState.MATCH_COMPLETE) {
-          // Don't update anything.
-          return;
-        } else {
-          set(matchAtom, newMatch);
-          fieldControl?.onMatchUpdate?.(newMatch);
-        }
+    (get, set) => async (newMatch: Match<any>) => {
+      const state = await get(matchStateAtom);
+      if (stopAfterMatchEnd && state >= MatchState.MATCH_COMPLETE) {
+        // Don't update anything.
+        return;
+      } else {
+        set(matchAtom, newMatch);
+        fieldControl?.onMatchUpdate?.(newMatch);
       }
+    }
   );
 
   return null;

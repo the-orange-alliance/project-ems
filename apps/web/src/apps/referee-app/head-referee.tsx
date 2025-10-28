@@ -2,7 +2,6 @@ import { FC } from 'react';
 import { Box } from '@mui/material';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 import { RefereeLayout } from 'src/layouts/referee-layout.js';
-import { useEventState } from 'src/stores/hooks/use-event-state.js';
 
 export const HeadReferee: FC = () => {
   const seasonComponents = useSeasonComponents();
@@ -15,9 +14,6 @@ export const HeadReferee: FC = () => {
 
   return (
     <RefereeLayout containerWidth='xl'>
-      {/* <SyncMatchStateToRecoil />
-      <SyncMatchesToRecoil />
-      <SyncMatchOccurringToRecoil /> */}
       <Box
         sx={{ display: 'flex', flexDirection: 'column', gap: '16px', mb: 1 }}
       >

@@ -25,7 +25,6 @@ import {
 } from 'src/stores/recoil';
 import { SyncMatchOccurringToRecoil } from 'src/components/sync-effects/sync-match-occurring.js';
 import { SyncMatchStateToRecoil } from 'src/components/sync-effects/sync-match-state.js';
-import { SyncMatchesToRecoil } from 'src/components/sync-effects/sync-matches-to-recoi';
 import { MatchTimer } from 'src/components/util/match-timer';
 
 // Amplify token offset
@@ -345,9 +344,9 @@ const HumanPlayer: FC = () => {
       }}
     >
       {/* Match state listeners */}
-      <SyncMatchStateToRecoil />
+      {/* <SyncMatchStateToRecoil />
       <SyncMatchesToRecoil />
-      <SyncMatchOccurringToRecoil />
+      <SyncMatchOccurringToRecoil /> */}
 
       {/* Match countdown */}
       <Typography variant='h1' sx={{ textAlign: 'center' }}>
