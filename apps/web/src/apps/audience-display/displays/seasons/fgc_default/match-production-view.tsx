@@ -43,7 +43,9 @@ const ScoreContainer: FC<{
       >
         {number}
       </div>
-      <h3 style={{ width: '100%', textAlign: 'center' }}>{label}</h3>
+      <h3 style={{ width: '100%', textAlign: 'center', marginBottom: 0 }}>
+        {label}
+      </h3>
     </div>
   );
 };
@@ -136,7 +138,7 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
   }, [socket]);
 
   const getRemainingFromLevel = (level: number) => {
-    const math = 3 - level;
+    const math = 4 - level;
     if (math < 0) return 0;
     return math;
   };
@@ -221,18 +223,18 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
           label={'Blue Side Biodiversity Dispensed'}
         />
         <ScoreContainer
-          number={`${redAcceleratorStatus.progress * 100}%`}
+          number={`${(redAcceleratorStatus.progress * 100).toFixed(0)}%`}
           medium
           label={'Red Side Energizing Progress'}
         />
         <ScoreContainer
-          number={`${blueAcceleratorStatus.progress * 100}%`}
+          number={`${(blueAcceleratorStatus.progress * 100).toFixed(0)}%`}
           medium
           label={'Blue Side Energizing Progress'}
         />
       </Row>
 
-      <Row style={{ width: '100vw', marginTop: '50px' }}>
+      <Row style={{ width: '100vw', marginTop: '0px' }}>
         <ScoreContainer
           number={dispenseRateStrings[redAcceleratorStatus.rate]}
           wide
