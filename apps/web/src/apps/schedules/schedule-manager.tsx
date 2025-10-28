@@ -37,6 +37,10 @@ export const ScheduleManager: FC = () => {
   const { data: scheduleParams, mutate: refetchScheduleParams } =
     useScheduleParamsForTournament(event?.eventKey, tournamentKey);
 
+  const scheduleMatches = matches.filter(
+    (m) => tournamentKey && m.tournamentKey === tournamentKey
+  );
+
   const onScheduleParamsChange = (schedule: ScheduleParams) => {
     const tournament = tournaments.find(
       (t) => t.tournamentKey === tournamentKey
@@ -111,8 +115,8 @@ export const ScheduleManager: FC = () => {
           tournamentKey={tournamentKey}
           eventSchedule={scheduleParams}
           onEventScheduleChange={onScheduleParamsChange}
-          savedMatches={matches}
-          hasMatches={matches.length > 0}
+          savedMatches={scheduleMatches}
+          hasMatches={scheduleMatches.length > 0}
         />
       </Suspense>
     </PaperLayout>
