@@ -15,6 +15,7 @@ export interface AppCardProps {
   href?: string;
   imgSrc?: string;
   loading?: boolean;
+  icon?: React.ReactNode;
 }
 
 export const AppCard: FC<AppCardProps> = ({
@@ -22,10 +23,10 @@ export const AppCard: FC<AppCardProps> = ({
   to,
   href,
   imgSrc,
-  loading
+  loading,
+  icon
 }) => {
   const darkMode = useAtomValue(darkModeAtom);
-
   const content = (
     <div
       style={{
@@ -51,14 +52,14 @@ export const AppCard: FC<AppCardProps> = ({
           style={{
             width: '100%',
             height: '100%',
-            backgroundImage: `url(${imgSrc ? imgSrc : darkMode ? firstLogoDarkMode : firstLogo})`,
+            backgroundImage: `url(${!icon ? (imgSrc ? imgSrc : darkMode ? firstLogoDarkMode : firstLogo) : ''})`,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
             marginBottom: 16
           }}
         />
-
+        {icon ? icon : null}
         <Typography.Text style={{ textAlign: 'center', width: '100%' }}>
           {title}
         </Typography.Text>

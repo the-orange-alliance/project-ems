@@ -10,7 +10,7 @@ import {
   FullscreenExitOutlined
 } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
-import { appbarConfigAtom, userAtom } from 'src/stores/state/ui.js';
+import { appbarConfigAtom } from 'src/stores/state/ui.js';
 import { eventKeyAtom } from 'src/stores/state/event.js';
 import { ConnectionChip } from '../util/connection-chip.js';
 
@@ -19,9 +19,8 @@ const { Header } = Layout;
 const PrimaryAppbar: FC = () => {
   const { token } = theme.useToken();
   const [fullscreen, setFullscreen] = useState(false);
-  const { title, titleLink, showSettings, showFullscreen } =
-    useAtomValue(appbarConfigAtom);
-  const user = useAtomValue(userAtom);
+  const { title, titleLink, showFullscreen } = useAtomValue(appbarConfigAtom);
+  const user = true; // useAtomValue(userAtom);
   const eventKey = useAtomValue(eventKeyAtom);
   const navigate = useNavigate();
 

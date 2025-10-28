@@ -1,5 +1,6 @@
 import { FC, LazyExoticComponent, ReactNode, lazy } from 'react';
 import THE_MAN from './assets/images/the_man.jpg';
+import THE_BOY from './assets/images/director_of_inside_sales.jpg';
 
 // Home route
 const HomeApp = lazy(() => import('./apps/index.js'));
@@ -160,11 +161,15 @@ const EventMonitor = lazy(() =>
 
 import {
   CalendarOutlined,
+  CodeOutlined,
   CompassOutlined,
   ControlOutlined,
   FlagOutlined,
   FormOutlined,
+  FundProjectionScreenOutlined,
+  PrinterOutlined,
   RobotOutlined,
+  SettingOutlined,
   TeamOutlined
 } from '@ant-design/icons';
 export interface AppRoute {
@@ -312,7 +317,8 @@ const AppRoutes: AppRoute[] = [
     name: 'Admin App',
     path: '/:eventKey/admin',
     group: 0,
-    element: AdminApp
+    element: AdminApp,
+    icon: <CodeOutlined style={{ fontSize: '100px', marginBottom: '50px' }} />
   },
   // {
   //   name: 'Settings',
@@ -325,19 +331,30 @@ const AppRoutes: AppRoute[] = [
     path: '/:eventKey/audience',
     group: 0,
     element: AudienceDisplay,
-    hideAppbar: true
+    hideAppbar: true,
+    icon: (
+      <FundProjectionScreenOutlined
+        style={{ fontSize: '100px', marginBottom: '50px' }}
+      />
+    )
   },
   {
     name: 'Reports App',
     path: '/:eventKey/reports',
     group: 0,
-    element: Reports
+    element: Reports,
+    icon: (
+      <PrinterOutlined style={{ fontSize: '100px', marginBottom: '50px' }} />
+    )
   },
   {
     name: 'Settings',
     path: '/:eventKey/settings',
     group: 0,
-    element: SettingsApp
+    element: SettingsApp,
+    icon: (
+      <SettingOutlined style={{ fontSize: '100px', marginBottom: '50px' }} />
+    )
   },
   {
     name: 'Settings', // point to same spot. centralized settings!
@@ -372,7 +389,8 @@ const AppRoutes: AppRoute[] = [
     name: 'Jan App',
     path: '/event-monitor',
     group: 0,
-    element: EventMonitor
+    element: EventMonitor,
+    image: THE_BOY
   }
   // {
   //   name: 'Streaming',
