@@ -12,7 +12,7 @@ export const FGC_MATCH_CONFIG: MatchConfiguration = {
   transitionTime: 0,
   delayTime: 0,
   autoTime: 0,
-  teleTime: 10,
+  teleTime: 150,
   endTime: 5
 };
 
@@ -148,36 +148,52 @@ export class MatchTimer extends EventEmitter {
     if (typeof window !== 'undefined') {
       const now = new Date();
       const elapsed = now.getTime() - (this._timerStartDate?.getTime() || 0);
-      const shouldRemain = getMatchTime(this._matchConfig) - (elapsed / 1000);
+      const shouldRemain = getMatchTime(this._matchConfig) - elapsed / 1000;
       if (shouldRemain >= 1.0) {
         const floored = Math.floor(shouldRemain);
         const correction = floored - this._timeLeft;
         this._timeLeft = Math.floor(shouldRemain);
-        const exceededMode = (this._modeTimeLeft - correction) < 0;
+        const exceededMode = this._modeTimeLeft - correction < 0;
         if (!exceededMode) {
           this._modeTimeLeft -= correction;
         } else {
-          const transSwitchPoint = this._matchConfig.teleTime + this._matchConfig.transitionTime;
+          const transSwitchPoint =
+            this._matchConfig.teleTime + this._matchConfig.transitionTime;
           const teleSwitchPoint = this._matchConfig.teleTime;
           const endSwitchPoint = this._matchConfig.endTime;
 
-
-          if (this._mode === MatchMode.AUTONOMOUS && this._matchConfig.transitionTime > 0 && this._timeLeft <= transSwitchPoint){
+          if (
+            this._mode === MatchMode.AUTONOMOUS &&
+            this._matchConfig.transitionTime > 0 &&
+            this._timeLeft <= transSwitchPoint
+          ) {
             console.log('Switching to TRANSITION due to correction');
             this._mode = MatchMode.TRANSITION;
-            this._modeTimeLeft = this._matchConfig.transitionTime - (transSwitchPoint - this._timeLeft);
+            this._modeTimeLeft =
+              this._matchConfig.transitionTime -
+              (transSwitchPoint - this._timeLeft);
             this.emit('timer:transition', denyAudioPayload);
-          } 
-          if (this._mode === MatchMode.TRANSITION && this._matchConfig.teleTime > 0 && this._timeLeft <= teleSwitchPoint) {
+          }
+          if (
+            this._mode === MatchMode.TRANSITION &&
+            this._matchConfig.teleTime > 0 &&
+            this._timeLeft <= teleSwitchPoint
+          ) {
             console.log('Switching to TELEOPERATED due to correction');
             this._mode = MatchMode.TELEOPERATED;
-            this._modeTimeLeft = this._matchConfig.teleTime - (teleSwitchPoint - this._timeLeft);
+            this._modeTimeLeft =
+              this._matchConfig.teleTime - (teleSwitchPoint - this._timeLeft);
             this.emit('timer:tele', denyAudioPayload);
-          } 
-          if (this._mode === MatchMode.TELEOPERATED && this._matchConfig.endTime > 0 && this._timeLeft <= endSwitchPoint) {
+          }
+          if (
+            this._mode === MatchMode.TELEOPERATED &&
+            this._matchConfig.endTime > 0 &&
+            this._timeLeft <= endSwitchPoint
+          ) {
             console.log('Switching to ENDGAME due to correction');
             this._mode = MatchMode.ENDGAME;
-            this._modeTimeLeft = this._matchConfig.endTime - (endSwitchPoint - this._timeLeft);
+            this._modeTimeLeft =
+              this._matchConfig.endTime - (endSwitchPoint - this._timeLeft);
             this.emit('timer:endgame', denyAudioPayload);
           }
           if (this._mode === MatchMode.ENDGAME && this._modeTimeLeft <= 0) {
