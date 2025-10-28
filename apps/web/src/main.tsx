@@ -18,7 +18,7 @@ const root = createRoot(container);
 export const store = createStore();
 
 // Configure lib-ems
-if (getFromLocalStorage('followerMode', false)) {
+if (getFromLocalStorage('leaderApiEnabled', false)) {
   APIOptions.host = `http://${getFromLocalStorage(
     'leaderApiHost',
     `http://${window.location.hostname}`

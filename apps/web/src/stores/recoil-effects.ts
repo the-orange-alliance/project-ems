@@ -19,15 +19,14 @@ export const localStorageEffect: (key: string) => AtomEffect<any> =
     });
   };
 
-
 /**
  * An atom effect that is basically a local storage store, but also checks the query parameters
  * for a override default value.
- * 
- * In a perfect world, the query parameter part would be its own effect, but unfortunatly, when 
+ *
+ * In a perfect world, the query parameter part would be its own effect, but unfortunatly, when
  * calling setSelf from the non-primary effect, it doesn't trigger the onSet event of the primary
  * effect, so we have to combine them.  It's dumb.
- * 
+ *
  * @param key the query parameter/local storage key
  * @returns an atom effect
  */
