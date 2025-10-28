@@ -76,7 +76,6 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const handleRefresh = () => {
     console.log('Refresh but idk how to');
   };
-  const [fcsStatus, setFcsStatus] = useState<FieldControlStatus | null>(null);
 
   useEffect(() => {
     const socket = createSocket();
@@ -89,7 +88,6 @@ const MonitorCard: FC<MonitorCardProps> = ({
     socket.on(MatchSocketEvent.COMMIT, handleCommit);
     socket.on(MatchSocketEvent.UPDATE, handleUpdate);
     socket.on(MatchSocketEvent.DISPLAY, handleDisplay);
-    socket.on('fcs:status', handleFcsStatus);
     socket.connect();
     socket.emit('rooms', ['match', 'fcs']);
     setSocket(socket);
@@ -141,9 +139,6 @@ const MonitorCard: FC<MonitorCardProps> = ({
     setMatch(newMatch);
   };
 
-  const handleFcsStatus = (status: FieldControlStatus) => {
-    setFcsStatus(status);
-  };
   const handleFcsClearStatus = () => {
     socket?.emit('fcs:clearStatus');
   };
@@ -168,24 +163,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
   };
 
   const getCardColor = (): string => {
-    if (!fcsStatus) {
       return darkMode ? '#1f1f1f' : '#ffffff';
-    }
-
-    if (Object.entries(fcsStatus.wleds).some((wled) => !wled[1].connected)) {
-      // Error state - red background
-      return darkMode ? '#5c1f1f' : '#FAA0A0';
-    } else if (
-      Object.entries(fcsStatus.wleds).some(
-        (wled) => wled[1].stickyLostConnection
-      )
-    ) {
-      // Warning state - yellow background
-      return darkMode ? '#5c5c1f' : '#FFFF8F';
-    } else {
-      // Normal state
-      return darkMode ? '#1f1f1f' : '#FFFFFF';
-    }
   };
 
   const currentDisplayName =
@@ -328,27 +306,6 @@ const MonitorCard: FC<MonitorCardProps> = ({
           </Space>
 
           <MatchDetails key={field} match={match} teams={teams} expanded />
-
-          {fcsStatus && (
-            <Row gutter={[16, 16]}>
-              {Object.entries(fcsStatus.wleds).map((wled) => (
-                <Col key={wled[0]}>
-                  <Space>
-                    {wled[1].connected ? (
-                      !wled[1].stickyLostConnection ? (
-                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                      ) : (
-                        <WarningOutlined style={{ color: '#faad14' }} />
-                      )
-                    ) : (
-                      <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-                    )}
-                    <Text>{`${wled[0]} wled`}</Text>
-                  </Space>
-                </Col>
-              ))}
-            </Row>
-          )}
 
           <Space direction='vertical' style={{ width: '100%' }}>
             <Button type='primary' href={`${webUrl}`} target='_blank' block>
