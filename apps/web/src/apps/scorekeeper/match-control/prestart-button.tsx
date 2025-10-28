@@ -20,6 +20,7 @@ export const PrestartButton: FC = () => {
   const match = useAtomValue<any>(matchAtom);
   const prestart = usePrestartCallback();
   const cancelPrestart = useCancelPrestartCallback();
+  console.log({ canPrestart, canCancelPrestart });
   const sendPrestart = async () => {
     if (match?.result !== RESULT_NOT_PLAYED) {
       const doReplay = await replayDialog.show();

@@ -67,7 +67,6 @@ export const usePrestartCallback = () => {
             }
           };
         }
-
         // Set the match in the atom so that it can be used by the field control. It will update match/tourn/event ids if needed
         set(matchAtom, currentMatch);
         fieldControl?.prestartField?.();
@@ -86,13 +85,11 @@ export const usePrestartCallback = () => {
 export const useCancelPrestartCallback = () => {
   const { canCancelPrestart, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
-  return useAtomCallback(
-    useCallback(() => {
-      if (!canCancelPrestart) {
-        throw new Error('Attempted to cancel prestart when not allowed.');
-      }
-      fieldControl?.cancelPrestartForField?.();
-      setState(MatchState.PRESTART_READY);
-    }, [])
-  );
+  return useCallback(() => {
+    if (!canCancelPrestart) {
+      throw new Error('Attempted to cancel prestart when not allowed.');
+    }
+    fieldControl?.cancelPrestartForField?.();
+    setState(MatchState.PRESTART_READY);
+  }, [canCancelPrestart, setState, fieldControl]);
 };
