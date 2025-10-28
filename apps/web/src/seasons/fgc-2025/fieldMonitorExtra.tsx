@@ -71,19 +71,21 @@ export const FieldMonitorExtra: FC = () => {
               <Flex justify='space-between'>
                 <span>Temp</span>
                 <span style={{ fontWeight: 500 }}>
-                  {fcsStatus.redDispenser.temperature}°C
+                  {Number(fcsStatus.redDispenser.temperature).toFixed(1)}
+                  {' °C'}
                 </span>
               </Flex>
               <Flex justify='space-between'>
                 <span>Current</span>
                 <span style={{ fontWeight: 500 }}>
-                  {fcsStatus.redDispenser.current}A
+                  {Number(fcsStatus.redDispenser.current).toFixed(1)}
+                  {' A'}
                 </span>
               </Flex>
               <Flex justify='space-between'>
                 <span>Unjam</span>
                 <span style={{ fontWeight: 500 }}>
-                  {fcsStatus.redDispenser.unjamCount}
+                  {Number(fcsStatus.redDispenser.unjamCount).toFixed(1)}
                 </span>
               </Flex>
               <Flex justify='center'>
@@ -103,13 +105,15 @@ export const FieldMonitorExtra: FC = () => {
               <Flex justify='space-between'>
                 <span>Temp</span>
                 <span style={{ fontWeight: 500 }}>
-                  {fcsStatus.blueDispenser.temperature}°C
+                  {Number(fcsStatus.blueDispenser.temperature).toFixed(1)}
+                  {' °C'}
                 </span>
               </Flex>
               <Flex justify='space-between'>
                 <span>Current</span>
                 <span style={{ fontWeight: 500 }}>
-                  {fcsStatus.blueDispenser.current}A
+                  {Number(fcsStatus.blueDispenser.current).toFixed(1)}
+                  {' A'}
                 </span>
               </Flex>
               <Flex justify='space-between'>
@@ -200,7 +204,7 @@ export const FieldMonitorExtra: FC = () => {
               <Flex justify='space-between'>
                 <span>Velocity</span>
                 <span style={{ fontWeight: 500 }}>
-                  {fcsStatus.redAccelerator.velocity}
+                  {Number(fcsStatus.redAccelerator.velocity).toFixed(1)}
                   {' RPM'}
                 </span>
               </Flex>
@@ -215,7 +219,7 @@ export const FieldMonitorExtra: FC = () => {
               <Flex justify='space-between'>
                 <span>Velocity</span>
                 <span style={{ fontWeight: 500 }}>
-                  {fcsStatus.blueAccelerator.velocity}
+                  {Number(fcsStatus.blueAccelerator.velocity).toFixed(1)}
                   {' RPM'}
                 </span>
               </Flex>

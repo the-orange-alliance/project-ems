@@ -50,11 +50,11 @@ export const FieldMonitorExtraMinimal: FC = () => {
       </Flex>
       <Flex flex={1} justify='space-between'>
         <Typography.Text>
-          {fcsStatus.redDispenser.temperature} °C
+          {Number(fcsStatus.redDispenser.temperature).toFixed(1)} °C
         </Typography.Text>
         <Typography.Text strong>Temps</Typography.Text>
         <Typography.Text>
-          {fcsStatus.blueDispenser.temperature} °C
+          {Number(fcsStatus.blueDispenser.temperature).toFixed(1)} °C
         </Typography.Text>
       </Flex>
       <Flex flex={1} justify='space-between'>
