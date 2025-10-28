@@ -13,7 +13,7 @@ export const FGC_MATCH_CONFIG: MatchConfiguration = {
   delayTime: 0,
   autoTime: 0,
   teleTime: 150,
-  endTime: 5
+  endTime: 30
 };
 
 export const FRC_MATCH_CONFIG: MatchConfiguration = {
