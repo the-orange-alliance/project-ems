@@ -16,14 +16,14 @@ COPY scripts ./scripts
 # Install all dependencies (Turbo will manage workspaces)
 RUN npm ci
 
+ARG GIT_SHA
+ENV VITE_GIT_SHA=$GIT_SHA
+
 # Build only what we need (api, realtime, web)
 RUN npx turbo run build --filter=api --filter=realtime --filter=ems-web
 
 # ---------- 3. Backend Runtime ----------
-FROM node:20-alpine AS backend
-WORKDIR /workspace
-ARG GIT_SHA
-ENV GIT_SHA=$GIT_SHA
+FROM base AS backend
 ENV NODE_ENV=production
 ENV WORKDIR=/workspace/apps/services
 
@@ -49,11 +49,8 @@ EXPOSE 8080 8081
 ENTRYPOINT ["./scripts/backend_entrypoint.sh"]
 
 # ---------- 4. Web Runtime ----------
-FROM node:20-alpine AS web
+FROM base AS web
 RUN npm install -g serve@14.2.1
-ARG GIT_SHA
-ENV VITE_GIT_SHA=$GIT_SHA
-WORKDIR /workspace
 
 # Copy only the built web app
 COPY --from=build /workspace/apps/web/build ./apps/web/build
