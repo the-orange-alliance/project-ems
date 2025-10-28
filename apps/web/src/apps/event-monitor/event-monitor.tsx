@@ -35,6 +35,7 @@ import { io, Socket } from 'socket.io-client';
 import { useEventState } from '../../stores/hooks/use-event-state.js';
 import { useAtomValue } from 'jotai';
 import { darkModeAtom } from '../../stores/state/ui.js';
+import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 
 const { Text } = Typography;
 
@@ -72,6 +73,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const [currentDisplay, setCurrentDisplay] = useState<Displays>(
     Displays.BLANK
   );
+  const seasonComponents = useSeasonComponents();
 
   const handleRefresh = () => {
     console.log('Refresh but idk how to');
@@ -307,6 +309,11 @@ const MonitorCard: FC<MonitorCardProps> = ({
 
           <MatchDetails key={field} match={match} teams={teams} expanded />
 
+          <Flex>
+            {seasonComponents && seasonComponents.FieldMonitorExtra ? (
+              <seasonComponents.FieldMonitorExtra />
+            ) : null}
+          </Flex>
           <Space direction='vertical' style={{ width: '100%' }}>
             <Button type='primary' href={`${webUrl}`} target='_blank' block>
               Open

@@ -127,7 +127,7 @@ export type SettingsType = {
 export const DEFAULT_SETTINGS: SettingsType = {
   kEStopDioChannel: 0,
   matchStateColors: {
-    kMatchEndColor: "#000000",
+    kMatchEndColor: '#000000'
   },
   dispenserSettings: {
     tornado: {
@@ -189,4 +189,41 @@ export const DEFAULT_SETTINGS: SettingsType = {
     kTimeToEnergize: 5,
     kGuaranteedPeriod: 15
   }
+};
+
+interface WledFcsStatus {
+  redConnected: boolean;
+  blueConnected: boolean;
+  centerConnected: boolean;
+}
+
+interface DispenserFcsStatus {
+  temperature: number;
+  current: number;
+  unjamCount: number;
+  indexerBeamBreak: boolean;
+};
+
+interface EcosystemFcsStatus {
+  l3BeamBreak: boolean;
+  l2BeamBreak: boolean;
+  l1BeamBreak: boolean;
+}
+
+interface AcceleratorFcsStatus {
+  velocity: number;
+}
+
+export interface FcsStatus {
+  wled: WledFcsStatus;
+
+  redDispenser: DispenserFcsStatus;
+  blueDispenser: DispenserFcsStatus;
+
+  redEcosystem: EcosystemFcsStatus;
+  blueEcosystem: EcosystemFcsStatus;
+  centerEcosystem: EcosystemFcsStatus;
+
+  redAccelerator: AcceleratorFcsStatus;
+  blueAccelerator: AcceleratorFcsStatus;
 };

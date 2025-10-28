@@ -9,6 +9,7 @@ import {
 import ScoreSheet from './referee/ScoreSheet.js';
 import HeadRefereeExtra from './referee/HRExtra.js';
 import { Settings } from './settings.js';
+import { FieldMonitorExtra } from './fieldMonitorExtra.js';
 
 export const fgc2025Components: SeasonComponents<
   EcoEquilibrium.MatchDetails,
@@ -20,5 +21,6 @@ export const fgc2025Components: SeasonComponents<
   BlueScoreBreakdown: BlueScoreBreakdown,
   RefereeScoreSheet: ScoreSheet,
   HeadRefExtrasSheet: HeadRefereeExtra,
-  Settings: Settings
+  Settings: Settings,
+  FieldMonitorExtra: FieldMonitorExtra
 };

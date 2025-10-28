@@ -3,7 +3,7 @@ import { Server, Socket } from "socket.io";
 import { fileURLToPath } from "url";
 import Room from "./Room.js";
 import logger from "../util/Logger.js";
-import { EcoEquilibriumFCS } from "@toa-lib/models";
+import { EcoEquilibriumFCS, FGC25FCS } from "@toa-lib/models";
 
 const __filename = fileURLToPath(import.meta.url);
 export const __dirname = dirname(__filename);
@@ -39,6 +39,11 @@ export default class FCS extends Room {
         socket.to("fcs").emit("fcs:settings", { field, data });
       },
     );
+
+    socket.on("fcs:status", (data: FGC25FCS.FcsStatus): void => {
+      logger.info("fcs:status", data);
+      socket.to("fcs").emit("fcs:status", data);
+    });
 
     socket.on("fcs:clearStatus", (): void => {
       logger.info("fcs:clearStatus");
