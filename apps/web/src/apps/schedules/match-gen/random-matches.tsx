@@ -41,7 +41,7 @@ export const RandomMatches: FC<Props> = ({
         tournamentKey,
         quality,
         fields,
-        matchesPerTeam: 5, // TODO: Make this configurable????
+        matchesPerTeam: eventSchedule.matchesPerTeam,
         teamsParticipating: teamKeys.length,
         teamsPerAlliance: eventSchedule.options.teamsPerAlliance,
         teamKeys,

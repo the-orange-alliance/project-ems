@@ -63,11 +63,15 @@ export default class Match extends Room {
     // These are in case of mid-match disconnect/reconnects
     if (
       this.state >= MatchState.PRESTART_COMPLETE &&
-      this.state < MatchState.RESULTS_POSTED &&
+      this.state < MatchState.MATCH_IN_PROGRESS &&
       this.key
     ) {
       // Send prestart information
       socket.emit(MatchSocketEvent.PRESTART, this.key);
+    }
+
+    if (this.state >= MatchState.MATCH_IN_PROGRESS && this.match) {
+      // Send match update
       socket.emit(MatchSocketEvent.UPDATE, this.match);
     }
 

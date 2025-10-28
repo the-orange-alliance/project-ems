@@ -13,9 +13,10 @@ export const EmitWebhooks = async (
     webhookEvent === WebhookEvent.SCORES_POSTED
       ? `AND subscribedEvent IN ('${WebhookEvent.SCORES_POSTED}', '${WebhookEvent.SCORES_POSTED_RED}', '${WebhookEvent.SCORES_POSTED_BLUE}', '${WebhookEvent.SCORES_POSTED_TIED}')`
       : '';
+  const initialClause = webhookEvent === WebhookEvent.SCORES_POSTED ? '' : `subscribedEvent = '${webhookEvent}' AND `;
   const webhooks = (await db.selectAllWhere(
     'webhooks',
-    `subscribedEvent = '${webhookEvent}' AND enabled = 1 AND (field IS NULL OR field = ${match.fieldNumber}) ${andClause}`
+    `${initialClause} enabled = 1 AND (field IS NULL OR field = ${match.fieldNumber}) ${andClause}`
   )) as WebhookDb[];
   for (const webhook of webhooks) {
     if (webhook) {
@@ -68,7 +69,7 @@ export const EmitWebhooks = async (
             await db.updateWhere(
               'webhooks',
               {
-                lastError: errorMessage,
+                lastErrorMessage: errorMessage,
                 lastErrorTime: errorTime,
                 errorCount: (webhook.errorCount || 0) + 1
               },

@@ -3,7 +3,7 @@ import { Server, Socket } from "socket.io";
 import { fileURLToPath } from "url";
 import Room from "./Room.js";
 import logger from "../util/Logger.js";
-import { EcoEquilibriumFCS, FGC25FCS } from "@toa-lib/models";
+import { EcoEquilibriumFCS, MatchSocketEvent, FGC25FCS } from "@toa-lib/models";
 
 const __filename = fileURLToPath(import.meta.url);
 export const __dirname = dirname(__filename);
@@ -70,6 +70,11 @@ export default class FCS extends Room {
           .emit(EcoEquilibriumFCS.SocketEvents.AccelerationUpdate, data);
       },
     );
+
+    socket.on('fcs:ropeDrop', (): void => {
+      logger.info('fcs:ropeDrop');
+      this.broadcast().emit(MatchSocketEvent.ENDGAME);
+    });
 
     socket.on(
       EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
