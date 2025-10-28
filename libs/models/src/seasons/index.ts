@@ -2,14 +2,10 @@ import { AllianceMember } from '../base/Alliance.js';
 import { Match, MatchDetailBase } from '../base/Match.js';
 import { Ranking } from '../base/Ranking.js';
 import { CarbonCaptureSeason } from './CarbonCapture.js';
-import { ChargedUpSeason } from './ChargedUp.js';
-// import { CrescendoSeason } from './Crescendo.js';
 import { FeedingTheFutureSeason } from './FeedingTheFuture.js';
 import { HydrogenHorizonsSeason } from './HydrogenHorizons.js';
-import { EcoEquilibriumSeason } from './FGC25_EcoEquilibrium.js'
+import { EcoEquilibriumSeason } from './FGC25_EcoEquilibrium.js';
 
-export * from './CarbonCapture.js';
-export * from './ChargedUp.js';
 export * as HydrogenHorizons from './HydrogenHorizons.js';
 export * as Crescendo from './Crescendo.js';
 export * as FeedingTheFuture from './FeedingTheFuture.js';
@@ -25,9 +21,7 @@ export interface Season<T extends MatchDetailBase, J extends Ranking> {
 
 export const Seasons: Season<any, any>[] = [
   CarbonCaptureSeason,
-  ChargedUpSeason,
   HydrogenHorizonsSeason,
-  // CrescendoSeason,
   FeedingTheFutureSeason,
   EcoEquilibriumSeason
 ];
@@ -39,7 +33,10 @@ export interface SeasonFunctions<T extends MatchDetailBase, J extends Ranking> {
     prevRankings: J[],
     members: AllianceMember[]
   ) => J[];
-  calculateScore: (match: Match<T>, matchInProgress?: boolean) => [number, number];
+  calculateScore: (
+    match: Match<T>,
+    matchInProgress?: boolean
+  ) => [number, number];
   calculateRankingPoints?: (details: T) => T;
   calculateAutoScore?: (match: Match<T>) => [number, number];
   calculateTeleScore?: (match: Match<T>) => [number, number];
