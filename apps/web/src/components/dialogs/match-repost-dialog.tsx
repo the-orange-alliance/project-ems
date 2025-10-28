@@ -1,9 +1,5 @@
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import { create, useModal, muiDialogV5 } from '@ebay/nice-modal-react';
+import { Modal, Button } from 'antd';
+import { create, useModal } from '@ebay/nice-modal-react';
 
 const MatchRepostDialog = create(() => {
   const handleAbort = () => {
@@ -16,32 +12,28 @@ const MatchRepostDialog = create(() => {
     modal.hide();
   };
   return (
-    <Dialog {...muiDialogV5(modal)} onClose={handleClose}>
-      <DialogTitle
-        sx={{
-          backgroundColor: (theme) => theme.palette.primary.main,
-          color: (theme) => theme.palette.common.white,
-          marginBottom: (theme) => theme.spacing(2)
-        }}
-      >
-        Repost Match
-      </DialogTitle>
-      <DialogContentText sx={{ padding: (theme) => theme.spacing(2) }}>
-        <p>
-          This match will have its updates committed and posted. Reposting this
-          match will overwrite the existing match (including all scores,
-          participants, and details), and stop any currently in-progress
-          matches.
-        </p>
-        <p>Are you sure you want to repost this match?</p>
-      </DialogContentText>
-      <DialogActions>
-        <Button onClick={handleAbort} color='error'>
+    <Modal
+      open={modal.visible}
+      onCancel={handleClose}
+      title='Repost Match'
+      footer={[
+        <Button key='overwrite' type='primary' danger onClick={handleAbort}>
           Yes, Overwrite
+        </Button>,
+        <Button key='cancel' onClick={handleClose}>
+          Cancel
         </Button>
-        <Button onClick={handleClose}>Cancel</Button>
-      </DialogActions>
-    </Dialog>
+      ]}
+      destroyOnClose
+    >
+      <p>This match will have its updates committed and posted.</p>
+      <p>
+        Reposting this match will overwrite the existing match (including all
+        scores, participants, and details), and stop any currently in-progress
+        matches.
+      </p>
+      <p>Are you sure you want to repost this match?</p>
+    </Modal>
   );
 });
 

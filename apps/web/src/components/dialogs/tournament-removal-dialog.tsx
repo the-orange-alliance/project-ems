@@ -1,9 +1,5 @@
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import { create, useModal, muiDialogV5 } from '@ebay/nice-modal-react';
+import { Modal, Button } from 'antd';
+import { create, useModal } from '@ebay/nice-modal-react';
 import { Tournament } from '@toa-lib/models';
 
 interface Props {
@@ -21,24 +17,24 @@ export const TournamentRemovalDialog = create(({ tournament }: Props) => {
     modal.hide();
   };
   return (
-    <Dialog {...muiDialogV5(modal)} onClose={handleClose}>
-      <DialogTitle
-        sx={{
-          backgroundColor: (theme) => theme.palette.primary.main,
-          color: (theme) => theme.palette.common.white,
-          marginBottom: (theme) => theme.spacing(2)
-        }}
-      >
-        Tournament Removal
-      </DialogTitle>
-      <DialogContentText sx={{ padding: (theme) => theme.spacing(2) }}>
+    <Modal
+      open={modal.visible}
+      onCancel={handleClose}
+      title='Tournament Removal'
+      footer={[
+        <Button key='yes' type='primary' danger onClick={handleResolve}>
+          Yes
+        </Button>,
+        <Button key='no' onClick={handleClose}>
+          No
+        </Button>
+      ]}
+      destroyOnClose
+    >
+      <p>
         Are you sure you want to remove <b>{tournament.name}</b> from the event
         tournament list?
-      </DialogContentText>
-      <DialogActions>
-        <Button onClick={handleResolve}>Yes</Button>
-        <Button onClick={handleClose}>No</Button>
-      </DialogActions>
-    </Dialog>
+      </p>
+    </Modal>
   );
 });
