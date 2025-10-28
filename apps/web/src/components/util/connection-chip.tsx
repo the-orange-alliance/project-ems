@@ -33,7 +33,7 @@ export const ConnectionChip: FC = () => {
       }}
     >
       {connected && user
-        ? 'Socket Connected'
+        ? 'Connected'
         : !user
           ? 'Please Login'
           : 'Socket Not Connected'}

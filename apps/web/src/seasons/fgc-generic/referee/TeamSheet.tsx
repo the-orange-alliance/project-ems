@@ -15,7 +15,7 @@ interface Props {
 
 const TeamSheet: FC<Props> = ({ station }) => {
   const [socket] = useSocket();
-  const [match, setMatch] = useAtom(matchAtom)
+  const [match, setMatch] = useAtom(matchAtom);
   const identifiers = useTeamIdentifiers();
   const participant = match?.participants?.find((p) => p.station === station);
 
@@ -59,10 +59,20 @@ const TeamSheet: FC<Props> = ({ station }) => {
   };
 
   return (
-    <Row justify="center" style={{ width: '100%' }}>
-      <Col span={24} style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+    <Row justify='center' style={{ width: '100%' }}>
+      <Col
+        span={24}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          alignItems: 'center'
+        }}
+      >
         {participant && (
-          <Typography.Title level={5}>{identifiers[participant.teamKey]}</Typography.Title>
+          <Typography.Title level={5}>
+            {identifiers[participant.teamKey]}
+          </Typography.Title>
         )}
         <Row gutter={8} style={{ width: '100%' }}>
           <Col flex={1}>
@@ -71,7 +81,11 @@ const TeamSheet: FC<Props> = ({ station }) => {
               type={participant?.cardStatus === 1 ? 'primary' : 'default'}
               danger={participant?.cardStatus === 1}
               onClick={handleYellow}
-              style={{ backgroundColor: participant?.cardStatus === 1 ? '#faad14' : undefined, color: participant?.cardStatus === 1 ? '#fff' : undefined }}
+              style={{
+                backgroundColor:
+                  participant?.cardStatus === 1 ? '#faad14' : undefined,
+                color: participant?.cardStatus === 1 ? '#fff' : undefined
+              }}
             >
               Yellow Card
             </Button>
@@ -82,7 +96,11 @@ const TeamSheet: FC<Props> = ({ station }) => {
               type={participant?.cardStatus === 2 ? 'primary' : 'default'}
               danger={participant?.cardStatus === 2}
               onClick={handleRed}
-              style={{ backgroundColor: participant?.cardStatus === 2 ? '#ff4d4f' : undefined, color: participant?.cardStatus === 2 ? '#fff' : undefined }}
+              style={{
+                backgroundColor:
+                  participant?.cardStatus === 2 ? '#ff4d4f' : undefined,
+                color: participant?.cardStatus === 2 ? '#fff' : undefined
+              }}
             >
               Red Card
             </Button>
@@ -92,7 +110,15 @@ const TeamSheet: FC<Props> = ({ station }) => {
               block
               type={participant?.cardStatus === 3 ? 'primary' : 'default'}
               onClick={handleWhite}
-              style={{ backgroundColor: participant?.cardStatus === 3 ? '#fff' : undefined, color: participant?.cardStatus === 3 ? '#000' : undefined, border: participant?.cardStatus === 3 ? '2px solid #d9d9d9' : undefined }}
+              style={{
+                backgroundColor:
+                  participant?.cardStatus === 3 ? '#fff' : undefined,
+                color: participant?.cardStatus === 3 ? '#000' : undefined,
+                border:
+                  participant?.cardStatus === 3
+                    ? '2px solid #d9d9d9'
+                    : undefined
+              }}
             >
               White Card
             </Button>

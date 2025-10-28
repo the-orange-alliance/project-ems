@@ -1,8 +1,8 @@
 import { FC, useState } from 'react';
 import { RefereeScoreSheetProps } from '@seasons/index.js';
 import { useSocket } from 'src/api/use-socket.js';
-import { useAtom, useAtomValue } from 'jotai';
-import { matchAtom, matchesAtom, matchIdAtom } from 'src/stores/state/event.js';
+import { useAtom } from 'jotai';
+import { matchAtom } from 'src/stores/state/event.js';
 import {
   Match,
   MatchSocketEvent,
@@ -17,7 +17,6 @@ import { ConnectionChip } from 'src/components/util/connection-chip.js';
 import { MatchChip } from 'src/components/util/match-chip.js';
 import TeamSheet from 'src/seasons/fgc-generic/referee/TeamSheet.js';
 import PenaltySheet from 'src/seasons/fgc-generic/referee/PenaltySheet.js';
-import { useEventState } from 'src/stores/hooks/use-event-state.js';
 
 // forever hail the generic types
 

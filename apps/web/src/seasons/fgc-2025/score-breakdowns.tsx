@@ -1,4 +1,4 @@
-import { EcoEquilibrium, FeedingTheFuture } from '@toa-lib/models';
+import { EcoEquilibrium } from '@toa-lib/models';
 import { FC } from 'react';
 import { ScoreBreakdownProps } from '../index.js';
 import { Row, Col, Input, Typography, Divider } from 'antd';
@@ -94,7 +94,7 @@ const FGC25ScoreBreakdown: FC<Props> = (data) => {
     if (handleUpdates) {
       return {
         onChange: (e: any) => {
-          const val = typeof e ==='object' && e.target ? e.target.value : e;
+          const val = typeof e === 'object' && e.target ? e.target.value : e;
           handleUpdates(key, !noParse ? parseInt(val, 10) : val);
         }
       };
@@ -308,7 +308,9 @@ export const CombinedBreakdown: FC<
         </Col>
 
         <Col xs={12}>
-          <Typography.Text>Ecosystem Distribution Factor (Calculated)</Typography.Text>
+          <Typography.Text>
+            Ecosystem Distribution Factor (Calculated)
+          </Typography.Text>
           <StateToggle
             states={[
               EcoEquilibrium.DistributionFactor.NotEven,

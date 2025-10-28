@@ -23,18 +23,38 @@ const PenaltySheet = <DetailsType extends MatchDetailBase>({
   };
 
   return (
-    <Row justify="center" style={{ width: '100%' }}>
-      <Col span={24} style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+    <Row justify='center' style={{ width: '100%' }}>
+      <Col
+        span={24}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          alignItems: 'center'
+        }}
+      >
         <Typography.Title level={5}>Minor Fouls</Typography.Title>
         <NumberInput
-          value={(alliance === 'red' ? match?.redMinPen : match?.blueMinPen) || 0}
+          value={
+            (alliance === 'red' ? match?.redMinPen : match?.blueMinPen) || 0
+          }
           onChange={handleFoulChange}
         />
       </Col>
-      <Col span={24} style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+      <Col
+        span={24}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          alignItems: 'center'
+        }}
+      >
         <Typography.Title level={5}>Major Fouls</Typography.Title>
         <NumberInput
-          value={(alliance === 'red' ? match?.redMajPen : match?.blueMajPen) || 0}
+          value={
+            (alliance === 'red' ? match?.redMajPen : match?.blueMajPen) || 0
+          }
           onChange={handleFoulChange}
         />
       </Col>
