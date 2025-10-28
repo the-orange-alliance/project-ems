@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react';
 import { useSocket } from 'src/api/use-socket.js';
 import { FGC25FCS } from '@toa-lib/models';
-import { Card, Tag, Flex, Typography } from 'antd';
+import { Card, Tag, Flex, Typography, Divider } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 
 const StatusTag = ({
@@ -83,6 +83,7 @@ export const FieldMonitorExtraMinimal: FC = () => {
 
   return fcsStatus ? (
     <Flex flex={1} vertical gap='0.5rem'>
+      <Divider>Field Status</Divider>
       <Flex justify='space-between'>
         <StatusTag connected={fcsStatus.wled.blueConnected} label='Blue' />
         <StatusTag connected={fcsStatus.wled.centerConnected} label='Center' />
