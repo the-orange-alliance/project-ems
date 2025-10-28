@@ -7,6 +7,8 @@ export enum WebhookEvent {
   DISPLAYS_SET = 'DISPLAYS_SET', // { payload: Match }
   FIELD_PREPPED = 'FIELD_PREPPED', // { payload: Match }
   MATCH_STARTED = 'MATCH_STARTED', // { payload: Match }
+  MATCH_ENDGAME = 'MATCH_ENDGAME', // { payload: Match }
+  MATCH_ENDED = 'MATCH_ENDED', // { payload: Match }
   ALL_CLEAR = 'ALL_CLEAR', // { payload: Match }
   COMMITTED = 'COMMITTED', // { payload: Match }
   SCORES_POSTED = 'SCORES_POSTED', // { payload: Match }

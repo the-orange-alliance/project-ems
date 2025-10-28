@@ -1,10 +1,17 @@
-import { MatchKey, MatchSocketEvent, MatchState } from '@toa-lib/models';
-import { useSetAtom } from 'jotai';
+import {
+  MatchKey,
+  MatchSocketEvent,
+  MatchState,
+  WebhookEvent
+} from '@toa-lib/models';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useAtomCallback } from 'jotai/utils';
 import { FC, useEffect } from 'react';
 import { useSocket } from 'src/api/use-socket.js';
+import { emitWebhook } from 'src/api/use-webhook-data.js';
 import {
   eventKeyAtom,
+  matchAtom,
   matchIdAtom,
   tournamentKeyAtom
 } from 'src/stores/state/event.js';
@@ -13,6 +20,7 @@ import { matchStateAtom, matchStatusAtom } from 'src/stores/state/match.js';
 export const SyncMatchState: FC = () => {
   const setState = useSetAtom(matchStateAtom);
   const setMode = useSetAtom(matchStatusAtom);
+  const match = useAtomValue(matchAtom);
   const [socket, connected] = useSocket();
 
   useEffect(() => {
@@ -62,14 +70,19 @@ export const SyncMatchState: FC = () => {
   const onMatchEnd = () => {
     setState(MatchState.MATCH_COMPLETE);
     setMode('MATCH COMPLETE');
+    emitWebhook(WebhookEvent.MATCH_ENDED, match!);
   };
   const onMatchAbort = () => {
     setState(MatchState.MATCH_ABORTED);
     setMode('MATCH ABORTED');
+    emitWebhook(WebhookEvent.MATCH_ENDED, match!);
   };
 
   const onMatchTele = () => setMode('TELEOPERATED');
-  const onMatchEndGame = () => setMode('ENDGAME');
+  const onMatchEndGame = () => {
+    setMode('ENDGAME');
+    emitWebhook(WebhookEvent.MATCH_ENDGAME, match!);
+  };
 
   return null;
 };

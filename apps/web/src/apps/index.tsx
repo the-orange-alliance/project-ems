@@ -61,6 +61,7 @@ const App = () => {
               title={route.name}
               to={`${route.path.replaceAll(':eventKey', event?.eventKey ?? '')}`}
               imgSrc={route.image ? route.image : undefined}
+              icon={route.icon ? route.icon : undefined}
               loading={isLoading}
             />
           ))}
