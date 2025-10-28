@@ -1,8 +1,8 @@
+import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { FGC25FCS } from '@toa-lib/models';
+import { Card, Flex, Tag, Typography } from 'antd';
 import { FC, useEffect, useState } from 'react';
 import { useSocket } from 'src/api/use-socket.js';
-import { FGC25FCS } from '@toa-lib/models';
-import { Card, Tag, Flex, Typography } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 
 export const StatusTag = ({
   connected,
@@ -25,48 +25,6 @@ export const FieldMonitorExtra: FC = () => {
   const [fcsStatus, setFcsStatus] = useState<FGC25FCS.FcsStatus | null>(null);
 
   useEffect(() => {
-    // TODO(jan): Use actual socket data
-    setFcsStatus({
-      wled: {
-        redConnected: true,
-        blueConnected: true,
-        centerConnected: false
-      },
-      redDispenser: {
-        temperature: 72.5,
-        current: 2.3,
-        unjamCount: 5,
-        indexerBeamBreak: true
-      },
-      blueDispenser: {
-        temperature: 71.8,
-        current: 2.1,
-        unjamCount: 3,
-        indexerBeamBreak: false
-      },
-      redEcosystem: {
-        l3BeamBreak: true,
-        l2BeamBreak: false,
-        l1BeamBreak: true
-      },
-      blueEcosystem: {
-        l3BeamBreak: false,
-        l2BeamBreak: true,
-        l1BeamBreak: false
-      },
-      centerEcosystem: {
-        l3BeamBreak: true,
-        l2BeamBreak: true,
-        l1BeamBreak: true
-      },
-      redAccelerator: {
-        velocity: 45.6
-      },
-      blueAccelerator: {
-        velocity: 47.2
-      }
-    });
-
     if (!connected || !socket) return;
 
     socket.on('fcs:status', handleFcsStatus);
@@ -77,8 +35,9 @@ export const FieldMonitorExtra: FC = () => {
     };
   }, []);
 
-  const handleFcsStatus = (status: FGC25FCS.FcsStatus) => {
-    setFcsStatus(status);
+  const handleFcsStatus = (status: any) => {
+    const parsedStatus: FGC25FCS.FcsStatus = JSON.parse(status as string); // lol?
+    setFcsStatus(parsedStatus);
   };
 
   return fcsStatus ? (
@@ -241,7 +200,8 @@ export const FieldMonitorExtra: FC = () => {
               <Flex justify='space-between'>
                 <span>Velocity</span>
                 <span style={{ fontWeight: 500 }}>
-                  {fcsStatus.redAccelerator.velocity}{' RPM'}
+                  {fcsStatus.redAccelerator.velocity}
+                  {' RPM'}
                 </span>
               </Flex>
             </Card>
@@ -255,7 +215,8 @@ export const FieldMonitorExtra: FC = () => {
               <Flex justify='space-between'>
                 <span>Velocity</span>
                 <span style={{ fontWeight: 500 }}>
-                  {fcsStatus.blueAccelerator.velocity}{' RPM'}
+                  {fcsStatus.blueAccelerator.velocity}
+                  {' RPM'}
                 </span>
               </Flex>
             </Card>

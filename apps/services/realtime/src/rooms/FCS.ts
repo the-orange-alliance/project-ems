@@ -41,7 +41,7 @@ export default class FCS extends Room {
     );
 
     socket.on("fcs:status", (data: FGC25FCS.FcsStatus): void => {
-      logger.info("fcs:status", data);
+      // logger.info("fcs:status", data);
       socket.to("fcs").emit("fcs:status", data);
     });
 
