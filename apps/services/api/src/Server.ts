@@ -161,13 +161,15 @@ await fastify.register(webhooksController, { prefix: '/webhooks' });
 await fastify.register(seasonSpecificController, { prefix: '/seasonSpecific' });
 
 // 🧩 Global hook: triggers after any mutating request
-fastify.addHook('onResponse', async (request) => {
+fastify.addHook('onResponse', (request, reply, done) => {
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
     const { eventKey } = (request.params as { eventKey?: string }) ?? {};
 
     if (eventKey) {
       debouncedUploadDatabase(eventKey);
     }
+
+    done();
   }
 });
 
