@@ -34,7 +34,7 @@ export const SyncMatchOccurring: FC<Props> = ({ stopAfterMatchEnd }) => {
         return;
       } else {
         set(matchAtom, newMatch);
-        // fieldControl?.onMatchUpdate?.(newMatch);
+        fieldControl?.onMatchUpdate?.(newMatch);
       }
     }
   );

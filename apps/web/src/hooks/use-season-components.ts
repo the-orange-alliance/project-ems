@@ -11,6 +11,6 @@ export const useSeasonComponents = () => {
 
 export const useSeasonFieldControl = () => {
   const eventKey = useAtomValue(eventKeyAtom);
-  const seasonKey = getSeasonKeyFromEventKey(eventKey ?? '');
+  const seasonKey = getSeasonKeyFromEventKey(eventKey ?? 'fgc_2025');
   return useFieldControl(seasonKey);
 };
