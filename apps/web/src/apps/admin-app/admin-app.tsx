@@ -4,7 +4,8 @@ import { Button, Divider, Typography, Space } from 'antd';
 import {
   createRankings,
   recalculateRankings,
-  recalculatePlayoffsRankings
+  recalculatePlayoffsRankings,
+  deleteRankings
 } from 'src/api/use-ranking-data.js';
 import {
   resultsSyncAlliances,
@@ -78,6 +79,11 @@ export const AdminApp: FC = () => {
     }
   };
 
+  const handleRankingsDelete = async () => {
+    if (!tournamentKey || !eventKey) return;
+    await deleteRankings(eventKey, tournamentKey);
+  };
+
   return (
     <PaperLayout
       header={
@@ -109,6 +115,9 @@ export const AdminApp: FC = () => {
         </Button>
         <Button type='primary' danger onClick={handleRankings}>
           Re-Calculate Rankings
+        </Button>
+        <Button type='primary' danger onClick={handleRankingsDelete}>
+          Delete Rankings
         </Button>
         <Button type='primary' danger onClick={handlePurge}>
           Purge Event Data
