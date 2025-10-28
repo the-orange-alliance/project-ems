@@ -1,13 +1,14 @@
 import { FC, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LoginButton } from 'src/components/buttons/login-button.js';
-import { LogoutButton } from 'src/components/buttons/logout-button.js';
+// import { LogoutButton } from 'src/components/buttons/logout-button.js';
 import emsAvatar from '@assets/favicon.ico';
 import { Layout, Avatar, Typography, Button, theme } from 'antd';
 import {
   SettingOutlined,
   FullscreenOutlined,
-  FullscreenExitOutlined
+  FullscreenExitOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 import { appbarConfigAtom } from 'src/stores/state/ui.js';
@@ -91,26 +92,44 @@ const PrimaryAppbar: FC = () => {
           {/* <Button type='link'>Docs</Button> */}
 
           {/* Settings */}
-          <Button
-            icon={<SettingOutlined />}
-            style={{ marginLeft: '8px' }}
-            onClick={navSettings}
-          />
+          {!showFullscreen && (
+            <Button
+              icon={<SettingOutlined />}
+              style={{ marginLeft: '8px' }}
+              onClick={navSettings}
+              size='large'
+            >
+              Settings
+            </Button>
+          )}
+
+          {showFullscreen && (
+            <Button
+              icon={<ReloadOutlined />}
+              style={{ marginLeft: '8px' }}
+              onClick={() => location.reload()}
+              size='large'
+            >
+              Refresh
+            </Button>
+          )}
 
           {/* Fullscreen Toggle */}
           {showFullscreen && (
             <Button
-              type='text'
               icon={
                 fullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />
               }
               style={{ marginLeft: '8px' }}
               onClick={fullscreen ? exitFullscreen : requestFullscreen}
-            />
+              size='large'
+            >
+              Fullscreen
+            </Button>
           )}
 
           {/* Logout */}
-          <LogoutButton />
+          {/* <LogoutButton /> */}
         </>
       ) : (
         <LoginButton />

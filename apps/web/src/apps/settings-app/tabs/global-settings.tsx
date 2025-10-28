@@ -18,7 +18,11 @@ import DropdownRow from 'src/components/settings/dropdown-row.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import ButtonRow from 'src/components/settings/button-row.js';
 import InputRow from 'src/components/settings/input-row.js';
-import { useGitHubDownload } from '../util/use-github-download.js';
+import {
+  initAudio,
+  MATCH_START
+} from 'src/apps/audience-display/audio/index.js';
+// import { useGitHubDownload } from '../util/use-github-download.js';
 
 const GlobalSettings: FC = () => {
   const [darkMode, setDarkMode] = useAtom(darkModeSettingAtom);
@@ -28,9 +32,11 @@ const GlobalSettings: FC = () => {
   const [syncPlatform, setSyncPlatform] = useAtom(syncPlatformAtom);
   const [syncApiKey, setSyncApiKey] = useAtom(syncApiKeyAtom);
   const [remoteUrl, setRemoteUrl] = useAtom(remoteApiUrlAtom);
-  const downloadRelease = useGitHubDownload();
+// const downloadRelease = useGitHubDownload();
   const timeoutRef1 = useRef<any>(null);
   const timeoutRef = useRef<any>(null);
+
+  const startAudio = initAudio(MATCH_START);
 
   const handleFollowerModeChange = (value: boolean) => {
     setFollowerMode(value);
@@ -69,17 +75,17 @@ const GlobalSettings: FC = () => {
     }, 1000);
   };
 
-  const download = async () => {
-    try {
-      const releaseUrl = await downloadRelease();
-      const link = document.createElement('a');
-      link.download = 'ems-latest';
-      link.href = releaseUrl;
-      link.click();
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  // const download = async () => {
+  //   try {
+  //     const releaseUrl = await downloadRelease();
+  //     const link = document.createElement('a');
+  //     link.download = 'ems-latest';
+  //     link.href = releaseUrl;
+  //     link.click();
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  // };
 
   const handleClear = () => localStorage.clear();
 
@@ -137,10 +143,15 @@ const GlobalSettings: FC = () => {
         color='danger'
         onClick={handleClear}
       />
-      <ButtonRow
+      {/* <ButtonRow
         title='Check For Updates'
         buttonText='Check Now'
         onClick={download}
+      /> */}
+      <ButtonRow
+        title='Test Audio'
+        buttonText='Play'
+        onClick={() => startAudio.play()}
       />
       <InputRow
         title='Remote API URL'
