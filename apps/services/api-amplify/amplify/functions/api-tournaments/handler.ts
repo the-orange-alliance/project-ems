@@ -40,7 +40,6 @@ export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
 ) => {
   const method = event.httpMethod;
-  const body = event.body ? tournamentZod.parse(JSON.parse(event.body)) : null;
   const tournaments = await readTournaments();
 
   switch (method) {
@@ -62,7 +61,10 @@ export const handler: APIGatewayProxyHandler = async (
       };
 
     case "POST":
-      if (!body) {
+      const bodyArray = event.body
+        ? tournamentZod.array().parse(JSON.parse(event.body))
+        : null;
+      if (!bodyArray) {
         return {
           statusCode: 400,
           body: "Bad Request: Missing body",
@@ -70,7 +72,7 @@ export const handler: APIGatewayProxyHandler = async (
         };
       }
 
-      tournaments.push(body);
+      tournaments.push(...bodyArray);
       await writeTournaments(tournaments);
       return {
         statusCode: 200,
@@ -79,6 +81,9 @@ export const handler: APIGatewayProxyHandler = async (
       };
 
     case "PATCH":
+      const body = event.body
+        ? tournamentZod.parse(JSON.parse(event.body))
+        : null;
       if (!body) {
         return {
           statusCode: 400,
