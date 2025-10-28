@@ -8,6 +8,8 @@ interface Props {
   onDecrement?: (newValue: number) => void;
   disabled?: boolean;
   textFieldDisabled?: boolean;
+  min?: number;
+  max?: number;
 }
 
 export const NumberInput: FC<Props> = ({
@@ -16,17 +18,21 @@ export const NumberInput: FC<Props> = ({
   onIncrement,
   onDecrement,
   disabled,
-  textFieldDisabled
+  textFieldDisabled,
+  min = 0,
+  max
 }) => {
   const handleTypedChange = (event: ChangeEvent<HTMLInputElement>) =>
     onChange(parseInt(event.target.value), true);
   const increment = () => {
-    const newValue = value + 1;
+    let newValue = value + 1;
+    if (max !== undefined && newValue > max) newValue = max;
     onIncrement?.(newValue);
     onChange(newValue, false);
   };
   const decrement = () => {
-    const newValue = value - 1;
+    let newValue = value - 1;
+    if (min !== undefined && newValue < min) newValue = min;
     onDecrement?.(newValue);
     onChange(newValue, false);
   };

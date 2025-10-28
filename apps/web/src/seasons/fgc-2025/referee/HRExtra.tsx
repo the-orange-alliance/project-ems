@@ -193,7 +193,6 @@ const HeadRefereeExtra: React.FC = () => {
             </Typography.Title>
             <NumberInput
               value={match?.details?.biodiversityUnitsCenterEcosystem || 0}
-              textFieldDisabled
               onChange={handleEcosystemExactChange}
               onIncrement={handleEcosystemExactIncrement}
               onDecrement={handleEcosystemExactDecrement}

@@ -1,7 +1,6 @@
 import { FC } from 'react';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 import { RefereeLayout } from 'src/layouts/referee-layout.js';
-import { useEventState } from 'src/stores/hooks/use-event-state.js';
 
 export const HeadRefereeMin: FC = () => {
   const seasonComponents = useSeasonComponents();
