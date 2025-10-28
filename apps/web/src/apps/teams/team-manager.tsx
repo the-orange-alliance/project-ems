@@ -107,7 +107,7 @@ export const TeamManager: FC = () => {
       {
         ...defaultTeam,
         eventKey,
-        teamKey: state.staged.teams.length + 1,
+        teamKey: state.local.teams.length + 1,
         countryCode: randCountry,
         teamNameShort: `Test ${prev.length + 1} (${randCountry})`
       },
