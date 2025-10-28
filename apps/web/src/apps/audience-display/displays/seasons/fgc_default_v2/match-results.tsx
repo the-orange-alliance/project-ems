@@ -12,8 +12,8 @@ export const MatchResults: FC<DisplayProps> = ({ match, ranks, teams }) => {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        width: '100%',
-        height: '100%',
+        width: '100vw',
+        height: '100vh',
         padding: '2rem',
         backgroundColor: '#161b22',
         overflow: 'hidden',
