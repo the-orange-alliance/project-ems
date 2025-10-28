@@ -41,6 +41,7 @@ jobs:
       - name: Build and push Backend Docker image
         run: |
           docker build --target backend \
+            --build-arg GIT_SHA=${SHORT_SHA} \
             -t ems-backend:latest \
             -t public.ecr.aws/102536421230/ems-backend:latest \
             -t public.ecr.aws/102536421230/ems-backend:${BRANCH_NAME}-${SHORT_SHA} .
@@ -50,6 +51,7 @@ jobs:
       - name: Build and push Web Docker image
         run: |
           docker build --target web \
+            --build-arg GIT_SHA=${SHORT_SHA} \
             -t ems-web:latest \
             -t public.ecr.aws/102536421230/ems-web:latest \
             -t public.ecr.aws/102536421230/ems-web:${BRANCH_NAME}-${SHORT_SHA} .

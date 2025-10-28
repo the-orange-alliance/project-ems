@@ -34,19 +34,26 @@ export const PaperLayout: FC<Props> = ({
 
   return (
     <Layout
-      style={{ display: 'flex', justifyContent: 'center', paddingTop: '48px', minHeight: 'calc(100% - 56px)' }}
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        paddingTop: '48px',
+        minHeight: 'calc(100% - 56px)'
+      }}
     >
       <Content
         style={{ maxWidth: containerWidth, width: '100%', padding: '0 16px' }}
       >
         <Card>
-          {header && typeof header === "string" && (
+          {header && typeof header === 'string' && (
             <>
-              <Typography.Title level={2} style={{margin: '0.5em 0'}}>{header}</Typography.Title>
+              <Typography.Title level={2} style={{ margin: '0.5em 0' }}>
+                {header}
+              </Typography.Title>
               <Divider />
             </>
           )}
-          {header && typeof header !== "string" && (
+          {header && typeof header !== 'string' && (
             <>
               {header}
               <Divider />

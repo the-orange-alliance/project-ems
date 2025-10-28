@@ -13,6 +13,7 @@ import { useAtomValue } from 'jotai';
 import { appbarConfigAtom } from 'src/stores/state/ui.js';
 import { eventKeyAtom } from 'src/stores/state/event.js';
 import { ConnectionChip } from '../util/connection-chip.js';
+import { VersionChip } from '../util/version-chip.js';
 
 const { Header } = Layout;
 
@@ -84,6 +85,7 @@ const PrimaryAppbar: FC = () => {
         </Typography.Title>
       )}
       <ConnectionChip />
+      <VersionChip />
       {user ? (
         <>
           {/* <Button type='link'>Docs</Button> */}
