@@ -33,7 +33,7 @@ export const FieldMonitorExtra: FC = () => {
     return () => {
       socket.off('fcs:status');
     };
-  }, []);
+  }, [socket, connected]);
 
   const handleFcsStatus = (status: any) => {
     const parsedStatus: FGC25FCS.FcsStatus = JSON.parse(status as string); // lol?
