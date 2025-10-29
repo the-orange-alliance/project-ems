@@ -3,16 +3,20 @@ import { FGC25FCS } from '@toa-lib/models';
 import { Card, Flex, Tag, Typography } from 'antd';
 import { FC } from 'react';
 
+export type StatusType = 'success' | 'error' | 'warning';
+
 export const StatusTag = ({
-  connected,
+  status,
   label
 }: {
-  connected: boolean;
+  status: StatusType;
   label: string;
 }) => (
   <Tag
-    icon={connected ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
-    color={connected ? 'success' : 'error'}
+    icon={
+      status === 'success' ? <CheckCircleOutlined /> : <CloseCircleOutlined />
+    }
+    color={status}
     style={{ padding: '0 4px', margin: '2px' }}
   >
     {label}
@@ -29,14 +33,35 @@ export const FieldMonitorExtra: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
             <Typography.Text>WLED</Typography.Text>
             <Flex style={{ width: '100%' }}>
               <StatusTag
-                connected={fcsStatus.wled.blueConnected}
+                status={
+                  !fcsStatus.wled.blueConnected
+                    ? 'error'
+                    : fcsStatus.wled.blueStickyDisconnect
+                      ? 'warning'
+                      : 'success'
+                }
                 label='Blue'
               />
               <StatusTag
-                connected={fcsStatus.wled.centerConnected}
+                status={
+                  !fcsStatus.wled.centerConnected
+                    ? 'error'
+                    : fcsStatus.wled.centerStickyDisconnect
+                      ? 'warning'
+                      : 'success'
+                }
                 label='Center'
               />
-              <StatusTag connected={fcsStatus.wled.redConnected} label='Red' />
+              <StatusTag
+                status={
+                  !fcsStatus.wled.redConnected
+                    ? 'error'
+                    : fcsStatus.wled.redStickyDisconnect
+                      ? 'warning'
+                      : 'success'
+                }
+                label='Red'
+              />
             </Flex>
           </Flex>
         </Card>
@@ -70,7 +95,11 @@ export const FieldMonitorExtra: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
               </Flex>
               <Flex justify='center'>
                 <StatusTag
-                  connected={fcsStatus.blueDispenser.indexerBeamBreak}
+                  status={
+                    fcsStatus.blueDispenser.indexerBeamBreak
+                      ? 'success'
+                      : 'error'
+                  }
                   label='Beam Break'
                 />
               </Flex>
@@ -104,7 +133,11 @@ export const FieldMonitorExtra: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
               </Flex>
               <Flex justify='center'>
                 <StatusTag
-                  connected={fcsStatus.redDispenser.indexerBeamBreak}
+                  status={
+                    fcsStatus.redDispenser.indexerBeamBreak
+                      ? 'success'
+                      : 'error'
+                  }
                   label='Beam Break'
                 />
               </Flex>
@@ -119,15 +152,21 @@ export const FieldMonitorExtra: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
               <Typography.Text strong>Blue Ecosystem</Typography.Text>
               <Flex flex={1} gap='0.5rem'>
                 <StatusTag
-                  connected={fcsStatus.blueEcosystem.l3BeamBreak}
+                  status={
+                    fcsStatus.blueEcosystem.l3BeamBreak ? 'success' : 'error'
+                  }
                   label='L3'
                 />
                 <StatusTag
-                  connected={fcsStatus.blueEcosystem.l2BeamBreak}
+                  status={
+                    fcsStatus.blueEcosystem.l2BeamBreak ? 'success' : 'error'
+                  }
                   label='L2'
                 />
                 <StatusTag
-                  connected={fcsStatus.blueEcosystem.l1BeamBreak}
+                  status={
+                    fcsStatus.blueEcosystem.l1BeamBreak ? 'success' : 'error'
+                  }
                   label='L1'
                 />
               </Flex>
@@ -139,15 +178,21 @@ export const FieldMonitorExtra: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
               <Typography.Text strong>Center Ecosystem</Typography.Text>
               <Flex flex={1} gap='0.5rem'>
                 <StatusTag
-                  connected={fcsStatus.centerEcosystem.l3BeamBreak}
+                  status={
+                    fcsStatus.centerEcosystem.l3BeamBreak ? 'success' : 'error'
+                  }
                   label='L3'
                 />
                 <StatusTag
-                  connected={fcsStatus.centerEcosystem.l2BeamBreak}
+                  status={
+                    fcsStatus.centerEcosystem.l2BeamBreak ? 'success' : 'error'
+                  }
                   label='L2'
                 />
                 <StatusTag
-                  connected={fcsStatus.centerEcosystem.l1BeamBreak}
+                  status={
+                    fcsStatus.centerEcosystem.l1BeamBreak ? 'success' : 'error'
+                  }
                   label='L1'
                 />
               </Flex>
@@ -158,15 +203,21 @@ export const FieldMonitorExtra: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
               <Typography.Text strong>Red Ecosystem</Typography.Text>
               <Flex flex={1} gap='0.5rem'>
                 <StatusTag
-                  connected={fcsStatus.redEcosystem.l3BeamBreak}
+                  status={
+                    fcsStatus.redEcosystem.l3BeamBreak ? 'success' : 'error'
+                  }
                   label='L3'
                 />
                 <StatusTag
-                  connected={fcsStatus.redEcosystem.l2BeamBreak}
+                  status={
+                    fcsStatus.redEcosystem.l2BeamBreak ? 'success' : 'error'
+                  }
                   label='L2'
                 />
                 <StatusTag
-                  connected={fcsStatus.redEcosystem.l1BeamBreak}
+                  status={
+                    fcsStatus.redEcosystem.l1BeamBreak ? 'success' : 'error'
+                  }
                   label='L1'
                 />
               </Flex>
