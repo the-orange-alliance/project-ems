@@ -626,7 +626,7 @@ export function calculateScore(
 
   // If match is in progress, do some crude math to turn the approx. biodiversity into scored biodiversity
   if (matchInProgress) {
-    const ballsPerPixel = 8 / 5; // For every 5 pixels illuminated, there are 8 biodiversity units
+    const ballsPerPixel = 5 / 5; // 5 balls / 5 pixels
     details.biodiversityUnitsRedSideEcosystem = Math.floor(
       details.approximateBiodiversityRedSideEcosystem * ballsPerPixel
     );
