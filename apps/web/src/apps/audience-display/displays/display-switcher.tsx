@@ -285,7 +285,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
       )}
       {layout[2] === LayoutMode.STREAM && resultsToUse && (
         <AbsolouteLocator top={0} left={0}>
-          <SlideInLeft
+          <SlideInBottom
             in={id === Displays.MATCH_RESULTS || showStreamResultsDuringPreview}
             duration={1.25}
             inDelay={0.75}
@@ -296,7 +296,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
               ranks={ranksToUse}
               teams={teams}
             />
-          </SlideInLeft>
+          </SlideInBottom>
         </AbsolouteLocator>
       )}
     </>
