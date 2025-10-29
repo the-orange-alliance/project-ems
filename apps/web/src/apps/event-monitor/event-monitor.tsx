@@ -35,6 +35,7 @@ import { io, Socket } from 'socket.io-client';
 import { useEventState } from '../../stores/hooks/use-event-state.js';
 import { useAtomValue } from 'jotai';
 import { darkModeAtom } from '../../stores/state/ui.js';
+import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 
 const { Text } = Typography;
 
@@ -72,11 +73,11 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const [currentDisplay, setCurrentDisplay] = useState<Displays>(
     Displays.BLANK
   );
+  const seasonComponents = useSeasonComponents();
 
   const handleRefresh = () => {
     console.log('Refresh but idk how to');
   };
-  const [fcsStatus, setFcsStatus] = useState<FieldControlStatus | null>(null);
 
   useEffect(() => {
     const socket = createSocket();
@@ -89,7 +90,6 @@ const MonitorCard: FC<MonitorCardProps> = ({
     socket.on(MatchSocketEvent.COMMIT, handleCommit);
     socket.on(MatchSocketEvent.UPDATE, handleUpdate);
     socket.on(MatchSocketEvent.DISPLAY, handleDisplay);
-    socket.on('fcs:status', handleFcsStatus);
     socket.connect();
     socket.emit('rooms', ['match', 'fcs']);
     setSocket(socket);
@@ -141,9 +141,6 @@ const MonitorCard: FC<MonitorCardProps> = ({
     setMatch(newMatch);
   };
 
-  const handleFcsStatus = (status: FieldControlStatus) => {
-    setFcsStatus(status);
-  };
   const handleFcsClearStatus = () => {
     socket?.emit('fcs:clearStatus');
   };
@@ -168,24 +165,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
   };
 
   const getCardColor = (): string => {
-    if (!fcsStatus) {
-      return darkMode ? '#1f1f1f' : '#ffffff';
-    }
-
-    if (Object.entries(fcsStatus.wleds).some((wled) => !wled[1].connected)) {
-      // Error state - red background
-      return darkMode ? '#5c1f1f' : '#FAA0A0';
-    } else if (
-      Object.entries(fcsStatus.wleds).some(
-        (wled) => wled[1].stickyLostConnection
-      )
-    ) {
-      // Warning state - yellow background
-      return darkMode ? '#5c5c1f' : '#FFFF8F';
-    } else {
-      // Normal state
-      return darkMode ? '#1f1f1f' : '#FFFFFF';
-    }
+    return darkMode ? '#1f1f1f' : '#ffffff';
   };
 
   const currentDisplayName =
@@ -294,6 +274,11 @@ const MonitorCard: FC<MonitorCardProps> = ({
               {getFieldDelay()}
             </Text>
           </Flex>
+          <Flex>
+            {seasonComponents && seasonComponents.FieldMonitorExtraMinimal ? (
+              <seasonComponents.FieldMonitorExtraMinimal />
+            ) : null}
+          </Flex>
         </Space>
       </Card>
       <Modal
@@ -329,27 +314,11 @@ const MonitorCard: FC<MonitorCardProps> = ({
 
           <MatchDetails key={field} match={match} teams={teams} expanded />
 
-          {fcsStatus && (
-            <Row gutter={[16, 16]}>
-              {Object.entries(fcsStatus.wleds).map((wled) => (
-                <Col key={wled[0]}>
-                  <Space>
-                    {wled[1].connected ? (
-                      !wled[1].stickyLostConnection ? (
-                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                      ) : (
-                        <WarningOutlined style={{ color: '#faad14' }} />
-                      )
-                    ) : (
-                      <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-                    )}
-                    <Text>{`${wled[0]} wled`}</Text>
-                  </Space>
-                </Col>
-              ))}
-            </Row>
-          )}
-
+          <Flex>
+            {seasonComponents && seasonComponents.FieldMonitorExtra ? (
+              <seasonComponents.FieldMonitorExtra />
+            ) : null}
+          </Flex>
           <Space direction='vertical' style={{ width: '100%' }}>
             <Button type='primary' href={`${webUrl}`} target='_blank' block>
               Open

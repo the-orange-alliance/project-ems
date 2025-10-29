@@ -387,7 +387,7 @@ const AppRoutes: AppRoute[] = [
   },
   {
     name: 'Jan App',
-    path: '/event-monitor',
+    path: '/:eventKey/event-monitor',
     group: 0,
     element: EventMonitor,
     image: THE_BOY
