@@ -67,6 +67,8 @@ export interface SeasonComponents<
   HeadRefExtrasSheet?: FC;
   RankingsReport?: FC<RankingsReportProps<U>>;
   useFieldControl?: () => FieldControlCallbacks<T>;
+  FieldMonitorExtra?: FC;
+  FieldMonitorExtraMinimal?: FC;
 }
 
 export function getComponentsFromSeasonKey<
