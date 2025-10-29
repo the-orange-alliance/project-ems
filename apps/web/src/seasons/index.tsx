@@ -1,12 +1,13 @@
 import {
   Alliance,
+  EcoEquilibrium,
   FeedingTheFuture,
+  FGC25FCS,
   Match,
   MatchDetailBase,
-  Ranking,
-  EcoEquilibrium
+  Ranking
 } from '@toa-lib/models';
-import { FC, ChangeEvent } from 'react';
+import { ChangeEvent, FC } from 'react';
 import { fgc2024Components } from './fgc-2024/index.js';
 import { fgc2025Components } from './fgc-2025/index.js';
 
@@ -67,8 +68,8 @@ export interface SeasonComponents<
   HeadRefExtrasSheet?: FC;
   RankingsReport?: FC<RankingsReportProps<U>>;
   useFieldControl?: () => FieldControlCallbacks<T>;
-  FieldMonitorExtra?: FC;
-  FieldMonitorExtraMinimal?: FC;
+  FieldMonitorExtra?: FC<FGC25FCS.FcsStatus>;
+  FieldMonitorExtraMinimal?: FC<FGC25FCS.FcsStatus>;
 }
 
 export function getComponentsFromSeasonKey<

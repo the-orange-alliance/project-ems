@@ -1,9 +1,7 @@
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { FGC25FCS } from '@toa-lib/models';
 import { Divider, Flex, Tag, Typography } from 'antd';
-import { FC, useEffect, useState } from 'react';
-import { useSocket } from 'src/api/use-socket.js';
-
+import { FC } from 'react';
 const StatusTag = ({
   connected,
   label
@@ -20,26 +18,7 @@ const StatusTag = ({
   </Tag>
 );
 
-export const FieldMonitorExtraMinimal: FC = () => {
-  const [socket, connected] = useSocket();
-  const [fcsStatus, setFcsStatus] = useState<FGC25FCS.FcsStatus | null>(null);
-
-  useEffect(() => {
-    if (!connected || !socket) return;
-
-    socket.on('fcs:status', handleFcsStatus);
-    socket.emit('rooms', ['fcs']);
-
-    return () => {
-      socket.off('fcs:status');
-    };
-  }, []);
-
-  const handleFcsStatus = (status: any) => {
-    const parsedStatus: FGC25FCS.FcsStatus = JSON.parse(status as string); // lol?
-    setFcsStatus(parsedStatus);
-  };
-
+export const FieldMonitorExtraMinimal: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
   return fcsStatus ? (
     <Flex flex={1} vertical gap='0.5rem'>
       <Divider>Field Status</Divider>

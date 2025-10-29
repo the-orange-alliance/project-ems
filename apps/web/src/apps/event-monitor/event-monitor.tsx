@@ -29,7 +29,8 @@ import {
   Match,
   FieldControlStatus,
   Team,
-  Displays
+  Displays,
+  FGC25FCS
 } from '@toa-lib/models';
 import { io, Socket } from 'socket.io-client';
 import { useEventState } from '../../stores/hooks/use-event-state.js';
@@ -73,6 +74,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const [currentDisplay, setCurrentDisplay] = useState<Displays>(
     Displays.BLANK
   );
+  const [fcsStatus, setFcsStatus] = useState<FGC25FCS.FcsStatus | null>(null);
   const seasonComponents = useSeasonComponents();
 
   const handleRefresh = () => {
@@ -90,6 +92,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
     socket.on(MatchSocketEvent.COMMIT, handleCommit);
     socket.on(MatchSocketEvent.UPDATE, handleUpdate);
     socket.on(MatchSocketEvent.DISPLAY, handleDisplay);
+    socket.on('fcs:status', handleFcsStatus);
     socket.connect();
     socket.emit('rooms', ['match', 'fcs']);
     setSocket(socket);
@@ -143,6 +146,11 @@ const MonitorCard: FC<MonitorCardProps> = ({
 
   const handleFcsClearStatus = () => {
     socket?.emit('fcs:clearStatus');
+  };
+
+  const handleFcsStatus = (status: any) => {
+    const parsedStatus: FGC25FCS.FcsStatus = JSON.parse(status as string); // lol?
+    setFcsStatus(parsedStatus);
   };
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -275,8 +283,10 @@ const MonitorCard: FC<MonitorCardProps> = ({
             </Text>
           </Flex>
           <Flex>
-            {seasonComponents && seasonComponents.FieldMonitorExtraMinimal ? (
-              <seasonComponents.FieldMonitorExtraMinimal />
+            {fcsStatus &&
+            seasonComponents &&
+            seasonComponents.FieldMonitorExtraMinimal ? (
+              <seasonComponents.FieldMonitorExtraMinimal {...fcsStatus} />
             ) : null}
           </Flex>
         </Space>
@@ -315,8 +325,10 @@ const MonitorCard: FC<MonitorCardProps> = ({
           <MatchDetails key={field} match={match} teams={teams} expanded />
 
           <Flex>
-            {seasonComponents && seasonComponents.FieldMonitorExtra ? (
-              <seasonComponents.FieldMonitorExtra />
+            {fcsStatus &&
+            seasonComponents &&
+            seasonComponents.FieldMonitorExtra ? (
+              <seasonComponents.FieldMonitorExtra {...fcsStatus} />
             ) : null}
           </Flex>
           <Space direction='vertical' style={{ width: '100%' }}>
