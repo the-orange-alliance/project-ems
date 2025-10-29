@@ -53,7 +53,10 @@ export const MatchEditDialog: FC<Props> = ({
       onClose();
       mutate(`match/${eventKey}/${tournamentKey}`);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      const error =
+        e instanceof Error
+          ? `${e.name} ${e.message}\\n(${e.cause})`
+          : String(e);
       showSnackbar('Error while uploading matches.', error);
     }
   };

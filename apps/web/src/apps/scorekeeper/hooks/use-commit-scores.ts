@@ -77,12 +77,24 @@ export const useCommitScoresCallback = () => {
           pending.details.tournamentKey = tournamentKey;
         }
 
-        await patchWholeMatch(pending);
-        if (isPlayoffsTournament(tournament)) {
-          await recalculatePlayoffsRankings(eventKey, tournamentKey);
-        } else {
-          await recalculateRankings(eventKey, tournamentKey);
+        try {
+          await patchWholeMatch(pending);
+        } catch (e) {
+          // Match patch failed
+          throw new Error('Failed to commit scores for match.', { cause: e });
         }
+
+        try {
+          if (isPlayoffsTournament(tournament)) {
+            await recalculatePlayoffsRankings(eventKey, tournamentKey);
+          } else {
+            await recalculateRankings(eventKey, tournamentKey);
+          }
+        } catch (e) {
+          // Rankings recalc failed
+          throw new Error('Failed to calculate rankings.', { cause: e });
+        }
+
         fieldControl?.commitScoresForField?.();
         sendCommitScores({ eventKey, tournamentKey, id });
         setState(MatchState.RESULTS_COMMITTED);

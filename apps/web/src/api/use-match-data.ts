@@ -47,14 +47,19 @@ export const patchMatchParticipants = async (
     participants
   );
 
+/**
+ * Runs a PATCH request to update the entire match, including details and participants.
+ * @param match
+ * @throws Error - IF ANY REQUEST FAILS, THE DEVELOPER MUST HANDLE THE ERROR APPROPRIATELY.
+ */
 export const patchWholeMatch = async (match: Match<any>): Promise<void> => {
-  try {
-    const promises: Promise<any>[] = [];
-    promises.push(patchMatch(match));
-    if (match.details) {
-      patchMatchDetails(match);
-    }
-    if (match.participants) {
+  const promises: Promise<any>[] = [];
+  promises.push(patchMatch(match));
+  if (match.details) {
+    promises.push(patchMatchDetails(match));
+  }
+  if (match.participants) {
+    promises.push(
       patchMatchParticipants(
         {
           eventKey: match.eventKey,
@@ -62,13 +67,10 @@ export const patchWholeMatch = async (match: Match<any>): Promise<void> => {
           id: match.id
         },
         match.participants
-      );
-    }
-    await Promise.all(promises);
-  } catch (e) {
-    // TODO - better error-handling
-    console.log(e);
+      )
+    );
   }
+  await Promise.all(promises);
 };
 
 export const deleteMatches = async (

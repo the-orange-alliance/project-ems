@@ -27,7 +27,10 @@ export const CommitScoresButton: FC = () => {
       await commitScores();
       setLoading(false);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      const error =
+        e instanceof Error
+          ? `${e.name} ${e.message}\\n(${e.cause})`
+          : String(e);
       showSnackbar('Error while committing scores', error);
       setLoading(false);
     }
