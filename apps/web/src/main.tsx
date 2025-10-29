@@ -20,7 +20,7 @@ export const store = createStore();
 const searchParams = new URLSearchParams(window.location.search);
 const leaderApiHostQP = searchParams.get('leaderApiHost');
 const leaderApiHost =
-  leaderApiHostQP || getFromLocalStorage('leaderApiEnabled', false);
+  leaderApiHostQP || getFromLocalStorage('leaderApiHost', false);
 // Configure lib-ems
 if (leaderApiHost) {
   APIOptions.host = `http://${leaderApiHost}:8080`;
