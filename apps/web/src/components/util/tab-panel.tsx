@@ -1,5 +1,4 @@
 import { FC } from 'react';
-import Box from '@mui/material/Box';
 
 interface Props {
   children?: React.ReactNode;
@@ -17,7 +16,9 @@ export const TabPanel: FC<Props> = ({
 }) => {
   return (
     <div role='tabpanel' hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ p: noPadding ? 1 : 3 }}>{children}</Box>}
+      {value === index && (
+        <div style={{ padding: noPadding ? 8 : 24 }}>{children}</div>
+      )}
     </div>
   );
 };

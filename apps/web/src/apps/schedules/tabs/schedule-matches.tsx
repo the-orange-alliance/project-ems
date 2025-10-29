@@ -21,6 +21,8 @@ import { useSWRConfig } from 'swr';
 import { useSyncConfig } from 'src/hooks/use-sync-config.js';
 import { resultsSyncMatches } from 'src/api/use-results-sync.js';
 import { FixedMatches } from '../match-gen/fixed-matches.js';
+import { useAtom } from 'jotai';
+import { matchesAtom } from 'src/stores/state/event.js';
 
 interface Props {
   eventSchedule?: ScheduleParams;
@@ -31,7 +33,6 @@ interface Props {
 
 export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
   const { mutate } = useSWRConfig();
-  const [matches, setMatches] = useState<Match<any>[]>([]);
   const { apiKey, platform } = useSyncConfig();
   const [loading, setLoading] = useState(false);
   const { data: scheduleItems } = useScheduleItemsForTournament(
@@ -42,6 +43,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
   const tournament = useCurrentTournament();
   const { showSnackbar } = useSnackbar();
   const repostModal = useModal(ScheduleRepostDialog);
+  const [matches, setMatches] = useAtom(matchesAtom);
   const hasMatchesWithScores = savedMatches
     ? savedMatches.some((m) => m.result && m.result > RESULT_NOT_PLAYED)
     : false;
