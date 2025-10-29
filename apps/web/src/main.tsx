@@ -17,12 +17,15 @@ if (!container) throw new Error('Error while trying to find document root.');
 const root = createRoot(container);
 export const store = createStore();
 
+const searchParams = new URLSearchParams(window.location.search);
+const leaderApiHostQP = searchParams.get('leaderApiHost');
+const leaderApiHost =
+  leaderApiHostQP || getFromLocalStorage('leaderApiEnabled', false);
 // Configure lib-ems
-if (getFromLocalStorage('leaderApiEnabled', false)) {
-  APIOptions.host = `http://${getFromLocalStorage(
-    'leaderApiHost',
-    `http://${window.location.hostname}`
-  )}`;
+if (leaderApiHost) {
+  APIOptions.host = `http://${leaderApiHost}:8080`;
+  localStorage.setItem('leaderApiEnabled', 'true');
+  localStorage.setItem('leaderApiHost', `"${leaderApiHost}"`);
   console.warn(
     `FOLLOWER MODE DETECTED: SETTING API HOST FROM LOCAL STORAGE\n${APIOptions.host}`
   );
