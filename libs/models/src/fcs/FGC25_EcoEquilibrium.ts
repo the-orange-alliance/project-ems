@@ -193,8 +193,11 @@ export const DEFAULT_SETTINGS: SettingsType = {
 
 interface WledFcsStatus {
   redConnected: boolean;
+  redStickyDisconnect: boolean;
   blueConnected: boolean;
+  blueStickyDisconnect: boolean;
   centerConnected: boolean;
+  centerStickyDisconnect: boolean;
 }
 
 interface DispenserFcsStatus {
