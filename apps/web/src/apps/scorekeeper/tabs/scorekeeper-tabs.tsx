@@ -20,7 +20,7 @@ interface Props {
   eventKey?: string;
 }
 
-export const ScorekeeperTabs: FC<Props> = ({eventKey}) => {
+export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
   const { canPrestart, setState } = useMatchControl();
   const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
   const [matchId, setMatchId] = useAtom(matchIdAtom);
@@ -33,7 +33,10 @@ export const ScorekeeperTabs: FC<Props> = ({eventKey}) => {
       local: { teams, tournaments }
     }
   } = useEventState({ matches: true, teams: true, tournaments: true });
-  const {data: tournamentMatches} = useMatchesForTournament(eventKey, tournamentKey)
+  const { data: tournamentMatches } = useMatchesForTournament(
+    eventKey,
+    tournamentKey
+  );
 
   useEffect(() => {
     setValue(0);
@@ -52,7 +55,7 @@ export const ScorekeeperTabs: FC<Props> = ({eventKey}) => {
   };
 
   return (
-    <Card style={{ width: '100%' }} styles={{body: { padding: 0 }}}>
+    <Card style={{ width: '100%' }} styles={{ body: { padding: 0 } }}>
       <Tabs
         activeKey={String(value)}
         size='large'
@@ -65,7 +68,9 @@ export const ScorekeeperTabs: FC<Props> = ({eventKey}) => {
             children: (
               <TabPanel value={value} index={0}>
                 <ScorekeeperMatches
-                  matches={tournamentMatches?.filter((m) => activeFields.includes(m.fieldNumber) )}
+                  matches={tournamentMatches?.filter((m) =>
+                    activeFields.includes(m.fieldNumber)
+                  )}
                   teams={teams}
                   tournaments={tournaments}
                   tournamentKey={tournamentKey}

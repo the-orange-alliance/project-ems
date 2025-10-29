@@ -1,6 +1,6 @@
 import { FC, LazyExoticComponent, ReactNode, lazy } from 'react';
 import THE_MAN from './assets/images/the_man.jpg';
-import THE_BOY from './assets/images/director_of_inside_sales.jpg';
+import THE_BOY from './assets/images/troubled.jpg';
 
 // Home route
 const HomeApp = lazy(() => import('./apps/index.js'));

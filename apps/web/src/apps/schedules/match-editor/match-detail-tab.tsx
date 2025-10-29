@@ -3,6 +3,7 @@ import {
   getFunctionsBySeasonKey,
   getSeasonKeyFromEventKey
 } from '@toa-lib/models';
+import { Col } from 'antd';
 import { FC } from 'react';
 import { useComponents } from 'src/seasons/index.js';
 
@@ -14,20 +15,46 @@ interface Props {
 export const MatchDetailTab: FC<Props> = ({ match, onUpdate }) => {
   const seasonKey = getSeasonKeyFromEventKey(match.eventKey);
   const components = useComponents(seasonKey);
-  const handleUpdates = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, name, type } = e.target;
-    const typedValue = type === 'number' ? parseInt(value) : value;
+
+  const handleUpdates = (key: any, value: any) => {
     const details = {
       ...match.details,
-      [name]: typedValue
+      [key]: value
     };
     const newMatch = { ...match, details };
     const functions = getFunctionsBySeasonKey(seasonKey);
     if (!functions) return;
+    newMatch.details = functions.calculateRankingPoints?.(newMatch.details);
+
+    console.log(newMatch);
     const [redScore, blueScore] = functions.calculateScore(newMatch);
-    onUpdate({ ...newMatch, redScore, blueScore });
+    onUpdate({
+      ...newMatch,
+      redScore,
+      blueScore
+    });
   };
-  return components?.MatchDetailInfo ? (
-    <components.MatchDetailInfo match={match} handleUpdates={handleUpdates} />
+
+  return components ? (
+    <Col>
+      {components.RedScoreBreakdown && (
+        <components.RedScoreBreakdown
+          match={match}
+          handleUpdates={handleUpdates}
+        />
+      )}
+      {components.BlueScoreBreakdown && (
+        <components.BlueScoreBreakdown
+          match={match}
+          handleUpdates={handleUpdates}
+        />
+      )}
+      {components.CustomBreakdown && (
+        <components.CustomBreakdown
+          match={match}
+          handleUpdates={handleUpdates}
+        />
+      )}
+    </Col>
   ) : null;
 };
