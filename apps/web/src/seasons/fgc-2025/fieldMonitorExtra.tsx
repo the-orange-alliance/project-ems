@@ -1,8 +1,7 @@
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { FGC25FCS } from '@toa-lib/models';
 import { Card, Flex, Tag, Typography } from 'antd';
-import { FC, useEffect, useState } from 'react';
-import { useSocket } from 'src/api/use-socket.js';
+import { FC } from 'react';
 
 export const StatusTag = ({
   connected,
@@ -20,26 +19,7 @@ export const StatusTag = ({
   </Tag>
 );
 
-export const FieldMonitorExtra: FC = () => {
-  const [socket, connected] = useSocket();
-  const [fcsStatus, setFcsStatus] = useState<FGC25FCS.FcsStatus | null>(null);
-
-  useEffect(() => {
-    if (!connected || !socket) return;
-
-    socket.on('fcs:status', handleFcsStatus);
-    socket.emit('rooms', ['fcs']);
-
-    return () => {
-      socket.off('fcs:status');
-    };
-  }, [socket, connected]);
-
-  const handleFcsStatus = (status: any) => {
-    const parsedStatus: FGC25FCS.FcsStatus = JSON.parse(status as string); // lol?
-    setFcsStatus(parsedStatus);
-  };
-
+export const FieldMonitorExtra: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
   return fcsStatus ? (
     <Card title='FCS Status' size='small' style={{ width: '100%' }}>
       <Flex vertical flex={1} gap='1rem'>
