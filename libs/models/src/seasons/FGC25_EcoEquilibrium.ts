@@ -129,7 +129,7 @@ export const FGC25MatchDetailsZod = matchKeyZod.extend({
   // Biodiversity Distribution
   biodiversityDistributionFactor: z
     .nativeEnum(DistributionFactor)
-    .default(1 / (1 + DistributionFactor.NotEven)),
+    .default(DistributionFactor.NotEven),
   // Approximated biodiversity for live-updates in match
   approximateBiodiversityRedSideEcosystem: z
     .number()
@@ -245,7 +245,7 @@ export const defaultMatchDetails: MatchDetails = {
   biodiversityUnitsRedSideEcosystem: 0,
   biodiversityUnitsCenterEcosystem: 0,
   biodiversityUnitsBlueSideEcosystem: 0,
-  biodiversityDistributionFactor: 1 / (1 + DistributionFactor.NotEven),
+  biodiversityDistributionFactor: DistributionFactor.NotEven,
   approximateBiodiversityRedSideEcosystem: 0,
   approximateBiodiversityCenterEcosystem: 0,
   approximateBiodiversityBlueSideEcosystem: 0,
@@ -545,7 +545,7 @@ export function calculatePlayoffsRankings(
 export function calculateBiodiversityDistributed(
   details: MatchDetails
 ): number {
-  return Math.round(
+  return (
     (details.biodiversityUnitsRedSideEcosystem +
       details.biodiversityUnitsCenterEcosystem +
       details.biodiversityUnitsBlueSideEcosystem) *
@@ -555,7 +555,7 @@ export function calculateBiodiversityDistributed(
 }
 
 export function calculateDistributionFactor(details: MatchDetails): number {
-  if (!details.allBarriersCleared) return 1 / (1 + DistributionFactor.NotEven);
+  if (!details.allBarriersCleared) return DistributionFactor.NotEven;
 
   // Get the biodiversity unit counts for each of the three ecosystems
   const biodiversityUnits = [
@@ -602,7 +602,7 @@ export function calculateDistributionFactor(details: MatchDetails): number {
     variance = DistributionFactor.NotEven;
   }
 
-  return 1 / (1 + variance);
+  return variance;
 }
 
 export function calculateRankingPoints(details: MatchDetails): MatchDetails {
@@ -626,7 +626,7 @@ export function calculateScore(
 
   // If match is in progress, do some crude math to turn the approx. biodiversity into scored biodiversity
   if (matchInProgress) {
-    const ballsPerPixel = 5 / 5; // 5 balls / 5 pixels
+    const ballsPerPixel = 5/ 5; // 5 balls / 5 pixels
     details.biodiversityUnitsRedSideEcosystem = Math.floor(
       details.approximateBiodiversityRedSideEcosystem * ballsPerPixel
     );
@@ -642,6 +642,7 @@ export function calculateScore(
   const barrierPoints =
     (details.barriersInRedMitigator + details.barriersInBlueMitigator) *
     ScoreTable.ScoredBarrier;
+
   const biodiversityDistributed = calculateBiodiversityDistributed(details);
   const globalPoints = barrierPoints + biodiversityDistributed;
 
@@ -651,25 +652,18 @@ export function calculateScore(
 
   // Total Score
   const redScore = globalPoints * protectionMultiplierRed + coopertitionPoints;
-  const blueScore =
-    globalPoints * protectionMultiplierBlue + coopertitionPoints;
+  const blueScore = globalPoints * protectionMultiplierBlue + coopertitionPoints;
 
   // Penalty
-  const redPenaltyMinor = Math.round(
-    match.redMinPen * ScoreTable.MinorFoul * redScore
-  );
-  const redPenaltyMajor = Math.round(
-    match.redMinPen * ScoreTable.MajorFoul * redScore
-  );
-  const bluePenaltyMinor = Math.round(
-    match.blueMinPen * ScoreTable.MinorFoul * blueScore
-  );
-  const bluePenaltyMajor = Math.round(
-    match.blueMinPen * ScoreTable.MajorFoul * blueScore
-  );
+  const redPenaltyMinor = match.redMinPen * ScoreTable.MinorFoul * redScore;
+  const redPenaltyMajor = match.redMinPen * ScoreTable.MajorFoul * redScore;
+  const bluePenaltyMinor = match.blueMinPen * ScoreTable.MinorFoul * blueScore;
+  const bluePenaltyMajor = match.blueMinPen * ScoreTable.MajorFoul * blueScore;
+
+  // Final score is
   return [
-    Math.round(redScore + bluePenaltyMajor + bluePenaltyMinor),
-    Math.round(blueScore + redPenaltyMajor + redPenaltyMinor)
+    Math.ceil(redScore + bluePenaltyMajor + bluePenaltyMinor),
+    Math.ceil(blueScore + redPenaltyMajor + redPenaltyMinor)
   ];
 }
 

@@ -223,8 +223,6 @@ export const CombinedBreakdown: FC<
     }
   };
 
-  const StringStateToggle = StateToggle<string>;
-
   return (
     <>
       <Divider>Global Alliance</Divider>
@@ -313,21 +311,21 @@ export const CombinedBreakdown: FC<
           <Typography.Text>
             Ecosystem Distribution Factor (Calculated)
           </Typography.Text>
-          <StringStateToggle
+          <StateToggle
             states={[
-              (1 / (1 + EcoEquilibrium.DistributionFactor.NotEven)).toPrecision(2),
-              (1 / (1 + EcoEquilibrium.DistributionFactor.SomewhatEven)).toPrecision(2),
-              (1 / (1 + EcoEquilibrium.DistributionFactor.Even)).toPrecision(2)
+              EcoEquilibrium.DistributionFactor.NotEven,
+              EcoEquilibrium.DistributionFactor.SomewhatEven,
+              EcoEquilibrium.DistributionFactor.Even
             ]}
             stateLabels={[
               'Not Even (x0.5)',
               'Somewhat Even (x0.6)',
               'Even (x1.0)'
             ]}
-            value={(
+            value={
               match?.details?.biodiversityDistributionFactor ??
-              1 / (1 + EcoEquilibrium.DistributionFactor.NotEven)
-            ).toPrecision(2)}
+              EcoEquilibrium.DistributionFactor.NotEven
+            }
             disabled
             fullWidth
             title={undefined}

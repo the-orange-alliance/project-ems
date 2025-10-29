@@ -1,7 +1,6 @@
-import { Lock, Restaurant, StarBorder } from '@mui/icons-material';
+import { Lock } from '@mui/icons-material';
 import { ResultsBreakdown } from '../../displays.js';
 import { EcoEquilibrium } from '@toa-lib/models';
-import CoopertitionLogo from '../fgc_default/assets/Coopertition_Points.svg';
 import styled from '@emotion/styled';
 import { Icon } from '@mui/material';
 
@@ -52,14 +51,12 @@ export const GlobalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>
       title: 'Distribution Factor',
       color: '#000000',
       resultCalc: (match, alliance) => {
-        if (!match.details) return 'Not Even';
-        switch (match.details.biodiversityDistributionFactor.toFixed(2)) {
-          case (1 / (1 + EcoEquilibrium.DistributionFactor.Even)).toFixed(2):
+        if (!match.details)
+          return `Not Even (x${EcoEquilibrium.DistributionFactor.NotEven.toFixed(2)})`;
+        switch (match.details.biodiversityDistributionFactor) {
+          case EcoEquilibrium.DistributionFactor.Even:
             return `Even (x${EcoEquilibrium.DistributionFactor.Even.toFixed(2)})`;
-          case (
-            1 /
-            (1 + EcoEquilibrium.DistributionFactor.SomewhatEven)
-          ).toFixed(2):
+          case EcoEquilibrium.DistributionFactor.SomewhatEven:
             return `Somewhat Even (x${EcoEquilibrium.DistributionFactor.SomewhatEven.toFixed(2)})`;
           default:
             return `Not Even (x${EcoEquilibrium.DistributionFactor.NotEven.toFixed(2)})`;
