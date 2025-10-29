@@ -60,7 +60,7 @@ export interface SeasonComponents<
   U extends Ranking
 > {
   Settings?: FC;
-  MatchDetailInfo?: FC<MatchDetailInfoProps<T>>;
+  MatchDetailInfo?: FC<ScoreBreakdownProps<T>>;
   RedScoreBreakdown?: FC<ScoreBreakdownProps<T>>;
   BlueScoreBreakdown?: FC<ScoreBreakdownProps<T>>;
   CustomBreakdown?: FC<ScoreBreakdownProps<T>>;

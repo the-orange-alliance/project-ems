@@ -22,6 +22,7 @@ export const fgc2025Components: SeasonComponents<
   BlueScoreBreakdown: BlueScoreBreakdown,
   RefereeScoreSheet: ScoreSheet,
   HeadRefExtrasSheet: HeadRefereeExtra,
+  MatchDetailInfo: CombinedBreakdown,
   Settings: Settings,
   FieldMonitorExtra: FieldMonitorExtra,
   FieldMonitorExtraMinimal: FieldMonitorExtraMinimal
