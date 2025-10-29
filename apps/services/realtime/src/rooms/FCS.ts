@@ -47,7 +47,7 @@ export default class FCS extends Room {
 
     socket.on("fcs:clearStatus", (): void => {
       logger.info("fcs:clearStatus");
-      // TODO
+      socket.to('fcs').emit('fcs:clearStatus');
     });
 
     // Season-Specific
