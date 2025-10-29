@@ -22,3 +22,5 @@ ALTER TABLE "match_detail" ADD COLUMN coopertition INT NOT NULL DEFAULT 0;
 ALTER TABLE "match_detail" ADD COLUMN biodiversityDistributed INT NOT NULL DEFAULT 0;
 ALTER TABLE "match_detail" ADD COLUMN redProtectionMultiplier REAL NOT NULL DEFAULT 1;
 ALTER TABLE "match_detail" ADD COLUMN blueProtectionMultiplier REAL NOT NULL DEFAULT 1;
+ALTER TABLE "match_detail" ADD COLUMN redTotalProtectionPoints INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail" ADD COLUMN allBarriersCleared INT NOT NULL DEFAULT 0;

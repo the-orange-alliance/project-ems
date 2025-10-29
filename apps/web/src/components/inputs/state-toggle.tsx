@@ -1,4 +1,4 @@
-import { FC, MouseEvent, ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { Card, Typography, Radio, Row, Col } from 'antd';
 
 interface Props<T> {

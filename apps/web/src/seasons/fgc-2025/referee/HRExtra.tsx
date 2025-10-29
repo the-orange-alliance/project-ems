@@ -139,6 +139,10 @@ const HeadRefereeExtra: React.FC = () => {
     handleMatchDetailsAdjustment('biodiversityUnitsCenterEcosystem', -1);
   };
 
+  const handleAllBarriersClearedChange = (newValue: number) => {
+    handleMatchDetailsUpdate('allBarriersCleared', newValue);
+  };
+
   return (
     <Card
       style={{
@@ -217,6 +221,17 @@ const HeadRefereeExtra: React.FC = () => {
             ]}
             value={ecosystemState}
             onChange={forceEcosystem}
+            fullWidth
+          />
+        </Col>
+
+        <Col xs={24}>
+          <StateToggle
+            title='All Barriers Cleared'
+            states={[0, 1]}
+            stateLabels={['No', 'Yes']}
+            value={match?.details?.allBarriersCleared || 0}
+            onChange={handleAllBarriersClearedChange}
             fullWidth
           />
         </Col>

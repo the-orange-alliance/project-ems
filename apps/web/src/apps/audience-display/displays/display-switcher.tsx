@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import { useEvent } from 'src/api/use-event-data.js';
 import {
   AudienceScreens,
@@ -15,10 +15,11 @@ import {
 } from 'src/components/animations/index.js';
 import AbsolouteLocator from 'src/components/util/absoloute-locator.js';
 import { useSearchParams } from 'react-router-dom';
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { matchAtom, matchOccurringRanksAtom } from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
+import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
 
 /**
  * Classic audience display that handles all scenarios.
@@ -33,6 +34,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   // const matchResultsMatch = useAtomValue(matchResultsMatchAtom);
   const ranks = useAtomValue(matchOccurringRanksAtom);
   const matchResultsRanks: Ranking[] = []; // useAtomValue(matchResultsRanksAtom);
+  const [audDispChroma, setAudDisplayChroma] = useAtom(displayChromaKeyAtom);
   const matchState = useAtomValue(matchStateAtom);
   const [searchParams] = useSearchParams();
 
@@ -51,6 +53,15 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   const layout =
     searchParams.get('layout')?.toLowerCase() ??
     `${LayoutMode.FULL}${LayoutMode.STREAM}${LayoutMode.FULL}`;
+
+  // Chroma
+  const chroma = searchParams.get('chroma');
+
+  useEffect(() => {
+    if (chroma && chroma !== audDispChroma) {
+      setAudDisplayChroma(chroma);
+    }
+  }, []);
 
   // Make sure you use the event key from the match to make sure we get the correct event, not
   // the one loaded from the url.

@@ -87,7 +87,7 @@ export enum MatchEndRobotState {
 
 export enum DistributionFactor {
   Even = 1,
-  SomewhatEven = 0.75,
+  SomewhatEven = 0.6,
   NotEven = 0.5
 }
 
@@ -129,7 +129,7 @@ export const FGC25MatchDetailsZod = matchKeyZod.extend({
   // Biodiversity Distribution
   biodiversityDistributionFactor: z
     .nativeEnum(DistributionFactor)
-    .default(DistributionFactor.NotEven),
+    .default(1 / (1 + DistributionFactor.NotEven)),
   // Approximated biodiversity for live-updates in match
   approximateBiodiversityRedSideEcosystem: z
     .number()
@@ -223,6 +223,14 @@ export const FGC25MatchDetailsZod = matchKeyZod.extend({
     .default(1)
     .describe(
       'Blue alliance protection multiplier.  This is a calculated value based on the parking states of the blue robots.'
+    ),
+  allBarriersCleared: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe(
+      'Whether all barriers were cleared during the match.  1 if all barriers were cleared, 0 otherwise.'
     )
 });
 
@@ -237,7 +245,7 @@ export const defaultMatchDetails: MatchDetails = {
   biodiversityUnitsRedSideEcosystem: 0,
   biodiversityUnitsCenterEcosystem: 0,
   biodiversityUnitsBlueSideEcosystem: 0,
-  biodiversityDistributionFactor: DistributionFactor.NotEven,
+  biodiversityDistributionFactor: 1 / (1 + DistributionFactor.NotEven),
   approximateBiodiversityRedSideEcosystem: 0,
   approximateBiodiversityCenterEcosystem: 0,
   approximateBiodiversityBlueSideEcosystem: 0,
@@ -250,7 +258,8 @@ export const defaultMatchDetails: MatchDetails = {
   blueRobotThreeParking: MatchEndRobotState.Level0,
   blueProtectionMultiplier: 1,
   coopertition: CoopertitionBonus.None,
-  biodiversityDistributed: 0
+  biodiversityDistributed: 0,
+  allBarriersCleared: 0
 };
 
 export const isEcoEquilibriumDetails = (obj: unknown): obj is MatchDetails =>
@@ -546,6 +555,8 @@ export function calculateBiodiversityDistributed(
 }
 
 export function calculateDistributionFactor(details: MatchDetails): number {
+  if (!details.allBarriersCleared) return 1 / (1 + DistributionFactor.NotEven);
+
   // Get the biodiversity unit counts for each of the three ecosystems
   const biodiversityUnits = [
     details.biodiversityUnitsRedSideEcosystem,
@@ -555,45 +566,59 @@ export function calculateDistributionFactor(details: MatchDetails): number {
 
   // Calculate the mean (average) of the biodiversity units
   const sum = biodiversityUnits.reduce((a, b) => a + b, 0);
+
   const mean = sum / biodiversityUnits.length;
 
-  // Calculate the variance
-  const variance =
-    biodiversityUnits.reduce((sumOfSquares, value) => {
-      const diff = value - mean;
-      return sumOfSquares + diff * diff;
-    }, 0) / biodiversityUnits.length;
+  // Calculate total - avg for each ecosystem
+  const redMinusMean = biodiversityUnits[0] - mean;
+  const blueMinusMean = biodiversityUnits[1] - mean;
+  const centerMinusMean = biodiversityUnits[2] - mean;
+
+  // Calculate squared differences
+  const redSquared = redMinusMean * redMinusMean;
+  const blueSquared = blueMinusMean * blueMinusMean;
+  const centerSquared = centerMinusMean * centerMinusMean;
+
+  // Calculate the sum of squared differences
+  const sumSquared = redSquared + blueSquared + centerSquared;
+
+  // Calculate the average of the squared differences
+  const averageSquared = sumSquared / biodiversityUnits.length;
 
   // Calculate the standard deviation (sigma)
-  const sigma = Math.sqrt(variance);
+  const sigma = Math.sqrt(averageSquared);
+
+  let variance: DistributionFactor = DistributionFactor.NotEven;
 
   // Apply the logic from the achievement table
-  if (sigma > 0 && sigma <= 1) {
-    return DistributionFactor.Even;
+  if (sigma >= 0 && sigma <= 1) {
+    variance = DistributionFactor.Even;
   } else if (sigma > 1 && sigma < 10) {
-    return DistributionFactor.SomewhatEven;
-  } else if (sigma >= 10 && sigma <= 60) {
-    return DistributionFactor.NotEven;
+    variance = DistributionFactor.SomewhatEven;
+  } else if (sigma >= 10) {
+    variance = DistributionFactor.NotEven;
   } else {
-    // This case covers sigma = 0 or sigma > 60.
-    // If sigma is 0, it means all values are the same, which falls into the 0 < sigma <= 1 range.
-    // However, if there are any barriers, the score is 0.5, which is handled below.
-    // The current table only goes up to sigma=60, so we default to the lowest score.
-    return DistributionFactor.NotEven;
+    // This covers any unexpected cases
+    variance = DistributionFactor.NotEven;
   }
+
+  return 1 / (1 + variance);
 }
 
 export function calculateRankingPoints(details: MatchDetails): MatchDetails {
   const copy = { ...details };
   copy.coopertition = ScoreTable.Coopertition(copy);
+  copy.biodiversityDistributionFactor = calculateDistributionFactor(copy);
   copy.biodiversityDistributed = calculateBiodiversityDistributed(copy);
   copy.redProtectionMultiplier = ScoreTable.ProtectionMultiplierRed(copy);
   copy.blueProtectionMultiplier = ScoreTable.ProtectionMultiplierBlue(copy);
-  copy.biodiversityDistributionFactor = calculateDistributionFactor(copy);
   return copy;
 }
 
-export function calculateScore(match: Match<MatchDetails>, matchInProgress?: boolean): [number, number] {
+export function calculateScore(
+  match: Match<MatchDetails>,
+  matchInProgress?: boolean
+): [number, number] {
   const { details } = match;
   if (!details) return [0, 0];
   // Coopertition Bonus Points
@@ -601,10 +626,16 @@ export function calculateScore(match: Match<MatchDetails>, matchInProgress?: boo
 
   // If match is in progress, do some crude math to turn the approx. biodiversity into scored biodiversity
   if (matchInProgress) {
-    const ballsPerPixel = 8/5; // For every 5 pixels illuminated, there are 8 biodiversity units
-    details.biodiversityUnitsRedSideEcosystem = Math.floor(details.approximateBiodiversityRedSideEcosystem * ballsPerPixel);
-    details.biodiversityUnitsCenterEcosystem = Math.floor(details.approximateBiodiversityCenterEcosystem * ballsPerPixel);
-    details.biodiversityUnitsBlueSideEcosystem = Math.floor(details.approximateBiodiversityBlueSideEcosystem * ballsPerPixel);
+    const ballsPerPixel = 8 / 5; // For every 5 pixels illuminated, there are 8 biodiversity units
+    details.biodiversityUnitsRedSideEcosystem = Math.floor(
+      details.approximateBiodiversityRedSideEcosystem * ballsPerPixel
+    );
+    details.biodiversityUnitsCenterEcosystem = Math.floor(
+      details.approximateBiodiversityCenterEcosystem * ballsPerPixel
+    );
+    details.biodiversityUnitsBlueSideEcosystem = Math.floor(
+      details.approximateBiodiversityBlueSideEcosystem * ballsPerPixel
+    );
   }
 
   // Global Alliance Points

@@ -13,7 +13,7 @@ export const RedScoreBreakdown: FC<
 
   const doUpdate = (key: any, value: any) => {
     if (handleUpdates) {
-      // @ts-expect-error
+      // @ts-expect-error this works, despite what TS says!
       handleUpdates(`red${key}`, value);
     }
   };
@@ -47,7 +47,7 @@ export const BlueScoreBreakdown: FC<
   const doUpdate = (key: any, value: any) => {
     console.log(`blue${key}: ${value}`);
     if (handleUpdates) {
-      // @ts-expect-error
+      // @ts-expect-error this works! despite what ts says
       handleUpdates(`blue${key}`, value);
     }
   };
@@ -223,6 +223,8 @@ export const CombinedBreakdown: FC<
     }
   };
 
+  const StringStateToggle = StateToggle<string>;
+
   return (
     <>
       <Divider>Global Alliance</Divider>
@@ -307,31 +309,31 @@ export const CombinedBreakdown: FC<
           />
         </Col>
 
-        <Col xs={12}>
+        <Col xs={8}>
           <Typography.Text>
             Ecosystem Distribution Factor (Calculated)
           </Typography.Text>
-          <StateToggle
+          <StringStateToggle
             states={[
-              EcoEquilibrium.DistributionFactor.NotEven,
-              EcoEquilibrium.DistributionFactor.SomewhatEven,
-              EcoEquilibrium.DistributionFactor.Even
+              (1 / (1 + EcoEquilibrium.DistributionFactor.NotEven)).toPrecision(2),
+              (1 / (1 + EcoEquilibrium.DistributionFactor.SomewhatEven)).toPrecision(2),
+              (1 / (1 + EcoEquilibrium.DistributionFactor.Even)).toPrecision(2)
             ]}
             stateLabels={[
               'Not Even (x0.5)',
               'Somewhat Even (x0.6)',
               'Even (x1.0)'
             ]}
-            value={
+            value={(
               match?.details?.biodiversityDistributionFactor ??
-              EcoEquilibrium.DistributionFactor.NotEven
-            }
+              1 / (1 + EcoEquilibrium.DistributionFactor.NotEven)
+            ).toPrecision(2)}
             disabled
             fullWidth
             title={undefined}
           />
         </Col>
-        <Col xs={12}>
+        <Col xs={8}>
           <Typography.Text>Coopertition (Calculated)</Typography.Text>
           <StateToggle
             states={[
@@ -347,6 +349,18 @@ export const CombinedBreakdown: FC<
             disabled
             fullWidth
             title={undefined}
+          />
+        </Col>
+        <Col xs={8}>
+          <Typography.Text>All Barriers Cleared</Typography.Text>
+          <StateToggle
+            states={[0, 1]}
+            stateLabels={['No', 'Yes']}
+            value={match?.details?.allBarriersCleared || 0}
+            fullWidth
+            title={undefined}
+            disabled={disabled}
+            {...onChangeProps('allBarriersCleared', true)}
           />
         </Col>
       </Row>

@@ -3,6 +3,8 @@ import { MatchParticipant, Ranking } from '@toa-lib/models';
 import { CountryFlag } from './country-flag.js';
 import { CardStatus } from './card-status.js';
 import { Space, Typography } from 'antd';
+import { useAtomValue } from 'jotai';
+import { matchOccurringRanksAtom } from 'src/stores/state/event.js';
 
 interface AllianceTeamProps {
   team: MatchParticipant;
@@ -25,7 +27,7 @@ const AllianceTeam: React.FC<AllianceTeamProps> = ({
   noBg = false,
   noRankChange = false
 }) => {
-  const ranks: Ranking[] = []; // useAtomValue(teamRanksAtom)
+  const ranks: Ranking[] = useAtomValue(matchOccurringRanksAtom);
 
   const { currentRank, up, down } = calcRankChange(ranks, team);
 
@@ -95,10 +97,9 @@ const AllianceTeam: React.FC<AllianceTeamProps> = ({
 };
 
 export const AllianceTeamStream: React.FC<AllianceTeamProps> = ({ team }) => {
-  const ranks: Ranking[] = []; // useAtomValue(teamRanksAtom)
+  const ranks: Ranking[] = useAtomValue(matchOccurringRanksAtom);
   const { currentRank, up, down } = calcRankChange(ranks, team);
 
-  console.log(team);
   return (
     <div
       style={{
