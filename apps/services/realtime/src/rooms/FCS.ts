@@ -71,9 +71,9 @@ export default class FCS extends Room {
       },
     );
 
-    socket.on('fcs:ropeDrop', (): void => {
-      logger.info('fcs:ropeDrop');
-      this.broadcast().emit(MatchSocketEvent.ENDGAME);
+    socket.on("fcs:ropeDrop", (): void => {
+      logger.info("fcs:ropeDrop");
+      socket.to("fcs").emit("fcs:ropeDrop");
     });
 
     socket.on(
