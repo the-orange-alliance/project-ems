@@ -53,10 +53,13 @@ export const GlobalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>
       color: '#000000',
       resultCalc: (match, alliance) => {
         if (!match.details) return 'Not Even';
-        switch (match.details.biodiversityDistributionFactor) {
-          case EcoEquilibrium.DistributionFactor.Even:
+        switch (match.details.biodiversityDistributionFactor.toFixed(2)) {
+          case (1 / (1 + EcoEquilibrium.DistributionFactor.Even)).toFixed(2):
             return `Even (x${EcoEquilibrium.DistributionFactor.Even.toFixed(2)})`;
-          case EcoEquilibrium.DistributionFactor.SomewhatEven:
+          case (
+            1 /
+            (1 + EcoEquilibrium.DistributionFactor.SomewhatEven)
+          ).toFixed(2):
             return `Somewhat Even (x${EcoEquilibrium.DistributionFactor.SomewhatEven.toFixed(2)})`;
           default:
             return `Not Even (x${EcoEquilibrium.DistributionFactor.NotEven.toFixed(2)})`;

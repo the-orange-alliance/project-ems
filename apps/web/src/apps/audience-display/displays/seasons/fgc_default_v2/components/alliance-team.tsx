@@ -82,15 +82,15 @@ const AllianceTeam: React.FC<AllianceTeamProps> = ({
         >
           #{currentRank ? currentRank.rank : '-'}
         </span>
-        {!noRankChange && up && (
+        {!noRankChange && up ? (
           <span style={{ color: '#16a34a', fontSize: iconFontSize }}>▲</span>
-        )}
-        {!noRankChange && down && (
+        ) : null}
+        {!noRankChange && down ? (
           <span style={{ color: '#dc2626', fontSize: iconFontSize }}>▼</span>
-        )}
-        {!noRankChange && !up && !down && (
+        ) : null}
+        {!noRankChange && !up && !down ? (
           <span style={{ color: '#9ca3af', fontSize: iconFontSize }}>━</span>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -120,13 +120,15 @@ export const AllianceTeamStream: React.FC<AllianceTeamProps> = ({ team }) => {
         >
           #{currentRank ? currentRank.rank : '-'}
         </Typography.Text>
-        {up && <span style={{ color: '#16a34a', fontSize: '1.25rem' }}>▲</span>}
-        {down && (
+        {up ? (
+          <span style={{ color: '#16a34a', fontSize: '1.25rem' }}>▲</span>
+        ) : null}
+        {down ? (
           <span style={{ color: '#dc2626', fontSize: '1.25rem' }}>▼</span>
-        )}
-        {!up && !down && (
+        ) : null}
+        {!up && !down ? (
           <span style={{ color: '#9ca3af', fontSize: '1.25rem' }}>━</span>
-        )}
+        ) : null}
       </div>
 
       <CountryFlag size={'2.5rem'} cc={team.team?.countryCode ?? ''} />

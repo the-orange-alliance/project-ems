@@ -8,7 +8,7 @@ import {
   Modal,
   Row,
   Space,
-  Typography
+  Typography, Grid
 } from 'antd';
 import {
   CheckCircleOutlined,
@@ -39,6 +39,7 @@ import { darkModeAtom } from '../../stores/state/ui.js';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 
 const { Text } = Typography;
+const { useBreakpoint } = Grid;
 
 interface Monitor {
   field: number;
@@ -236,7 +237,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
         onClick={() => {
           setDialogOpen(true);
         }}
-        style={{ cursor: 'pointer', backgroundColor: getCardColor() }}
+        style={{ cursor: 'pointer', backgroundColor: getCardColor(), flex: 1 }}
         title={
           <Space>
             {connected ? (
@@ -529,6 +530,7 @@ export const EventMonitor: FC = () => {
 
   const [monitors, setMonitors] = useState<Monitor[]>([]);
   const [inputValue, setInputValue] = useState('');
+  const screens = useBreakpoint();
 
   // Load monitors from localStorage on component mount
   useEffect(() => {
@@ -639,9 +641,9 @@ export const EventMonitor: FC = () => {
         </Text>
       </Space>
 
-      <Row gutter={[24, 24]}>
+      <Flex wrap>
         {monitors.map((monitor) => (
-          <Col key={`${monitor.address}-${monitor.field}`} md={4} xs={24}>
+          <Flex key={`${monitor.address}-${monitor.field}`} style={{ width: screens.md ? '20%' : '50%', padding: '0.25rem'}}>
             <MonitorCard
               field={monitor.field}
               address={monitor.address}
@@ -651,9 +653,9 @@ export const EventMonitor: FC = () => {
                 handleRemoveMonitor(monitor.address, monitor.field)
               }
             />
-          </Col>
+          </Flex>
         ))}
-      </Row>
+      </Flex>
     </DefaultLayout>
   );
 };

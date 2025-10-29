@@ -43,7 +43,9 @@ async function seasonSpecificController(fastify: FastifyInstance) {
         const totalUnitsScored = (metrics[0].totalEcosystemBlue || 0) + (metrics[0].totalEcosystemCenter || 0) + (metrics[0].totalEcosystemRed || 0);
 
         reply.send({
-          ...metrics[0],
+          totalEcosystemBlue: metrics[0].totalEcosystemBlue || 0,
+          totalEcosystemCenter: metrics[0].totalEcosystemCenter || 0,
+          totalEcosystemRed: metrics[0].totalEcosystemRed || 0,
           totalUnitsScored,
           ecosystemBluePercentage: totalUnitsScored > 0 ? ((metrics[0].totalEcosystemBlue / totalUnitsScored) * 100).toFixed(2) : 0,
           ecosystemCenterPercentage: totalUnitsScored > 0 ? ((metrics[0].totalEcosystemCenter / totalUnitsScored) * 100).toFixed(2) : 0,
