@@ -11,6 +11,7 @@ import HeadRefereeExtra from './referee/HRExtra.js';
 import { Settings } from './settings.js';
 import { FieldMonitorExtra } from './fieldMonitorExtra.js';
 import { FieldMonitorExtraMinimal } from './fieldMonitorExtraMinimal.js';
+import { RankingsReport } from './rankings-report.js';
 
 export const fgc2025Components: SeasonComponents<
   EcoEquilibrium.MatchDetails,
@@ -25,5 +26,6 @@ export const fgc2025Components: SeasonComponents<
   MatchDetailInfo: CombinedBreakdown,
   Settings: Settings,
   FieldMonitorExtra: FieldMonitorExtra,
-  FieldMonitorExtraMinimal: FieldMonitorExtraMinimal
+  FieldMonitorExtraMinimal: FieldMonitorExtraMinimal,
+  RankingsReport: RankingsReport
 };

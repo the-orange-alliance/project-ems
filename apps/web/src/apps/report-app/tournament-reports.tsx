@@ -43,7 +43,13 @@ export const TournamentReports: FC<ReportProps> = ({
   };
   const generateRankingReport = () => {
     if (seasonComponents?.RankingsReport) {
-      onGenerate(<seasonComponents.RankingsReport rankings={rankings ?? []} />);
+      onGenerate(
+        <seasonComponents.RankingsReport
+          rankings={rankings ?? []}
+          teams={teams}
+          identifier={identifier}
+        />
+      );
     }
   };
 

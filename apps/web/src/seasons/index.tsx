@@ -5,7 +5,8 @@ import {
   FGC25FCS,
   Match,
   MatchDetailBase,
-  Ranking
+  Ranking,
+  Team
 } from '@toa-lib/models';
 import { ChangeEvent, FC } from 'react';
 import { fgc2024Components } from './fgc-2024/index.js';
@@ -39,6 +40,8 @@ export interface RefereeScoreSheetProps {
 
 export interface RankingsReportProps<T extends Ranking> {
   rankings: T[];
+  teams?: Team[];
+  identifier?: keyof Team;
 }
 
 export interface FieldControlCallbacks<T extends MatchDetailBase> {

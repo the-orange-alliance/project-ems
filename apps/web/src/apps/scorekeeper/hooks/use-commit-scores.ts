@@ -1,6 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useMatchControl } from './use-match-control.js';
 import {
+  isPlayoffsTournament,
   MatchState,
   RESULT_BLUE_WIN,
   RESULT_NOT_PLAYED,
@@ -18,24 +19,21 @@ import {
 } from 'src/api/use-ranking-data.js';
 import { sendCommitScores } from 'src/api/use-socket.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
-import {
-  eventKeyAtom,
-  matchAtom,
-  tournamentKeyAtom
-} from 'src/stores/state/event.js';
+import { eventKeyAtom, matchAtom } from 'src/stores/state/event.js';
 import { useCallback } from 'react';
 import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 import { useAtomCallback } from 'jotai/utils';
 import { matchStateAtom } from 'src/stores/state/match.js';
 import { emitWebhook } from 'src/api/use-webhook-data.js';
+import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 
 export const useCommitScoresCallback = () => {
   const { canCommitScores, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
   const eventKey = useAtomValue(eventKeyAtom);
-  const tournamentKey = useAtomValue(tournamentKeyAtom);
+  const tournament = useCurrentTournament();
   const { data: tournMatches, mutate: updateTournMatches } =
-    useMatchesForTournament(eventKey, tournamentKey);
+    useMatchesForTournament(eventKey, tournament?.tournamentKey);
 
   return useAtomCallback(
     useCallback(
@@ -47,6 +45,11 @@ export const useCommitScoresCallback = () => {
         }
         if (!canCommitScores) {
           throw new Error('Attempted to commit scores when not allowed.');
+        }
+        if (!tournament) {
+          throw new Error(
+            'Attempted to commit scores when there is no tournament.'
+          );
         }
         if (!match) {
           throw new Error('Attempted to commit scores when there is no match.');
@@ -75,8 +78,7 @@ export const useCommitScoresCallback = () => {
         }
 
         await patchWholeMatch(pending);
-        // TODO - When to calculate rankings vs. playoff rankings?
-        if (tournamentKey === 't3' || tournamentKey === 't4') {
+        if (isPlayoffsTournament(tournament)) {
           await recalculatePlayoffsRankings(eventKey, tournamentKey);
         } else {
           await recalculateRankings(eventKey, tournamentKey);
@@ -109,7 +111,7 @@ export const useCommitScoresCallback = () => {
 
         emitWebhook(WebhookEvent.COMMITTED, pending);
       },
-      [canCommitScores, setState, eventKey, tournamentKey, tournMatches]
+      [canCommitScores, setState, eventKey, tournament, tournMatches]
     )
   );
 };

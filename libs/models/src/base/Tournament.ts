@@ -47,4 +47,12 @@ export const fromDatabaseJSON = (
   return { ...tournament, fields: Array.from(tournament.fields) };
 };
 
+export const isPlayoffsTournament = (tournament: Tournament): boolean => {
+  return (
+    tournament.tournamentType === 'Eliminations' ||
+    tournament.tournamentType === 'Finals' ||
+    tournament.tournamentType === 'Round Robin'
+  );
+};
+
 export type Tournament = z.infer<typeof tournamentZod>;

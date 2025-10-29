@@ -17,7 +17,7 @@ import { eventKeyAtom, tournamentKeyAtom } from 'src/stores/state/event.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
 import { EventTournamentsDropdown } from 'src/components/dropdowns/event-tournaments-dropdown.js';
-import { Tournament } from '@toa-lib/models';
+import { isPlayoffsTournament, Tournament } from '@toa-lib/models';
 import { useTeamsForEvent } from 'src/api/use-team-data.js';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data.js';
 import { useSyncConfig } from 'src/hooks/use-sync-config.js';
@@ -69,7 +69,7 @@ export const AdminApp: FC = () => {
     );
     if (!tournament) return;
     // FGC2024 SPECIFIC
-    if (tournamentKey === 't3' || tournamentKey === 't4') {
+    if (isPlayoffsTournament(tournament)) {
       await recalculatePlayoffsRankings(
         tournament.eventKey,
         tournament.tournamentKey
