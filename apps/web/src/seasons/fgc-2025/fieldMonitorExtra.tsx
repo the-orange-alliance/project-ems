@@ -90,6 +90,12 @@ const EcosystemCard: FC<EcosystemCardProps> = ({ name, status }) => {
             label='L1'
           />
         </Flex>
+        <Flex justify='space-between'>
+          <span>Force Level Count</span>
+          <span style={{ fontWeight: 500 }}>
+            {Number(status.forceCount).toFixed(0)}
+          </span>
+        </Flex>
       </Card>
     </Flex>
   );
