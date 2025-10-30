@@ -14,7 +14,10 @@ import {
   tournamentKeyAtom
 } from 'src/stores/state/event.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
-import { useMatchesForTournament } from 'src/api/use-match-data.js';
+import {
+  getMatchAll,
+  useMatchesForTournament
+} from 'src/api/use-match-data.js';
 
 interface Props {
   eventKey?: string;
@@ -49,8 +52,11 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
     setState(MatchState.MATCH_NOT_SELECTED);
   };
   const handleMatchChange = (id: number) => {
-    if (!tournamentMatches) return null;
+    if (!tournamentMatches || !tournamentKey || !eventKey) return null;
     setMatchOccurring(tournamentMatches.find((m) => m.id === id) ?? null);
+    void getMatchAll(eventKey, tournamentKey, id).then((fullMatch) => {
+      setMatchOccurring(fullMatch);
+    });
     setState(MatchState.PRESTART_READY);
   };
 
