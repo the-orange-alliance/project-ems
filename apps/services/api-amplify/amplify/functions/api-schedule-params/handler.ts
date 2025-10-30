@@ -166,7 +166,12 @@ export const handler: APIGatewayProxyHandler = async (
       }
 
       try {
-        const body = JSON.parse(event.body) as ScheduleParams;
+        const baseJSON = JSON.parse(event.body);
+        const body = baseJSON.map((param: any) => ({
+          ...param,
+          days: JSON.parse(param.days),
+          options: JSON.parse(param.options),
+        }));
         const { eventKey, tournamentKey } = event.pathParameters;
 
         // Find existing param or create new one
