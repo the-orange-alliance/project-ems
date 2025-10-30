@@ -48,7 +48,7 @@ export const ScoreTable = {
       details.blueRobotOneParking,
       details.blueRobotTwoParking,
       details.blueRobotThreeParking
-    ].reduce((count, state) => count + (state > 0 ? 1 : 0), 0);
+    ].reduce((count, state) => count + (state >= MatchEndRobotState.Level2 ? 1 : 0), 0);
 
     return numParking < 5 ? 0 : numParking >= 6 ? 30 : 15;
   },
