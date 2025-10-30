@@ -89,6 +89,13 @@ export const deleteMatches = async (
   tournamentKey: string
 ): Promise<void> => apiFetcher(`match/${eventKey}/${tournamentKey}`, 'DELETE');
 
+export const getMatchAll = async (
+  eventKey: string,
+  tournamentKey: string,
+  id: number
+): Promise<Match<any>> =>
+  apiFetcher(`match/all/${eventKey}/${tournamentKey}/${id}`, 'GET');
+
 export const useMatchAll = (
   key?: MatchKey | null
 ): SWRResponse<Match<any>, ApiResponseError> =>

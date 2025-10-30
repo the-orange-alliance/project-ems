@@ -100,7 +100,7 @@ async function matchController(fastify: FastifyInstance) {
     {
       schema: {
         params: EventKeyParams,
-        response: errorableSchema(MatchArraySchema),
+        response: errorableSchema(z.union([z.any(), MatchArraySchema])),
         tags: ['Matches']
       }
     },
@@ -125,7 +125,9 @@ async function matchController(fastify: FastifyInstance) {
     {
       schema: {
         params: EventKeyParams,
-        response: errorableSchema(MatchParticipantArraySchema),
+        response: errorableSchema(
+          z.union([z.any(), MatchParticipantArraySchema])
+        ),
         tags: ['Matches']
       }
     },
@@ -150,7 +152,7 @@ async function matchController(fastify: FastifyInstance) {
     {
       schema: {
         params: EventTournamentKeyParams,
-        response: errorableSchema(MatchArraySchema),
+        response: errorableSchema(z.union([z.any(), MatchArraySchema])),
         tags: ['Matches']
       }
     },
@@ -181,7 +183,7 @@ async function matchController(fastify: FastifyInstance) {
     {
       schema: {
         params: EventTournamentIdParams,
-        response: errorableSchema(matchWithDetailsZod),
+        response: errorableSchema(z.union([z.any(), matchWithDetailsZod])),
         tags: ['Matches']
       }
     },
@@ -207,7 +209,7 @@ async function matchController(fastify: FastifyInstance) {
           eventKey.split('-')[0].toLowerCase()
         );
         const parsedDetails = funcs?.detailsFromJson
-          ? funcs.detailsFromJson(details)
+          ? (funcs.detailsFromJson(details) ?? details)
           : details;
         for (let i = 0; i < participants.length; i++) {
           const [team] = await db.selectAllWhere(
