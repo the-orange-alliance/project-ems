@@ -11,6 +11,7 @@ const s3 = new S3Client({ region: "us-east-2" });
 const BUCKET = process.env.STORAGE_BUCKET_NAME!;
 const FILE_KEY = "data/schedule-params.json";
 
+// Normalize read: parse days/options if they are stringified
 async function readScheduleParams(): Promise<ScheduleParams[]> {
   try {
     const res = await s3.send(
@@ -21,8 +22,12 @@ async function readScheduleParams(): Promise<ScheduleParams[]> {
     const baseJSON = JSON.parse(body);
     const scheduleParams = baseJSON.map((param: any) => ({
       ...param,
-      days: JSON.parse(param.days),
-      options: JSON.parse(param.options),
+      days:
+        typeof param.days === "string" ? JSON.parse(param.days) : param.days,
+      options:
+        typeof param.options === "string"
+          ? JSON.parse(param.options)
+          : param.options,
     }));
     return scheduleParams as ScheduleParams[];
   } catch (err) {
@@ -31,12 +36,25 @@ async function readScheduleParams(): Promise<ScheduleParams[]> {
   }
 }
 
+// Serialize for storage: ensure days/options are strings
+function serializeForStorage(scheduleParams: ScheduleParams[]): any[] {
+  return scheduleParams.map((p: any) => ({
+    ...p,
+    days: typeof p.days === "string" ? p.days : JSON.stringify(p.days ?? []),
+    options:
+      typeof p.options === "string"
+        ? p.options
+        : JSON.stringify(p.options ?? {}),
+  }));
+}
+
 async function writeScheduleParams(scheduleParams: ScheduleParams[]) {
+  const payload = serializeForStorage(scheduleParams);
   await s3.send(
     new PutObjectCommand({
       Bucket: BUCKET,
       Key: FILE_KEY,
-      Body: JSON.stringify(scheduleParams, null, 2),
+      Body: JSON.stringify(payload, null, 2),
       ContentType: "application/json",
     }),
   );
@@ -127,8 +145,22 @@ export const handler: APIGatewayProxyHandler = async (
           };
         }
 
-        // Add new schedule params to existing ones
-        const updatedScheduleParams = [...scheduleParams, ...body];
+        // Normalize inbound for storage (stringify days/options)
+        const normalizedIncoming = serializeForStorage(
+          (body as any[]).map((p) => ({ ...p })) as any,
+        ) as ScheduleParams[];
+
+        // Add new schedule params to existing ones (existing are parsed objects)
+        const updatedScheduleParams = [
+          ...scheduleParams,
+          ...normalizedIncoming.map((p: any) => ({
+            ...p,
+            // After serializeForStorage, p.days/options are strings; parse back for in-memory
+            days: typeof p.days === "string" ? JSON.parse(p.days) : p.days,
+            options:
+              typeof p.options === "string" ? JSON.parse(p.options) : p.options,
+          })),
+        ];
         await writeScheduleParams(updatedScheduleParams);
 
         return {
@@ -167,11 +199,18 @@ export const handler: APIGatewayProxyHandler = async (
 
       try {
         const baseJSON = JSON.parse(event.body);
+        // Accept either string or object for days/options
         const body = {
           ...baseJSON,
-          days: JSON.parse(baseJSON.days),
-          options: JSON.parse(baseJSON.options),
-        };
+          days:
+            typeof baseJSON.days === "string"
+              ? JSON.parse(baseJSON.days)
+              : baseJSON.days,
+          options:
+            typeof baseJSON.options === "string"
+              ? JSON.parse(baseJSON.options)
+              : baseJSON.options,
+        } as ScheduleParams;
         const { eventKey, tournamentKey } = event.pathParameters;
 
         // Find existing param or create new one
