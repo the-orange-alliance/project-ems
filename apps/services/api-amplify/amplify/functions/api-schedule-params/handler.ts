@@ -167,11 +167,11 @@ export const handler: APIGatewayProxyHandler = async (
 
       try {
         const baseJSON = JSON.parse(event.body);
-        const body = baseJSON.map((param: any) => ({
-          ...param,
-          days: JSON.parse(param.days),
-          options: JSON.parse(param.options),
-        }));
+        const body = {
+          ...baseJSON,
+          days: JSON.parse(baseJSON.days),
+          options: JSON.parse(baseJSON.options),
+        };
         const { eventKey, tournamentKey } = event.pathParameters;
 
         // Find existing param or create new one
