@@ -51,7 +51,7 @@ export const ScheduleTabs: FC<Props> = ({
           <EventScheduleParams
             eventSchedule={eventSchedule}
             onEventScheduleChange={onEventScheduleChange}
-            disabled={false}
+            disabled={hasMatches}
           />
         </TabPanel>
       )
@@ -66,7 +66,7 @@ export const ScheduleTabs: FC<Props> = ({
             eventSchedule={eventSchedule}
             onEventScheduleChange={onEventScheduleChange}
             savedMatches={savedMatches}
-            disabled={false}
+            disabled={hasMatches}
           />
         </TabPanel>
       )

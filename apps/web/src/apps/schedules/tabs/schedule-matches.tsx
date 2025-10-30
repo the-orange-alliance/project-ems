@@ -156,6 +156,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
             disabled={loading || hasMatchesWithScores}
             onClick={saveSchedule}
             onReassignTimes={handleReassignTimes}
+            onDownload={handleCreateMatches}
           />
         </>
       )}

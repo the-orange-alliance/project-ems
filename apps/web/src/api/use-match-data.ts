@@ -11,6 +11,17 @@ import {
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 
+export const getMatchSchedule = async (
+  eventKey: string,
+  tournamentKey: string
+): Promise<Match<any>[]> =>
+  apiFetcher(
+    `match/${eventKey}/${tournamentKey}`,
+    'GET',
+    undefined,
+    matchZod.array().parse
+  );
+
 export const createMatchSchedule = async (
   params: MatchMakerParams
 ): Promise<Match<any>[]> =>
