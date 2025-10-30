@@ -64,7 +64,7 @@ const AllianceScore: React.FC<AllianceScoreProps> = ({
             <Typography.Text
               style={{
                 fontSize: '1.2rem',
-                fontWeight: 'semibold',
+                fontWeight: 'bold',
                 color: '#cbd5e1'
               }}
             >
@@ -74,7 +74,7 @@ const AllianceScore: React.FC<AllianceScoreProps> = ({
               level={3}
               style={{
                 color: 'white',
-                fontWeight: 'extrabold',
+                fontWeight: 'bold',
                 margin: 0,
                 fontSize: '2.4rem',
                 textAlign: allianceColor === 'red' ? 'left' : 'right'
@@ -89,7 +89,7 @@ const AllianceScore: React.FC<AllianceScoreProps> = ({
         <Typography.Text
           style={{
             fontSize: '1.2rem',
-            fontWeight: 'semibold',
+            fontWeight: 'bold',
             color: '#cbd5e1'
           }}
         >
@@ -100,7 +100,7 @@ const AllianceScore: React.FC<AllianceScoreProps> = ({
           level={3}
           style={{
             color: '#d1d5db',
-            fontWeight: 'extrabold',
+            fontWeight: 'bold',
             margin: 0,
             fontSize: '2.4rem',
             textAlign: allianceColor === 'red' ? 'left' : 'right'
@@ -117,7 +117,7 @@ const AllianceScore: React.FC<AllianceScoreProps> = ({
       <Typography.Text
         style={{
           fontSize: '1.5rem',
-          fontWeight: 'semibold',
+          fontWeight: 'bold',
           color: '#cbd5e1'
         }}
       >
@@ -127,7 +127,7 @@ const AllianceScore: React.FC<AllianceScoreProps> = ({
         level={1}
         style={{
           color: 'white',
-          fontWeight: 'extrabold',
+          fontWeight: 'bold',
           margin: 0,
           fontSize: '4.8rem',
           textAlign: allianceColor === 'blue' ? 'left' : 'right'

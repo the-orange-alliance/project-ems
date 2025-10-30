@@ -43,6 +43,7 @@ export const MatchPreviewStream: FC<DisplayProps> = ({ match, ranks }) => {
   return (
     <div
       style={{
+        fontFamily: 'Roboto, sans-serif !important',
         width: '100%',
         maxWidth: '80%',
         margin: '0 auto',

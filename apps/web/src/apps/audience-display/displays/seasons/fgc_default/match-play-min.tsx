@@ -32,7 +32,7 @@ const Container = styled.div`
 const InnerContainer = styled.div`
   position: absolute;
   height: 16vh;
-  bottom: -1.5vh;
+  bottom: 0;
   width: 100%;
   background-color: #000000;
   border-top-left-radius: 2em;

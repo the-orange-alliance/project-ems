@@ -10,6 +10,7 @@ export const MatchResults: FC<DisplayProps> = ({ match, ranks, teams }) => {
   return (
     <div
       style={{
+        fontFamily: 'Roboto, sans-serif !important',
         display: 'flex',
         flexDirection: 'column',
         width: '100vw',
