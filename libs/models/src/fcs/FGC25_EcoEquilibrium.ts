@@ -191,7 +191,7 @@ export const DEFAULT_SETTINGS: SettingsType = {
   }
 };
 
-interface WledFcsStatus {
+export interface WledFcsStatus {
   redConnected: boolean;
   redStickyDisconnect: boolean;
   blueConnected: boolean;
@@ -200,20 +200,21 @@ interface WledFcsStatus {
   centerStickyDisconnect: boolean;
 }
 
-interface DispenserFcsStatus {
+export interface DispenserFcsStatus {
   temperature: number;
   current: number;
   unjamCount: number;
   indexerBeamBreak: boolean;
 };
 
-interface EcosystemFcsStatus {
+export interface EcosystemFcsStatus {
   l3BeamBreak: boolean;
   l2BeamBreak: boolean;
   l1BeamBreak: boolean;
+  forceCount: number;
 }
 
-interface AcceleratorFcsStatus {
+export interface AcceleratorFcsStatus {
   velocity: number;
 }
 

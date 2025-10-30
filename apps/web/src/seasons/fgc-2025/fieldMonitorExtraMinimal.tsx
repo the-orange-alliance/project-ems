@@ -58,6 +58,17 @@ export const FieldMonitorExtraMinimal: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
           {Number(fcsStatus.redDispenser.unjamCount).toFixed(0)}
         </Typography.Text>
       </Flex>
+      <Flex flex={1} justify='space-between'>
+        <Typography.Text>
+          {Number(fcsStatus.blueEcosystem.forceCount).toFixed(0)}
+        </Typography.Text>
+        <Typography.Text>
+          {Number(fcsStatus.centerEcosystem.forceCount).toFixed(0)}
+        </Typography.Text>
+        <Typography.Text>
+          {Number(fcsStatus.redEcosystem.forceCount).toFixed(0)}
+        </Typography.Text>
+      </Flex>
     </Flex>
   ) : null;
 };
