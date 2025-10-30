@@ -45,10 +45,10 @@ async function uploadDatabase(eventKey: string) {
 }
 
 /**
- * Debounced version – runs once every 10 minutes (after last call)
+ * Throttled version – runs at most once every 4 minutes
  */
-export const debouncedUploadDatabase = _.debounce(
+export const throttledUploadDatabase = _.throttle(
   (eventKey: string) => uploadDatabase(eventKey),
-  5 * 60 * 1000, // 5 minutes debounce
+  4 * 60 * 1000, // 4 minutes throttle
   { trailing: true, leading: false }
 );

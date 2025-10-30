@@ -39,7 +39,7 @@ import { handleErrors, handleNotFound } from './middleware/ErrorHandler.js';
 import { join } from 'path';
 import webhooksController from './controllers/Webhooks.js';
 import seasonSpecificController from './controllers/SeasonSpecific.js';
-import { debouncedUploadDatabase, initS3Client } from './util/S3Backup.js';
+import { throttledUploadDatabase, initS3Client } from './util/S3Backup.js';
 
 // Setup our environment
 const workingDir = process.env.WORKDIR ?? '../';
@@ -166,7 +166,7 @@ fastify.addHook('onResponse', (request, reply, done) => {
     const { eventKey } = (request.params as { eventKey?: string }) ?? {};
 
     if (eventKey) {
-      debouncedUploadDatabase(eventKey);
+      throttledUploadDatabase(eventKey);
     }
 
     done();
