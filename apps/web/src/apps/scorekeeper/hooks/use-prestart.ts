@@ -41,7 +41,7 @@ export const usePrestartCallback = () => {
         const { eventKey, tournamentKey, id } = match;
 
         const prestartTime = DateTime.now().toISO();
-        const currentMatch = { ...match, prestartTime };
+        let currentMatch = { ...match, prestartTime };
         await patchMatch(currentMatch);
 
         currentMatch.participants = currentMatch.participants?.map((p) => ({
