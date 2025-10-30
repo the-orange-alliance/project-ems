@@ -54,7 +54,7 @@ export const useCommitScoresCallback = () => {
         if (!match) {
           throw new Error('Attempted to commit scores when there is no match.');
         }
-        const pending = { ...match, details: { ...match.details } };
+        const pending = { ...match, details: { ...match.details }, active: 0 };
         // Update the result if it hasn't been set yet
         if (pending.result < 0) {
           pending.result =
