@@ -11,7 +11,6 @@ import {
   postScheduleItems,
   useScheduleItemsForTournament
 } from 'src/api/use-schedule-data.js';
-import { setApiStorage } from 'src/api/use-storage-data.js';
 import { ScheduleLayout } from '../schedule-layout.js';
 import { ScheduleTable } from 'src/components/tables/schedule-table.js';
 import { DefaultScheduleOptions } from '../tournaments/default-params.js';
@@ -51,10 +50,6 @@ export const ScheduleParams: FC<Props> = ({
     await deleteScheduleItems(
       eventSchedule.eventKey,
       eventSchedule.tournamentKey
-    );
-    await setApiStorage(
-      `${eventSchedule.eventKey}_${eventSchedule.tournamentKey}.json`,
-      eventSchedule
     );
     await postScheduleItems(scheduleItems);
     mutateScheduleItems(scheduleItems);
