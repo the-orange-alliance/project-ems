@@ -47,14 +47,14 @@ export default class FCS extends Room {
 
     socket.on("fcs:clearStatus", (): void => {
       logger.info("fcs:clearStatus");
-      socket.to('fcs').emit('fcs:clearStatus');
+      socket.to("fcs").emit("fcs:clearStatus");
     });
 
     // Season-Specific
     socket.on(
       EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
       (data: EcoEquilibriumFCS.EcosystemUpdate): void => {
-        logger.info("fcs:ecosystemUpdate", data);
+        // logger.info("fcs:ecosystemUpdate", data);
         this.server
           .to("match")
           .emit(EcoEquilibriumFCS.SocketEvents.EcosystemUpdate, data);
@@ -64,7 +64,7 @@ export default class FCS extends Room {
     socket.on(
       EcoEquilibriumFCS.SocketEvents.AccelerationUpdate,
       (data: EcoEquilibriumFCS.AcceleratorUpdate): void => {
-        logger.info("fcs:accelerationUpdate", data);
+        // logger.info("fcs:accelerationUpdate", data);
         this.server
           .to("match")
           .emit(EcoEquilibriumFCS.SocketEvents.AccelerationUpdate, data);
@@ -72,14 +72,14 @@ export default class FCS extends Room {
     );
 
     socket.on("fcs:ropeDrop", (): void => {
-      logger.info("fcs:ropeDrop");
+      // logger.info("fcs:ropeDrop");
       socket.to("fcs").emit("fcs:ropeDrop");
     });
 
     socket.on(
       EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
       (data: EcoEquilibriumFCS.DispenserUpdate): void => {
-        logger.info("fcs:biodiversityDispensedUpdate", data);
+        // logger.info("fcs:biodiversityDispensedUpdate", data);
         this.server
           .to("match")
           .emit(
