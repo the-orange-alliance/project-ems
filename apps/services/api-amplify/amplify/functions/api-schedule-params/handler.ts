@@ -18,7 +18,13 @@ async function readScheduleParams(): Promise<ScheduleParams[]> {
     );
     const body = await res.Body?.transformToString();
     if (!body) return [];
-    return JSON.parse(body) as ScheduleParams[];
+    const baseJSON = JSON.parse(body);
+    const scheduleParams = baseJSON.map((param: any) => ({
+      ...param,
+      days: JSON.parse(param.days),
+      options: JSON.parse(param.options),
+    }));
+    return scheduleParams as ScheduleParams[];
   } catch (err) {
     console.error("Error reading schedule params:", err);
     return [];
