@@ -37,7 +37,7 @@ async function seasonSpecificController(fastify: FastifyInstance) {
             SUM(COALESCE(biodiversityUnitsBlueSideEcosystem, 0)) AS totalEcosystemBlue,
             SUM(COALESCE(biodiversityUnitsCenterEcosystem, 0)) AS totalEcosystemCenter,
             SUM(COALESCE(biodiversityUnitsRedSideEcosystem, 0)) AS totalEcosystemRed
-          FROM match_detail
+          FROM match_detail WHERE tournamentKey IN ('t2', 't3', 't4');
         `);
 
         const totalUnitsScored = (metrics[0].totalEcosystemBlue || 0) + (metrics[0].totalEcosystemCenter || 0) + (metrics[0].totalEcosystemRed || 0);
@@ -47,9 +47,9 @@ async function seasonSpecificController(fastify: FastifyInstance) {
           totalEcosystemCenter: metrics[0].totalEcosystemCenter || 0,
           totalEcosystemRed: metrics[0].totalEcosystemRed || 0,
           totalUnitsScored,
-          ecosystemBluePercentage: totalUnitsScored > 0 ? ((metrics[0].totalEcosystemBlue / totalUnitsScored) * 100).toFixed(2) : 0,
-          ecosystemCenterPercentage: totalUnitsScored > 0 ? ((metrics[0].totalEcosystemCenter / totalUnitsScored) * 100).toFixed(2) : 0,
-          ecosystemRedPercentage: totalUnitsScored > 0 ? ((metrics[0].totalEcosystemRed / totalUnitsScored) * 100).toFixed(2) : 0,
+          ecosystemBluePercentage: totalUnitsScored > 0 ? ((metrics[0].totalEcosystemBlue / totalUnitsScored) * 100).toFixed(2) : '0',
+          ecosystemCenterPercentage: totalUnitsScored > 0 ? ((metrics[0].totalEcosystemCenter / totalUnitsScored) * 100).toFixed(2) : '0',
+          ecosystemRedPercentage: totalUnitsScored > 0 ? ((metrics[0].totalEcosystemRed / totalUnitsScored) * 100).toFixed(2) : '0',
         });
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
