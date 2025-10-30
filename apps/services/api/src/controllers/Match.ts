@@ -317,6 +317,15 @@ async function matchController(fastify: FastifyInstance) {
         const match = request.body as z.infer<typeof matchWithDetailsZod>;
         if (match.details) delete match.details;
         if (match.participants) delete match.participants;
+
+        if (match.active === 1) {
+          await db.updateWhere(
+            'match',
+            { active: 0 },
+            'active = 1 AND fieldNumber = ' + match.fieldNumber
+          );
+        }
+
         await db.updateWhere(
           'match',
           match,
@@ -459,7 +468,9 @@ async function matchController(fastify: FastifyInstance) {
         const funcs = getFunctionsBySeasonKey(
           eventKey.split('-')[0].toLowerCase()
         );
-        console.log(`Recalculating scores for event ${eventKey} tournament ${tournamentKey}`);
+        console.log(
+          `Recalculating scores for event ${eventKey} tournament ${tournamentKey}`
+        );
 
         const match = await db.selectAllWhere(
           'match',
@@ -476,21 +487,32 @@ async function matchController(fastify: FastifyInstance) {
         for (const m of match) {
           const detail = detailsMap.get(m.id);
           if (!detail) {
-            console.log(`No details found for match id ${m.id}, skipping score recalculation.`)
+            console.log(
+              `No details found for match id ${m.id}, skipping score recalculation.`
+            );
             continue;
           }
           const newDetails = funcs?.calculateRankingPoints?.(detail);
           if (!newDetails) {
-            console.log(`No new details returned for match id ${m.id}, skipping score recalculation.`)
+            console.log(
+              `No new details returned for match id ${m.id}, skipping score recalculation.`
+            );
             continue;
           }
-          const [redScore, blueScore] = funcs?.calculateScore?.({...m, details: newDetails}) ?? [-1, -1];
+          const [redScore, blueScore] = funcs?.calculateScore?.({
+            ...m,
+            details: newDetails
+          }) ?? [-1, -1];
 
           if (redScore !== m.redScore) {
-            console.log(`SCORE UPDATED: Match ${m.id} red score changed from ${m.redScore} to ${redScore}`);
+            console.log(
+              `SCORE UPDATED: Match ${m.id} red score changed from ${m.redScore} to ${redScore}`
+            );
           }
           if (blueScore !== m.blueScore) {
-            console.log(`SCORE UPDATED: Match ${m.id} blue score changed from ${m.blueScore} to ${blueScore}`);
+            console.log(
+              `SCORE UPDATED: Match ${m.id} blue score changed from ${m.blueScore} to ${blueScore}`
+            );
           }
           const oldWinBlue = m.blueScore > m.redScore;
           const newWinBlue = blueScore > redScore;
@@ -498,18 +520,21 @@ async function matchController(fastify: FastifyInstance) {
           const oldWinTie = m.blueScore === m.redScore;
           const newWinTie = blueScore === redScore;
 
-          const coOpChanged = detail.coopertitionLevel !== (newDetails as any).coopertitionLevel;
+          const coOpChanged =
+            detail.coopertitionLevel !== (newDetails as any).coopertitionLevel;
 
           if (coOpChanged) {
-            console.log(`CO-OP LEVEL CHANGED: Match ${m.id} CO-OP level changed from ${detail.coopertitionLevel} to ${(newDetails as any).coopertitionLevel}`);
+            console.log(
+              `CO-OP LEVEL CHANGED: Match ${m.id} CO-OP level changed from ${detail.coopertitionLevel} to ${(newDetails as any).coopertitionLevel}`
+            );
           }
 
           if (oldWinBlue !== newWinBlue || oldWinTie !== newWinTie) {
-            console.log(`MATCH RESULT CHANGED: Match ${m.id} OLD: Red ${m.redScore} - Blue ${m.blueScore} NEW: Red ${redScore} - Blue ${blueScore}`);
+            console.log(
+              `MATCH RESULT CHANGED: Match ${m.id} OLD: Red ${m.redScore} - Blue ${m.blueScore} NEW: Red ${redScore} - Blue ${blueScore}`
+            );
           }
-
         }
-
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
       }
