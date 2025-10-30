@@ -20,7 +20,8 @@ async function readScheduleParams(): Promise<ScheduleParams[]> {
     const body = await res.Body?.transformToString();
     if (!body) return [];
     const baseJSON = JSON.parse(body);
-    const scheduleParams = baseJSON.map((param: any) => ({
+    const arr = Array.isArray(baseJSON) ? baseJSON : [baseJSON];
+    const scheduleParams = arr.map((param: any) => ({
       ...param,
       days:
         typeof param.days === "string" ? JSON.parse(param.days) : param.days,

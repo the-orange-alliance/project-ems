@@ -6,6 +6,7 @@ import { apiTeamsFunction } from "./functions/api-teams/resource";
 import { apiTournamentsFunction } from "./functions/api-tournaments/resource";
 import { apiScheduleFunction } from "./functions/api-schedule/resource";
 import { apiScheduleParamsFunction } from "./functions/api-schedule-params/resource";
+import { apiMatchFunction } from "./functions/api-matches/resource";
 import {
   BasePathMapping,
   Cors,
@@ -33,6 +34,7 @@ const backend = defineBackend({
   apiTournamentsFunction,
   apiScheduleFunction,
   apiScheduleParamsFunction,
+  apiMatchFunction,
 });
 
 backend.storage.resources.bucket.grantReadWrite(
@@ -53,6 +55,10 @@ backend.storage.resources.bucket.grantReadWrite(
 
 backend.storage.resources.bucket.grantReadWrite(
   backend.apiScheduleParamsFunction.resources.lambda,
+);
+
+backend.storage.resources.bucket.grantReadWrite(
+  backend.apiMatchFunction.resources.lambda,
 );
 
 backend.apiEventsFunction.addEnvironment(
@@ -76,6 +82,11 @@ backend.apiScheduleFunction.addEnvironment(
 );
 
 backend.apiScheduleParamsFunction.addEnvironment(
+  "STORAGE_BUCKET_NAME",
+  backend.storage.resources.bucket.bucketName,
+);
+
+backend.apiMatchFunction.addEnvironment(
   "STORAGE_BUCKET_NAME",
   backend.storage.resources.bucket.bucketName,
 );
@@ -151,6 +162,10 @@ const scheduleParamsLambdaIntegration = new LambdaIntegration(
   backend.apiScheduleParamsFunction.resources.lambda,
 );
 
+const matchesLambdaIntegration = new LambdaIntegration(
+  backend.apiMatchFunction.resources.lambda,
+);
+
 const eventsPath = restApi.root.addResource("event");
 const eventPath = eventsPath.addResource("{eventKey}");
 
@@ -171,6 +186,29 @@ const scheduleParamsPath = restApi.root.addResource("schedule-params");
 const scheduleParamsForEventPath = scheduleParamsPath.addResource("{eventKey}");
 const scheduleParamsForTournamentPath =
   scheduleParamsForEventPath.addResource("{tournamentKey}");
+
+// Matches API resources
+const matchesPath = restApi.root.addResource("matches");
+const matchesAllPath = matchesPath.addResource("all");
+const matchesParticipantsPath = matchesPath.addResource("participants");
+
+const matchesForEventPath = matchesPath.addResource("{eventKey}");
+const matchesForTournamentPath =
+  matchesForEventPath.addResource("{tournamentKey}");
+const matchIdPath = matchesForTournamentPath.addResource("{id}");
+
+const matchesAllForEventPath = matchesAllPath.addResource("{eventKey}");
+const matchesAllForTournamentPath =
+  matchesAllForEventPath.addResource("{tournamentKey}");
+const matchesAllForMatchIdPath =
+  matchesAllForTournamentPath.addResource("{id}");
+
+const matchesParticipantsForEventPath =
+  matchesParticipantsPath.addResource("{eventKey}");
+const matchesParticipantsForTournamentPath =
+  matchesParticipantsForEventPath.addResource("{tournamentKey}");
+const matchesParticipantsForMatchIdPath =
+  matchesParticipantsForTournamentPath.addResource("{id}");
 
 eventsPath.addMethod("GET", eventsLambdaIntegration);
 eventsPath.addMethod("POST", eventsLambdaIntegration);
@@ -210,6 +248,33 @@ scheduleParamsForTournamentPath.addMethod(
   "DELETE",
   scheduleParamsLambdaIntegration,
 );
+
+// Matches API methods mapped to handler logic
+// GET /matches (all), POST /matches (insert)
+matchesPath.addMethod("GET", matchesLambdaIntegration);
+matchesPath.addMethod("POST", matchesLambdaIntegration);
+
+// GET /matches/{eventKey}
+matchesForEventPath.addMethod("GET", matchesLambdaIntegration);
+
+// GET /matches/{eventKey}/{tournamentKey}
+// DELETE /matches/{eventKey}/{tournamentKey}
+matchesForTournamentPath.addMethod("GET", matchesLambdaIntegration);
+matchesForTournamentPath.addMethod("DELETE", matchesLambdaIntegration);
+
+// GET /matches/{eventKey}/{tournamentKey}/{id}
+// PATCH /matches/{eventKey}/{tournamentKey}/{id}
+matchIdPath.addMethod("GET", matchesLambdaIntegration);
+matchIdPath.addMethod("PATCH", matchesLambdaIntegration);
+
+// GET /matches/all/{eventKey}/{tournamentKey}/{id}
+matchesAllForMatchIdPath.addMethod("GET", matchesLambdaIntegration);
+
+// GET /matches/participants/{eventKey}
+matchesParticipantsForEventPath.addMethod("GET", matchesLambdaIntegration);
+
+// PATCH /matches/participants/{eventKey}/{tournamentKey}/{id}
+matchesParticipantsForMatchIdPath.addMethod("PATCH", matchesLambdaIntegration);
 
 backend.addOutput({
   custom: {
