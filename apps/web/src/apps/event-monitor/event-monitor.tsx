@@ -8,7 +8,9 @@ import {
   Modal,
   Row,
   Space,
-  Typography, Grid
+  Typography,
+  Grid,
+  Divider
 } from 'antd';
 import {
   CheckCircleOutlined,
@@ -332,6 +334,35 @@ const MonitorCard: FC<MonitorCardProps> = ({
               <seasonComponents.FieldMonitorExtra {...fcsStatus} />
             ) : null}
           </Flex>
+
+          <Divider>Field Control</Divider>
+          <Flex vertical gap='0.25rem'>
+            <Flex gap='0.25rem'>
+              <Button type='primary' block 
+                onClick={() => socket?.emit('fcs:allClear')}>
+                Force Field Green
+              </Button>
+              <Button type='primary' block 
+                onClick={() => socket?.emit('fcs:prepareField')}>
+                Force Prep Field
+              </Button>
+            </Flex>
+            <Flex gap='0.25rem'>
+              <Button type='primary' block 
+                onClick={() => socket?.emit('fcs:awardsMode')}>
+                Awards Mode
+              </Button>
+              <Button
+                type='primary'
+                block
+                onClick={() => socket?.emit('fcs:ropeDrop')}
+              >
+                Force Rope Drop (2025)
+              </Button>
+            </Flex>
+          </Flex>
+
+          <Divider />
           <Space direction='vertical' style={{ width: '100%' }}>
             <Button type='primary' href={`${webUrl}`} target='_blank' block>
               Open
@@ -643,7 +674,10 @@ export const EventMonitor: FC = () => {
 
       <Flex wrap>
         {monitors.map((monitor) => (
-          <Flex key={`${monitor.address}-${monitor.field}`} style={{ width: screens.md ? '20%' : '50%', padding: '0.25rem'}}>
+          <Flex
+            key={`${monitor.address}-${monitor.field}`}
+            style={{ width: screens.md ? '20%' : '50%', padding: '0.25rem' }}
+          >
             <MonitorCard
               field={monitor.field}
               address={monitor.address}
