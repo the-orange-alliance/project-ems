@@ -8,11 +8,7 @@ import {
   Ranking
 } from '@toa-lib/models';
 import { getDisplays } from './displays.js';
-import {
-  FadeInOut,
-  SlideInBottom,
-  SlideInLeft
-} from 'src/components/animations/index.js';
+import { FadeInOut, SlideInBottom } from 'src/components/animations/index.js';
 import AbsolouteLocator from 'src/components/util/absoloute-locator.js';
 import { useSearchParams } from 'react-router-dom';
 import { useAtom, useAtomValue } from 'jotai';

@@ -33,6 +33,7 @@ export const MatchResultsStream: FC<DisplayProps> = ({
     <div
       style={{
         width: '100%',
+        fontFamily: 'Roboto, sans-serif !important',
         maxWidth: '80%',
         margin: '0 auto',
         padding: '0.5rem 1rem',
