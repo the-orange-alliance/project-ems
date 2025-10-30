@@ -39,11 +39,11 @@ export const usePrestartCallback = () => {
           throw new Error('Attempted to prestart without participants.');
         }
         const { eventKey, tournamentKey, id } = match;
+
         const prestartTime = DateTime.now().toISO();
-        if (prestartTime) {
-          await patchMatch({ ...match, prestartTime });
-        }
-        let currentMatch = { ...match };
+        const currentMatch = { ...match, prestartTime };
+        await patchMatch(currentMatch);
+
         currentMatch.participants = currentMatch.participants?.map((p) => ({
           ...p,
           team: p.team || teams?.find((t) => t.teamKey === p.teamKey)
