@@ -20,8 +20,6 @@ export const AutocompleteTeam: FC<Props> = ({
   onChange
 }) => {
   const identifier = useAtomValue(teamIdentifierAtom);
-  const team = teams?.find((t) => t.teamKey === teamKey);
-
   return (
     <Select
       showSearch
@@ -29,21 +27,29 @@ export const AutocompleteTeam: FC<Props> = ({
       value={teamKey ?? undefined}
       disabled={disabled}
       style={{ width: '100%', background: white ? '#fff' : undefined }}
-      placeholder="Select a team"
-      optionFilterProp="children"
+      placeholder='Select a team'
+      optionFilterProp='label'
       onChange={(value) => {
         const selected = teams?.find((t) => t.teamKey === value) || null;
         onChange(selected);
       }}
       filterOption={(input, option) => {
         if (!option) return false;
-        const label = typeof option.children === 'string' ? option.children : '';
+        const label = typeof option.label === 'string' ? option.label : '';
         return label.toLowerCase().includes(input.toLowerCase());
       }}
     >
       {(teams ?? []).map((option) => (
-        <Select.Option key={option.teamKey} value={option.teamKey}>
-          <span className={'flag-icon flag-icon-' + option.countryCode.toLowerCase()}></span>
+        <Select.Option
+          key={option.teamKey}
+          value={option.teamKey}
+          label={`${option.teamKey} ${String(option[identifier as keyof typeof option] ?? '')}`}
+        >
+          <span
+            className={
+              'flag-icon flag-icon-' + option.countryCode.toLowerCase()
+            }
+          ></span>
           &nbsp;
           <span>{option[identifier as keyof typeof option]}</span>
         </Select.Option>
