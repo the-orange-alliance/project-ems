@@ -60,6 +60,22 @@ async function writeScheduleParams(scheduleParams: ScheduleParams[]) {
   );
 }
 
+// Normalize inbound payload(s): accept objects or strings for complex fields
+function normalizeInboundParam(p: any): ScheduleParams {
+  const days =
+    typeof p?.days === "string" ? JSON.parse(p.days) : (p?.days ?? []);
+  const options =
+    typeof p?.options === "string" ? JSON.parse(p.options) : (p?.options ?? {});
+  const teamKeys =
+    typeof p?.teamKeys === "string" ? JSON.parse(p.teamKeys) : p?.teamKeys;
+  return {
+    ...p,
+    days,
+    options,
+    teamKeys,
+  } as ScheduleParams;
+}
+
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent,
 ) => {
@@ -126,7 +142,7 @@ export const handler: APIGatewayProxyHandler = async (
       };
 
     case "POST":
-      // POST / - Insert schedule params (expects array)
+      // POST / - Insert schedule params (accepts single object or array)
       if (!event.body) {
         return {
           statusCode: 400,
@@ -136,8 +152,9 @@ export const handler: APIGatewayProxyHandler = async (
       }
 
       try {
-        const body = JSON.parse(event.body) as ScheduleParams[];
-        if (!Array.isArray(body) || body.length === 0) {
+        const parsed = JSON.parse(event.body);
+        const items: any[] = Array.isArray(parsed) ? parsed : [parsed];
+        if (items.length === 0) {
           return {
             statusCode: 400,
             body: "Bad Request: Invalid schedule params array",
@@ -145,22 +162,10 @@ export const handler: APIGatewayProxyHandler = async (
           };
         }
 
-        // Normalize inbound for storage (stringify days/options)
-        const normalizedIncoming = serializeForStorage(
-          (body as any[]).map((p) => ({ ...p })) as any,
-        ) as ScheduleParams[];
+        const normalized = items.map((p) => normalizeInboundParam(p));
 
-        // Add new schedule params to existing ones (existing are parsed objects)
-        const updatedScheduleParams = [
-          ...scheduleParams,
-          ...normalizedIncoming.map((p: any) => ({
-            ...p,
-            // After serializeForStorage, p.days/options are strings; parse back for in-memory
-            days: typeof p.days === "string" ? JSON.parse(p.days) : p.days,
-            options:
-              typeof p.options === "string" ? JSON.parse(p.options) : p.options,
-          })),
-        ];
+        // Add new schedule params to existing ones
+        const updatedScheduleParams = [...scheduleParams, ...normalized];
         await writeScheduleParams(updatedScheduleParams);
 
         return {
@@ -199,19 +204,12 @@ export const handler: APIGatewayProxyHandler = async (
 
       try {
         const baseJSON = JSON.parse(event.body);
-        // Accept either string or object for days/options
-        const body = {
-          ...baseJSON,
-          days:
-            typeof baseJSON.days === "string"
-              ? JSON.parse(baseJSON.days)
-              : baseJSON.days,
-          options:
-            typeof baseJSON.options === "string"
-              ? JSON.parse(baseJSON.options)
-              : baseJSON.options,
-        } as ScheduleParams;
+        const body = normalizeInboundParam(baseJSON);
         const { eventKey, tournamentKey } = event.pathParameters;
+
+        // Ensure body keys match path (authoritative)
+        body.eventKey = eventKey as string;
+        body.tournamentKey = tournamentKey as string;
 
         // Find existing param or create new one
         const existingIndex = scheduleParams.findIndex(

@@ -5,7 +5,8 @@ import {
   Match,
   RESULT_NOT_PLAYED,
   ScheduleItem,
-  Tournament
+  Tournament,
+  assignMatchTimes
 } from '@toa-lib/models';
 import { useTeamsForEvent } from 'src/api/use-team-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
@@ -14,7 +15,11 @@ import { ScheduleMatchFooter } from '../schedule-match-footer.js';
 import { MatchTable } from 'src/components/tables/matches-table.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { createRankings, deleteRankings } from 'src/api/use-ranking-data.js';
-import { deleteMatches, postMatchSchedule } from 'src/api/use-match-data.js';
+import {
+  deleteMatches,
+  patchMatch,
+  postMatchSchedule
+} from 'src/api/use-match-data.js';
 import { useModal } from '@ebay/nice-modal-react';
 import ScheduleRepostDialog from 'src/components/dialogs/schedule-repost-dialog.js';
 import { useSWRConfig } from 'swr';
@@ -107,6 +112,35 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
     }
   };
 
+  const handleReassignTimes = async () => {
+    setLoading(true);
+    try {
+      if (!eventSchedule || !scheduleItems || !tournament) return;
+      const matchesWithNewTimes = assignMatchTimes(matches, scheduleItems);
+      const promises = matchesWithNewTimes.map(async (match) => {
+        patchMatch(match);
+      });
+      await Promise.all(promises);
+      await mutate(
+        `match/${eventSchedule.eventKey}/${eventSchedule.tournamentKey}`,
+        matchesWithNewTimes,
+        false
+      );
+      await resultsSyncMatches(
+        eventSchedule.eventKey,
+        eventSchedule.tournamentKey,
+        platform,
+        apiKey
+      );
+      showSnackbar('Match times adjusted successfully.');
+      setLoading(false);
+    } catch (e) {
+      setLoading(false);
+      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+      showSnackbar('Error while adjusting match times.', error);
+    }
+  };
+
   return (
     <>
       <MatchGen
@@ -121,6 +155,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
           <ScheduleMatchFooter
             disabled={loading || hasMatchesWithScores}
             onClick={saveSchedule}
+            onReassignTimes={handleReassignTimes}
           />
         </>
       )}
