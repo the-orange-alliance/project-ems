@@ -172,210 +172,201 @@ export const postAlliances = async (
 
 async function resultsController(fastify: FastifyInstance) {
   // Sync rankings
-  fastify
-    .withTypeProvider<ZodTypeProvider>()
-    .post(
-      '/sync/rankings/:eventKey/:tournamentKey',
-      {
-        schema: {
-          params: EventTournamentKeyParams,
-          body: SyncSettings,
-          response: errorableSchema(z.any()),
-          tags: ['Results']
-        }
-      },
-      async (req, reply) => {
-        logger.info(
-          environment.isProd()
-            ? 'attempting to sync rankings'
-            : 'not syncing ranking'
-        );
-        if (!environment.isProd()) {
-          reply.send({ success: false });
-          return;
-        }
-        const { eventKey, tournamentKey } = req.params as z.infer<
-          typeof EventTournamentKeyParams
-        >;
-        const { platform, apiKey } = req.body;
-        const rankingsReq = await postRankings(
-          eventKey,
-          tournamentKey,
-          platform,
-          apiKey
-        );
-        reply.send({ success: rankingsReq?.ok });
+  fastify.withTypeProvider<ZodTypeProvider>().post(
+    '/sync/rankings/:eventKey/:tournamentKey',
+    {
+      schema: {
+        params: EventTournamentKeyParams,
+        body: SyncSettings,
+        response: errorableSchema(z.any()),
+        tags: ['Results']
       }
-    );
+    },
+    async (req, reply) => {
+      logger.info(
+        environment.isProd()
+          ? 'attempting to sync rankings'
+          : 'not syncing ranking'
+      );
+      if (!environment.isProd()) {
+        reply.send({ success: false });
+        return;
+      }
+      const { eventKey, tournamentKey } = req.params as z.infer<
+        typeof EventTournamentKeyParams
+      >;
+      const { platform, apiKey } = req.body;
+      const rankingsReq = await postRankings(
+        eventKey,
+        tournamentKey,
+        platform,
+        apiKey
+      );
+      reply.send({ success: rankingsReq?.ok });
+    }
+  );
 
   // Sync match by id
-  fastify
-    .withTypeProvider<ZodTypeProvider>()
-    .post(
-      '/sync/matches/:eventKey/:tournamentKey/:id',
-      {
-        schema: {
-          params: EventTournamentIdParams,
-          body: SyncSettings,
-          response: errorableSchema(z.any()),
-          tags: ['Results']
-        }
-      },
-      async (req, reply) => {
-        logger.info(
-          environment.isProd()
-            ? 'attempting to sync results'
-            : 'not syncing results'
-        );
-        if (!environment.isProd()) {
-          reply.send({ success: false });
-          return;
-        }
-        const {
-          eventKey,
-          tournamentKey,
-          id: idStr
-        } = req.params as z.infer<typeof EventTournamentIdParams>;
-        const id = parseInt(idStr);
-        const { platform, apiKey } = req.body;
-        const matchesReq = await postMatchResults(
-          { eventKey, tournamentKey, id },
-          platform,
-          apiKey
-        );
-        reply.send({ success: matchesReq?.ok });
+  fastify.withTypeProvider<ZodTypeProvider>().post(
+    '/sync/matches/:eventKey/:tournamentKey/:id',
+    {
+      schema: {
+        params: EventTournamentIdParams,
+        body: SyncSettings,
+        response: errorableSchema(z.any()),
+        tags: ['Results']
       }
-    );
+    },
+    async (req, reply) => {
+      logger.info(
+        environment.isProd()
+          ? 'attempting to sync results'
+          : 'not syncing results'
+      );
+      if (!environment.isProd()) {
+        reply.send({ success: false });
+        return;
+      }
+      const {
+        eventKey,
+        tournamentKey,
+        id: idStr
+      } = req.params as z.infer<typeof EventTournamentIdParams>;
+      const id = parseInt(idStr);
+      const { platform, apiKey } = req.body;
+      const matchesReq = await postMatchResults(
+        { eventKey, tournamentKey, id },
+        platform,
+        apiKey
+      );
+      reply.send({ success: matchesReq?.ok });
+    }
+  );
 
   // Sync all matches
-  fastify
-    .withTypeProvider<ZodTypeProvider>()
-    .post(
-      '/sync/matches/:eventKey/:tournamentKey',
-      {
-        schema: {
-          params: EventTournamentKeyParams,
-          body: SyncSettings,
-          response: errorableSchema(z.any()),
-          tags: ['Results']
-        }
-      },
-      async (req, reply) => {
-        logger.info(
-          environment.isProd()
-            ? 'attempting to sync results'
-            : 'not syncing results'
-        );
-        if (!environment.isProd()) {
-          reply.send({ success: false });
-          return;
-        }
-        const { eventKey, tournamentKey } = req.params as z.infer<
-          typeof EventTournamentKeyParams
-        >;
-        const db = await getDB(eventKey);
-        const matches = await db.selectAllWhere(
-          'match',
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
-        );
-        const participants = await db.selectAllWhere(
-          'match_participant',
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
-        );
-        const details = await db.selectAllWhere(
-          'match_detail',
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
-        );
-        const matchesWithParticipants = reconcileMatchParticipants(
-          matches,
-          participants
-        );
-        const matchesWithDetails = reconcileMatchDetails(
-          matchesWithParticipants,
-          details
-        );
-        const { platform, apiKey } = req.body;
-        const matchesReq = await request(
-          '/upload/matches',
-          {
-            method: 'PUT',
-            body: JSON.stringify(matchesWithDetails)
-          },
-          platform,
-          apiKey
-        );
-        reply.send({ success: matchesReq?.ok });
+  fastify.withTypeProvider<ZodTypeProvider>().post(
+    '/sync/matches/:eventKey/:tournamentKey',
+    {
+      schema: {
+        params: EventTournamentKeyParams,
+        body: SyncSettings,
+        response: errorableSchema(z.any()),
+        tags: ['Results']
       }
-    );
+    },
+    async (req, reply) => {
+      logger.info(
+        environment.isProd()
+          ? 'attempting to sync results'
+          : 'not syncing results'
+      );
+      if (!environment.isProd()) {
+        reply.send({ success: false });
+        return;
+      }
+      const { eventKey, tournamentKey } = req.params as z.infer<
+        typeof EventTournamentKeyParams
+      >;
+      const db = await getDB(eventKey);
+      const matches = await db.selectAllWhere(
+        'match',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+      );
+      const participants = await db.selectAllWhere(
+        'match_participant',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+      );
+      const details = await db.selectAllWhere(
+        'match_detail',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+      );
+      const matchesWithParticipants = reconcileMatchParticipants(
+        matches,
+        participants
+      );
+      const matchesWithDetails = reconcileMatchDetails(
+        matchesWithParticipants,
+        details
+      );
+      const { platform, apiKey } = req.body;
+      logger.info('syncing matches to platform', platform);
+      const matchesReq = await request(
+        '/upload/matches',
+        {
+          method: 'PUT',
+          body: JSON.stringify(matchesWithDetails)
+        },
+        platform,
+        apiKey
+      );
+      reply.send({ success: matchesReq?.ok });
+    }
+  );
 
   // Sync teams
-  fastify
-    .withTypeProvider<ZodTypeProvider>()
-    .post(
-      '/sync/teams/:eventKey',
-      {
-        schema: {
-          params: EventKeyParams,
-          body: SyncSettings,
-          response: errorableSchema(z.any()),
-          tags: ['Results']
-        }
-      },
-      async (req, reply) => {
-        logger.info(
-          environment.isProd()
-            ? 'attempting to sync results'
-            : 'not syncing results'
-        );
-        if (!environment.isProd()) {
-          reply.send({ success: false });
-          return;
-        }
-        const { eventKey } = req.params as z.infer<typeof EventKeyParams>;
-        const db = await getDB(eventKey);
-        const teams = await db.selectAll('team');
-        const { platform, apiKey } = req.body;
-        const teamsReq = await postTeams(teams, platform, apiKey);
-        reply.send({ success: teamsReq?.ok });
+  fastify.withTypeProvider<ZodTypeProvider>().post(
+    '/sync/teams/:eventKey',
+    {
+      schema: {
+        params: EventKeyParams,
+        body: SyncSettings,
+        response: errorableSchema(z.any()),
+        tags: ['Results']
       }
-    );
+    },
+    async (req, reply) => {
+      logger.info(
+        environment.isProd()
+          ? 'attempting to sync results'
+          : 'not syncing results'
+      );
+      if (!environment.isProd()) {
+        reply.send({ success: false });
+        return;
+      }
+      const { eventKey } = req.params as z.infer<typeof EventKeyParams>;
+      const db = await getDB(eventKey);
+      const teams = await db.selectAll('team');
+      const { platform, apiKey } = req.body;
+      const teamsReq = await postTeams(teams, platform, apiKey);
+      reply.send({ success: teamsReq?.ok });
+    }
+  );
 
   // Sync alliances
-  fastify
-    .withTypeProvider<ZodTypeProvider>()
-    .post(
-      '/sync/alliances/:eventKey/:tournamentKey',
-      {
-        schema: {
-          params: EventTournamentKeyParams,
-          body: SyncSettings,
-          response: errorableSchema(z.any()),
-          tags: ['Results']
-        }
-      },
-      async (req, reply) => {
-        logger.info(
-          environment.isProd()
-            ? 'attempting to sync results'
-            : 'not syncing results'
-        );
-        if (!environment.isProd()) {
-          reply.send({ success: false });
-          return;
-        }
-        const { eventKey, tournamentKey } = req.params as z.infer<
-          typeof EventTournamentKeyParams
-        >;
-        const { platform, apiKey } = req.body;
-        const db = await getDB(eventKey);
-        const alliances = await db.selectAllWhere(
-          'alliance',
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
-        );
-        const allianceReq = await postAlliances(alliances, platform, apiKey);
-        reply.send({ success: allianceReq?.ok });
+  fastify.withTypeProvider<ZodTypeProvider>().post(
+    '/sync/alliances/:eventKey/:tournamentKey',
+    {
+      schema: {
+        params: EventTournamentKeyParams,
+        body: SyncSettings,
+        response: errorableSchema(z.any()),
+        tags: ['Results']
       }
-    );
+    },
+    async (req, reply) => {
+      logger.info(
+        environment.isProd()
+          ? 'attempting to sync results'
+          : 'not syncing results'
+      );
+      if (!environment.isProd()) {
+        reply.send({ success: false });
+        return;
+      }
+      const { eventKey, tournamentKey } = req.params as z.infer<
+        typeof EventTournamentKeyParams
+      >;
+      const { platform, apiKey } = req.body;
+      const db = await getDB(eventKey);
+      const alliances = await db.selectAllWhere(
+        'alliance',
+        `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+      );
+      const allianceReq = await postAlliances(alliances, platform, apiKey);
+      reply.send({ success: allianceReq?.ok });
+    }
+  );
 }
 
 export default resultsController;
