@@ -1,6 +1,6 @@
 import z from 'zod';
 import { AllianceMember } from '../base/Alliance.js';
-import { Match, matchKeyZod } from '../base/Match.js';
+import { Match, matchKeyZod, RESULT_NOT_PLAYED } from '../base/Match.js';
 import { Ranking, rankingZod } from '../base/Ranking.js';
 import { isNonNullObject, isNumber } from '../types.js';
 import { Season, SeasonFunctions } from './index.js';
@@ -336,7 +336,8 @@ function calculateRankings(
       if (
         !isEcoEquilibriumDetails(match.details) ||
         participant.disqualified === 1 ||
-        participant.surrogate > 0
+        participant.surrogate > 0 ||
+        match.result === RESULT_NOT_PLAYED
       ) {
         continue;
       }
@@ -549,8 +550,8 @@ export function calculateBiodiversityDistributed(
     (details.biodiversityUnitsRedSideEcosystem +
       details.biodiversityUnitsCenterEcosystem +
       details.biodiversityUnitsBlueSideEcosystem) *
-      ScoreTable.BiodiversityUnit *
-      details.biodiversityDistributionFactor
+    ScoreTable.BiodiversityUnit *
+    details.biodiversityDistributionFactor
   );
 }
 
@@ -626,7 +627,7 @@ export function calculateScore(
 
   // If match is in progress, do some crude math to turn the approx. biodiversity into scored biodiversity
   if (matchInProgress) {
-    const ballsPerPixel = 5/ 5; // 5 balls / 5 pixels
+    const ballsPerPixel = 5 / 5; // 5 balls / 5 pixels
     details.biodiversityUnitsRedSideEcosystem = Math.floor(
       details.approximateBiodiversityRedSideEcosystem * ballsPerPixel
     );
@@ -652,7 +653,8 @@ export function calculateScore(
 
   // Total Score
   const redScore = globalPoints * protectionMultiplierRed + coopertitionPoints;
-  const blueScore = globalPoints * protectionMultiplierBlue + coopertitionPoints;
+  const blueScore =
+    globalPoints * protectionMultiplierBlue + coopertitionPoints;
 
   // Penalty
   const redPenaltyMinor = match.redMinPen * ScoreTable.MinorFoul * redScore;
