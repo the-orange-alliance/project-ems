@@ -153,6 +153,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
         <>
           <MatchTable matches={matchesToDisplay} teams={teams} />
           <ScheduleMatchFooter
+            tournament={tournament}
             disabled={loading || hasMatchesWithScores}
             onClick={saveSchedule}
             onReassignTimes={handleReassignTimes}
