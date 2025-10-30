@@ -188,7 +188,7 @@ const scheduleParamsForTournamentPath =
   scheduleParamsForEventPath.addResource("{tournamentKey}");
 
 // Matches API resources
-const matchesPath = restApi.root.addResource("matches");
+const matchesPath = restApi.root.addResource("match");
 const matchesAllPath = matchesPath.addResource("all");
 const matchesParticipantsPath = matchesPath.addResource("participants");
 
