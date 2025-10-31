@@ -48,7 +48,10 @@ export const ScoreTable = {
       details.blueRobotOneParking,
       details.blueRobotTwoParking,
       details.blueRobotThreeParking
-    ].reduce((count, state) => count + (state >= MatchEndRobotState.Level2 ? 1 : 0), 0);
+    ].reduce(
+      (count, state) => count + (state >= MatchEndRobotState.Level2 ? 1 : 0),
+      0
+    );
 
     return numParking < 5 ? 0 : numParking >= 6 ? 30 : 15;
   },
@@ -658,9 +661,9 @@ export function calculateScore(
 
   // Penalty
   const redPenaltyMinor = match.redMinPen * ScoreTable.MinorFoul * redScore;
-  const redPenaltyMajor = match.redMinPen * ScoreTable.MajorFoul * redScore;
+  const redPenaltyMajor = match.redMajPen * ScoreTable.MajorFoul * redScore;
   const bluePenaltyMinor = match.blueMinPen * ScoreTable.MinorFoul * blueScore;
-  const bluePenaltyMajor = match.blueMinPen * ScoreTable.MajorFoul * blueScore;
+  const bluePenaltyMajor = match.redMajPen * ScoreTable.MajorFoul * blueScore;
 
   // Final score is
   return [
