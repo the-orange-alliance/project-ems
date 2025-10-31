@@ -663,7 +663,7 @@ export function calculateScore(
   const redPenaltyMinor = match.redMinPen * ScoreTable.MinorFoul * redScore;
   const redPenaltyMajor = match.redMajPen * ScoreTable.MajorFoul * redScore;
   const bluePenaltyMinor = match.blueMinPen * ScoreTable.MinorFoul * blueScore;
-  const bluePenaltyMajor = match.redMajPen * ScoreTable.MajorFoul * blueScore;
+  const bluePenaltyMajor = match.blueMajPen * ScoreTable.MajorFoul * blueScore;
 
   // Final score is
   return [
