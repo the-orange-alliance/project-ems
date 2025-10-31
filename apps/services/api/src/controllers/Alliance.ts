@@ -11,7 +11,7 @@ async function allianceController(fastify: FastifyInstance) {
   // Get all alliances for event
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/:eventKey',
-    { schema: { params: EventKeyParams, response: errorableSchema(z.array(allianceMemberZod)), tags: ['Alliances'] } },
+    { schema: { params: EventKeyParams, response: errorableSchema(z.union([z.any(), z.array(allianceMemberZod)])), tags: ['Alliances'] } },
     async (request, reply) => {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
@@ -27,7 +27,7 @@ async function allianceController(fastify: FastifyInstance) {
   // Get all alliances for event/tournament
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/:eventKey/:tournamentKey',
-    { schema: { params: EventTournamentKeyParams, response: errorableSchema(z.array(allianceMemberZod)), tags: ['Alliances'] } },
+    { schema: { params: EventTournamentKeyParams, response: errorableSchema(z.union([z.any(), z.array(allianceMemberZod)])), tags: ['Alliances'] } },
     async (request, reply) => {
       try {
         const { eventKey, tournamentKey } = request.params as z.infer<typeof EventTournamentKeyParams>;
@@ -43,7 +43,7 @@ async function allianceController(fastify: FastifyInstance) {
   // Get alliance by rank
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/:eventKey/:tournamentKey/:rank',
-    { schema: { params: EventTournamentRankParams, response: errorableSchema(z.array(allianceMemberZod), DataNotFoundError), tags: ['Alliances'] } },
+    { schema: { params: EventTournamentRankParams, response: errorableSchema(z.union([z.any(), z.array(allianceMemberZod)]), DataNotFoundError), tags: ['Alliances'] } },
     async (request, reply) => {
       try {
         const { eventKey, tournamentKey, rank } = request.params as z.infer<typeof EventTournamentRankParams>;
