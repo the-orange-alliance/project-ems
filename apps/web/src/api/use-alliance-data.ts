@@ -1,4 +1,4 @@
-import { apiFetcher, clientFetcher } from '@toa-lib/client';
+import { apiFetcher } from '@toa-lib/client';
 import { AllianceMember, allianceMemberZod } from '@toa-lib/models';
 import useSWR from 'swr';
 
@@ -26,7 +26,7 @@ export const useAllianceMember = (
 export const postAllianceMembers = (
   eventKey: string,
   members: AllianceMember[]
-): Promise<void> => clientFetcher(`alliance/${eventKey}`, 'POST', members);
+): Promise<void> => apiFetcher(`alliance/${eventKey}`, 'POST', members);
 
 export const patchAllianceMember = (
   eventKey: string,
@@ -34,7 +34,7 @@ export const patchAllianceMember = (
   teamKey: number,
   member: AllianceMember
 ): Promise<void> =>
-  clientFetcher(
+  apiFetcher(
     `alliance/${eventKey}/${tournamentKey}/${teamKey}`,
     'PATCH',
     member
@@ -44,4 +44,4 @@ export const deleteAllianceMembers = (
   eventKey: string,
   tournamentKey: string
 ): Promise<void> =>
-  clientFetcher(`alliance/${eventKey}/${tournamentKey}`, 'DELETE');
+  apiFetcher(`alliance/${eventKey}/${tournamentKey}`, 'DELETE');

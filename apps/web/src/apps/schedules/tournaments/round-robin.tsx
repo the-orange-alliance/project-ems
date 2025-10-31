@@ -1,4 +1,4 @@
-import { Row, Col, Button } from 'antd';
+import { Row, Col, Button, Typography } from 'antd';
 import {
   AllianceMember,
   ScheduleParams,
@@ -62,10 +62,25 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
         if (teamKey) {
           teamKeys.push(teamKey);
         } else {
-          // FGC2024 - this is the 4th robot. Randomly assign.
-          const randomIndex = Math.floor(Math.random() * teams.length);
-          teamKeys.push(randomIndex);
+          // FGC2024/25 - this is the 4th robot, assign -1 for now, and we'll handle it after the rest of the assignments are in
+          teamKeys.push(-1);
         }
+      }
+    }
+
+    // Now handle any -1 assignments (randomly assign remaining teams)
+    for (let i = 0; i < teamKeys.length; i++) {
+      if (teamKeys[i] === -1) {
+        // Randomly assign.
+        let [teamKey] = teamKeys;
+
+        // Make sure we don't assign a team that is already picked. Keep picking randomly until we find one.
+        while (teamKeys.includes(teamKey)) {
+          const randomIndex = Math.floor(Math.random() * ranks.length);
+          ({ teamKey } = ranks[randomIndex]);
+        }
+
+        teamKeys[i] = teamKey;
       }
     }
     setPickedTeamKeys(teamKeys);
@@ -115,67 +130,82 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
     }
   };
   return (
-    <Row gutter={[24, 24]}>
-      {Array.from({ length: allianceRows }).map((_, i) => {
-        return Array.from({ length: ALLIANCE_SIZE }).map((__, j) => {
-          const handleChange = (team: Team | null) => {
-            if (team) {
-              const newTeamKeys = [...pickedTeamKeys];
-              newTeamKeys[i * ALLIANCE_SIZE + j] = team.teamKey;
-              setPickedTeamKeys(newTeamKeys);
-            } else {
-              const newTeamKeys = [...pickedTeamKeys];
-              newTeamKeys[i * ALLIANCE_SIZE + j] = null;
-              setPickedTeamKeys(newTeamKeys);
-            }
-          };
+    <>
+      <Row gutter={[24, 0]}>
+        {Array.from({ length: allianceRows }).map((_, i) => {
           return (
-            <Col
-              xs={24}
-              sm={12}
-              md={6}
-              lg={3}
-              key={`alliance-${i + 1}-team-${j + 1}`}
-            >
-              <AutocompleteTeam
-                onChange={handleChange}
-                teamKey={pickedTeamKeys[i * ALLIANCE_SIZE + j]}
-                teams={teams}
-              />
-            </Col>
+            <>
+              <Col
+                span={24}
+                key={`alliance-${i + 1}-header`}
+                style={{ marginTop: '1rem' }}
+              >
+                <Typography.Title level={4}>Alliance {i + 1}</Typography.Title>
+              </Col>
+              {Array.from({ length: ALLIANCE_SIZE }).map((__, j) => {
+                const handleChange = (team: Team | null) => {
+                  if (team) {
+                    const newTeamKeys = [...pickedTeamKeys];
+                    newTeamKeys[i * ALLIANCE_SIZE + j] = team.teamKey;
+                    setPickedTeamKeys(newTeamKeys);
+                  } else {
+                    const newTeamKeys = [...pickedTeamKeys];
+                    newTeamKeys[i * ALLIANCE_SIZE + j] = null;
+                    setPickedTeamKeys(newTeamKeys);
+                  }
+                };
+                return (
+                  <Col
+                    xs={24}
+                    sm={12}
+                    md={6}
+                    lg={3}
+                    key={`alliance-${i + 1}-team-${j + 1}`}
+                  >
+                    <AutocompleteTeam
+                      onChange={handleChange}
+                      teamKey={pickedTeamKeys[i * ALLIANCE_SIZE + j]}
+                      teams={teams}
+                    />
+                  </Col>
+                );
+              })}
+            </>
           );
-        });
-      })}
-      <Col xs={12} sm={6} md={4} lg={2}>
-        <Button onClick={addAlliance} type='primary' block disabled={loading}>
-          Add Alliance
-        </Button>
-      </Col>
-      <Col xs={12} sm={6} md={4} lg={2}>
-        <Button
-          onClick={removeAlliance}
-          type='primary'
-          block
-          disabled={loading}
-        >
-          Remove Alliance
-        </Button>
-      </Col>
-      <Col xs={12} sm={6} md={4} lg={2}>
-        <Button onClick={autoAssign} type='primary' block disabled={loading}>
-          Auto-Assign
-        </Button>
-      </Col>
-      <Col xs={12} sm={6} md={4} lg={2}>
-        <Button
-          type='primary'
-          block
-          onClick={saveAlliances}
-          disabled={hasDuplicates || loading}
-        >
-          Save Alliances
-        </Button>
-      </Col>
-    </Row>
+        })}
+      </Row>
+      <Row style={{ marginTop: '1rem' }} gutter={[24, 24]}>
+        <Col xs={12} sm={6} md={4} lg={2}>
+          <Button onClick={addAlliance} type='primary' block disabled={loading}>
+            Add Alliance
+          </Button>
+        </Col>
+        <Col xs={12} sm={6} md={4} lg={2}>
+          <Button
+            onClick={removeAlliance}
+            type='primary'
+            block
+            disabled={loading}
+          >
+            Remove Alliance
+          </Button>
+        </Col>
+        <Col xs={12} sm={6} md={4} lg={2}>
+          <Button onClick={autoAssign} type='primary' block disabled={loading}>
+            Auto-Assign
+          </Button>
+        </Col>
+        <Col xs={12} sm={6} md={4} lg={2}>
+          <Button
+            type='primary'
+            block
+            onClick={saveAlliances}
+            disabled={hasDuplicates || loading}
+          >
+            Save Alliances
+          </Button>
+        </Col>
+      </Row>
+    </>
   );
 };

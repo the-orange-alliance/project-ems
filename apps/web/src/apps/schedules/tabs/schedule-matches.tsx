@@ -53,7 +53,9 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
     ? savedMatches.some((m) => m.result && m.result > RESULT_NOT_PLAYED)
     : false;
   const matchesToDisplay =
-    savedMatches && savedMatches.length ? savedMatches : matches;
+    savedMatches && savedMatches.length
+      ? savedMatches
+      : matches.filter((m) => m.tournamentKey === eventSchedule?.tournamentKey);
 
   const saveSchedule = async () => {
     setLoading(true);
