@@ -55,6 +55,7 @@ export interface DispenserSettings {
     kUpSpeed: number;
     kDownSpeed: number;
     kStopSpeed: number;
+    kDownResetSpeed: number;
   };
   indexer: {
     kFwdSpeed: number;
@@ -134,7 +135,8 @@ export const DEFAULT_SETTINGS: SettingsType = {
       kUpTurboSpeed: 1.0,
       kUpSpeed: 0.5,
       kDownSpeed: -0.5,
-      kStopSpeed: 0.0
+      kStopSpeed: 0.0,
+      kDownResetSpeed: -0.60
     },
     indexer: {
       kFwdSpeed: -0.5,
