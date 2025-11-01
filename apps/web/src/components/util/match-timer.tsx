@@ -10,8 +10,8 @@ import {
 } from '@toa-lib/models';
 import { useAtom, useAtomValue } from 'jotai';
 import { Duration } from 'luxon';
-import { FC, useEffect } from 'react';
-import { useSocket } from 'src/api/use-socket.js';
+import { FC, useEffect, useMemo } from 'react';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import {
   initAudio,
   MATCH_START,
@@ -28,6 +28,7 @@ import {
   matchTimeModeAtom,
   timer
 } from 'src/stores/state/match.js';
+import * as Comlink from 'comlink';
 
 const startAudio = initAudio(MATCH_START);
 const transitionAudio = initAudio(MATCH_TRANSITION);
@@ -46,55 +47,7 @@ export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
   const [time, setTime] = useAtom(matchTimeAtom);
   const [modeTime, setModeTime] = useAtom(matchTimeModeAtom);
   const currentMatch = useAtomValue(matchAtom);
-  const [socket, connected] = useSocket();
-
-  useEffect(() => {
-    if (connected) {
-      socket?.on(MatchSocketEvent.PRESTART, onPrestart);
-      socket?.on(MatchSocketEvent.START, onStart);
-      socket?.on(MatchSocketEvent.ABORT, onAbort);
-      socket?.on(MatchSocketEvent.TIMER, onTimer);
-
-      socket?.emit(MatchSocketEvent.TIMER);
-
-      timer.on('timer:transition', onTransition);
-      timer.on('timer:tele', onTele);
-      timer.on('timer:endgame', onEndgame);
-      timer.on('timer:end', onEnd);
-    }
-  }, [connected]);
-
-  useEffect(() => {
-    if (!timer.inProgress()) {
-      timer.reset();
-      setTime(timer.timeLeft);
-      setModeTime(timer.modeTimeLeft);
-    }
-
-    const tick = setInterval(() => {
-      setTime(timer.timeLeft);
-      setModeTime(timer.modeTimeLeft);
-    }, 500);
-
-    return () => {
-      socket?.off(MatchSocketEvent.PRESTART, onPrestart);
-      socket?.off(MatchSocketEvent.START, onStart);
-      socket?.off(MatchSocketEvent.ABORT, onAbort);
-
-      timer.off('timer:transition', onTransition);
-      timer.off('timer:tele', onTele);
-      timer.off('timer:endgame', onEndgame);
-      timer.off('timer:end', onEnd);
-      clearInterval(tick);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (matchState === MatchState.MATCH_IN_PROGRESS && timer.inProgress()) {
-      setTime(timer.timeLeft);
-      setModeTime(timer.modeTimeLeft);
-    }
-  }, [matchState]);
+  const { worker, connected } = useSocketWorker();
 
   const timeDuration = Duration.fromObject({
     seconds: mode === 'timeLeft' ? time : modeTime
@@ -157,6 +110,59 @@ export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
       : FGC_MATCH_CONFIG;
     timer.matchConfig = matchConfig;
   };
+
+  const prestartProxy = useMemo(() => Comlink.proxy(onPrestart), [onPrestart]);
+  const startProxy = useMemo(() => Comlink.proxy(onStart), [onStart]);
+  const abortProxy = useMemo(() => Comlink.proxy(onAbort), [onAbort]);
+  const timerProxy = useMemo(() => Comlink.proxy(onTimer), [onTimer]);
+
+  useEffect(() => {
+    if (connected) {
+      worker?.on(MatchSocketEvent.PRESTART, prestartProxy);
+      worker?.on(MatchSocketEvent.START, startProxy);
+      worker?.on(MatchSocketEvent.ABORT, abortProxy);
+      worker?.on(MatchSocketEvent.TIMER, timerProxy);
+
+      worker?.emit(MatchSocketEvent.TIMER);
+
+      timer.on('timer:transition', onTransition);
+      timer.on('timer:tele', onTele);
+      timer.on('timer:endgame', onEndgame);
+      timer.on('timer:end', onEnd);
+    }
+  }, [connected]);
+
+  useEffect(() => {
+    if (!timer.inProgress()) {
+      timer.reset();
+      setTime(timer.timeLeft);
+      setModeTime(timer.modeTimeLeft);
+    }
+
+    const tick = setInterval(() => {
+      setTime(timer.timeLeft);
+      setModeTime(timer.modeTimeLeft);
+    }, 500);
+
+    return () => {
+      worker?.off(MatchSocketEvent.PRESTART, prestartProxy);
+      worker?.off(MatchSocketEvent.START, startProxy);
+      worker?.off(MatchSocketEvent.ABORT, abortProxy);
+
+      timer.off('timer:transition', onTransition);
+      timer.off('timer:tele', onTele);
+      timer.off('timer:endgame', onEndgame);
+      timer.off('timer:end', onEnd);
+      clearInterval(tick);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (matchState === MatchState.MATCH_IN_PROGRESS && timer.inProgress()) {
+      setTime(timer.timeLeft);
+      setModeTime(timer.modeTimeLeft);
+    }
+  }, [matchState]);
 
   return (
     <>

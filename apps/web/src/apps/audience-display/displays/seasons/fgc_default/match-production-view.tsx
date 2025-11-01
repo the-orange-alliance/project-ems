@@ -7,9 +7,10 @@ import {
   Match,
   MatchState
 } from '@toa-lib/models';
-import { useSocket } from 'src/api/use-socket.js';
 import { useAtomValue } from 'jotai';
 import { matchStateAtom, matchStatusAtom } from 'src/stores/state/match.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
+import * as Comlink from 'comlink';
 
 const ScoreContainer: FC<{
   number: string;
@@ -54,7 +55,7 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
   const matchParts = genericMatch.name.split(' ');
   const matchNumber = matchParts[matchParts.length - 1];
   const field = genericMatch.fieldNumber;
-  const [socket, socketConnected] = useSocket();
+  const { worker, connected } = useSocketWorker();
 
   const match = genericMatch as Match<EcoEquilibrium.MatchDetails>;
 
@@ -111,31 +112,34 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
   };
 
   useEffect(() => {
-    if (!socket) return;
-    socket.on(EcoEquilibriumFCS.SocketEvents.EcosystemUpdate, updateEcosystem);
-    socket.on(
+    if (!worker) return;
+    const ecosystemProxy = Comlink.proxy(updateEcosystem);
+    const accelerationProxy = Comlink.proxy(updateAcceleration);
+    const dispenserProxy = Comlink.proxy(updateDispenser);
+    worker.on(EcoEquilibriumFCS.SocketEvents.EcosystemUpdate, ecosystemProxy);
+    worker.on(
       EcoEquilibriumFCS.SocketEvents.AccelerationUpdate,
-      updateAcceleration
+      accelerationProxy
     );
-    socket.on(
+    worker.on(
       EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
-      updateDispenser
+      dispenserProxy
     );
     return () => {
-      socket.off(
+      worker.off(
         EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
-        updateEcosystem
+        ecosystemProxy
       );
-      socket.off(
+      worker.off(
         EcoEquilibriumFCS.SocketEvents.AccelerationUpdate,
-        updateAcceleration
+        accelerationProxy
       );
-      socket.off(
+      worker.off(
         EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
-        updateDispenser
+        dispenserProxy
       );
     };
-  }, [socket]);
+  }, [worker]);
 
   const getRemainingFromLevel = (level: number) => {
     const math = 4 - level;
@@ -172,9 +176,9 @@ export const MatchProduction: FC<DisplayProps> = ({ match: genericMatch }) => {
     <>
       <Row>
         <ScoreContainer
-          number={socketConnected ? 'Y' : 'N'}
+          number={connected ? 'Y' : 'N'}
           label={`Socket Connected`}
-          bg={socketConnected ? '#4caf50' : '#f44336'}
+          bg={connected ? '#4caf50' : '#f44336'}
         />
         <ScoreContainer number={matchNumber} label={`Match Number`} />
         <ScoreContainer number={`${field}`} label={`Field`} />

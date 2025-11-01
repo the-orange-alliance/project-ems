@@ -1,11 +1,11 @@
 import { Button, Space } from 'antd';
 import { FC } from 'react';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 
 export const ScorekeeperOptions: FC = () => {
   const fieldControl = useSeasonFieldControl();
-  const [socket] = useSocket();
+  const { worker } = useSocketWorker();
 
   return (
     <Space direction='vertical' size='middle' style={{ width: '100%' }}>
@@ -18,7 +18,7 @@ export const ScorekeeperOptions: FC = () => {
       <Button type='primary' block onClick={fieldControl?.awardsMode}>
         Awards Mode
       </Button>
-      <Button type='primary' block onClick={() => socket?.emit('fcs:ropeDrop')}>
+      <Button type='primary' block onClick={() => worker?.emit('fcs:ropeDrop')}>
         Force Rope Drop (2025)
       </Button>
     </Space>

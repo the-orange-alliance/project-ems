@@ -10,14 +10,16 @@ import {
 import { Row, Col, Typography, Card } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { NumberInput } from 'src/components/inputs/number-input.js';
 import { StateToggle } from 'src/components/inputs/state-toggle.js';
 import { matchAtom } from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
 import { ForceConfirm } from './confirm-force-dialog.js';
+import * as Comlink from 'comlink';
+
 const HeadRefereeExtra: React.FC = () => {
-  const [socket] = useSocket();
+  const { worker } = useSocketWorker();
   const [match, setMatch] = useAtom(matchAtom);
   const matchState = useAtomValue(matchStateAtom);
   const [ecosystemState, setEcosystemState] = useState<number>(0);
@@ -30,21 +32,20 @@ const HeadRefereeExtra: React.FC = () => {
       }
     };
 
-    socket?.on(
-      EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
-      updateEcosystemState
-    );
+    const ecosystemProxy = Comlink.proxy(updateEcosystemState);
+
+    worker?.on(EcoEquilibriumFCS.SocketEvents.EcosystemUpdate, ecosystemProxy);
     return () => {
-      socket?.off(
+      worker?.off(
         EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
-        updateEcosystemState
+        ecosystemProxy
       );
     };
   }, []);
 
   const forceEcosystem = async (newState: number) => {
     if (await forceModal.show({ level: (newState + 1).toString() })) {
-      socket?.emit(EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate, {
+      worker?.emit(EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate, {
         ecosystem: EcoEquilibriumFCS.Ecosystem.Center,
         position: newState
       } as EcoEquilibriumFCS.EcosystemUpdate);
@@ -60,7 +61,7 @@ const HeadRefereeExtra: React.FC = () => {
     value: EcoEquilibrium.MatchDetails[K]
   ) => {
     const updatePacket: ItemUpdate = { key: String(detailsKey), value };
-    socket?.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, updatePacket);
+    worker?.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, updatePacket);
 
     // Reduce UI latency by updating our local match state in anticipation
     // of the update that the server wil send soon
@@ -82,7 +83,7 @@ const HeadRefereeExtra: React.FC = () => {
       key: String(detailsKey),
       adjustment
     };
-    socket?.emit(
+    worker?.emit(
       MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
       adjustmentPacket
     );

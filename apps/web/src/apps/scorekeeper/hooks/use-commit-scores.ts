@@ -17,11 +17,10 @@ import {
   recalculatePlayoffsRankings,
   recalculateRankings
 } from 'src/api/use-ranking-data.js';
-import { sendCommitScores } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { eventKeyAtom, matchAtom } from 'src/stores/state/event.js';
 import { useCallback } from 'react';
-import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 import { useAtomCallback } from 'jotai/utils';
 import { matchStateAtom } from 'src/stores/state/match.js';
 import { emitWebhook } from 'src/api/use-webhook-data.js';
@@ -34,13 +33,13 @@ export const useCommitScoresCallback = () => {
   const tournament = useCurrentTournament();
   const { data: tournMatches, mutate: updateTournMatches } =
     useMatchesForTournament(eventKey, tournament?.tournamentKey);
+  const { events, connected } = useSocketWorker();
 
   return useAtomCallback(
     useCallback(
       async (get, set) => {
         const match = get(matchAtom);
-        const socketConnected = get(isSocketConnectedAtom);
-        if (!socketConnected) {
+        if (!connected) {
           throw new Error('Not connected to realtime service.');
         }
         if (!canCommitScores) {
@@ -96,7 +95,7 @@ export const useCommitScoresCallback = () => {
         }
 
         fieldControl?.commitScoresForField?.();
-        sendCommitScores({ eventKey, tournamentKey, id });
+        events.commit({ eventKey, tournamentKey, id });
         setState(MatchState.RESULTS_COMMITTED);
 
         // Update the match occurring atom

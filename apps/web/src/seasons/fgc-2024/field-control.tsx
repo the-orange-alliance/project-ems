@@ -1,14 +1,14 @@
 import { FeedingTheFuture } from '@toa-lib/models';
 import { FieldControlCallbacks } from '../index.js';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 
 export const useFieldControl =
   (): FieldControlCallbacks<FeedingTheFuture.MatchDetails> => {
-    const [socket] = useSocket();
+    const { worker } = useSocketWorker();
     const fieldOptions = {}; // TODO: update for season
 
     const prestartField = () => {
-      socket?.emit('fcs:test', { test: 'test' });
+      worker?.emit('fcs:test', { test: 'test' });
       // console.log('prestartField');
     };
 
@@ -17,7 +17,7 @@ export const useFieldControl =
     };
 
     const prepareField = () => {
-      socket?.emit('fcs:prepareField');
+      worker?.emit('fcs:prepareField');
       // console.log('prepareField');
     };
 
@@ -30,7 +30,7 @@ export const useFieldControl =
     };
 
     const clearField = () => {
-      socket?.emit('fcs:allClear');
+      worker?.emit('fcs:allClear');
       // console.log('clearField');
     };
 
@@ -47,11 +47,11 @@ export const useFieldControl =
     };
 
     const awardsMode = () => {
-      socket?.emit('fcs:awardsMode');
+      worker?.emit('fcs:awardsMode');
     };
 
     const updateFieldSettings = () => {
-      socket?.emit('fcs:settings', fieldOptions);
+      worker?.emit('fcs:settings', fieldOptions);
       // console.log('updateFieldSettings');
     };
 

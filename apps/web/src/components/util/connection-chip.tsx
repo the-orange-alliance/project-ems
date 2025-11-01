@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { Tag } from 'antd';
 import {
   CheckCircleOutlined,
@@ -10,7 +10,7 @@ import {
 // import { userAtom } from 'src/stores/state/ui.js';
 
 export const ConnectionChip: FC = () => {
-  const [, connected] = useSocket();
+  const { connected } = useSocketWorker();
   const user = true; //  useAtomValue(userAtom);
 
   return (

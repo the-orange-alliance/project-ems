@@ -22,6 +22,7 @@
     "@toa-lib/models": "1.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "antd": "^5.27.4",
+    "comlink": "^4.4.2",
     "export-to-csv": "^1.4.0",
     "jotai": "^2.15.0",
     "lodash": "^4.17.21",

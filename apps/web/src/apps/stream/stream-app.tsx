@@ -1,28 +1,28 @@
 import { FC } from 'react';
-import { PaperLayout } from 'src/layouts/paper-layout';
+import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { Displays, MatchSocketEvent } from '@toa-lib/models';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import { useSocket } from 'src/api/use-socket';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 
 export const StreamApp: FC = () => {
-  const [socket] = useSocket();
+  const { worker } = useSocketWorker();
 
   const sendBlank = () =>
-    socket?.emit(MatchSocketEvent.DISPLAY, Displays.BLANK);
+    worker?.emit(MatchSocketEvent.DISPLAY, Displays.BLANK);
   const sendChroma = () =>
-    socket?.emit(MatchSocketEvent.DISPLAY, Displays.BLANK);
+    worker?.emit(MatchSocketEvent.DISPLAY, Displays.BLANK);
   const sendPreview = () =>
-    socket?.emit(MatchSocketEvent.DISPLAY, Displays.MATCH_PREVIEW);
+    worker?.emit(MatchSocketEvent.DISPLAY, Displays.MATCH_PREVIEW);
   const sendPlay = () =>
-    socket?.emit(MatchSocketEvent.DISPLAY, Displays.MATCH_START);
+    worker?.emit(MatchSocketEvent.DISPLAY, Displays.MATCH_START);
   const sendResults = () =>
-    socket?.emit(MatchSocketEvent.DISPLAY, Displays.MATCH_RESULTS);
+    worker?.emit(MatchSocketEvent.DISPLAY, Displays.MATCH_RESULTS);
   const sendRankingsRR = () =>
-    socket?.emit(MatchSocketEvent.DISPLAY, Displays.RANKINGS);
+    worker?.emit(MatchSocketEvent.DISPLAY, Displays.RANKINGS);
   const sendRankingsF = () =>
-    socket?.emit(MatchSocketEvent.DISPLAY, Displays.BLANK);
+    worker?.emit(MatchSocketEvent.DISPLAY, Displays.BLANK);
 
   return (
     <PaperLayout

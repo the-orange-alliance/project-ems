@@ -9,7 +9,7 @@ import {
   NumberAdjustment
 } from '@toa-lib/models';
 import { SetterOrUpdater, useRecoilState, useRecoilValue } from 'recoil';
-import { useSocket } from 'src/api/use-socket';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { NumberInput } from 'src/components/inputs/number-input';
 import { StateToggle } from 'src/components/inputs/state-toggle';
 import { matchOccurringAtom, matchStateAtom } from 'src/stores/recoil';
@@ -18,7 +18,7 @@ import { ConnectionChip } from 'src/components/util/connection-chip';
 import { MatchChip } from 'src/components/util/match-chip';
 
 const HeadRefereeExtra: React.FC = () => {
-  const [socket] = useSocket();
+  const { worker } = useSocketWorker();
   const matchState = useRecoilValue(matchStateAtom);
   const [match, setMatch]: [
     Match<FeedingTheFuture.MatchDetails> | null,
@@ -32,7 +32,7 @@ const HeadRefereeExtra: React.FC = () => {
     value: FeedingTheFuture.MatchDetails[K]
   ) => {
     const updatePacket: ItemUpdate = { key: String(detailsKey), value };
-    socket?.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, updatePacket);
+    worker?.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, updatePacket);
 
     // Reduce UI latency by updating our local match state in anticipation
     // of the update that the server wil send soon
@@ -54,7 +54,7 @@ const HeadRefereeExtra: React.FC = () => {
       key: String(detailsKey),
       adjustment
     };
-    socket?.emit(
+    worker?.emit(
       MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
       adjustmentPacket
     );

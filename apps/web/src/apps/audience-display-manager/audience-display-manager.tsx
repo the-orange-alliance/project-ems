@@ -19,12 +19,7 @@ import {
   TableRow,
   TextField
 } from '@mui/material';
-import {
-  requestAllClientsIdentification,
-  requestClientIdentification,
-  requestClientRefresh,
-  sendUpdateSocketClient
-} from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import {
   Cached,
   ChevronLeft,
@@ -45,6 +40,7 @@ export const AudienceDisplayManager: FC = () => {
   // const resetClients = useResetRecoilState(socketClientsSelector);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContext, setDialogContext] = useState<any>(null);
+  const { events } = useSocketWorker();
 
   // Add effect to invalidate the clients atom when the component is unmounted
   useEffect(() => {
@@ -70,7 +66,7 @@ export const AudienceDisplayManager: FC = () => {
   const saveUpdate = () => {
     if (!dialogContext) return;
     setDialogOpen(false);
-    sendUpdateSocketClient(dialogContext);
+    events.sendUpdateSocketClient(dialogContext);
     updateSocketClient(dialogContext.persistantClientId, dialogContext);
     const cpy = [...clients];
     const id = cpy.findIndex(
@@ -86,11 +82,11 @@ export const AudienceDisplayManager: FC = () => {
   };
 
   const requestClientToIdentify = (data: any) => {
-    requestClientIdentification(data);
+    events.requestClientIdentification(data);
   };
 
   const requestClientToRefresh = (data: any) => {
-    requestClientRefresh(data);
+    events.requestClientRefresh(data);
   };
 
   const deleteDevice = (id: string) => {
@@ -102,7 +98,7 @@ export const AudienceDisplayManager: FC = () => {
   };
 
   const idAll = () => {
-    requestAllClientsIdentification({ clients });
+    events.requestAllClientsIdentification({ clients });
   };
 
   return (
@@ -183,7 +179,7 @@ export const AudienceDisplayManager: FC = () => {
                 <TableCell>
                   <IconButton
                     onClick={(e) => {
-                      requestClientRefresh(client);
+                      events.requestClientRefresh(client);
                       e.stopPropagation();
                     }}
                   >
