@@ -33,7 +33,7 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
   const { data: teams } = useTeamsForEvent(eventSchedule.eventKey);
   const { data: ranks } = useRankingsForTournament(
     eventSchedule.eventKey,
-    't1' // hard-coded, stupid. use field in event schedule
+    't2' // hard-coded, stupid. use field in event schedule
   );
   const [allianceRows, setAllianceRows] = useState(0);
   const [pickedTeamKeys, setPickedTeamKeys] = useState<(number | null)[]>([]);
@@ -42,7 +42,6 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
     (v, i) => pickedTeamKeys.indexOf(v) !== i
   );
   const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     if (alliances) {
       setAllianceRows(alliances.length / ALLIANCE_SIZE);

@@ -491,7 +491,11 @@ export function calculatePlayoffsRankings(
         });
       }
 
-      if (!isEcoEquilibriumDetails(match.details)) continue;
+      if (
+        !isEcoEquilibriumDetails(match.details) ||
+        match.result === RESULT_NOT_PLAYED
+      )
+        continue;
 
       const ranking = {
         ...(rankingMap.get(participant.teamKey) as SeasonRanking)
