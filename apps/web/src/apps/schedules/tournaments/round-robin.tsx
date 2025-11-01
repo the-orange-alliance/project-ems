@@ -186,6 +186,8 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
                       onChange={(e) => {
                         const newNames = [...allianceNames];
                         newNames[i] = {
+                          long: newNames[i]?.long || `Alliance ${i + 1}`,
+                          short: newNames[i]?.short || `#${i + 1}`,
                           ...newNames[i],
                           long: e.target.value
                         };
@@ -201,6 +203,8 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
                       onChange={(e) => {
                         const newNames = [...allianceNames];
                         newNames[i] = {
+                          long: newNames[i]?.long || `Alliance ${i + 1}`,
+                          short: newNames[i]?.short || `#${i + 1}`,
                           ...newNames[i],
                           short: e.target.value
                         };
