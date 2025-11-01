@@ -96,7 +96,10 @@ const AllianceTeam: React.FC<AllianceTeamProps> = ({
   );
 };
 
-export const AllianceTeamStream: React.FC<AllianceTeamProps> = ({ team }) => {
+export const AllianceTeamStream: React.FC<AllianceTeamProps> = ({
+  team,
+  noRankChange
+}) => {
   const ranks: Ranking[] = useAtomValue(matchOccurringRanksAtom);
   const { currentRank, up, down } = calcRankChange(ranks, team);
 
@@ -120,15 +123,19 @@ export const AllianceTeamStream: React.FC<AllianceTeamProps> = ({ team }) => {
         >
           #{currentRank ? currentRank.rank : '-'}
         </Typography.Text>
-        {up ? (
-          <span style={{ color: '#16a34a', fontSize: '1.25rem' }}>▲</span>
-        ) : null}
-        {down ? (
-          <span style={{ color: '#dc2626', fontSize: '1.25rem' }}>▼</span>
-        ) : null}
-        {!up && !down ? (
-          <span style={{ color: '#9ca3af', fontSize: '1.25rem' }}>━</span>
-        ) : null}
+        {!noRankChange && (
+          <>
+            {up ? (
+              <span style={{ color: '#16a34a', fontSize: '1.25rem' }}>▲</span>
+            ) : null}
+            {down ? (
+              <span style={{ color: '#dc2626', fontSize: '1.25rem' }}>▼</span>
+            ) : null}
+            {!up && !down ? (
+              <span style={{ color: '#9ca3af', fontSize: '1.25rem' }}>━</span>
+            ) : null}
+          </>
+        )}
       </div>
 
       <CountryFlag size={'2.5rem'} cc={team.team?.countryCode ?? ''} />

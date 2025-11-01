@@ -7,7 +7,7 @@ import AllianceBox from './components/alliance-box.js';
 import L3Header from './components/l3-header.js';
 import { useAllianceMember } from 'src/api/use-alliance-data.js';
 
-export const MatchPreviewStream: FC<DisplayProps> = ({ match, ranks }) => {
+export const MatchPreviewStream: FC<DisplayProps> = ({ match }) => {
   const redTeams: MatchParticipant[] = [];
   const blueTeams: MatchParticipant[] = [];
 

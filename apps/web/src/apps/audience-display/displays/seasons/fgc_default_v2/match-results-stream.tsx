@@ -29,6 +29,8 @@ export const MatchResultsStream: FC<DisplayProps> = ({
     ? `Blue (${blueAllianceNum.allianceNameLong})`
     : 'Blue';
 
+    console.log(blueAllianceNum, redAllianceNum);
+
   return (
     <div
       style={{
@@ -64,11 +66,21 @@ export const MatchResultsStream: FC<DisplayProps> = ({
           gap: '1rem'
         }}
       >
-        <AllianceSheetStream allianceColor='red' match={match} teams={teams} />
+        <AllianceSheetStream
+          allianceColor='red'
+          match={match}
+          teams={teams}
+          isPlayoffs={!!redAllianceNum}
+        />
 
         <GlobalObjectivesStream match={match} />
 
-        <AllianceSheetStream allianceColor='blue' match={match} teams={teams} />
+        <AllianceSheetStream
+          allianceColor='blue'
+          match={match}
+          teams={teams}
+          isPlayoffs={!!blueAllianceNum}
+        />
       </div>
     </div>
   );

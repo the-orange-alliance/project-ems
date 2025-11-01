@@ -5,11 +5,13 @@ import AllianceTeams from './alliance-teams.js';
 import { Match, Team } from '@toa-lib/models';
 import { AllianceTeamStream } from './alliance-team.js';
 import AllianceBox from './alliance-box.js';
+import { useAllianceMember } from 'src/api/use-alliance-data.js';
 
 interface AllianceSheetProps {
   match: Match<any>;
   teams?: Team[];
   allianceColor: 'red' | 'blue';
+  isPlayoffs?: boolean;
 }
 
 const calcWin = (match: Match<any>, allianceColor: 'red' | 'blue') => {
@@ -37,6 +39,25 @@ const AllianceSheet: React.FC<AllianceSheetProps> = ({
   const win = calcWin(match, allianceColor);
   const allianceTeams = getAllianceTeams(match, allianceColor);
 
+  const redAllianceNum = useAllianceMember(
+    match?.eventKey || '',
+    match?.tournamentKey || '',
+    match?.participants?.filter((t) => t.station < 20)[0]?.teamKey || 0
+  );
+
+  const blueAllianceNum = useAllianceMember(
+    match?.eventKey || '',
+    match?.tournamentKey || '',
+    match?.participants?.filter((t) => t.station >= 20)[0]?.teamKey || 0
+  );
+
+  const redHeader = redAllianceNum
+    ? `Red (${redAllianceNum.allianceNameLong})`
+    : 'Red';
+  const blueHeader = blueAllianceNum
+    ? `Blue (${blueAllianceNum.allianceNameLong})`
+    : 'Blue';
+
   // Backfill team data just in case
   allianceTeams?.forEach((participant) => {
     if (!participant.team)
@@ -63,7 +84,7 @@ const AllianceSheet: React.FC<AllianceSheetProps> = ({
           textShadow: '0 0 15px #000'
         }}
       >
-        {allianceColor.toUpperCase()}
+        {allianceColor === 'red' ? redHeader : blueHeader}
       </Typography.Title>
 
       <AllianceScore
@@ -72,7 +93,11 @@ const AllianceSheet: React.FC<AllianceSheetProps> = ({
         isWinning={win}
       />
       <div style={{ marginTop: 24, width: '100%' }}>
-        <AllianceTeams teams={allianceTeams ?? []} large />
+        <AllianceTeams
+          teams={allianceTeams ?? []}
+          large
+          isPlayoffs={!!redAllianceNum}
+        />
       </div>
     </div>
   );
@@ -82,7 +107,8 @@ const AllianceSheet: React.FC<AllianceSheetProps> = ({
 export const AllianceSheetStream: React.FC<AllianceSheetProps> = ({
   match,
   teams,
-  allianceColor
+  allianceColor,
+  isPlayoffs
 }) => {
   const win = calcWin(match, allianceColor);
   const allianceTeams = getAllianceTeams(match, allianceColor);
@@ -110,7 +136,11 @@ export const AllianceSheetStream: React.FC<AllianceSheetProps> = ({
         }}
       >
         {allianceTeams?.map((team, index) => (
-          <AllianceTeamStream key={index} team={team} />
+          <AllianceTeamStream
+            key={index}
+            team={team}
+            noRankChange={isPlayoffs}
+          />
         ))}
       </Space>
     </AllianceBox>
