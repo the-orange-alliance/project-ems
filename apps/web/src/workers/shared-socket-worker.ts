@@ -3,14 +3,14 @@ import { createSocket, SocketOptions } from '@toa-lib/client';
 import { Socket } from 'socket.io-client';
 import * as Comlink from 'comlink';
 import { AnyCb } from './types.js';
-import { EventBus, eventBus } from './util/event-bus.js';
+import { eventBus } from './util/event-bus.js';
 
 interface SocketProperties {
   host: string;
   port: number;
 }
 
-export interface SocketService extends EventBus {
+export interface SocketService {
   initialize: (token: string, props: SocketProperties) => void;
   destroy: () => void;
   registerClient: () => void;
@@ -31,6 +31,7 @@ let socket: Socket | null = null;
 let connected = false;
 let ready = false;
 let clientCount = 0;
+let destroyTimer: number | null = null;
 
 // broadcast subscriber sets
 const stateListeners = {
@@ -57,9 +58,9 @@ function notifyReady(v: boolean) {
 }
 
 function fanoutEvent(event: string, data: any) {
-  socketService.lastEventPayload.set(event, data);
+  eventBus.lastEventPayload.set(event, data);
 
-  const listeners = socketService.eventListeners.get(event);
+  const listeners = eventBus.eventListeners.get(event);
   if (!listeners) return;
 
   for (const cb of listeners) {
@@ -117,11 +118,28 @@ export const socketService: SocketService = {
   },
   registerClient() {
     clientCount++;
+    // Cancel any pending shutdown when a new client registers
+    if (destroyTimer !== null) {
+      clearTimeout(destroyTimer);
+      destroyTimer = null;
+      console.log('[worker] cancelled pending shutdown');
+    }
   },
   unregisterClient() {
     clientCount = Math.max(0, clientCount - 1);
     if (clientCount === 0) {
-      socketService.destroy();
+      // In React 18 StrictMode dev, effects mount->unmount->mount.
+      // Defer actual teardown slightly to avoid a disconnect blip.
+      if (destroyTimer === null) {
+        destroyTimer = setTimeout(() => {
+          destroyTimer = null;
+          if (clientCount === 0) {
+            console.log('[worker] no clients; shutting down socket');
+            socketService.destroy();
+          }
+        }, 1500) as unknown as number;
+        console.log('[worker] scheduled shutdown in 1.5s');
+      }
     }
   },
   emit(key, data) {
@@ -148,7 +166,7 @@ export const socketService: SocketService = {
     return ready;
   },
   getLastEvent(key) {
-    return this.lastEventPayload.get(key);
+    return eventBus.lastEventPayload.get(key);
   },
 
   destroy() {
@@ -161,7 +179,7 @@ export const socketService: SocketService = {
     ready = false;
     notifyConnected(false);
     notifyReady(false);
-    this.lastEventPayload.clear();
+    eventBus.lastEventPayload.clear();
   },
   ...eventBus
 };
@@ -170,12 +188,9 @@ export const socketService: SocketService = {
 // @ts-ignore
 self.onconnect = (event: MessageEvent) => {
   const [port] = event.ports;
-  port.start();
+  // Expose first, then start to avoid race conditions in some browsers/dev tools
   Comlink.expose(socketService, port);
+  port.start();
 
-  port.postMessage({
-    type: 'state',
-    connected,
-    ready
-  });
+  console.log('[worker] onconnect ports:', event.ports.length);
 };

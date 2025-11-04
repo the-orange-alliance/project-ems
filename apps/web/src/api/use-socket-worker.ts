@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as Comlink from 'comlink';
-import { SocketService } from '@workers/shared-socket-worker.js';
-import workerUrl from '@workers/shared-socket-worker.js?sharedworker&url';
+import type { SocketService } from '@workers/shared-socket-worker.js';
+import SharedSocketWorker from '@workers/shared-socket-worker?sharedworker';
 import { SocketOptions } from '@toa-lib/client';
 import {
   FieldControlUpdatePacket,
@@ -16,28 +16,33 @@ export function useSocketWorker() {
   const [ready, setReady] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
+  const registeredRef = useRef(false);
   const socket = remoteRef.current;
 
   useEffect(() => {
     if (!workerRef.current) {
-      const worker = new SharedWorker(new URL(workerUrl, import.meta.url), {
-        type: 'module',
+      const worker = new SharedSocketWorker({
         name: '[EMS] Shared Socket Worker'
       });
+      worker.port.start();
       worker.onerror = (err) => {
         console.error('SharedWorker error:', err);
       };
       setInitialized(false);
       workerRef.current = worker;
       const remote = Comlink.wrap<SocketService>(worker.port);
-      worker.port.start();
       remoteRef.current = remote;
 
       const proxyConnected = Comlink.proxy((v: boolean) => setConnected(v));
       const proxyReady = Comlink.proxy((v: boolean) => setReady(v));
 
       const init = async () => {
-        await remoteRef.current?.registerClient();
+        // Register this client immediately to cancel any pending shutdowns
+        // in the worker (important for React 18 StrictMode double-mount).
+        void remoteRef.current?.registerClient().then(() => {
+          registeredRef.current = true;
+          console.debug('[useSocketWorker] registered client');
+        });
         await remoteRef.current?.subscribeConnected(proxyConnected);
         await remoteRef.current?.subscribeReady(proxyReady);
         await remoteRef.current?.initialize('', {
@@ -48,7 +53,6 @@ export function useSocketWorker() {
           remoteRef.current?.getConnected(),
           remoteRef.current?.getReady()
         ]);
-        console.log('[useSocketWorker] initialized:', c && r);
         setConnected(c ?? false);
         setReady(r ?? false);
         setInitialized(true);
@@ -62,10 +66,12 @@ export function useSocketWorker() {
           void remoteRef.current?.unsubscribeReady(proxyReady);
         } catch {
           // ignore race conditions during tab teardown
-        } finally {
-          worker.port.close();
         }
-        remoteRef.current?.unregisterClient();
+        if (registeredRef.current) {
+          console.debug('[useSocketWorker] unregistering client');
+          remoteRef.current?.unregisterClient();
+          registeredRef.current = false;
+        }
       };
     }
   }, []);
