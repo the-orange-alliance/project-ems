@@ -491,7 +491,11 @@ export function calculatePlayoffsRankings(
         });
       }
 
-      if (!isEcoEquilibriumDetails(match.details)) continue;
+      if (
+        !isEcoEquilibriumDetails(match.details) ||
+        match.result === RESULT_NOT_PLAYED
+      )
+        continue;
 
       const ranking = {
         ...(rankingMap.get(participant.teamKey) as SeasonRanking)
@@ -660,11 +664,10 @@ export function calculateScore(
     globalPoints * protectionMultiplierBlue + coopertitionPoints;
 
   // Penalty
-  const redPenaltyMinor = match.redMinPen * (ScoreTable.MinorFoul * redScore);
-  const redPenaltyMajor = match.redMajPen * (ScoreTable.MajorFoul * redScore);
-  const bluePenaltyMinor =
-    match.blueMinPen * (ScoreTable.MinorFoul * blueScore);
-  const bluePenaltyMajor = match.redMajPen * (ScoreTable.MajorFoul * blueScore);
+  const redPenaltyMinor = match.redMinPen * ScoreTable.MinorFoul * redScore;
+  const redPenaltyMajor = match.redMajPen * ScoreTable.MajorFoul * redScore;
+  const bluePenaltyMinor = match.blueMinPen * ScoreTable.MinorFoul * blueScore;
+  const bluePenaltyMajor = match.blueMajPen * ScoreTable.MajorFoul * blueScore;
 
   // Final score is
   return [

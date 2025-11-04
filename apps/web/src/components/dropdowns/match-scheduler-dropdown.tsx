@@ -1,11 +1,5 @@
 import { FC } from 'react';
-import {
-  Select,
-  MenuItem,
-  SelectChangeEvent,
-  FormControl,
-  InputLabel
-} from '@mui/material';
+import { Select } from 'antd';
 
 interface Props {
   value: string | undefined;
@@ -18,21 +12,19 @@ export const MatchSchedulerDropdown: FC<Props> = ({
   disabled,
   onChange
 }) => {
-  const handleChange = (event: SelectChangeEvent<string>) =>
-    onChange(event.target.value);
+  const options = [
+    { value: 'fgc_2023', label: 'Round Robin' },
+    { value: 'fgc_2023_2', label: 'Round Robin Finals' }
+  ];
 
   return (
-    <FormControl disabled={disabled} sx={{ minWidth: 200 }}>
-      <InputLabel>Match Scheduler</InputLabel>
-      <Select
-        value={value ?? 'standard'}
-        onChange={handleChange}
-        variant='standard'
-      >
-        <MenuItem value='fgc_2023'>FGC 2023 RR #1</MenuItem>
-        <MenuItem value='fgc_2023_2'>FGC 2023 RR #2</MenuItem>
-        <MenuItem value='standard'>Round Robin</MenuItem>
-      </Select>
-    </FormControl>
+    <Select
+      value={value ?? 'standard'}
+      onChange={onChange}
+      disabled={disabled}
+      style={{ minWidth: 200 }}
+      placeholder='Match Scheduler'
+      options={options}
+    />
   );
 };

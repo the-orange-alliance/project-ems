@@ -28,7 +28,7 @@ export const FixedMatches: FC<Props> = ({
     eventSchedule?.eventKey,
     eventSchedule?.tournamentKey
   );
-  const [gen, setGen] = useState('standard');
+  const [gen, setGen] = useState('fgc_2023');
   const createMatches = () => {
     if (!scheduleItems || !alliances) return;
     const map =
@@ -39,7 +39,7 @@ export const FixedMatches: FC<Props> = ({
     onCreateMatches(assignMatchTimes(matches, scheduleItems));
   };
   return (
-    <Row gutter={16}>
+    <Row gutter={16} style={{ marginBottom: 16 }}>
       <Col xs={24} sm={12} md={20}>
         <MatchSchedulerDropdown onChange={setGen} value={gen} />
       </Col>
