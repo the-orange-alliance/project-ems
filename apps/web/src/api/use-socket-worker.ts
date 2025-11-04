@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as Comlink from 'comlink';
 import { SocketService } from '@workers/shared-socket-worker.js';
-import workerUrl from '@workers/shared-socket-worker.js?worker&url';
+import workerUrl from '@workers/shared-socket-worker.js?sharedworker&url';
 import { SocketOptions } from '@toa-lib/client';
 import {
   FieldControlUpdatePacket,

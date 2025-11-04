@@ -3,11 +3,12 @@ import {
   FRC_MATCH_CONFIG,
   MatchKey,
   MatchSocketEvent,
+  TimerEventPayload,
   getSeasonKeyFromEventKey
 } from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 import { Duration } from 'luxon';
-import { FC, useEffect, useMemo, useRef } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useMatchTimerWorker } from 'src/api/use-timer-worker.js';
 import {
@@ -35,80 +36,59 @@ interface Props {
 }
 
 export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
-  const {
-    timeLeft,
-    mode: timerMode,
-    inProgress,
-    setConfig,
-    start,
-    abort,
-    reset
-  } = useMatchTimerWorker();
+  const { timeLeft, start, abort, reset } = useMatchTimerWorker();
   const currentMatch = useAtomValue(matchAtom);
   const { connected, worker } = useSocketWorker();
 
-  const prevInProgressRef = useRef(inProgress);
-  const prevTimerModeRef = useRef(timerMode);
-
   const onPrestart = (e: MatchKey) => {
     reset();
-    const config = determineTimerConfig(e.eventKey);
-    setConfig(config);
+    determineTimerConfig(e.eventKey);
   };
 
   const onStart = () => {
-    if (currentMatch) {
-      const config = determineTimerConfig(currentMatch.eventKey);
-      setConfig(config);
-    }
+    if (audio) startAudio.play();
+    if (currentMatch) determineTimerConfig(currentMatch.eventKey);
     start();
   };
-
+  const onTransition = (payload: TimerEventPayload) => {
+    if (audio && payload.allowAudio) transitionAudio.play();
+  };
+  const onTele = (payload: TimerEventPayload) => {
+    if (audio && payload.allowAudio) teleAudio.play();
+  };
   const onAbort = () => {
     if (audio) abortAudio.play();
     abort();
+  };
+  const onEnd = (payload: TimerEventPayload) => {
+    if (audio && payload.allowAudio) endAudio.play();
+    stop();
+  };
+  const onEndgame = (payload: TimerEventPayload) => {
+    if (audio && payload.allowAudio) endgameAudio.play();
   };
 
   const prestartProxy = useMemo(() => Comlink.proxy(onPrestart), [onPrestart]);
   const startProxy = useMemo(() => Comlink.proxy(onStart), [onStart]);
   const abortProxy = useMemo(() => Comlink.proxy(onAbort), [onAbort]);
-
-  useEffect(() => {
-    if (audio) {
-      const prevInProgress = prevInProgressRef.current;
-      const prevTimerMode = prevTimerModeRef.current;
-
-      if (inProgress && !prevInProgress) {
-        startAudio.play();
-      } else if (!inProgress && prevInProgress) {
-        // This could be abort or end
-      }
-
-      if (timerMode !== prevTimerMode) {
-        if (timerMode === 1) {
-          // Assuming 1 is transition
-          transitionAudio.play();
-        } else if (timerMode === 2) {
-          // Assuming 2 is teleop
-          teleAudio.play();
-        } else if (timerMode === 3) {
-          // Assuming 3 is endgame
-          endgameAudio.play();
-        } else if (timerMode === 0 && prevTimerMode !== 0) {
-          endAudio.play();
-        }
-      }
-
-      prevInProgressRef.current = inProgress;
-      prevTimerModeRef.current = timerMode;
-    }
-  }, [inProgress, timerMode, audio]);
+  const transitionProxy = useMemo(
+    () => Comlink.proxy(onTransition),
+    [onTransition]
+  );
+  const teleProxy = useMemo(() => Comlink.proxy(onTele), [onTele]);
+  const endProxy = useMemo(() => Comlink.proxy(onEnd), [onEnd]);
+  const endgameProxy = useMemo(() => Comlink.proxy(onEndgame), [onEndgame]);
 
   useEffect(() => {
     if (connected) {
       worker?.on(MatchSocketEvent.PRESTART, prestartProxy);
       worker?.on(MatchSocketEvent.START, startProxy);
       worker?.on(MatchSocketEvent.ABORT, abortProxy);
+
+      worker?.on('timer:transition', transitionProxy);
+      worker?.on('timer:tele', teleProxy);
+      worker?.on('timer:endgame', endProxy);
+      worker?.on('timer:end', endgameProxy);
     }
 
     return () => {
@@ -116,6 +96,11 @@ export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
         worker?.off(MatchSocketEvent.PRESTART, prestartProxy);
         worker?.off(MatchSocketEvent.START, startProxy);
         worker?.off(MatchSocketEvent.ABORT, abortProxy);
+
+        worker?.off('timer:transition', transitionProxy);
+        worker?.off('timer:tele', teleProxy);
+        worker?.off('timer:endgame', endgameProxy);
+        worker?.off('timer:end', endProxy);
       }
     };
   }, [connected, worker]);

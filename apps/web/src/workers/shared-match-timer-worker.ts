@@ -1,6 +1,21 @@
 /// <reference lib="webworker" />
 import * as Comlink from 'comlink';
 import { MatchTimer, MatchConfiguration } from '@toa-lib/models';
+import { EventBus, eventBus } from './util/event-bus.js';
+
+export interface MatchTimerWorkerAPI extends EventBus {
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  reset: () => void;
+  inProgress: () => boolean;
+  setConfig: (cfg: MatchConfiguration) => void;
+  getState: () => {
+    timeLeft: number;
+    mode: number;
+    inProgress: boolean;
+  };
+}
 
 const ports = new Set<MessagePort>();
 const timer = new MatchTimer();
@@ -106,7 +121,8 @@ const api = {
     timeLeft: timer.timeLeft,
     mode: timer.mode,
     inProgress: timer.inProgress()
-  })
+  }),
+  ...eventBus
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

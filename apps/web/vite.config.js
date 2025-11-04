@@ -4,7 +4,20 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'reload-shared-worker',
+      handleHotUpdate({ file, server }) {
+        if (
+          file.includes('shared-match-timer-worker') ||
+          file.includes('shared-socket-worker')
+        ) {
+          server.ws.send({ type: 'full-reload' });
+        }
+      }
+    }
+  ],
   root: './',
   publicDir: './public',
   resolve: {
@@ -25,7 +38,11 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@toa-lib/client', '@toa-lib/models'],
-    exclude: ['@react-refresh'], // stop leaking refresh runtime
+    exclude: [
+      '@react-refresh',
+      '@workers/shared-socket-worker',
+      '@workers/shared-match-timer-worker'
+    ], // stop leaking refresh runtime
     force: true /* Use this option when @toa-lib needs to be rebuilt for some weird reason. */
   },
   build: {

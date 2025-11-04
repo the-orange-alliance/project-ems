@@ -1,23 +1,20 @@
+/// <reference lib="webworker" />
 import { createSocket, SocketOptions } from '@toa-lib/client';
 import { Socket } from 'socket.io-client';
 import * as Comlink from 'comlink';
-
-type AnyCb<T = any> = (v: T) => void;
+import { AnyCb } from './types.js';
+import { EventBus, eventBus } from './util/event-bus.js';
 
 interface SocketProperties {
   host: string;
   port: number;
 }
 
-export interface SocketService {
+export interface SocketService extends EventBus {
   initialize: (token: string, props: SocketProperties) => void;
   destroy: () => void;
   registerClient: () => void;
   unregisterClient: () => void;
-
-  once: (key: string, callback: (data: any) => void) => void;
-  on: (key: string, callback: (data: any) => void) => void;
-  off: (key: string, callback: (data: any) => void) => void;
 
   emit: (key: string, data?: any) => void;
 
@@ -41,9 +38,6 @@ const stateListeners = {
   ready: new Set<AnyCb<boolean>>()
 };
 
-const eventListeners = new Map<string, Set<AnyCb<any>>>();
-const lastEventPayload = new Map<string, any>();
-
 function safeCall(event: string, cb: AnyCb<any>, data: any) {
   try {
     cb(data);
@@ -63,9 +57,9 @@ function notifyReady(v: boolean) {
 }
 
 function fanoutEvent(event: string, data: any) {
-  lastEventPayload.set(event, data);
+  socketService.lastEventPayload.set(event, data);
 
-  const listeners = eventListeners.get(event);
+  const listeners = socketService.eventListeners.get(event);
   if (!listeners) return;
 
   for (const cb of listeners) {
@@ -130,26 +124,6 @@ export const socketService: SocketService = {
       socketService.destroy();
     }
   },
-  on(key, callback) {
-    if (!eventListeners.has(key)) {
-      eventListeners.set(key, new Set());
-    }
-    eventListeners.get(key)!.add(callback);
-
-    if (lastEventPayload.has(key)) {
-      callback(lastEventPayload.get(key));
-    }
-  },
-  once(key, callback) {
-    const wrapper = (data: any) => {
-      callback(data);
-      eventListeners.get(key)?.delete(wrapper);
-    };
-    socketService.on(key, wrapper);
-  },
-  off(key, callback) {
-    eventListeners.get(key)?.delete(callback);
-  },
   emit(key, data) {
     socket?.emit(key, data);
   },
@@ -174,7 +148,7 @@ export const socketService: SocketService = {
     return ready;
   },
   getLastEvent(key) {
-    return lastEventPayload.get(key);
+    return this.lastEventPayload.get(key);
   },
 
   destroy() {
@@ -187,8 +161,9 @@ export const socketService: SocketService = {
     ready = false;
     notifyConnected(false);
     notifyReady(false);
-    lastEventPayload.clear();
-  }
+    this.lastEventPayload.clear();
+  },
+  ...eventBus
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

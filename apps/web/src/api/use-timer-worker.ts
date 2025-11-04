@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as Comlink from 'comlink';
-import workerUrl from '@workers/shared-match-timer-worker.js?worker&url';
+import workerUrl from '@workers/shared-match-timer-worker.js?sharedworker&url';
 
 export function useMatchTimerWorker() {
   const workerRef = useRef<SharedWorker | null>(null);
@@ -27,13 +27,13 @@ export function useMatchTimerWorker() {
       setMode(ev.data.mode);
       setInProgress(ev.data.inProgress);
     };
-
     return () => {
       worker.port.postMessage('disconnect');
       worker.port.close();
     };
   }, []);
   return {
+    worker: remoteRef.current,
     timeLeft,
     mode,
     inProgress,
