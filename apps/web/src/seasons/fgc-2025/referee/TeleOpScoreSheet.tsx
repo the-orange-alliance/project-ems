@@ -16,9 +16,11 @@ import { NumberInput } from 'src/components/inputs/number-input.js';
 import { StateToggle } from 'src/components/inputs/state-toggle.js';
 import { matchAtom } from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { ForceConfirm } from './confirm-force-dialog.js';
 import { useModal } from '@ebay/nice-modal-react';
+import * as Comlink from 'comlink';
+
 interface Props {
   alliance: Alliance;
   participants: MatchParticipant[] | undefined;
@@ -44,7 +46,7 @@ const TeleScoreSheet: FC<Props> = ({
   const identifiers = useTeamIdentifiers();
   const matchState = useAtomValue(matchStateAtom);
   const postMatch = matchState > MatchState.MATCH_IN_PROGRESS;
-  const [socket] = useSocket();
+  const { worker } = useSocketWorker();
   const [ecosystemState, setEcosystemState] = useState<number>(0);
   const forceModal = useModal(ForceConfirm);
 
@@ -59,15 +61,12 @@ const TeleScoreSheet: FC<Props> = ({
         setEcosystemState(s.position);
       }
     };
-
-    socket?.on(
-      EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
-      updateEcosystemState
-    );
+    const ecosystemProxy = Comlink.proxy(updateEcosystemState);
+    worker?.on(EcoEquilibriumFCS.SocketEvents.EcosystemUpdate, ecosystemProxy);
     return () => {
-      socket?.off(
+      worker?.off(
         EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
-        updateEcosystemState
+        ecosystemProxy
       );
     };
   }, []);
@@ -76,7 +75,7 @@ const TeleScoreSheet: FC<Props> = ({
 
   const forceEcosystem = async (newState: number) => {
     if (await forceModal.show({ level: (newState + 1).toString() })) {
-      socket?.emit(EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate, {
+      worker?.emit(EcoEquilibriumFCS.SocketEvents.ForceEcosystemUpdate, {
         ecosystem:
           alliance === 'red'
             ? EcoEquilibriumFCS.Ecosystem.RedSide

@@ -11,7 +11,7 @@ import {
 import { TeamRow } from './components/team-row';
 import { PrestartStatus as PrestartStatusIcon } from './components/prestart-status';
 import { ConnectionChip } from 'src/components/util/connection-chip';
-import { useSocket } from 'src/api/use-socket';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 
 export const FrcFmsFieldMonitorApp: FC = () => {
   const [monitor, setMonitor] = useState<DriverstationMonitor>({
@@ -23,22 +23,22 @@ export const FrcFmsFieldMonitorApp: FC = () => {
       state: PrestartState.NotReady
     }
   });
-  const [socket, connected] = useSocket();
+  const { worker, connected } = useSocketWorker();
 
   useEffect(() => {
     return () => {
-      socket?.off('frc-fms:ds-update');
-      socket?.off('frc-fms:prestart-status');
+      worker?.off('frc-fms:ds-update');
+      worker?.off('frc-fms:prestart-status');
     };
   }, []);
 
   useEffect(() => {
     if (connected) {
-      socket?.off('frc-fms:ds-update');
-      socket?.on('frc-fms:ds-update', setMonitor);
+      worker?.off('frc-fms:ds-update');
+      worker?.on('frc-fms:ds-update', setMonitor);
 
-      socket?.off('frc-fms:prestart-status');
-      socket?.on('frc-fms:prestart-status', onPrestartStatus);
+      worker?.off('frc-fms:prestart-status');
+      worker?.on('frc-fms:prestart-status', onPrestartStatus);
     }
   }, [connected]);
 

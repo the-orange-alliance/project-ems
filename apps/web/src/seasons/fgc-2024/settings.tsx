@@ -29,13 +29,13 @@ import {
   redWledWebSocketAddressAtom
 } from './stores/settings-store';
 import { NumberSetting } from 'src/apps/settings-app/components/number-setting';
-import { useSocket } from 'src/api/use-socket';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { FeedingTheFutureFCS } from '@toa-lib/models';
 import { TextSetting } from 'src/apps/settings-app/components/text-setting';
 import { ColorSetting } from 'src/apps/settings-app/components/color-setting';
 
 export const Settings: FC = () => {
-  const [socket] = useSocket();
+  const { worker } = useSocketWorker();
   const [goalLedLength, setGoalLedLength] = useRecoilState(goalLedLengthAtom);
   const [rampLedLength, setRampLedLength] = useRecoilState(rampLedLengthAtom);
   const [allClearColor, setAllClearColor] = useRecoilState(allClearColorAtom);
@@ -96,7 +96,7 @@ export const Settings: FC = () => {
     useRecoilValue(fieldOptionsSelector);
 
   useEffect(() => {
-    socket?.emit('fcs:settings', fieldOptions);
+    worker?.emit('fcs:settings', fieldOptions);
   }, [fieldOptions]);
 
   return (

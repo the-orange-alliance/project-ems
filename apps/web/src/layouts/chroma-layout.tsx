@@ -2,7 +2,7 @@ import { FC, ReactNode } from 'react';
 import { Typography } from 'antd';
 import { useAtomValue } from 'jotai';
 import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 
 interface Props {
   children?: ReactNode;
@@ -10,7 +10,7 @@ interface Props {
 
 export const ChromaLayout: FC<Props> = ({ children }) => {
   const chromaKey = useAtomValue(displayChromaKeyAtom);
-  const [, connected] = useSocket();
+  const { connected } = useSocketWorker();
   return (
     <div>
       {!connected && (

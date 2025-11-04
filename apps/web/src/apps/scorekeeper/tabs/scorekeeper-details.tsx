@@ -2,7 +2,7 @@ import { ItemUpdate, MatchSocketEvent } from '@toa-lib/models';
 import { Row, Col, Divider } from 'antd';
 import { useAtomValue } from 'jotai';
 import { FC, useCallback } from 'react';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 import { matchAtom } from 'src/stores/state/event.js';
 import { useMatchControl } from '../hooks/use-match-control.js';
@@ -12,7 +12,7 @@ export const ScorekeeperDetails: FC = () => {
   const match = useAtomValue(matchAtom);
   const seasonComponents = useSeasonComponents();
   const { canEditDetails } = useMatchControl();
-  const [socket] = useSocket();
+  const { worker } = useSocketWorker();
 
   const handleMatchDetailsUpdate = useAtomCallback(
     useCallback(
@@ -24,7 +24,7 @@ export const ScorekeeperDetails: FC = () => {
           ? MatchSocketEvent.MATCH_UPDATE_ITEM
           : MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM;
 
-        socket?.emit(event, updatePacket);
+        void worker?.emit(event, updatePacket);
         if (match?.details) {
           if (isMatchLevel) {
             set(matchAtom, { ...match, [detailsKey]: value });
@@ -36,7 +36,7 @@ export const ScorekeeperDetails: FC = () => {
           }
         }
       },
-      [match, socket]
+      [match, worker]
     )
   );
 

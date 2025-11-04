@@ -5,7 +5,7 @@ import {
   MatchParticipant,
   MatchSocketEvent
 } from '@toa-lib/models';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier.js';
 import { matchAtom } from 'src/stores/state/event.js';
 import { useAtom } from 'jotai';
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const TeamSheet: FC<Props> = ({ station }) => {
-  const [socket] = useSocket();
+  const { worker } = useSocketWorker();
   const [match, setMatch] = useAtom(matchAtom);
   const identifiers = useTeamIdentifiers();
   const participant = match?.participants?.find((p) => p.station === station);
@@ -42,7 +42,7 @@ const TeamSheet: FC<Props> = ({ station }) => {
         teamKey: participant.teamKey,
         cardStatus
       };
-      socket?.emit(MatchSocketEvent.UPDATE_CARD_STATUS, updateCardPacket);
+      worker?.emit(MatchSocketEvent.UPDATE_CARD_STATUS, updateCardPacket);
     }
   };
 
