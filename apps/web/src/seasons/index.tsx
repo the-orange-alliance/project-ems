@@ -1,7 +1,6 @@
 import {
   Alliance,
   EcoEquilibrium,
-  FeedingTheFuture,
   FGC25FCS,
   Match,
   MatchDetailBase,
@@ -9,15 +8,12 @@ import {
   Team
 } from '@toa-lib/models';
 import { ChangeEvent, FC } from 'react';
-import { fgc2024Components } from './fgc-2024/index.js';
 import { fgc2025Components } from './fgc-2025/index.js';
 
-const { FeedingTheFutureSeason } = FeedingTheFuture;
 const { EcoEquilibriumSeason } = EcoEquilibrium;
 
 // Add season components map here to be used in the function for later.
 const seasonComponents = new Map<string, SeasonComponents<any, any>>();
-seasonComponents.set(FeedingTheFutureSeason.key, fgc2024Components);
 seasonComponents.set(EcoEquilibriumSeason.key, fgc2025Components);
 
 /**

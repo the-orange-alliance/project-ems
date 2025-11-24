@@ -7,7 +7,7 @@ import {
   tournamentKeyAtom
 } from 'src/stores/state/event.js';
 
-export const useSyncUrlToRecoil = () => {
+export const useSyncUrlToState = () => {
   const { eventKey, teamKey, tournamentKey } = useParams();
   const setEventKey = useSetAtom(eventKeyAtom);
   const setTeamKey = useSetAtom(teamKeyAtom);
