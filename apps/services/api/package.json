@@ -46,7 +46,7 @@
     "fastify": "^5.5.0",
     "fastify-type-provider-zod": "^4.0.2",
     "jsonwebtoken": "^9.0.2",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "node-fetch": "^3.3.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
