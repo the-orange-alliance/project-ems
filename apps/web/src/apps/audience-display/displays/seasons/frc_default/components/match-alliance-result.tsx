@@ -7,9 +7,11 @@ import {
 } from '@toa-lib/models';
 import { FC, useMemo } from 'react';
 import { MatchBillboard } from './match-billboard';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
+import {
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+  MinusOutlined
+} from '@ant-design/icons';
 
 const Container = styled.div((props: { alliance: Alliance }) => ({
   width: '100%',
@@ -89,11 +91,11 @@ const TeamRank: FC<{ rank: number; rankChange: number }> = ({
 }) => {
   const rankIcon = useMemo(() => {
     if (rankChange === 0) {
-      return <HorizontalRuleIcon fontSize='inherit' />;
+      return <MinusOutlined style={{ fontSize: 'inherit' }} />;
     } else if (rankChange > 0) {
-      return <ArrowUpwardIcon fontSize='inherit' />;
+      return <ArrowUpOutlined style={{ fontSize: 'inherit' }} />;
     } else if (rankChange < 0) {
-      return <ArrowDownwardIcon fontSize='inherit' />;
+      return <ArrowDownOutlined style={{ fontSize: 'inherit' }} />;
     }
   }, [rankChange]);
   return (

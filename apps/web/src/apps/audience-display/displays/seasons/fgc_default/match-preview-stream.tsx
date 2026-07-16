@@ -3,7 +3,6 @@ import { DisplayProps } from '../../displays';
 import styled from '@emotion/styled';
 import { AlliancePreview } from './components/alliance-preview';
 import MatchTitle from './components/match-title';
-import { Stack } from '@mui/material';
 
 const TitleContainer = styled.div`
   margin-bottom: 1vh;
@@ -33,11 +32,13 @@ export const MatchPreviewStream: FC<DisplayProps> = ({ match, ranks }) => {
       <TitleContainer>
         <MatchTitle match={match} branding />
       </TitleContainer>
-      <Stack
-        direction='row'
-        sx={{ height: numParticipants > 6 ? '25vh' : '18vh' }}
-        spacing={5}
-        useFlexGap
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          height: numParticipants > 6 ? '25vh' : '18vh',
+          gap: 40
+        }}
       >
         <AlliancePreview
           alliance='red'
@@ -51,7 +52,7 @@ export const MatchPreviewStream: FC<DisplayProps> = ({ match, ranks }) => {
           ranks={ranks}
           small
         />
-      </Stack>
+      </div>
     </Container>
   );
 };

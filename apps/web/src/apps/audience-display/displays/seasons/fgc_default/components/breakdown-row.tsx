@@ -1,6 +1,6 @@
 import { Match } from '@toa-lib/models';
 import { ResultsBreakdown } from '../../../displays';
-import { Grid } from '@mui/material';
+import { Row, Col } from 'antd';
 import styled from '@emotion/styled';
 
 interface BreakdownRowProps {
@@ -9,7 +9,7 @@ interface BreakdownRowProps {
   alliance: 'red' | 'blue';
 }
 
-const RowContainer = styled(Grid)((props: { color: string }) => ({
+const RowContainer = styled(Row)((props: { color: string }) => ({
   height: '100%',
   fontSize: '3vh',
   fontWeight: '600',
@@ -17,22 +17,17 @@ const RowContainer = styled(Grid)((props: { color: string }) => ({
   color: props.color
 }));
 
-const RowItem = styled(Grid)(() => ({
+const RowItem = styled(Col)(() => ({
   display: 'flex',
   alignItems: 'center'
 }));
 
 const BreakdownRow = ({ breakdown: b, match, alliance }: BreakdownRowProps) => {
   return (
-    <RowContainer
-      container
-      direction='row'
-      sx={{ height: '100%' }}
-      color={b.color}
-    >
+    <RowContainer style={{ height: '100%' }} color={b.color}>
       <RowItem
-        size={1.5}
-        sx={{
+        span={3}
+        style={{
           textAlign: 'center',
           justifyContent: 'center'
         }}
@@ -40,8 +35,8 @@ const BreakdownRow = ({ breakdown: b, match, alliance }: BreakdownRowProps) => {
         {b.icon}
       </RowItem>
       <RowItem
-        size={7.5}
-        sx={{
+        span={15}
+        style={{
           borderRight: '.2em solid #00000060',
           textTransform: 'uppercase'
         }}
@@ -49,8 +44,8 @@ const BreakdownRow = ({ breakdown: b, match, alliance }: BreakdownRowProps) => {
         {b.title}
       </RowItem>
       <RowItem
-        size={3}
-        sx={{ textAlign: 'center', justifyContent: 'center' }}
+        span={6}
+        style={{ textAlign: 'center', justifyContent: 'center' }}
       >
         {b.resultCalc(match, alliance)}
       </RowItem>

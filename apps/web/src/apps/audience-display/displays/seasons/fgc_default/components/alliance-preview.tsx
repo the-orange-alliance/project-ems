@@ -10,7 +10,7 @@ import {
   Team
 } from '@toa-lib/models';
 import { CountryFlag } from './country-flag.js';
-import { Typography } from '@mui/material';
+import { Typography } from 'antd';
 import { useAllianceMember } from 'src/api/use-alliance-data.js';
 
 const Container = styled.div`
@@ -105,10 +105,10 @@ export const AlliancePreview: FC<Props> = ({
       <Banner src={alliance === 'red' ? RED_BANNER : BLUE_BANNER} />
       {firstTeamAlliance && (
         <AllianceText small={small}>
-          <Typography variant={'h5'} sx={{ fontWeight: 'bold' }}>
+          <Typography.Title level={5} style={{ fontWeight: 'bold', margin: 0 }}>
             {/* \u00A0 is a non-breaking space. since the width is 0, we need non breaking spaces otherwise every space will put things onto new lines */}
             {firstTeamAlliance.allianceNameLong.replaceAll(' ', '\u00A0')}
-          </Typography>
+          </Typography.Title>
         </AllianceText>
       )}
       <AllianceContainer size={allianceParticipants.length}>

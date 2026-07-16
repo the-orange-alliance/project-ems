@@ -1,20 +1,11 @@
-import { Lock } from '@mui/icons-material';
+import { LockOutlined } from '@ant-design/icons';
 import { ResultsBreakdown } from '../../displays.js';
 import { EcoEquilibrium } from '@toa-lib/models';
-import styled from '@emotion/styled';
-import { Icon } from '@mui/material';
-
-const CustomIcon = styled(Icon)(() => {
-  return {
-    display: 'inline-flex',
-    fontSize: 'inherit'
-  };
-});
 
 export const RegionalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>[] =
   [
     {
-      icon: <Lock fontSize='inherit' />,
+      icon: <LockOutlined style={{ fontSize: 'inherit' }} />,
       title: 'Protection Multiplier',
       color: '#000000',
       resultCalc: (match, alliance) => {
@@ -29,7 +20,7 @@ export const RegionalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetail
 export const GlobalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>[] =
   [
     {
-      icon: <Lock fontSize='inherit' />,
+      icon: <LockOutlined style={{ fontSize: 'inherit' }} />,
       title: 'Barrier Points',
       color: '#000000',
       resultCalc: (match, alliance) => {
@@ -38,7 +29,7 @@ export const GlobalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>
       }
     },
     {
-      icon: <Lock fontSize='inherit' />,
+      icon: <LockOutlined style={{ fontSize: 'inherit' }} />,
       title: 'Biodiversity Points',
       color: '#000000',
       resultCalc: (match, alliance) => {
@@ -47,7 +38,7 @@ export const GlobalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>
       }
     },
     {
-      icon: <Lock fontSize='inherit' />,
+      icon: <LockOutlined style={{ fontSize: 'inherit' }} />,
       title: 'Distribution Factor',
       color: '#000000',
       resultCalc: (match, alliance) => {
@@ -64,7 +55,7 @@ export const GlobalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>
       }
     },
     {
-      icon: <Lock fontSize='inherit' />,
+      icon: <LockOutlined style={{ fontSize: 'inherit' }} />,
       title: 'Coopertition Bonus',
       color: '#000000',
       resultCalc: (match, alliance) => {

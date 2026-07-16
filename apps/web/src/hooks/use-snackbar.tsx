@@ -1,14 +1,7 @@
 import { FC } from 'react';
-import { Snackbar, Button } from '@mui/material';
+import { notification, Button } from 'antd';
 import { useModal } from '@ebay/nice-modal-react';
 import { ErrorDialog } from 'src/components/dialogs/error-dialog.js';
-import { useAtom } from 'jotai';
-import {
-  isSnackbarOpenAtom,
-  snackbarErrorMessageAtom,
-  snackbarMessageAtom,
-  isSnackbarDetailsShownAtom
-} from 'src/stores/state/index.js';
 
 /**
  * The goal is to have the following
@@ -25,36 +18,23 @@ const ModalButton: FC<{ message: string }> = ({ message }) => {
   const errorDialog = useModal(ErrorDialog);
   const handleClick = () => errorDialog.show({ message });
   return (
-    <Button color='info' onClick={handleClick}>
+    <Button type='link' size='small' onClick={handleClick}>
       Show
     </Button>
   );
 };
 
 export const useSnackbar: SnackbarHook = () => {
-  const [open, setOpen] = useAtom(isSnackbarOpenAtom);
-  const [message, setMessage] = useAtom(snackbarMessageAtom);
-  const [useShow, setUseShow] = useAtom(isSnackbarDetailsShownAtom);
-  const [error, setError] = useAtom(snackbarErrorMessageAtom);
-
   const showSnackbar = (msg: string, detail?: string) => {
-    setMessage(msg);
-    setUseShow(!!detail);
-    setOpen(true);
-    setError(detail ?? '');
+    notification.open({
+      message: msg,
+      duration: 5,
+      btn: detail ? <ModalButton message={detail} /> : undefined
+    });
   };
 
-  const handleClose = () => setOpen(false);
-
-  const AppSnackbar = () => (
-    <Snackbar
-      open={open}
-      autoHideDuration={5000}
-      onClose={handleClose}
-      message={message}
-      action={useShow ? <ModalButton message={error} /> : undefined}
-    />
-  );
+  // antd's notification renders via its own portal, so there's nothing to mount here.
+  const AppSnackbar: FC = () => null;
 
   return { showSnackbar, AppSnackbar };
 };

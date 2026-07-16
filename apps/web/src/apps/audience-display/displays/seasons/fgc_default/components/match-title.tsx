@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { Match } from '@toa-lib/models';
 import FGC_LOGO from '../assets/fg-logo-inverted.png';
-import { Grid, Stack } from '@mui/material';
+import { Row, Col } from 'antd';
 
 const InfoContainer = styled.div`
   flex-direction: column;
@@ -19,7 +19,7 @@ const InfoContainer = styled.div`
   height: 100%;
 `;
 
-const GridLogo = styled(Grid)(() => ({
+const GridLogo = styled(Col)(() => ({
   backgroundImage: `url(${FGC_LOGO})`,
   backgroundSize: 'contain',
   backgroundRepeat: 'no-repeat',
@@ -35,25 +35,28 @@ const MatchTitle = ({
   branding?: boolean;
   noMargin?: boolean;
 }) => {
-  const Item = branding ? GridLogo : Grid;
+  const Item = branding ? GridLogo : Col;
   return (
     <InfoContainer style={{ margin: noMargin ? 0 : undefined }}>
-      <Grid
-        container
-        direction='row'
-        sx={{ height: '100%', justifyContent: 'center' }}
-      >
+      <Row style={{ height: '100%', justifyContent: 'center' }}>
         {/* Funky Spacing Shenatigans (for FIRST global logo) */}
-        <Grid size={0.2}></Grid>
-        <Item size={2.3} />
-        <Grid size={7}>
-          <Stack sx={{ height: '100%', justifyContent: 'center' }}>
+        <Col span={0.4}></Col>
+        <Item span={4.6} />
+        <Col span={14}>
+          <div
+            style={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center'
+            }}
+          >
             <div>{match.name}</div>
             <div>Field {match.fieldNumber}</div>
-          </Stack>
-        </Grid>
-        <Grid size={2.5}></Grid>
-      </Grid>
+          </div>
+        </Col>
+        <Col span={5}></Col>
+      </Row>
     </InfoContainer>
   );
 };

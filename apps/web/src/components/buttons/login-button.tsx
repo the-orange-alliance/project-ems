@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { Button } from '@mui/material';
+import { Button } from 'antd';
 import { LoginDialog } from '../dialogs/login-dialog.js';
 
 export const LoginButton: FC = () => {
@@ -14,7 +14,7 @@ export const LoginButton: FC = () => {
 
   return (
     <>
-      <Button onClick={openDialog} color='inherit'>
+      <Button onClick={openDialog} size='large'>
         Login
       </Button>
       <LoginDialog open={open} onClose={closeDialog} onSubmit={onSubmit} />

@@ -1,8 +1,6 @@
-import { FC, ChangeEvent } from 'react';
-import FormGroup from '@mui/material/FormGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
+import { FC } from 'react';
+import { Input, InputNumber } from 'antd';
+import { SettingRow } from './setting-row.js';
 
 interface Props {
   name: string;
@@ -29,52 +27,29 @@ export const NumberSetting: FC<Props> = ({
   min,
   max
 }) => {
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const parsed = e.target.value.includes('.')
-      ? parseFloat(e.target.value)
-      : parseInt(e.target.value);
-
-    if (isNaN(parsed)) {
-      onChange(0);
-    } else {
-      onChange(parsed);
-    }
-  };
+  const style = { margin: 8, width: fullWidth ? '100%' : 220 };
 
   return (
-    <FormGroup
-      sx={{
-        '&:hover': {
-          backgroundColor: (theme) => theme.palette.action.hover
-        }
-      }}
-    >
-      <FormControlLabel
-        control={
-          <TextField
-            value={value}
-            onChange={handleChange}
-            sx={{ m: 1, minWidth: 220 }}
-            type={type}
-            slotProps={{
-              htmlInput: {
-                step,
-                min,
-                max
-              }
-            }}
-            fullWidth={fullWidth}
-          />
-        }
-        label={
-          <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-            {name}
-          </Typography>
-        }
-        labelPlacement={inline ? 'start' : 'top'}
-        sx={{ padding: (theme) => theme.spacing(2) }}
-        title={title}
-      />
-    </FormGroup>
+    <SettingRow name={name} inline={inline} title={title}>
+      {type === 'password' ? (
+        <Input.Password
+          value={String(value)}
+          onChange={(e) => {
+            const parsed = parseFloat(e.target.value);
+            onChange(isNaN(parsed) ? 0 : parsed);
+          }}
+          style={style}
+        />
+      ) : (
+        <InputNumber
+          value={value}
+          onChange={(v) => onChange(v ?? 0)}
+          step={step}
+          min={min}
+          max={max}
+          style={style}
+        />
+      )}
+    </SettingRow>
   );
 };

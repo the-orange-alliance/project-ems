@@ -1,8 +1,6 @@
 import { FC, ChangeEvent } from 'react';
-import FormGroup from '@mui/material/FormGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
+import { Input } from 'antd';
+import { SettingRow } from './setting-row.js';
 
 interface Props {
   name: string;
@@ -27,32 +25,13 @@ export const TextSetting: FC<Props> = ({
     onChange(e.target.value);
 
   return (
-    <FormGroup
-      sx={{
-        '&:hover': {
-          backgroundColor: (theme) => theme.palette.action.hover
-        }
-      }}
-    >
-      <FormControlLabel
-        control={
-          <TextField
-            value={value}
-            onChange={handleChange}
-            sx={{ m: 1, minWidth: 220 }}
-            fullWidth={fullWidth}
-          />
-        }
-        label={
-          <Typography sx={{ marginRight: 'auto', fontWeight: 'bold' }}>
-            {name}
-          </Typography>
-        }
-        labelPlacement={inline ? 'start' : 'top'}
-        sx={{ padding: (theme) => theme.spacing(2) }}
-        title={title}
+    <SettingRow name={name} inline={inline} title={title} disabled={disabled}>
+      <Input
+        value={value}
+        onChange={handleChange}
         disabled={disabled}
+        style={{ margin: 8, width: fullWidth ? '100%' : 220 }}
       />
-    </FormGroup>
+    </SettingRow>
   );
 };
