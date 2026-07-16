@@ -45,7 +45,7 @@ export const SaveAddUploadLoadingFab = ({
     >
       {!loading && canAdd && (
         <SpeedDialAction
-          tooltipTitle={addTooltip ?? 'Add'}
+          title={addTooltip ?? 'Add'}
           onClick={onAdd}
           icon={<SpeedDialIcon />}
         />
@@ -53,7 +53,7 @@ export const SaveAddUploadLoadingFab = ({
 
       {!loading && canUpload && (
         <SpeedDialAction
-          tooltipTitle={uploadTooltip ?? 'Upload'}
+          title={uploadTooltip ?? 'Upload'}
           icon={
             <>
               <Upload onClick={handleUpload} />
@@ -65,7 +65,7 @@ export const SaveAddUploadLoadingFab = ({
 
       {!loading && canSave && (
         <SpeedDialAction
-          tooltipTitle={saveTooltip ?? 'Save'}
+          title={saveTooltip ?? 'Save'}
           onClick={onSave}
           icon={<Save />}
         />

@@ -56,10 +56,12 @@ export const NumberSetting: FC<Props> = ({
             onChange={handleChange}
             sx={{ m: 1, minWidth: 220 }}
             type={type}
-            inputProps={{
-              step,
-              min,
-              max
+            slotProps={{
+              htmlInput: {
+                step,
+                min,
+                max
+              }
             }}
             fullWidth={fullWidth}
           />

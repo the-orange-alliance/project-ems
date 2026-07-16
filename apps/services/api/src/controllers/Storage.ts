@@ -11,7 +11,7 @@ const StorageParamsSchema = z.object({ store: z.string() });
 // POST body schema
 const StoragePostSchema = z.object({
   file: z.string(),
-  data: z.record(z.unknown())
+  data: z.record(z.string(), z.unknown())
 });
 
 // PATCH body schema
@@ -22,7 +22,7 @@ const StoragePatchSchema = z.object({
 });
 
 // Response schema for GET /:store (unknown object)
-const StorageResponseSchema = z.record(z.unknown());
+const StorageResponseSchema = z.record(z.string(), z.unknown());
 
 type StorageParams = z.infer<typeof StorageParamsSchema>;
 type StoragePost = z.infer<typeof StoragePostSchema>;

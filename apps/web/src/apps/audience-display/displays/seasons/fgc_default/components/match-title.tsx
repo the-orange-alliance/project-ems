@@ -41,19 +41,18 @@ const MatchTitle = ({
       <Grid
         container
         direction='row'
-        justifyContent={'center'}
-        sx={{ height: '100%' }}
+        sx={{ height: '100%', justifyContent: 'center' }}
       >
         {/* Funky Spacing Shenatigans (for FIRST global logo) */}
-        <Grid item xs={0.2}></Grid>
-        <Item item xs={2.3} />
-        <Grid item xs={7}>
-          <Stack sx={{ height: '100%' }} justifyContent={'center'}>
+        <Grid size={0.2}></Grid>
+        <Item size={2.3} />
+        <Grid size={7}>
+          <Stack sx={{ height: '100%', justifyContent: 'center' }}>
             <div>{match.name}</div>
             <div>Field {match.fieldNumber}</div>
           </Stack>
         </Grid>
-        <Grid item xs={2.5}></Grid>
+        <Grid size={2.5}></Grid>
       </Grid>
     </InfoContainer>
   );

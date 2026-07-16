@@ -108,13 +108,13 @@ export const AudienceDisplayManager: FC = () => {
       padding
     >
       <Grid container direction='row' spacing={2}>
-        <Grid item>
+        <Grid>
           <Button startIcon={<ChevronLeft />} component={Link} to='../'>
             Back
           </Button>
         </Grid>
-        <Grid item flex={1} />
-        <Grid item>
+        <Grid sx={{ flex: 1 }} />
+        <Grid>
           <Button
             startIcon={<Refresh />}
             variant='contained'
@@ -123,7 +123,7 @@ export const AudienceDisplayManager: FC = () => {
             Refresh Clients
           </Button>
         </Grid>
-        <Grid item>
+        <Grid>
           <Button
             startIcon={<Visibility />}
             variant='contained'

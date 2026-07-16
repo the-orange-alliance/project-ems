@@ -3,7 +3,7 @@ import {
   Link as RouterLink,
   LinkProps as RouterLinkProps
 } from 'react-router-dom';
-import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 
@@ -34,10 +34,10 @@ export function ListItemLink({
 
   return (
     <li>
-      <ListItem button onClick={onClick} component={renderLink}>
+      <ListItemButton onClick={onClick} component={renderLink}>
         {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
         <ListItemText primary={primary} />
-      </ListItem>
+      </ListItemButton>
     </li>
   );
 }

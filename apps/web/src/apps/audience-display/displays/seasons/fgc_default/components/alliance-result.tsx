@@ -65,6 +65,7 @@ const BreakdownContainer = styled.div((props: { alliance: Alliance }) => ({
 const BreakdownTable = styled(Grid)(() => ({
   width: '100%',
   height: '100%',
+  flexDirection: 'column' as const,
   '> :nth-of-type(odd)': {
     backgroundColor: '#ffffff',
     color: 'black'
@@ -268,14 +269,14 @@ export const AllianceResult: FC<Props> = ({
         })}
       </AllianceContainer>
       <BreakdownContainer alliance={alliance}>
-        <BreakdownTable container direction='column' gap={0.5}>
+        <BreakdownTable container sx={{ gap: 0.5 }}>
           {breakdown.map((b, i) => (
-            <Grid item key={i} xs={breakdownRowSize}>
+            <Grid key={i} size={breakdownRowSize}>
               <BreakdownRow breakdown={b} match={match} alliance={alliance} />
             </Grid>
           ))}
           {/* Penalty Row */}
-          <Grid item xs={breakdownRowSize}>
+          <Grid size={breakdownRowSize}>
             <BreakdownRow
               match={match}
               alliance={alliance}

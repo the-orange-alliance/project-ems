@@ -13,7 +13,7 @@ import { useAllianceMember } from 'src/api/use-alliance-data.js';
 const Container = styled.div((props: { alliance: Alliance }) => ({
   backgroundColor: props.alliance === 'red' ? '#ce2000' : '#5c88ff',
   display: 'flex',
-  flexDirection: 'column',
+  flexDirection: 'column' as const,
   justifyContent: 'space-around'
 }));
 
@@ -35,7 +35,9 @@ const AllianceText = styled.div((props: { invert?: boolean }) => ({
   color: '#ffffff',
   display: 'flex',
   alignItems: 'center',
-  flexDirection: !props.invert ? 'row-reverse' : 'row',
+  flexDirection: !props.invert
+    ? ('row-reverse' as const)
+    : ('row' as const),
   fontWeight: 'bold',
   fontSize: '1.75vh',
   gap: '0.5em',

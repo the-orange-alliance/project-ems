@@ -31,8 +31,7 @@ const BreakdownRow = ({ breakdown: b, match, alliance }: BreakdownRowProps) => {
       color={b.color}
     >
       <RowItem
-        item
-        xs={1.5}
+        size={1.5}
         sx={{
           textAlign: 'center',
           justifyContent: 'center'
@@ -41,8 +40,7 @@ const BreakdownRow = ({ breakdown: b, match, alliance }: BreakdownRowProps) => {
         {b.icon}
       </RowItem>
       <RowItem
-        item
-        xs={7.5}
+        size={7.5}
         sx={{
           borderRight: '.2em solid #00000060',
           textTransform: 'uppercase'
@@ -51,8 +49,7 @@ const BreakdownRow = ({ breakdown: b, match, alliance }: BreakdownRowProps) => {
         {b.title}
       </RowItem>
       <RowItem
-        item
-        xs={3}
+        size={3}
         sx={{ textAlign: 'center', justifyContent: 'center' }}
       >
         {b.resultCalc(match, alliance)}

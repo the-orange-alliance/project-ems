@@ -49,7 +49,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* Event Key / Field Number */}
         <Grid direction='row' container spacing={1}>
           {/* Event Key */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <DropdownSetting
               name='Assigned Event'
               value={settings.eventKey}
@@ -58,7 +58,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
             />
           </Grid>
           {/* Field Number */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <NumberSetting
               name='Field Number'
               value={settings.fieldNumber}
@@ -71,7 +71,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* Enable FMS / Enable Advanced Networking */}
         <Grid direction='row' container spacing={1}>
           {/* Enable FMS */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <SwitchSetting
               name='Enable Field Set'
               value={!!settings.enableFms}
@@ -80,7 +80,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
             />
           </Grid>
           {/* Enable Advanced Networking */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <SwitchSetting
               name='Enable Advanced Networking'
               value={!!settings.enableAdvNet}
@@ -93,7 +93,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
 
         {/* AP IP Address */}
         <Grid direction='row' container spacing={1}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextSetting
               name='AP IP Address'
               value={settings.apIp}
@@ -106,7 +106,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* AP User / Password */}
         <Grid direction='row' container spacing={1}>
           {/* AP Username */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <TextSetting
               name='AP Username'
               value={settings.apUsername}
@@ -114,7 +114,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
             />
           </Grid>
           {/* AP Password */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <TextSetting
               name='AP Password'
               value={settings.apPassword}
@@ -126,7 +126,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* AP Admin SSID / Password */}
         <Grid direction='row' container spacing={1}>
           {/* AP Admin SSID */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <TextSetting
               name='AP Admin Wifi SSID'
               value={settings.apAdminSsid}
@@ -134,7 +134,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
             />
           </Grid>
           {/* AP Admin WPA Key */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <TextSetting
               name='AP Admin Wifi WPA Key'
               value={settings.apAdminWpa}
@@ -146,7 +146,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* AP Team Channel / Admin Channel */}
         <Grid direction='row' container spacing={1}>
           {/* AP Team Channel */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <DropdownSetting
               name='AP Admin Wifi Channel'
               value={settings.apAdminCh}
@@ -155,7 +155,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
             />
           </Grid>
           {/* AP Admin WPA Key */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <DropdownSetting
               name='AP Team Wifi Channel'
               value={settings.apTeamCh}
@@ -168,7 +168,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* Switch IP */}
         <Grid direction='row' container spacing={1}>
           {/* Switch IP */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextSetting
               name='Switch IP Address'
               value={settings.switchIp}
@@ -181,7 +181,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* Switch User / Password */}
         <Grid direction='row' container spacing={1}>
           {/* Switch Username */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <TextSetting
               name='Switch Username'
               value={settings.switchUsername}
@@ -189,7 +189,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
             />
           </Grid>
           {/* Switch Password */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <TextSetting
               name='Switch Password'
               value={settings.switchPassword}
@@ -201,7 +201,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
         {/* Enable PLC / IP */}
         <Grid direction='row' container spacing={1}>
           {/* Enable PLC */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <SwitchSetting
               name='Enable PLC'
               value={!!settings.enablePlc}
@@ -210,7 +210,7 @@ export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
             />
           </Grid>
           {/* PLC IP */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <TextSetting
               name='PLC IP Address'
               value={settings.plcIp}

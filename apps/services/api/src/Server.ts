@@ -29,12 +29,12 @@ import fcsController from './controllers/FCS.js';
 import logger from './util/Logger.js';
 import { initGlobal } from './db/EventDatabase.js';
 import {
-  createJsonSchemaTransformObject,
   jsonSchemaTransform,
+  jsonSchemaTransformObject,
   serializerCompiler,
   validatorCompiler
 } from 'fastify-type-provider-zod';
-import SchemaRef from './util/GlobalSchema.js';
+import './util/GlobalSchema.js';
 import { handleErrors, handleNotFound } from './middleware/ErrorHandler.js';
 import { join } from 'path';
 import webhooksController from './controllers/Webhooks.js';
@@ -127,7 +127,7 @@ await fastify.register(fastifySwagger, {
     ]
   },
   transform: jsonSchemaTransform,
-  transformObject: createJsonSchemaTransformObject({ schemas: SchemaRef })
+  transformObject: jsonSchemaTransformObject
 });
 
 // Register Swagger UI

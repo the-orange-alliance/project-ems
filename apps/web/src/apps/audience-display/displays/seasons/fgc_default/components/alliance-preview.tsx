@@ -54,11 +54,11 @@ const RankText = styled.div`
 `;
 
 const AllianceText = styled.div((props: { small?: boolean }) => ({
-  position: 'relative',
+  position: 'relative' as const,
   width: 0,
   top: '40%',
   left: props.small ? '-6vw' : '-7vw',
-  textAlign: 'center',
+  textAlign: 'center' as const,
   color: 'white'
 }));
 

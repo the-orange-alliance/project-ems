@@ -30,37 +30,37 @@ export const StreamApp: FC = () => {
       header={<Typography variant='h4'>Streaming App</Typography>}
     >
       <Grid container spacing={3} sx={{ padding: (theme) => theme.spacing(3) }}>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <Button variant='contained' fullWidth onClick={sendBlank}>
             Blank Screen
           </Button>
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <Button variant='contained' fullWidth onClick={sendChroma}>
             Chroma Background
           </Button>
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <Button variant='contained' fullWidth onClick={sendPreview}>
             Match Preview
           </Button>
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <Button variant='contained' fullWidth onClick={sendPlay}>
             Match Play
           </Button>
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <Button variant='contained' fullWidth onClick={sendResults}>
             Match Results
           </Button>
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <Button variant='contained' fullWidth onClick={sendRankingsRR}>
             Rankings (Round Robin)
           </Button>
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <Button variant='contained' fullWidth onClick={sendRankingsF}>
             Rankings (Finals)
           </Button>

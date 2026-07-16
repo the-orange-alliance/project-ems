@@ -2,17 +2,17 @@
   "name": "ems-api-amplify",
   "type": "module",
   "dependencies": {
-    "aws-amplify": "^6.15.6"
+    "aws-amplify": "^6.18.0"
   },
   "devDependencies": {
-    "@aws-amplify/backend": "^1.16.1",
-    "@aws-amplify/backend-cli": "^1.8.0",
+    "@aws-amplify/backend": "^1.23.0",
+    "@aws-amplify/backend-cli": "^1.8.3",
     "@types/minimatch": "^6.0.0",
-    "aws-cdk-lib": "^2.189.1",
-    "constructs": "^10.4.2",
-    "esbuild": "^0.25.5",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3",
+    "aws-cdk-lib": "^2.261.0",
+    "constructs": "^10.6.0",
+    "esbuild": "^0.28.1",
+    "tsx": "^4.23.1",
+    "typescript": "^5.9.3",
     "@toa-lib/models": "1.0.0"
   },
   "engine": {

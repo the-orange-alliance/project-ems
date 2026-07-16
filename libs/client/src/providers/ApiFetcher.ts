@@ -5,7 +5,7 @@ import {
   TypeGuard,
   isApiError
 } from '@toa-lib/models';
-import { ZodTypeDef, ZodType } from 'zod';
+import { ZodType } from 'zod';
 
 export const options = {
   host: DEFAULT_API_HOST
@@ -68,11 +68,11 @@ export const clientFetcher = async <T>(
  * @param guard zod parse
  * @returns
  */
-export const apiFetcher = async <T, Z extends ZodTypeDef = ZodTypeDef>(
+export const apiFetcher = async <T>(
   url: string,
   method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
   body?: unknown,
-  guard?: ZodType<T, Z>['parse']
+  guard?: ZodType<T>['parse']
 ): Promise<T> => {
   // NOTE - If options.host doesn't include http://, fetch() will put the host request URL onto it.
   const request = await fetch(`${options.host}/${url}`, {
