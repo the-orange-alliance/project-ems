@@ -27,6 +27,7 @@ import { CardStatus as CardStatusComponent } from './card-status';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data';
 import { useAllianceMember } from 'src/api/use-alliance-data';
 import { RegionalBreakdownFGC25 } from '../../fgc_2025/index.js';
+import { RegionalBreakdownFGC26 } from '../../fgc_2026/index.js';
 
 const { CardStatus } = FeedingTheFuture;
 
@@ -228,6 +229,9 @@ export const AllianceResult: FC<Props> = ({
       break;
     case '2025':
       breakdown = RegionalBreakdownFGC25;
+      break;
+    case '2026':
+      breakdown = RegionalBreakdownFGC26;
       break;
   }
 

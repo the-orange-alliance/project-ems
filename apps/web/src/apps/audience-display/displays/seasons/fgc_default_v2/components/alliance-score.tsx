@@ -3,6 +3,7 @@ import { Typography } from 'antd';
 import { Match } from '@toa-lib/models';
 import { ResultsBreakdown } from '../../../displays.js';
 import { RegionalBreakdownFGC25 } from '../../fgc_2025/index.js';
+import { RegionalBreakdownFGC26 } from '../../fgc_2026/index.js';
 
 interface AllianceScoreProps {
   match: Match<any>;
@@ -30,6 +31,9 @@ const AllianceScore: React.FC<AllianceScoreProps> = ({
   switch (match.eventKey.split('-')[0]?.replace('FGC_', '')) {
     case '2025':
       breakdown = RegionalBreakdownFGC25;
+      break;
+    case '2026':
+      breakdown = RegionalBreakdownFGC26;
       break;
   }
 
@@ -159,6 +163,9 @@ export const AllianceScoreStream: React.FC<AllianceScoreProps> = ({
   switch (match.eventKey.split('-')[0]?.replace('FGC_', '')) {
     case '2025':
       breakdown = RegionalBreakdownFGC25;
+      break;
+    case '2026':
+      breakdown = RegionalBreakdownFGC26;
       break;
   }
 

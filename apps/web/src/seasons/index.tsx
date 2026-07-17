@@ -1,7 +1,7 @@
 import {
   Alliance,
   EcoEquilibrium,
-  FGC25FCS,
+  IgnitingInnovation,
   Match,
   MatchDetailBase,
   Ranking,
@@ -9,12 +9,15 @@ import {
 } from '@toa-lib/models';
 import { ChangeEvent, FC } from 'react';
 import { fgc2025Components } from './fgc-2025/index.js';
+import { fgc2026Components } from './fgc-2026/index.js';
 
 const { EcoEquilibriumSeason } = EcoEquilibrium;
+const { IgnitingInnovationSeason } = IgnitingInnovation;
 
 // Add season components map here to be used in the function for later.
 const seasonComponents = new Map<string, SeasonComponents<any, any>>();
 seasonComponents.set(EcoEquilibriumSeason.key, fgc2025Components);
+seasonComponents.set(IgnitingInnovationSeason.key, fgc2026Components);
 
 /**
  * @deprecated Use `ScoreBreakdownProps` instead.
@@ -67,8 +70,10 @@ export interface SeasonComponents<
   HeadRefExtrasSheet?: FC;
   RankingsReport?: FC<RankingsReportProps<U>>;
   useFieldControl?: () => FieldControlCallbacks<T>;
-  FieldMonitorExtra?: FC<FGC25FCS.FcsStatus>;
-  FieldMonitorExtraMinimal?: FC<FGC25FCS.FcsStatus>;
+  // Each season's FCS status shape is disjoint (tied to that season's field
+  // hardware), so this is intentionally untyped here.
+  FieldMonitorExtra?: FC<any>;
+  FieldMonitorExtraMinimal?: FC<any>;
 }
 
 export function getComponentsFromSeasonKey<

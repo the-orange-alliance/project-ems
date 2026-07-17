@@ -4,7 +4,8 @@ import {
   Match,
   ScheduleItem,
   Tournament,
-  assignMatchTimes
+  assignMatchTimes,
+  getSeasonKeyFromEventKey
 } from '@toa-lib/models';
 import { FGCSchedule } from '@toa-lib/models';
 import { FC, useState } from 'react';
@@ -47,10 +48,20 @@ export const RandomMatches: FC<Props> = ({
         teamKeys,
         name
       });
+      const assignPremiereFields = (matches: Match<any>[]) => {
+        const seasonKey = getSeasonKeyFromEventKey(eventKey);
+        switch (seasonKey) {
+          case 'fgc_2026':
+            return FGCSchedule.FGC2026.assignFields(matches);
+          case 'fgc_2025':
+          default:
+            return FGCSchedule.FGC2025.assignFields(matches);
+        }
+      };
       onCreateMatches(
         assignMatchTimes(
           eventSchedule.hasPremiereField
-            ? FGCSchedule.FGC2025.assignFields(matches)
+            ? assignPremiereFields(matches)
             : matches,
           scheduleItems
         )
