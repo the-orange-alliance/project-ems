@@ -4,8 +4,7 @@ import {
   AudienceScreens,
   Displays,
   LayoutMode,
-  MatchState,
-  Ranking
+  MatchState
 } from '@toa-lib/models';
 import { getDisplays } from './displays.js';
 import { FadeInOut, SlideInBottom } from 'src/components/animations/index.js';
@@ -27,9 +26,7 @@ export interface DisplayModeProps {
 }
 export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   const match = useAtomValue(matchAtom);
-  // const matchResultsMatch = useAtomValue(matchResultsMatchAtom);
   const ranks = useAtomValue(matchOccurringRanksAtom);
-  const matchResultsRanks: Ranking[] = []; // useAtomValue(matchResultsRanksAtom);
   const [audDispChroma, setAudDisplayChroma] = useAtom(displayChromaKeyAtom);
   const matchState = useAtomValue(matchStateAtom);
   const [searchParams] = useSearchParams();
@@ -41,6 +38,10 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   } = useEventState({
     teams: true
   });
+
+  // Hide ranks on preview screens once the match has started — they'd spoil
+  // the results once post-match rankings are fetched at commit time.
+  const showRanks = matchState < MatchState.MATCH_IN_PROGRESS;
 
   // Pin a display
   const pin = searchParams.get('pin');
@@ -71,14 +72,18 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
     switch (pin) {
       case AudienceScreens.PREVIEW:
         return (
-          <displays.matchPreview event={event} match={match} ranks={ranks} />
+          <displays.matchPreview
+            event={event}
+            match={match}
+            ranks={showRanks ? ranks : []}
+          />
         );
       case AudienceScreens.PREVIEW_STREAM:
         return (
           <displays.matchPreviewStream
             event={event}
             match={match}
-            ranks={ranks}
+            ranks={showRanks ? ranks : []}
           />
         );
       case AudienceScreens.MATCH:
@@ -145,8 +150,6 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
     matchState > MatchState.MATCH_IN_PROGRESS &&
     matchState < MatchState.RESULTS_POSTED;
 
-  const showRanks = matchState < MatchState.MATCH_IN_PROGRESS;
-
   const showPreviewFull =
     layout[0] === LayoutMode.FULL || layout[1] === LayoutMode.FULL;
 
@@ -165,9 +168,6 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   // force hide the preview if we are showing the results
   const forceHidePreview =
     showStreamResultsDuringPreview || showFullResultsDuringPreview;
-
-  const resultsToUse = match;
-  const ranksToUse = !matchResultsRanks ? ranks : matchResultsRanks;
 
   return (
     <>
@@ -204,7 +204,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
             <displays.matchPreviewStream
               event={event}
               match={match}
-              ranks={ranks}
+              ranks={showRanks ? ranks : []}
               teams={teams}
             />
           </SlideInBottom>
@@ -272,14 +272,14 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
           >
             <displays.matchResults
               event={event}
-              match={resultsToUse}
-              ranks={ranksToUse}
+              match={match}
+              ranks={ranks}
               teams={teams}
             />
           </FadeInOut>
         </AbsolouteLocator>
       )}
-      {layout[2] === LayoutMode.STREAM && resultsToUse && (
+      {layout[2] === LayoutMode.STREAM && (
         <AbsolouteLocator top={0} left={0}>
           <SlideInBottom
             in={id === Displays.MATCH_RESULTS || showStreamResultsDuringPreview}
@@ -288,8 +288,8 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
           >
             <displays.matchResultsStream
               event={event}
-              match={resultsToUse}
-              ranks={ranksToUse}
+              match={match}
+              ranks={ranks}
               teams={teams}
             />
           </SlideInBottom>

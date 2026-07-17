@@ -1,13 +1,19 @@
 import { FC } from 'react';
 import { DisplayProps } from '../../displays.js';
 import { Space } from 'antd';
-import { MatchParticipant } from '@toa-lib/models';
+import { MatchParticipant, MatchState } from '@toa-lib/models';
+import { useAtomValue } from 'jotai';
 import AllianceTeam from './components/alliance-team.js';
 import AllianceBox from './components/alliance-box.js';
 import L3Header from './components/l3-header.js';
 import { useAllianceMember } from 'src/api/use-alliance-data.js';
+import { matchStateAtom } from 'src/stores/state/match.js';
 
 export const MatchPreviewStream: FC<DisplayProps> = ({ match }) => {
+  const matchState = useAtomValue(matchStateAtom);
+  // Once the match has started, ranks become spoilers — post-match rankings
+  // are fetched into the shared ranks atom when scores are committed.
+  const hideRanks = matchState >= MatchState.MATCH_IN_PROGRESS;
   const redTeams: MatchParticipant[] = [];
   const blueTeams: MatchParticipant[] = [];
 
@@ -81,6 +87,7 @@ export const MatchPreviewStream: FC<DisplayProps> = ({ match }) => {
                 noBg
                 noRankChange
                 large
+                hideRanks={hideRanks}
               />
             ))}
           </Space>
@@ -94,6 +101,7 @@ export const MatchPreviewStream: FC<DisplayProps> = ({ match }) => {
                 noBg
                 noRankChange
                 large
+                hideRanks={hideRanks}
               />
             ))}
           </Space>
