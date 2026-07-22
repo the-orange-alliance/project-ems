@@ -33,12 +33,19 @@ export const useDisplayEvent = () => {
     // Reuse the post-commit rankings fetch if the commit handler already
     // started one; otherwise start it now. Hold the screen switch until it
     // resolves or the deadline passes, so stale ranks never flash on screen.
+    let resolveDeadline!: (value: 'deadline') => void;
+    const deadline = new Promise<'deadline'>((resolve) => {
+      resolveDeadline = resolve;
+    });
+    const deadlineTimer = setTimeout(
+      () => resolveDeadline('deadline'),
+      SHOW_RESULTS_DEADLINE_MS
+    );
     const outcome = await Promise.race([
       ensurePostCommitRanks(get, set, match),
-      new Promise<'deadline'>((resolve) =>
-        setTimeout(() => resolve('deadline'), SHOW_RESULTS_DEADLINE_MS)
-      )
+      deadline
     ]);
+    clearTimeout(deadlineTimer);
 
     // A newer display event took over while we waited — do nothing.
     if (seq !== displaySeq) return;

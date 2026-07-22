@@ -4,6 +4,7 @@ import {
   Match,
   MatchDetailBase,
   matchZod,
+  Ranking,
   getSeasonKeyFromEventKey,
   getDefaultMatchDetailsBySeasonKey
 } from '@toa-lib/models';
@@ -34,7 +35,14 @@ export const usePrestartEvent = () => {
           matchZod.parse
         )
       );
-      const rankings = await fetchMatchRankings(key);
+      let rankings: Ranking[] = [];
+      try {
+        rankings = await fetchMatchRankings(key);
+      } catch (e) {
+        // Rankings are best-effort here — still show the new match rather
+        // than aborting the whole prestart and leaving the display stuck.
+        console.error('Failed to fetch rankings for match prestart', e);
+      }
       const seasonKey = getSeasonKeyFromEventKey(eventKey);
       const details = getDefaultMatchDetailsBySeasonKey(seasonKey);
       match.details = { eventKey, id, tournamentKey, ...details };
