@@ -11,6 +11,7 @@ interface AllianceTeamProps {
   large?: boolean;
   noBg?: boolean;
   noRankChange?: boolean;
+  hideRanks?: boolean;
 }
 
 const calcRankChange = (ranks: Ranking[], team: MatchParticipant) => {
@@ -25,7 +26,8 @@ const AllianceTeam: React.FC<AllianceTeamProps> = ({
   team,
   large = false,
   noBg = false,
-  noRankChange = false
+  noRankChange = false,
+  hideRanks = false
 }) => {
   const ranks: Ranking[] = useAtomValue(matchOccurringRanksAtom);
 
@@ -76,22 +78,28 @@ const AllianceTeam: React.FC<AllianceTeamProps> = ({
       >
         <CardStatus cardStatus={team.cardStatus} />
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <span
-          style={{ fontWeight: 'bold', fontSize: rankFontSize, color: 'white' }}
-        >
-          #{currentRank ? currentRank.rank : '-'}
-        </span>
-        {!noRankChange && up ? (
-          <span style={{ color: '#16a34a', fontSize: iconFontSize }}>▲</span>
-        ) : null}
-        {!noRankChange && down ? (
-          <span style={{ color: '#dc2626', fontSize: iconFontSize }}>▼</span>
-        ) : null}
-        {!noRankChange && !up && !down ? (
-          <span style={{ color: '#9ca3af', fontSize: iconFontSize }}>━</span>
-        ) : null}
-      </div>
+      {!hideRanks && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span
+            style={{
+              fontWeight: 'bold',
+              fontSize: rankFontSize,
+              color: 'white'
+            }}
+          >
+            #{currentRank ? currentRank.rank : '-'}
+          </span>
+          {!noRankChange && up ? (
+            <span style={{ color: '#16a34a', fontSize: iconFontSize }}>▲</span>
+          ) : null}
+          {!noRankChange && down ? (
+            <span style={{ color: '#dc2626', fontSize: iconFontSize }}>▼</span>
+          ) : null}
+          {!noRankChange && !up && !down ? (
+            <span style={{ color: '#9ca3af', fontSize: iconFontSize }}>━</span>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 };
