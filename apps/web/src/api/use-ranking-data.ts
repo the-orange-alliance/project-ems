@@ -1,6 +1,7 @@
 import { apiFetcher } from '@toa-lib/client';
-import { Team, Ranking } from '@toa-lib/models';
+import { MatchKey, Team, Ranking, rankingZod } from '@toa-lib/models';
 import useSWR from 'swr';
+import { withRetry } from './with-retry.js';
 
 export const createRankings = (
   tournamentKey: string,
@@ -30,6 +31,26 @@ export const recalculatePlayoffsRankings = (
 
 export const deleteRankings = (eventKey: string, tournamentKey: string) =>
   apiFetcher(`ranking/${eventKey}/${tournamentKey}`, 'DELETE');
+
+/**
+ * Fetches the rankings for the teams participating in the given match.
+ * Returns the current rankings from the API (post-match once scores have
+ * been committed and rankings recalculated). Retries transient failures
+ * before rethrowing the last error.
+ */
+export const fetchMatchRankings = ({
+  eventKey,
+  tournamentKey,
+  id
+}: MatchKey): Promise<Ranking[]> =>
+  withRetry(() =>
+    apiFetcher(
+      `ranking/${eventKey}/${tournamentKey}/${id}`,
+      'GET',
+      undefined,
+      rankingZod.array().parse
+    )
+  );
 
 export const useRankingsForTournament = (
   eventKey: string | null | undefined,
