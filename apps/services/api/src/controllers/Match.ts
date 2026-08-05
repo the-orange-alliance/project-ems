@@ -5,7 +5,8 @@ import {
   matchMakerParamsZod,
   matchParticipantZod,
   reconcileMatchParticipants,
-  getFunctionsBySeasonKey
+  getFunctionsBySeasonKey,
+  getCardCarryPhase
 } from '@toa-lib/models';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -212,12 +213,28 @@ async function matchController(fastify: FastifyInstance) {
         const parsedDetails = funcs?.detailsFromJson
           ? (funcs.detailsFromJson(details) ?? details)
           : details;
+        // A carried card is only in force during the phase it was earned in, so
+        // it is scoped here rather than at every display. This route is the
+        // authoritative source of `participant.team` for the audience display
+        // and the scorekeeper's repeat-card prompt, and unlike them it knows
+        // which tournament is being played. Prestarting the first match of a
+        // new phase therefore "resets" the cards with no reset step to run.
+        const [tournament] = await db.selectAllWhere(
+          'tournament',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+        );
+        const phase = tournament ? getCardCarryPhase(tournament) : null;
         for (let i = 0; i < participants.length; i++) {
           const [team] = await db.selectAllWhere(
             'team',
             `teamKey = ${participants[i].teamKey} AND eventKey = "${eventKey}"`
           );
-          participants[i].team = team;
+          // A null phase (test/practice) matches nothing, which is what makes
+          // carried cards invisible there.
+          participants[i].team =
+            team && team.cardPhase && team.cardPhase === phase
+              ? team
+              : { ...team, cardStatus: 0, hasCard: 0, cardPhase: null };
         }
         match.participants = participants;
         match.details = parsedDetails;
