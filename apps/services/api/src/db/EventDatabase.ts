@@ -75,6 +75,9 @@ export class EventDatabase {
     // startTime -> actualStartTime. The old name read like "when the match
     // started" but actually held the scheduled time; see issue #236.
     await this.renameColumnIfPresent('match', 'startTime', 'actualStartTime');
+    // Carried cards are scoped to a qualification/playoff phase rather than to
+    // the whole event; this records which phase a team's card belongs to.
+    await this.addColumnIfMissing('team', 'cardPhase', 'VARCHAR(15)');
   }
 
   /**
@@ -89,10 +92,7 @@ export class EventDatabase {
   ): Promise<void> {
     try {
       if (!(await this.tableExists(table))) return;
-      const columns = (await this.db.all(
-        `PRAGMA table_info("${table}");`
-      )) as { name: string }[];
-      const names = columns.map((c) => c.name);
+      const names = await this.columnNames(table);
       if (!names.includes(from) || names.includes(to)) return;
       await this.db.exec(
         `ALTER TABLE "${table}" RENAME COLUMN "${from}" TO "${to}";`
@@ -100,6 +100,34 @@ export class EventDatabase {
     } catch (e) {
       throw new ApiDatabaseError(table, e);
     }
+  }
+
+  /**
+   * Adds `column` to `table`, but only if the table exists and does not already
+   * have it. `type` is the column's DDL (e.g. `'VARCHAR(15)'`); it must be
+   * nullable or carry a default, since existing rows will need a value.
+   */
+  private async addColumnIfMissing(
+    table: string,
+    column: string,
+    type: string
+  ): Promise<void> {
+    try {
+      if (!(await this.tableExists(table))) return;
+      if (await this.columnNames(table).then((n) => n.includes(column))) return;
+      await this.db.exec(
+        `ALTER TABLE "${table}" ADD COLUMN "${column}" ${type};`
+      );
+    } catch (e) {
+      throw new ApiDatabaseError(table, e);
+    }
+  }
+
+  private async columnNames(table: string): Promise<string[]> {
+    const columns = (await this.db.all(
+      `PRAGMA table_info("${table}");`
+    )) as { name: string }[];
+    return columns.map((c) => c.name);
   }
 
   private async tableExists(table: string): Promise<boolean> {
