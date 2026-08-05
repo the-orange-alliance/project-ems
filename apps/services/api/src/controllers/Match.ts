@@ -6,7 +6,11 @@ import {
   matchParticipantZod,
   reconcileMatchParticipants,
   getFunctionsBySeasonKey,
-  getCardCarryPhase
+  getCardCarryPhase,
+  RESULT_BLUE_WIN,
+  RESULT_GAME_SPECIFIC,
+  RESULT_RED_WIN,
+  RESULT_TIE
 } from '@toa-lib/models';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -39,6 +43,33 @@ import { computeCycleTime } from '../util/CycleTime.js';
 
 const MatchArraySchema = z.array(matchWithDetailsZod);
 const MatchParticipantArraySchema = z.array(matchParticipantZod);
+
+const MatchScoreSchema = z.object({
+  redScore: z.number(),
+  blueScore: z.number(),
+  result: z.number()
+});
+
+const MatchScoreChangeSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  previous: MatchScoreSchema,
+  current: MatchScoreSchema,
+  resultChanged: z.boolean()
+});
+
+const RecalculateSkipSchema = z.object({
+  id: z.number(),
+  reason: z.string()
+});
+
+/** What `/recalculate-scores` actually did, so the caller can see it. */
+const RecalculateSummarySchema = z.object({
+  matchesExamined: z.number(),
+  matchesChanged: z.number(),
+  changes: z.array(MatchScoreChangeSchema),
+  skipped: z.array(RecalculateSkipSchema)
+});
 
 async function matchController(fastify: FastifyInstance) {
   // SPECIAL ROUTES
@@ -266,7 +297,7 @@ async function matchController(fastify: FastifyInstance) {
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
         );
         if (!data) {
-          reply.send(DataNotFoundError);
+          reply.code(DataNotFoundError.code).send(DataNotFoundError);
         } else {
           reply.send(data);
         }
@@ -379,7 +410,7 @@ async function matchController(fastify: FastifyInstance) {
       schema: {
         params: EventTournamentIdParams,
         body: z.any(),
-        response: errorableSchema(EmptySchema),
+        response: errorableSchema(EmptySchema, InvalidDataError),
         tags: ['Matches']
       }
     },
@@ -398,7 +429,7 @@ async function matchController(fastify: FastifyInstance) {
           body.tournamentKey !== tournamentKey ||
           String(body.id) !== id
         ) {
-          reply.send(InvalidDataError);
+          reply.code(InvalidDataError.code).send(InvalidDataError);
           return;
         }
         const data = funcs?.detailsToJson ? funcs.detailsToJson(body) : body;
@@ -484,12 +515,17 @@ async function matchController(fastify: FastifyInstance) {
   );
 
   // Recalculate Match Scores
+  //
+  // Re-derives every played match's details and scores from the stored match
+  // details, and writes the results back. Previously this only logged what it
+  // would have changed and never replied at all, so callers hung until they
+  // timed out and the recalculated scores were thrown away.
   fastify.withTypeProvider<ZodTypeProvider>().post(
     '/recalculate-scores/:eventKey/:tournamentKey',
     {
       schema: {
         params: EventTournamentKeyParams,
-        response: errorableSchema(EmptySchema),
+        response: errorableSchema(RecalculateSummarySchema),
         tags: ['Matches']
       }
     },
@@ -502,11 +538,11 @@ async function matchController(fastify: FastifyInstance) {
         const funcs = getFunctionsBySeasonKey(
           eventKey.split('-')[0].toLowerCase()
         );
-        console.log(
+        logger.info(
           `Recalculating scores for event ${eventKey} tournament ${tournamentKey}`
         );
 
-        const match = await db.selectAllWhere(
+        const matches = await db.selectAllWhere(
           'match',
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND result > -1`
         );
@@ -518,19 +554,24 @@ async function matchController(fastify: FastifyInstance) {
         for (const detail of matchDetails) {
           detailsMap.set(detail.id, detail);
         }
-        for (const m of match) {
-          const detail = detailsMap.get(m.id);
-          if (!detail) {
-            console.log(
-              `No details found for match id ${m.id}, skipping score recalculation.`
-            );
+
+        const changes: z.infer<typeof MatchScoreChangeSchema>[] = [];
+        const skipped: z.infer<typeof RecalculateSkipSchema>[] = [];
+
+        for (const m of matches) {
+          const stored = detailsMap.get(m.id);
+          if (!stored) {
+            skipped.push({ id: m.id, reason: 'no match details found' });
             continue;
           }
+          // Parse the row the same way GET /all does before handing it to
+          // season code — the raw row is not the season's detail shape.
+          const detail = funcs?.detailsFromJson
+            ? (funcs.detailsFromJson(stored) ?? stored)
+            : stored;
           const newDetails = funcs?.calculateRankingPoints?.(detail);
           if (!newDetails) {
-            console.log(
-              `No new details returned for match id ${m.id}, skipping score recalculation.`
-            );
+            skipped.push({ id: m.id, reason: 'season returned no details' });
             continue;
           }
           const [redScore, blueScore] = funcs?.calculateScore?.({
@@ -538,37 +579,59 @@ async function matchController(fastify: FastifyInstance) {
             details: newDetails
           }) ?? [-1, -1];
 
-          if (redScore !== m.redScore) {
-            console.log(
-              `SCORE UPDATED: Match ${m.id} red score changed from ${m.redScore} to ${redScore}`
+          // Keep `result` consistent with the scores we just wrote. Leaving a
+          // stale result next to a changed score is worse than not recalculating
+          // at all. Game-specific results are decided by something other than
+          // the score comparison, so those are left alone.
+          const result =
+            m.result === RESULT_GAME_SPECIFIC
+              ? m.result
+              : redScore > blueScore
+                ? RESULT_RED_WIN
+                : blueScore > redScore
+                  ? RESULT_BLUE_WIN
+                  : RESULT_TIE;
+
+          await db.updateWhere(
+            'match_detail',
+            funcs?.detailsToJson ? funcs.detailsToJson(newDetails) : newDetails,
+            `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${m.id}`
+          );
+
+          const scoreChanged =
+            redScore !== m.redScore || blueScore !== m.blueScore;
+          const resultChanged = result !== m.result;
+          if (scoreChanged || resultChanged) {
+            await db.updateWhere(
+              'match',
+              { redScore, blueScore, result },
+              `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${m.id}`
             );
-          }
-          if (blueScore !== m.blueScore) {
-            console.log(
-              `SCORE UPDATED: Match ${m.id} blue score changed from ${m.blueScore} to ${blueScore}`
-            );
-          }
-          const oldWinBlue = m.blueScore > m.redScore;
-          const newWinBlue = blueScore > redScore;
-
-          const oldWinTie = m.blueScore === m.redScore;
-          const newWinTie = blueScore === redScore;
-
-          const coOpChanged =
-            detail.coopertitionLevel !== (newDetails as any).coopertitionLevel;
-
-          if (coOpChanged) {
-            console.log(
-              `CO-OP LEVEL CHANGED: Match ${m.id} CO-OP level changed from ${detail.coopertitionLevel} to ${(newDetails as any).coopertitionLevel}`
-            );
-          }
-
-          if (oldWinBlue !== newWinBlue || oldWinTie !== newWinTie) {
-            console.log(
-              `MATCH RESULT CHANGED: Match ${m.id} OLD: Red ${m.redScore} - Blue ${m.blueScore} NEW: Red ${redScore} - Blue ${blueScore}`
+            const change = {
+              id: m.id,
+              name: m.name,
+              previous: {
+                redScore: m.redScore,
+                blueScore: m.blueScore,
+                result: m.result
+              },
+              current: { redScore, blueScore, result },
+              resultChanged
+            };
+            changes.push(change);
+            logger.info(
+              `Match ${m.id} recalculated: ${m.redScore}-${m.blueScore} -> ${redScore}-${blueScore}` +
+                (resultChanged ? ` (result ${m.result} -> ${result})` : '')
             );
           }
         }
+
+        reply.status(200).send({
+          matchesExamined: matches.length,
+          matchesChanged: changes.length,
+          changes,
+          skipped
+        });
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
       }

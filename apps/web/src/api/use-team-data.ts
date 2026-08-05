@@ -37,8 +37,9 @@ export const postCarriedCards = async (
 ): Promise<void> =>
   apiFetcher(`teams/carry-cards/${eventKey}/${tournamentKey}`, 'POST', cards);
 
-export const useTeams = (): SWRResponse<Team[], ApiResponseError> =>
-  useSWR('teams', (url) => apiFetcher(url, 'GET'));
+// `useTeams` was removed alongside the `GET /teams` route it called: that route
+// queried a `team` table on the global database, which does not exist, so it
+// 500'd on every call. Teams are per-event — use `useTeamsForEvent`.
 
 export const useTeamsForEvent = (
   eventKey: string | null | undefined,
