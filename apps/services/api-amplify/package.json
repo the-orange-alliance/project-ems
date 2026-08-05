@@ -1,6 +1,9 @@
 {
   "name": "ems-api-amplify",
   "type": "module",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
   "dependencies": {
     "aws-amplify": "^6.18.0"
   },

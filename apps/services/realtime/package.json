@@ -10,7 +10,8 @@
     "build": "tsc -p .",
     "dist": "npm run dist:index && npm run dist:worker",
     "dist:index": "ncc build build/Server.js -o dist",
-    "dist:worker": "ncc build build/util/WLEDWorker/worker.js -o dist/worker"
+    "dist:worker": "ncc build build/util/WLEDWorker/worker.js -o dist/worker",
+    "test": "echo \"No tests yet\""
   },
   "author": "Kyle Flynn",
   "license": "ISC",

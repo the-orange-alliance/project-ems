@@ -11,12 +11,13 @@ jobs:
     name: Build (Non-Main)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
-      - name: Use Node.js 20
-        uses: actions/setup-node@v3
+      - name: Use Node.js 22
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
@@ -26,3 +27,9 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      # NOTE: apps/web currently has ~128 pre-existing type errors, so this
+      # step is expected to fail until they are worked through. It is
+      # intentionally blocking -- the errors are real and should stay visible.
+      - name: Check types
+        run: npm run check-types

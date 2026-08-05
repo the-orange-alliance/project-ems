@@ -1,7 +1,7 @@
 # ---------- 1. Base Stage ----------
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 RUN apk add --no-cache python3 make g++ bash gcompat
-RUN npm i -g npm@11.6.2 turbo
+RUN npm i -g npm@12.0.1 turbo
 WORKDIR /workspace
 
 # ---------- 2. Build Stage ----------

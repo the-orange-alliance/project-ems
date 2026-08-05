@@ -7,6 +7,7 @@
     "dev": "vite --host",
     "build": "vite build",
     "check-types": "tsc --noEmit",
+    "test": "echo \"No tests yet\"",
     "preview": "vite preview"
   },
   "dependencies": {

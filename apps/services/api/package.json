@@ -7,7 +7,8 @@
   "scripts": {
     "start": "tsc -p . && node build/Server.js",
     "build": "tsc -p .",
-    "dist": "ncc build build/Server.js -e sqlite3 -o dist"
+    "dist": "ncc build build/Server.js -e sqlite3 -o dist",
+    "test": "echo \"No tests yet\""
   },
   "author": "Kyle Flynn",
   "license": "ISC",

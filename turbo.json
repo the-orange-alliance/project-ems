@@ -38,7 +38,11 @@
       "dependsOn": ["@toa-lib/models#build", "@toa-lib/client#build"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": []
     },
     "dev": {
       "persistent": true,
