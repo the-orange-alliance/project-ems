@@ -1,20 +1,31 @@
 import { z } from 'zod';
 import { matchZod } from './Match.js';
 
+/**
+ * Events a webhook can be subscribed to. Every payload is `{ payload: Match }`.
+ *
+ * The first group is emitted directly. The `SCORES_POSTED_*` variants are
+ * **subscription-side filters**, not separate emits: only `SCORES_POSTED` is
+ * ever emitted, and `EmitWebhooks` decides the winner and delivers to whichever
+ * of the coloured subscriptions matches. Subscribing to `SCORES_POSTED` itself
+ * receives every posted result regardless of outcome.
+ */
 export enum WebhookEvent {
-  PRESTARTED = 'PRESTARTED', // { payload: Match }
-  PRESTART_ABORTED = 'PRESTART_ABORTED', // { payload: Match }
-  DISPLAYS_SET = 'DISPLAYS_SET', // { payload: Match }
-  FIELD_PREPPED = 'FIELD_PREPPED', // { payload: Match }
-  MATCH_STARTED = 'MATCH_STARTED', // { payload: Match }
-  MATCH_ENDGAME = 'MATCH_ENDGAME', // { payload: Match }
-  MATCH_ENDED = 'MATCH_ENDED', // { payload: Match }
-  ALL_CLEAR = 'ALL_CLEAR', // { payload: Match }
-  COMMITTED = 'COMMITTED', // { payload: Match }
-  SCORES_POSTED = 'SCORES_POSTED', // { payload: Match }
-  SCORES_POSTED_RED = 'SCORES_POSTED_RED', // { payload: Match }
-  SCORES_POSTED_BLUE = 'SCORES_POSTED_BLUE', // { payload: Match }
-  SCORES_POSTED_TIED = 'SCORES_POSTED_TIED' // { payload: Match }
+  PRESTARTED = 'PRESTARTED',
+  PRESTART_ABORTED = 'PRESTART_ABORTED',
+  DISPLAYS_SET = 'DISPLAYS_SET',
+  FIELD_PREPPED = 'FIELD_PREPPED',
+  MATCH_STARTED = 'MATCH_STARTED',
+  MATCH_ENDGAME = 'MATCH_ENDGAME',
+  MATCH_ENDED = 'MATCH_ENDED',
+  ALL_CLEAR = 'ALL_CLEAR',
+  COMMITTED = 'COMMITTED',
+  SCORES_POSTED = 'SCORES_POSTED',
+
+  // Filters on SCORES_POSTED — see above. Never emitted on their own.
+  SCORES_POSTED_RED = 'SCORES_POSTED_RED',
+  SCORES_POSTED_BLUE = 'SCORES_POSTED_BLUE',
+  SCORES_POSTED_TIED = 'SCORES_POSTED_TIED'
 };
 
 export const SendWebhookSchema = z.object({

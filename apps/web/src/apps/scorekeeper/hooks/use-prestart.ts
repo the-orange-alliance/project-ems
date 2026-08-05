@@ -91,11 +91,18 @@ export const usePrestartCallback = () => {
 export const useCancelPrestartCallback = () => {
   const { canCancelPrestart, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
-  return useCallback(() => {
-    if (!canCancelPrestart) {
-      throw new Error('Attempted to cancel prestart when not allowed.');
-    }
-    fieldControl?.cancelPrestartForField?.();
-    setState(MatchState.PRESTART_READY);
-  }, [canCancelPrestart, setState, fieldControl]);
+  return useAtomCallback(
+    useCallback(
+      (get) => {
+        if (!canCancelPrestart) {
+          throw new Error('Attempted to cancel prestart when not allowed.');
+        }
+        const match = get(matchAtom);
+        fieldControl?.cancelPrestartForField?.();
+        setState(MatchState.PRESTART_READY);
+        if (match) emitWebhook(WebhookEvent.PRESTART_ABORTED, match);
+      },
+      [canCancelPrestart, setState, fieldControl]
+    )
+  );
 };

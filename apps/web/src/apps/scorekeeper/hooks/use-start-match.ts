@@ -59,14 +59,23 @@ export const useAbortMatchCallback = () => {
   const abortModal = useModal(AbortDialog);
   const fieldControl = useSeasonFieldControl();
   const { events } = useSocketWorker();
-  return async () => {
-    if (!canAbortMatch) {
-      throw new Error('Attempted to abort match when not allowed.');
-    }
-    const canAbort = await abortModal.show();
-    if (!canAbort) return;
-    fieldControl?.abortField?.();
-    events.abort();
-    setState(MatchState.PRESTART_READY);
-  };
+  return useAtomCallback(
+    useCallback(
+      async (get) => {
+        if (!canAbortMatch) {
+          throw new Error('Attempted to abort match when not allowed.');
+        }
+        const canAbort = await abortModal.show();
+        if (!canAbort) return;
+        const match = get(matchAtom);
+        fieldControl?.abortField?.();
+        events.abort();
+        setState(MatchState.PRESTART_READY);
+        // Aborting returns the field to PRESTART_READY, so from a subscriber's
+        // point of view the prestart has been undone — same as cancelling it.
+        if (match) emitWebhook(WebhookEvent.PRESTART_ABORTED, match);
+      },
+      [canAbortMatch, setState, fieldControl, events, abortModal]
+    )
+  );
 };
