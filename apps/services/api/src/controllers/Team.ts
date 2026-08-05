@@ -13,20 +13,10 @@ const carryCardsZod = z.array(
 );
 
 async function teamController(fastify: FastifyInstance) {
-  // Get all teams (global)
-  fastify.withTypeProvider<ZodTypeProvider>().get(
-    '/',
-    { schema: { response: errorableSchema<typeof teamsZod>(teamsZod), tags: ['Teams'] } },
-    async (request, reply) => {
-      try {
-        const db = await getDB('global');
-        const data = await db.selectAll('team');
-        reply.send(data);
-      } catch (e) {
-        reply.code(500).send(InternalServerError(e));
-      }
-    }
-  );
+  // NOTE: there is deliberately no `GET /` here. It used to select `team` from
+  // the *global* database, which has no such table (teams are per-event), so it
+  // returned a 500 on every call. It had no callers. Teams are only meaningful
+  // scoped to an event — use `GET /:eventKey`.
 
   // Get teams by eventKey
   fastify.withTypeProvider<ZodTypeProvider>().get(
@@ -38,7 +28,7 @@ async function teamController(fastify: FastifyInstance) {
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere('team', `eventKey = "${eventKey}"`);
         if (!data) {
-          reply.send(DataNotFoundError);
+          reply.code(DataNotFoundError.code).send(DataNotFoundError);
         } else {
           reply.send(data);
         }
@@ -176,7 +166,7 @@ async function teamController(fastify: FastifyInstance) {
           `eventKey = "${eventKey}" AND teamKey = ${teamKey}`
         );
         if (!data) {
-          reply.send(DataNotFoundError);
+          reply.code(DataNotFoundError.code).send(DataNotFoundError);
         } else {
           reply.send({});
         }

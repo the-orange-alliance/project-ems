@@ -97,7 +97,7 @@ async function allianceController(fastify: FastifyInstance) {
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND allianceRank = ${rank}`
         );
         if (!data) {
-          reply.send(DataNotFoundError);
+          reply.code(DataNotFoundError.code).send(DataNotFoundError);
         } else {
           reply.send(data);
         }

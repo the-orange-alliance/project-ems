@@ -19,7 +19,7 @@ async function scheduleItemController(fastify: FastifyInstance) {
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere('schedule', `eventKey = '${eventKey}'`);
         if (!data) {
-          reply.send(DataNotFoundError);
+          reply.code(DataNotFoundError.code).send(DataNotFoundError);
         } else {
           reply.send(data);
         }
@@ -39,7 +39,7 @@ async function scheduleItemController(fastify: FastifyInstance) {
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere('schedule', `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`);
         if (!data) {
-          reply.send(DataNotFoundError);
+          reply.code(DataNotFoundError.code).send(DataNotFoundError);
         } else {
           reply.send(data);
         }
