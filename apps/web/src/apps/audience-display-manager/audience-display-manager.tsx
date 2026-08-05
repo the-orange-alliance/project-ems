@@ -141,7 +141,6 @@ export const AudienceDisplayManager: FC = () => {
               <TableCell>IP Address</TableCell>
               <TableCell>Connetcted</TableCell>
               <TableCell>Socket ID</TableCell>
-              <TableCell>Last URL</TableCell>
               <TableCell>Chroma Key</TableCell>
               <TableCell>Field Numbers</TableCell>
               <TableCell>Follower Mode Enabled</TableCell>
@@ -160,7 +159,6 @@ export const AudienceDisplayManager: FC = () => {
                 <TableCell>{client.ipAddress}</TableCell>
                 <TableCell>{client.connected ? 'Yes' : 'No'}</TableCell>
                 <TableCell>{client.lastSocketId}</TableCell>
-                <TableCell>{client.currentUrl}</TableCell>
                 <TableCell>
                   {client.audienceDisplayChroma.replaceAll('"', '')}
                 </TableCell>

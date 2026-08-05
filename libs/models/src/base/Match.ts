@@ -105,7 +105,12 @@ export type Match<T extends MatchDetailBase> = {
   name: string;
   scheduledTime: string;
   prestartTime: string;
-  startTime: string;
+  /**
+   * When the match actually started, as an ISO string. Distinct from
+   * `scheduledTime` (when the schedule says it should start) — this is only
+   * written once the match is actually started, and is `''` until then.
+   */
+  actualStartTime: string;
   fieldNumber: number;
   cycleTime: number;
   redScore: number;
@@ -129,7 +134,7 @@ export const matchZod: z.ZodSchema<Match<MatchDetailBase>> = z.object({
   name: z.string(),
   scheduledTime: z.string(),
   prestartTime: z.string(),
-  startTime: z.string(),
+  actualStartTime: z.string(),
   cycleTime: z.number(),
   redScore: z.number(),
   redMinPen: z.number(),
@@ -199,7 +204,10 @@ export function createFixedMatches(
       redMinPen: 0,
       redScore: 0,
       scheduledTime: item.startTime,
-      startTime: item.startTime,
+      // Seeded empty, not from `item.startTime`: the schedule item's start time
+      // is when the match is *supposed* to start. It gets filled in when the
+      // match is actually started.
+      actualStartTime: '',
       uploaded: 0
     };
     const matchAllianceMap = matchMap[matchNumber];
