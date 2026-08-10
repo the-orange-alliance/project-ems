@@ -199,7 +199,7 @@ export function createFixedMatches(
       redMinPen: 0,
       redScore: 0,
       scheduledTime: item.startTime,
-      startTime: item.startTime,
+      startTime: '',
       uploaded: 0
     };
     const matchAllianceMap = matchMap[matchNumber];
