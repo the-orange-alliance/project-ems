@@ -49,9 +49,65 @@ export class EventDatabase {
       this.db = await AsyncDatabase.open(
         getAppData('ems') + sep + this.name + '.db'
       );
+      await this.runMigrations();
     } catch (e) {
       throw e;
     }
+  }
+
+  /**
+   * Brings an already-existing database file up to date with the current schema.
+   *
+   * Every `create_*.sql` uses `CREATE TABLE IF NOT EXISTS`, which means schema
+   * changes to those files only ever reach *new* databases — an event created
+   * before a column was renamed would silently keep the old column and drop
+   * writes to the new one on the floor. This is the seam where those changes get
+   * applied to existing databases instead.
+   *
+   * Contract for every step in here:
+   *  - **Idempotent.** This runs on every database open, so a step that has
+   *    already been applied must be a no-op, not an error.
+   *  - **Safe on a fresh database.** A brand new event DB has no tables at all
+   *    until `createEventBase()` runs, so each step must check that its table
+   *    exists before touching it.
+   */
+  public async runMigrations(): Promise<void> {
+    // startTime -> actualStartTime. The old name read like "when the match
+    // started" but actually held the scheduled time; see issue #236.
+    await this.renameColumnIfPresent('match', 'startTime', 'actualStartTime');
+  }
+
+  /**
+   * Renames `from` to `to` on `table`, but only if the rename is actually
+   * pending — i.e. the table exists, still has the old column, and does not yet
+   * have the new one. Any other state is treated as already-migrated.
+   */
+  private async renameColumnIfPresent(
+    table: string,
+    from: string,
+    to: string
+  ): Promise<void> {
+    try {
+      if (!(await this.tableExists(table))) return;
+      const columns = (await this.db.all(
+        `PRAGMA table_info("${table}");`
+      )) as { name: string }[];
+      const names = columns.map((c) => c.name);
+      if (!names.includes(from) || names.includes(to)) return;
+      await this.db.exec(
+        `ALTER TABLE "${table}" RENAME COLUMN "${from}" TO "${to}";`
+      );
+    } catch (e) {
+      throw new ApiDatabaseError(table, e);
+    }
+  }
+
+  private async tableExists(table: string): Promise<boolean> {
+    const rows = await this.db.all(
+      `SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?;`,
+      [table]
+    );
+    return rows.length > 0;
   }
 
   public async setupUsers(): Promise<void> {

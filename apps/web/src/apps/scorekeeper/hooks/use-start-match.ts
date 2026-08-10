@@ -6,7 +6,9 @@ import { useModal } from '@ebay/nice-modal-react';
 import { AbortDialog } from 'src/components/dialogs/abort-dialog.js';
 import { useAtomCallback } from 'jotai/utils';
 import { useCallback } from 'react';
+import { DateTime } from 'luxon';
 import { emitWebhook } from 'src/api/use-webhook-data.js';
+import { patchMatch } from 'src/api/use-match-data.js';
 import { matchAtom } from 'src/stores/state/index.js';
 
 export const useMatchStartCallback = () => {
@@ -15,7 +17,7 @@ export const useMatchStartCallback = () => {
   const { events, connected } = useSocketWorker();
   return useAtomCallback(
     useCallback(
-      (get) => {
+      async (get, set) => {
         const match = get(matchAtom);
         if (!connected) {
           throw new Error('Not connected to realtime service.');
@@ -23,12 +25,31 @@ export const useMatchStartCallback = () => {
         if (!canStartMatch) {
           throw new Error('Attempted to start match when not allowed.');
         }
+        if (!match) {
+          throw new Error('Attempted to start match without a match selected.');
+        }
+        // Start the field and the timer first — neither should wait on a
+        // network round trip. Everything below is bookkeeping.
         fieldControl?.startField?.();
         events.start();
         setState(MatchState.MATCH_IN_PROGRESS);
-        emitWebhook(WebhookEvent.MATCH_STARTED, match);
+
+        const currentMatch = {
+          ...match,
+          actualStartTime: DateTime.now().toISO() ?? ''
+        };
+        set(matchAtom, currentMatch);
+        try {
+          await patchMatch(currentMatch);
+        } catch (e) {
+          // Deliberately not rethrown: the match is already running, and
+          // surfacing a blocking error mid-match would be alarming and
+          // unactionable. The start time can be corrected in the match editor.
+          console.error('Failed to persist match start time', e);
+        }
+        emitWebhook(WebhookEvent.MATCH_STARTED, currentMatch);
       },
-      [canStartMatch, setState]
+      [canStartMatch, setState, connected, fieldControl, events]
     )
   );
 };

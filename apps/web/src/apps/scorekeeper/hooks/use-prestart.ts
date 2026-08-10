@@ -78,7 +78,10 @@ export const usePrestartCallback = () => {
         // Send prestart to server
         events.prestart({ eventKey, tournamentKey, id });
         setState(MatchState.PRESTART_COMPLETE);
-        emitWebhook(WebhookEvent.PRESTARTED, match);
+        // `currentMatch`, not `match`: `match` is the pre-patch object, so
+        // sending it here shipped `prestartTime: ''` and `active: 0` to every
+        // subscriber — the original symptom behind issue #236.
+        emitWebhook(WebhookEvent.PRESTARTED, currentMatch);
       },
       [canPrestart, setState, teams]
     )

@@ -34,6 +34,7 @@ import {
 } from '../util/GlobalSchema.js';
 import { matchWithDetailsZod } from '@toa-lib/models/base';
 import { platform } from 'os';
+import { computeCycleTime } from '../util/CycleTime.js';
 
 const MatchArraySchema = z.array(matchWithDetailsZod);
 const MatchParticipantArraySchema = z.array(matchParticipantZod);
@@ -317,6 +318,22 @@ async function matchController(fastify: FastifyInstance) {
         const match = request.body as z.infer<typeof matchWithDetailsZod>;
         if (match.details) delete match.details;
         if (match.participants) delete match.participants;
+
+        // Cycle time is derived, never client-supplied, so that every client
+        // agrees on it. Recomputed only on the patch that first records this
+        // match's actual start — later patches (commit, score edits) resend the
+        // same actualStartTime and must not disturb the stored value.
+        const [stored] = await db.selectAllWhere(
+          'match',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
+        );
+        if (
+          match.actualStartTime &&
+          match.actualStartTime !== stored?.actualStartTime
+        ) {
+          const cycleTime = await computeCycleTime(db, match);
+          if (cycleTime !== null) match.cycleTime = cycleTime;
+        }
 
         if (match.active === 1) {
           await db.updateWhere(

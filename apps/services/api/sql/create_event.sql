@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS "match" (
     "id" INT NOT NULL,
     "name" VARCHAR(50) NOT NULL,
     "scheduledTime" VARCHAR(255),
-    "startTime" VARCHAR(255),
+    "actualStartTime" VARCHAR(255),
     "prestartTime" VARCHAR(255),
     "fieldNumber" INT,
     "cycleTime" REAL,
