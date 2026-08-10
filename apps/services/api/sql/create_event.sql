@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS "match" (
     "active" INT,
     "result" INT,
     "uploaded" INT,
+    "updatedAtUtc" VARCHAR(255),
     PRIMARY KEY (eventKey, tournamentKey, id),
     UNIQUE (eventKey, tournamentKey, id),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey)

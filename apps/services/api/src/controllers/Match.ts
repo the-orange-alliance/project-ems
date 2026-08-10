@@ -40,6 +40,13 @@ import {
 import { matchWithDetailsZod } from '@toa-lib/models/base';
 import { platform } from 'os';
 import { computeCycleTime } from '../util/CycleTime.js';
+import {
+  nowUtc,
+  participantsSinceClause,
+  sinceClause,
+  SinceQuery,
+  touchMatch
+} from '../util/MatchTimestamps.js';
 
 const MatchArraySchema = z.array(matchWithDetailsZod);
 const MatchParticipantArraySchema = z.array(matchParticipantZod);
@@ -133,6 +140,7 @@ async function matchController(fastify: FastifyInstance) {
     {
       schema: {
         params: EventKeyParams,
+        querystring: SinceQuery,
         response: errorableSchema(z.union([z.any(), MatchArraySchema])),
         tags: ['Matches']
       }
@@ -140,10 +148,11 @@ async function matchController(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
+        const { since } = request.query as z.infer<typeof SinceQuery>;
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere(
           'match',
-          `eventKey = "${eventKey}"`
+          `eventKey = "${eventKey}"${sinceClause(since)}`
         );
         reply.send(data);
       } catch (e) {
@@ -158,6 +167,7 @@ async function matchController(fastify: FastifyInstance) {
     {
       schema: {
         params: EventKeyParams,
+        querystring: SinceQuery,
         response: errorableSchema(
           z.union([z.any(), MatchParticipantArraySchema])
         ),
@@ -167,10 +177,11 @@ async function matchController(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
+        const { since } = request.query as z.infer<typeof SinceQuery>;
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere(
           'match_participant',
-          `eventKey = "${eventKey}"`
+          `eventKey = "${eventKey}"${participantsSinceClause(since)}`
         );
         reply.send(data);
       } catch (e) {
@@ -185,6 +196,7 @@ async function matchController(fastify: FastifyInstance) {
     {
       schema: {
         params: EventTournamentKeyParams,
+        querystring: SinceQuery,
         response: errorableSchema(z.union([z.any(), MatchArraySchema])),
         tags: ['Matches']
       }
@@ -194,14 +206,27 @@ async function matchController(fastify: FastifyInstance) {
         const { eventKey, tournamentKey } = request.params as z.infer<
           typeof EventTournamentKeyParams
         >;
+        const { since } = request.query as z.infer<typeof SinceQuery>;
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere(
           'match',
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"${sinceClause(
+            since
+          )}`
         );
+        // Nothing changed - skip the participants query rather than pulling the
+        // whole tournament's worth of rows to reconcile against an empty list.
+        if (data.length === 0) {
+          reply.send([]);
+          return;
+        }
+        // Fetch participants for the matches actually being returned. Ids come
+        // back from SQLite as numbers, but they are going into concatenated
+        // SQL, so coerce rather than trusting that.
+        const ids = data.map((match) => Number(match.id)).join(', ');
         const participants = await db.selectAllWhere(
           'match_participant',
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id IN (${ids})`
         );
         reply.send(reconcileMatchParticipants(data, participants));
       } catch (e) {
@@ -322,8 +347,10 @@ async function matchController(fastify: FastifyInstance) {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
         const db = await getDB(eventKey);
+        const insertedAt = nowUtc();
         const pureMatches: Match<any>[] = request.body.map((m: Match<any>) => ({
-          ...m
+          ...m,
+          updatedAtUtc: insertedAt
         }));
         for (const match of pureMatches) delete match.participants;
         const participants = request.body
@@ -366,6 +393,9 @@ async function matchController(fastify: FastifyInstance) {
         const match = request.body as z.infer<typeof matchWithDetailsZod>;
         if (match.details) delete match.details;
         if (match.participants) delete match.participants;
+        // Server-owned, like cycleTime below: clients echo back whatever they
+        // were last handed, which would pin the timestamp to a stale value.
+        delete match.updatedAtUtc;
 
         // Cycle time is derived, never client-supplied, so that every client
         // agrees on it. Recomputed only on the patch that first records this
@@ -384,13 +414,15 @@ async function matchController(fastify: FastifyInstance) {
         }
 
         if (match.active === 1) {
+          // Those matches really did change, so they get a new timestamp too.
           await db.updateWhere(
             'match',
-            { active: 0 },
+            { active: 0, updatedAtUtc: nowUtc() },
             'active = 1 AND fieldNumber = ' + match.fieldNumber
           );
         }
 
+        match.updatedAtUtc = nowUtc();
         await db.updateWhere(
           'match',
           match,
@@ -438,6 +470,7 @@ async function matchController(fastify: FastifyInstance) {
           data,
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
         );
+        await touchMatch(db, eventKey, tournamentKey, id);
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
@@ -472,6 +505,7 @@ async function matchController(fastify: FastifyInstance) {
             `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id} AND station = ${station}`
           );
         }
+        await touchMatch(db, eventKey, tournamentKey, id);
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
@@ -592,15 +626,30 @@ async function matchController(fastify: FastifyInstance) {
                   ? RESULT_BLUE_WIN
                   : RESULT_TIE;
 
+          const detailUpdate = funcs?.detailsToJson
+            ? funcs.detailsToJson(newDetails)
+            : newDetails;
           await db.updateWhere(
             'match_detail',
-            funcs?.detailsToJson ? funcs.detailsToJson(newDetails) : newDetails,
+            detailUpdate,
             `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${m.id}`
           );
 
           const scoreChanged =
             redScore !== m.redScore || blueScore !== m.blueScore;
           const resultChanged = result !== m.result;
+          // Details are rewritten for every examined match, usually with values
+          // identical to what was already there. Compare the columns actually
+          // being written against the stored row so that a recalculation that
+          // changes nothing doesn't bump every match's `updatedAtUtc` and make
+          // every consumer re-fetch the whole tournament. Ranking points can
+          // move without the score moving, so this can't just key off the score.
+          const detailsChanged = Object.entries(
+            detailUpdate as Record<string, unknown>
+          ).some(([key, value]) => stored[key] !== value);
+          if (scoreChanged || resultChanged || detailsChanged) {
+            await touchMatch(db, eventKey, tournamentKey, m.id);
+          }
           if (scoreChanged || resultChanged) {
             await db.updateWhere(
               'match',
