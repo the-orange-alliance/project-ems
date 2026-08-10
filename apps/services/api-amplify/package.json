@@ -5,15 +5,15 @@
     "aws-amplify": "^6.18.0"
   },
   "devDependencies": {
-    "@aws-amplify/backend": "^1.23.0",
-    "@aws-amplify/backend-cli": "^1.8.3",
+    "@aws-amplify/backend": "^1.24.0",
+    "@aws-amplify/backend-cli": "^1.9.0",
+    "@toa-lib/models": "1.0.0",
     "@types/minimatch": "^6.0.0",
     "aws-cdk-lib": "^2.261.0",
     "constructs": "^10.6.0",
     "esbuild": "^0.28.1",
     "tsx": "^4.23.1",
-    "typescript": "^5.9.3",
-    "@toa-lib/models": "1.0.0"
+    "typescript": "^5.9.3"
   },
   "engine": {
     "node": ">=20.0.0"
