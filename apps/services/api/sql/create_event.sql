@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS "team" (
     "countryCode" VARCHAR(2),
     "rookieYear" INT,
     "cardStatus" INT,
+    "cardPhase" VARCHAR(15),
     PRIMARY KEY (eventKey, teamKey),
     UNIQUE (eventKey, teamKey)
 );

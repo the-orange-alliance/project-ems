@@ -44,10 +44,18 @@ export const usePrestartCallback = () => {
         let currentMatch = { ...match, prestartTime, active: 1 };
         await patchMatch(currentMatch);
 
-        currentMatch.participants = currentMatch.participants?.map((p) => ({
-          ...p,
-          team: p.team || teams?.find((t) => t.teamKey === p.teamKey)
-        }));
+        currentMatch.participants = currentMatch.participants?.map((p) => {
+          if (p.team) return p;
+          const team = teams?.find((t) => t.teamKey === p.teamKey);
+          // teamsAtom comes from GET /teams, which has no tournament context and
+          // so reports carried cards unscoped. Strip them here rather than
+          // briefly showing a card from a finished phase — the socket prestart
+          // handler refetches from match/all, which scopes them properly.
+          return {
+            ...p,
+            team: team && { ...team, cardStatus: 0, hasCard: false, cardPhase: null }
+          };
+        });
 
         await patchMatchParticipants(
           { eventKey, tournamentKey, id },
