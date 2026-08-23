@@ -17,7 +17,8 @@ const PERSISTED_FIELDS = [
   'cycleTime',
   'fieldNumber',
   'active',
-  'uploaded'
+  'uploaded',
+  'updatedAtUtc'
 ] as const;
 
 /**

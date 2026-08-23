@@ -24,7 +24,7 @@ async function tournamentController(fastify: FastifyInstance) {
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere('tournament', `eventKey = "${eventKey}"`);
         if (!data) {
-          reply.send(DataNotFoundError);
+          reply.code(DataNotFoundError.code).send(DataNotFoundError);
         } else {
           reply.send(data.map((t: any) => tournamentDatabaseZod.parse(t)));
         }

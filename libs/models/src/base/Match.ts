@@ -122,6 +122,14 @@ export type Match<T extends MatchDetailBase> = {
   active: number;
   result: number;
   uploaded: number;
+  /**
+   * When this match was last written, as an ISO-8601 UTC string. Covers the
+   * whole match — a change to its participants or details bumps it too, so a
+   * consumer can reconcile on this one value. Server-owned: any value sent by a
+   * client is discarded. Optional only so that code constructing a new match
+   * doesn't have to invent one; the API always populates it.
+   */
+  updatedAtUtc?: string;
   participants?: MatchParticipant[];
   details?: T;
 };
@@ -145,6 +153,7 @@ export const matchZod: z.ZodSchema<Match<MatchDetailBase>> = z.object({
   active: z.number(),
   result: z.number(),
   uploaded: z.number(),
+  updatedAtUtc: z.string().optional(),
   participants: z.array(matchParticipantZod).optional(),
   details: matchKeyZod.optional()
 });
