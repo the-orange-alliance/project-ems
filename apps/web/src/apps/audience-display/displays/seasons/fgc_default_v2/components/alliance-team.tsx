@@ -2,6 +2,7 @@ import React from 'react';
 import { MatchParticipant, Ranking } from '@toa-lib/models';
 import { CountryFlag } from './country-flag.js';
 import { CardStatus } from './card-status.js';
+import { CarriedCard } from './carried-card.js';
 import { Space, Typography } from 'antd';
 import { useAtomValue } from 'jotai';
 import { matchOccurringRanksAtom } from 'src/stores/state/event.js';
@@ -77,6 +78,8 @@ const AllianceTeam: React.FC<AllianceTeamProps> = ({
         }}
       >
         <CardStatus cardStatus={team.cardStatus} />
+        {/* Carried from an earlier match; see CarriedCard. */}
+        <CarriedCard cardStatus={team.team?.cardStatus} />
       </div>
       {!hideRanks && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -154,6 +157,10 @@ export const AllianceTeamStream: React.FC<AllianceTeamProps> = ({
             <CardStatus cardStatus={team.cardStatus} />
           </div>
         )}
+        {/* Carried from an earlier match; see CarriedCard. */}
+        <div style={{ width: '1rem', height: '1rem' }}>
+          <CarriedCard cardStatus={team.team?.cardStatus} />
+        </div>
         <Typography.Text
           style={{ color: 'white', fontWeight: 'bold', fontSize: '1.25rem' }}
         >

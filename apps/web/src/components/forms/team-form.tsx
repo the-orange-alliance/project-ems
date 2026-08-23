@@ -1,6 +1,6 @@
 import { FC, ChangeEvent, useState, useEffect } from 'react';
-import { Button, Form, Input, InputNumber, Row, Col } from 'antd';
-import { Team, defaultTeam } from '@toa-lib/models';
+import { Button, Form, Input, InputNumber, Row, Col, Select } from 'antd';
+import { CardStatus, Team, defaultTeam } from '@toa-lib/models';
 import { ViewReturn } from '@components/buttons/view-return.js';
 
 const FormField: FC<{
@@ -53,6 +53,20 @@ export const TeamForm: FC<Props> = ({
     setTeam({
       ...team,
       [name]: type === 'number' ? parseInt(value) : value
+    });
+  };
+
+  // hasCard mirrors cardStatus and cardPhase records which phase the card is in
+  // force for, so all three are always written together. Clearing the card
+  // clears the phase; setting one by hand here has no tournament context, so it
+  // keeps whatever phase was already recorded.
+  const handleCardStatusChange = (cardStatus: number) => {
+    const cleared = cardStatus === CardStatus.NO_CARD;
+    setTeam({
+      ...team,
+      cardStatus,
+      hasCard: !cleared,
+      cardPhase: cleared ? null : team.cardPhase
     });
   };
 
@@ -130,6 +144,36 @@ export const TeamForm: FC<Props> = ({
           onChange={handleChange}
           disabled={loading}
         />
+        {/*
+          Carried cards are only ever *set* automatically (a yellow issued in a
+          match carries for the rest of the event). Nothing clears one
+          automatically, so that a card cannot be dropped as a side effect of a
+          later match being played or replayed — this control is the way back.
+        */}
+        <Col xs={24} sm={12} md={8}>
+          <Form.Item
+            label='Carried Card'
+            // The phase is spelled out because this form has no tournament
+            // context: a quals card shown here is not in force during playoffs.
+            tooltip='Card this team carries for the rest of the phase it was issued in. Set automatically when a yellow is issued; clear it here if it was issued in error.'
+            extra={
+              team.cardPhase
+                ? `In force for ${team.cardPhase} matches only`
+                : undefined
+            }
+          >
+            <Select
+              value={team.cardStatus ?? CardStatus.NO_CARD}
+              onChange={handleCardStatusChange}
+              disabled={loading}
+              size='large'
+              options={[
+                { value: CardStatus.NO_CARD, label: 'None' },
+                { value: CardStatus.YELLOW_CARD, label: 'Yellow Card' }
+              ]}
+            />
+          </Form.Item>
+        </Col>
       </Row>
       <Row justify='space-between'>
         <Col>{returnTo && <ViewReturn title='Back' href={returnTo} />}</Col>

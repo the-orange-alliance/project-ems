@@ -16,3 +16,4 @@ out/
 .amplify
 amplify_outputs*
 amplifyconfiguration*
+logs/

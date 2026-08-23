@@ -5,12 +5,9 @@ import { Ranking, rankingZod } from '../base/Ranking.js';
 import { isNonNullObject, isNumber } from '../types.js';
 import { Season, SeasonFunctions } from './index.js';
 
-export enum CardStatus {
-  WHITE_CARD = 3,
-  RED_CARD = 2,
-  YELLOW_CARD = 1,
-  NO_CARD = 0
-}
+// Re-exported from base so every season shares one definition; see CardStatus.ts.
+import { CardStatus } from '../base/CardStatus.js';
+export { CardStatus };
 
 // Protection Multiplier is sum of robot park states + 1
 const calcProtectionMultiplier = (
