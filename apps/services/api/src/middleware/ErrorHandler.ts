@@ -1,13 +1,21 @@
 import logger from '../util/Logger.js';
 import { ApiDatabaseError, ApiError, isApiError } from '@toa-lib/models';
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 
 const handleErrors = (
   error: unknown,
   req: FastifyRequest,
   reply: FastifyReply
 ) => {
-  if (error instanceof ApiDatabaseError) {
+  if (hasZodFastifySchemaValidationErrors(error)) {
+    // A schema violation is the caller's mistake, not ours. Without this branch
+    // it falls through to the catch-all below and every malformed request — a
+    // bad `?since=` cursor, a mistyped body — comes back as a 500, sending API
+    // consumers off hunting for a server-side bug that isn't there.
+    logger.warn(`[400] ${error.message} (${req.method} - ${req.originalUrl})`);
+    reply.status(400).send({ code: 400, message: error.message });
+  } else if (error instanceof ApiDatabaseError) {
     logger.error(`[500] ${error.message} (${req.method} - ${req.originalUrl})`);
     reply.status(500).send(toApiError(error));
   } else if (isApiError(error) && error.code <= 500) {
