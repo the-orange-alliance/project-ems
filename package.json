@@ -16,8 +16,6 @@
     "url": "https://github.com/the-orange-alliance/project-ems.git"
   },
   "devDependencies": {
-    "@aws-amplify/backend": "^1.24.0",
-    "@aws-amplify/backend-cli": "^1.9.0",
     "aws-cdk-lib": "^2.261.0",
     "constructs": "^10.6.0",
     "esbuild": "^0.28.1",
@@ -31,14 +29,10 @@
     "libs/client",
     "libs/server",
     "apps/services/api",
-    "apps/services/api-amplify",
     "apps/services/realtime",
     "apps/services/frc-fms",
     "apps/web"
   ],
-  "dependencies": {
-    "aws-amplify": "^6.18.0"
-  },
   "overrides": {
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
@@ -52,5 +46,14 @@
         "sqlite3": "^5 || ^6"
       }
     }
+  },
+  "allowScripts": {
+    "@serialport/bindings-cpp@13.0.0": true,
+    "bufferutil@4.1.0": true,
+    "esbuild@0.28.2": true,
+    "sqlite3@6.0.1": true,
+    "utf-8-validate@6.0.6": true,
+    "cpu-features@0.0.10": true,
+    "ssh2@1.17.0": true
   }
 }
