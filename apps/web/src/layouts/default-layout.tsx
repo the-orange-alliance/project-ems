@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { FC, JSX, useEffect } from 'react';
 import { Layout } from 'antd';
 import { appbarConfigAtom } from '@stores/state/index.js';
 import { useSetAtom } from 'jotai';
