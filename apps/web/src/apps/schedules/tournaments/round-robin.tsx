@@ -22,6 +22,12 @@ interface ParticipantsProps {
   disabled?: boolean;
 }
 const ALLIANCE_SIZE = 4;
+
+const defaultAllianceName = (i: number) => ({
+  long: `Alliance ${i + 1}`,
+  short: `#${i + 1}`
+});
+
 export const RoundRobinParticipants: FC<ParticipantsProps> = ({
   eventSchedule,
   onEventScheduleChange
@@ -49,37 +55,46 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
     if (alliances) {
       const numAlliances = alliances.length / ALLIANCE_SIZE;
       setAllianceRows(numAlliances);
-      setPickedTeamKeys(alliances.map((a) => a.teamKey));
-      
-      // Extract unique alliance names from existing alliances
+
+      // Alliance members are keyed by allianceRank, not returned in rank
+      // order (the API sorts by allianceNameLong). Sort defensively before
+      // mapping positionally into team slots, otherwise custom alliance
+      // names reorder the rows and teams reload under the wrong alliance.
+      const sorted = [...alliances].sort(
+        (a, b) => a.allianceRank - b.allianceRank || a.pickOrder - b.pickOrder
+      );
+      setPickedTeamKeys(sorted.map((a) => a.teamKey));
+
+      // Extract alliance names from existing alliances
       const names: { long: string; short: string }[] = [];
       for (let i = 0; i < numAlliances; i++) {
         const allianceMember = alliances.find((a) => a.allianceRank === i + 1);
-        if (allianceMember) {
-          names.push({
-            long: allianceMember.allianceNameLong,
-            short: allianceMember.allianceNameShort
-          });
-        } else {
-          names.push({
-            long: `Alliance ${i + 1}`,
-            short: `#${i + 1}`
-          });
-        }
+        names.push(
+          allianceMember
+            ? {
+                long: allianceMember.allianceNameLong,
+                short: allianceMember.allianceNameShort
+              }
+            : defaultAllianceName(i)
+        );
       }
       setAllianceNames(names);
     }
   }, [alliances]);
 
+  const updateAllianceName = (
+    i: number,
+    field: 'long' | 'short',
+    value: string
+  ) => {
+    const newNames = [...allianceNames];
+    newNames[i] = { ...defaultAllianceName(i), ...newNames[i], [field]: value };
+    setAllianceNames(newNames);
+  };
+
   const addAlliance = () => {
     setAllianceRows(allianceRows + 1);
-    setAllianceNames([
-      ...allianceNames,
-      {
-        long: `Alliance ${allianceRows + 1}`,
-        short: `#${allianceRows + 1}`
-      }
-    ]);
+    setAllianceNames([...allianceNames, defaultAllianceName(allianceRows)]);
   };
   const removeAlliance = () => {
     setAllianceRows(allianceRows - 1);
@@ -131,8 +146,10 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
           eventKey,
           tournamentKey,
           teamKey,
-          allianceNameShort: allianceNames[i]?.short || `#${i + 1}`,
-          allianceNameLong: allianceNames[i]?.long || `Alliance ${i + 1}`,
+          allianceNameShort:
+            allianceNames[i]?.short || defaultAllianceName(i).short,
+          allianceNameLong:
+            allianceNames[i]?.long || defaultAllianceName(i).long,
           allianceRank: i + 1,
           isCaptain: j === 0 ? 1 : 0,
           pickOrder: j + 1
@@ -173,43 +190,31 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
                 key={`alliance-${i + 1}-header`}
                 style={{ marginTop: '1rem' }}
               >
-                <Row gutter={[8, 8]} align="middle">
+                <Row gutter={[8, 8]} align='middle'>
                   <Col>
                     <Typography.Title level={4} style={{ margin: 0 }}>
-                      Alliance {i + 1}
+                      #{i + 1}
                     </Typography.Title>
                   </Col>
-                  <Col flex="auto">
+                  <Col flex='auto'>
                     <Input
-                      placeholder="Alliance Name (e.g., Alliance 1)"
+                      placeholder='Alliance Name (e.g., Alliance 1)'
                       value={allianceNames[i]?.long || ''}
-                      onChange={(e) => {
-                        const newNames = [...allianceNames];
-                        newNames[i] = {
-                          long: newNames[i]?.long || `Alliance ${i + 1}`,
-                          short: newNames[i]?.short || `#${i + 1}`,
-                          ...newNames[i],
-                          long: e.target.value
-                        };
-                        setAllianceNames(newNames);
-                      }}
+                      maxLength={50}
+                      onChange={(e) =>
+                        updateAllianceName(i, 'long', e.target.value)
+                      }
                       style={{ maxWidth: '300px' }}
                     />
                   </Col>
                   <Col>
                     <Input
-                      placeholder="Short (e.g., #1)"
+                      placeholder='Short (e.g., #1)'
                       value={allianceNames[i]?.short || ''}
-                      onChange={(e) => {
-                        const newNames = [...allianceNames];
-                        newNames[i] = {
-                          long: newNames[i]?.long || `Alliance ${i + 1}`,
-                          short: newNames[i]?.short || `#${i + 1}`,
-                          ...newNames[i],
-                          short: e.target.value
-                        };
-                        setAllianceNames(newNames);
-                      }}
+                      maxLength={5}
+                      onChange={(e) =>
+                        updateAllianceName(i, 'short', e.target.value)
+                      }
                       style={{ maxWidth: '120px' }}
                     />
                   </Col>
