@@ -230,7 +230,7 @@ async function rankingController(fastify: FastifyInstance) {
         const seasonKey = getSeasonKeyFromEventKey(eventKey);
         const functions = getFunctionsBySeasonKey(seasonKey);
         if (!functions) {
-          reply.send(SeasonFunctionsMissing);
+          reply.code(SeasonFunctionsMissing.code).send(SeasonFunctionsMissing);
           return;
         }
         if (playoffs) {

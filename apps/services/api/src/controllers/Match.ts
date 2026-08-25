@@ -5,7 +5,12 @@ import {
   matchMakerParamsZod,
   matchParticipantZod,
   reconcileMatchParticipants,
-  getFunctionsBySeasonKey
+  getFunctionsBySeasonKey,
+  getCardCarryPhase,
+  RESULT_BLUE_WIN,
+  RESULT_GAME_SPECIFIC,
+  RESULT_RED_WIN,
+  RESULT_TIE
 } from '@toa-lib/models';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -34,9 +39,44 @@ import {
 } from '../util/GlobalSchema.js';
 import { matchWithDetailsZod } from '@toa-lib/models/base';
 import { platform } from 'os';
+import { computeCycleTime } from '../util/CycleTime.js';
+import {
+  nowUtc,
+  participantsSinceClause,
+  sinceClause,
+  SinceQuery,
+  touchMatch
+} from '../util/MatchTimestamps.js';
 
 const MatchArraySchema = z.array(matchWithDetailsZod);
 const MatchParticipantArraySchema = z.array(matchParticipantZod);
+
+const MatchScoreSchema = z.object({
+  redScore: z.number(),
+  blueScore: z.number(),
+  result: z.number()
+});
+
+const MatchScoreChangeSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  previous: MatchScoreSchema,
+  current: MatchScoreSchema,
+  resultChanged: z.boolean()
+});
+
+const RecalculateSkipSchema = z.object({
+  id: z.number(),
+  reason: z.string()
+});
+
+/** What `/recalculate-scores` actually did, so the caller can see it. */
+const RecalculateSummarySchema = z.object({
+  matchesExamined: z.number(),
+  matchesChanged: z.number(),
+  changes: z.array(MatchScoreChangeSchema),
+  skipped: z.array(RecalculateSkipSchema)
+});
 
 async function matchController(fastify: FastifyInstance) {
   // SPECIAL ROUTES
@@ -100,6 +140,7 @@ async function matchController(fastify: FastifyInstance) {
     {
       schema: {
         params: EventKeyParams,
+        querystring: SinceQuery,
         response: errorableSchema(z.union([z.any(), MatchArraySchema])),
         tags: ['Matches']
       }
@@ -107,10 +148,11 @@ async function matchController(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
+        const { since } = request.query as z.infer<typeof SinceQuery>;
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere(
           'match',
-          `eventKey = "${eventKey}"`
+          `eventKey = "${eventKey}"${sinceClause(since)}`
         );
         reply.send(data);
       } catch (e) {
@@ -125,6 +167,7 @@ async function matchController(fastify: FastifyInstance) {
     {
       schema: {
         params: EventKeyParams,
+        querystring: SinceQuery,
         response: errorableSchema(
           z.union([z.any(), MatchParticipantArraySchema])
         ),
@@ -134,10 +177,11 @@ async function matchController(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
+        const { since } = request.query as z.infer<typeof SinceQuery>;
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere(
           'match_participant',
-          `eventKey = "${eventKey}"`
+          `eventKey = "${eventKey}"${participantsSinceClause(since)}`
         );
         reply.send(data);
       } catch (e) {
@@ -152,6 +196,7 @@ async function matchController(fastify: FastifyInstance) {
     {
       schema: {
         params: EventTournamentKeyParams,
+        querystring: SinceQuery,
         response: errorableSchema(z.union([z.any(), MatchArraySchema])),
         tags: ['Matches']
       }
@@ -161,14 +206,27 @@ async function matchController(fastify: FastifyInstance) {
         const { eventKey, tournamentKey } = request.params as z.infer<
           typeof EventTournamentKeyParams
         >;
+        const { since } = request.query as z.infer<typeof SinceQuery>;
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere(
           'match',
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"${sinceClause(
+            since
+          )}`
         );
+        // Nothing changed - skip the participants query rather than pulling the
+        // whole tournament's worth of rows to reconcile against an empty list.
+        if (data.length === 0) {
+          reply.send([]);
+          return;
+        }
+        // Fetch participants for the matches actually being returned. Ids come
+        // back from SQLite as numbers, but they are going into concatenated
+        // SQL, so coerce rather than trusting that.
+        const ids = data.map((match) => Number(match.id)).join(', ');
         const participants = await db.selectAllWhere(
           'match_participant',
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id IN (${ids})`
         );
         reply.send(reconcileMatchParticipants(data, participants));
       } catch (e) {
@@ -211,12 +269,28 @@ async function matchController(fastify: FastifyInstance) {
         const parsedDetails = funcs?.detailsFromJson
           ? (funcs.detailsFromJson(details) ?? details)
           : details;
+        // A carried card is only in force during the phase it was earned in, so
+        // it is scoped here rather than at every display. This route is the
+        // authoritative source of `participant.team` for the audience display
+        // and the scorekeeper's repeat-card prompt, and unlike them it knows
+        // which tournament is being played. Prestarting the first match of a
+        // new phase therefore "resets" the cards with no reset step to run.
+        const [tournament] = await db.selectAllWhere(
+          'tournament',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
+        );
+        const phase = tournament ? getCardCarryPhase(tournament) : null;
         for (let i = 0; i < participants.length; i++) {
           const [team] = await db.selectAllWhere(
             'team',
             `teamKey = ${participants[i].teamKey} AND eventKey = "${eventKey}"`
           );
-          participants[i].team = team;
+          // A null phase (test/practice) matches nothing, which is what makes
+          // carried cards invisible there.
+          participants[i].team =
+            team && team.cardPhase && team.cardPhase === phase
+              ? team
+              : { ...team, cardStatus: 0, hasCard: 0, cardPhase: null };
         }
         match.participants = participants;
         match.details = parsedDetails;
@@ -248,7 +322,7 @@ async function matchController(fastify: FastifyInstance) {
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
         );
         if (!data) {
-          reply.send(DataNotFoundError);
+          reply.code(DataNotFoundError.code).send(DataNotFoundError);
         } else {
           reply.send(data);
         }
@@ -273,8 +347,10 @@ async function matchController(fastify: FastifyInstance) {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
         const db = await getDB(eventKey);
+        const insertedAt = nowUtc();
         const pureMatches: Match<any>[] = request.body.map((m: Match<any>) => ({
-          ...m
+          ...m,
+          updatedAtUtc: insertedAt
         }));
         for (const match of pureMatches) delete match.participants;
         const participants = request.body
@@ -317,15 +393,36 @@ async function matchController(fastify: FastifyInstance) {
         const match = request.body as z.infer<typeof matchWithDetailsZod>;
         if (match.details) delete match.details;
         if (match.participants) delete match.participants;
+        // Server-owned, like cycleTime below: clients echo back whatever they
+        // were last handed, which would pin the timestamp to a stale value.
+        delete match.updatedAtUtc;
+
+        // Cycle time is derived, never client-supplied, so that every client
+        // agrees on it. Recomputed only on the patch that first records this
+        // match's actual start — later patches (commit, score edits) resend the
+        // same actualStartTime and must not disturb the stored value.
+        const [stored] = await db.selectAllWhere(
+          'match',
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
+        );
+        if (
+          match.actualStartTime &&
+          match.actualStartTime !== stored?.actualStartTime
+        ) {
+          const cycleTime = await computeCycleTime(db, match);
+          if (cycleTime !== null) match.cycleTime = cycleTime;
+        }
 
         if (match.active === 1) {
+          // Those matches really did change, so they get a new timestamp too.
           await db.updateWhere(
             'match',
-            { active: 0 },
+            { active: 0, updatedAtUtc: nowUtc() },
             'active = 1 AND fieldNumber = ' + match.fieldNumber
           );
         }
 
+        match.updatedAtUtc = nowUtc();
         await db.updateWhere(
           'match',
           match,
@@ -345,7 +442,7 @@ async function matchController(fastify: FastifyInstance) {
       schema: {
         params: EventTournamentIdParams,
         body: z.any(),
-        response: errorableSchema(EmptySchema),
+        response: errorableSchema(EmptySchema, InvalidDataError),
         tags: ['Matches']
       }
     },
@@ -364,7 +461,7 @@ async function matchController(fastify: FastifyInstance) {
           body.tournamentKey !== tournamentKey ||
           String(body.id) !== id
         ) {
-          reply.send(InvalidDataError);
+          reply.code(InvalidDataError.code).send(InvalidDataError);
           return;
         }
         const data = funcs?.detailsToJson ? funcs.detailsToJson(body) : body;
@@ -373,6 +470,7 @@ async function matchController(fastify: FastifyInstance) {
           data,
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
         );
+        await touchMatch(db, eventKey, tournamentKey, id);
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
@@ -407,6 +505,7 @@ async function matchController(fastify: FastifyInstance) {
             `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id} AND station = ${station}`
           );
         }
+        await touchMatch(db, eventKey, tournamentKey, id);
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
@@ -450,12 +549,17 @@ async function matchController(fastify: FastifyInstance) {
   );
 
   // Recalculate Match Scores
+  //
+  // Re-derives every played match's details and scores from the stored match
+  // details, and writes the results back. Previously this only logged what it
+  // would have changed and never replied at all, so callers hung until they
+  // timed out and the recalculated scores were thrown away.
   fastify.withTypeProvider<ZodTypeProvider>().post(
     '/recalculate-scores/:eventKey/:tournamentKey',
     {
       schema: {
         params: EventTournamentKeyParams,
-        response: errorableSchema(EmptySchema),
+        response: errorableSchema(RecalculateSummarySchema),
         tags: ['Matches']
       }
     },
@@ -468,11 +572,11 @@ async function matchController(fastify: FastifyInstance) {
         const funcs = getFunctionsBySeasonKey(
           eventKey.split('-')[0].toLowerCase()
         );
-        console.log(
+        logger.info(
           `Recalculating scores for event ${eventKey} tournament ${tournamentKey}`
         );
 
-        const match = await db.selectAllWhere(
+        const matches = await db.selectAllWhere(
           'match',
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND result > -1`
         );
@@ -484,19 +588,24 @@ async function matchController(fastify: FastifyInstance) {
         for (const detail of matchDetails) {
           detailsMap.set(detail.id, detail);
         }
-        for (const m of match) {
-          const detail = detailsMap.get(m.id);
-          if (!detail) {
-            console.log(
-              `No details found for match id ${m.id}, skipping score recalculation.`
-            );
+
+        const changes: z.infer<typeof MatchScoreChangeSchema>[] = [];
+        const skipped: z.infer<typeof RecalculateSkipSchema>[] = [];
+
+        for (const m of matches) {
+          const stored = detailsMap.get(m.id);
+          if (!stored) {
+            skipped.push({ id: m.id, reason: 'no match details found' });
             continue;
           }
+          // Parse the row the same way GET /all does before handing it to
+          // season code — the raw row is not the season's detail shape.
+          const detail = funcs?.detailsFromJson
+            ? (funcs.detailsFromJson(stored) ?? stored)
+            : stored;
           const newDetails = funcs?.calculateRankingPoints?.(detail);
           if (!newDetails) {
-            console.log(
-              `No new details returned for match id ${m.id}, skipping score recalculation.`
-            );
+            skipped.push({ id: m.id, reason: 'season returned no details' });
             continue;
           }
           const [redScore, blueScore] = funcs?.calculateScore?.({
@@ -504,37 +613,74 @@ async function matchController(fastify: FastifyInstance) {
             details: newDetails
           }) ?? [-1, -1];
 
-          if (redScore !== m.redScore) {
-            console.log(
-              `SCORE UPDATED: Match ${m.id} red score changed from ${m.redScore} to ${redScore}`
-            );
+          // Keep `result` consistent with the scores we just wrote. Leaving a
+          // stale result next to a changed score is worse than not recalculating
+          // at all. Game-specific results are decided by something other than
+          // the score comparison, so those are left alone.
+          const result =
+            m.result === RESULT_GAME_SPECIFIC
+              ? m.result
+              : redScore > blueScore
+                ? RESULT_RED_WIN
+                : blueScore > redScore
+                  ? RESULT_BLUE_WIN
+                  : RESULT_TIE;
+
+          const detailUpdate = funcs?.detailsToJson
+            ? funcs.detailsToJson(newDetails)
+            : newDetails;
+          await db.updateWhere(
+            'match_detail',
+            detailUpdate,
+            `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${m.id}`
+          );
+
+          const scoreChanged =
+            redScore !== m.redScore || blueScore !== m.blueScore;
+          const resultChanged = result !== m.result;
+          // Details are rewritten for every examined match, usually with values
+          // identical to what was already there. Compare the columns actually
+          // being written against the stored row so that a recalculation that
+          // changes nothing doesn't bump every match's `updatedAtUtc` and make
+          // every consumer re-fetch the whole tournament. Ranking points can
+          // move without the score moving, so this can't just key off the score.
+          const detailsChanged = Object.entries(
+            detailUpdate as Record<string, unknown>
+          ).some(([key, value]) => stored[key] !== value);
+          if (scoreChanged || resultChanged || detailsChanged) {
+            await touchMatch(db, eventKey, tournamentKey, m.id);
           }
-          if (blueScore !== m.blueScore) {
-            console.log(
-              `SCORE UPDATED: Match ${m.id} blue score changed from ${m.blueScore} to ${blueScore}`
+          if (scoreChanged || resultChanged) {
+            await db.updateWhere(
+              'match',
+              { redScore, blueScore, result },
+              `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${m.id}`
             );
-          }
-          const oldWinBlue = m.blueScore > m.redScore;
-          const newWinBlue = blueScore > redScore;
-
-          const oldWinTie = m.blueScore === m.redScore;
-          const newWinTie = blueScore === redScore;
-
-          const coOpChanged =
-            detail.coopertitionLevel !== (newDetails as any).coopertitionLevel;
-
-          if (coOpChanged) {
-            console.log(
-              `CO-OP LEVEL CHANGED: Match ${m.id} CO-OP level changed from ${detail.coopertitionLevel} to ${(newDetails as any).coopertitionLevel}`
-            );
-          }
-
-          if (oldWinBlue !== newWinBlue || oldWinTie !== newWinTie) {
-            console.log(
-              `MATCH RESULT CHANGED: Match ${m.id} OLD: Red ${m.redScore} - Blue ${m.blueScore} NEW: Red ${redScore} - Blue ${blueScore}`
+            const change = {
+              id: m.id,
+              name: m.name,
+              previous: {
+                redScore: m.redScore,
+                blueScore: m.blueScore,
+                result: m.result
+              },
+              current: { redScore, blueScore, result },
+              resultChanged
+            };
+            changes.push(change);
+            logger.info(
+              `Match ${m.id} recalculated: ${m.redScore}-${m.blueScore} -> ${redScore}-${blueScore}` +
+                (resultChanged ? ` (result ${m.result} -> ${result})` : '')
             );
           }
         }
+
+        reply.status(200).send({
+          matchesExamined: matches.length,
+          matchesChanged: changes.length,
+          changes,
+          skipped
+        });
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
       }
