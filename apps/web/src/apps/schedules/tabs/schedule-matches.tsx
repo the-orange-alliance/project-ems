@@ -91,11 +91,11 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
         apiKey
       );
       showSnackbar('Matches saved successfully.');
-      setLoading(false);
     } catch (e) {
-      setLoading(false);
       const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
       showSnackbar('Error while uploading matches.', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,11 +135,11 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
         apiKey
       );
       showSnackbar('Match times adjusted successfully.');
-      setLoading(false);
     } catch (e) {
-      setLoading(false);
       const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
       showSnackbar('Error while adjusting match times.', error);
+    } finally {
+      setLoading(false);
     }
   };
 
