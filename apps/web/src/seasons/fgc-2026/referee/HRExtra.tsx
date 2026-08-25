@@ -1,18 +1,28 @@
 import {
+  FGC26FCS,
   IgnitingInnovation,
   ItemUpdate,
   MatchSocketEvent,
-  NumberAdjustment
+  MatchState
 } from '@toa-lib/models';
-import { Row, Col, Typography, Card } from 'antd';
-import { useAtom } from 'jotai';
+import { Row, Col, Card } from 'antd';
+import { useAtom, useAtomValue } from 'jotai';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
-import { NumberInput } from 'src/components/inputs/number-input.js';
+import { useFcsData } from 'src/api/use-fcs-data.js';
+import { LedBallCalculator } from 'src/components/inputs/led-ball-calculator.js';
 import { matchAtom } from 'src/stores/state/event.js';
+import { matchStateAtom } from 'src/stores/state/match.js';
 
 const HeadRefereeExtra: React.FC = () => {
   const { worker } = useSocketWorker();
   const [match, setMatch] = useAtom(matchAtom);
+  const matchState = useAtomValue(matchStateAtom);
+  const postMatch = matchState > MatchState.MATCH_IN_PROGRESS;
+  const { data: fcsData } = useFcsData<Partial<FGC26FCS.SettingsType>>(
+    match?.fieldNumber ?? ''
+  );
+  const ratio =
+    fcsData?.wildfireBallsPerLed ?? FGC26FCS.DEFAULT_SETTINGS.wildfireBallsPerLed;
 
   const handleMatchDetailsUpdate = <
     K extends keyof IgnitingInnovation.MatchDetails
@@ -35,49 +45,23 @@ const HeadRefereeExtra: React.FC = () => {
     }
   };
 
-  const handleMatchDetailsAdjustment = (
-    detailsKey: keyof IgnitingInnovation.MatchDetails,
-    adjustment: number
-  ) => {
-    const adjustmentPacket: NumberAdjustment = {
-      key: String(detailsKey),
-      adjustment
-    };
-    worker?.emit(
-      MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
-      adjustmentPacket
+  // "Conversion calculator": a ref may edit either the LED count or the ball count. Whichever
+  // one they touch is authoritative and the other is fully recomputed from it - see
+  // ledCountToBallCount/ballCountToLedCount.
+  const handleLedChange = (newLedCount: number) => {
+    handleMatchDetailsUpdate('approximateWildfireInExtinguisher', newLedCount);
+    handleMatchDetailsUpdate(
+      'wildfireInExtinguisher',
+      IgnitingInnovation.ledCountToBallCount(newLedCount, ratio)
     );
-
-    // Reduce UI latency by updating our local match state in anticipation
-    // of the update that the server wil send soon
-    if (match?.details) {
-      const details = Object.assign(
-        {},
-        {
-          ...match.details,
-          [detailsKey]: (match.details[detailsKey] as number) + adjustment
-        }
-      );
-      const newMatch = Object.assign({}, { ...match, details });
-      setMatch(newMatch);
-    }
   };
 
-  const handleExtinguisherChange = (
-    newValue: number,
-    manuallyTyped: boolean
-  ) => {
-    if (manuallyTyped) {
-      handleMatchDetailsUpdate('wildfireInExtinguisher', newValue);
-    }
-  };
-
-  const handleExtinguisherIncrement = () => {
-    handleMatchDetailsAdjustment('wildfireInExtinguisher', 1);
-  };
-
-  const handleExtinguisherDecrement = () => {
-    handleMatchDetailsAdjustment('wildfireInExtinguisher', -1);
+  const handleBallChange = (newBallCount: number) => {
+    handleMatchDetailsUpdate('wildfireInExtinguisher', newBallCount);
+    handleMatchDetailsUpdate(
+      'approximateWildfireInExtinguisher',
+      IgnitingInnovation.ballCountToLedCount(newBallCount, ratio)
+    );
   };
 
   return (
@@ -99,22 +83,14 @@ const HeadRefereeExtra: React.FC = () => {
             alignItems: 'center'
           }}
         >
-          <Typography.Title
-            level={5}
-            style={{
-              textAlign: 'center',
-              textTransform: 'capitalize',
-              marginBottom: 16
-            }}
-          >
-            EXTINGUISHER (Global Alliance)
-          </Typography.Title>
-          <NumberInput
-            value={match?.details?.wildfireInExtinguisher || 0}
-            textFieldDisabled
-            onChange={handleExtinguisherChange}
-            onIncrement={handleExtinguisherIncrement}
-            onDecrement={handleExtinguisherDecrement}
+          <LedBallCalculator
+            title='EXTINGUISHER (Global Alliance)'
+            ledCount={match?.details?.approximateWildfireInExtinguisher ?? 0}
+            ballCount={match?.details?.wildfireInExtinguisher ?? 0}
+            ratio={ratio}
+            onLedChange={handleLedChange}
+            onBallChange={handleBallChange}
+            ledDisabled={postMatch}
           />
         </Col>
       </Row>
