@@ -12,11 +12,11 @@ import EventsTable from 'src/components/tables/events-table.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
 import { MoreButton } from 'src/components/buttons/more-button.js';
-import { APIOptions } from '@toa-lib/client';
 import { useAtomValue } from 'jotai';
 import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { mutate } from 'swr';
+import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
 
 export const EventSelection: FC = () => {
   const navigate = useNavigate();
@@ -26,10 +26,7 @@ export const EventSelection: FC = () => {
 
   const handleDownload = async () => {
     try {
-      const previousUrl = APIOptions.host;
-      APIOptions.host = remoteUrl;
-      const events = await getEvents();
-      APIOptions.host = previousUrl;
+      const events = await getEvents(normalizeRemoteApiHost(remoteUrl));
       await Promise.all(
         events.map(async (event) => {
           await postEvent(event);

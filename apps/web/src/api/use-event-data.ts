@@ -13,8 +13,8 @@ export const setupDefaultAccounts = async (): Promise<void> =>
 export const purgeAll = async (): Promise<void> =>
   apiFetcher('admin/purge', 'DELETE');
 
-export const getEvents = async (): Promise<Event[]> =>
-  apiFetcher('event', 'GET', undefined, eventZod.array().parse);
+export const getEvents = async (host?: string): Promise<Event[]> =>
+  apiFetcher('event', 'GET', undefined, eventZod.array().parse, host);
 
 export const postEvent = async (event: Event): Promise<void> =>
   apiFetcher('event', 'POST', event);

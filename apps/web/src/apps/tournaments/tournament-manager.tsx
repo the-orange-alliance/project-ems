@@ -15,9 +15,9 @@ import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { getDifferences } from 'src/stores/array-utils.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
-import { APIOptions } from '@toa-lib/client';
 import { useAtomValue } from 'jotai';
 import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
+import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
 
 export const TournamentManager: FC = () => {
   const { loading, state } = useEventState({
@@ -97,10 +97,10 @@ export const TournamentManager: FC = () => {
 
   const handleDownload = async () => {
     try {
-      const previousUrl = APIOptions.host;
-      APIOptions.host = remoteUrl;
-      const tournaments = await getTournaments(event?.eventKey);
-      APIOptions.host = previousUrl;
+      const tournaments = await getTournaments(
+        event?.eventKey,
+        normalizeRemoteApiHost(remoteUrl)
+      );
       setModifiedTournaments(tournaments);
       showSnackbar(`(${tournaments.length}) Teams successfully downloaded`);
     } catch (e) {
