@@ -1,8 +1,8 @@
 import { FC } from 'react';
-import { DisplayProps } from '../../displays';
+import { DisplayProps } from '../../displays.js';
 import styled from '@emotion/styled';
-import { AlliancePlay } from './components/alliance-play';
-import { MatchScoreBug } from './components/match-score-bug';
+import { AlliancePlay } from './components/alliance-play.js';
+import { MatchScoreBug } from './components/match-score-bug.js';
 
 const Container = styled.div`
   background-color: #000000;

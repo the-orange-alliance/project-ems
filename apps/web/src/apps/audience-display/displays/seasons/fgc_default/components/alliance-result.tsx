@@ -11,21 +11,21 @@ import {
   Ranking,
   Team
 } from '@toa-lib/models';
-import { CountryFlag } from './country-flag';
+import { CountryFlag } from './country-flag.js';
 import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   MinusOutlined,
   BlockOutlined
 } from '@ant-design/icons';
-import { ResultsBreakdown } from '../../../displays';
-import { Breakdown as Breakdown2024 } from '../../fgc_2024';
+import { ResultsBreakdown } from '../../../displays.js';
+import { Breakdown as Breakdown2024 } from '../../fgc_2024/index.js';
 import { Row, Col, Typography } from 'antd';
-import BreakdownRow from './breakdown-row';
+import BreakdownRow from './breakdown-row.js';
 import { FeedingTheFuture } from '@toa-lib/models';
-import { CardStatus as CardStatusComponent } from './card-status';
-import { useTournamentsForEvent } from 'src/api/use-tournament-data';
-import { useAllianceMember } from 'src/api/use-alliance-data';
+import { CardStatus as CardStatusComponent } from './card-status.js';
+import { useTournamentsForEvent } from 'src/api/use-tournament-data.js';
+import { useAllianceMember } from 'src/api/use-alliance-data.js';
 import { RegionalBreakdownFGC25 } from '../../fgc_2025/index.js';
 import { RegionalBreakdownFGC26 } from '../../fgc_2026/index.js';
 

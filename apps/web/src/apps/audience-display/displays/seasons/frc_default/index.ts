@@ -1,5 +1,5 @@
-import { MatchPlay } from './match-play';
-import { MatchPreview } from './match-preview';
-import { MatchResults } from './match-results';
+import { MatchPlay } from './match-play.js';
+import { MatchPreview } from './match-preview.js';
+import { MatchResults } from './match-results.js';
 
 export { MatchPlay, MatchPreview, MatchResults };

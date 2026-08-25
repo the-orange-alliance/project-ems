@@ -1,3 +1,3 @@
-import { AudienceDisplayManager } from './audience-display-manager';
+import { AudienceDisplayManager } from './audience-display-manager.js';
 
 export { AudienceDisplayManager };
