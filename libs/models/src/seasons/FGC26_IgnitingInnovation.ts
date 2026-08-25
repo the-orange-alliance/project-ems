@@ -314,7 +314,7 @@ function calculateRankings(
 
   // In this loop calculate basic W-L-T, as well as basic game information
   for (const match of matches) {
-    if (!match.participants) break;
+    if (!match.participants) continue;
     for (const participant of match.participants) {
       if (!rankingMap.get(participant.teamKey)) {
         rankingMap.set(participant.teamKey, {
@@ -473,7 +473,7 @@ export function calculatePlayoffsRankings(
   const rankingMap: Map<number, SeasonRanking> = new Map();
 
   for (const match of matches) {
-    if (!match.participants) break;
+    if (!match.participants) continue;
     for (const participant of match.participants) {
       if (!rankingMap.get(participant.teamKey)) {
         rankingMap.set(participant.teamKey, {
@@ -539,8 +539,10 @@ export function calculatePlayoffsRankings(
     const prevRanking = prevRankings.find(
       (r) => r.teamKey === rankings[i].teamKey
     );
-    if (prevRanking && member) {
+    if (member) {
       rankings[i].rank = allianceRankMap.get(member.allianceRank) || 0;
+    }
+    if (prevRanking) {
       const rankDelta =
         prevRanking.rank === 0 ? 0 : prevRanking.rank - rankings[i].rank;
       rankings[i].rankChange = rankDelta;
