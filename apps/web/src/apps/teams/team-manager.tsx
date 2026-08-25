@@ -90,16 +90,16 @@ export const TeamManager: FC = () => {
     const { eventKey } = event;
     // Array of random ISO 3-digit country codes to use for test teams
     const countryCodes = [
-      'USA',
-      'CAN',
-      'GBR',
-      'AUS',
-      'DEU',
-      'FRA',
-      'ITA',
-      'ESP',
-      'NLD',
-      'SWE'
+      'US',
+      'CA',
+      'GB',
+      'AU',
+      'DE',
+      'FR',
+      'IT',
+      'ES',
+      'NL',
+      'SW'
     ];
     const randCountry =
       countryCodes[Math.floor(Math.random() * countryCodes.length)];

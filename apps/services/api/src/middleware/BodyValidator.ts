@@ -1,7 +1,7 @@
 import { TypeGuard } from '@toa-lib/models';
 import { NextFunction, Request, Response } from 'express';
 import { BodyNotValidError, EmptyBodyError } from '../util/Errors.js';
-import { z, ZodTypeDef, ZodType } from 'zod';
+import { ZodType } from 'zod';
 
 export const validateBody =
   <T>(t: TypeGuard<T>) =>
@@ -12,7 +12,7 @@ export const validateBody =
   };
 
 export const validateBodyZ =
-  <T, Z extends ZodTypeDef = ZodTypeDef>(t: ZodType<T, Z>) =>
+  <T>(t: ZodType<T>) =>
   (req: Request, res: Response, next: NextFunction) => {
     if (!req.body) return next(EmptyBodyError);
     try {

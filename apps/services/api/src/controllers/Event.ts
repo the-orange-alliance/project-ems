@@ -59,7 +59,7 @@ async function eventController(fastify: FastifyInstance) {
             `eventKey = "${eventKey}"`
           );
           if (data.length === 0) {
-            reply.send(DataNotFoundError);
+            reply.code(DataNotFoundError.code).send(DataNotFoundError);
           } else {
             reply.send(data[0]);
           }

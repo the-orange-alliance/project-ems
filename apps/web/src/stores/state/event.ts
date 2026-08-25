@@ -5,6 +5,7 @@ import {
   Team,
   Tournament,
   Match,
+  MatchKey,
   Ranking
 } from '@toa-lib/models';
 import { atom } from 'jotai';
@@ -79,6 +80,15 @@ export const scheduleParamsAtom = atom<ScheduleParams[]>([]);
 export const scheduleItemsAtom = atom<ScheduleItem[]>([]);
 export const matchesAtom = atom<Match<any>[]>([]);
 export const matchOccurringRanksAtom = atom<Ranking[]>([]);
+
+// The one in-flight/settled post-commit rankings fetch for the current match.
+// Shared between the commit and display event handlers so showing the results
+// screen doesn't refetch what the commit already fetched. Reset at prestart.
+export interface PostCommitRanksFetch {
+  key: MatchKey;
+  promise: Promise<Ranking[] | null>; // resolves null if all retries failed
+}
+export const postCommitRanksFetchAtom = atom<PostCommitRanksFetch | null>(null);
 
 /**
  * @section MODIFIED STATE - modified state for unsaved changes

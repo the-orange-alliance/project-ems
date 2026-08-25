@@ -2,20 +2,20 @@ import { useMatchControl } from './use-match-control.js';
 import { MatchState, WebhookEvent } from '@toa-lib/models';
 import { useAtomCallback } from 'jotai/utils';
 import { useCallback } from 'react';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { emitWebhook } from 'src/api/use-webhook-data.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { matchAtom } from 'src/stores/state/event.js';
-import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 
 export const usePrepareFieldCallback = () => {
   const { canPrepField, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
+  const { connected } = useSocketWorker();
   return useAtomCallback(
     useCallback(
       (get) => {
-        const socketConnected = get(isSocketConnectedAtom);
         const match = get(matchAtom);
-        if (!socketConnected) {
+        if (!connected) {
           throw new Error('Not connected to realtime service.');
         }
         if (!canPrepField) {

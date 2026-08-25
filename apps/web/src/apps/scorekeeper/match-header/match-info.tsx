@@ -5,7 +5,7 @@ import {
   CheckCircleOutlined
 } from '@ant-design/icons';
 import { MatchTimer } from 'src/components/util/match-timer.js';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useAtomValue } from 'jotai';
 import { matchStatusAtom } from 'src/stores/state/match.js';
 import { isAudioEnabledForScorekeeper } from 'src/stores/state/ui.js';
@@ -15,7 +15,7 @@ export const MatchInfo: FC = () => {
   const matchState = useAtomValue(matchStatusAtom);
   const match = useAtomValue(matchAtom);
   const audioEnabled = useAtomValue(isAudioEnabledForScorekeeper);
-  const [, connected] = useSocket();
+  const { connected } = useSocketWorker();
   return (
     <Card
       style={{
@@ -27,7 +27,7 @@ export const MatchInfo: FC = () => {
         padding: 16
       }}
     >
-      <Typography.Title style={{textAlign: 'center'}} level={4}>
+      <Typography.Title style={{ textAlign: 'center' }} level={4}>
         {match ? match.name : 'No Match Selected'}
       </Typography.Title>
       <Typography.Title
@@ -46,7 +46,12 @@ export const MatchInfo: FC = () => {
           connected ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />
         }
         color={connected ? 'success' : 'error'}
-        style={{ alignSelf: 'center', marginTop: 8, width: '100%', textAlign: 'center' }}
+        style={{
+          alignSelf: 'center',
+          marginTop: 8,
+          width: '100%',
+          textAlign: 'center'
+        }}
       >
         {connected ? 'Connected' : 'Not Connected'}
       </Tag>

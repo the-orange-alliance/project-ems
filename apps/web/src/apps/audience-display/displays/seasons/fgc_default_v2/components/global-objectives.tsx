@@ -4,6 +4,7 @@ import GlobalObjectiveItem, { GlobalObjectiveItemStream } from './global-objecti
 import { Match } from '@toa-lib/models';
 import { ResultsBreakdown } from '../../../displays.js';
 import { GlobalBreakdownFGC25 } from '../../fgc_2025/index.js';
+import { GlobalBreakdownFGC26 } from '../../fgc_2026/index.js';
 
 interface GlobalObjectivesProps {
   match: Match<any>; // Replace 'any' with the actual type of match if available
@@ -16,6 +17,9 @@ const GlobalObjectives: React.FC<GlobalObjectivesProps> = ({ match }) => {
   switch (match.eventKey.split('-')[0]?.replace('FGC_', '')) {
     case '2025':
       breakdown = GlobalBreakdownFGC25;
+      break;
+    case '2026':
+      breakdown = GlobalBreakdownFGC26;
       break;
   }
 
@@ -70,6 +74,9 @@ export const GlobalObjectivesStream: React.FC<GlobalObjectivesProps> = ({
   switch (match.eventKey.split('-')[0]?.replace('FGC_', '')) {
     case '2025':
       breakdown = GlobalBreakdownFGC25;
+      break;
+    case '2026':
+      breakdown = GlobalBreakdownFGC26;
       break;
   }
 

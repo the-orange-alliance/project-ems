@@ -75,25 +75,6 @@ const JBApp = lazy(() =>
   import('./apps/jb-app/jb-app.js').then((m) => ({ default: m.JBApp }))
 );
 
-// Streaming Routes
-// const Streaming = lazy(() =>
-//   import('./apps/stream').then((m) => ({ default: m.StreamApp }))
-// );
-
-// Audience Display Routes
-// const AudienceDisplayManager = lazy(() =>
-//   import('./apps/audience-display-manager').then((m) => ({
-//     default: m.AudienceDisplayManager
-//   }))
-// );
-
-// Field Monitor Routes
-// const FrcFmsFieldMonitorApp = lazy(() =>
-//   import('./apps/field-monitor').then((m) => ({
-//     default: m.FrcFmsFieldMonitorApp
-//   }))
-// );
-
 // Queueing Display Routes
 // const QueueingManager = lazy(() =>
 //   import('./apps/queueing').then((m) => ({ default: m.QueueingManager }))
@@ -146,18 +127,6 @@ const EventMonitor = lazy(() =>
     default: m.EventMonitor
   }))
 );
-
-// Unised Routes
-// const AccountManager = lazy(() => import('./apps/AccountManager'));
-// const RefereeApp = lazy(() => import('./apps/Referee/Referee'));
-// const ScoreKeeper = lazy(() => import('./apps/Referee/ScoreKeeper'));
-// const HeadReferee = lazy(() => import('./apps/Referee/HeadReferee'));
-// const FieldDebugger = lazy(() => import('./apps/FieldDebugger'));
-
-// Season specific apps
-// const FRC2024_HumanPlayer = lazy(
-//   () => import('./apps/SeasonSpecific/frc_2024/HumanPlayer')
-// );
 
 import {
   CalendarOutlined,
@@ -364,13 +333,6 @@ const AppRoutes: AppRoute[] = [
     hidden: true
   },
   // {
-  //   name: 'FRC FMS Field Monitor',
-  //   path: '/frc/fms/fieldmonitor',
-  //   group: 0,
-  //   element: FrcFmsFieldMonitorApp,
-  //   hidden: true
-  // },
-  // {
   //   name: 'Queueing Display',
   //   path: '/:eventKey/queue-manager',
   //   group: 0,
@@ -392,32 +354,6 @@ const AppRoutes: AppRoute[] = [
     element: EventMonitor,
     image: THE_BOY
   }
-  // {
-  //   name: 'Streaming',
-  //   path: '/:eventKey/streaming',
-  //   group: 0,
-  //   element: Streaming
-  // },
-  // {
-  //   name: 'Audience Display Manager',
-  //   path: '/audience-display-manager',
-  //   group: 0,
-  //   element: AudienceDisplayManager
-  // },
-  // {
-  //   name: 'Account Manager',
-  //   path: '/accounts',
-  //   group: 0,
-  //   element: <AccountManager />,
-  //   hidden: false
-  // },
-  // {
-  //   name: 'Field Debugger',
-  //   path: '/fcs-debug',
-  //   group: 0,
-  //   element: <FieldDebugger />,
-  //   hidden: true
-  // },
 ];
 
 export default AppRoutes;

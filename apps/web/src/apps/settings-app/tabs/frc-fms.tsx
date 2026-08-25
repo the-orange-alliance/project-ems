@@ -2,7 +2,7 @@ import { FC, useState, MouseEvent } from 'react';
 import { FrcFmsSetting } from '../components/frc-fms-setting.js';
 import { FMSSettings } from '@toa-lib/models';
 import { postFrcFmsSettings } from 'src/api/use-fms-data.js';
-import { sendUpdateFrcFmsSettings, useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { Button, List, Space, Spin, Typography } from 'antd';
 
 const FrcFmsSettingsTab: FC = () => {
@@ -12,7 +12,7 @@ const FrcFmsSettingsTab: FC = () => {
   const [currentSetting, setCurrentSetting] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [, connected] = useSocket();
+  const { worker, connected, events } = useSocketWorker();
 
   const openSetting = (i: number) => {
     setCurrentSetting(i);
@@ -21,14 +21,14 @@ const FrcFmsSettingsTab: FC = () => {
 
   const onSettingChange = async (value: FMSSettings, cancel: boolean) => {
     setSettingOpen(false);
-    if (!cancel) {
+    if (!cancel || !worker) {
       try {
         // Set loading state
         setLoading(true);
 
         // Upload Remote Copy and request FMS to update
         await postFrcFmsSettings(value);
-        await sendUpdateFrcFmsSettings(value.hwFingerprint);
+        events.sendUpdateFrcFmsSettings(value.hwFingerprint);
 
         // Update Local copy
         const copy = [...allFms];
@@ -46,7 +46,7 @@ const FrcFmsSettingsTab: FC = () => {
 
   const identify = (e: MouseEvent, fms: FMSSettings) => {
     e.stopPropagation();
-    sendUpdateFrcFmsSettings(fms.hwFingerprint);
+    events.sendUpdateFrcFmsSettings(fms.hwFingerprint);
   };
 
   if (!connected) {
@@ -93,9 +93,7 @@ const FrcFmsSettingsTab: FC = () => {
               </Typography>
             </Space>
             <Space style={{ marginLeft: 'auto' }}>
-              <Button onClick={(e) => identify(e, fms)}>
-                Identify
-              </Button>
+              <Button onClick={(e) => identify(e, fms)}>Identify</Button>
             </Space>
           </List.Item>
         ))}

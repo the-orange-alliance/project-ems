@@ -1,5 +1,6 @@
 import {
   EcoEquilibrium,
+  IgnitingInnovation,
   getFunctionsBySeasonKey,
   getSeasonKeyFromEventKey,
   Ranking,
@@ -28,7 +29,11 @@ import {
 } from '../util/GlobalSchema.js';
 
 const rankingZodArray = z.array(
-  z.union([EcoEquilibrium.SeasonRankingSchema, rankingZod])
+  z.union([
+    EcoEquilibrium.SeasonRankingSchema,
+    IgnitingInnovation.SeasonRankingSchema,
+    rankingZod
+  ])
 );
 
 async function rankingController(fastify: FastifyInstance) {
@@ -225,7 +230,7 @@ async function rankingController(fastify: FastifyInstance) {
         const seasonKey = getSeasonKeyFromEventKey(eventKey);
         const functions = getFunctionsBySeasonKey(seasonKey);
         if (!functions) {
-          reply.send(SeasonFunctionsMissing);
+          reply.code(SeasonFunctionsMissing.code).send(SeasonFunctionsMissing);
           return;
         }
         if (playoffs) {

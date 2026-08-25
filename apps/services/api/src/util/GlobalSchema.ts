@@ -55,4 +55,28 @@ const SchemaRef: Record<string, z.ZodTypeAny> = {
     ...EMSModelsSchemas
 }
 
+// Route "params" schemas (path parameters) are excluded from the global registry.
+// @fastify/swagger must eagerly flatten params/querystring/headers into its OpenAPI
+// `parameters` array at documentation-build time, and it does so using its own internal
+// definitions registry rather than the one populated by fastify-type-provider-zod's
+// `transformObject` hook - so $ref'ing these specific schemas crashes doc generation.
+// Response/body schemas don't hit that code path, so they're safe to $ref.
+const ParamsSchemaIds = new Set([
+    'EventKeyParams',
+    'EventTournamentKeyParams',
+    'EventTournamentIdParams',
+    'EventTournamentTeamKeyParams',
+    'EventTournamentRankParams',
+    'EventTeamKeyParams'
+]);
+
+// Register schemas with the global Zod registry so fastify-type-provider-zod
+// can generate $ref'd OpenAPI components for them.
+for (const [id, schema] of Object.entries(SchemaRef)) {
+    if (ParamsSchemaIds.has(id)) continue;
+    if (!z.globalRegistry.has(schema)) {
+        z.globalRegistry.add(schema, { id });
+    }
+}
+
 export default SchemaRef;

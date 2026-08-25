@@ -2,16 +2,15 @@ import {
   FGC_MATCH_CONFIG,
   FRC_MATCH_CONFIG,
   MatchKey,
-  MatchMode,
   MatchSocketEvent,
-  MatchState,
   TimerEventPayload,
   getSeasonKeyFromEventKey
 } from '@toa-lib/models';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { Duration } from 'luxon';
-import { FC, useEffect } from 'react';
-import { useSocket } from 'src/api/use-socket.js';
+import { FC, useEffect, useMemo } from 'react';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
+import { useMatchTimerWorker } from 'src/api/use-timer-worker.js';
 import {
   initAudio,
   MATCH_START,
@@ -22,12 +21,7 @@ import {
   MATCH_END
 } from 'src/apps/audience-display/audio/index.js';
 import { matchAtom } from 'src/stores/state/event.js';
-import {
-  matchStateAtom,
-  matchTimeAtom,
-  matchTimeModeAtom,
-  timer
-} from 'src/stores/state/match.js';
+import * as Comlink from 'comlink';
 
 const startAudio = initAudio(MATCH_START);
 const transitionAudio = initAudio(MATCH_TRANSITION);
@@ -42,76 +36,19 @@ interface Props {
 }
 
 export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
-  const matchState = useAtomValue(matchStateAtom);
-  const [time, setTime] = useAtom(matchTimeAtom);
-  const [modeTime, setModeTime] = useAtom(matchTimeModeAtom);
+  const { timeLeft, start, abort, reset } = useMatchTimerWorker();
   const currentMatch = useAtomValue(matchAtom);
-  const [socket, connected] = useSocket();
-
-  useEffect(() => {
-    if (connected) {
-      socket?.on(MatchSocketEvent.PRESTART, onPrestart);
-      socket?.on(MatchSocketEvent.START, onStart);
-      socket?.on(MatchSocketEvent.ABORT, onAbort);
-      socket?.on(MatchSocketEvent.TIMER, onTimer);
-
-      socket?.emit(MatchSocketEvent.TIMER);
-
-      timer.on('timer:transition', onTransition);
-      timer.on('timer:tele', onTele);
-      timer.on('timer:endgame', onEndgame);
-      timer.on('timer:end', onEnd);
-    }
-  }, [connected]);
-
-  useEffect(() => {
-    if (!timer.inProgress()) {
-      timer.reset();
-      setTime(timer.timeLeft);
-      setModeTime(timer.modeTimeLeft);
-    }
-
-    const tick = setInterval(() => {
-      setTime(timer.timeLeft);
-      setModeTime(timer.modeTimeLeft);
-    }, 500);
-
-    return () => {
-      socket?.off(MatchSocketEvent.PRESTART, onPrestart);
-      socket?.off(MatchSocketEvent.START, onStart);
-      socket?.off(MatchSocketEvent.ABORT, onAbort);
-
-      timer.off('timer:transition', onTransition);
-      timer.off('timer:tele', onTele);
-      timer.off('timer:endgame', onEndgame);
-      timer.off('timer:end', onEnd);
-      clearInterval(tick);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (matchState === MatchState.MATCH_IN_PROGRESS && timer.inProgress()) {
-      setTime(timer.timeLeft);
-      setModeTime(timer.modeTimeLeft);
-    }
-  }, [matchState]);
-
-  const timeDuration = Duration.fromObject({
-    seconds: mode === 'timeLeft' ? time : modeTime
-  });
+  const { connected, worker } = useSocketWorker();
 
   const onPrestart = (e: MatchKey) => {
-    timer.reset();
-
+    reset();
     determineTimerConfig(e.eventKey);
-
-    setTime(timer.timeLeft);
   };
 
   const onStart = () => {
     if (audio) startAudio.play();
     if (currentMatch) determineTimerConfig(currentMatch.eventKey);
-    timer.start();
+    start();
   };
   const onTransition = (payload: TimerEventPayload) => {
     if (audio && payload.allowAudio) transitionAudio.play();
@@ -121,41 +58,63 @@ export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
   };
   const onAbort = () => {
     if (audio) abortAudio.play();
-    timer.abort();
+    abort();
   };
   const onEnd = (payload: TimerEventPayload) => {
     if (audio && payload.allowAudio) endAudio.play();
-    timer.stop();
+    stop();
   };
   const onEndgame = (payload: TimerEventPayload) => {
     if (audio && payload.allowAudio) endgameAudio.play();
   };
-  const onTimer = ({
-    timeLeft,
-    modeTimeLeft,
-    mode,
-    inProgress
-  }: {
-    timeLeft: number;
-    modeTimeLeft: number;
-    mode: MatchMode;
-    inProgress: boolean;
-  }) => {
-    if (inProgress) timer.start();
-    timer.modeTimeLeft = modeTimeLeft;
-    timer.mode = mode;
-    timer.timeLeft = timeLeft;
-  };
+
+  const prestartProxy = useMemo(() => Comlink.proxy(onPrestart), [onPrestart]);
+  const startProxy = useMemo(() => Comlink.proxy(onStart), [onStart]);
+  const abortProxy = useMemo(() => Comlink.proxy(onAbort), [onAbort]);
+  const transitionProxy = useMemo(
+    () => Comlink.proxy(onTransition),
+    [onTransition]
+  );
+  const teleProxy = useMemo(() => Comlink.proxy(onTele), [onTele]);
+  const endProxy = useMemo(() => Comlink.proxy(onEnd), [onEnd]);
+  const endgameProxy = useMemo(() => Comlink.proxy(onEndgame), [onEndgame]);
+
+  useEffect(() => {
+    if (connected) {
+      worker?.on(MatchSocketEvent.PRESTART, prestartProxy);
+      worker?.on(MatchSocketEvent.START, startProxy);
+      worker?.on(MatchSocketEvent.ABORT, abortProxy);
+
+      worker?.on('timer:transition', transitionProxy);
+      worker?.on('timer:tele', teleProxy);
+      worker?.on('timer:endgame', endProxy);
+      worker?.on('timer:end', endgameProxy);
+    }
+
+    return () => {
+      if (connected) {
+        worker?.off(MatchSocketEvent.PRESTART, prestartProxy);
+        worker?.off(MatchSocketEvent.START, startProxy);
+        worker?.off(MatchSocketEvent.ABORT, abortProxy);
+
+        worker?.off('timer:transition', transitionProxy);
+        worker?.off('timer:tele', teleProxy);
+        worker?.off('timer:endgame', endgameProxy);
+        worker?.off('timer:end', endProxy);
+      }
+    };
+  }, [connected, worker]);
+
+  const timeDuration = Duration.fromObject({
+    seconds: mode === 'timeLeft' ? timeLeft : 0 // modeTime is not available from the worker
+  });
 
   const determineTimerConfig = (eventKeyLike: string) => {
     // Get season key frome event key
     const seasonKey = getSeasonKeyFromEventKey(eventKeyLike).toLowerCase();
 
     // Set match config based on season key
-    const matchConfig = seasonKey.includes('frc')
-      ? FRC_MATCH_CONFIG
-      : FGC_MATCH_CONFIG;
-    timer.matchConfig = matchConfig;
+    return seasonKey.includes('frc') ? FRC_MATCH_CONFIG : FGC_MATCH_CONFIG;
   };
 
   return (

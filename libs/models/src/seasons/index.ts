@@ -5,11 +5,13 @@ import { CarbonCaptureSeason } from './CarbonCapture.js';
 import { FeedingTheFutureSeason } from './FeedingTheFuture.js';
 import { HydrogenHorizonsSeason } from './HydrogenHorizons.js';
 import { EcoEquilibriumSeason } from './FGC25_EcoEquilibrium.js';
+import { IgnitingInnovationSeason } from './FGC26_IgnitingInnovation.js';
 
 export * as HydrogenHorizons from './HydrogenHorizons.js';
 export * as Crescendo from './Crescendo.js';
 export * as FeedingTheFuture from './FeedingTheFuture.js';
 export * as EcoEquilibrium from './FGC25_EcoEquilibrium.js';
+export * as IgnitingInnovation from './FGC26_IgnitingInnovation.js';
 
 export interface Season<T extends MatchDetailBase, J extends Ranking> {
   key: string;
@@ -23,7 +25,8 @@ export const Seasons: Season<any, any>[] = [
   CarbonCaptureSeason,
   HydrogenHorizonsSeason,
   FeedingTheFutureSeason,
-  EcoEquilibriumSeason
+  EcoEquilibriumSeason,
+  IgnitingInnovationSeason
 ];
 
 export interface SeasonFunctions<T extends MatchDetailBase, J extends Ranking> {

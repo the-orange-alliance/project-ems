@@ -1,4 +1,4 @@
-import EventEmitter from 'events';
+import { EventEmitter } from 'eventemitter3';
 
 export interface MatchConfiguration {
   delayTime: number;
@@ -133,7 +133,11 @@ export class MatchTimer extends EventEmitter {
     this.removeAllListeners('timer:abort');
   }
 
-  private tick() {
+  /**
+   * DO NOT CALL DIRECTLY. Called internally by the timer interval. Exposed for
+   * use in service workers.
+   */
+  public tick() {
     if (this._timeLeft === 0) {
       this.stop();
       return;

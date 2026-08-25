@@ -16,30 +16,44 @@
     "url": "https://github.com/the-orange-alliance/project-ems.git"
   },
   "devDependencies": {
-    "@aws-amplify/backend": "^1.16.1",
-    "@aws-amplify/backend-cli": "^1.8.0",
-    "aws-cdk-lib": "^2.204.0",
-    "constructs": "^10.4.2",
-    "esbuild": "^0.25.10",
-    "tsx": "^4.20.6",
-    "turbo": "^2.4.4",
-    "typescript": "^5.9.2"
+    "aws-cdk-lib": "^2.261.0",
+    "constructs": "^10.6.0",
+    "esbuild": "^0.28.1",
+    "tsx": "^4.23.1",
+    "turbo": "^2.10.5",
+    "typescript": "^5.9.3"
   },
-  "packageManager": "npm@11.6.2",
+  "packageManager": "npm@12.0.2",
   "workspaces": [
     "libs/models",
     "libs/client",
     "libs/server",
     "apps/services/api",
-    "apps/services/api-amplify",
     "apps/services/realtime",
     "apps/services/frc-fms",
     "apps/web"
   ],
-  "dependencies": {
-    "aws-amplify": "^6.15.6"
+  "overrides": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "engine": {
     "node": ">=20.0.0"
+  },
+  "packageExtensions": {
+    "promised-sqlite3@2.1.0": {
+      "peerDependencies": {
+        "sqlite3": "^5 || ^6"
+      }
+    }
+  },
+  "allowScripts": {
+    "@serialport/bindings-cpp@13.0.0": true,
+    "bufferutil@4.1.0": true,
+    "esbuild@0.28.2": true,
+    "sqlite3@6.0.1": true,
+    "utf-8-validate@6.0.6": true,
+    "cpu-features@0.0.10": true,
+    "ssh2@1.17.0": true
   }
 }

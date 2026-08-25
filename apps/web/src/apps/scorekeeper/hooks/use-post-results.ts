@@ -1,6 +1,6 @@
 import { MatchState, QUALIFICATION_LEVEL, WebhookEvent } from '@toa-lib/models';
 import { useMatchControl } from './use-match-control.js';
-import { sendPostResults } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { useMatchesForTournament } from 'src/api/use-match-data.js';
 import {
@@ -19,7 +19,6 @@ import {
 } from 'src/stores/state/event.js';
 import { useCallback } from 'react';
 import { useAtomCallback } from 'jotai/utils';
-import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 import { useActiveFieldNumbers } from 'src/components/sync-effects/sync-fields.js';
 import { matchStatusAtom } from 'src/stores/state/match.js';
 import { emitWebhook } from 'src/api/use-webhook-data.js';
@@ -37,13 +36,13 @@ export const usePostResultsCallback = () => {
   );
   const { apiKey, platform } = useSyncConfig();
   const setStatus = useSetAtom(matchStatusAtom);
+  const { events, connected } = useSocketWorker();
 
   return useAtomCallback(
     useCallback(
       async (get, set) => {
         const match = get(matchAtom);
-        const socketConnected = get(isSocketConnectedAtom);
-        if (!socketConnected) {
+        if (!connected) {
           throw new Error('Not connected to realtime service.');
         }
         if (!canPostResults) {
@@ -109,7 +108,7 @@ export const usePostResultsCallback = () => {
         }
 
         fieldControl?.postResultsForField?.();
-        sendPostResults();
+        events.postresults();
         setState(MatchState.RESULTS_POSTED);
         setStatus('Ready for Prestart');
         emitWebhook(WebhookEvent.SCORES_POSTED, match);

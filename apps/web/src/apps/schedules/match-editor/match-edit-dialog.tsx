@@ -9,7 +9,7 @@ import { Match, Team } from '@toa-lib/models';
 import { MatchParticipantTab } from './match-participant-tab.js';
 import { MatchDetailTab } from './match-detail-tab.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
-import { sendCommitScores, sendPostResults } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useModal } from '@ebay/nice-modal-react';
 import MatchRepostDialog from 'src/components/dialogs/match-repost-dialog.js';
 
@@ -40,6 +40,7 @@ export const MatchEditDialog: FC<Props> = ({
   });
   const { showSnackbar } = useSnackbar();
   const repostModal = useModal(MatchRepostDialog);
+  const { events } = useSocketWorker();
   useEffect(() => {
     if (savedMatch) setMatch(savedMatch);
   }, [savedMatch, matchId, setMatch]);
@@ -67,8 +68,8 @@ export const MatchEditDialog: FC<Props> = ({
       const canRepost = await repostModal.show();
       if (!canRepost) return;
       await patchWholeMatch(match);
-      await sendCommitScores({ eventKey, tournamentKey, id });
-      await sendPostResults();
+      await events.commit({ eventKey, tournamentKey, id });
+      await events.postresults();
       mutate(`match/${eventKey}/${tournamentKey}`);
       onClose();
       // TODO - Sync results

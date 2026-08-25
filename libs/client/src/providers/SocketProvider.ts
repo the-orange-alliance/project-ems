@@ -1,5 +1,5 @@
 import { DEFAULT_SOCKET_HOST, DEFAULT_SOCKET_PORT } from '@toa-lib/models';
-import io, { Socket } from 'socket.io-client';
+import { type Socket, io } from 'socket.io-client';
 
 export const options = {
   host: DEFAULT_SOCKET_HOST,

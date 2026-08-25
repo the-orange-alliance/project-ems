@@ -11,7 +11,7 @@ import {
 import { TeamRow } from './components/team-row';
 import { PrestartStatus as PrestartStatusIcon } from './components/prestart-status';
 import { ConnectionChip } from 'src/components/util/connection-chip';
-import { useSocket } from 'src/api/use-socket';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 
 export const FrcFmsFieldMonitorApp: FC = () => {
   const [monitor, setMonitor] = useState<DriverstationMonitor>({
@@ -23,22 +23,22 @@ export const FrcFmsFieldMonitorApp: FC = () => {
       state: PrestartState.NotReady
     }
   });
-  const [socket, connected] = useSocket();
+  const { worker, connected } = useSocketWorker();
 
   useEffect(() => {
     return () => {
-      socket?.off('frc-fms:ds-update');
-      socket?.off('frc-fms:prestart-status');
+      worker?.off('frc-fms:ds-update');
+      worker?.off('frc-fms:prestart-status');
     };
   }, []);
 
   useEffect(() => {
     if (connected) {
-      socket?.off('frc-fms:ds-update');
-      socket?.on('frc-fms:ds-update', setMonitor);
+      worker?.off('frc-fms:ds-update');
+      worker?.on('frc-fms:ds-update', setMonitor);
 
-      socket?.off('frc-fms:prestart-status');
-      socket?.on('frc-fms:prestart-status', onPrestartStatus);
+      worker?.off('frc-fms:prestart-status');
+      worker?.on('frc-fms:prestart-status', onPrestartStatus);
     }
   }, [connected]);
 
@@ -70,15 +70,14 @@ export const FrcFmsFieldMonitorApp: FC = () => {
     <DefaultLayout>
       <Paper sx={{ marginBottom: (theme) => theme.spacing(1) }}>
         <Grid
-          direction='column'
           container
-          sx={{ width: '100%', m: 0, textAlign: 'center' }}
+          sx={{ width: '100%', m: 0, textAlign: 'center', flexDirection: 'column' }}
         >
           {/* Match Number/Status Row */}
-          <Grid item sx={{ maxHeight: '70px' }}>
+          <Grid sx={{ maxHeight: '70px' }}>
             <Grid direction='row' container>
               {/* Match Status */}
-              <Grid item xs={2}>
+              <Grid size={2}>
                 <Typography variant='h5'>
                   Match {monitor?.prestartStatus.matchKey.tournamentKey ?? ''}-
                   {monitor?.prestartStatus.matchKey.id ?? 'None'}
@@ -86,10 +85,7 @@ export const FrcFmsFieldMonitorApp: FC = () => {
               </Grid>
 
               {/* Match Mode */}
-              <Grid
-                item
-                xs={8 - (monitor?.prestartStatus.hardware.length ?? 0)}
-              >
+              <Grid size={8 - (monitor?.prestartStatus.hardware.length ?? 0)}>
                 <Typography variant='h4'>
                   {friendlyMatchStatus()}
                   {monitor?.matchStatus === MatchMode.PRESTART &&
@@ -106,7 +102,7 @@ export const FrcFmsFieldMonitorApp: FC = () => {
               </Grid>
 
               {/* Socket Connected Chip */}
-              <Grid item xs={2}>
+              <Grid size={2}>
                 <ConnectionChip />
               </Grid>
 
@@ -118,42 +114,42 @@ export const FrcFmsFieldMonitorApp: FC = () => {
           </Grid>
 
           {/* Status Header Row */}
-          <Grid item>
+          <Grid>
             <Grid direction='row' container>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 Station
               </Grid>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 Team Number
               </Grid>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 DS
               </Grid>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 BWU
               </Grid>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 Radio
               </Grid>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 Rio
               </Grid>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 Battery
               </Grid>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 Status
               </Grid>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 Trip Time (ms)
               </Grid>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 Missed Packets
               </Grid>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 Radio Quality
               </Grid>
-              <Grid item xs={1}>
+              <Grid size={1}>
                 Radio Signal
               </Grid>
             </Grid>

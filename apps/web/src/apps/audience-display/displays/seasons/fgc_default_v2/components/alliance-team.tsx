@@ -2,6 +2,7 @@ import React from 'react';
 import { MatchParticipant, Ranking } from '@toa-lib/models';
 import { CountryFlag } from './country-flag.js';
 import { CardStatus } from './card-status.js';
+import { CarriedCard } from './carried-card.js';
 import { Space, Typography } from 'antd';
 import { useAtomValue } from 'jotai';
 import { matchOccurringRanksAtom } from 'src/stores/state/event.js';
@@ -11,6 +12,7 @@ interface AllianceTeamProps {
   large?: boolean;
   noBg?: boolean;
   noRankChange?: boolean;
+  hideRanks?: boolean;
 }
 
 const calcRankChange = (ranks: Ranking[], team: MatchParticipant) => {
@@ -25,7 +27,8 @@ const AllianceTeam: React.FC<AllianceTeamProps> = ({
   team,
   large = false,
   noBg = false,
-  noRankChange = false
+  noRankChange = false,
+  hideRanks = false
 }) => {
   const ranks: Ranking[] = useAtomValue(matchOccurringRanksAtom);
 
@@ -75,23 +78,31 @@ const AllianceTeam: React.FC<AllianceTeamProps> = ({
         }}
       >
         <CardStatus cardStatus={team.cardStatus} />
+        {/* Carried from an earlier match; see CarriedCard. */}
+        <CarriedCard cardStatus={team.team?.cardStatus} />
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <span
-          style={{ fontWeight: 'bold', fontSize: rankFontSize, color: 'white' }}
-        >
-          #{currentRank ? currentRank.rank : '-'}
-        </span>
-        {!noRankChange && up ? (
-          <span style={{ color: '#16a34a', fontSize: iconFontSize }}>▲</span>
-        ) : null}
-        {!noRankChange && down ? (
-          <span style={{ color: '#dc2626', fontSize: iconFontSize }}>▼</span>
-        ) : null}
-        {!noRankChange && !up && !down ? (
-          <span style={{ color: '#9ca3af', fontSize: iconFontSize }}>━</span>
-        ) : null}
-      </div>
+      {!hideRanks && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span
+            style={{
+              fontWeight: 'bold',
+              fontSize: rankFontSize,
+              color: 'white'
+            }}
+          >
+            #{currentRank ? currentRank.rank : '-'}
+          </span>
+          {!noRankChange && up ? (
+            <span style={{ color: '#16a34a', fontSize: iconFontSize }}>▲</span>
+          ) : null}
+          {!noRankChange && down ? (
+            <span style={{ color: '#dc2626', fontSize: iconFontSize }}>▼</span>
+          ) : null}
+          {!noRankChange && !up && !down ? (
+            <span style={{ color: '#9ca3af', fontSize: iconFontSize }}>━</span>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 };
@@ -146,6 +157,10 @@ export const AllianceTeamStream: React.FC<AllianceTeamProps> = ({
             <CardStatus cardStatus={team.cardStatus} />
           </div>
         )}
+        {/* Carried from an earlier match; see CarriedCard. */}
+        <div style={{ width: '1rem', height: '1rem' }}>
+          <CarriedCard cardStatus={team.team?.cardStatus} />
+        </div>
         <Typography.Text
           style={{ color: 'white', fontWeight: 'bold', fontSize: '1.25rem' }}
         >

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
     "types": ["react", "react-dom"],
     "allowJs": false,
     "skipLibCheck": true,
@@ -25,7 +25,9 @@
       "@layouts/*": ["./src/layouts/*"],
       "@seasons/*": ["./src/seasons/*"],
       "@stores/*": ["./src/stores/*"],
-      "@api/*": ["./src/api/*"]
+      "@api/*": ["./src/api/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@workers/*": ["./src/workers/*"]
     }
   },
   "include": ["src/"],

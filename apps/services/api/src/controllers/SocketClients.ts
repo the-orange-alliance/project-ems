@@ -29,7 +29,10 @@ const disconnectParamsSchema = z.object({
 });
 
 const socketClientSchema = connectBodySchema.extend({
-  // Add any additional fields returned by DB if needed
+  // Set server-side from `request.ip` on connect. It was missing from this
+  // schema, and since the zod serializer strips anything undeclared, the
+  // display manager's IP column came back blank on every row.
+  ipAddress: z.string().optional()
 });
 const socketClientArraySchema = z.array(socketClientSchema);
 

@@ -6,11 +6,11 @@ import {
 } from '../hooks/use-start-match.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { Button } from 'antd';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 
 export const StartMatchButton: FC = () => {
   const [loading, setLoading] = useState(false);
-  const [, connected] = useSocket();
+  const { connected } = useSocketWorker();
   const { canStartMatch, canAbortMatch } = useMatchControl();
   const startMatch = useMatchStartCallback();
   const abortMatch = useAbortMatchCallback();

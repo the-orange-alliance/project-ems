@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 import { RefereeScoreSheetProps } from '@seasons/index.js';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useAtom } from 'jotai';
 import { matchAtom } from 'src/stores/state/event.js';
 import {
@@ -42,7 +42,7 @@ const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
   alliance,
   TeleopScoreSheet
 }: GenericScoreSheetProps<DetailsType>) => {
-  const [socket] = useSocket();
+  const { worker } = useSocketWorker();
   const [match, setMatch] = useAtom(matchAtom);
 
   const [tabIndex, setTabIndex] = useState(0);
@@ -60,7 +60,7 @@ const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
     value: Match<DetailsType>[K]
   ) => {
     const updatePacket: ItemUpdate = { key, value };
-    socket?.emit(MatchSocketEvent.MATCH_UPDATE_ITEM, updatePacket);
+    worker?.emit(MatchSocketEvent.MATCH_UPDATE_ITEM, updatePacket);
 
     // Reduce UI latency by updating our local match state in anticipation
     // of the update that the server wil send soon
@@ -75,7 +75,7 @@ const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
     value: DetailsType[K]
   ) => {
     const updatePacket: ItemUpdate = { key: String(detailsKey), value };
-    socket?.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, updatePacket);
+    worker?.emit(MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM, updatePacket);
     // Reduce UI latency by updating our local match state in anticipation
     // of the update that the server wil send soon
     if (match?.details) {
@@ -96,7 +96,7 @@ const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
       key: String(detailsKey),
       adjustment
     };
-    socket?.emit(
+    worker?.emit(
       MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
       adjustmentPacket
     );

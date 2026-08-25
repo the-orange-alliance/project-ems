@@ -1,11 +1,10 @@
-import { Lock, Restaurant, StarBorder } from '@mui/icons-material';
+import { LockOutlined, AppleOutlined, StarOutlined } from '@ant-design/icons';
 import { ResultsBreakdown } from '../../displays';
 import { FeedingTheFuture } from '@toa-lib/models';
 import CoopertitionLogo from '../fgc_default/assets/Coopertition_Points.svg';
 import Resevoir from './assets/Resevoir.svg';
 import Nexus from './assets/Nexus.svg';
 import styled from '@emotion/styled';
-import { Icon } from '@mui/material';
 
 const {
   getBalancedRobots,
@@ -17,7 +16,7 @@ const {
   ScoreTable
 } = FeedingTheFuture;
 
-const CustomIcon = styled(Icon)(() => {
+const CustomIcon = styled.span(() => {
   return {
     display: 'inline-flex',
     fontSize: 'inherit'
@@ -58,7 +57,7 @@ export const Breakdown: ResultsBreakdown<FeedingTheFuture.MatchDetails>[] = [
     }
   },
   {
-    icon: <Restaurant fontSize='inherit' />,
+    icon: <AppleOutlined style={{ fontSize: 'inherit' }} />,
     title: 'Food Produced Points',
     color: '#000000',
     resultCalc: (match, alliance) => {
@@ -71,7 +70,7 @@ export const Breakdown: ResultsBreakdown<FeedingTheFuture.MatchDetails>[] = [
     }
   },
   {
-    icon: <StarBorder fontSize='inherit' />,
+    icon: <StarOutlined style={{ fontSize: 'inherit' }} />,
     title: 'Bonus Multiplier',
     color: '#000000',
     resultCalc: (match, alliance) => {
@@ -100,7 +99,7 @@ export const Breakdown: ResultsBreakdown<FeedingTheFuture.MatchDetails>[] = [
     }
   },
   {
-    icon: <Lock fontSize='inherit' />,
+    icon: <LockOutlined style={{ fontSize: 'inherit' }} />,
     title: 'Food Secured Points',
     color: '#000000',
     resultCalc: (match) => {

@@ -4,7 +4,7 @@ import { MatchInfoBar } from './components/match-info-bar';
 import { MatchAlliancePlay } from './components/match-alliance-play';
 import { MatchBillboard } from './components/match-billboard';
 import { MatchTimer } from 'src/components/util/match-timer';
-import { SmartToyOutlined } from '@mui/icons-material';
+import { RobotOutlined } from '@ant-design/icons';
 import { DisplayProps } from '../../displays';
 
 const Container = styled.div`
@@ -39,7 +39,7 @@ export const MatchPlay: FC<DisplayProps> = ({ match }) => {
         bot={redScore.toString()}
       />
       <MatchBillboard
-        top={<SmartToyOutlined fontSize='inherit' />}
+        top={<RobotOutlined style={{ fontSize: 'inherit' }} />}
         bot={<MatchTimer audio />}
       />
       <MatchBillboard

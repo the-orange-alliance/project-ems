@@ -15,7 +15,7 @@ import {
 import { LoadingOutlined } from '@ant-design/icons';
 import { updateFcsData, useFcsData } from 'src/api/use-fcs-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { FGC25FCS } from '@toa-lib/models';
 
 const { Option } = Select;
@@ -268,7 +268,7 @@ const ConstantsSection: FC<ConstantsSectionProps> = ({
 
 export const Settings: FC = () => {
   const tournament = useCurrentTournament();
-  const [socket] = useSocket();
+  const { worker } = useSocketWorker();
   const [selectedField, setSelectedField] = useState<string>('');
   const { data: fcsData, mutate } = useFcsData(
     parseInt(selectedField.match(/\d+/)?.[0] ?? '', 10)
@@ -301,8 +301,8 @@ export const Settings: FC = () => {
         await updateFcsData(fieldNum, data);
 
         // Emit socket event to notify other clients
-        if (socket) {
-          socket.emit('fcs:settings', {
+        if (worker) {
+          worker.emit('fcs:settings', {
             field: fieldNum,
             data,
             timestamp: Date.now()
@@ -317,7 +317,7 @@ export const Settings: FC = () => {
         setIsSaving(false);
       }
     },
-    [socket, mutate, isSaving]
+    [worker, mutate, isSaving]
   );
 
   const debouncedSave = useCallback(

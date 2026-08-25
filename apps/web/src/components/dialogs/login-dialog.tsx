@@ -3,9 +3,10 @@ import { useSetAtom } from 'jotai';
 import { userAtom } from 'src/stores/state/ui.js';
 import { ChangeEvent, FC, useEffect, useCallback, useState } from 'react';
 import { login } from 'src/api/use-login-data.js';
-import { useSocket } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import useLocalStorage from 'src/stores/local-storage.js';
 import { Form, Input, Modal, Space, Typography } from 'antd';
+import { SocketOptions } from '@toa-lib/client';
 
 interface Props {
   open: boolean;
@@ -18,7 +19,7 @@ type FieldType = {
   password?: string;
 };
 
-export const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
+export const LoginDialog: FC<Props> = ({ open, onSubmit }) => {
   const setUser = useSetAtom(userAtom);
   const [, setValue] = useLocalStorage<User | null>('currentUser', null);
   const [username, setUsername] = useState('');
@@ -26,7 +27,7 @@ export const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [, , setupSocket] = useSocket();
+  const { worker } = useSocketWorker();
 
   useEffect(() => {
     setUsername('');
@@ -45,7 +46,10 @@ export const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
       const user = await login(username, password);
       setValue(user);
       setUser(user);
-      setupSocket(user.token);
+      worker?.initialize(user.token, {
+        host: SocketOptions.host,
+        port: SocketOptions.port
+      });
       onSubmit();
       setLoading(false);
     } catch (e) {
@@ -71,7 +75,6 @@ export const LoginDialog: FC<Props> = ({ open, onClose, onSubmit }) => {
   return (
     <Modal
       open={open}
-      onClose={onClose}
       title='Login'
       okText='Login'
       onOk={submit}

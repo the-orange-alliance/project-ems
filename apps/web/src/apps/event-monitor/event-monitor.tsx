@@ -86,27 +86,27 @@ const MonitorCard: FC<MonitorCardProps> = ({
 
   useEffect(() => {
     const socket = createSocket();
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on(MatchSocketEvent.PRESTART, handlePrestart);
-    socket.on(MatchSocketEvent.START, handleStart);
-    socket.on(MatchSocketEvent.ABORT, handleAbort);
-    socket.on(MatchSocketEvent.END, handleEnd);
-    socket.on(MatchSocketEvent.COMMIT, handleCommit);
-    socket.on(MatchSocketEvent.UPDATE, handleUpdate);
-    socket.on(MatchSocketEvent.DISPLAY, handleDisplay);
-    socket.on('fcs:status', handleFcsStatus);
+    worker.on('connect', handleConnect);
+    worker.on('disconnect', handleDisconnect);
+    worker.on(MatchSocketEvent.PRESTART, handlePrestart);
+    worker.on(MatchSocketEvent.START, handleStart);
+    worker.on(MatchSocketEvent.ABORT, handleAbort);
+    worker.on(MatchSocketEvent.END, handleEnd);
+    worker.on(MatchSocketEvent.COMMIT, handleCommit);
+    worker.on(MatchSocketEvent.UPDATE, handleUpdate);
+    worker.on(MatchSocketEvent.DISPLAY, handleDisplay);
+    worker.on('fcs:status', handleFcsStatus);
     socket.connect();
     socket.emit('rooms', ['match', 'fcs']);
     setSocket(socket);
     return () => {
-      socket.off(MatchSocketEvent.PRESTART, handlePrestart);
-      socket.off(MatchSocketEvent.START, handleStart);
-      socket.off(MatchSocketEvent.ABORT, handleAbort);
-      socket.off(MatchSocketEvent.END, handleEnd);
-      socket.off(MatchSocketEvent.COMMIT, handleCommit);
-      socket.off(MatchSocketEvent.UPDATE, handleUpdate);
-      socket.off(MatchSocketEvent.DISPLAY, handleDisplay);
+      worker.off(MatchSocketEvent.PRESTART, handlePrestart);
+      worker.off(MatchSocketEvent.START, handleStart);
+      worker.off(MatchSocketEvent.ABORT, handleAbort);
+      worker.off(MatchSocketEvent.END, handleEnd);
+      worker.off(MatchSocketEvent.COMMIT, handleCommit);
+      worker.off(MatchSocketEvent.UPDATE, handleUpdate);
+      worker.off(MatchSocketEvent.DISPLAY, handleDisplay);
     };
   }, []);
 
@@ -148,7 +148,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
   };
 
   const handleFcsClearStatus = () => {
-    socket?.emit('fcs:clearStatus');
+    worker?.emit('fcs:clearStatus');
   };
 
   const handleFcsStatus = (status: any) => {
@@ -338,24 +338,33 @@ const MonitorCard: FC<MonitorCardProps> = ({
           <Divider>Field Control</Divider>
           <Flex vertical gap='0.25rem'>
             <Flex gap='0.25rem'>
-              <Button type='primary' block 
-                onClick={() => socket?.emit('fcs:allClear')}>
+              <Button
+                type='primary'
+                block
+                onClick={() => worker?.emit('fcs:allClear')}
+              >
                 Force Field Green
               </Button>
-              <Button type='primary' block 
-                onClick={() => socket?.emit('fcs:prepareField')}>
+              <Button
+                type='primary'
+                block
+                onClick={() => worker?.emit('fcs:prepareField')}
+              >
                 Force Prep Field
               </Button>
             </Flex>
             <Flex gap='0.25rem'>
-              <Button type='primary' block 
-                onClick={() => socket?.emit('fcs:awardsMode')}>
+              <Button
+                type='primary'
+                block
+                onClick={() => worker?.emit('fcs:awardsMode')}
+              >
                 Awards Mode
               </Button>
               <Button
                 type='primary'
                 block
-                onClick={() => socket?.emit('fcs:ropeDrop')}
+                onClick={() => worker?.emit('fcs:ropeDrop')}
               >
                 Force Rope Drop (2025)
               </Button>

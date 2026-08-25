@@ -3,6 +3,7 @@ export * from './Audience.js';
 export * from './User.js';
 export * from './Event.js';
 export * from './Team.js';
+export * from './CardStatus.js';
 export * from './ApiErrors.js';
 export * from './ApiStorage.js';
 export * from '../types.js';

@@ -1,4 +1,3 @@
-import { Box } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 interface AnimationProps {
@@ -38,14 +37,14 @@ const FadeInOut: React.FC<AnimationProps> = ({
     };
   }, [elementIn, inDelay, outDelay]);
   return (
-    <Box
-      sx={{
+    <div
+      style={{
         opacity: localIn ? 1 : 0,
         transition: `opacity ${duration ?? 0.3}s ease-in-out`
       }}
     >
       {children}
-    </Box>
+    </div>
   );
 };
 

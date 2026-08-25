@@ -1,11 +1,4 @@
-import {
-  Select,
-  OutlinedInput,
-  MenuItem,
-  Checkbox,
-  ListItemText,
-  SelectChangeEvent
-} from '@mui/material';
+import { Select } from 'antd';
 import { FC } from 'react';
 import { useCurrentTournament } from 'src/api/use-tournament-data';
 
@@ -24,29 +17,16 @@ export const EventTournamentFieldsDropdown: FC<Props> = ({
     field: i + 1
   }));
 
-  const changeFields = (event: SelectChangeEvent<number[]>) => {
-    const {
-      target: { value }
-    } = event;
-    onChange(typeof value === 'string' ? [] : value);
-  };
-
   return (
     <Select
-      labelId='demo-multiple-checkbox-label'
-      id='demo-multiple-checkbox'
-      multiple
+      mode='multiple'
       value={fields}
-      onChange={changeFields}
-      input={<OutlinedInput label='Tag' />}
-      renderValue={(selected) => selected.join(', ')}
-    >
-      {allFields.map((field) => (
-        <MenuItem key={field.name} value={field.field}>
-          <Checkbox checked={fields.indexOf(field.field) > -1} />
-          <ListItemText primary={field.name} />
-        </MenuItem>
-      ))}
-    </Select>
+      onChange={onChange}
+      style={{ width: '100%' }}
+      options={allFields.map((field) => ({
+        label: field.name,
+        value: field.field
+      }))}
+    />
   );
 };

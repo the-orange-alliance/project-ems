@@ -4,10 +4,9 @@ import { MatchControl } from './match-control/match-control.js';
 import { ScorekeeperTabs } from './tabs/scorekeeper-tabs.js';
 import { MatchHeader } from './match-header/match-header.js';
 import { Row } from 'antd';
-// import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
-// import { useSocket } from 'src/api/use-socket.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { PageLoader } from 'src/components/loading/page-loader.js';
+import { useMatchLifecycleWebhooks } from './hooks/use-match-lifecycle-webhooks.js';
 
 export const ScorekeeperApp: FC = () => {
   const {
@@ -16,12 +15,9 @@ export const ScorekeeperApp: FC = () => {
       local: { event, teams }
     }
   } = useEventState({ event: true, teams: true });
-  // const [, connected] = useSocket();
-  // const fieldControl = useSeasonFieldControl();
 
-  // useEffect(() => {
-  //   if (connected) fieldControl?.updateFieldSettings?.();
-  // }, [connected]);
+  // Scoped here rather than to ConnectionManager on purpose; see the hook.
+  useMatchLifecycleWebhooks();
 
   if (loading) {
     return <PageLoader />;

@@ -4,10 +4,8 @@ import styled from '@emotion/styled';
 import FGC_BG from './assets/global-bg.png';
 import { AlliancePlay } from './components/alliance-play';
 import { MatchTimer } from 'src/components/util/match-timer';
-import { Stack } from '@mui/material';
 import MatchTitle from './components/match-title';
 import { Alliance } from '@toa-lib/models';
-import * as muiStyled from '@mui/material';
 
 const BGImage = styled.div`
   background-image: url(${FGC_BG});
@@ -16,8 +14,11 @@ const BGImage = styled.div`
   height: 100vh;
 `;
 
-const Container = styled(Stack)(() => ({
-  padding: '1em 1em'
+const Container = styled.div(() => ({
+  padding: '1em 1em',
+  display: 'flex',
+  flexDirection: 'column' as const,
+  gap: '40px'
 }));
 
 const MatchTitleContainer = styled.div`
@@ -40,10 +41,11 @@ const TimerContainer = styled.div`
   text-align: center;
 `;
 
-const ScoreRow = muiStyled.styled(Stack)(() => ({
+const ScoreRow = styled.div(() => ({
   marginTop: '-0.8rem !important',
   height: '20vh',
   display: 'flex',
+  flexDirection: 'row' as const,
   justifyContent: 'center',
   alignItems: 'center',
   '> *:first-of-type': {
@@ -82,14 +84,14 @@ const ScoreContainer = styled.div((props: { alliance: Alliance }) => ({
 export const MatchPlay: FC<DisplayProps> = ({ match, teams }) => {
   return (
     <BGImage>
-      <Container spacing={5}>
+      <Container>
         <MatchTitleContainer>
           <MatchTitle match={match} noMargin branding />
         </MatchTitleContainer>
         <TimerContainer>
           <MatchTimer audio />
         </TimerContainer>
-        <ScoreRow direction='row'>
+        <ScoreRow>
           <AlliancePlay
             alliance='red'
             participants={match.participants ?? []}

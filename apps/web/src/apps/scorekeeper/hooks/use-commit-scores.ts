@@ -1,6 +1,8 @@
 import { useAtomValue } from 'jotai';
+import { useModal } from '@ebay/nice-modal-react';
 import { useMatchControl } from './use-match-control.js';
 import {
+  CardStatus,
   isPlayoffsTournament,
   MatchState,
   RESULT_BLUE_WIN,
@@ -9,6 +11,8 @@ import {
   RESULT_TIE,
   WebhookEvent
 } from '@toa-lib/models';
+import { CarriedCardDialog } from 'src/components/dialogs/carried-card-dialog.js';
+import { postCarriedCards } from 'src/api/use-team-data.js';
 import {
   patchWholeMatch,
   useMatchesForTournament
@@ -17,11 +21,10 @@ import {
   recalculatePlayoffsRankings,
   recalculateRankings
 } from 'src/api/use-ranking-data.js';
-import { sendCommitScores } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { eventKeyAtom, matchAtom } from 'src/stores/state/event.js';
 import { useCallback } from 'react';
-import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 import { useAtomCallback } from 'jotai/utils';
 import { matchStateAtom } from 'src/stores/state/match.js';
 import { emitWebhook } from 'src/api/use-webhook-data.js';
@@ -34,13 +37,14 @@ export const useCommitScoresCallback = () => {
   const tournament = useCurrentTournament();
   const { data: tournMatches, mutate: updateTournMatches } =
     useMatchesForTournament(eventKey, tournament?.tournamentKey);
+  const { events, connected } = useSocketWorker();
+  const carriedCardDialog = useModal(CarriedCardDialog);
 
   return useAtomCallback(
     useCallback(
       async (get, set) => {
         const match = get(matchAtom);
-        const socketConnected = get(isSocketConnectedAtom);
-        if (!socketConnected) {
+        if (!connected) {
           throw new Error('Not connected to realtime service.');
         }
         if (!canCommitScores) {
@@ -54,6 +58,24 @@ export const useCommitScoresCallback = () => {
         if (!match) {
           throw new Error('Attempted to commit scores when there is no match.');
         }
+        // A team picking up a yellow while already carrying one is a human
+        // judgement call, not something to automate — EMS deliberately does not
+        // escalate it to a red. Prompt before the commit so the scores can
+        // still be corrected if HR rules differently.
+        const repeatOffenders = (match.participants ?? []).filter(
+          (p) =>
+            p.cardStatus === CardStatus.YELLOW_CARD &&
+            p.team?.cardStatus === CardStatus.YELLOW_CARD
+        );
+        if (repeatOffenders.length > 0) {
+          const proceed = await carriedCardDialog.show({
+            teams: repeatOffenders.map(
+              (p) => p.team?.teamNameShort ?? `Team ${p.teamKey}`
+            )
+          });
+          if (!proceed) return;
+        }
+
         const pending = { ...match, details: { ...match.details }, active: 0 };
         // Update the result if it hasn't been set yet
         if (pending.result < 0) {
@@ -95,8 +117,26 @@ export const useCommitScoresCallback = () => {
           throw new Error('Failed to calculate rankings.', { cause: e });
         }
 
+        // Carry any yellow cards from this match forward for the rest of the
+        // phase. Only after the match itself has been committed, so a failed
+        // commit never leaves a team carrying a card for a match that was not
+        // recorded. Not rethrown: the scores are already saved, and a carried
+        // card is advisory display state that can be set by hand.
+        try {
+          await postCarriedCards(
+            eventKey,
+            tournamentKey,
+            (pending.participants ?? []).map((p) => ({
+              teamKey: p.teamKey,
+              cardStatus: p.cardStatus
+            }))
+          );
+        } catch (e) {
+          console.error('Failed to carry cards forward for match', e);
+        }
+
         fieldControl?.commitScoresForField?.();
-        sendCommitScores({ eventKey, tournamentKey, id });
+        events.commit({ eventKey, tournamentKey, id });
         setState(MatchState.RESULTS_COMMITTED);
 
         // Update the match occurring atom
@@ -123,7 +163,14 @@ export const useCommitScoresCallback = () => {
 
         emitWebhook(WebhookEvent.COMMITTED, pending);
       },
-      [canCommitScores, setState, eventKey, tournament, tournMatches]
+      [
+        canCommitScores,
+        setState,
+        eventKey,
+        tournament,
+        tournMatches,
+        carriedCardDialog
+      ]
     )
   );
 };

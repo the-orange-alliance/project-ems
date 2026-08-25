@@ -12,19 +12,22 @@ import {
   Team
 } from '@toa-lib/models';
 import { CountryFlag } from './country-flag';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
+import {
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+  MinusOutlined,
+  BlockOutlined
+} from '@ant-design/icons';
 import { ResultsBreakdown } from '../../../displays';
 import { Breakdown as Breakdown2024 } from '../../fgc_2024';
-import { Grid, Typography } from '@mui/material';
+import { Row, Col, Typography } from 'antd';
 import BreakdownRow from './breakdown-row';
-import { Block } from '@mui/icons-material';
 import { FeedingTheFuture } from '@toa-lib/models';
 import { CardStatus as CardStatusComponent } from './card-status';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data';
 import { useAllianceMember } from 'src/api/use-alliance-data';
 import { RegionalBreakdownFGC25 } from '../../fgc_2025/index.js';
+import { RegionalBreakdownFGC26 } from '../../fgc_2026/index.js';
 
 const { CardStatus } = FeedingTheFuture;
 
@@ -62,9 +65,10 @@ const BreakdownContainer = styled.div((props: { alliance: Alliance }) => ({
   paddingTop: '1em'
 }));
 
-const BreakdownTable = styled(Grid)(() => ({
+const BreakdownTable = styled(Row)(() => ({
   width: '100%',
   height: '100%',
+  flexDirection: 'column' as const,
   '> :nth-of-type(odd)': {
     backgroundColor: '#ffffff',
     color: 'black'
@@ -149,11 +153,11 @@ const AllianceTeam: FC<AllianceTeamProps> = ({
   const rankIcon = useMemo(() => {
     if (!rank) return null;
     if (rank.rankChange === 0) {
-      return <HorizontalRuleIcon fontSize='inherit' />;
+      return <MinusOutlined style={{ fontSize: 'inherit' }} />;
     } else if (rank.rankChange > 0) {
-      return <ArrowUpwardIcon fontSize='inherit' />;
+      return <ArrowUpOutlined style={{ fontSize: 'inherit' }} />;
     } else if (rank.rankChange < 0) {
-      return <ArrowDownwardIcon fontSize='inherit' />;
+      return <ArrowDownOutlined style={{ fontSize: 'inherit' }} />;
     }
   }, [rank]);
 
@@ -226,6 +230,9 @@ export const AllianceResult: FC<Props> = ({
     case '2025':
       breakdown = RegionalBreakdownFGC25;
       break;
+    case '2026':
+      breakdown = RegionalBreakdownFGC26;
+      break;
   }
 
   const penaltyCalc = () => {
@@ -246,9 +253,9 @@ export const AllianceResult: FC<Props> = ({
       <TopBanner src={alliance === 'red' ? RED_BANNER : BLUE_BANNER} />
       <AllianceText>
         {firstTeamAlliance && (
-          <Typography variant='h4' sx={{ fontWeight: 'bold' }}>
+          <Typography.Title level={4} style={{ fontWeight: 'bold', margin: 0 }}>
             &nbsp;{firstTeamAlliance.allianceNameLong}
-          </Typography>
+          </Typography.Title>
         )}
       </AllianceText>
       <AllianceContainer alliance={alliance} size={allianceParticipants.length}>
@@ -268,25 +275,25 @@ export const AllianceResult: FC<Props> = ({
         })}
       </AllianceContainer>
       <BreakdownContainer alliance={alliance}>
-        <BreakdownTable container direction='column' gap={0.5}>
+        <BreakdownTable style={{ gap: 4 }}>
           {breakdown.map((b, i) => (
-            <Grid item key={i} xs={breakdownRowSize}>
+            <Col key={i} span={breakdownRowSize * 2}>
               <BreakdownRow breakdown={b} match={match} alliance={alliance} />
-            </Grid>
+            </Col>
           ))}
           {/* Penalty Row */}
-          <Grid item xs={breakdownRowSize}>
+          <Col span={breakdownRowSize * 2}>
             <BreakdownRow
               match={match}
               alliance={alliance}
               breakdown={{
-                icon: <Block fontSize='inherit' />,
+                icon: <BlockOutlined style={{ fontSize: 'inherit' }} />,
                 title: alliance === 'red' ? 'Blue Penalty' : 'Red Penalty',
                 color: 'red',
                 resultCalc: penaltyCalc
               }}
             />
-          </Grid>
+          </Col>
         </BreakdownTable>
       </BreakdownContainer>
       <ScoreContainer alliance={alliance}>

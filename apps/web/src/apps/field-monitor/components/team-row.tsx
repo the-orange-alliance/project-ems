@@ -20,7 +20,7 @@ import {
   SignalWifi0Bar,
   DoNotDisturb
 } from '@mui/icons-material';
-import CheckCircleOutline from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleOutline from '@mui/icons-material/CheckCircleOutlined';
 
 interface IProps {
   ds: DriverstationStatus;
@@ -40,7 +40,6 @@ export const TeamRow: FC<IProps> = ({ ds }: IProps) => {
 
   return (
     <Grid
-      item
       sx={{
         backgroundColor: ds.robotStatus.brownout
           ? 'brown'
@@ -53,22 +52,21 @@ export const TeamRow: FC<IProps> = ({ ds }: IProps) => {
       <Grid
         direction='row'
         container
-        sx={{ fontSize: '20px' }}
-        alignItems={'center'}
+        sx={{ fontSize: '20px', alignItems: 'center' }}
         onClick={() => setDataOpen(true)}
       >
         {/* Station */}
-        <Grid item xs={1} sx={{ fontSize: '40px' }}>
+        <Grid size={1} sx={{ fontSize: '40px' }}>
           {friendlyStation}
         </Grid>
 
         {/* Team Number */}
-        <Grid item xs={1} sx={{ fontSize: '30px' }}>
+        <Grid size={1} sx={{ fontSize: '30px' }}>
           {ds.teamKey}
         </Grid>
 
         {/* Driverstation */}
-        <Grid item xs={1}>
+        <Grid size={1}>
           <Status
             status={ds.dsStatus.linked}
             optionalText={dsText}
@@ -78,17 +76,17 @@ export const TeamRow: FC<IProps> = ({ ds }: IProps) => {
         </Grid>
 
         {/* Bandwidth Usage */}
-        <Grid item xs={1}>
+        <Grid size={1}>
           {ds.robotStatus.bandwidth}
         </Grid>
 
         {/* Radio */}
-        <Grid item xs={1}>
+        <Grid size={1}>
           <Status status={ds.apStatus.linked} />
         </Grid>
 
         {/* Rio */}
-        <Grid item xs={1} alignContent={'center'}>
+        <Grid size={1} sx={{ alignContent: 'center' }}>
           <Status
             status={ds.robotStatus.rioPing && ds.robotStatus.commsActive}
             optionalText={rioText}
@@ -97,12 +95,12 @@ export const TeamRow: FC<IProps> = ({ ds }: IProps) => {
         </Grid>
 
         {/* Battery */}
-        <Grid item xs={1}>
+        <Grid size={1}>
           {ds.robotStatus.batteryVoltage.toFixed(2)}
         </Grid>
 
         {/* Status */}
-        <Grid item xs={1} alignContent={'center'}>
+        <Grid size={1} sx={{ alignContent: 'center' }}>
           <Status
             status={ds.robotStatus.enabled}
             optionalText={ds.robotStatus.mode === 0 ? 'T' : 'A'}
@@ -111,22 +109,22 @@ export const TeamRow: FC<IProps> = ({ ds }: IProps) => {
         </Grid>
 
         {/* Trip Time */}
-        <Grid item xs={1}>
+        <Grid size={1}>
           {ds.robotStatus.tripTimeMs}
         </Grid>
 
         {/* Missed Packets */}
-        <Grid item xs={1}>
+        <Grid size={1}>
           {ds.dsStatus.missedPacketCount - ds.dsStatus.missedPacketOffset}
         </Grid>
 
         {/* Radio Quality */}
-        <Grid item xs={1}>
+        <Grid size={1}>
           {ds.apStatus.quality[0]}/{ds.apStatus.quality[1]}
         </Grid>
 
         {/* Radio Signal */}
-        <Grid item xs={1}>
+        <Grid size={1}>
           <WifiQuality signal={ds.apStatus.signal} />
         </Grid>
       </Grid>
@@ -252,7 +250,7 @@ const DataPopup = ({
       <DialogContent>
         <Grid container direction='row'>
           {/* Robot Indicators */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <Typography
               variant='h6'
               sx={{ fontWeight: 'bold', textDecoration: 'underline' }}
@@ -305,7 +303,7 @@ const DataPopup = ({
           </Grid>
 
           {/* FMS Commands / AP Statuses */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             {/* FMS Commands */}
             <Typography
               variant='h6'
@@ -349,7 +347,7 @@ const DataPopup = ({
         </Grid>
 
         <Grid container direction='row'>
-          <Grid item></Grid>
+          <Grid></Grid>
         </Grid>
 
         {/* Driverstation Indicators */}

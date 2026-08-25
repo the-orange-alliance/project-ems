@@ -1,4 +1,3 @@
-import { Box } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 interface AnimationProps {
@@ -39,8 +38,8 @@ const SlideInLeft: React.FC<AnimationProps> = ({
   }, [elementIn, inDelay, outDelay]);
 
   return (
-    <Box
-      sx={{
+    <div
+      style={{
         transform: `translateX(${localIn ? '0' : '-100vw'})`,
         transition: `transform ${duration ?? 0.3}s ease-in-out`,
         overflow: 'hidden',
@@ -49,7 +48,7 @@ const SlideInLeft: React.FC<AnimationProps> = ({
       }}
     >
       {children}
-    </Box>
+    </div>
   );
 };
 

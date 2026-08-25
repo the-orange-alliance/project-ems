@@ -7,26 +7,26 @@ import {
 } from '@toa-lib/models';
 import { patchMatch, patchMatchParticipants } from 'src/api/use-match-data.js';
 import { DateTime } from 'luxon';
-import { once, sendPrestart, sendUpdate } from 'src/api/use-socket.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { matchAtom, teamsAtom } from 'src/stores/state/event.js';
 import { useAtomCallback } from 'jotai/utils';
 import { useCallback } from 'react';
-import { isSocketConnectedAtom } from 'src/stores/state/ui.js';
 import { useAtomValue } from 'jotai';
 import { emitWebhook } from 'src/api/use-webhook-data.js';
+import * as Comlink from 'comlink';
 
 export const usePrestartCallback = () => {
   const { canPrestart, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
   const teams = useAtomValue(teamsAtom);
+  const { worker, events, connected } = useSocketWorker();
 
   return useAtomCallback(
     useCallback(
       async (get, set) => {
         const match = get(matchAtom);
-        const socketConnected = get(isSocketConnectedAtom);
-        if (!socketConnected) {
+        if (!connected) {
           throw new Error('Not connected to realtime service.');
         }
         if (!canPrestart) {
@@ -44,10 +44,18 @@ export const usePrestartCallback = () => {
         let currentMatch = { ...match, prestartTime, active: 1 };
         await patchMatch(currentMatch);
 
-        currentMatch.participants = currentMatch.participants?.map((p) => ({
-          ...p,
-          team: p.team || teams?.find((t) => t.teamKey === p.teamKey)
-        }));
+        currentMatch.participants = currentMatch.participants?.map((p) => {
+          if (p.team) return p;
+          const team = teams?.find((t) => t.teamKey === p.teamKey);
+          // teamsAtom comes from GET /teams, which has no tournament context and
+          // so reports carried cards unscoped. Strip them here rather than
+          // briefly showing a card from a finished phase — the socket prestart
+          // handler refetches from match/all, which scopes them properly.
+          return {
+            ...p,
+            team: team && { ...team, cardStatus: 0, hasCard: false, cardPhase: null }
+          };
+        });
 
         await patchMatchParticipants(
           { eventKey, tournamentKey, id },
@@ -71,11 +79,17 @@ export const usePrestartCallback = () => {
         set(matchAtom, currentMatch);
         fieldControl?.prestartField?.();
         // Once we recieve the prestart response, immediately send update to load socket with match
-        once(MatchSocketEvent.PRESTART, () => sendUpdate(currentMatch));
+        const proxyUpdate = Comlink.proxy(() => {
+          events.update(currentMatch);
+        });
+        worker?.once(MatchSocketEvent.PRESTART, proxyUpdate);
         // Send prestart to server
-        sendPrestart({ eventKey, tournamentKey, id });
+        events.prestart({ eventKey, tournamentKey, id });
         setState(MatchState.PRESTART_COMPLETE);
-        emitWebhook(WebhookEvent.PRESTARTED, match);
+        // `currentMatch`, not `match`: `match` is the pre-patch object, so
+        // sending it here shipped `prestartTime: ''` and `active: 0` to every
+        // subscriber — the original symptom behind issue #236.
+        emitWebhook(WebhookEvent.PRESTARTED, currentMatch);
       },
       [canPrestart, setState, teams]
     )
@@ -85,11 +99,18 @@ export const usePrestartCallback = () => {
 export const useCancelPrestartCallback = () => {
   const { canCancelPrestart, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
-  return useCallback(() => {
-    if (!canCancelPrestart) {
-      throw new Error('Attempted to cancel prestart when not allowed.');
-    }
-    fieldControl?.cancelPrestartForField?.();
-    setState(MatchState.PRESTART_READY);
-  }, [canCancelPrestart, setState, fieldControl]);
+  return useAtomCallback(
+    useCallback(
+      (get) => {
+        if (!canCancelPrestart) {
+          throw new Error('Attempted to cancel prestart when not allowed.');
+        }
+        const match = get(matchAtom);
+        fieldControl?.cancelPrestartForField?.();
+        setState(MatchState.PRESTART_READY);
+        if (match) emitWebhook(WebhookEvent.PRESTART_ABORTED, match);
+      },
+      [canCancelPrestart, setState, fieldControl]
+    )
+  );
 };

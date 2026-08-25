@@ -1,7 +1,6 @@
 import { FC, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LoginButton } from 'src/components/buttons/login-button.js';
-// import { LogoutButton } from 'src/components/buttons/logout-button.js';
 import emsAvatar from '@assets/favicon.ico';
 import { Layout, Avatar, Typography, Button, theme } from 'antd';
 import {
@@ -52,7 +51,7 @@ const PrimaryAppbar: FC = () => {
       style={{
         display: 'flex',
         alignItems: 'center',
-        padding: '0 16px',
+        padding: '10px 16px',
         background: token.colorPrimary,
         color: token.colorTextSecondary
       }}
@@ -128,8 +127,6 @@ const PrimaryAppbar: FC = () => {
             </Button>
           )}
 
-          {/* Logout */}
-          {/* <LogoutButton /> */}
         </>
       ) : (
         <LoginButton />
