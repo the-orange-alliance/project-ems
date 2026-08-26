@@ -10,7 +10,8 @@
     "build:libs": "turbo run @toa-lib/client#build @toa-lib/server#build",
     "build": "turbo build",
     "build:apps": "turbo run api#build realtime#build ems-web#build",
-    "dev": "turbo run dev api#start realtime#dev"
+    "dev": "turbo run dev api#start realtime#dev",
+    "prepare": "husky"
   },
   "repository": {
     "url": "https://github.com/the-orange-alliance/project-ems.git"
@@ -19,6 +20,7 @@
     "aws-cdk-lib": "^2.261.0",
     "constructs": "^10.6.0",
     "esbuild": "^0.28.1",
+    "husky": "^9.1.7",
     "tsx": "^4.23.1",
     "turbo": "^2.10.5",
     "typescript": "^5.9.3"
