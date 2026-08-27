@@ -1,0 +1,4 @@
+npm version patch -w api --no-git-tag-version
+NEW_VERSION=$(node -p "require('./apps/services/api/package.json').version")
+git add apps/services/api/package.json
+git commit -m "chore: bump api version to $NEW_VERSION" --no-verify
