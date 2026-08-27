@@ -13,13 +13,15 @@ import useSWR, { SWRResponse } from 'swr';
 
 export const getMatchSchedule = async (
   eventKey: string,
-  tournamentKey: string
+  tournamentKey: string,
+  host?: string
 ): Promise<Match<any>[]> =>
   apiFetcher(
     `match/${eventKey}/${tournamentKey}`,
     'GET',
     undefined,
-    matchZod.array().parse
+    matchZod.array().parse,
+    host
   );
 
 export const createMatchSchedule = async (

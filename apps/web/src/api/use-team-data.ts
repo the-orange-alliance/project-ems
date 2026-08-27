@@ -4,11 +4,15 @@ import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
 
 export const getTeams = async (
   eventKey: string | null | undefined,
-  averageScore?: boolean
+  averageScore?: boolean,
+  host?: string
 ): Promise<Team[]> =>
   apiFetcher(
     `teams/${eventKey}${averageScore ? '?averageScore=true' : ''}`,
-    'GET'
+    'GET',
+    undefined,
+    undefined,
+    host
   );
 
 export const postTeams = async (

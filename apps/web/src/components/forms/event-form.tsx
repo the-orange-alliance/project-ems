@@ -140,7 +140,9 @@ export const EventForm: FC<Props> = ({
               onChange={(startDate) =>
                 setEvent((prev) => ({
                   ...prev,
-                  startDate: startDate?.toISOString()
+                  startDate: startDate
+                    ? startDate.toISOString()
+                    : prev.startDate
                 }))
               }
               style={{ width: '100%' }}
@@ -159,7 +161,7 @@ export const EventForm: FC<Props> = ({
               onChange={(endDate) =>
                 setEvent((prev) => ({
                   ...prev,
-                  endDate: endDate?.toISOString()
+                  endDate: endDate ? endDate.toISOString() : prev.endDate
                 }))
               }
               style={{ width: '100%' }}

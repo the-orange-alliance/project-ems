@@ -6,7 +6,7 @@ import {
   Ranking
 } from '@toa-lib/models';
 import { FC, useMemo } from 'react';
-import { MatchBillboard } from './match-billboard';
+import { MatchBillboard } from './match-billboard.js';
 import {
   ArrowUpOutlined,
   ArrowDownOutlined,

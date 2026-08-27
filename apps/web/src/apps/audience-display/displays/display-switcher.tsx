@@ -22,7 +22,7 @@ import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
 
 export interface DisplayModeProps {
   id: Displays;
-  eventKey: string;
+  eventKey: string | null;
 }
 export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   const match = useAtomValue(matchAtom);

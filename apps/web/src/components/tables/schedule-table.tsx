@@ -1,6 +1,6 @@
 import { ScheduleItem } from '@toa-lib/models';
 import { FC } from 'react';
-import { UpgradedTable } from './upgraded-table';
+import { UpgradedTable } from './upgraded-table.js';
 import { DateTime } from 'luxon';
 
 interface Props {
@@ -11,6 +11,7 @@ export const ScheduleTable: FC<Props> = ({ items }) => {
   return (
     <UpgradedTable
       data={items}
+      rowKey='id'
       headers={['Day', 'Name', 'Start Time', 'Duration', 'Is Match']}
       renderRow={(e) => {
         return [

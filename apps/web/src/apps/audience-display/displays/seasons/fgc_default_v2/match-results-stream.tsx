@@ -1,5 +1,5 @@
 import { GlobalObjectivesStream } from './components/global-objectives.js';
-import { FC } from 'node_modules/@types/react/index.js';
+import { FC } from 'react';
 import { DisplayProps } from '../../displays.js';
 import { AllianceSheetStream } from './components/alliance-sheet.js';
 import L3Header from './components/l3-header.js';

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Typography, Row, Col } from 'antd';
-import GlobalObjectiveItem, { GlobalObjectiveItemStream } from './global-objective-item.js';
+import GlobalObjectiveItem, {
+  GlobalObjectiveItemStream
+} from './global-objective-item.js';
 import { Match } from '@toa-lib/models';
 import { ResultsBreakdown } from '../../../displays.js';
 import { GlobalBreakdownFGC25 } from '../../fgc_2025/index.js';
@@ -102,6 +104,7 @@ export const GlobalObjectivesStream: React.FC<GlobalObjectivesProps> = ({
             key={index}
             title={item.title}
             value={item.resultCalc(match, 'red')}
+            color='#10522c'
           />
         ))}
       </div>

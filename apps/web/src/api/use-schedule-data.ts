@@ -34,9 +34,16 @@ export const useScheduleItemsForTournament = (
 
 export const getScheduleParams = async (
   eventKey: string,
-  tournamentKey: string
+  tournamentKey: string,
+  host?: string
 ): Promise<ScheduleParams> =>
-  apiFetcher(`schedule-params/${eventKey}/${tournamentKey}`, 'GET');
+  apiFetcher(
+    `schedule-params/${eventKey}/${tournamentKey}`,
+    'GET',
+    undefined,
+    undefined,
+    host
+  );
 
 export const useScheduleParamsForTournament = (
   eventKey: string | null | undefined,

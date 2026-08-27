@@ -16,9 +16,9 @@ import {
 import { ScheduleParams } from '@toa-lib/models';
 import { PageLoader } from 'src/components/loading/page-loader.js';
 import { MoreButton } from 'src/components/buttons/more-button.js';
-import { APIOptions } from '@toa-lib/client';
 import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
 
 export const ScheduleManager: FC = () => {
   const { state } = useEventState({
@@ -66,13 +66,11 @@ export const ScheduleManager: FC = () => {
   const handleParamsDownload = async () => {
     if (!event || !tournamentKey) return;
     try {
-      const previousUrl = APIOptions.host;
-      APIOptions.host = remoteUrl;
       const scheduleParams = await getScheduleParams(
-        event?.eventKey,
-        tournamentKey
+        event.eventKey,
+        tournamentKey,
+        normalizeRemoteApiHost(remoteUrl)
       );
-      APIOptions.host = previousUrl;
       onScheduleParamsChange(scheduleParams);
     } catch (e) {
       const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);

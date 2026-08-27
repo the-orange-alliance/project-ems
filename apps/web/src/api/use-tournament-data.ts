@@ -5,8 +5,10 @@ import { eventKeyAtom, tournamentKeyAtom } from 'src/stores/state/event.js';
 import useSWR, { SWRConfiguration } from 'swr';
 
 export const getTournaments = async (
-  eventKey: string | null | undefined
-): Promise<Tournament[]> => apiFetcher(`tournament/${eventKey}`, 'GET');
+  eventKey: string | null | undefined,
+  host?: string
+): Promise<Tournament[]> =>
+  apiFetcher(`tournament/${eventKey}`, 'GET', undefined, undefined, host);
 
 export const postTournaments = async (
   tournaments: Tournament[]

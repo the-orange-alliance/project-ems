@@ -1,3 +1,3 @@
-import { StreamApp } from './stream-app';
+import { StreamApp } from './stream-app.js';
 
 export { StreamApp };

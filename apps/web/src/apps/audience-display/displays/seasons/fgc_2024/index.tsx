@@ -1,5 +1,5 @@
 import { LockOutlined, AppleOutlined, StarOutlined } from '@ant-design/icons';
-import { ResultsBreakdown } from '../../displays';
+import { ResultsBreakdown } from '../../displays.js';
 import { FeedingTheFuture } from '@toa-lib/models';
 import CoopertitionLogo from '../fgc_default/assets/Coopertition_Points.svg';
 import Resevoir from './assets/Resevoir.svg';
