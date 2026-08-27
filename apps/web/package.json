@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
-    "build": "vite build",
+    "dev": "node scripts/generate-flag-data.mjs && vite --host",
+    "build": "node scripts/generate-flag-data.mjs && vite build",
     "check-types": "tsc --noEmit",
     "preview": "vite preview"
   },
