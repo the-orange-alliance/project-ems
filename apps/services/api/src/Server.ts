@@ -171,9 +171,8 @@ fastify.addHook('onResponse', (request, reply, done) => {
     if (eventKey) {
       throttledUploadDatabase(eventKey);
     }
-
-    done();
   }
+  done();
 });
 
 // Passport serialization (optional, for sessions)

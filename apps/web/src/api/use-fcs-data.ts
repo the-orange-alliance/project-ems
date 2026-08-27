@@ -2,10 +2,10 @@ import { apiFetcher } from '@toa-lib/client';
 import { FGC25FCS } from '@toa-lib/models';
 import useSWR from 'swr';
 
-export const useFcsData = (field: string | number) =>
+export const useFcsData = <T = FGC25FCS.SettingsType>(field: string | number) =>
   useSWR(
     field ? `fcs/settings/${field}` : undefined,
-    (url) => apiFetcher<FGC25FCS.SettingsType>(url, 'GET'),
+    (url) => apiFetcher<T>(url, 'GET'),
     { revalidateOnFocus: false }
   );
 

@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react';
+import { FC, JSX, ReactNode } from 'react';
 import { Row, Col } from 'antd';
 
 interface Props {

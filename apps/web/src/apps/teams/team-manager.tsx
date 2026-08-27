@@ -18,9 +18,9 @@ import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 import { UploadButton } from 'src/components/buttons/upload-button.js';
 import { Shortcut } from 'src/components/util/shortcuts.js';
-import { APIOptions } from '@toa-lib/client';
 import { useAtomValue } from 'jotai';
 import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
+import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
 
 export const TeamManager: FC = () => {
   const { loading, state } = useEventState({
@@ -146,10 +146,11 @@ export const TeamManager: FC = () => {
 
   const handleDownload = async () => {
     try {
-      const previousUrl = APIOptions.host;
-      APIOptions.host = remoteUrl;
-      const teams = await getTeams(event?.eventKey);
-      APIOptions.host = previousUrl;
+      const teams = await getTeams(
+        event?.eventKey,
+        undefined,
+        normalizeRemoteApiHost(remoteUrl)
+      );
       setModifiedTeams(teams);
       showSnackbar(`(${teams.length}) Teams successfully downloaded`);
     } catch (e) {
@@ -215,6 +216,7 @@ export const TeamManager: FC = () => {
         {event && (
           <Space direction='vertical' style={{ width: '100%' }}>
             <Shortcut disableRender action={handleAdd} shortcut='alt + a' />
+            <Shortcut disableRender action={handleAddTest} shortcut='alt + t' />
             <Typography.Text>{teams.length} Teams</Typography.Text>
             <TeamsTable
               event={event}

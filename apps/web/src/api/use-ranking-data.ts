@@ -57,8 +57,7 @@ export const useRankingsForTournament = (
   tournamentKey: string | null | undefined
 ) =>
   useSWR<Ranking[]>(
-    eventKey && tournamentKey
-      ? `ranking/${eventKey}/${tournamentKey}`
-      : undefined,
-    (url) => apiFetcher(url, 'GET')
+    eventKey && tournamentKey ? `ranking/${eventKey}/${tournamentKey}` : null,
+    (url: string): Promise<Ranking[]> =>
+      apiFetcher<Ranking[]>(url, 'GET', undefined, rankingZod.array().parse)
   );

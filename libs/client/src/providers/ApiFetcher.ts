@@ -66,16 +66,21 @@ export const clientFetcher = async <T>(
  * @param method method 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
  * @param body POST/PATCH/PUT body
  * @param guard zod parse
+ * @param host optional per-request host override. Prefer this over mutating
+ * `options.host` around an await - `options.host` is shared module state, so
+ * temporarily swapping it races with any other in-flight or concurrently
+ * triggered request (e.g. SWR revalidating on focus) reading the same value.
  * @returns
  */
 export const apiFetcher = async <T>(
   url: string,
   method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
   body?: unknown,
-  guard?: ZodType<T>['parse']
+  guard?: ZodType<T>['parse'],
+  host?: string
 ): Promise<T> => {
   // NOTE - If options.host doesn't include http://, fetch() will put the host request URL onto it.
-  const request = await fetch(`${options.host}/${url}`, {
+  const request = await fetch(`${host ?? options.host}/${url}`, {
     method,
     body: JSON.stringify(body),
     headers: {

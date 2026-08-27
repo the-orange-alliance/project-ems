@@ -6,6 +6,7 @@ import {
   DEFAULT_ADMIN_USER,
   DEFAULT_ADMIN_USERNAME
 } from '@toa-lib/models';
+import { FastifyReply, FastifyRequest } from 'fastify';
 
 /**
  * Library file for using different passport strategies within EMS.
@@ -33,4 +34,25 @@ export const localStrategy = () =>
     }
   });
 
-export const requireAuth = passport.authenticate('jwt', { session: false });
+export const requireAuth = (
+  request: FastifyRequest,
+  reply: FastifyReply,
+  done: (err?: Error) => void
+) => {
+  passport.authenticate(
+    'jwt',
+    { session: false },
+    (err: Error | null, user: unknown) => {
+      if (err) {
+        return done(err);
+      }
+
+      // TODO - We don't actually validate anything, or log the user in. Lol.
+      // if (!user) {
+      //   reply.code(401).send({ error: 'Unauthorized' });
+      //   return;
+      // }
+      done();
+    }
+  )(request.raw, reply.raw);
+};

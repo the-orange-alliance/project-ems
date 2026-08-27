@@ -1,6 +1,6 @@
 import { Select } from 'antd';
 import { FC } from 'react';
-import { useCurrentTournament } from 'src/api/use-tournament-data';
+import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 
 interface Props {
   fields: number[];

@@ -1,5 +1,5 @@
-import { FC, useState } from 'react';
-import { AdminChannels, FMSSettings, TeamChannels } from '@toa-lib/models';
+import { FC } from 'react';
+import { FMSSettings } from '@toa-lib/models';
 
 interface Props {
   onChange: (value: FMSSettings, cancel: boolean) => void;
@@ -7,21 +7,21 @@ interface Props {
   value: FMSSettings;
 }
 
-export const FrcFmsSetting: FC<Props> = ({ value, onChange, open }) => {
-  const [settings, setSettings] = useState<FMSSettings>({ ...value });
-  const { data: events } = useEvents();
+export const FrcFmsSetting: FC<Props> = (/*{ value, onChange, open }*/) => {
+  // const [settings, setSettings] = useState<FMSSettings>({ ...value });
+  // const { data: events } = useEvents();
 
-  const save = () => onChange(settings, false);
-  const cancel = () => onChange(settings, true);
+  // const save = () => onChange(settings, false);
+  // const cancel = () => onChange(settings, true);
 
-  // Update a key inside the settings object
-  const updateState = (val: any, key: keyof FMSSettings) => {
-    if (typeof val === 'boolean') val = val ? 1 : 0;
-    if (key === 'fieldNumber' && val < 0) val = 0;
-    setSettings({ ...settings, [key]: val });
-  };
+  // // Update a key inside the settings object
+  // const updateState = (val: any, key: keyof FMSSettings) => {
+  //   if (typeof val === 'boolean') val = val ? 1 : 0;
+  //   if (key === 'fieldNumber' && val < 0) val = 0;
+  //   setSettings({ ...settings, [key]: val });
+  // };
 
-  if (!settings.hwFingerprint) return null;
+  // if (!settings.hwFingerprint) return null;
 
   return null;
   // <Dialog open={open}>

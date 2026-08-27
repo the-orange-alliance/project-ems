@@ -18,7 +18,7 @@ const SlideInBottom: React.FC<AnimationProps> = ({
   const [localIn, setLocalIn] = useState(false);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout> | null;
 
     const delay = elementIn ? inDelay : outDelay;
 

@@ -33,11 +33,9 @@ export const MatchEditDialog: FC<Props> = ({
   const [value, setValue] = useState('0');
   const [match, setMatch] = useState<Match<any> | null>(null);
   const handleChange = (key: string) => setValue(key);
-  const { data: savedMatch } = useMatchAll({
-    eventKey,
-    tournamentKey,
-    id: matchId
-  });
+  const { data: savedMatch } = useMatchAll(
+    open && matchId >= 0 ? { eventKey, tournamentKey, id: matchId } : null
+  );
   const { showSnackbar } = useSnackbar();
   const repostModal = useModal(MatchRepostDialog);
   const { events } = useSocketWorker();

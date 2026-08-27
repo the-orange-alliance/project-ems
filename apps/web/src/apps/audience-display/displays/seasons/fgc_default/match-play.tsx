@@ -1,10 +1,10 @@
 import { FC } from 'react';
-import { DisplayProps } from '../../displays';
+import { DisplayProps } from '../../displays.js';
 import styled from '@emotion/styled';
 import FGC_BG from './assets/global-bg.png';
-import { AlliancePlay } from './components/alliance-play';
-import { MatchTimer } from 'src/components/util/match-timer';
-import MatchTitle from './components/match-title';
+import { AlliancePlay } from './components/alliance-play.js';
+import { MatchTimer } from 'src/components/util/match-timer.js';
+import MatchTitle from './components/match-title.js';
 import { Alliance } from '@toa-lib/models';
 
 const BGImage = styled.div`

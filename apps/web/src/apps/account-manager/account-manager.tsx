@@ -1,8 +1,8 @@
-import { Box, Button, Divider, Paper, Typography } from '@mui/material';
+import { Button, Card, Divider, Space, Typography } from 'antd';
 import { FC } from 'react';
-import { setupDefaultAccounts } from 'src/api/use-event-data';
-import { useUsers } from 'src/api/use-login-data';
-import { DefaultLayout } from '@layouts/default-layout';
+import { setupDefaultAccounts } from 'src/api/use-event-data.js';
+import { useUsers } from 'src/api/use-login-data.js';
+import { DefaultLayout } from '@layouts/default-layout.js';
 
 const AccountManager: FC = () => {
   const { data: users, error } = useUsers();
@@ -13,39 +13,37 @@ const AccountManager: FC = () => {
 
   return (
     <DefaultLayout containerWidth='md'>
-      <Paper>
-        <Box sx={{ padding: (theme) => theme.spacing(2) }}>
-          <Typography variant='h4'>Account Manager</Typography>
-        </Box>
+      <Card>
+        <Typography.Title level={4}>Account Manager</Typography.Title>
         <Divider />
-        <Box sx={{ padding: (theme) => theme.spacing(2) }}>
+        <Space direction='vertical'>
           {users && users.length > 0 && !error && (
-            <Typography>{JSON.stringify(users)}</Typography>
+            <Typography.Text>{JSON.stringify(users)}</Typography.Text>
           )}
           {users && users.length <= 0 && !error && (
             <>
-              <Typography>
+              <Typography.Text>
                 There are currently no active accounts. Please create default
                 accounts.
-              </Typography>
-              <Button variant='contained' onClick={setup}>
+              </Typography.Text>
+              <Button type='primary' onClick={setup}>
                 Create Default Accounts
               </Button>
             </>
           )}
           {!users && error && (
             <>
-              <Typography>
+              <Typography.Text>
                 There are currently no active accounts. Please create default
                 accounts.
-              </Typography>
-              <Button variant='contained' onClick={setup}>
+              </Typography.Text>
+              <Button type='primary' onClick={setup}>
                 Create Default Accounts
               </Button>
             </>
           )}
-        </Box>
-      </Paper>
+        </Space>
+      </Card>
     </DefaultLayout>
   );
 };

@@ -1,5 +1,5 @@
 import { Match } from '@toa-lib/models';
-import { ResultsBreakdown } from '../../../displays';
+import { ResultsBreakdown } from '../../../displays.js';
 import { Row, Col } from 'antd';
 import styled from '@emotion/styled';
 

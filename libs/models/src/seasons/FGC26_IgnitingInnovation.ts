@@ -40,6 +40,41 @@ export enum CoopertitionBonus {
 }
 
 /**
+ * LED <-> ball conversion helpers ("conversion calculator")
+ *
+ * The field's on-field LEDs track WILDFIRE CONTAINED counts 1:1 as balls are sensed, while the
+ * scored/"real" ball count can represent more than one ball per lit LED via a per-field ratio
+ * (see FGC26FCS.SettingsType.wildfireBallsPerLed). A ref may enter either the LED count or the
+ * real ball count at any time; whichever value was just entered is authoritative and the other
+ * is fully recomputed from it - so these are one-way conversions from a single source value,
+ * not a stored round-trip.
+ */
+
+// Clamp a ratio to a sane minimum: 1 LED can never represent less than 1 ball.
+const clampRatio = (ratio: number): number =>
+  Number.isFinite(ratio) && ratio >= 1 ? Math.floor(ratio) : 1;
+
+const clampCount = (count: number): number =>
+  Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+
+/**
+ * Given an LED count (1:1 with the on-field LEDs) and the field's balls-per-LED ratio,
+ * returns the exact ball count it represents.
+ */
+export function ledCountToBallCount(ledCount: number, ratio: number): number {
+  return clampCount(ledCount) * clampRatio(ratio);
+}
+
+/**
+ * Given an exact ball count and the field's balls-per-LED ratio, returns the number of LEDs
+ * needed to represent it. Rounds UP so that every ball always lights at least one LED - a
+ * single LED may end up representing more than one ball when ratio > 1.
+ */
+export function ballCountToLedCount(ballCount: number, ratio: number): number {
+  return Math.ceil(clampCount(ballCount) / clampRatio(ratio));
+}
+
+/**
  * Score Table
  */
 export const ScoreTable = {
@@ -131,6 +166,35 @@ export const FGC26MatchDetailsZod = matchKeyZod.extend({
     .default(0)
     .describe(
       'Number of WILDFIRE CONTAINED in the EXTINGUISHER at the end of the MATCH. This is a GLOBAL ALLIANCE value shared by both REGIONAL ALLIANCES.'
+    ),
+
+  // Approximated (1:1 with on-field LEDs) WILDFIRE counts. Refs may enter either this LED
+  // count or the real count above interchangeably; the two are kept in sync via
+  // ledCountToBallCount/ballCountToLedCount using the field's configured ratio. Not used
+  // directly for scoring - see wildfireInRed/BlueSuppressionUnit/Extinguisher above.
+  approximateWildfireInRedSuppressionUnit: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe(
+      'Approximated WILDFIRE CONTAINED in the red SUPPRESSION UNIT, kept 1:1 with the on-field LEDs. This value is not used directly for scoring - see wildfireInRedSuppressionUnit.'
+    ),
+  approximateWildfireInBlueSuppressionUnit: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe(
+      'Approximated WILDFIRE CONTAINED in the blue SUPPRESSION UNIT, kept 1:1 with the on-field LEDs. This value is not used directly for scoring - see wildfireInBlueSuppressionUnit.'
+    ),
+  approximateWildfireInExtinguisher: z
+    .number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe(
+      'Approximated WILDFIRE CONTAINED in the EXTINGUISHER, kept 1:1 with the on-field LEDs. This value is not used directly for scoring - see wildfireInExtinguisher.'
     ),
 
   // Red robot BRACE states
@@ -245,6 +309,9 @@ export const defaultMatchDetails: MatchDetails = {
   wildfireInRedSuppressionUnit: 0,
   wildfireInBlueSuppressionUnit: 0,
   wildfireInExtinguisher: 0,
+  approximateWildfireInRedSuppressionUnit: 0,
+  approximateWildfireInBlueSuppressionUnit: 0,
+  approximateWildfireInExtinguisher: 0,
   redRobotOneBraceState: BraceState.None,
   redRobotTwoBraceState: BraceState.None,
   redRobotThreeBraceState: BraceState.None,

@@ -10,7 +10,9 @@
     "build:libs": "turbo run @toa-lib/client#build @toa-lib/server#build",
     "build": "turbo build",
     "build:apps": "turbo run api#build realtime#build ems-web#build",
+    "check-types": "turbo check-types",
     "dev": "turbo run dev api#start realtime#dev",
+    "deploy:dev": "node infra/scripts/lightsail_deploy.mjs",
     "prepare": "husky"
   },
   "repository": {
@@ -42,18 +44,11 @@
   "engine": {
     "node": ">=20.0.0"
   },
-  "packageExtensions": {
-    "promised-sqlite3@2.1.0": {
-      "peerDependencies": {
-        "sqlite3": "^5 || ^6"
-      }
-    }
-  },
   "allowScripts": {
     "@serialport/bindings-cpp@13.0.0": true,
     "bufferutil@4.1.0": true,
     "esbuild@0.28.2": true,
-    "sqlite3@6.0.1": true,
+    "sqlite3@5.1.7": true,
     "utf-8-validate@6.0.6": true,
     "cpu-features@0.0.10": true,
     "ssh2@1.17.0": true
