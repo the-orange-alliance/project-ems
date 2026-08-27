@@ -34,7 +34,6 @@ COPY --from=build /workspace/node_modules ./node_modules
 
 # Copy any per-app node_modules (if not hoisted)
 COPY --from=build /workspace/apps/services/api/node_modules ./apps/services/api/node_modules
-COPY --from=build /workspace/apps/services/realtime/node_modules ./apps/services/realtime/node_modules
 
 COPY --from=build /workspace/libs ./libs
 

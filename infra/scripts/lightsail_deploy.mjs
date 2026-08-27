@@ -9,7 +9,7 @@ const run = (command) => {
 };
 
 const service = "project-ems";
-const profile = "kfly-root";
+const profile = "default";
 const region = "us-east-1";
 
 run("docker build --target backend -t ems-backend:dev .");
