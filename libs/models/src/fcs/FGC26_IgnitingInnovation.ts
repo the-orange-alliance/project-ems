@@ -11,10 +11,17 @@
 // TODO: define real socket event names once field hardware is designed.
 export enum SocketEvents {}
 
-// TODO: define real settings once field hardware is designed.
-export type SettingsType = Record<string, never>;
+// TODO: expand once field hardware is designed. For now this only carries the WILDFIRE
+// LED<->ball conversion ratio (see seasons/FGC26_IgnitingInnovation.ts ledCountToBallCount /
+// ballCountToLedCount), which refs need even before the physical LEDs exist.
+export interface SettingsType {
+  /** Balls represented by each lit WILDFIRE LED on this field. Must be >= 1. */
+  wildfireBallsPerLed: number;
+}
 
-export const DEFAULT_SETTINGS: SettingsType = {};
+export const DEFAULT_SETTINGS: SettingsType = {
+  wildfireBallsPerLed: 1
+};
 
 // TODO: define real field status telemetry once field hardware is designed.
 export type FcsStatus = Record<string, never>;
