@@ -23,7 +23,7 @@ const leaderApiHost =
   leaderApiHostQP || getFromLocalStorage('leaderApiHost', false);
 // Configure lib-ems
 if (leaderApiHost) {
-  APIOptions.host = `http://${leaderApiHost}`;
+  APIOptions.host = `${leaderApiHost}`;
   localStorage.setItem('leaderApiEnabled', 'true');
   localStorage.setItem('leaderApiHost', `"${leaderApiHost}"`);
   console.warn(

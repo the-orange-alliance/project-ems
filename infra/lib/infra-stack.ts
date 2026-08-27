@@ -1,8 +1,13 @@
 import * as cdk from "aws-cdk-lib";
-import { aws_iam as iam, aws_ecr as ecr, aws_s3 as s3 } from "aws-cdk-lib";
+import {
+  aws_iam as iam,
+  aws_ecr as ecr,
+  aws_s3 as s3,
+  aws_lightsail as lightsail,
+} from "aws-cdk-lib";
 import { Construct } from "constructs";
 
-export class PublicEcrCicdStack extends cdk.Stack {
+export class PublicAppStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -97,7 +102,142 @@ export class PublicEcrCicdStack extends cdk.Stack {
       }),
     );
 
-    // Outputs
+    const imageTag = this.node.tryGetContext("imageTag") ?? "latest";
+    const backendImage = `public.ecr.aws/102536421230/ems-backend:${imageTag}`;
+    const webImage = `public.ecr.aws/102536421230/ems-web:${imageTag}`;
+
+    // ------------------------------------------------
+    // Lightsail Backend Container Service
+    // ------------------------------------------------
+    const backendService = new lightsail.CfnContainer(
+      this,
+      "EmsBackendService",
+      {
+        serviceName: "project-ems-backend",
+
+        // Start cheap; increase independently if needed.
+        power: "nano",
+        scale: 1,
+
+        containerServiceDeployment: {
+          containers: [
+            {
+              containerName: "backend",
+              image: backendImage,
+
+              environment: [
+                {
+                  variable: "NODE_ENV",
+                  value: "production",
+                },
+
+                // Your backend uses APPDATA for its config/data
+                // location. Adjust if you've changed that logic.
+                {
+                  variable: "APPDATA",
+                  value: "/root/.config",
+                },
+              ],
+
+              ports: [
+                {
+                  port: "8080",
+                  protocol: "HTTP",
+                },
+
+                // Deliberately omit 8081.
+                // Realtime isn't needed in the cloud preview.
+              ],
+            },
+          ],
+
+          publicEndpoint: {
+            containerName: "backend",
+            containerPort: 8080,
+
+            healthCheckConfig: {
+              path: "/",
+              successCodes: "200-499",
+              intervalSeconds: 10,
+              timeoutSeconds: 5,
+              healthyThreshold: 2,
+              unhealthyThreshold: 5,
+            },
+          },
+        },
+
+        tags: [
+          {
+            key: "Project",
+            value: "project-ems",
+          },
+          {
+            key: "Service",
+            value: "backend",
+          },
+        ],
+      },
+    );
+
+    // ------------------------------------------------
+    // Lightsail Web Container Service
+    // ------------------------------------------------
+    const webService = new lightsail.CfnContainer(this, "EmsWebService", {
+      serviceName: "project-ems-web",
+
+      power: "nano",
+      scale: 1,
+
+      containerServiceDeployment: {
+        containers: [
+          {
+            containerName: "web",
+            image: webImage,
+
+            ports: [
+              {
+                port: "80",
+                protocol: "HTTP",
+              },
+            ],
+          },
+        ],
+
+        publicEndpoint: {
+          containerName: "web",
+          containerPort: 80,
+
+          healthCheckConfig: {
+            path: "/",
+            successCodes: "200-399",
+            intervalSeconds: 10,
+            timeoutSeconds: 5,
+            healthyThreshold: 2,
+            unhealthyThreshold: 5,
+          },
+        },
+      },
+
+      tags: [
+        {
+          key: "Project",
+          value: "project-ems",
+        },
+        {
+          key: "Service",
+          value: "web",
+        },
+      ],
+    });
+
+    new cdk.CfnOutput(this, "BackendServiceUrl", {
+      value: backendService.attrUrl,
+    });
+
+    new cdk.CfnOutput(this, "WebServiceUrl", {
+      value: webService.attrUrl,
+    });
+
     new cdk.CfnOutput(this, "BackendPublicEcrUri", {
       value: `public.ecr.aws/${this.account}/ems-backend`,
     });
