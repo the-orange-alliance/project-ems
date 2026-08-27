@@ -6,7 +6,8 @@ import {
   RESULT_NOT_PLAYED,
   ScheduleItem,
   Tournament,
-  assignMatchTimes
+  assignMatchTimes,
+  isPlayoffsTournamentType
 } from '@toa-lib/models';
 import { useTeamsForEvent } from 'src/api/use-team-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
@@ -181,24 +182,19 @@ const MatchGen: FC<MatchGenProps> = ({
   onCreateMatches
 }) => {
   if (!eventSchedule) return <div>Please select a tournament.</div>;
-  switch (eventSchedule.type) {
-    case 'Round Robin':
-      return (
-        <FixedMatches
-          eventSchedule={eventSchedule}
-          scheduleItems={scheduleItems}
-          tournament={tournament}
-          onCreateMatches={onCreateMatches}
-        />
-      );
-    default:
-      return (
-        <RandomMatches
-          eventSchedule={eventSchedule}
-          scheduleItems={scheduleItems}
-          tournament={tournament}
-          onCreateMatches={onCreateMatches}
-        />
-      );
-  }
+  return isPlayoffsTournamentType(eventSchedule.type) ? (
+    <FixedMatches
+      eventSchedule={eventSchedule}
+      scheduleItems={scheduleItems}
+      tournament={tournament}
+      onCreateMatches={onCreateMatches}
+    />
+  ) : (
+    <RandomMatches
+      eventSchedule={eventSchedule}
+      scheduleItems={scheduleItems}
+      tournament={tournament}
+      onCreateMatches={onCreateMatches}
+    />
+  );
 };

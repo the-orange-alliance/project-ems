@@ -24,6 +24,18 @@ export const tournamentTypeZod = z.enum([
 
 export type TournamentType = z.infer<typeof tournamentTypeZod>;
 
+/**
+ * Whether a tournament type is a playoff/alliance-based format (as opposed to
+ * an individual-team format like Test/Practice/Qualification/Ranking). Used
+ * to decide between alliance-based UI (participant picker, schedule options,
+ * match generator) and the individual-team equivalents.
+ *
+ * Mirrors {@link isPlayoffsTournament} in Tournament.ts, which delegates here
+ * so the list of playoff types is defined in exactly one place.
+ */
+export const isPlayoffsTournamentType = (type: TournamentType): boolean =>
+  type === 'Round Robin' || type === 'Eliminations' || type === 'Finals';
+
 export const TournamentTypes = [
   {
     key: 'Test',
@@ -323,6 +335,7 @@ export function calculateTotalMatches(schedule: ScheduleParams): number {
         (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
       );
     case 'Round Robin':
+    case 'Eliminations':
       if (!allianceCount) return 0;
       return (allianceCount / 2) * rounds;
     // if (rounds) {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { tournamentTypeZod } from './Schedule.js';
+import { isPlayoffsTournamentType, tournamentTypeZod } from './Schedule.js';
 import { UnreachableError } from '../types.js';
 
 export const tournamentZod = z.object({
@@ -49,11 +49,7 @@ export const fromDatabaseJSON = (
 };
 
 export const isPlayoffsTournament = (tournament: Tournament): boolean => {
-  return (
-    tournament.tournamentType === 'Eliminations' ||
-    tournament.tournamentType === 'Finals' ||
-    tournament.tournamentType === 'Round Robin'
-  );
+  return isPlayoffsTournamentType(tournament.tournamentType);
 };
 
 /**
