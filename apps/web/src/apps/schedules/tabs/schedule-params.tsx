@@ -3,6 +3,7 @@ import { ScheduleFooter } from '../schedule-footer.js';
 import {
   generateScheduleItems,
   getScheduleValidation,
+  isPlayoffsTournamentType,
   ScheduleParams as EventScheduleParams
 } from '@toa-lib/models';
 import { PageLoader } from 'src/components/loading/index.js';
@@ -95,22 +96,17 @@ export const ScheduleOptions: FC<ScheduleOptionsProps> = ({
   onChange
 }) => {
   if (!eventSchedule) return <div>Please select a tournament.</div>;
-  switch (eventSchedule.type) {
-    case 'Round Robin':
-      return (
-        <RoudnRobinScheduleOptions
-          eventSchedule={eventSchedule}
-          disabled={disabled}
-          onChange={onChange}
-        />
-      );
-    default:
-      return (
-        <DefaultScheduleOptions
-          eventSchedule={eventSchedule}
-          disabled={disabled}
-          onChange={onChange}
-        />
-      );
-  }
+  return isPlayoffsTournamentType(eventSchedule.type) ? (
+    <RoudnRobinScheduleOptions
+      eventSchedule={eventSchedule}
+      disabled={disabled}
+      onChange={onChange}
+    />
+  ) : (
+    <DefaultScheduleOptions
+      eventSchedule={eventSchedule}
+      disabled={disabled}
+      onChange={onChange}
+    />
+  );
 };

@@ -34,7 +34,6 @@ COPY --from=build /workspace/node_modules ./node_modules
 
 # Copy any per-app node_modules (if not hoisted)
 COPY --from=build /workspace/apps/services/api/node_modules ./apps/services/api/node_modules
-COPY --from=build /workspace/apps/services/realtime/node_modules ./apps/services/realtime/node_modules
 
 COPY --from=build /workspace/libs ./libs
 
@@ -42,6 +41,7 @@ COPY --from=build /workspace/apps/services/api/bin ./apps/services/api/bin
 COPY --from=build /workspace/apps/services/api/sql ./apps/services/api/sql
 
 COPY --from=build /workspace/scripts ./scripts
+RUN sed -i 's/\r$//' ./scripts/backend_entrypoint.sh
 RUN chmod +x /workspace/apps/services/api/bin/MatchMaker
 RUN chmod +x ./scripts/backend_entrypoint.sh
 

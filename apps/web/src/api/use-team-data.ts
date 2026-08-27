@@ -4,9 +4,16 @@ import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
 
 export const getTeams = async (
   eventKey: string | null | undefined,
+  averageScore?: boolean,
   host?: string
 ): Promise<Team[]> =>
-  apiFetcher(`teams/${eventKey}`, 'GET', undefined, undefined, host);
+  apiFetcher(
+    `teams/${eventKey}${averageScore ? '?averageScore=true' : ''}`,
+    'GET',
+    undefined,
+    undefined,
+    host
+  );
 
 export const postTeams = async (
   eventKey: string,
@@ -45,10 +52,13 @@ export const postCarriedCards = async (
 
 export const useTeamsForEvent = (
   eventKey: string | null | undefined,
+  averageScore?: boolean,
   config?: SWRConfiguration
 ): SWRResponse<Team[], ApiResponseError> =>
   useSWR(
-    eventKey ? `teams/${eventKey}` : undefined,
+    eventKey
+      ? `teams/${eventKey}${averageScore ? '?averageScore=true' : ''}`
+      : undefined,
     (url) => apiFetcher(url, 'GET'),
     config ?? { revalidateOnFocus: false }
   );

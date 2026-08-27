@@ -24,6 +24,9 @@ export const RedScoreBreakdown: FC<
       wildfireInSuppressionUnit={
         match?.details?.wildfireInRedSuppressionUnit ?? 0
       }
+      approximateWildfireInSuppressionUnit={
+        match?.details?.approximateWildfireInRedSuppressionUnit ?? 0
+      }
       climbMultiplier={match?.details?.redClimbMultiplier ?? 0}
       partnerClimbPoints={match?.details?.redPartnerClimbPoints ?? 0}
       robot1BraceState={match?.details?.redRobotOneBraceState ?? 0}
@@ -64,6 +67,9 @@ export const BlueScoreBreakdown: FC<
       wildfireInSuppressionUnit={
         match?.details?.wildfireInBlueSuppressionUnit ?? 0
       }
+      approximateWildfireInSuppressionUnit={
+        match?.details?.approximateWildfireInBlueSuppressionUnit ?? 0
+      }
       climbMultiplier={match?.details?.blueClimbMultiplier ?? 0}
       partnerClimbPoints={match?.details?.bluePartnerClimbPoints ?? 0}
       robot1BraceState={match?.details?.blueRobotOneBraceState ?? 0}
@@ -96,6 +102,7 @@ const braceStateLabels = ['None', 'Contact', 'Zone 1', 'Zone 2', 'Zone 3'];
 interface Props {
   alliance: 'Red' | 'Blue';
   wildfireInSuppressionUnit: number;
+  approximateWildfireInSuppressionUnit: number;
   climbMultiplier: number;
   partnerClimbPoints: number;
   robot1BraceState: number;
@@ -159,7 +166,18 @@ const FGC26ScoreBreakdown: FC<Props> = (data) => {
         margin: 1
       }}
     >
-      <Col xs={24}>
+      <Col xs={12}>
+        <Typography.Text>
+          {data.alliance} Approx. (LED) SUPPRESSION UNIT
+        </Typography.Text>
+        <Input
+          value={data.approximateWildfireInSuppressionUnit ?? 0}
+          type='number'
+          disabled
+          style={{ width: '100%' }}
+        />
+      </Col>
+      <Col xs={12}>
         <Typography.Text>
           {data.alliance} WILDFIRE in SUPPRESSION UNIT
         </Typography.Text>
@@ -269,6 +287,15 @@ export const CombinedBreakdown: FC<
     <>
       <Divider>Global Alliance</Divider>
       <Row gutter={[24, 24]}>
+        <Col xs={12}>
+          <Typography.Text>Approx. (LED) EXTINGUISHER</Typography.Text>
+          <Input
+            value={match?.details?.approximateWildfireInExtinguisher ?? 0}
+            type='number'
+            disabled
+            style={{ width: '100%' }}
+          />
+        </Col>
         <Col xs={12}>
           <Typography.Text>WILDFIRE in EXTINGUISHER</Typography.Text>
           <Input

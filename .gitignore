@@ -12,6 +12,9 @@ dist/
 .turbo
 out/
 
+# generated at build/dev time by apps/web/scripts/generate-flag-data.mjs
+apps/web/public/flags/base64/
+
 # amplify
 .amplify
 amplify_outputs*

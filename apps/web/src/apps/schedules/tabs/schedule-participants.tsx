@@ -1,4 +1,4 @@
-import { ScheduleParams } from '@toa-lib/models';
+import { isPlayoffsTournamentType, ScheduleParams } from '@toa-lib/models';
 import { FC } from 'react';
 import { RoundRobinParticipants } from '../tournaments/round-robin.js';
 import { DefaultScheduleParticipants } from '../tournaments/default.js';
@@ -15,22 +15,17 @@ export const ScheduleParticipants: FC<Props> = ({
   disabled
 }) => {
   if (!eventSchedule) return <div>Please select a tournament.</div>;
-  switch (eventSchedule.type) {
-    case 'Round Robin':
-      return (
-        <RoundRobinParticipants
-          eventSchedule={eventSchedule}
-          onEventScheduleChange={onEventScheduleChange}
-          disabled={disabled}
-        />
-      );
-    default:
-      return (
-        <DefaultScheduleParticipants
-          eventSchedule={eventSchedule}
-          onEventScheduleChange={onEventScheduleChange}
-          disabled={disabled}
-        />
-      );
-  }
+  return isPlayoffsTournamentType(eventSchedule.type) ? (
+    <RoundRobinParticipants
+      eventSchedule={eventSchedule}
+      onEventScheduleChange={onEventScheduleChange}
+      disabled={disabled}
+    />
+  ) : (
+    <DefaultScheduleParticipants
+      eventSchedule={eventSchedule}
+      onEventScheduleChange={onEventScheduleChange}
+      disabled={disabled}
+    />
+  );
 };

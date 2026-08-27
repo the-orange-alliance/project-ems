@@ -148,6 +148,7 @@ export const TeamManager: FC = () => {
     try {
       const teams = await getTeams(
         event?.eventKey,
+        undefined,
         normalizeRemoteApiHost(remoteUrl)
       );
       setModifiedTeams(teams);
