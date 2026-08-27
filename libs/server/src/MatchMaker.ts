@@ -80,7 +80,7 @@ function parseMatchMaker(
       redMinPen: 0,
       redScore: 0,
       scheduledTime: '',
-      startTime: '',
+      actualStartTime: '',
       uploaded: 0,
       participants
     });

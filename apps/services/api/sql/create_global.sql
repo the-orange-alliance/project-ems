@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS "event" (
 );
 
 CREATE TABLE IF NOT EXISTS "socket_clients" (
-    "currentUrl" VARCHAR(255),
     "ipAddress" VARCHAR(64) NOT NULL,
     "fieldNumbers" VARCHAR(255),
     "audienceDisplayChroma" VARCHAR(255),

@@ -15,6 +15,7 @@ import { getDB } from '../db/EventDatabase.js';
 import logger from '../util/Logger.js';
 import { z } from 'zod';
 import { errorableSchema } from '../util/Errors.js';
+import { nowUtc } from '../util/MatchTimestamps.js';
 import {
   EventKeyParams,
   EventTournamentKeyParams,
@@ -141,7 +142,7 @@ export const postMatchResults = async (
   if (res?.ok) {
     await db.updateWhere(
       'match',
-      { uploaded: 1 },
+      { uploaded: 1, updatedAtUtc: nowUtc() },
       `eventKey = "${info.eventKey}" AND tournamentKey = "${info.tournamentKey}" AND id = ${info.id}`
     );
   }

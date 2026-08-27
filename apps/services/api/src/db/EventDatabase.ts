@@ -49,9 +49,136 @@ export class EventDatabase {
       this.db = await AsyncDatabase.open(
         getAppData('ems') + sep + this.name + '.db'
       );
+      await this.runMigrations();
     } catch (e) {
       throw e;
     }
+  }
+
+  /**
+   * Brings an already-existing database file up to date with the current schema.
+   *
+   * Every `create_*.sql` uses `CREATE TABLE IF NOT EXISTS`, which means schema
+   * changes to those files only ever reach *new* databases — an event created
+   * before a column was renamed would silently keep the old column and drop
+   * writes to the new one on the floor. This is the seam where those changes get
+   * applied to existing databases instead.
+   *
+   * Contract for every step in here:
+   *  - **Idempotent.** This runs on every database open, so a step that has
+   *    already been applied must be a no-op, not an error.
+   *  - **Safe on a fresh database.** A brand new event DB has no tables at all
+   *    until `createEventBase()` runs, so each step must check that its table
+   *    exists before touching it.
+   */
+  public async runMigrations(): Promise<void> {
+    // startTime -> actualStartTime. The old name read like "when the match
+    // started" but actually held the scheduled time; see issue #236.
+    await this.renameColumnIfPresent('match', 'startTime', 'actualStartTime');
+    // Carried cards are scoped to a qualification/playoff phase rather than to
+    // the whole event; this records which phase a team's card belongs to.
+    await this.addColumnIfMissing('team', 'cardPhase', 'VARCHAR(15)');
+    // Lets consumers reconcile which matches changed since their last poll,
+    // and backs the `?since=` filter on the match routes; see issue #240.
+    await this.addColumnIfMissing('match', 'updatedAtUtc', 'VARCHAR(255)');
+    // Rows predating the column have no recorded write time. Stamp them now so
+    // that `?since=` has a total order to work with: a null would have to be
+    // either dropped from every filtered response (the consumer never learns
+    // the match exists) or included in all of them (the filter saves nothing).
+    // "as far as this server knows, last written at upgrade time" is the
+    // conservative answer - an older cursor still sees the row, a newer one
+    // correctly skips it.
+    await this.backfillNullColumn(
+      'match',
+      'updatedAtUtc',
+      new Date().toISOString()
+    );
+  }
+
+  /**
+   * Renames `from` to `to` on `table`, but only if the rename is actually
+   * pending — i.e. the table exists, still has the old column, and does not yet
+   * have the new one. Any other state is treated as already-migrated.
+   */
+  private async renameColumnIfPresent(
+    table: string,
+    from: string,
+    to: string
+  ): Promise<void> {
+    try {
+      if (!(await this.tableExists(table))) return;
+      const names = await this.columnNames(table);
+      if (!names.includes(from) || names.includes(to)) return;
+      await this.db.exec(
+        `ALTER TABLE "${table}" RENAME COLUMN "${from}" TO "${to}";`
+      );
+    } catch (e) {
+      throw new ApiDatabaseError(table, e);
+    }
+  }
+
+  /**
+   * Adds `column` to `table`, but only if the table exists and does not already
+   * have it. `type` is the column's DDL (e.g. `'VARCHAR(15)'`); it must be
+   * nullable or carry a default, since existing rows will need a value.
+   */
+  private async addColumnIfMissing(
+    table: string,
+    column: string,
+    type: string
+  ): Promise<void> {
+    try {
+      if (!(await this.tableExists(table))) return;
+      if (await this.columnNames(table).then((n) => n.includes(column))) return;
+      await this.db.exec(
+        `ALTER TABLE "${table}" ADD COLUMN "${column}" ${type};`
+      );
+    } catch (e) {
+      throw new ApiDatabaseError(table, e);
+    }
+  }
+
+  /**
+   * Gives `column` a value on rows that don't have one yet.
+   *
+   * Idempotent by construction: it only touches nulls, so a second run matches
+   * nothing. No-ops on a database where `table` doesn't exist, and on a brand
+   * new one it matches zero rows because inserts populate the column already.
+   *
+   * Doubles as a safety net — if a write path is ever missed, those rows pick
+   * up a timestamp on the next restart instead of staying invisible to
+   * timestamp-filtered queries forever.
+   */
+  private async backfillNullColumn(
+    table: string,
+    column: string,
+    value: string
+  ): Promise<void> {
+    try {
+      if (!(await this.tableExists(table))) return;
+      if (!(await this.columnNames(table)).includes(column)) return;
+      await this.db.all(
+        `UPDATE "${table}" SET "${column}" = ? WHERE "${column}" IS NULL;`,
+        [value]
+      );
+    } catch (e) {
+      throw new ApiDatabaseError(table, e);
+    }
+  }
+
+  private async columnNames(table: string): Promise<string[]> {
+    const columns = (await this.db.all(
+      `PRAGMA table_info("${table}");`
+    )) as { name: string }[];
+    return columns.map((c) => c.name);
+  }
+
+  private async tableExists(table: string): Promise<boolean> {
+    const rows = await this.db.all(
+      `SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?;`,
+      [table]
+    );
+    return rows.length > 0;
   }
 
   public async setupUsers(): Promise<void> {

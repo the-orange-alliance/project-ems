@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS "team" (
     "countryCode" VARCHAR(2),
     "rookieYear" INT,
     "cardStatus" INT,
+    "cardPhase" VARCHAR(15),
     PRIMARY KEY (eventKey, teamKey),
     UNIQUE (eventKey, teamKey)
 );
@@ -103,7 +104,7 @@ CREATE TABLE IF NOT EXISTS "match" (
     "id" INT NOT NULL,
     "name" VARCHAR(50) NOT NULL,
     "scheduledTime" VARCHAR(255),
-    "startTime" VARCHAR(255),
+    "actualStartTime" VARCHAR(255),
     "prestartTime" VARCHAR(255),
     "fieldNumber" INT,
     "cycleTime" REAL,
@@ -116,6 +117,7 @@ CREATE TABLE IF NOT EXISTS "match" (
     "active" INT,
     "result" INT,
     "uploaded" INT,
+    "updatedAtUtc" VARCHAR(255),
     PRIMARY KEY (eventKey, tournamentKey, id),
     UNIQUE (eventKey, tournamentKey, id),
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey)

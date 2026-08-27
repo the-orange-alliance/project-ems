@@ -46,8 +46,14 @@ export const usePrestartEvent = () => {
       const seasonKey = getSeasonKeyFromEventKey(eventKey);
       const details = getDefaultMatchDetailsBySeasonKey(seasonKey);
       match.details = { eventKey, id, tournamentKey, ...details };
+      // All four penalty counters clear together. Prestart is the first step of
+      // the match cycle, so it is the reset point; penalties and cards awarded
+      // "before the match starts" are awarded after prestart, once the referee
+      // screens have a match loaded, and so are unaffected by this.
       match.redMinPen = 0;
       match.blueMinPen = 0;
+      match.redMajPen = 0;
+      match.blueMajPen = 0;
       match.redScore = 0;
       match.blueScore = 0;
       match.result = -1;
