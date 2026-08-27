@@ -3,10 +3,27 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { getDB } from '../db/EventDatabase.js';
 import { errorableSchema, InternalServerError } from '../util/Errors.js';
-import { toDbWebhook, WebhookDbSchema, WebhookSchema } from '@toa-lib/models';
+import {
+  toDbWebhook,
+  WebhookDbSchema,
+  WebhookEvent,
+  WebhookSchema
+} from '@toa-lib/models';
 import { SendWebhookSchema } from '@toa-lib/models/base';
 import { SuccessSchema } from '../util/GlobalSchema.js';
-import { EmitWebhooks } from '../util/Webhooks.js';
+import { EmitWebhooks, sendTestWebhook } from '../util/Webhooks.js';
+
+const TestWebhookSchema = z.object({
+  url: z.string().min(1),
+  event: z.nativeEnum(WebhookEvent)
+});
+
+const TestWebhookResultSchema = z.object({
+  success: z.boolean(),
+  status: z.number().int().optional(),
+  statusText: z.string().optional(),
+  error: z.string().optional()
+});
 
 async function webhooksController(fastify: FastifyInstance) {
   fastify.withTypeProvider<ZodTypeProvider>().post(
@@ -26,6 +43,35 @@ async function webhooksController(fastify: FastifyInstance) {
       } catch (e) {
         console.error(e);
         reply.code(200).send({ success: false });
+      }
+    }
+  );
+
+  // Send a best-effort sample payload straight to one URL, bypassing the
+  // `webhooks` table (enabled/field filtering, DB row) entirely — lets an
+  // operator test a webhook before or right after saving it.
+  fastify.withTypeProvider<ZodTypeProvider>().post(
+    '/test',
+    {
+      schema: {
+        body: TestWebhookSchema,
+        response: errorableSchema(TestWebhookResultSchema),
+        tags: ['Webhooks']
+      }
+    },
+    async (request, reply) => {
+      try {
+        const { url, event } = request.body;
+        const result = await sendTestWebhook(url, event);
+        reply.status(200).send(result);
+      } catch (e) {
+        console.error(e);
+        reply
+          .status(200)
+          .send({
+            success: false,
+            error: e instanceof Error ? e.message : 'Unknown error'
+          });
       }
     }
   );

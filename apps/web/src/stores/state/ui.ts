@@ -39,6 +39,13 @@ export const isAudioEnabledForScorekeeper = atomWithStorage<boolean>(
   'audioEnabled',
   false
 );
+/**
+ * The name (matching a `Tournament.fields` entry, e.g. `"Field 2"`) of the
+ * field this station is paired/linked with for production purposes, or `''`
+ * for "no paired field". Station-local, same storage pattern as the other
+ * settings in this section — see issue #262.
+ */
+export const pairedFieldAtom = atomWithStorage<string>('pairedField', '');
 export const fieldsAtom = atom<string[]>([]);
 export const remoteApiUrlAtom = atomWithStorage<string>('remoteApiUrl', '');
 

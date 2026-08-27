@@ -23,3 +23,28 @@ export const emitWebhook = async (
     console.error('Failed to emit webhook:', event, payload, e);
   }
 };
+
+export interface TestWebhookResult {
+  success: boolean;
+  status?: number;
+  statusText?: string;
+  error?: string;
+}
+
+/**
+ * Sends one best-effort sample payload straight to `url` (no saved webhook
+ * row required) so the Webhooks settings tab can offer a "Test" action.
+ */
+export const testWebhook = async (
+  url: string,
+  event: WebhookEvent
+): Promise<TestWebhookResult> => {
+  try {
+    return await apiFetcher('webhooks/test', 'POST', { url, event });
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : 'Unknown error'
+    };
+  }
+};

@@ -62,6 +62,79 @@ const withPersistedFields = async (match: Match<any>): Promise<Match<any>> => {
   }
 };
 
+export interface TestWebhookResult {
+  success: boolean;
+  status?: number;
+  statusText?: string;
+  error?: string;
+}
+
+/**
+ * Builds a plausible-looking, but entirely synthetic, match payload. Used
+ * only by {@link sendTestWebhook} so an operator can confirm a webhook URL is
+ * reachable and see the payload shape without needing a live match.
+ */
+const buildSampleMatchPayload = (): Match<any> => {
+  const now = new Date().toISOString();
+  return {
+    eventKey: 'TEST-EVENT',
+    tournamentKey: 'TEST-QUAL',
+    id: 1,
+    name: 'Test Match 1',
+    scheduledTime: now,
+    prestartTime: now,
+    actualStartTime: now,
+    fieldNumber: 1,
+    cycleTime: 0,
+    redScore: 120,
+    redMinPen: 0,
+    redMajPen: 1,
+    blueScore: 98,
+    blueMinPen: 1,
+    blueMajPen: 0,
+    active: 1,
+    result: 1,
+    uploaded: 0,
+    updatedAtUtc: now,
+    participants: []
+  };
+};
+
+/**
+ * Sends one best-effort sample payload directly to `url`, bypassing the
+ * `webhooks` table entirely (no enabled/field filtering, no DB row required —
+ * this is used to test a URL before or after it's saved). Never throws;
+ * reports success/failure back to the caller instead of just logging, since
+ * this is the one webhook send a human is actively waiting on.
+ */
+export const sendTestWebhook = async (
+  url: string,
+  webhookEvent: WebhookEvent
+): Promise<TestWebhookResult> => {
+  const payload = buildSampleMatchPayload();
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2500); // 2.5 second timeout
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: webhookEvent, payload }),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    return {
+      success: response.ok,
+      status: response.status,
+      statusText: response.statusText
+    };
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : 'Unknown error'
+    };
+  }
+};
+
 export const EmitWebhooks = async (
   webhookEvent: WebhookEvent,
   match: Match<any>

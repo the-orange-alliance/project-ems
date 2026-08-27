@@ -9,6 +9,11 @@ import { matchZod } from './Match.js';
  * ever emitted, and `EmitWebhooks` decides the winner and delivers to whichever
  * of the coloured subscriptions matches. Subscribing to `SCORES_POSTED` itself
  * receives every posted result regardless of outcome.
+ *
+ * `PRODUCTION_ACTIVE`, `FORCE_LIGHTS_MATCH`, and `FORCE_LIGHTS_STANDBY` are the
+ * production/broadcast control group (issue #262): manual or field-linking
+ * driven signals for switching what a broadcast is showing, still carrying the
+ * current match as payload like everything else here.
  */
 export enum WebhookEvent {
   PRESTARTED = 'PRESTARTED',
@@ -25,7 +30,12 @@ export enum WebhookEvent {
   // Filters on SCORES_POSTED — see above. Never emitted on their own.
   SCORES_POSTED_RED = 'SCORES_POSTED_RED',
   SCORES_POSTED_BLUE = 'SCORES_POSTED_BLUE',
-  SCORES_POSTED_TIED = 'SCORES_POSTED_TIED'
+  SCORES_POSTED_TIED = 'SCORES_POSTED_TIED',
+
+  // Production/broadcast control — see doc comment above.
+  PRODUCTION_ACTIVE = 'PRODUCTION_ACTIVE',
+  FORCE_LIGHTS_MATCH = 'FORCE_LIGHTS_MATCH',
+  FORCE_LIGHTS_STANDBY = 'FORCE_LIGHTS_STANDBY'
 };
 
 export const SendWebhookSchema = z.object({

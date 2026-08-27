@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { updateSocketClient } from 'src/api/use-socket-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
-import { isAudioEnabledForScorekeeper } from 'src/stores/state/ui.js';
+import { isAudioEnabledForScorekeeper, pairedFieldAtom } from 'src/stores/state/ui.js';
 import { useAtom } from 'jotai';
 import BooleanRow from 'src/components/settings/boolean-row.js';
 import DropdownRow from 'src/components/settings/dropdown-row.js';
@@ -13,6 +13,7 @@ const MainSettingsTab: FC = () => {
   const [enableScorekeeperAudio, setScorekeeperAudioEnabled] = useAtom(
     isAudioEnabledForScorekeeper
   );
+  const [pairedField, setPairedField] = useAtom(pairedFieldAtom);
 
   const tournament = useCurrentTournament();
 
@@ -44,6 +45,15 @@ const MainSettingsTab: FC = () => {
         options={tournament?.fields?.map((f) => ({ label: f, value: f })) ?? []}
         onChange={updateFieldControl}
         multiple
+      />
+      <DropdownRow
+        title='Paired Field'
+        value={pairedField}
+        options={[
+          { label: 'None', value: '' },
+          ...(tournament?.fields?.map((f) => ({ label: f, value: f })) ?? [])
+        ]}
+        onChange={(value: string | null) => setPairedField(value ?? '')}
       />
       <BooleanRow
         title='Scorekeeper Audio'
