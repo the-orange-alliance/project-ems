@@ -315,7 +315,12 @@ export const CombinedBreakdown: FC<
               IgnitingInnovation.CoopertitionBonus.Five,
               IgnitingInnovation.CoopertitionBonus.Six
             ]}
-            stateLabels={['None (+0)', '4 Robots (+10)', '5 Robots (+25)', '6 Robots (+40)']}
+            stateLabels={[
+              'None (+0)',
+              '4 Robots (+10)',
+              '5 Robots (+25)',
+              '6 Robots (+40)'
+            ]}
             value={
               match?.details?.coopertition ??
               IgnitingInnovation.CoopertitionBonus.None

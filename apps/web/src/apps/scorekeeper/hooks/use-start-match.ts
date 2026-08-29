@@ -7,8 +7,8 @@ import { AbortDialog } from 'src/components/dialogs/abort-dialog.js';
 import { useAtomCallback } from 'jotai/utils';
 import { useCallback } from 'react';
 import { DateTime } from 'luxon';
-import { emitWebhook } from 'src/api/use-webhook-data.js';
-import { patchMatch } from 'src/api/use-match-data.js';
+import { webhooksApi } from 'src/api/use-webhook-data.js';
+import { matchApi } from 'src/api/use-match-data.js';
 import { matchAtom } from 'src/stores/state/index.js';
 
 export const useMatchStartCallback = () => {
@@ -40,14 +40,14 @@ export const useMatchStartCallback = () => {
         };
         set(matchAtom, currentMatch);
         try {
-          await patchMatch(currentMatch);
+          await matchApi.update.match(currentMatch);
         } catch (e) {
           // Deliberately not rethrown: the match is already running, and
           // surfacing a blocking error mid-match would be alarming and
           // unactionable. The start time can be corrected in the match editor.
           console.error('Failed to persist match start time', e);
         }
-        emitWebhook(WebhookEvent.MATCH_STARTED, currentMatch);
+        webhooksApi.create.emit(WebhookEvent.MATCH_STARTED, currentMatch);
       },
       [canStartMatch, setState, connected, fieldControl, events]
     )
@@ -73,7 +73,8 @@ export const useAbortMatchCallback = () => {
         setState(MatchState.PRESTART_READY);
         // Aborting returns the field to PRESTART_READY, so from a subscriber's
         // point of view the prestart has been undone — same as cancelling it.
-        if (match) emitWebhook(WebhookEvent.PRESTART_ABORTED, match);
+        if (match)
+          webhooksApi.create.emit(WebhookEvent.PRESTART_ABORTED, match);
       },
       [canAbortMatch, setState, fieldControl, events, abortModal]
     )

@@ -1,13 +1,8 @@
 import { Typography } from 'antd';
-import { Event } from '@toa-lib/models';
+import { Event, eventZod } from '@toa-lib/models';
 import { FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  getEvents,
-  postEvent,
-  setupEventBase,
-  useEvents
-} from 'src/api/use-event-data.js';
+import { eventsApi, useEvents } from 'src/api/use-event-data.js';
 import EventsTable from 'src/components/tables/events-table.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
@@ -17,6 +12,7 @@ import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { mutate } from 'swr';
 import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
+import { remoteClient } from 'src/api/http-clients.js';
 
 export const EventSelection: FC = () => {
   const navigate = useNavigate();
@@ -26,14 +22,18 @@ export const EventSelection: FC = () => {
 
   const handleDownload = async () => {
     try {
-      const events = await getEvents(normalizeRemoteApiHost(remoteUrl));
+      remoteClient.setBaseUrl(normalizeRemoteApiHost(remoteUrl));
+      const events =
+        (await remoteClient.get<Event[]>('/event', {
+          schema: eventZod.array()
+        })) ?? [];
       await Promise.all(
         events.map(async (event) => {
-          await postEvent(event);
-          await setupEventBase(event.eventKey);
+          await eventsApi.create.event(event);
+          await eventsApi.setup.get.eventBase(event.eventKey);
         })
       );
-      mutate('event', events);
+      mutate('/event', events);
       showSnackbar(`(${events.length}) Events successfully downloaded`);
     } catch (e) {
       const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);

@@ -5,11 +5,7 @@ import { AllianceSheetStream } from './components/alliance-sheet.js';
 import L3Header from './components/l3-header.js';
 import { useAllianceMember } from 'src/api/use-alliance-data.js';
 
-export const MatchResultsStream: FC<DisplayProps> = ({
-  match,
-  ranks,
-  teams
-}) => {
+export const MatchResultsStream: FC<DisplayProps> = ({ match, teams }) => {
   const redAllianceNum = useAllianceMember(
     match?.eventKey || '',
     match?.tournamentKey || '',
@@ -29,7 +25,7 @@ export const MatchResultsStream: FC<DisplayProps> = ({
     ? `Blue (${blueAllianceNum.allianceNameLong})`
     : 'Blue';
 
-    console.log(blueAllianceNum, redAllianceNum);
+  console.log(blueAllianceNum, redAllianceNum);
 
   return (
     <div

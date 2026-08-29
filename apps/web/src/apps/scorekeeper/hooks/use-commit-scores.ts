@@ -12,22 +12,16 @@ import {
   WebhookEvent
 } from '@toa-lib/models';
 import { CarriedCardDialog } from 'src/components/dialogs/carried-card-dialog.js';
-import { postCarriedCards } from 'src/api/use-team-data.js';
-import {
-  patchWholeMatch,
-  useMatchesForTournament
-} from 'src/api/use-match-data.js';
-import {
-  recalculatePlayoffsRankings,
-  recalculateRankings
-} from 'src/api/use-ranking-data.js';
+import { teamsApi } from 'src/api/use-team-data.js';
+import { matchApi, useMatchesForTournament } from 'src/api/use-match-data.js';
+import { rankingsApi } from 'src/api/use-ranking-data.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { eventKeyAtom, matchAtom } from 'src/stores/state/event.js';
 import { useCallback } from 'react';
 import { useAtomCallback } from 'jotai/utils';
 import { matchStateAtom } from 'src/stores/state/match.js';
-import { emitWebhook } from 'src/api/use-webhook-data.js';
+import { webhooksApi } from 'src/api/use-webhook-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 
 export const useCommitScoresCallback = () => {
@@ -100,7 +94,7 @@ export const useCommitScoresCallback = () => {
         }
 
         try {
-          await patchWholeMatch(pending);
+          await matchApi.patchWholeMatch(pending);
         } catch (e) {
           // Match patch failed
           throw new Error('Failed to commit scores for match.', { cause: e });
@@ -108,9 +102,9 @@ export const useCommitScoresCallback = () => {
 
         try {
           if (isPlayoffsTournament(tournament)) {
-            await recalculatePlayoffsRankings(eventKey, tournamentKey);
+            await rankingsApi.create.recalculate(eventKey, tournamentKey, true);
           } else {
-            await recalculateRankings(eventKey, tournamentKey);
+            await rankingsApi.create.recalculate(eventKey, tournamentKey);
           }
         } catch (e) {
           // Rankings recalc failed
@@ -123,7 +117,7 @@ export const useCommitScoresCallback = () => {
         // recorded. Not rethrown: the scores are already saved, and a carried
         // card is advisory display state that can be set by hand.
         try {
-          await postCarriedCards(
+          await teamsApi.create.carriedCards(
             eventKey,
             tournamentKey,
             (pending.participants ?? []).map((p) => ({
@@ -161,7 +155,7 @@ export const useCommitScoresCallback = () => {
           updateTournMatches(copy);
         }
 
-        emitWebhook(WebhookEvent.COMMITTED, pending);
+        webhooksApi.create.emit(WebhookEvent.COMMITTED, pending);
       },
       [
         canCommitScores,
@@ -187,7 +181,7 @@ export const useClearFieldCallback = () => {
         fieldControl?.clearField?.();
         set(matchStateAtom, MatchState.RESULTS_READY);
         const match = get(matchAtom); // Trigger matchAtom update
-        emitWebhook(WebhookEvent.ALL_CLEAR, match);
+        webhooksApi.create.emit(WebhookEvent.ALL_CLEAR, match);
       },
       [canResetField]
     )

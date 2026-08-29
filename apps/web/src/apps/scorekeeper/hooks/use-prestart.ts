@@ -5,7 +5,7 @@ import {
   MatchState,
   WebhookEvent
 } from '@toa-lib/models';
-import { patchMatch, patchMatchParticipants } from 'src/api/use-match-data.js';
+import { matchApi } from 'src/api/use-match-data.js';
 import { DateTime } from 'luxon';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
@@ -13,7 +13,7 @@ import { matchAtom, teamsAtom } from 'src/stores/state/event.js';
 import { useAtomCallback } from 'jotai/utils';
 import { useCallback } from 'react';
 import { useAtomValue } from 'jotai';
-import { emitWebhook } from 'src/api/use-webhook-data.js';
+import { webhooksApi } from 'src/api/use-webhook-data.js';
 import * as Comlink from 'comlink';
 
 export const usePrestartCallback = () => {
@@ -42,7 +42,7 @@ export const usePrestartCallback = () => {
 
         const prestartTime = DateTime.now().toISO();
         let currentMatch = { ...match, prestartTime, active: 1 };
-        await patchMatch(currentMatch);
+        await matchApi.update.match(currentMatch);
 
         currentMatch.participants = currentMatch.participants?.map((p) => {
           if (p.team) return p;
@@ -53,11 +53,16 @@ export const usePrestartCallback = () => {
           // handler refetches from match/all, which scopes them properly.
           return {
             ...p,
-            team: team && { ...team, cardStatus: 0, hasCard: false, cardPhase: null }
+            team: team && {
+              ...team,
+              cardStatus: 0,
+              hasCard: false,
+              cardPhase: null
+            }
           };
         });
 
-        await patchMatchParticipants(
+        await matchApi.update.participants(
           { eventKey, tournamentKey, id },
           match.participants
         );
@@ -89,7 +94,7 @@ export const usePrestartCallback = () => {
         // `currentMatch`, not `match`: `match` is the pre-patch object, so
         // sending it here shipped `prestartTime: ''` and `active: 0` to every
         // subscriber — the original symptom behind issue #236.
-        emitWebhook(WebhookEvent.PRESTARTED, currentMatch);
+        webhooksApi.create.emit(WebhookEvent.PRESTARTED, currentMatch);
       },
       [canPrestart, setState, teams]
     )
@@ -108,7 +113,8 @@ export const useCancelPrestartCallback = () => {
         const match = get(matchAtom);
         fieldControl?.cancelPrestartForField?.();
         setState(MatchState.PRESTART_READY);
-        if (match) emitWebhook(WebhookEvent.PRESTART_ABORTED, match);
+        if (match)
+          webhooksApi.create.emit(WebhookEvent.PRESTART_ABORTED, match);
       },
       [canCancelPrestart, setState, fieldControl]
     )

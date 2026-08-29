@@ -8,8 +8,8 @@ export const FieldMonitorExtra: FC<FGC26FCS.FcsStatus> = () => {
       <Divider>Field Status</Divider>
       <Card size='small' style={{ width: '100%' }}>
         <Typography.Text type='secondary'>
-          Field hardware is not yet implemented for the 2026 Igniting
-          Innovation season.
+          Field hardware is not yet implemented for the 2026 Igniting Innovation
+          season.
         </Typography.Text>
       </Card>
     </Flex>

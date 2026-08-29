@@ -9,8 +9,7 @@ import { tournamentKeyAtom } from '@stores/state/event.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import {
-  getScheduleParams,
-  patchScheduleParams,
+  scheduleApi,
   useScheduleParamsForTournament
 } from 'src/api/use-schedule-data.js';
 import { ScheduleParams } from '@toa-lib/models';
@@ -19,6 +18,7 @@ import { MoreButton } from 'src/components/buttons/more-button.js';
 import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
+import { remoteClient } from 'src/api/http-clients.js';
 
 export const ScheduleManager: FC = () => {
   const { state } = useEventState({
@@ -47,7 +47,7 @@ export const ScheduleManager: FC = () => {
     );
     if (!tournament) return;
     schedule.type = tournament.tournamentType;
-    patchScheduleParams(schedule).then(() => {
+    scheduleApi.update.params(schedule).then(() => {
       return refetchScheduleParams();
     });
   };
@@ -66,11 +66,11 @@ export const ScheduleManager: FC = () => {
   const handleParamsDownload = async () => {
     if (!event || !tournamentKey) return;
     try {
-      const scheduleParams = await getScheduleParams(
-        event.eventKey,
-        tournamentKey,
-        normalizeRemoteApiHost(remoteUrl)
+      remoteClient.setBaseUrl(normalizeRemoteApiHost(remoteUrl));
+      const scheduleParams = await remoteClient.get<ScheduleParams>(
+        `/schedule-params/${event.eventKey}/${tournamentKey}`
       );
+      if (!scheduleParams) throw new Error('Schedule params not found.');
       onScheduleParamsChange(scheduleParams);
     } catch (e) {
       const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);

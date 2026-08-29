@@ -18,7 +18,7 @@ import {
   DeleteOutlined,
   MoreOutlined,
   PlusOutlined,
-  ReloadOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
 import { useMatchAll } from '../../api/use-match-data.js';
 import { DateTime } from 'luxon';

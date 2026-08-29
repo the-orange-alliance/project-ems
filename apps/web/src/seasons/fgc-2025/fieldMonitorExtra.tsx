@@ -128,7 +128,7 @@ const AcceleratorCard: FC<AcceleratorCardProps> = ({ name, status }) => {
 export const FieldMonitorExtra: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
   return fcsStatus ? (
     <Flex vertical flex={1}>
-    <Divider>Field Status</Divider>
+      <Divider>Field Status</Divider>
       <Card size='small' style={{ width: '100%' }}>
         <Flex vertical flex={1} gap='1rem'>
           {/* WLED */}

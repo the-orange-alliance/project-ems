@@ -33,8 +33,9 @@ export interface TeleOpProps<DetailsType extends MatchDetailBase> {
   ) => void;
 }
 
-interface GenericScoreSheetProps<DetailsType extends MatchDetailBase>
-  extends RefereeScoreSheetProps {
+interface GenericScoreSheetProps<
+  DetailsType extends MatchDetailBase
+> extends RefereeScoreSheetProps {
   TeleopScoreSheet: FC<TeleOpProps<DetailsType>>;
 }
 

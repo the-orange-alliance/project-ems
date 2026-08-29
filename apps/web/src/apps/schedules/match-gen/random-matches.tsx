@@ -9,7 +9,7 @@ import {
 } from '@toa-lib/models';
 import { FGCSchedule } from '@toa-lib/models';
 import { FC, useState } from 'react';
-import { createMatchSchedule } from 'src/api/use-match-data.js';
+import { matchApi } from 'src/api/use-match-data.js';
 import { MatchMakerQualityDropdown } from 'src/components/dropdowns/match-maker-dropdown.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 
@@ -37,7 +37,7 @@ export const RandomMatches: FC<Props> = ({
       if (!scheduleItems) return;
       const { eventKey, tournamentKey, teamKeys } = eventSchedule;
       const { fieldCount: fields, name } = tournament;
-      const matches = await createMatchSchedule({
+      const matches = await matchApi.create.schedule({
         eventKey,
         tournamentKey,
         quality,

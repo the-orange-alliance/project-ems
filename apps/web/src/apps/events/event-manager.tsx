@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 import { Typography } from 'antd';
 import { Event } from '@toa-lib/models';
-import { patchEvent, useCurrentEvent } from 'src/api/use-event-data.js';
+import { eventsApi, useCurrentEvent } from 'src/api/use-event-data.js';
 import { EventForm } from 'src/components/forms/event-form.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
@@ -13,7 +13,7 @@ export const EventManager: FC = () => {
   const onSubmit = async (event: Event) => {
     setLoading(true);
     try {
-      await patchEvent(event.eventKey, event);
+      await eventsApi.update.event(event.eventKey, event);
       mutate(event);
       showSnackbar(`Event ${event.eventName} Modified`);
       setLoading(false);

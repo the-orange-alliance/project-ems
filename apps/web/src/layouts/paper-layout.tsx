@@ -1,5 +1,5 @@
 import { FC, JSX, Suspense, useEffect } from 'react';
-import { Layout, Card, Divider, theme, Typography } from 'antd';
+import { Layout, Card, Divider, Typography } from 'antd';
 import { appbarConfigAtom } from '@stores/state/index.js';
 import { useSetAtom } from 'jotai';
 
@@ -30,7 +30,7 @@ export const PaperLayout: FC<Props> = ({
     if (title || titleLink || showSettings) {
       updateAppbarConfig({ title, titleLink, showSettings });
     }
-  }, [title, titleLink]);
+  }, [showSettings, title, titleLink, updateAppbarConfig]);
 
   return (
     <Layout

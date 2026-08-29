@@ -6,11 +6,7 @@ import {
   FGCSchedule
 } from '@toa-lib/models';
 import { FC, useEffect, useState } from 'react';
-import {
-  deleteAllianceMembers,
-  postAllianceMembers,
-  useAllianceMembers
-} from 'src/api/use-alliance-data.js';
+import { allianceApi, useAllianceMembers } from 'src/api/use-alliance-data.js';
 import { useRankingsForTournament } from 'src/api/use-ranking-data.js';
 import { useTeamsForEvent } from 'src/api/use-team-data.js';
 import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team.js';
@@ -159,9 +155,9 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
     }
     try {
       if (alliances) {
-        await deleteAllianceMembers(eventKey, tournamentKey);
+        await allianceApi.delete.members(eventKey, tournamentKey);
       }
-      await postAllianceMembers(eventKey, allianceMembers);
+      await allianceApi.create.members(eventKey, allianceMembers);
 
       onEventScheduleChange?.({
         ...eventSchedule,

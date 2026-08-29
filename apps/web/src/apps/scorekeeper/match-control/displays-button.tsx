@@ -5,7 +5,7 @@ import { MatchState, WebhookEvent } from '@toa-lib/models';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { matchAtom } from 'src/stores/state/index.js';
 import { useAtomValue } from 'jotai';
-import { emitWebhook } from 'src/api/use-webhook-data.js';
+import { webhooksApi } from 'src/api/use-webhook-data.js';
 import { Displays } from '@toa-lib/models/base';
 
 export const DisplaysButton: FC = () => {
@@ -15,7 +15,7 @@ export const DisplaysButton: FC = () => {
   const updateDisplays = () => {
     events.display(Displays.MATCH_START);
     setState(MatchState.AUDIENCE_READY);
-    emitWebhook(WebhookEvent.DISPLAYS_SET, match);
+    webhooksApi.create.emit(WebhookEvent.DISPLAYS_SET, match);
   };
   return (
     <Button

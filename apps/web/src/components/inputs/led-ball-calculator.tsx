@@ -45,7 +45,11 @@ export const LedBallCalculator: FC<Props> = ({
       <Space direction='vertical' align='center' style={{ width: '100%' }}>
         <Typography.Title
           level={5}
-          style={{ textAlign: 'center', textTransform: 'capitalize', margin: 0 }}
+          style={{
+            textAlign: 'center',
+            textTransform: 'capitalize',
+            margin: 0
+          }}
         >
           {title}
         </Typography.Title>

@@ -8,8 +8,7 @@ import {
 } from '@toa-lib/models';
 import { PageLoader } from 'src/components/loading/index.js';
 import {
-  deleteScheduleItems,
-  postScheduleItems,
+  scheduleApi,
   useScheduleItemsForTournament
 } from 'src/api/use-schedule-data.js';
 import { ScheduleLayout } from '../schedule-layout.js';
@@ -48,11 +47,11 @@ export const ScheduleParams: FC<Props> = ({
     if (!eventSchedule) return;
     setLoading(true);
     const scheduleItems = generateScheduleItems(eventSchedule);
-    await deleteScheduleItems(
+    await scheduleApi.delete.items(
       eventSchedule.eventKey,
       eventSchedule.tournamentKey
     );
-    await postScheduleItems(scheduleItems);
+    await scheduleApi.create.items(scheduleItems);
     mutateScheduleItems(scheduleItems);
     setLoading(false);
   };

@@ -1,12 +1,8 @@
 import { Typography } from 'antd';
-import { Tournament, defaultTournament } from '@toa-lib/models';
+import { Tournament, defaultTournament, tournamentZod } from '@toa-lib/models';
 import { FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  getTournaments,
-  patchTournament,
-  postTournaments
-} from 'src/api/use-tournament-data.js';
+import { tournamentsApi } from 'src/api/use-tournament-data.js';
 import { MoreButton } from 'src/components/buttons/more-button.js';
 import { TournamentTable } from 'src/components/tables/tournament-table.js';
 import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
@@ -18,6 +14,7 @@ import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 import { useAtomValue } from 'jotai';
 import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
 import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
+import { remoteClient } from 'src/api/http-clients.js';
 
 export const TournamentManager: FC = () => {
   const { loading, state } = useEventState({
@@ -51,10 +48,10 @@ export const TournamentManager: FC = () => {
         'tournamentKey'
       );
       if (diffs.additions.length > 0) {
-        await postTournaments(diffs.additions);
+        await tournamentsApi.create.tournaments(diffs.additions);
       }
       for (const tournament of diffs.edits) {
-        await patchTournament(tournament);
+        await tournamentsApi.update.tournament(tournament);
       }
 
       setModifiedTournaments([]);
@@ -97,10 +94,12 @@ export const TournamentManager: FC = () => {
 
   const handleDownload = async () => {
     try {
-      const tournaments = await getTournaments(
-        event?.eventKey,
-        normalizeRemoteApiHost(remoteUrl)
-      );
+      if (!event?.eventKey) return;
+      remoteClient.setBaseUrl(normalizeRemoteApiHost(remoteUrl));
+      const tournaments =
+        (await remoteClient.get<Tournament[]>(`/tournament/${event.eventKey}`, {
+          schema: tournamentZod.array()
+        })) ?? [];
       setModifiedTournaments(tournaments);
       showSnackbar(`(${tournaments.length}) Teams successfully downloaded`);
     } catch (e) {

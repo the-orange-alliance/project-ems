@@ -1,10 +1,10 @@
-import { useModal } from '@ebay/nice-modal-react';
+﻿import { useModal } from '@ebay/nice-modal-react';
 import { Space, Typography } from 'antd';
-import { Team, defaultTeam } from '@toa-lib/models';
+import { Team, defaultTeam, teamZod } from '@toa-lib/models';
 import { ChangeEvent, FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { resultsSyncTeams } from 'src/api/use-results-sync.js';
-import { getTeams, patchTeam, postTeams } from 'src/api/use-team-data.js';
+import { resultsSyncApi } from 'src/api/use-results-sync.js';
+import { teamsApi } from 'src/api/use-team-data.js';
 import { TeamRemovalDialog } from 'src/components/dialogs/team-removal-dialog.js';
 import { TeamsTable } from 'src/components/tables/teams-table.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
@@ -21,6 +21,7 @@ import { Shortcut } from 'src/components/util/shortcuts.js';
 import { useAtomValue } from 'jotai';
 import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
 import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
+import { remoteClient } from 'src/api/http-clients.js';
 
 export const TeamManager: FC = () => {
   const { loading, state } = useEventState({
@@ -56,12 +57,12 @@ export const TeamManager: FC = () => {
         'teamKey'
       );
       if (diffs.additions.length > 0) {
-        await postTeams(event.eventKey, diffs.additions);
+        await teamsApi.create.teams(event.eventKey, diffs.additions);
       }
       for (const team of diffs.edits) {
-        await patchTeam(team.eventKey, team.teamKey, team);
+        await teamsApi.update.team(team.eventKey, team.teamKey, team);
       }
-      await resultsSyncTeams(event.eventKey, platform, apiKey);
+      await resultsSyncApi.create.teams(event.eventKey, platform, apiKey);
 
       setModifiedTeams([]);
 
@@ -146,11 +147,12 @@ export const TeamManager: FC = () => {
 
   const handleDownload = async () => {
     try {
-      const teams = await getTeams(
-        event?.eventKey,
-        undefined,
-        normalizeRemoteApiHost(remoteUrl)
-      );
+      if (!event?.eventKey) return;
+      remoteClient.setBaseUrl(normalizeRemoteApiHost(remoteUrl));
+      const teams =
+        (await remoteClient.get<Team[]>(`/teams/${event.eventKey}`, {
+          schema: teamZod.array()
+        })) ?? [];
       setModifiedTeams(teams);
       showSnackbar(`(${teams.length}) Teams successfully downloaded`);
     } catch (e) {

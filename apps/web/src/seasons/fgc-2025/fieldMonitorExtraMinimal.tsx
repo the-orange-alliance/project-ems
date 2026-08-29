@@ -1,6 +1,5 @@
-import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { FGC25FCS } from '@toa-lib/models';
-import { Divider, Flex, Tag, Typography } from 'antd';
+import { Divider, Flex, Typography } from 'antd';
 import { FC } from 'react';
 import { StatusTag } from './fieldMonitorExtra.js';
 
