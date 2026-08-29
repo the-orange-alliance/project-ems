@@ -43,7 +43,6 @@ const braceStateLabels = ['None', 'Contact', 'Zone 1', 'Zone 2', 'Zone 3'];
 const TeleScoreSheet: FC<Props> = ({
   alliance,
   participants,
-  onMatchDetailsAdjustment,
   onMatchDetailsUpdate
 }) => {
   const match: Match<IgnitingInnovation.MatchDetails> | null =
@@ -57,10 +56,11 @@ const TeleScoreSheet: FC<Props> = ({
     match?.fieldNumber ?? ''
   );
   const ratio =
-    fcsData?.wildfireBallsPerLed ?? FGC26FCS.DEFAULT_SETTINGS.wildfireBallsPerLed;
+    fcsData?.wildfireBallsPerLed ??
+    FGC26FCS.DEFAULT_SETTINGS.wildfireBallsPerLed;
 
   if (!match || !match.details) return null;
-  const details = match.details;
+  const { details } = match;
 
   const ledKey =
     alliance === 'blue'

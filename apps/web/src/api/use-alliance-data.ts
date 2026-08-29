@@ -1,16 +1,59 @@
-import { apiFetcher } from '@toa-lib/client';
-import { AllianceMember, allianceMemberZod } from '@toa-lib/models';
-import useSWR from 'swr';
+import {
+  AllianceMember,
+  ApiResponseError,
+  allianceMemberZod
+} from '@toa-lib/models';
+import useSWR, { SWRResponse } from 'swr';
+import { localClient } from './http-clients.js';
+
+export const allianceApi = {
+  get: {
+    members: (eventKey: string, tournamentKey: string) =>
+      localClient.get<AllianceMember[]>(
+        `/alliance/${eventKey}/${tournamentKey}`,
+        {
+          schema: allianceMemberZod.array()
+        }
+      )
+  },
+  create: {
+    members: (eventKey: string, members: AllianceMember[]) =>
+      localClient.post<void>(`/alliance/${eventKey}`, { body: members })
+  },
+  update: {
+    member: (
+      eventKey: string,
+      tournamentKey: string,
+      teamKey: number,
+      member: AllianceMember
+    ) =>
+      localClient.patch<void>(
+        `/alliance/${eventKey}/${tournamentKey}/${teamKey}`,
+        {
+          body: member
+        }
+      )
+  },
+  delete: {
+    members: (eventKey: string, tournamentKey: string) =>
+      localClient.delete<void>(`/alliance/${eventKey}/${tournamentKey}`)
+  }
+};
 
 export const useAllianceMembers = (
   eventKey: string | null | undefined,
   tournamentKey: string | null | undefined
-) =>
-  useSWR<AllianceMember[]>(
+): SWRResponse<AllianceMember[], ApiResponseError> =>
+  useSWR<
+    AllianceMember[],
+    ApiResponseError,
+    readonly [string, string, string] | null
+  >(
     eventKey && tournamentKey
-      ? `alliance/${eventKey}/${tournamentKey}`
-      : undefined,
-    (url) => apiFetcher(url, 'GET', undefined, allianceMemberZod.array().parse),
+      ? (['/alliance', eventKey, tournamentKey] as const)
+      : null,
+    ([, eKey, tKey]) =>
+      allianceApi.get.members(eKey, tKey).then((res) => res ?? []),
     { revalidateOnFocus: false }
   );
 
@@ -22,26 +65,3 @@ export const useAllianceMember = (
   const { data: members } = useAllianceMembers(eventKey, tournamentKey);
   return members?.find((m) => m.teamKey === teamKey);
 };
-
-export const postAllianceMembers = (
-  eventKey: string,
-  members: AllianceMember[]
-): Promise<void> => apiFetcher(`alliance/${eventKey}`, 'POST', members);
-
-export const patchAllianceMember = (
-  eventKey: string,
-  tournamentKey: string,
-  teamKey: number,
-  member: AllianceMember
-): Promise<void> =>
-  apiFetcher(
-    `alliance/${eventKey}/${tournamentKey}/${teamKey}`,
-    'PATCH',
-    member
-  );
-
-export const deleteAllianceMembers = (
-  eventKey: string,
-  tournamentKey: string
-): Promise<void> =>
-  apiFetcher(`alliance/${eventKey}/${tournamentKey}`, 'DELETE');

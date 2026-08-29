@@ -3,7 +3,6 @@ import { Tournament } from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ViewReturn } from 'src/components/buttons/view-return.js';
 import { TournamentForm } from 'src/components/forms/tournament-form.js';
 import { PageLoader } from 'src/components/loading/page-loader.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';

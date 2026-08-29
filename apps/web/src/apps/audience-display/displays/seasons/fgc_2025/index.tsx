@@ -23,7 +23,7 @@ export const GlobalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>
       icon: <LockOutlined style={{ fontSize: 'inherit' }} />,
       title: 'Barrier Points',
       color: '#000000',
-      resultCalc: (match, alliance) => {
+      resultCalc: (match) => {
         if (!match.details) return '0';
         return `${match.details.barriersInRedMitigator + match.details.barriersInBlueMitigator}`;
       }
@@ -32,7 +32,7 @@ export const GlobalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>
       icon: <LockOutlined style={{ fontSize: 'inherit' }} />,
       title: 'Biodiversity Points',
       color: '#000000',
-      resultCalc: (match, alliance) => {
+      resultCalc: (match) => {
         if (!match.details) return '0';
         return `${match.details.biodiversityUnitsBlueSideEcosystem + match.details.biodiversityUnitsRedSideEcosystem + match.details.biodiversityUnitsCenterEcosystem}`;
       }
@@ -41,7 +41,7 @@ export const GlobalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>
       icon: <LockOutlined style={{ fontSize: 'inherit' }} />,
       title: 'Distribution Factor',
       color: '#000000',
-      resultCalc: (match, alliance) => {
+      resultCalc: (match) => {
         if (!match.details)
           return `Not Even (x${EcoEquilibrium.DistributionFactor.NotEven.toFixed(2)})`;
         switch (match.details.biodiversityDistributionFactor) {
@@ -58,7 +58,7 @@ export const GlobalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>
       icon: <LockOutlined style={{ fontSize: 'inherit' }} />,
       title: 'Coopertition Bonus',
       color: '#000000',
-      resultCalc: (match, alliance) => {
+      resultCalc: (match) => {
         if (!match.details) return 'None (+0)';
         switch (match.details.coopertition) {
           case EcoEquilibrium.CoopertitionBonus.Full:

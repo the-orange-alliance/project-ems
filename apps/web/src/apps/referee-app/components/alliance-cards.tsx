@@ -39,7 +39,7 @@ export const AllianceCards: FC = () => {
         margin: '0 20px'
       }}
     >
-      {buttonConfigs.map(({ to, className, style, label }, idx) => (
+      {buttonConfigs.map(({ to, className, style, label }) => (
         <Col span={24} key={to}>
           <Link to={to} style={{ width: '100%' }}>
             <Button block type='primary' className={className} style={style}>

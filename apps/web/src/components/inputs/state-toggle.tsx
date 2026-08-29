@@ -60,7 +60,7 @@ export function StateToggle<T>({
                   width: fullWidth ? '100%' : undefined,
                   textAlign: 'center',
                   height: '5rem',
-                  lineHeight: '5rem',
+                  lineHeight: '5rem'
                 }}
               >
                 {stateLabels ? stateLabels[i] : `${s}`}

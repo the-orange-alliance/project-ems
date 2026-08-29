@@ -62,6 +62,7 @@ export const clientFetcher = async <T>(
 
 /**
  * Utility function that fetchers from the given URL and parses into the zod definition (if given).
+ * @deprecated - use HttpClient instead.
  * @param url url as a string
  * @param method method 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
  * @param body POST/PATCH/PUT body

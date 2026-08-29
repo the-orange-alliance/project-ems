@@ -1,49 +1,69 @@
-import { apiFetcher } from '@toa-lib/client';
 import { ApiResponseError, Event, eventZod } from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 import { eventKeyAtom } from 'src/stores/state/index.js';
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
+import { localClient } from './http-clients.js';
 
-export const setupEventBase = async (eventKey: string): Promise<void> =>
-  apiFetcher(`event/setup/${eventKey}`, 'GET');
-
-export const setupDefaultAccounts = async (): Promise<void> =>
-  apiFetcher('auth/setup', 'GET');
-
-export const purgeAll = async (): Promise<void> =>
-  apiFetcher('admin/purge', 'DELETE');
-
-export const getEvents = async (host?: string): Promise<Event[]> =>
-  apiFetcher('event', 'GET', undefined, eventZod.array().parse, host);
-
-export const postEvent = async (event: Event): Promise<void> =>
-  apiFetcher('event', 'POST', event);
-
-export const patchEvent = async (
-  eventKey: string,
-  event: Event
-): Promise<void> => apiFetcher(`event/${eventKey}`, 'PATCH', event);
+export const eventsApi = {
+  setup: {
+    get: {
+      eventBase: async (eventKey: string): Promise<void> => {
+        await localClient.get<void>(`/event/setup/${eventKey}`);
+      },
+      defaultAccounts: async (): Promise<void> => {
+        await localClient.get<void>('/auth/setup');
+      }
+    },
+    delete: {
+      purgeAll: async (): Promise<void> => {
+        await localClient.delete<void>('/admin/purge');
+      }
+    }
+  },
+  get: {
+    events: () =>
+      localClient.get<Event[]>('/event', {
+        schema: eventZod.array()
+      }),
+    event: (eventKey: string): Promise<Event | null> =>
+      localClient.get<Event>(`/event/${eventKey}`, { schema: eventZod })
+  },
+  create: {
+    event: (event: Event) => localClient.post<void>('/event', { body: event })
+  },
+  update: {
+    event: async (eventKey: string, event: Event): Promise<void> => {
+      await localClient.patch<void>(`/event/${eventKey}`, { body: event });
+    }
+  },
+  delete: {
+    event: async (eventKey: string): Promise<void> => {
+      await localClient.delete<void>(`/event/${eventKey}`);
+    }
+  }
+};
 
 export const useEvents = (
   config?: SWRConfiguration,
   fetch: boolean = true
-): SWRResponse<Event[], ApiResponseError> =>
-  useSWR<Event[]>(
-    fetch ? 'event' : undefined,
-    (url) => apiFetcher(url, 'GET', undefined, eventZod.array().parse),
+): SWRResponse<Event[] | null> =>
+  useSWR<Event[] | null>(
+    fetch ? '/event' : null,
+    () => eventsApi.get.events(),
     config
   );
 
 export const useEvent = (
   eventKey: string | null | undefined,
   config?: SWRConfiguration
-): SWRResponse<Event> =>
-  useSWR<Event>(
-    eventKey && eventKey.length > 0 ? `event/${eventKey}` : undefined,
-    (url: string) => apiFetcher(url, 'GET', undefined, eventZod.parse),
+): SWRResponse<Event | null, ApiResponseError> =>
+  useSWR<Event | null, ApiResponseError, readonly [string, string] | null>(
+    eventKey ? (['/event', eventKey] as const) : null,
+    ([, key]) => eventsApi.get.event(key),
     config
   );
 
 export const useCurrentEvent = (
   config?: SWRConfiguration
-): SWRResponse<Event> => useEvent(useAtomValue(eventKeyAtom), config);
+): SWRResponse<Event | null, ApiResponseError> =>
+  useEvent(useAtomValue(eventKeyAtom), config);

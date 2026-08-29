@@ -13,7 +13,7 @@ import {
   Collapse
 } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import { updateFcsData, useFcsData } from 'src/api/use-fcs-data.js';
+import { fcsApi, useFcsData } from 'src/api/use-fcs-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { FGC25FCS } from '@toa-lib/models';
@@ -298,7 +298,7 @@ export const Settings: FC = () => {
       setIsSaving(true);
       try {
         // Save to API
-        await updateFcsData(fieldNum, data);
+        await fcsApi.update.settings(fieldNum, data);
 
         // Emit socket event to notify other clients
         if (worker) {

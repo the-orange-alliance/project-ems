@@ -24,8 +24,7 @@ export const RefereeLayout: FC<Props> = ({
       titleLink,
       showFullscreen: true
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setAppbarConfig, title, titleLink]);
 
   return (
     <Layout style={{ minHeight: '100vh', display: 'flex' }}>

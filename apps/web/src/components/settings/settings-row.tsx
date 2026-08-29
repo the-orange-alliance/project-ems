@@ -1,5 +1,5 @@
 import React from 'react';
-import { Col, Divider, Flex, Row, Space, Typography } from 'antd';
+import { Col, Divider, Row, Typography } from 'antd';
 
 interface SettingsRowProps {
   title: string;

@@ -30,8 +30,8 @@ export const TeamRow: FC<IProps> = ({ ds }: IProps) => {
         backgroundColor: ds.robotStatus.brownout
           ? 'brown'
           : ds.allianceStation < 20
-          ? '#ff6666'
-          : '#6666ff',
+            ? '#ff6666'
+            : '#6666ff',
         paddingBottom: 8
       }}
     >
@@ -230,15 +230,11 @@ const DataPopup = ({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
         {/* Robot Indicators */}
         <div>
-          <Typography.Title
-            level={5}
-            style={{ textDecoration: 'underline' }}
-          >
+          <Typography.Title level={5} style={{ textDecoration: 'underline' }}>
             Robot
           </Typography.Title>
           <Typography.Paragraph>
-            <b>Connected:</b>{' '}
-            <BooleanIndicator bool={ds.robotStatus.rioPing} />
+            <b>Connected:</b> <BooleanIndicator bool={ds.robotStatus.rioPing} />
           </Typography.Paragraph>
           <Typography.Paragraph>
             <b>Comms Active: </b>{' '}
@@ -248,8 +244,7 @@ const DataPopup = ({
             <b>Rio Version:</b> {ds.robotStatus.versionData.rio.split('>')[1]}
           </Typography.Paragraph>
           <Typography.Paragraph>
-            <b>Brownout:</b>{' '}
-            <BooleanIndicator bool={ds.robotStatus.brownout} />
+            <b>Brownout:</b> <BooleanIndicator bool={ds.robotStatus.brownout} />
           </Typography.Paragraph>
           <Typography.Paragraph>
             <b>Robot EStopped: </b>{' '}
@@ -280,10 +275,7 @@ const DataPopup = ({
         {/* FMS Commands / AP Statuses */}
         <div>
           {/* FMS Commands */}
-          <Typography.Title
-            level={5}
-            style={{ textDecoration: 'underline' }}
-          >
+          <Typography.Title level={5} style={{ textDecoration: 'underline' }}>
             FMS Commands
           </Typography.Title>
           <Typography.Paragraph>
@@ -322,7 +314,10 @@ const DataPopup = ({
       </div>
 
       {/* Driverstation Indicators */}
-      <Typography.Title level={5} style={{ textDecoration: 'underline', marginTop: 16 }}>
+      <Typography.Title
+        level={5}
+        style={{ textDecoration: 'underline', marginTop: 16 }}
+      >
         Driverstation
       </Typography.Title>
       <Typography.Paragraph>

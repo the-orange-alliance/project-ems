@@ -3,11 +3,7 @@ import { useMatchControl } from './use-match-control.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { useMatchesForTournament } from 'src/api/use-match-data.js';
-import {
-  resultsSyncAlliances,
-  resultsSyncMatch,
-  resultsSyncRankings
-} from 'src/api/use-results-sync.js';
+import { resultsSyncApi } from 'src/api/use-results-sync.js';
 import { useSyncConfig } from 'src/hooks/use-sync-config.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -21,7 +17,7 @@ import { useCallback } from 'react';
 import { useAtomCallback } from 'jotai/utils';
 import { useActiveFieldNumbers } from 'src/components/sync-effects/sync-fields.js';
 import { matchStatusAtom } from 'src/stores/state/match.js';
-import { emitWebhook } from 'src/api/use-webhook-data.js';
+import { webhooksApi } from 'src/api/use-webhook-data.js';
 
 export const usePostResultsCallback = () => {
   const { canPostResults, setState } = useMatchControl();
@@ -53,7 +49,7 @@ export const usePostResultsCallback = () => {
         }
 
         // Sync match online
-        const { success: successMatch } = await resultsSyncMatch(
+        const { success: successMatch } = await resultsSyncApi.create.match(
           match.eventKey,
           match.tournamentKey,
           match.id,
@@ -61,18 +57,19 @@ export const usePostResultsCallback = () => {
           apiKey
         );
 
-        const { success: successRankings } = await resultsSyncRankings(
-          match.eventKey,
-          match.tournamentKey,
-          platform,
-          apiKey
-        );
+        const { success: successRankings } =
+          await resultsSyncApi.create.rankings(
+            match.eventKey,
+            match.tournamentKey,
+            platform,
+            apiKey
+          );
 
         let successAlliances = true;
 
         if (tournament && tournament.tournamentLevel > QUALIFICATION_LEVEL) {
           successAlliances = (
-            await resultsSyncAlliances(
+            await resultsSyncApi.create.alliances(
               match.eventKey,
               match.tournamentKey,
               platform,
@@ -111,7 +108,7 @@ export const usePostResultsCallback = () => {
         events.postresults();
         setState(MatchState.RESULTS_POSTED);
         setStatus('Ready for Prestart');
-        emitWebhook(WebhookEvent.SCORES_POSTED, match);
+        webhooksApi.create.emit(WebhookEvent.SCORES_POSTED, match);
       },
       [canPostResults, setState, matches, eventKey, tournamentKey, tournament]
     )

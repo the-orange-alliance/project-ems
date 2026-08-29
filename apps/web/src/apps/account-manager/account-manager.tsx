@@ -1,6 +1,6 @@
 import { Button, Card, Divider, Space, Typography } from 'antd';
 import { FC } from 'react';
-import { setupDefaultAccounts } from 'src/api/use-event-data.js';
+import { eventsApi } from 'src/api/use-event-data.js';
 import { useUsers } from 'src/api/use-login-data.js';
 import { DefaultLayout } from '@layouts/default-layout.js';
 
@@ -8,7 +8,7 @@ const AccountManager: FC = () => {
   const { data: users, error } = useUsers();
 
   const setup = async (): Promise<void> => {
-    await setupDefaultAccounts();
+    await eventsApi.setup.get.defaultAccounts();
   };
 
   return (

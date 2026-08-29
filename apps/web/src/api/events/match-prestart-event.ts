@@ -1,4 +1,3 @@
-import { apiFetcher } from '@toa-lib/client';
 import {
   MatchKey,
   Match,
@@ -14,6 +13,7 @@ import {
   matchOccurringRanksAtom,
   postCommitRanksFetchAtom
 } from 'src/stores/state/event.js';
+import { localClient } from 'src/api/http-clients.js';
 import { fetchMatchRankings } from 'src/api/use-ranking-data.js';
 import { withRetry } from 'src/api/with-retry.js';
 
@@ -27,14 +27,17 @@ export const usePrestartEvent = () => {
     // New match cycle — the previous match's post-commit fetch is done with.
     setPostCommitRanksFetch(null);
     try {
-      const match: Match<MatchDetailBase> = await withRetry(() =>
-        apiFetcher(
-          `match/all/${eventKey}/${tournamentKey}/${id}`,
-          'GET',
-          undefined,
-          matchZod.parse
+      const payload = await withRetry(() =>
+        localClient.get<unknown>(
+          `/match/all/${eventKey}/${tournamentKey}/${id}`
         )
       );
+      if (!payload) {
+        throw new Error(
+          `Match not found: ${eventKey}/${tournamentKey}/${String(id)}`
+        );
+      }
+      const match: Match<MatchDetailBase> = matchZod.parse(payload);
       let rankings: Ranking[] = [];
       try {
         rankings = await fetchMatchRankings(key);

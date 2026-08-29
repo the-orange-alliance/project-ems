@@ -23,7 +23,17 @@ export const ErrorDialog = create(({ message }: Props) => {
       ]}
       destroyOnClose
     >
-      <p>{message}</p>
+      <pre
+        style={{
+          margin: 0,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          maxHeight: 400,
+          overflow: 'auto'
+        }}
+      >
+        {message}
+      </pre>
     </Modal>
   );
 });

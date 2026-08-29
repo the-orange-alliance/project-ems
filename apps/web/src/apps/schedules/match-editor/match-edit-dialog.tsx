@@ -1,7 +1,7 @@
 import { Modal, Tabs, Button, Divider } from 'antd';
 import { FC, useEffect, useState } from 'react';
 import { mutate } from 'swr';
-import { patchWholeMatch, useMatchAll } from 'src/api/use-match-data.js';
+import { matchApi, useMatchAll } from 'src/api/use-match-data.js';
 import { TabPanel } from 'src/components/util/tab-panel.js';
 import { MatchInfoTab } from './match-info-tab.js';
 import { PageLoader } from 'src/components/loading/page-loader.js';
@@ -36,7 +36,7 @@ export const MatchEditDialog: FC<Props> = ({
   const { data: savedMatch } = useMatchAll(
     open && matchId >= 0 ? { eventKey, tournamentKey, id: matchId } : null
   );
-  const { showSnackbar } = useSnackbar();
+  const { showErrorSnackbar } = useSnackbar();
   const repostModal = useModal(MatchRepostDialog);
   const { events } = useSocketWorker();
   useEffect(() => {
@@ -48,15 +48,11 @@ export const MatchEditDialog: FC<Props> = ({
   const updateMatch = async () => {
     if (!match) return;
     try {
-      await patchWholeMatch(match);
+      await matchApi.patchWholeMatch(match);
       onClose();
       mutate(`match/${eventKey}/${tournamentKey}`);
     } catch (e) {
-      const error =
-        e instanceof Error
-          ? `${e.name} ${e.message}\\n(${e.cause})`
-          : String(e);
-      showSnackbar('Error while uploading matches.', error);
+      showErrorSnackbar('Error while uploading matches.', e);
     }
   };
   const updateAndPost = async () => {
@@ -65,15 +61,14 @@ export const MatchEditDialog: FC<Props> = ({
     try {
       const canRepost = await repostModal.show();
       if (!canRepost) return;
-      await patchWholeMatch(match);
+      await matchApi.patchWholeMatch(match);
       await events.commit({ eventKey, tournamentKey, id });
       await events.postresults();
       mutate(`match/${eventKey}/${tournamentKey}`);
       onClose();
       // TODO - Sync results
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while uploading matches.', error);
+      showErrorSnackbar('Error while uploading matches.', e);
     }
   };
   const handleCancel = () => {

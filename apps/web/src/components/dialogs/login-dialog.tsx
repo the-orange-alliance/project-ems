@@ -2,7 +2,7 @@ import { User } from '@toa-lib/models';
 import { useSetAtom } from 'jotai';
 import { userAtom } from 'src/stores/state/ui.js';
 import { ChangeEvent, FC, useEffect, useCallback, useState } from 'react';
-import { login } from 'src/api/use-login-data.js';
+import { loginApi } from 'src/api/use-login-data.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import useLocalStorage from 'src/stores/local-storage.js';
 import { Form, Input, Modal, Space, Typography } from 'antd';
@@ -43,7 +43,7 @@ export const LoginDialog: FC<Props> = ({ open, onSubmit }) => {
   const submit = useCallback(async () => {
     try {
       setLoading(true);
-      const user = await login(username, password);
+      const user = await loginApi.create.login(username, password);
       setValue(user);
       setUser(user);
       worker?.initialize(user.token, {

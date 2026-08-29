@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider as ModalProvider } from '@ebay/nice-modal-react';
 import { customfgcTheme } from './app-theme.js';
-import { APIOptions, SocketOptions } from '@toa-lib/client';
+import { SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/local-storage.js';
 import { AppContainer } from './App.js';
 import { useCurrentEvent } from './api/use-event-data.js';
@@ -11,6 +11,7 @@ import { createStore, Provider, useAtomValue } from 'jotai';
 import { darkModeAtom } from './stores/state/ui.js';
 import { ConfigProvider } from 'antd';
 import 'antd/dist/reset.css';
+import { localClient, remoteClient } from './api/http-clients.js';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Error while trying to find document root.');
@@ -21,23 +22,23 @@ const searchParams = new URLSearchParams(window.location.search);
 const leaderApiHostQP = searchParams.get('leaderApiHost');
 const leaderApiHost =
   leaderApiHostQP || getFromLocalStorage('leaderApiHost', false);
-// Configure lib-ems
+const remoteApiHost = getFromLocalStorage('remoteApiHost', false);
+
 if (leaderApiHost) {
-  APIOptions.host = `${leaderApiHost}`;
+  localClient.setBaseUrl(leaderApiHost);
+
   localStorage.setItem('leaderApiEnabled', 'true');
   localStorage.setItem('leaderApiHost', `"${leaderApiHost}"`);
-  console.warn(
-    `FOLLOWER MODE DETECTED: SETTING API HOST FROM LOCAL STORAGE\n${APIOptions.host}`
-  );
-} else {
-  const remoteUrl = import.meta.env.VITE_API_URL;
-  if (remoteUrl) {
-    console.warn(`VITE_API_URL DETECTED: SETTING API HOST TO ${remoteUrl}`);
-    APIOptions.host = remoteUrl;
-  } else {
-    APIOptions.host = `http://${window.location.hostname}:8080`;
-  }
+  console.warn(`[EMS]: Leader API host set to ${leaderApiHost}`);
 }
+
+if (remoteApiHost) {
+  remoteClient.setBaseUrl(remoteApiHost);
+
+  localStorage.setItem('remoteApiHost', `"${remoteApiHost}"`);
+  console.warn(`[EMS]: Remote API host set to ${remoteApiHost}`);
+}
+
 SocketOptions.host = window.location.hostname;
 SocketOptions.port = 8081;
 
