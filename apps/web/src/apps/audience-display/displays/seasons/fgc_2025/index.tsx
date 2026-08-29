@@ -2,6 +2,8 @@ import { LockOutlined } from '@ant-design/icons';
 import { ResultsBreakdown } from '../../displays.js';
 import { EcoEquilibrium } from '@toa-lib/models';
 
+export { MatchProduction2025 } from './match-production-view.js';
+
 export const RegionalBreakdownFGC25: ResultsBreakdown<EcoEquilibrium.MatchDetails>[] =
   [
     {
