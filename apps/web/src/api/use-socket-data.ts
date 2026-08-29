@@ -1,10 +1,16 @@
-import { clientFetcher } from '@toa-lib/client';
+import { localClient } from './http-clients.js';
 
-export const deleteSocketClient = (uuid: string): Promise<void> =>
-  clientFetcher(`socketClients/remove/${uuid}`, 'DELETE');
-
-export const updateSocketClient = (uuid: string, data: any): Promise<void> =>
-  clientFetcher(`socketClients/update/${uuid}`, 'POST', data);
-
-export const connectSocketClient = (data: any): Promise<void> =>
-  clientFetcher(`socketClients/connect`, 'POST', data);
+export const socketApi = {
+  create: {
+    client: (data: unknown): Promise<void | null> =>
+      localClient.post<void>('/socketClients/connect', { body: data })
+  },
+  update: {
+    client: (uuid: string, data: unknown): Promise<void | null> =>
+      localClient.post<void>(`/socketClients/update/${uuid}`, { body: data })
+  },
+  delete: {
+    client: (uuid: string): Promise<void | null> =>
+      localClient.delete<void>(`/socketClients/remove/${uuid}`)
+  }
+};
