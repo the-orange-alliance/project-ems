@@ -34,7 +34,7 @@ export const TeamManager: FC = () => {
   } = state;
 
   const { platform, apiKey } = useSyncConfig();
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const removeModal = useModal(TeamRemovalDialog);
 
@@ -72,8 +72,7 @@ export const TeamManager: FC = () => {
         }) Teams successfully uploaded`
       );
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while uploading team.', error);
+      showErrorSnackbar('Error while uploading team.', e);
     }
   };
 
@@ -156,8 +155,7 @@ export const TeamManager: FC = () => {
       setModifiedTeams(teams);
       showSnackbar(`(${teams.length}) Teams successfully downloaded`);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while downloading teams.', error);
+      showErrorSnackbar('Error while downloading teams.', e);
     }
   };
 

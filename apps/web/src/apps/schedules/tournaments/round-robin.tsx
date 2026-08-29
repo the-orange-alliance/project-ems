@@ -42,7 +42,7 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
   const [allianceNames, setAllianceNames] = useState<
     { long: string; short: string }[]
   >([]);
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const hasDuplicates = pickedTeamKeys.some(
     (v, i) => pickedTeamKeys.indexOf(v) !== i
   );
@@ -170,9 +170,8 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
       setLoading(false);
       showSnackbar(`Successfully uploaded alliance members.`);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
       setLoading(false);
-      showSnackbar('Error while uploading alliance members.', error);
+      showErrorSnackbar('Error while uploading alliance members.', e);
     }
   };
   return (

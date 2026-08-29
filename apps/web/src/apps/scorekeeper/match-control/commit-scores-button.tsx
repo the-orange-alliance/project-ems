@@ -12,13 +12,12 @@ export const CommitScoresButton: FC = () => {
   const { canResetField, canCommitScores } = useMatchControl();
   const commitScores = useCommitScoresCallback();
   const clearField = useClearFieldCallback();
-  const { showSnackbar } = useSnackbar();
+  const { showErrorSnackbar } = useSnackbar();
   const sendResetField = async () => {
     try {
       await clearField();
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while clearing field', error);
+      showErrorSnackbar('Error while clearing field.', e);
     }
   };
   const sendCommitScores = async () => {
@@ -27,11 +26,7 @@ export const CommitScoresButton: FC = () => {
       await commitScores();
       setLoading(false);
     } catch (e) {
-      const error =
-        e instanceof Error
-          ? `${e.name} ${e.message}\\n(${e.cause})`
-          : String(e);
-      showSnackbar('Error while committing scores', error);
+      showErrorSnackbar('Error while committing scores.', e);
       setLoading(false);
     }
   };

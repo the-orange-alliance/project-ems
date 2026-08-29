@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 export const EventCreation: FC = () => {
   const [loading, setLoading] = useState(false);
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const onSubmit = async (event: Event) => {
     setLoading(true);
@@ -20,8 +20,7 @@ export const EventCreation: FC = () => {
       setLoading(false);
       navigate(`/${event.eventKey}`);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar(`Error: ${error}`, error);
+      showErrorSnackbar('Error while creating event.', e);
       setLoading(false);
     }
   };

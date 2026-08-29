@@ -36,7 +36,7 @@ export const MatchEditDialog: FC<Props> = ({
   const { data: savedMatch } = useMatchAll(
     open && matchId >= 0 ? { eventKey, tournamentKey, id: matchId } : null
   );
-  const { showSnackbar } = useSnackbar();
+  const { showErrorSnackbar } = useSnackbar();
   const repostModal = useModal(MatchRepostDialog);
   const { events } = useSocketWorker();
   useEffect(() => {
@@ -52,11 +52,7 @@ export const MatchEditDialog: FC<Props> = ({
       onClose();
       mutate(`match/${eventKey}/${tournamentKey}`);
     } catch (e) {
-      const error =
-        e instanceof Error
-          ? `${e.name} ${e.message}\\n(${e.cause})`
-          : String(e);
-      showSnackbar('Error while uploading matches.', error);
+      showErrorSnackbar('Error while uploading matches.', e);
     }
   };
   const updateAndPost = async () => {
@@ -72,8 +68,7 @@ export const MatchEditDialog: FC<Props> = ({
       onClose();
       // TODO - Sync results
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while uploading matches.', error);
+      showErrorSnackbar('Error while uploading matches.', e);
     }
   };
   const handleCancel = () => {

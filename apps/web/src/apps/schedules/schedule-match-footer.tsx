@@ -28,7 +28,7 @@ export const ScheduleMatchFooter: FC<Props> = ({
   onDownload
 }) => {
   const remoteUrl = useAtomValue(remoteApiUrlAtom);
-  const { showSnackbar } = useSnackbar();
+  const { showErrorSnackbar } = useSnackbar();
 
   const handleDownload = async () => {
     if (!tournament) return;
@@ -39,8 +39,7 @@ export const ScheduleMatchFooter: FC<Props> = ({
       );
       onDownload(scheduleParams ?? []);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while downloading matches.', error);
+      showErrorSnackbar('Error while downloading matches.', e);
     }
   };
 

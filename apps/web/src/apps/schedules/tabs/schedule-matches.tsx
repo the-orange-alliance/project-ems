@@ -43,7 +43,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
   );
   const { data: teams } = useTeamsForEvent(eventSchedule?.eventKey);
   const tournament = useCurrentTournament();
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const repostModal = useModal(ScheduleRepostDialog);
   const [matches, setMatches] = useAtom(matchesAtom);
   const hasMatchesWithScores = savedMatches
@@ -89,8 +89,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
       );
       showSnackbar('Matches saved successfully.');
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while uploading matches.', error);
+      showErrorSnackbar('Error while uploading matches.', e);
     } finally {
       setLoading(false);
     }
@@ -133,8 +132,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
       );
       showSnackbar('Match times adjusted successfully.');
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while adjusting match times.', error);
+      showErrorSnackbar('Error while adjusting match times.', e);
     } finally {
       setLoading(false);
     }

@@ -30,7 +30,7 @@ export const ScheduleManager: FC = () => {
     local: { event, tournaments },
     remote: { matches }
   } = state;
-  const { showSnackbar } = useSnackbar();
+  const { showErrorSnackbar } = useSnackbar();
   const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
   const remoteUrl = useAtomValue(remoteApiUrlAtom);
 
@@ -73,8 +73,7 @@ export const ScheduleManager: FC = () => {
       if (!scheduleParams) throw new Error('Schedule params not found.');
       onScheduleParamsChange(scheduleParams);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while downloading teams.', error);
+      showErrorSnackbar('Error while downloading teams.', e);
     }
   };
 

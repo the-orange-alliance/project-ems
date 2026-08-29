@@ -26,7 +26,7 @@ export const TournamentManager: FC = () => {
     local: { event, tournaments }
   } = state;
 
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const navigate = useNavigate();
 
   const remoteUrl = useAtomValue(remoteApiUrlAtom);
@@ -62,8 +62,7 @@ export const TournamentManager: FC = () => {
         }) Tournaments successfully uploaded`
       );
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while uploading tournaments.', error);
+      showErrorSnackbar('Error while uploading tournaments.', e);
     }
   };
 
@@ -103,8 +102,7 @@ export const TournamentManager: FC = () => {
       setModifiedTournaments(tournaments);
       showSnackbar(`(${tournaments.length}) Teams successfully downloaded`);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while downloading teams.', error);
+      showErrorSnackbar('Error while downloading teams.', e);
     }
   };
 

@@ -9,7 +9,7 @@ import { PaperLayout } from 'src/layouts/paper-layout.js';
 export const EventManager: FC = () => {
   const { data: initialEvent, mutate } = useCurrentEvent();
   const [loading, setLoading] = useState(false);
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const onSubmit = async (event: Event) => {
     setLoading(true);
     try {
@@ -18,8 +18,7 @@ export const EventManager: FC = () => {
       showSnackbar(`Event ${event.eventName} Modified`);
       setLoading(false);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar(`Error: ${error}`, error);
+      showErrorSnackbar('Error while updating event.', e);
       setLoading(false);
     }
   };

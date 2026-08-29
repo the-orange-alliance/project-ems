@@ -28,7 +28,7 @@ export const RandomMatches: FC<Props> = ({
 }) => {
   const [quality, setQuality] = useState('best');
   const [loading, setLoading] = useState(false);
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const createMatches = async () => {
     setLoading(true);
     try {
@@ -70,8 +70,7 @@ export const RandomMatches: FC<Props> = ({
       setLoading(false);
     } catch (e) {
       setLoading(false);
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while executing matchmaker.', error);
+      showErrorSnackbar('Error while executing matchmaker.', e);
     }
   };
   return (

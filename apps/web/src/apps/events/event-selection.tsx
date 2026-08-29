@@ -18,7 +18,7 @@ export const EventSelection: FC = () => {
   const navigate = useNavigate();
   const createEvent = () => navigate('/create-event');
   const remoteUrl = useAtomValue(remoteApiUrlAtom);
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
 
   const handleDownload = async () => {
     try {
@@ -36,8 +36,7 @@ export const EventSelection: FC = () => {
       mutate('/event', events);
       showSnackbar(`(${events.length}) Events successfully downloaded`);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while downloading events.', error);
+      showErrorSnackbar('Error while downloading events.', e);
     }
   };
 
