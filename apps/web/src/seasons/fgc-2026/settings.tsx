@@ -101,6 +101,21 @@ export const Settings: FC = () => {
     });
   };
 
+  const handleExtinguisherVisibilityChange = (
+    extinguisherVisibility: FGC26FCS.ExtinguisherVisibility
+  ) => {
+    setLocalData((prev) => {
+      const newData: FGC26FCS.SettingsType = {
+        ...(prev ?? FGC26FCS.DEFAULT_SETTINGS),
+        extinguisherVisibility
+      };
+      if (selectedField) {
+        debouncedSave(selectedField, newData);
+      }
+      return newData;
+    });
+  };
+
   const fieldOptions =
     tournament?.fields?.map((field) => ({
       value: field,
@@ -157,6 +172,31 @@ export const Settings: FC = () => {
                     precision={0}
                     style={{ width: '100%' }}
                   />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Card>
+        )}
+
+        {selectedField && localData && (
+          <Card title='Referee Tablets' size='small'>
+            <Row>
+              <Col span={12}>
+                <Form.Item
+                  label='EXTINGUISHER visibility'
+                  labelCol={{ span: 12 }}
+                  wrapperCol={{ span: 12 }}
+                  tooltip='Which alliance referee tablet(s) show the EXTINGUISHER LED/ball calculator in the TeleOp tab. The head referee always keeps their own EXTINGUISHER control regardless of this setting.'
+                >
+                  <Select
+                    value={localData.extinguisherVisibility}
+                    onChange={handleExtinguisherVisibilityChange}
+                    style={{ width: '100%' }}
+                  >
+                    <Option value='both'>Both</Option>
+                    <Option value='red'>Red</Option>
+                    <Option value='blue'>Blue</Option>
+                  </Select>
                 </Form.Item>
               </Col>
             </Row>

@@ -23,6 +23,8 @@ import PenaltySheet from 'src/seasons/fgc-generic/referee/PenaltySheet.js';
 export interface TeleOpProps<DetailsType extends MatchDetailBase> {
   alliance: Alliance;
   participants: MatchParticipant[] | undefined;
+  /** Forwarded from RefereeScoreSheetProps; true inside the head referee overview. */
+  headReferee?: boolean;
   onMatchDetailsAdjustment: <K extends keyof DetailsType>(
     detailsKey: K,
     adjustment: number
@@ -41,6 +43,7 @@ interface GenericScoreSheetProps<
 
 const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
   alliance,
+  headReferee,
   TeleopScoreSheet
 }: GenericScoreSheetProps<DetailsType>) => {
   const { worker } = useSocketWorker();
@@ -162,6 +165,7 @@ const GenericScoreSheet = <DetailsType extends MatchDetailBase>({
                 <TeleopScoreSheet
                   alliance={alliance}
                   participants={participants}
+                  headReferee={headReferee}
                   onMatchDetailsAdjustment={handleMatchDetailsAdjustment}
                   onMatchDetailsUpdate={handleMatchDetailsUpdate}
                 />

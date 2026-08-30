@@ -35,6 +35,13 @@ export interface ScoreBreakdownProps<T extends MatchDetailBase> {
 
 export interface RefereeScoreSheetProps {
   alliance: Alliance;
+  /**
+   * True when this sheet is rendered inside the head referee's combined overview
+   * rather than on a dedicated single-alliance referee tablet. Season components may
+   * use it to suppress tablet-only affordances that the head referee already has
+   * elsewhere (e.g. the FGC 2026 EXTINGUISHER calculator lives in HeadRefExtrasSheet).
+   */
+  headReferee?: boolean;
 }
 
 export interface RankingsReportProps<T extends Ranking> {
