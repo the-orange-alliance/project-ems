@@ -9,10 +9,7 @@ import {
   ReloadOutlined,
   SyncOutlined
 } from '@ant-design/icons';
-import {
-  deleteSocketClient,
-  updateSocketClient
-} from 'src/api/use-socket-data.js';
+import { socketApi } from 'src/api/use-socket-data.js';
 import { Link } from 'react-router-dom';
 
 export const AudienceDisplayManager: FC = () => {
@@ -48,7 +45,7 @@ export const AudienceDisplayManager: FC = () => {
     if (!dialogContext) return;
     setDialogOpen(false);
     events.sendUpdateSocketClient(dialogContext);
-    updateSocketClient(dialogContext.persistantClientId, dialogContext);
+    socketApi.update.client(dialogContext.persistantClientId, dialogContext);
     const cpy = [...clients];
     const id = cpy.findIndex(
       (e) => e.persistantClientId === dialogContext.persistantClientId
@@ -67,7 +64,7 @@ export const AudienceDisplayManager: FC = () => {
   };
 
   const deleteDevice = (id: string) => {
-    deleteSocketClient(id);
+    socketApi.delete.client(id);
     const cpy = [...clients];
     const index = cpy.findIndex((e) => e.persistantClientId === id);
     cpy.splice(index, 1);
@@ -152,10 +149,7 @@ export const AudienceDisplayManager: FC = () => {
       }
       padding
     >
-      <Space
-        style={{ width: '100%', justifyContent: 'space-between' }}
-        wrap
-      >
+      <Space style={{ width: '100%', justifyContent: 'space-between' }} wrap>
         <Link to='../'>
           <Button icon={<LeftOutlined />}>Back</Button>
         </Link>

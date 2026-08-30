@@ -14,15 +14,14 @@ export const StartMatchButton: FC = () => {
   const { canStartMatch, canAbortMatch } = useMatchControl();
   const startMatch = useMatchStartCallback();
   const abortMatch = useAbortMatchCallback();
-  const { showSnackbar } = useSnackbar();
+  const { showErrorSnackbar } = useSnackbar();
   const sendStartMatch = async () => {
     setLoading(true);
     try {
       await startMatch();
       setLoading(false);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while prestarting', error);
+      showErrorSnackbar('Error while starting match.', e);
       setLoading(false);
     }
   };
@@ -30,8 +29,7 @@ export const StartMatchButton: FC = () => {
     try {
       await abortMatch();
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while prestarting', error);
+      showErrorSnackbar('Error while aborting match.', e);
     }
   };
   return canStartMatch ? (

@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 import { Typography } from 'antd';
 import { Event } from '@toa-lib/models';
-import { postEvent, setupEventBase } from 'src/api/use-event-data.js';
+import { eventsApi } from 'src/api/use-event-data.js';
 import { EventForm } from 'src/components/forms/event-form.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
@@ -9,19 +9,18 @@ import { useNavigate } from 'react-router-dom';
 
 export const EventCreation: FC = () => {
   const [loading, setLoading] = useState(false);
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const onSubmit = async (event: Event) => {
     setLoading(true);
     try {
-      await postEvent(event);
-      await setupEventBase(event.eventKey);
+      await eventsApi.create.event(event);
+      await eventsApi.setup.get.eventBase(event.eventKey);
       showSnackbar(`Event ${event.eventName} Created`);
       setLoading(false);
       navigate(`/${event.eventKey}`);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar(`Error: ${error}`, error);
+      showErrorSnackbar('Error while creating event.', e);
       setLoading(false);
     }
   };

@@ -7,11 +7,9 @@
  * path and silently sends the request to the current page's own
  * origin/port instead of the remote one.
  *
- * Pass the normalized result as the `host` argument to `apiFetcher` (or a
- * wrapper like `getTeams`/`getMatchSchedule`) rather than swapping
- * `APIOptions.host` globally - that shared module state races with any
- * other in-flight or concurrently triggered request (e.g. SWR revalidating
- * on window focus) that reads the same value mid-swap.
+ * Pass the normalized result into a dedicated `HttpClient` instance via
+ * `setBaseUrl` (for example `remoteClient.setBaseUrl(...)`) rather than
+ * swapping shared client state around an `await`.
  */
 export const normalizeRemoteApiHost = (url: string): string => {
   const trimmed = url.trim();

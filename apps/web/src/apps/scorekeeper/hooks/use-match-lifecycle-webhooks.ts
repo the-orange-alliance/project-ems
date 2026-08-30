@@ -2,7 +2,7 @@ import { MatchSocketEvent, WebhookEvent } from '@toa-lib/models';
 import { useAtomCallback } from 'jotai/utils';
 import { useCallback, useEffect, useMemo } from 'react';
 import { proxy } from 'comlink';
-import { emitWebhook } from 'src/api/use-webhook-data.js';
+import { webhooksApi } from 'src/api/use-webhook-data.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { matchAtom } from 'src/stores/state/event.js';
 
@@ -34,7 +34,7 @@ export const useMatchLifecycleWebhooks = () => {
       // EmitWebhooks refuses a non-match payload, but there is no point making
       // the round trip when no match is loaded.
       if (!match) return;
-      emitWebhook(event, match);
+      webhooksApi.create.emit(event, match);
     }, [])
   );
 

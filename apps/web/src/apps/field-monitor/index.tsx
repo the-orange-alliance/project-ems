@@ -90,7 +90,9 @@ export const FrcFmsFieldMonitorApp: FC = () => {
 
               {/* Match Mode */}
               <div
-                style={{ flex: 8 - (monitor?.prestartStatus.hardware.length ?? 0) }}
+                style={{
+                  flex: 8 - (monitor?.prestartStatus.hardware.length ?? 0)
+                }}
               >
                 <Typography.Title level={3}>
                   {friendlyMatchStatus()}

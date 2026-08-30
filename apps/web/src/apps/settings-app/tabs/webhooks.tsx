@@ -11,11 +11,7 @@ import {
   Col
 } from 'antd';
 import { Webhook, WebhookEvent } from '@toa-lib/models';
-import {
-  deleteWebhook,
-  upsertWebhook,
-  useWebhooks
-} from 'src/api/use-webhook-data.js';
+import { webhooksApi, useWebhooks } from 'src/api/use-webhook-data.js';
 
 const WebhooksTab = () => {
   const { data: webhooks, mutate } = useWebhooks();
@@ -39,17 +35,17 @@ const WebhooksTab = () => {
   };
 
   const handleUpdate = async (webhook: Webhook) => {
-    await upsertWebhook(webhook);
+    await webhooksApi.update.webhook(webhook);
     mutate();
   };
 
   const handleDelete = async (id: number) => {
-    await deleteWebhook(id);
+    await webhooksApi.delete.webhook(id);
     mutate();
   };
 
   const handleAdd = async () => {
-    await upsertWebhook(newWebhook as Webhook);
+    await webhooksApi.update.webhook(newWebhook as Webhook);
     mutate();
     setNewWebhook({
       url: '',

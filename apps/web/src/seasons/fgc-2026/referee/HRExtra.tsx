@@ -22,7 +22,8 @@ const HeadRefereeExtra: React.FC = () => {
     match?.fieldNumber ?? ''
   );
   const ratio =
-    fcsData?.wildfireBallsPerLed ?? FGC26FCS.DEFAULT_SETTINGS.wildfireBallsPerLed;
+    fcsData?.wildfireBallsPerLed ??
+    FGC26FCS.DEFAULT_SETTINGS.wildfireBallsPerLed;
 
   const handleMatchDetailsUpdate = <
     K extends keyof IgnitingInnovation.MatchDetails

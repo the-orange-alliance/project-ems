@@ -12,7 +12,7 @@ import {
 } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import { FGC26FCS } from '@toa-lib/models';
-import { updateFcsData, useFcsData } from 'src/api/use-fcs-data.js';
+import { fcsApi, useFcsData } from 'src/api/use-fcs-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 
@@ -53,7 +53,7 @@ export const Settings: FC = () => {
 
       setIsSaving(true);
       try {
-        await updateFcsData(fieldNum, data);
+        await fcsApi.update.settings(fieldNum, data);
 
         if (worker) {
           worker.emit('fcs:settings', {
@@ -131,10 +131,9 @@ export const Settings: FC = () => {
           </Typography.Title>
           <Typography.Text type='secondary'>
             Field hardware for the 2026 season has not been designed yet, so
-            there are no LED/motor calibration constants to configure here
-            yet. The WILDFIRE LED-to-ball conversion ratio below is used by
-            the referee scoring screens even without physical field
-            hardware.
+            there are no LED/motor calibration constants to configure here yet.
+            The WILDFIRE LED-to-ball conversion ratio below is used by the
+            referee scoring screens even without physical field hardware.
           </Typography.Text>
         </Card>
 

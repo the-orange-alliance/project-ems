@@ -8,15 +8,14 @@ export const FieldPrepButton: FC = () => {
   const [loading, setLoading] = useState(false);
   const { canPrepField } = useMatchControl();
   const prepareField = usePrepareFieldCallback();
-  const { showSnackbar } = useSnackbar();
+  const { showErrorSnackbar } = useSnackbar();
   const sendPrepareField = async () => {
     setLoading(true);
     try {
       await prepareField();
       setLoading(false);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while prestarting', error);
+      showErrorSnackbar('Error while prestarting.', e);
       setLoading(false);
     }
   };

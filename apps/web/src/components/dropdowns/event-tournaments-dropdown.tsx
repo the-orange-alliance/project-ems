@@ -28,12 +28,13 @@ export const EventTournamentsDropdown: FC<Props> = ({
     onChange(option ? option.tournament : null);
   };
 
-  const items = tournaments?.map((t) => ({
-    value: t.tournamentKey,
-    label: t.name,
-    key: t.tournamentKey,
-    tournament: t
-  })) || []
+  const items =
+    tournaments?.map((t) => ({
+      value: t.tournamentKey,
+      label: t.name,
+      key: t.tournamentKey,
+      tournament: t
+    })) || [];
 
   return (
     <Select

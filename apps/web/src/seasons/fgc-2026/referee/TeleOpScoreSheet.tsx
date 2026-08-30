@@ -50,7 +50,6 @@ const TeleScoreSheet: FC<Props> = ({
   alliance,
   participants,
   headReferee,
-  onMatchDetailsAdjustment,
   onMatchDetailsUpdate
 }) => {
   const match: Match<IgnitingInnovation.MatchDetails> | null =
@@ -64,7 +63,8 @@ const TeleScoreSheet: FC<Props> = ({
     match?.fieldNumber ?? ''
   );
   const ratio =
-    fcsData?.wildfireBallsPerLed ?? FGC26FCS.DEFAULT_SETTINGS.wildfireBallsPerLed;
+    fcsData?.wildfireBallsPerLed ??
+    FGC26FCS.DEFAULT_SETTINGS.wildfireBallsPerLed;
   const extinguisherVisibility =
     fcsData?.extinguisherVisibility ??
     FGC26FCS.DEFAULT_SETTINGS.extinguisherVisibility;
@@ -73,7 +73,7 @@ const TeleScoreSheet: FC<Props> = ({
     (extinguisherVisibility === 'both' || extinguisherVisibility === alliance);
 
   if (!match || !match.details) return null;
-  const details = match.details;
+  const { details } = match;
 
   const ledKey =
     alliance === 'blue'

@@ -35,9 +35,7 @@ const AllianceText = styled.div((props: { invert?: boolean }) => ({
   color: '#ffffff',
   display: 'flex',
   alignItems: 'center',
-  flexDirection: !props.invert
-    ? ('row-reverse' as const)
-    : ('row' as const),
+  flexDirection: !props.invert ? ('row-reverse' as const) : ('row' as const),
   fontWeight: 'bold',
   fontSize: '1.75vh',
   gap: '0.5em',
