@@ -3,7 +3,7 @@ import { MatchState, WebhookEvent } from '@toa-lib/models';
 import { useAtomCallback } from 'jotai/utils';
 import { useCallback } from 'react';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
-import { emitWebhook } from 'src/api/use-webhook-data.js';
+import { webhooksApi } from 'src/api/use-webhook-data.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { matchAtom } from 'src/stores/state/event.js';
 
@@ -23,7 +23,7 @@ export const usePrepareFieldCallback = () => {
         }
         fieldControl?.prepareField?.();
         setState(MatchState.FIELD_READY);
-        emitWebhook(WebhookEvent.FIELD_PREPPED, match);
+        webhooksApi.create.emit(WebhookEvent.FIELD_PREPPED, match);
       },
       [canPrepField, setState]
     )

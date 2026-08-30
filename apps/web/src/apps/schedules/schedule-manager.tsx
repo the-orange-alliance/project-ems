@@ -9,16 +9,16 @@ import { tournamentKeyAtom } from '@stores/state/event.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import {
-  getScheduleParams,
-  patchScheduleParams,
+  scheduleApi,
   useScheduleParamsForTournament
 } from 'src/api/use-schedule-data.js';
 import { ScheduleParams } from '@toa-lib/models';
 import { PageLoader } from 'src/components/loading/page-loader.js';
 import { MoreButton } from 'src/components/buttons/more-button.js';
-import { APIOptions } from '@toa-lib/client';
 import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
+import { remoteClient } from 'src/api/http-clients.js';
 
 export const ScheduleManager: FC = () => {
   const { state } = useEventState({
@@ -30,7 +30,7 @@ export const ScheduleManager: FC = () => {
     local: { event, tournaments },
     remote: { matches }
   } = state;
-  const { showSnackbar } = useSnackbar();
+  const { showErrorSnackbar } = useSnackbar();
   const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
   const remoteUrl = useAtomValue(remoteApiUrlAtom);
 
@@ -47,7 +47,7 @@ export const ScheduleManager: FC = () => {
     );
     if (!tournament) return;
     schedule.type = tournament.tournamentType;
-    patchScheduleParams(schedule).then(() => {
+    scheduleApi.update.params(schedule).then(() => {
       return refetchScheduleParams();
     });
   };
@@ -66,17 +66,14 @@ export const ScheduleManager: FC = () => {
   const handleParamsDownload = async () => {
     if (!event || !tournamentKey) return;
     try {
-      const previousUrl = APIOptions.host;
-      APIOptions.host = remoteUrl;
-      const scheduleParams = await getScheduleParams(
-        event?.eventKey,
-        tournamentKey
+      remoteClient.setBaseUrl(normalizeRemoteApiHost(remoteUrl));
+      const scheduleParams = await remoteClient.get<ScheduleParams>(
+        `/schedule-params/${event.eventKey}/${tournamentKey}`
       );
-      APIOptions.host = previousUrl;
+      if (!scheduleParams) throw new Error('Schedule params not found.');
       onScheduleParamsChange(scheduleParams);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while downloading teams.', error);
+      showErrorSnackbar('Error while downloading teams.', e);
     }
   };
 

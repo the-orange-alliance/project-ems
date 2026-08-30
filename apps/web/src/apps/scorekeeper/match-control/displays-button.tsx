@@ -7,7 +7,7 @@ import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { matchAtom } from 'src/stores/state/index.js';
 import { pairedFieldAtom } from 'src/stores/state/ui.js';
 import { useAtomValue } from 'jotai';
-import { emitWebhook } from 'src/api/use-webhook-data.js';
+import { webhooksApi } from 'src/api/use-webhook-data.js';
 import { Displays } from '@toa-lib/models/base';
 import { useModal } from '@ebay/nice-modal-react';
 import { PairedFieldDialog } from 'src/components/dialogs/paired-field-dialog.js';
@@ -27,7 +27,7 @@ export const DisplaysButton: FC = () => {
     setLoading(true);
     try {
       events.display(Displays.MATCH_START);
-      emitWebhook(WebhookEvent.DISPLAYS_SET, match); // "match preview is set" — always happens
+      webhooksApi.create.emit(WebhookEvent.DISPLAYS_SET, match); // "match preview is set" — always happens
 
       if (pairedField && match) {
         const shouldBlock = await checkPairedFieldGate(match);
@@ -41,7 +41,7 @@ export const DisplaysButton: FC = () => {
       // (partner's previous match already played, or this is the first
       // match on that field); or a paired field blocked and the operator
       // picked "Set Field as Active".
-      emitWebhook(WebhookEvent.PRODUCTION_ACTIVE, match);
+      webhooksApi.create.emit(WebhookEvent.PRODUCTION_ACTIVE, match);
       setState(MatchState.AUDIENCE_READY);
     } catch (e) {
       const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);

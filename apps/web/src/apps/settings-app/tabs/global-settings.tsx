@@ -1,7 +1,7 @@
 import { FC, useRef } from 'react';
 import { SyncPlatform, TeamKeys, TeamKeysLables } from '@toa-lib/models';
-import { APIOptions } from '@toa-lib/client';
-import { updateSocketClient } from 'src/api/use-socket-data.js';
+import { socketApi } from 'src/api/use-socket-data.js';
+import { localClient, remoteClient } from 'src/api/http-clients.js';
 import { Space } from 'antd';
 import BooleanRow from 'src/components/settings/boolean-row.js';
 import { useAtom } from 'jotai';
@@ -22,9 +22,12 @@ import {
   initAudio,
   MATCH_START
 } from 'src/apps/audience-display/audio/index.js';
+import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
 // import { useGitHubDownload } from '../util/use-github-download.js';
 
 const GlobalSettings: FC = () => {
+  const defaultLocalBaseUrl = `${window.location.protocol}//${window.location.hostname}:8080`;
+
   const [darkMode, setDarkMode] = useAtom(darkModeSettingAtom);
   const [teamIdentifier, setTeamIdentifier] = useAtom(teamIdentifierAtom);
   const [followerMode, setFollowerMode] = useAtom(isFollowerAtom);
@@ -32,7 +35,7 @@ const GlobalSettings: FC = () => {
   const [syncPlatform, setSyncPlatform] = useAtom(syncPlatformAtom);
   const [syncApiKey, setSyncApiKey] = useAtom(syncApiKeyAtom);
   const [remoteUrl, setRemoteUrl] = useAtom(remoteApiUrlAtom);
-// const downloadRelease = useGitHubDownload();
+  // const downloadRelease = useGitHubDownload();
   const timeoutRef1 = useRef<any>(null);
   const timeoutRef = useRef<any>(null);
 
@@ -42,13 +45,16 @@ const GlobalSettings: FC = () => {
     setFollowerMode(value);
     if (!value) {
       setLeaderApiHost('');
-      APIOptions.host = `${window.location.hostname}`;
+      localClient.setBaseUrl(defaultLocalBaseUrl);
     }
   };
 
   const handleLeaderAddressChange = (value: string | number) => {
-    setLeaderApiHost(value.toString());
-    APIOptions.host = `http://${value.toString()}`;
+    const nextValue = value.toString().trim();
+    setLeaderApiHost(nextValue);
+    localClient.setBaseUrl(
+      nextValue ? normalizeRemoteApiHost(nextValue) : defaultLocalBaseUrl
+    );
   };
 
   const updateFollowerMode = (value: boolean) => {
@@ -57,9 +63,12 @@ const GlobalSettings: FC = () => {
     // Don't hammer the server with requests
     if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
-      updateSocketClient(localStorage.getItem('persistantClientId') ?? '', {
-        followerMode: value ? 1 : 0
-      });
+      socketApi.update.client(
+        localStorage.getItem('persistantClientId') ?? '',
+        {
+          followerMode: value ? 1 : 0
+        }
+      );
     }, 1000);
   };
 
@@ -69,9 +78,12 @@ const GlobalSettings: FC = () => {
     // Don't hammer the server with requests
     if (timeoutRef1.current !== null) clearTimeout(timeoutRef1.current);
     timeoutRef1.current = setTimeout(() => {
-      updateSocketClient(localStorage.getItem('persistantClientId') ?? '', {
-        followerApiHost: value
-      });
+      socketApi.update.client(
+        localStorage.getItem('persistantClientId') ?? '',
+        {
+          followerApiHost: value
+        }
+      );
     }, 1000);
   };
 
@@ -156,7 +168,13 @@ const GlobalSettings: FC = () => {
       <InputRow
         title='Remote API URL'
         value={remoteUrl}
-        onChange={(s) => setRemoteUrl(String(s))}
+        onChange={(s) => {
+          const nextValue = String(s).trim();
+          setRemoteUrl(nextValue);
+          remoteClient.setBaseUrl(
+            nextValue ? normalizeRemoteApiHost(nextValue) : defaultLocalBaseUrl
+          );
+        }}
       />
     </Space>
   );

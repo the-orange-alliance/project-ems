@@ -1,7 +1,7 @@
 import { WebhookEvent } from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 import type { MenuProps } from 'antd';
-import { emitWebhook } from 'src/api/use-webhook-data.js';
+import { webhooksApi } from 'src/api/use-webhook-data.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { matchAtom } from 'src/stores/state/event.js';
@@ -40,19 +40,19 @@ export const useProductionOptionsItems = (): ActionItem[] => {
       key: 'production_active',
       label: 'Force Field Active',
       disabled: !pairedField || !match,
-      onClick: () => emitWebhook(WebhookEvent.PRODUCTION_ACTIVE, match)
+      onClick: () => webhooksApi.create.emit(WebhookEvent.PRODUCTION_ACTIVE, match)
     },
     {
       key: 'force_lights_match',
       label: 'Force Match Lighting',
       disabled: !match,
-      onClick: () => emitWebhook(WebhookEvent.FORCE_LIGHTS_MATCH, match)
+      onClick: () => webhooksApi.create.emit(WebhookEvent.FORCE_LIGHTS_MATCH, match)
     },
     {
       key: 'force_lights_standby',
       label: 'Force Standby Lighting',
       disabled: !match,
-      onClick: () => emitWebhook(WebhookEvent.FORCE_LIGHTS_STANDBY, match)
+      onClick: () => webhooksApi.create.emit(WebhookEvent.FORCE_LIGHTS_STANDBY, match)
     }
   ];
 };

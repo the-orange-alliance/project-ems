@@ -1,11 +1,11 @@
 import styled from '@emotion/styled';
 import { FC } from 'react';
-import { MatchInfoBar } from './components/match-info-bar';
-import { MatchAlliancePlay } from './components/match-alliance-play';
-import { MatchBillboard } from './components/match-billboard';
-import { MatchTimer } from 'src/components/util/match-timer';
+import { MatchInfoBar } from './components/match-info-bar.js';
+import { MatchAlliancePlay } from './components/match-alliance-play.js';
+import { MatchBillboard } from './components/match-billboard.js';
+import { MatchTimer } from 'src/components/util/match-timer.js';
 import { RobotOutlined } from '@ant-design/icons';
-import { DisplayProps } from '../../displays';
+import { DisplayProps } from '../../displays.js';
 
 const Container = styled.div`
   position: absolute;

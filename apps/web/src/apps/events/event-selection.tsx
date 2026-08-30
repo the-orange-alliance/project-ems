@@ -1,46 +1,42 @@
 import { Typography } from 'antd';
-import { Event } from '@toa-lib/models';
+import { Event, eventZod } from '@toa-lib/models';
 import { FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  getEvents,
-  postEvent,
-  setupEventBase,
-  useEvents
-} from 'src/api/use-event-data.js';
+import { eventsApi, useEvents } from 'src/api/use-event-data.js';
 import EventsTable from 'src/components/tables/events-table.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
 import { MoreButton } from 'src/components/buttons/more-button.js';
-import { APIOptions } from '@toa-lib/client';
 import { useAtomValue } from 'jotai';
 import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { mutate } from 'swr';
+import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
+import { remoteClient } from 'src/api/http-clients.js';
 
 export const EventSelection: FC = () => {
   const navigate = useNavigate();
   const createEvent = () => navigate('/create-event');
   const remoteUrl = useAtomValue(remoteApiUrlAtom);
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
 
   const handleDownload = async () => {
     try {
-      const previousUrl = APIOptions.host;
-      APIOptions.host = remoteUrl;
-      const events = await getEvents();
-      APIOptions.host = previousUrl;
+      remoteClient.setBaseUrl(normalizeRemoteApiHost(remoteUrl));
+      const events =
+        (await remoteClient.get<Event[]>('/event', {
+          schema: eventZod.array()
+        })) ?? [];
       await Promise.all(
         events.map(async (event) => {
-          await postEvent(event);
-          await setupEventBase(event.eventKey);
+          await eventsApi.create.event(event);
+          await eventsApi.setup.get.eventBase(event.eventKey);
         })
       );
-      mutate('event', events);
+      mutate('/event', events);
       showSnackbar(`(${events.length}) Events successfully downloaded`);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while downloading events.', error);
+      showErrorSnackbar('Error while downloading events.', e);
     }
   };
 

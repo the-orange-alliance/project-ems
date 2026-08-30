@@ -35,7 +35,7 @@ async function allianceController(fastify: FastifyInstance) {
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere(
           'alliance',
-          `eventKey = "${eventKey}" ORDER BY allianceNameLong ASC, pickOrder ASC`
+          `eventKey = "${eventKey}" ORDER BY allianceRank ASC, pickOrder ASC`
         );
         reply.send(data);
       } catch (e) {
@@ -64,7 +64,7 @@ async function allianceController(fastify: FastifyInstance) {
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere(
           'alliance',
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" ORDER BY allianceNameLong ASC, pickOrder ASC`
+          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" ORDER BY allianceRank ASC, pickOrder ASC`
         );
         reply.send(data);
       } catch (e) {

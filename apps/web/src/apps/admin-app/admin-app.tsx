@@ -1,18 +1,9 @@
 import { FC } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import { Button, Divider, Typography, Space } from 'antd';
-import {
-  createRankings,
-  recalculateRankings,
-  recalculatePlayoffsRankings,
-  deleteRankings
-} from 'src/api/use-ranking-data.js';
-import {
-  resultsSyncAlliances,
-  resultsSyncMatches,
-  resultsSyncRankings
-} from 'src/api/use-results-sync.js';
-import { purgeAll } from 'src/api/use-event-data.js';
+import { rankingsApi } from 'src/api/use-ranking-data.js';
+import { resultsSyncApi } from 'src/api/use-results-sync.js';
+import { eventsApi } from 'src/api/use-event-data.js';
 import { eventKeyAtom, tournamentKeyAtom } from 'src/stores/state/event.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
@@ -36,22 +27,37 @@ export const AdminApp: FC = () => {
 
   const syncMatches = async (): Promise<void> => {
     if (!eventKey || !tournamentKey) return;
-    await resultsSyncMatches(eventKey, tournamentKey, platform, apiKey);
+    await resultsSyncApi.create.matches(
+      eventKey,
+      tournamentKey,
+      platform,
+      apiKey
+    );
   };
 
   const syncRankings = async (): Promise<void> => {
     if (!eventKey || !tournamentKey) return;
-    await resultsSyncRankings(eventKey, tournamentKey, platform, apiKey);
+    await resultsSyncApi.create.rankings(
+      eventKey,
+      tournamentKey,
+      platform,
+      apiKey
+    );
   };
 
   const syncAlliances = async (): Promise<void> => {
     if (!eventKey || !tournamentKey) return;
-    await resultsSyncAlliances(eventKey, tournamentKey, platform, apiKey);
+    await resultsSyncApi.create.alliances(
+      eventKey,
+      tournamentKey,
+      platform,
+      apiKey
+    );
   };
 
   const handlePurge = async (): Promise<void> => {
     try {
-      await purgeAll();
+      await eventsApi.setup.delete.purgeAll();
     } catch (e) {
       console.log(e);
     }
@@ -59,7 +65,7 @@ export const AdminApp: FC = () => {
 
   const handleRankingsCreate = async () => {
     if (!tournamentKey || !teams) return;
-    await createRankings(tournamentKey, teams);
+    await rankingsApi.create.rankingsForTournament(tournamentKey, teams);
   };
 
   const handleRankings = async () => {
@@ -70,18 +76,22 @@ export const AdminApp: FC = () => {
     if (!tournament) return;
     // FGC2024 SPECIFIC
     if (isPlayoffsTournament(tournament)) {
-      await recalculatePlayoffsRankings(
+      await rankingsApi.create.recalculate(
+        tournament.eventKey,
+        tournament.tournamentKey,
+        true
+      );
+    } else {
+      await rankingsApi.create.recalculate(
         tournament.eventKey,
         tournament.tournamentKey
       );
-    } else {
-      await recalculateRankings(tournament.eventKey, tournament.tournamentKey);
     }
   };
 
   const handleRankingsDelete = async () => {
     if (!tournamentKey || !eventKey) return;
-    await deleteRankings(eventKey, tournamentKey);
+    await rankingsApi.delete.rankings(eventKey, tournamentKey);
   };
 
   return (

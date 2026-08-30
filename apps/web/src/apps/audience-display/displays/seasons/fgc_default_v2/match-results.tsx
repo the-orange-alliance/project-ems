@@ -6,7 +6,7 @@ import FGC_BG from './assets/global-bg.png';
 import { FC } from 'react';
 import DisplayHeader from './components/display-header.js';
 
-export const MatchResults: FC<DisplayProps> = ({ match, ranks, teams }) => {
+export const MatchResults: FC<DisplayProps> = ({ match, teams }) => {
   return (
     <div
       style={{

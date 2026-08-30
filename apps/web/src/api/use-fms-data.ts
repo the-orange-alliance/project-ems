@@ -1,5 +1,12 @@
-import { clientFetcher } from '@toa-lib/client';
 import { FMSSettings } from '@toa-lib/models';
+import { localClient } from './http-clients.js';
 
-export const postFrcFmsSettings = (settings: FMSSettings): Promise<void> =>
-  clientFetcher(`frc/fms/advancedNetworkingConfig`, 'POST', settings);
+export const fmsApi = {
+  create: {
+    frcFmsSettings: async (settings: FMSSettings): Promise<void> => {
+      await localClient.post<void>('/frc/fms/advancedNetworkingConfig', {
+        body: settings
+      });
+    }
+  }
+};

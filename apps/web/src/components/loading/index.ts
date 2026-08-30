@@ -1,3 +1,3 @@
-import { PageLoader } from "./page-loader";
+import { PageLoader } from './page-loader.js';
 
 export { PageLoader };

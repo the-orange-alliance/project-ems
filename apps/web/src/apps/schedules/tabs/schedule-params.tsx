@@ -3,12 +3,12 @@ import { ScheduleFooter } from '../schedule-footer.js';
 import {
   generateScheduleItems,
   getScheduleValidation,
+  isPlayoffsTournamentType,
   ScheduleParams as EventScheduleParams
 } from '@toa-lib/models';
 import { PageLoader } from 'src/components/loading/index.js';
 import {
-  deleteScheduleItems,
-  postScheduleItems,
+  scheduleApi,
   useScheduleItemsForTournament
 } from 'src/api/use-schedule-data.js';
 import { ScheduleLayout } from '../schedule-layout.js';
@@ -47,11 +47,11 @@ export const ScheduleParams: FC<Props> = ({
     if (!eventSchedule) return;
     setLoading(true);
     const scheduleItems = generateScheduleItems(eventSchedule);
-    await deleteScheduleItems(
+    await scheduleApi.delete.items(
       eventSchedule.eventKey,
       eventSchedule.tournamentKey
     );
-    await postScheduleItems(scheduleItems);
+    await scheduleApi.create.items(scheduleItems);
     mutateScheduleItems(scheduleItems);
     setLoading(false);
   };
@@ -95,22 +95,17 @@ export const ScheduleOptions: FC<ScheduleOptionsProps> = ({
   onChange
 }) => {
   if (!eventSchedule) return <div>Please select a tournament.</div>;
-  switch (eventSchedule.type) {
-    case 'Round Robin':
-      return (
-        <RoudnRobinScheduleOptions
-          eventSchedule={eventSchedule}
-          disabled={disabled}
-          onChange={onChange}
-        />
-      );
-    default:
-      return (
-        <DefaultScheduleOptions
-          eventSchedule={eventSchedule}
-          disabled={disabled}
-          onChange={onChange}
-        />
-      );
-  }
+  return isPlayoffsTournamentType(eventSchedule.type) ? (
+    <RoudnRobinScheduleOptions
+      eventSchedule={eventSchedule}
+      disabled={disabled}
+      onChange={onChange}
+    />
+  ) : (
+    <DefaultScheduleOptions
+      eventSchedule={eventSchedule}
+      disabled={disabled}
+      onChange={onChange}
+    />
+  );
 };

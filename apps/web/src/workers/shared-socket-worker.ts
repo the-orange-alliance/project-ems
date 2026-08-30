@@ -3,14 +3,14 @@ import { createSocket, SocketOptions } from '@toa-lib/client';
 import { Socket } from 'socket.io-client';
 import * as Comlink from 'comlink';
 import { AnyCb } from './types.js';
-import { eventBus } from './util/event-bus.js';
+import { EventBus, eventBus } from './util/event-bus.js';
 
 interface SocketProperties {
   host: string;
   port: number;
 }
 
-export interface SocketService {
+export interface SocketService extends EventBus {
   initialize: (token: string, props: SocketProperties) => void;
   destroy: () => void;
   registerClient: () => void;

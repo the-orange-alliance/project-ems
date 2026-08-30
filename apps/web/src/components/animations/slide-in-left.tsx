@@ -18,7 +18,7 @@ const SlideInLeft: React.FC<AnimationProps> = ({
   const [localIn, setLocalIn] = useState(false);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const delay = elementIn ? inDelay : outDelay;
 

@@ -1,10 +1,10 @@
-import { useModal } from '@ebay/nice-modal-react';
+﻿import { useModal } from '@ebay/nice-modal-react';
 import { Space, Typography } from 'antd';
-import { Team, defaultTeam } from '@toa-lib/models';
+import { Team, defaultTeam, teamZod } from '@toa-lib/models';
 import { ChangeEvent, FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { resultsSyncTeams } from 'src/api/use-results-sync.js';
-import { getTeams, patchTeam, postTeams } from 'src/api/use-team-data.js';
+import { resultsSyncApi } from 'src/api/use-results-sync.js';
+import { teamsApi } from 'src/api/use-team-data.js';
 import { TeamRemovalDialog } from 'src/components/dialogs/team-removal-dialog.js';
 import { TeamsTable } from 'src/components/tables/teams-table.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
@@ -18,9 +18,10 @@ import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 import { UploadButton } from 'src/components/buttons/upload-button.js';
 import { Shortcut } from 'src/components/util/shortcuts.js';
-import { APIOptions } from '@toa-lib/client';
 import { useAtomValue } from 'jotai';
 import { remoteApiUrlAtom } from 'src/stores/state/ui.js';
+import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
+import { remoteClient } from 'src/api/http-clients.js';
 
 export const TeamManager: FC = () => {
   const { loading, state } = useEventState({
@@ -33,7 +34,7 @@ export const TeamManager: FC = () => {
   } = state;
 
   const { platform, apiKey } = useSyncConfig();
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const removeModal = useModal(TeamRemovalDialog);
 
@@ -56,12 +57,12 @@ export const TeamManager: FC = () => {
         'teamKey'
       );
       if (diffs.additions.length > 0) {
-        await postTeams(event.eventKey, diffs.additions);
+        await teamsApi.create.teams(event.eventKey, diffs.additions);
       }
       for (const team of diffs.edits) {
-        await patchTeam(team.eventKey, team.teamKey, team);
+        await teamsApi.update.team(team.eventKey, team.teamKey, team);
       }
-      await resultsSyncTeams(event.eventKey, platform, apiKey);
+      await resultsSyncApi.create.teams(event.eventKey, platform, apiKey);
 
       setModifiedTeams([]);
 
@@ -71,8 +72,7 @@ export const TeamManager: FC = () => {
         }) Teams successfully uploaded`
       );
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while uploading team.', error);
+      showErrorSnackbar('Error while uploading team.', e);
     }
   };
 
@@ -146,15 +146,16 @@ export const TeamManager: FC = () => {
 
   const handleDownload = async () => {
     try {
-      const previousUrl = APIOptions.host;
-      APIOptions.host = remoteUrl;
-      const teams = await getTeams(event?.eventKey);
-      APIOptions.host = previousUrl;
+      if (!event?.eventKey) return;
+      remoteClient.setBaseUrl(normalizeRemoteApiHost(remoteUrl));
+      const teams =
+        (await remoteClient.get<Team[]>(`/teams/${event.eventKey}`, {
+          schema: teamZod.array()
+        })) ?? [];
       setModifiedTeams(teams);
       showSnackbar(`(${teams.length}) Teams successfully downloaded`);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while downloading teams.', error);
+      showErrorSnackbar('Error while downloading teams.', e);
     }
   };
 
@@ -215,6 +216,7 @@ export const TeamManager: FC = () => {
         {event && (
           <Space direction='vertical' style={{ width: '100%' }}>
             <Shortcut disableRender action={handleAdd} shortcut='alt + a' />
+            <Shortcut disableRender action={handleAddTest} shortcut='alt + t' />
             <Typography.Text>{teams.length} Teams</Typography.Text>
             <TeamsTable
               event={event}

@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { updateSocketClient } from 'src/api/use-socket-data.js';
+import { socketApi } from 'src/api/use-socket-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 import { isAudioEnabledForScorekeeper, pairedFieldAtom } from 'src/stores/state/ui.js';
 import { useAtom } from 'jotai';
@@ -31,9 +31,12 @@ const MainSettingsTab: FC = () => {
     const fields = tournament.fields.filter((f) => value.includes(f));
     if (fieldIdTimeout !== null) clearTimeout(fieldIdTimeout);
     fieldIdTimeout = setTimeout(() => {
-      updateSocketClient(localStorage.getItem('persistantClientId') ?? '', {
-        fieldNumbers: fields
-      });
+      socketApi.update.client(
+        localStorage.getItem('persistantClientId') ?? '',
+        {
+          fieldNumbers: fields
+        }
+      );
     }, 1000);
   };
 

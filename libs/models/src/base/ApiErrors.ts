@@ -1,5 +1,14 @@
 import { isNonNullObject, isNumber, isString } from '../types.js';
 
+// V8-only API (Node/Chrome). Declared unconditionally by @types/node (where it's
+// visible) but absent from the plain lib.dom/lib.es types this package is also
+// compiled against (e.g. the web app's tsconfig restricts ambient `types` to
+// react/react-dom). Cast through `unknown` rather than `extends
+// ErrorConstructor` so this works regardless of which is in scope.
+type ErrorConstructorWithCapture = {
+  captureStackTrace?: (targetObject: object, constructorOpt?: Function) => void;
+};
+
 export class ApiResponseError extends Error {
   constructor(
     public response: Response,
@@ -8,8 +17,11 @@ export class ApiResponseError extends Error {
   ) {
     super(err.message);
     this.name = `Invalid API Response from ${url} with code ${err.code}.`;
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ApiResponseError);
+    // V8-only API (Node/Chrome), not part of the standard ErrorConstructor type.
+    const captureStackTrace = (Error as unknown as ErrorConstructorWithCapture)
+      .captureStackTrace;
+    if (captureStackTrace) {
+      captureStackTrace(this, ApiResponseError);
     }
   }
 }
@@ -23,8 +35,10 @@ export class ApiDatabaseError extends Error {
     } else {
       this.name = `Error while executing query in table ${table}.`;
     }
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ApiDatabaseError);
+    const captureStackTrace = (Error as unknown as ErrorConstructorWithCapture)
+      .captureStackTrace;
+    if (captureStackTrace) {
+      captureStackTrace(this, ApiDatabaseError);
     }
   }
 }

@@ -6,7 +6,8 @@ import {
   RESULT_NOT_PLAYED,
   ScheduleItem,
   Tournament,
-  assignMatchTimes
+  assignMatchTimes,
+  isPlayoffsTournamentType
 } from '@toa-lib/models';
 import { useTeamsForEvent } from 'src/api/use-team-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
@@ -14,17 +15,13 @@ import { useScheduleItemsForTournament } from 'src/api/use-schedule-data.js';
 import { ScheduleMatchFooter } from '../schedule-match-footer.js';
 import { MatchTable } from 'src/components/tables/matches-table.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
-import { createRankings, deleteRankings } from 'src/api/use-ranking-data.js';
-import {
-  deleteMatches,
-  patchMatch,
-  postMatchSchedule
-} from 'src/api/use-match-data.js';
+import { rankingsApi } from 'src/api/use-ranking-data.js';
+import { matchApi } from 'src/api/use-match-data.js';
 import { useModal } from '@ebay/nice-modal-react';
 import ScheduleRepostDialog from 'src/components/dialogs/schedule-repost-dialog.js';
 import { useSWRConfig } from 'swr';
 import { useSyncConfig } from 'src/hooks/use-sync-config.js';
-import { resultsSyncMatches } from 'src/api/use-results-sync.js';
+import { resultsSyncApi } from 'src/api/use-results-sync.js';
 import { FixedMatches } from '../match-gen/fixed-matches.js';
 import { useAtom } from 'jotai';
 import { matchesAtom } from 'src/stores/state/event.js';
@@ -46,7 +43,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
   );
   const { data: teams } = useTeamsForEvent(eventSchedule?.eventKey);
   const tournament = useCurrentTournament();
-  const { showSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const repostModal = useModal(ScheduleRepostDialog);
   const [matches, setMatches] = useAtom(matchesAtom);
   const hasMatchesWithScores = savedMatches
@@ -65,37 +62,36 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
         const canRepost = await repostModal.show();
         if (!canRepost) return;
         // Remove the past schedule, then post the new one.
-        await deleteMatches(
+        await matchApi.delete.matches(
           eventSchedule.eventKey,
           eventSchedule.tournamentKey
         );
-        await deleteRankings(
+        await rankingsApi.delete.rankings(
           eventSchedule.eventKey,
           eventSchedule.tournamentKey
         );
       }
-      await createRankings(
+      await rankingsApi.create.rankingsForTournament(
         eventSchedule.tournamentKey,
         teams?.filter((t) => eventSchedule.teamKeys.includes(t.teamKey)) ?? []
       );
-      await postMatchSchedule(eventSchedule.eventKey, matches);
+      await matchApi.create.scheduleForEvent(eventSchedule.eventKey, matches);
       await mutate(
         `match/${eventSchedule.eventKey}/${eventSchedule.tournamentKey}`,
         matches,
         false
       );
-      await resultsSyncMatches(
+      await resultsSyncApi.create.matches(
         eventSchedule.eventKey,
         eventSchedule.tournamentKey,
         platform,
         apiKey
       );
       showSnackbar('Matches saved successfully.');
-      setLoading(false);
     } catch (e) {
+      showErrorSnackbar('Error while uploading matches.', e);
+    } finally {
       setLoading(false);
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while uploading matches.', error);
     }
   };
 
@@ -119,27 +115,26 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
     try {
       if (!eventSchedule || !scheduleItems || !tournament) return;
       const matchesWithNewTimes = assignMatchTimes(matches, scheduleItems);
-      const promises = matchesWithNewTimes.map(async (match) => {
-        patchMatch(match);
-      });
+      const promises = matchesWithNewTimes.map((match) =>
+        matchApi.update.match(match)
+      );
       await Promise.all(promises);
       await mutate(
         `match/${eventSchedule.eventKey}/${eventSchedule.tournamentKey}`,
         matchesWithNewTimes,
         false
       );
-      await resultsSyncMatches(
+      await resultsSyncApi.create.matches(
         eventSchedule.eventKey,
         eventSchedule.tournamentKey,
         platform,
         apiKey
       );
       showSnackbar('Match times adjusted successfully.');
-      setLoading(false);
     } catch (e) {
+      showErrorSnackbar('Error while adjusting match times.', e);
+    } finally {
       setLoading(false);
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while adjusting match times.', error);
     }
   };
 
@@ -181,24 +176,19 @@ const MatchGen: FC<MatchGenProps> = ({
   onCreateMatches
 }) => {
   if (!eventSchedule) return <div>Please select a tournament.</div>;
-  switch (eventSchedule.type) {
-    case 'Round Robin':
-      return (
-        <FixedMatches
-          eventSchedule={eventSchedule}
-          scheduleItems={scheduleItems}
-          tournament={tournament}
-          onCreateMatches={onCreateMatches}
-        />
-      );
-    default:
-      return (
-        <RandomMatches
-          eventSchedule={eventSchedule}
-          scheduleItems={scheduleItems}
-          tournament={tournament}
-          onCreateMatches={onCreateMatches}
-        />
-      );
-  }
+  return isPlayoffsTournamentType(eventSchedule.type) ? (
+    <FixedMatches
+      eventSchedule={eventSchedule}
+      scheduleItems={scheduleItems}
+      tournament={tournament}
+      onCreateMatches={onCreateMatches}
+    />
+  ) : (
+    <RandomMatches
+      eventSchedule={eventSchedule}
+      scheduleItems={scheduleItems}
+      tournament={tournament}
+      onCreateMatches={onCreateMatches}
+    />
+  );
 };

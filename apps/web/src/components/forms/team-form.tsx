@@ -1,5 +1,5 @@
 import { FC, ChangeEvent, useState, useEffect } from 'react';
-import { Button, Form, Input, InputNumber, Row, Col, Select } from 'antd';
+import { Button, Form, Input, Row, Col, Select } from 'antd';
 import { CardStatus, Team, defaultTeam } from '@toa-lib/models';
 import { ViewReturn } from '@components/buttons/view-return.js';
 

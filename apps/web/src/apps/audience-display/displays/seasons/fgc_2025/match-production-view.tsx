@@ -1,0 +1,229 @@
+import { FC, useEffect, useState } from 'react';
+import { DisplayProps } from '../../displays.js';
+import { Row } from 'antd';
+import {
+  EcoEquilibrium,
+  EcoEquilibriumFCS,
+  Match,
+  MatchState
+} from '@toa-lib/models';
+import { useAtomValue } from 'jotai';
+import { matchStateAtom, matchStatusAtom } from 'src/stores/state/match.js';
+import { useSocketWorker } from 'src/api/use-socket-worker.js';
+import * as Comlink from 'comlink';
+import { ScoreContainer } from '../fgc_default/components/production-score-container.js';
+
+export const MatchProduction2025: FC<DisplayProps> = ({
+  match: genericMatch
+}) => {
+  const matchParts = genericMatch.name.split(' ');
+  const matchNumber = matchParts[matchParts.length - 1];
+  const field = genericMatch.fieldNumber;
+  const { worker, connected } = useSocketWorker();
+
+  const match = genericMatch as Match<EcoEquilibrium.MatchDetails>;
+
+  const [redAcceleratorStatus, setRedAcceleratorStatus] =
+    useState<EcoEquilibriumFCS.AcceleratorStatus>({
+      state: EcoEquilibriumFCS.AcceleratorState.Idle,
+      rate: EcoEquilibriumFCS.FlowRate.Low,
+      progress: 0
+    });
+  const [blueAcceleratorStatus, setBlueAcceleratorStatus] =
+    useState<EcoEquilibriumFCS.AcceleratorStatus>({
+      state: EcoEquilibriumFCS.AcceleratorState.Idle,
+      rate: EcoEquilibriumFCS.FlowRate.Low,
+      progress: 0
+    });
+  const [redEcoLevel, setRedEcoLevel] = useState(0);
+  const [blueEcoLevel, setBlueEcoLevel] = useState(0);
+  const [centerEcoLevel, setCenterEcoLevel] = useState(0);
+  const [biodiversityDispensed, setBiodiversityDispensed] = useState({
+    red: 0,
+    blue: 0
+  });
+
+  const updateEcosystem = (payload: EcoEquilibriumFCS.EcosystemUpdate) => {
+    if (payload.ecosystem === EcoEquilibriumFCS.Ecosystem.RedSide) {
+      setRedEcoLevel(payload.position);
+    } else if (payload.ecosystem === EcoEquilibriumFCS.Ecosystem.BlueSide) {
+      setBlueEcoLevel(payload.position);
+    } else if (payload.ecosystem === EcoEquilibriumFCS.Ecosystem.Center) {
+      setCenterEcoLevel(payload.position);
+    }
+  };
+
+  const updateAcceleration = (payload: EcoEquilibriumFCS.AcceleratorUpdate) => {
+    if (payload.side === EcoEquilibriumFCS.FieldSide.Red) {
+      setRedAcceleratorStatus(payload.status);
+    } else if (payload.side === EcoEquilibriumFCS.FieldSide.Blue) {
+      setBlueAcceleratorStatus(payload.status);
+    }
+  };
+
+  const updateDispenser = (payload: EcoEquilibriumFCS.DispenserUpdate) => {
+    if (payload.side === EcoEquilibriumFCS.FieldSide.Red) {
+      setBiodiversityDispensed((prev) => ({
+        ...prev,
+        red: payload.biodiversityDispensed
+      }));
+    } else if (payload.side === EcoEquilibriumFCS.FieldSide.Blue) {
+      setBiodiversityDispensed((prev) => ({
+        ...prev,
+        blue: payload.biodiversityDispensed
+      }));
+    }
+  };
+
+  useEffect(() => {
+    if (!worker) return;
+    const ecosystemProxy = Comlink.proxy(updateEcosystem);
+    const accelerationProxy = Comlink.proxy(updateAcceleration);
+    const dispenserProxy = Comlink.proxy(updateDispenser);
+    worker.on(EcoEquilibriumFCS.SocketEvents.EcosystemUpdate, ecosystemProxy);
+    worker.on(
+      EcoEquilibriumFCS.SocketEvents.AccelerationUpdate,
+      accelerationProxy
+    );
+    worker.on(
+      EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
+      dispenserProxy
+    );
+    return () => {
+      worker.off(
+        EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
+        ecosystemProxy
+      );
+      worker.off(
+        EcoEquilibriumFCS.SocketEvents.AccelerationUpdate,
+        accelerationProxy
+      );
+      worker.off(
+        EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
+        dispenserProxy
+      );
+    };
+  }, [worker]);
+
+  const getRemainingFromLevel = (level: number) => {
+    const math = 4 - level;
+    if (math < 0) return 0;
+    return math;
+  };
+
+  const dispenseRateStrings = ['Low', 'Medium', 'High'];
+  const acceleratorStateStrings = ['Idle', 'Energizing', 'Deenergizing'];
+  const matchStateStrings: Record<MatchState, string> = {
+    [MatchState.AUDIENCE_READY]: 'Audience Ready',
+    [MatchState.FIELD_READY]: 'Field Ready',
+    [MatchState.MATCH_ABORTED]: 'Match Aborted',
+    [MatchState.MATCH_COMPLETE]: 'Match Complete',
+    [MatchState.MATCH_NOT_SELECTED]: 'Match Not Selected',
+    [MatchState.MATCH_READY]: 'Match Ready',
+    [MatchState.PRESTART_COMPLETE]: 'Prestart Complete',
+    [MatchState.PRESTART_READY]: 'Prestart Ready',
+    [MatchState.RESULTS_COMMITTED]: 'Results Committed',
+    [MatchState.RESULTS_POSTED]: 'Results Posted',
+    [MatchState.RESULTS_READY]: 'Results Ready',
+    [MatchState.MATCH_IN_PROGRESS]: 'Match In Progress'
+  };
+
+  const matchState = useAtomValue(matchStateAtom);
+  const matchStatus = useAtomValue(matchStatusAtom);
+
+  const matchString =
+    matchStateStrings[matchState].toLowerCase() === matchStatus.toLowerCase()
+      ? matchStateStrings[matchState]
+      : `${matchStateStrings[matchState]} \n (${matchStatus})`;
+
+  return (
+    <>
+      <Row>
+        <ScoreContainer
+          number={connected ? 'Y' : 'N'}
+          label={`Socket Connected`}
+          bg={connected ? '#4caf50' : '#f44336'}
+        />
+        <ScoreContainer number={matchNumber} label={`Match Number`} />
+        <ScoreContainer number={`${field}`} label={`Field`} />
+        <ScoreContainer
+          number={matchString}
+          label={`Match State`}
+          medium
+          smallFont
+        />
+      </Row>
+      <Row>
+        <ScoreContainer
+          number={getRemainingFromLevel(redEcoLevel).toString()}
+          label={'Red Side Eco Barrier Remain'}
+        />
+        <ScoreContainer
+          number={getRemainingFromLevel(blueEcoLevel).toString()}
+          label={'Blue Side Eco Barrier Remain'}
+        />
+        <ScoreContainer
+          number={getRemainingFromLevel(centerEcoLevel).toString()}
+          label={'Center Eco Barrier Remain'}
+        />
+        <ScoreContainer
+          number={
+            match && match.details
+              ? match.details.barriersInRedMitigator.toString()
+              : ''
+          }
+          label={'Barriers Scored Red Mitigator'}
+        />
+        <ScoreContainer
+          number={
+            match && match.details
+              ? match.details.barriersInBlueMitigator.toString()
+              : ''
+          }
+          label={'Barriers Scored Blue Mitigator'}
+        />
+        <ScoreContainer
+          number={biodiversityDispensed.red.toString()}
+          label={'Red Side Biodiversity Dispensed'}
+        />
+        <ScoreContainer
+          number={biodiversityDispensed.blue.toString()}
+          label={'Blue Side Biodiversity Dispensed'}
+        />
+        <ScoreContainer
+          number={`${(redAcceleratorStatus.progress * 100).toFixed(0)}%`}
+          medium
+          label={'Red Side Energizing Progress'}
+        />
+        <ScoreContainer
+          number={`${(blueAcceleratorStatus.progress * 100).toFixed(0)}%`}
+          medium
+          label={'Blue Side Energizing Progress'}
+        />
+      </Row>
+
+      <Row style={{ width: '100vw', marginTop: '0px' }}>
+        <ScoreContainer
+          number={dispenseRateStrings[redAcceleratorStatus.rate]}
+          wide
+          label={'Red Side Dispense Rate'}
+        />
+        <ScoreContainer
+          number={dispenseRateStrings[blueAcceleratorStatus.rate]}
+          wide
+          label={'Blue Side Dispense Rate'}
+        />
+        <ScoreContainer
+          number={acceleratorStateStrings[redAcceleratorStatus.state]}
+          wide
+          label={'Red Side Accelerator State'}
+        />
+        <ScoreContainer
+          number={acceleratorStateStrings[blueAcceleratorStatus.state]}
+          wide
+          label={'Blue Side Accelerator State'}
+        />
+      </Row>
+    </>
+  );
+};

@@ -1,7 +1,7 @@
 import { FC, useState, MouseEvent } from 'react';
 import { FrcFmsSetting } from '../components/frc-fms-setting.js';
 import { FMSSettings } from '@toa-lib/models';
-import { postFrcFmsSettings } from 'src/api/use-fms-data.js';
+import { fmsApi } from 'src/api/use-fms-data.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { Button, List, Space, Spin, Typography } from 'antd';
 
@@ -27,7 +27,7 @@ const FrcFmsSettingsTab: FC = () => {
         setLoading(true);
 
         // Upload Remote Copy and request FMS to update
-        await postFrcFmsSettings(value);
+        await fmsApi.create.frcFmsSettings(value);
         events.sendUpdateFrcFmsSettings(value.hwFingerprint);
 
         // Update Local copy

@@ -4,10 +4,12 @@ import { DisplaySwitcher } from './displays/index.js';
 import { useAtomValue } from 'jotai';
 import { eventKeyAtom } from 'src/stores/state/event.js';
 import { displayIdAtom } from 'src/stores/state/audience-display.js';
+import { useHeartbeatReload } from './hooks/use-heartbeat-reload.js';
 
 export const AudienceDisplay: FC = () => {
   const eventKey = useAtomValue(eventKeyAtom);
   const displayId = useAtomValue(displayIdAtom);
+  useHeartbeatReload();
   return (
     <Suspense
       fallback={

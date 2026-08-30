@@ -1,22 +1,32 @@
 import { FC } from 'react';
-import { Row, Col, Typography } from 'antd';
+import { Row, Col } from 'antd';
 import {
   Alliance,
+  FGC26FCS,
   IgnitingInnovation,
   Match,
-  MatchParticipant
+  MatchParticipant,
+  MatchState
 } from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 
 import { useTeamIdentifiers } from 'src/hooks/use-team-identifier.js';
 import { useTeamsForEvent } from 'src/api/use-team-data.js';
-import { NumberInput } from 'src/components/inputs/number-input.js';
+import { useFcsData } from 'src/api/use-fcs-data.js';
+import { LedBallCalculator } from 'src/components/inputs/led-ball-calculator.js';
 import { StateToggle } from 'src/components/inputs/state-toggle.js';
 import { matchAtom } from 'src/stores/state/event.js';
+import { matchStateAtom } from 'src/stores/state/match.js';
 
 interface Props {
   alliance: Alliance;
   participants: MatchParticipant[] | undefined;
+  /**
+   * True inside the head referee overview. The EXTINGUISHER calculator is only shown
+   * on the dedicated single-alliance tablets (where this is falsy) - the head referee
+   * already has its own EXTINGUISHER control in HRExtra.
+   */
+  headReferee?: boolean;
   onMatchDetailsAdjustment: <K extends keyof IgnitingInnovation.MatchDetails>(
     detailsKey: K,
     adjustment: number
@@ -39,46 +49,75 @@ const braceStateLabels = ['None', 'Contact', 'Zone 1', 'Zone 2', 'Zone 3'];
 const TeleScoreSheet: FC<Props> = ({
   alliance,
   participants,
-  onMatchDetailsAdjustment,
+  headReferee,
   onMatchDetailsUpdate
 }) => {
   const match: Match<IgnitingInnovation.MatchDetails> | null =
     useAtomValue(matchAtom);
+  const matchState = useAtomValue(matchStateAtom);
+  const postMatch = matchState > MatchState.MATCH_IN_PROGRESS;
   const { data: teams } = useTeamsForEvent(match?.eventKey ?? '');
   const identifiers = useTeamIdentifiers();
 
+  const { data: fcsData } = useFcsData<Partial<FGC26FCS.SettingsType>>(
+    match?.fieldNumber ?? ''
+  );
+  const ratio =
+    fcsData?.wildfireBallsPerLed ??
+    FGC26FCS.DEFAULT_SETTINGS.wildfireBallsPerLed;
+  const extinguisherVisibility =
+    fcsData?.extinguisherVisibility ??
+    FGC26FCS.DEFAULT_SETTINGS.extinguisherVisibility;
+  const showExtinguisherHere =
+    !headReferee &&
+    (extinguisherVisibility === 'both' || extinguisherVisibility === alliance);
+
   if (!match || !match.details) return null;
-  const details = match.details;
+  const { details } = match;
 
-  const handleSuppressionUnitChange = (
-    newValue: number,
-    manuallyTyped: boolean
-  ) => {
-    if (manuallyTyped) {
-      onMatchDetailsUpdate(
-        alliance === 'blue'
-          ? 'wildfireInBlueSuppressionUnit'
-          : 'wildfireInRedSuppressionUnit',
-        newValue
-      );
-    }
-  };
+  const ledKey =
+    alliance === 'blue'
+      ? 'approximateWildfireInBlueSuppressionUnit'
+      : 'approximateWildfireInRedSuppressionUnit';
+  const ballKey =
+    alliance === 'blue'
+      ? 'wildfireInBlueSuppressionUnit'
+      : 'wildfireInRedSuppressionUnit';
 
-  const handleSuppressionUnitIncrement = () => {
-    onMatchDetailsAdjustment(
-      alliance === 'blue'
-        ? 'wildfireInBlueSuppressionUnit'
-        : 'wildfireInRedSuppressionUnit',
-      1
+  // "Conversion calculator": a ref may edit either the LED count or the ball count. Whichever
+  // one they touch is authoritative and the other is fully recomputed from it - see
+  // ledCountToBallCount/ballCountToLedCount.
+  const handleLedChange = (newLedCount: number) => {
+    onMatchDetailsUpdate(ledKey, newLedCount);
+    onMatchDetailsUpdate(
+      ballKey,
+      IgnitingInnovation.ledCountToBallCount(newLedCount, ratio)
     );
   };
 
-  const handleSuppressionUnitDecrement = () => {
-    onMatchDetailsAdjustment(
-      alliance === 'blue'
-        ? 'wildfireInBlueSuppressionUnit'
-        : 'wildfireInRedSuppressionUnit',
-      -1
+  const handleBallChange = (newBallCount: number) => {
+    onMatchDetailsUpdate(ballKey, newBallCount);
+    onMatchDetailsUpdate(
+      ledKey,
+      IgnitingInnovation.ballCountToLedCount(newBallCount, ratio)
+    );
+  };
+
+  // EXTINGUISHER is a GLOBAL ALLIANCE goal - both alliances write the same detail keys.
+  // Same conversion-calculator behaviour as the head referee's HRExtra sheet.
+  const handleExtinguisherLedChange = (newLedCount: number) => {
+    onMatchDetailsUpdate('approximateWildfireInExtinguisher', newLedCount);
+    onMatchDetailsUpdate(
+      'wildfireInExtinguisher',
+      IgnitingInnovation.ledCountToBallCount(newLedCount, ratio)
+    );
+  };
+
+  const handleExtinguisherBallChange = (newBallCount: number) => {
+    onMatchDetailsUpdate('wildfireInExtinguisher', newBallCount);
+    onMatchDetailsUpdate(
+      'approximateWildfireInExtinguisher',
+      IgnitingInnovation.ballCountToLedCount(newBallCount, ratio)
     );
   };
 
@@ -176,28 +215,36 @@ const TeleScoreSheet: FC<Props> = ({
           alignItems: 'center'
         }}
       >
-        <Typography.Title
-          level={5}
-          style={{
-            textAlign: 'center',
-            textTransform: 'capitalize',
-            marginBottom: 16
-          }}
-        >
-          {alliance === 'red' ? 'Red' : 'Blue'} SUPPRESSION UNIT
-        </Typography.Title>
-        <NumberInput
-          value={
-            alliance === 'red'
-              ? details.wildfireInRedSuppressionUnit
-              : details.wildfireInBlueSuppressionUnit
-          }
-          textFieldDisabled
-          onChange={handleSuppressionUnitChange}
-          onIncrement={handleSuppressionUnitIncrement}
-          onDecrement={handleSuppressionUnitDecrement}
+        <LedBallCalculator
+          title={`${alliance === 'red' ? 'Red' : 'Blue'} SUPPRESSION UNIT`}
+          ledCount={details[ledKey]}
+          ballCount={details[ballKey]}
+          ratio={ratio}
+          onLedChange={handleLedChange}
+          onBallChange={handleBallChange}
+          ledDisabled={postMatch}
         />
       </Col>
+      {showExtinguisherHere && (
+        <Col
+          xs={24}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}
+        >
+          <LedBallCalculator
+            title='EXTINGUISHER (Global Alliance)'
+            ledCount={details.approximateWildfireInExtinguisher}
+            ballCount={details.wildfireInExtinguisher}
+            ratio={ratio}
+            onLedChange={handleExtinguisherLedChange}
+            onBallChange={handleExtinguisherBallChange}
+            ledDisabled={postMatch}
+          />
+        </Col>
+      )}
       {participants?.map((p) => {
         if (p.station < 0) return null;
         const team = teams?.find((t) => t.teamKey === p.teamKey);

@@ -1,4 +1,3 @@
-import { apiFetcher, clientFetcher } from '@toa-lib/client';
 import {
   ApiResponseError,
   User,
@@ -7,37 +6,47 @@ import {
   userZod
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
+import { localClient } from './http-clients.js';
 
-export const login = async (
-  username: string,
-  password: string
-): Promise<UserLoginResponse> =>
-  apiFetcher(
-    'auth/login',
-    'POST',
-    {
-      username,
-      password
+export const loginApi = {
+  create: {
+    login: async (
+      username: string,
+      password: string
+    ): Promise<UserLoginResponse> => {
+      const payload = await localClient.post<unknown>('/auth/login', {
+        body: { username, password }
+      });
+      return userLoginResponseZod.parse(payload);
+    }
+  },
+  get: {
+    logout: async (): Promise<void> => {
+      await localClient.get<void>('/auth/logout');
     },
-    userLoginResponseZod.parse
-  );
-
-export const logout = async (): Promise<void> =>
-  clientFetcher('auth/logout', 'GET');
+    users: async (): Promise<User[]> => {
+      const payload = await localClient.get<unknown[]>('/auth/users');
+      return userZod.array().parse(payload ?? []);
+    }
+  }
+};
 
 export const useLoginAttempt = (
   username: string,
   password: string
 ): SWRResponse<User, ApiResponseError> =>
   useSWR<User>(
-    'auth/login',
-    (url) => apiFetcher(url, 'POST', { username, password }, userZod.parse),
+    '/auth/login',
+    async () => {
+      const payload = await localClient.post<unknown>('/auth/login', {
+        body: { username, password }
+      });
+      return userZod.parse(payload);
+    },
     { revalidateOnFocus: false }
   );
 
 export const useUsers = (): SWRResponse<User[], ApiResponseError> =>
-  useSWR<User[]>(
-    'auth/users',
-    (url) => apiFetcher(url, 'GET', undefined, userZod.array().parse),
-    { revalidateOnFocus: false }
-  );
+  useSWR<User[]>('/auth/users', () => loginApi.get.users(), {
+    revalidateOnFocus: false
+  });

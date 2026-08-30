@@ -23,6 +23,7 @@ import rankingController from './controllers/Ranking.js';
 import allianceController from './controllers/Alliance.js';
 import tournamentController from './controllers/Tournament.js';
 import frcFmsController from './controllers/FrcFms.js';
+import heartbeatController from './controllers/Heartbeat.js';
 import resultsController from './controllers/Results.js';
 import socketClientsController from './controllers/SocketClients.js';
 import fcsController from './controllers/FCS.js';
@@ -105,6 +106,7 @@ await fastify.register(fastifySwagger, {
       { name: 'Alliances', description: 'Alliance related endpoints' },
       { name: 'Tournaments', description: 'Tournament related endpoints' },
       { name: 'FrcFms', description: 'FRC FMS related endpoints' },
+      { name: 'Heartbeat', description: 'Heartbeat/health-check endpoint' },
       { name: 'Results', description: 'Results related endpoints' },
       {
         name: 'Schedule Items',
@@ -146,6 +148,7 @@ await fastify.register(authController, { prefix: '/auth' });
 await fastify.register(eventController, { prefix: '/event' });
 await fastify.register(fcsController, { prefix: '/fcs' });
 await fastify.register(frcFmsController, { prefix: '/frc/fms' });
+await fastify.register(heartbeatController, { prefix: '/heartbeat' });
 await fastify.register(matchController, { prefix: '/match' });
 await fastify.register(rankingController, { prefix: '/ranking' });
 await fastify.register(resultsController, { prefix: '/results' });
@@ -168,9 +171,8 @@ fastify.addHook('onResponse', (request, reply, done) => {
     if (eventKey) {
       throttledUploadDatabase(eventKey);
     }
-
-    done();
   }
+  done();
 });
 
 // Passport serialization (optional, for sessions)

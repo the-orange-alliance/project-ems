@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
-    "build": "vite build",
+    "dev": "node scripts/generate-flag-data.mjs && vite --host",
+    "build": "node scripts/generate-flag-data.mjs && vite build",
     "check-types": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "npx eslint ./src --ext .ts,.tsx,.js,.jsx"
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.2",
@@ -53,7 +54,8 @@
     "prettier": "^3.9.5",
     "typescript": "^5.9.3",
     "vite": "^8.1.4",
-    "vite-plugin-node-polyfills": "^0.28.0"
+    "vite-plugin-node-polyfills": "^0.28.0",
+    "zod": "^4.4.3"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.62.2"

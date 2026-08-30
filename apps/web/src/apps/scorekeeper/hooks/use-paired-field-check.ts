@@ -1,7 +1,7 @@
 import { Match, RESULT_NOT_PLAYED } from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 import { useCallback } from 'react';
-import { getMatchSchedule } from 'src/api/use-match-data.js';
+import { matchApi } from 'src/api/use-match-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 import { pairedFieldAtom } from 'src/stores/state/ui.js';
 
@@ -28,10 +28,10 @@ export const usePairedFieldGate = () => {
         // Fresh fetch — deliberately not a cached SWR hook or any atom, since
         // match results change during the event and this must reflect what's
         // true right now, not what was true on page load. Implicitly
-        // tournament-scoped: `getMatchSchedule` only returns matches for
+        // tournament-scoped: `matchApi.get.schedule` only returns matches for
         // `match.tournamentKey`, so a new phase (e.g. Playoffs) restarting
         // `id` at 1 naturally has no "previous" match to find yet.
-        const matches = await getMatchSchedule(
+        const matches = await matchApi.get.schedule(
           match.eventKey,
           match.tournamentKey
         );
@@ -45,7 +45,7 @@ export const usePairedFieldGate = () => {
       } catch (e) {
         // Fail open: a failed lookup should never leave the scorekeeper
         // unable to proceed. Same fail-soft posture as `withPersistedFields`
-        // on the server and `emitWebhook` on the client.
+        // on the server and webhook emits on the client.
         console.error('Failed to check paired field status; not blocking:', e);
         return false;
       }

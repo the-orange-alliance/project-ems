@@ -143,7 +143,6 @@ const PrimaryAppbar: FC = () => {
               Fullscreen
             </Button>
           )}
-
         </>
       ) : (
         <LoginButton />

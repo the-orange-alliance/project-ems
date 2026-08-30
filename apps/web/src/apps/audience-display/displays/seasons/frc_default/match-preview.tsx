@@ -1,9 +1,9 @@
 import styled from '@emotion/styled';
 import { FC } from 'react';
-import { MatchInfoBar } from './components/match-info-bar';
-import { MatchBottomBar } from './components/match-bottom-bar';
-import { MatchAlliancePreview } from './components/match-alliance-preview';
-import { DisplayProps } from '../../displays';
+import { MatchInfoBar } from './components/match-info-bar.js';
+import { MatchBottomBar } from './components/match-bottom-bar.js';
+import { MatchAlliancePreview } from './components/match-alliance-preview.js';
+import { DisplayProps } from '../../displays.js';
 
 const Container = styled.div`
   display: grid;

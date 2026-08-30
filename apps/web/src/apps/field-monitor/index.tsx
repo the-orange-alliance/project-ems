@@ -1,16 +1,15 @@
 import { FC, useEffect, useState } from 'react';
-import { DefaultLayout } from '@layouts/default-layout';
-import Paper from '@mui/material/Paper';
-import { Grid, Typography } from '@mui/material';
+import { DefaultLayout } from '@layouts/default-layout.js';
+import { Card, Typography } from 'antd';
 import {
   DriverstationMonitor,
   MatchMode,
   PrestartState,
   PrestartStatus
 } from '@toa-lib/models';
-import { TeamRow } from './components/team-row';
-import { PrestartStatus as PrestartStatusIcon } from './components/prestart-status';
-import { ConnectionChip } from 'src/components/util/connection-chip';
+import { TeamRow } from './components/team-row.js';
+import { PrestartStatus as PrestartStatusIcon } from './components/prestart-status.js';
+import { ConnectionChip } from 'src/components/util/connection-chip.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 
 export const FrcFmsFieldMonitorApp: FC = () => {
@@ -27,18 +26,18 @@ export const FrcFmsFieldMonitorApp: FC = () => {
 
   useEffect(() => {
     return () => {
-      worker?.off('frc-fms:ds-update');
-      worker?.off('frc-fms:prestart-status');
+      (worker as any)?.off('frc-fms:ds-update');
+      (worker as any)?.off('frc-fms:prestart-status');
     };
   }, []);
 
   useEffect(() => {
     if (connected) {
-      worker?.off('frc-fms:ds-update');
-      worker?.on('frc-fms:ds-update', setMonitor);
+      (worker as any)?.off('frc-fms:ds-update');
+      (worker as any)?.on('frc-fms:ds-update', setMonitor);
 
-      worker?.off('frc-fms:prestart-status');
-      worker?.on('frc-fms:prestart-status', onPrestartStatus);
+      (worker as any)?.off('frc-fms:prestart-status');
+      (worker as any)?.on('frc-fms:prestart-status', onPrestartStatus);
     }
   }, [connected]);
 
@@ -68,25 +67,34 @@ export const FrcFmsFieldMonitorApp: FC = () => {
 
   return (
     <DefaultLayout>
-      <Paper sx={{ marginBottom: (theme) => theme.spacing(1) }}>
-        <Grid
-          container
-          sx={{ width: '100%', m: 0, textAlign: 'center', flexDirection: 'column' }}
+      <Card style={{ marginBottom: 8 }}>
+        <div
+          style={{
+            width: '100%',
+            margin: 0,
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
         >
           {/* Match Number/Status Row */}
-          <Grid sx={{ maxHeight: '70px' }}>
-            <Grid direction='row' container>
+          <div style={{ maxHeight: '70px' }}>
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
               {/* Match Status */}
-              <Grid size={2}>
-                <Typography variant='h5'>
+              <div style={{ flex: 2 }}>
+                <Typography.Title level={4}>
                   Match {monitor?.prestartStatus.matchKey.tournamentKey ?? ''}-
                   {monitor?.prestartStatus.matchKey.id ?? 'None'}
-                </Typography>
-              </Grid>
+                </Typography.Title>
+              </div>
 
               {/* Match Mode */}
-              <Grid size={8 - (monitor?.prestartStatus.hardware.length ?? 0)}>
-                <Typography variant='h4'>
+              <div
+                style={{
+                  flex: 8 - (monitor?.prestartStatus.hardware.length ?? 0)
+                }}
+              >
+                <Typography.Title level={3}>
                   {friendlyMatchStatus()}
                   {monitor?.matchStatus === MatchMode.PRESTART &&
                     monitor?.prestartStatus.state ===
@@ -98,69 +106,50 @@ export const FrcFmsFieldMonitorApp: FC = () => {
                   {monitor?.matchStatus === MatchMode.PRESTART &&
                     monitor?.prestartStatus.state === PrestartState.Success &&
                     ' Complete'}
-                </Typography>
-              </Grid>
+                </Typography.Title>
+              </div>
 
               {/* Socket Connected Chip */}
-              <Grid size={2}>
+              <div style={{ flex: 2 }}>
                 <ConnectionChip />
-              </Grid>
+              </div>
 
               {/* HW Prestart Statuses */}
               {monitor?.prestartStatus.hardware.map((hw) => (
                 <PrestartStatusIcon hw={hw} key={hw.name} />
               ))}
-            </Grid>
-          </Grid>
+            </div>
+          </div>
 
           {/* Status Header Row */}
-          <Grid>
-            <Grid direction='row' container>
-              <Grid size={1}>
-                Station
-              </Grid>
-              <Grid size={1}>
-                Team Number
-              </Grid>
-              <Grid size={1}>
-                DS
-              </Grid>
-              <Grid size={1}>
-                BWU
-              </Grid>
-              <Grid size={1}>
-                Radio
-              </Grid>
-              <Grid size={1}>
-                Rio
-              </Grid>
-              <Grid size={1}>
-                Battery
-              </Grid>
-              <Grid size={1}>
-                Status
-              </Grid>
-              <Grid size={1}>
-                Trip Time (ms)
-              </Grid>
-              <Grid size={1}>
-                Missed Packets
-              </Grid>
-              <Grid size={1}>
-                Radio Quality
-              </Grid>
-              <Grid size={1}>
-                Radio Signal
-              </Grid>
-            </Grid>
-          </Grid>
+          <div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(12, 1fr)'
+              }}
+            >
+              <div>Station</div>
+              <div>Team Number</div>
+              <div>DS</div>
+              <div>BWU</div>
+              <div>Radio</div>
+              <div>Rio</div>
+              <div>Battery</div>
+              <div>Status</div>
+              <div>Trip Time (ms)</div>
+              <div>Missed Packets</div>
+              <div>Radio Quality</div>
+              <div>Radio Signal</div>
+            </div>
+          </div>
 
           {/* One row per DS */}
           {monitor?.dsStatuses?.map((ds) => (
             <TeamRow ds={ds} key={ds.allianceStation} />
           ))}
-        </Grid>
-      </Paper>
+        </div>
+      </Card>
     </DefaultLayout>
   );
 };

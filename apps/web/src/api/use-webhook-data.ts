@@ -1,28 +1,39 @@
-import { apiFetcher, clientFetcher } from '@toa-lib/client';
-import useSWR from 'swr';
-import { Webhook, WebhookEvent } from '@toa-lib/models';
+import { ApiResponseError, Webhook, WebhookEvent } from '@toa-lib/models';
+import useSWR, { SWRResponse } from 'swr';
+import { localClient } from './http-clients.js';
 
-export const useWebhooks = () =>
-  useSWR('webhooks', (url) => clientFetcher<Webhook[]>(url, 'GET'), {
-    revalidateOnFocus: false
-  });
-
-export const upsertWebhook = async (webhook: Webhook): Promise<void> =>
-  apiFetcher('webhooks', 'PUT', webhook);
-
-export const deleteWebhook = async (id: number): Promise<void> =>
-  apiFetcher(`webhooks/${id}`, 'DELETE');
-
-export const emitWebhook = async (
-  event: WebhookEvent,
-  payload: any
-): Promise<void> => {
-  try {
-    await apiFetcher('webhooks/send', 'POST', { event, payload });
-  } catch (e) {
-    console.error('Failed to emit webhook:', event, payload, e);
+export const webhooksApi = {
+  get: {
+    webhooks: (): Promise<Webhook[] | null> =>
+      localClient.get<Webhook[]>('/webhooks')
+  },
+  update: {
+    webhook: async (webhook: Webhook): Promise<void> => {
+      await localClient.put<void>('/webhooks', { body: webhook });
+    }
+  },
+  delete: {
+    webhook: async (id: number): Promise<void> => {
+      await localClient.delete<void>(`/webhooks/${id}`);
+    }
+  },
+  create: {
+    emit: async (event: WebhookEvent, payload: any): Promise<void> => {
+      await localClient.post<void>('/webhooks/send', {
+        body: { event, payload }
+      });
+    }
   }
 };
+
+export const useWebhooks = (): SWRResponse<Webhook[], ApiResponseError> =>
+  useSWR<Webhook[], ApiResponseError>(
+    '/webhooks',
+    () => webhooksApi.get.webhooks().then((res) => res ?? []),
+    {
+      revalidateOnFocus: false
+    }
+  );
 
 export interface TestWebhookResult {
   success: boolean;
@@ -40,7 +51,15 @@ export const testWebhook = async (
   event: WebhookEvent
 ): Promise<TestWebhookResult> => {
   try {
-    return await apiFetcher('webhooks/test', 'POST', { url, event });
+    const result = await localClient.post<TestWebhookResult>('/webhooks/test', {
+      body: { url, event }
+    });
+    return (
+      result ?? {
+        success: false,
+        error: 'Unknown error'
+      }
+    );
   } catch (e) {
     return {
       success: false,

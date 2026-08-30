@@ -2,6 +2,8 @@ import { FireOutlined } from '@ant-design/icons';
 import { ResultsBreakdown } from '../../displays.js';
 import { IgnitingInnovation } from '@toa-lib/models';
 
+export { MatchProduction2026 } from './match-production-view.js';
+
 export const RegionalBreakdownFGC26: ResultsBreakdown<IgnitingInnovation.MatchDetails>[] =
   [
     {

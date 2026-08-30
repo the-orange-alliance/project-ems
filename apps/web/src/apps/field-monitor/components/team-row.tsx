@@ -1,26 +1,12 @@
 import { FC, useState } from 'react';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Grid,
-  Tooltip,
-  Typography
-} from '@mui/material';
+import { Button, Modal, Tooltip, Typography } from 'antd';
 import { DriverstationStatus } from '@toa-lib/models';
 import {
-  SignalWifiOff,
-  SignalWifi4Bar,
-  SignalWifi3Bar,
-  SignalWifi2Bar,
-  SignalWifi1Bar,
-  SignalWifi0Bar,
-  DoNotDisturb
-} from '@mui/icons-material';
-import CheckCircleOutline from '@mui/icons-material/CheckCircleOutlined';
+  CheckCircleOutlined,
+  MinusCircleOutlined,
+  WifiOutlined,
+  DisconnectOutlined
+} from '@ant-design/icons';
 
 interface IProps {
   ds: DriverstationStatus;
@@ -39,98 +25,91 @@ export const TeamRow: FC<IProps> = ({ ds }: IProps) => {
   const rioText = rioTextSplit.length > 1 ? rioTextSplit[1].substring(12) : ``;
 
   return (
-    <Grid
-      sx={{
+    <div
+      style={{
         backgroundColor: ds.robotStatus.brownout
           ? 'brown'
           : ds.allianceStation < 20
-          ? '#ff6666'
-          : '#6666ff',
-        pb: 1
+            ? '#ff6666'
+            : '#6666ff',
+        paddingBottom: 8
       }}
     >
-      <Grid
-        direction='row'
-        container
-        sx={{ fontSize: '20px', alignItems: 'center' }}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(12, 1fr)',
+          fontSize: '20px',
+          alignItems: 'center'
+        }}
         onClick={() => setDataOpen(true)}
       >
         {/* Station */}
-        <Grid size={1} sx={{ fontSize: '40px' }}>
-          {friendlyStation}
-        </Grid>
+        <div style={{ fontSize: '40px' }}>{friendlyStation}</div>
 
         {/* Team Number */}
-        <Grid size={1} sx={{ fontSize: '30px' }}>
-          {ds.teamKey}
-        </Grid>
+        <div style={{ fontSize: '30px' }}>{ds.teamKey}</div>
 
         {/* Driverstation */}
-        <Grid size={1}>
+        <div>
           <Status
             status={ds.dsStatus.linked}
             optionalText={dsText}
             textSize='15px'
             title={ds.dsStatus.lastLog.split('<message>')[1]}
           />
-        </Grid>
+        </div>
 
         {/* Bandwidth Usage */}
-        <Grid size={1}>
-          {ds.robotStatus.bandwidth}
-        </Grid>
+        <div>{ds.robotStatus.bandwidth}</div>
 
         {/* Radio */}
-        <Grid size={1}>
+        <div>
           <Status status={ds.apStatus.linked} />
-        </Grid>
+        </div>
 
         {/* Rio */}
-        <Grid size={1} sx={{ alignContent: 'center' }}>
+        <div style={{ alignContent: 'center' }}>
           <Status
             status={ds.robotStatus.rioPing && ds.robotStatus.commsActive}
             optionalText={rioText}
             textSize={'10px'}
           />
-        </Grid>
+        </div>
 
         {/* Battery */}
-        <Grid size={1}>
-          {ds.robotStatus.batteryVoltage.toFixed(2)}
-        </Grid>
+        <div>{ds.robotStatus.batteryVoltage.toFixed(2)}</div>
 
         {/* Status */}
-        <Grid size={1} sx={{ alignContent: 'center' }}>
+        <div style={{ alignContent: 'center' }}>
           <Status
             status={ds.robotStatus.enabled}
             optionalText={ds.robotStatus.mode === 0 ? 'T' : 'A'}
             estop={ds.robotStatus.estop}
           />
-        </Grid>
+        </div>
 
         {/* Trip Time */}
-        <Grid size={1}>
-          {ds.robotStatus.tripTimeMs}
-        </Grid>
+        <div>{ds.robotStatus.tripTimeMs}</div>
 
         {/* Missed Packets */}
-        <Grid size={1}>
+        <div>
           {ds.dsStatus.missedPacketCount - ds.dsStatus.missedPacketOffset}
-        </Grid>
+        </div>
 
         {/* Radio Quality */}
-        <Grid size={1}>
+        <div>
           {ds.apStatus.quality[0]}/{ds.apStatus.quality[1]}
-        </Grid>
+        </div>
 
         {/* Radio Signal */}
-        <Grid size={1}>
+        <div>
           <WifiQuality signal={ds.apStatus.signal} />
-        </Grid>
-      </Grid>
+        </div>
+      </div>
 
       <DataPopup open={dataOpen} ds={ds} onClose={() => setDataOpen(false)} />
-    </Grid>
+    </div>
   );
 };
 
@@ -149,8 +128,8 @@ const Status = ({
 }) => {
   if (estop)
     return (
-      <Box
-        sx={{
+      <div
+        style={{
           textAlign: 'center',
           background: '#000000',
           height: '52px',
@@ -158,11 +137,11 @@ const Status = ({
           marginTop: '10px',
           width: '52px',
           border: '3px solid white',
-          mx: 'auto'
+          margin: '10px auto 0'
         }}
       >
-        <Typography
-          sx={{
+        <Typography.Text
+          style={{
             color: '#FFFFFF',
             display: 'table-cell',
             height: '55px',
@@ -173,23 +152,23 @@ const Status = ({
           }}
         >
           E
-        </Typography>
-      </Box>
+        </Typography.Text>
+      </div>
     );
 
   // Otherwise show normal status
   return (
     <Tooltip title={title}>
-      <Box
-        sx={{
+      <div
+        style={{
           backgroundColor: status ? 'green' : 'red',
           width: '75px',
           height: '75px',
-          borderRadius: status ? '50px' : null,
+          borderRadius: status ? '50px' : undefined,
           border: '3px solid black',
           fontSize: textSize ?? '50px',
           textAlign: 'center',
-          mx: 'auto',
+          margin: '0 auto',
           wordBreak: 'break-all',
           alignItems: 'center',
           justifyContent: 'center',
@@ -197,7 +176,7 @@ const Status = ({
         }}
       >
         {optionalText}
-      </Box>
+      </div>
     </Tooltip>
   );
 };
@@ -206,29 +185,21 @@ const WifiQuality = ({ signal }: { signal: string }) => {
   const GetIcon = () => {
     // If unknown, show no data
     if (signal.indexOf('unknown') > -1)
-      return <SignalWifiOff sx={{ fontSize: '50px' }} />;
+      return <DisconnectOutlined style={{ fontSize: '50px' }} />;
 
     // Parse quality
     const s = parseInt(signal.substring(0, signal.length - 4));
+    const opacity =
+      s <= -90 ? 0.2 : s <= -80 ? 0.4 : s <= -70 ? 0.6 : s <= -60 ? 0.8 : 1;
 
-    if (s <= -90) {
-      return <SignalWifi0Bar sx={{ fontSize: '50px' }} />;
-    } else if (s <= -80) {
-      return <SignalWifi1Bar sx={{ fontSize: '50px' }} />;
-    } else if (s <= -70) {
-      return <SignalWifi2Bar sx={{ fontSize: '50px' }} />;
-    } else if (s <= -60) {
-      return <SignalWifi3Bar sx={{ fontSize: '50px' }} />;
-    } else {
-      return <SignalWifi4Bar sx={{ fontSize: '50px' }} />;
-    }
+    return <WifiOutlined style={{ fontSize: '50px', opacity }} />;
   };
 
   return (
-    <Box sx={{ textAlign: 'center' }}>
+    <div style={{ textAlign: 'center' }}>
       <GetIcon />
-      <Typography>{signal}</Typography>
-    </Box>
+      <Typography.Text>{signal}</Typography.Text>
+    </div>
   );
 };
 
@@ -242,149 +213,137 @@ const DataPopup = ({
   onClose: () => void;
 }) => {
   const BooleanIndicator = ({ bool }: { bool: boolean }) =>
-    bool ? <CheckCircleOutline /> : <DoNotDisturb />;
+    bool ? <CheckCircleOutlined /> : <MinusCircleOutlined />;
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth>
-      <DialogTitle>{ds.teamKey} Status</DialogTitle>
-      <DialogContent>
-        <Grid container direction='row'>
-          {/* Robot Indicators */}
-          <Grid size={6}>
-            <Typography
-              variant='h6'
-              sx={{ fontWeight: 'bold', textDecoration: 'underline' }}
-            >
-              Robot
-            </Typography>
-            <Typography>
-              <b>Connected:</b>{' '}
-              <BooleanIndicator bool={ds.robotStatus.rioPing} />
-            </Typography>
-            <Typography>
-              <b>Comms Active: </b>{' '}
-              <BooleanIndicator bool={ds.robotStatus.commsActive} />
-            </Typography>
-            <Typography>
-              <b>Rio Version:</b> {ds.robotStatus.versionData.rio.split('>')[1]}
-            </Typography>
-            <Typography>
-              <b>Brownout:</b>{' '}
-              <BooleanIndicator bool={ds.robotStatus.brownout} />
-            </Typography>
-            <Typography>
-              <b>Robot EStopped: </b>{' '}
-              <BooleanIndicator bool={ds.robotStatus.estop} />
-            </Typography>
-            <Typography>
-              <b>Trip Time: </b> {ds.robotStatus.tripTimeMs}
-            </Typography>
-            <Typography>
-              <b>DS Disable/Robot Disable:</b>
-              <BooleanIndicator
-                bool={ds.robotStatus.additionalData.dsDisable}
-              />
-              <BooleanIndicator
-                bool={ds.robotStatus.additionalData.robotDisable}
-              />
-            </Typography>
-            <Typography>
-              <b>DS Teleop/Robot Auto:</b>
-              <BooleanIndicator bool={ds.robotStatus.additionalData.dsAuto} />
-              <BooleanIndicator bool={ds.robotStatus.additionalData.dsAuto} />
-            </Typography>
-            <Typography>
-              <b>DS Teleop/Robot Teleop:</b>
-              <BooleanIndicator bool={ds.robotStatus.additionalData.dsTele} />
-              <BooleanIndicator
-                bool={ds.robotStatus.additionalData.robotTele}
-              />
-            </Typography>
-          </Grid>
-
-          {/* FMS Commands / AP Statuses */}
-          <Grid size={6}>
-            {/* FMS Commands */}
-            <Typography
-              variant='h6'
-              sx={{ fontWeight: 'bold', textDecoration: 'underline' }}
-            >
-              FMS Commands
-            </Typography>
-            <Typography>
-              <b>Bypassed:</b> <BooleanIndicator bool={ds.fmsStatus.bypassed} />
-            </Typography>
-            <Typography>
-              <b>FMS Commanding Auto:</b>{' '}
-              <BooleanIndicator bool={ds.fmsStatus.auto} />
-            </Typography>
-            <Typography>
-              <b>FMS Commanding Enable:</b>{' '}
-              <BooleanIndicator bool={ds.fmsStatus.enabled} />
-            </Typography>
-            <Typography>
-              <b>FMS Commanding EStop:</b>{' '}
-              <BooleanIndicator bool={ds.fmsStatus.estop} />
-            </Typography>
-
-            {/* AP Statuses */}
-            <Typography
-              variant='h6'
-              sx={{ fontWeight: 'bold', textDecoration: 'underline', mt: 1 }}
-            >
-              AP Statuses
-            </Typography>
-            <Typography>
-              <b>Linked: </b> <BooleanIndicator bool={ds.apStatus.linked} />
-            </Typography>
-            <Typography>
-              <b>Quality: </b> {ds.apStatus.quality[0]}/{ds.apStatus.quality[1]}
-            </Typography>
-            <Typography>
-              <b>Signal: </b> {ds.apStatus.signal}
-            </Typography>
-          </Grid>
-        </Grid>
-
-        <Grid container direction='row'>
-          <Grid></Grid>
-        </Grid>
-
-        {/* Driverstation Indicators */}
-        <Typography
-          variant='h6'
-          sx={{ fontWeight: 'bold', textDecoration: 'underline', mt: 2 }}
-        >
-          Driverstation
-        </Typography>
-        <Typography>
-          <b>Connected:</b> <BooleanIndicator bool={ds.dsStatus.linked} />
-        </Typography>
-        <Typography>
-          <b>Version:</b> {ds.robotStatus.versionData.ds.split('>')[1]}
-        </Typography>
-        <Typography>
-          <b>PC CPU Utilization:</b> {ds.dsStatus.computerCpuPercent}%
-        </Typography>
-        <Typography>
-          <b>PC Battery:</b> {ds.dsStatus.computerBatteryPercent}%
-        </Typography>
-        <Typography>
-          <b>IP Address:</b> {ds.dsStatus.ipAddress}
-        </Typography>
-        <Typography>
-          <b>Missed Packet Count:</b> {ds.dsStatus.missedPacketCount}
-        </Typography>
-        <Typography>
-          <b>Last Log:</b>
-        </Typography>
-        <Typography>{ds.dsStatus.lastLog.split('<message>')[1]}</Typography>
-      </DialogContent>
-      <DialogActions>
-        <Button variant='contained' onClick={onClose}>
+    <Modal
+      open={open}
+      onCancel={onClose}
+      width='90%'
+      title={`${ds.teamKey} Status`}
+      footer={[
+        <Button key='close' type='primary' onClick={onClose}>
           Close
         </Button>
-      </DialogActions>
-    </Dialog>
+      ]}
+    >
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+        {/* Robot Indicators */}
+        <div>
+          <Typography.Title level={5} style={{ textDecoration: 'underline' }}>
+            Robot
+          </Typography.Title>
+          <Typography.Paragraph>
+            <b>Connected:</b> <BooleanIndicator bool={ds.robotStatus.rioPing} />
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>Comms Active: </b>{' '}
+            <BooleanIndicator bool={ds.robotStatus.commsActive} />
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>Rio Version:</b> {ds.robotStatus.versionData.rio.split('>')[1]}
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>Brownout:</b> <BooleanIndicator bool={ds.robotStatus.brownout} />
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>Robot EStopped: </b>{' '}
+            <BooleanIndicator bool={ds.robotStatus.estop} />
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>Trip Time: </b> {ds.robotStatus.tripTimeMs}
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>DS Disable/Robot Disable:</b>
+            <BooleanIndicator bool={ds.robotStatus.additionalData.dsDisable} />
+            <BooleanIndicator
+              bool={ds.robotStatus.additionalData.robotDisable}
+            />
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>DS Teleop/Robot Auto:</b>
+            <BooleanIndicator bool={ds.robotStatus.additionalData.dsAuto} />
+            <BooleanIndicator bool={ds.robotStatus.additionalData.dsAuto} />
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>DS Teleop/Robot Teleop:</b>
+            <BooleanIndicator bool={ds.robotStatus.additionalData.dsTele} />
+            <BooleanIndicator bool={ds.robotStatus.additionalData.robotTele} />
+          </Typography.Paragraph>
+        </div>
+
+        {/* FMS Commands / AP Statuses */}
+        <div>
+          {/* FMS Commands */}
+          <Typography.Title level={5} style={{ textDecoration: 'underline' }}>
+            FMS Commands
+          </Typography.Title>
+          <Typography.Paragraph>
+            <b>Bypassed:</b> <BooleanIndicator bool={ds.fmsStatus.bypassed} />
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>FMS Commanding Auto:</b>{' '}
+            <BooleanIndicator bool={ds.fmsStatus.auto} />
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>FMS Commanding Enable:</b>{' '}
+            <BooleanIndicator bool={ds.fmsStatus.enabled} />
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>FMS Commanding EStop:</b>{' '}
+            <BooleanIndicator bool={ds.fmsStatus.estop} />
+          </Typography.Paragraph>
+
+          {/* AP Statuses */}
+          <Typography.Title
+            level={5}
+            style={{ textDecoration: 'underline', marginTop: 8 }}
+          >
+            AP Statuses
+          </Typography.Title>
+          <Typography.Paragraph>
+            <b>Linked: </b> <BooleanIndicator bool={ds.apStatus.linked} />
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>Quality: </b> {ds.apStatus.quality[0]}/{ds.apStatus.quality[1]}
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>Signal: </b> {ds.apStatus.signal}
+          </Typography.Paragraph>
+        </div>
+      </div>
+
+      {/* Driverstation Indicators */}
+      <Typography.Title
+        level={5}
+        style={{ textDecoration: 'underline', marginTop: 16 }}
+      >
+        Driverstation
+      </Typography.Title>
+      <Typography.Paragraph>
+        <b>Connected:</b> <BooleanIndicator bool={ds.dsStatus.linked} />
+      </Typography.Paragraph>
+      <Typography.Paragraph>
+        <b>Version:</b> {ds.robotStatus.versionData.ds.split('>')[1]}
+      </Typography.Paragraph>
+      <Typography.Paragraph>
+        <b>PC CPU Utilization:</b> {ds.dsStatus.computerCpuPercent}%
+      </Typography.Paragraph>
+      <Typography.Paragraph>
+        <b>PC Battery:</b> {ds.dsStatus.computerBatteryPercent}%
+      </Typography.Paragraph>
+      <Typography.Paragraph>
+        <b>IP Address:</b> {ds.dsStatus.ipAddress}
+      </Typography.Paragraph>
+      <Typography.Paragraph>
+        <b>Missed Packet Count:</b> {ds.dsStatus.missedPacketCount}
+      </Typography.Paragraph>
+      <Typography.Paragraph>
+        <b>Last Log:</b>
+      </Typography.Paragraph>
+      <Typography.Paragraph>
+        {ds.dsStatus.lastLog.split('<message>')[1]}
+      </Typography.Paragraph>
+    </Modal>
   );
 };

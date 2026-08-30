@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { updateSocketClient } from 'src/api/use-socket-data.js';
+import { socketApi } from 'src/api/use-socket-data.js';
 import { Space } from 'antd';
 import ColorRow from 'src/components/settings/color-row.js';
 import { useAtom } from 'jotai';
@@ -15,9 +15,12 @@ const AudienceDisplaySettingsTab: FC = () => {
     // Don't hammer the server with requests
     if (timeout) clearTimeout(timeout);
     timeout = setTimeout(() => {
-      updateSocketClient(localStorage.getItem('persistantClientId') ?? '', {
-        audienceDisplayChroma: key
-      });
+      socketApi.update.client(
+        localStorage.getItem('persistantClientId') ?? '',
+        {
+          audienceDisplayChroma: key
+        }
+      );
     }, 1000);
   };
 

@@ -1,8 +1,8 @@
 import { FC } from 'react';
-import { DisplayProps } from '../../displays';
+import { DisplayProps } from '../../displays.js';
 import styled from '@emotion/styled';
-import { AlliancePreview } from './components/alliance-preview';
-import MatchTitle from './components/match-title';
+import { AlliancePreview } from './components/alliance-preview.js';
+import MatchTitle from './components/match-title.js';
 
 const TitleContainer = styled.div`
   margin-bottom: 1vh;

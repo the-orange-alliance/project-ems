@@ -22,8 +22,8 @@ export const HeadReferee: FC = () => {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
-          <seasonComponents.RefereeScoreSheet alliance='red' />
-          <seasonComponents.RefereeScoreSheet alliance='blue' />
+          <seasonComponents.RefereeScoreSheet alliance='red' headReferee />
+          <seasonComponents.RefereeScoreSheet alliance='blue' headReferee />
         </div>
       </div>
       {seasonComponents.HeadRefExtrasSheet && (

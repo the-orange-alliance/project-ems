@@ -1,8 +1,8 @@
 import { Match, Team } from '@toa-lib/models';
 import { FC } from 'react';
-import { UpgradedTable } from './upgraded-table';
+import { UpgradedTable } from './upgraded-table.js';
 import { DateTime } from 'luxon';
-import { useTeamIdentifierRecord } from 'src/hooks/use-team-identifier';
+import { useTeamIdentifierRecord } from 'src/hooks/use-team-identifier.js';
 
 interface Props {
   matches: Match<any>[];
@@ -22,6 +22,7 @@ export const MatchTable: FC<Props> = ({ matches, teams }) => {
   return (
     <UpgradedTable
       data={matches}
+      rowKey='id'
       headers={['Name', 'Field', 'Time', ...allianceHeaders]}
       renderRow={(e) => {
         const participants = e.participants

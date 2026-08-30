@@ -1,37 +1,15 @@
 import { FC, useEffect, useState } from 'react';
-import { Typography } from '@mui/material';
+import { Typography, Button, Checkbox, Input, Modal, Space, Table } from 'antd';
 import { PaperLayout } from '@layouts/paper-layout.js';
-import {
-  Button,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  Grid,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField
-} from '@mui/material';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import {
-  Cached,
-  ChevronLeft,
-  Delete,
-  Refresh,
-  RemoveRedEye,
-  Visibility
-} from '@mui/icons-material';
-import {
-  deleteSocketClient,
-  updateSocketClient
-} from 'src/api/use-socket-data.js';
+  DeleteOutlined,
+  EyeOutlined,
+  LeftOutlined,
+  ReloadOutlined,
+  SyncOutlined
+} from '@ant-design/icons';
+import { socketApi } from 'src/api/use-socket-data.js';
 import { Link } from 'react-router-dom';
 
 export const AudienceDisplayManager: FC = () => {
@@ -67,7 +45,7 @@ export const AudienceDisplayManager: FC = () => {
     if (!dialogContext) return;
     setDialogOpen(false);
     events.sendUpdateSocketClient(dialogContext);
-    updateSocketClient(dialogContext.persistantClientId, dialogContext);
+    socketApi.update.client(dialogContext.persistantClientId, dialogContext);
     const cpy = [...clients];
     const id = cpy.findIndex(
       (e) => e.persistantClientId === dialogContext.persistantClientId
@@ -85,12 +63,8 @@ export const AudienceDisplayManager: FC = () => {
     events.requestClientIdentification(data);
   };
 
-  const requestClientToRefresh = (data: any) => {
-    events.requestClientRefresh(data);
-  };
-
   const deleteDevice = (id: string) => {
-    deleteSocketClient(id);
+    socketApi.delete.client(id);
     const cpy = [...clients];
     const index = cpy.findIndex((e) => e.persistantClientId === id);
     cpy.splice(index, 1);
@@ -101,164 +75,151 @@ export const AudienceDisplayManager: FC = () => {
     events.requestAllClientsIdentification({ clients });
   };
 
+  const columns = [
+    { title: 'ID', dataIndex: 'persistantClientId', key: 'id' },
+    { title: 'IP Address', dataIndex: 'ipAddress', key: 'ipAddress' },
+    {
+      title: 'Connetcted',
+      key: 'connected',
+      render: (_: any, client: any) => (client.connected ? 'Yes' : 'No')
+    },
+    { title: 'Socket ID', dataIndex: 'lastSocketId', key: 'lastSocketId' },
+    {
+      title: 'Chroma Key',
+      key: 'chroma',
+      render: (_: any, client: any) =>
+        client.audienceDisplayChroma?.replaceAll('"', '')
+    },
+    { title: 'Field Numbers', dataIndex: 'fieldNumbers', key: 'fieldNumbers' },
+    {
+      title: 'Follower Mode Enabled',
+      key: 'followerMode',
+      render: (_: any, client: any) => (client.followerMode ? 'Yes' : 'No')
+    },
+    {
+      title: 'Identify',
+      key: 'identify',
+      render: (_: any, client: any) => (
+        <Button
+          type='text'
+          icon={<EyeOutlined />}
+          onClick={(e) => {
+            requestClientToIdentify(client);
+            e.stopPropagation();
+          }}
+        />
+      )
+    },
+    {
+      title: 'Force Reload',
+      key: 'reload',
+      render: (_: any, client: any) => (
+        <Button
+          type='text'
+          icon={<SyncOutlined />}
+          onClick={(e) => {
+            events.requestClientRefresh(client);
+            e.stopPropagation();
+          }}
+        />
+      )
+    },
+    {
+      title: 'Delete',
+      key: 'delete',
+      render: (_: any, client: any) => (
+        <Button
+          type='text'
+          danger
+          icon={<DeleteOutlined />}
+          onClick={(e) => {
+            deleteDevice(client.persistantClientId);
+            e.stopPropagation();
+          }}
+        />
+      )
+    }
+  ];
+
   return (
     <PaperLayout
       containerWidth='xl'
-      header={<Typography variant='h4'>Audience Display Manager</Typography>}
+      header={
+        <Typography.Title level={4}>Audience Display Manager</Typography.Title>
+      }
       padding
     >
-      <Grid container direction='row' spacing={2}>
-        <Grid>
-          <Button startIcon={<ChevronLeft />} component={Link} to='../'>
-            Back
-          </Button>
-        </Grid>
-        <Grid sx={{ flex: 1 }} />
-        <Grid>
+      <Space style={{ width: '100%', justifyContent: 'space-between' }} wrap>
+        <Link to='../'>
+          <Button icon={<LeftOutlined />}>Back</Button>
+        </Link>
+        <Space>
           <Button
-            startIcon={<Refresh />}
-            variant='contained'
+            icon={<ReloadOutlined />}
+            type='primary'
             onClick={refreshClients}
           >
             Refresh Clients
           </Button>
-        </Grid>
-        <Grid>
-          <Button
-            startIcon={<Visibility />}
-            variant='contained'
-            onClick={idAll}
-          >
+          <Button icon={<EyeOutlined />} type='primary' onClick={idAll}>
             Identify All Devices
           </Button>
-        </Grid>
-      </Grid>
-      <TableContainer>
-        <Table size='small'>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>IP Address</TableCell>
-              <TableCell>Connetcted</TableCell>
-              <TableCell>Socket ID</TableCell>
-              <TableCell>Chroma Key</TableCell>
-              <TableCell>Field Numbers</TableCell>
-              <TableCell>Follower Mode Enabled</TableCell>
-              <TableCell>Identify</TableCell>
-              <TableCell>Force Reload</TableCell>
-              <TableCell>Delete</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {clients.map((client) => (
-              <TableRow
-                key={client.persistantClientId}
-                onClick={() => openDialog(client)}
-              >
-                <TableCell>{client.persistantClientId}</TableCell>
-                <TableCell>{client.ipAddress}</TableCell>
-                <TableCell>{client.connected ? 'Yes' : 'No'}</TableCell>
-                <TableCell>{client.lastSocketId}</TableCell>
-                <TableCell>
-                  {client.audienceDisplayChroma.replaceAll('"', '')}
-                </TableCell>
-                <TableCell>{client.fieldNumbers}</TableCell>
-                <TableCell>{client.followerMode ? 'Yes' : 'No'}</TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={(e) => {
-                      requestClientToIdentify(client);
-                      e.stopPropagation();
-                    }}
-                  >
-                    <RemoveRedEye />
-                  </IconButton>
-                </TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={(e) => {
-                      events.requestClientRefresh(client);
-                      e.stopPropagation();
-                    }}
-                  >
-                    <Cached />
-                  </IconButton>
-                </TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={(e) => {
-                      deleteDevice(client.persistantClientId);
-                      e.stopPropagation();
-                    }}
-                  >
-                    <Delete />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+        </Space>
+      </Space>
+      <Table
+        size='small'
+        rowKey='persistantClientId'
+        columns={columns}
+        dataSource={clients}
+        pagination={false}
+        onRow={(client) => ({ onClick: () => openDialog(client) })}
+      />
 
       {dialogContext && ( // TODO: make field numbers more pretty
-        <Dialog open={dialogOpen} onClose={handleClose}>
-          <DialogTitle>Update {dialogContext.persistantClientId}</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin='dense'
-              id='name'
-              label='Audience Display Chroma'
-              type='text'
-              fullWidth
-              defaultValue={dialogContext.audienceDisplayChroma.replaceAll(
+        <Modal
+          open={dialogOpen}
+          onCancel={handleClose}
+          title={`Update ${dialogContext.persistantClientId}`}
+          footer={[
+            <Button key='cancel' onClick={handleClose}>
+              Cancel
+            </Button>,
+            <Button key='update' type='primary' onClick={saveUpdate}>
+              Update
+            </Button>
+          ]}
+        >
+          <Space direction='vertical' style={{ width: '100%' }}>
+            <Input
+              placeholder='Audience Display Chroma'
+              defaultValue={dialogContext.audienceDisplayChroma?.replaceAll(
                 '"',
                 ''
               )}
-              variant='standard'
               onChange={(e) =>
                 updateContext('audienceDisplayChroma', e.target.value)
               }
             />
-            <TextField
-              autoFocus
-              margin='dense'
-              id='name'
-              label='Field Numbers (Seperated by commas)'
-              type='text'
-              fullWidth
+            <Input
+              placeholder='Field Numbers (Seperated by commas)'
               defaultValue={dialogContext.fieldNumbers}
-              variant='standard'
               onChange={(e) => updateContext('fieldNumbers', e.target.value)}
             />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  defaultChecked={!!dialogContext.followerMode}
-                  onChange={(e) =>
-                    updateContext('followerMode', e.target.checked ? 1 : 0)
-                  }
-                />
+            <Checkbox
+              defaultChecked={!!dialogContext.followerMode}
+              onChange={(e) =>
+                updateContext('followerMode', e.target.checked ? 1 : 0)
               }
-              label='Enable Follower Mode'
-            />
-            <TextField
-              autoFocus
-              margin='dense'
-              id='name'
-              label='Follower API Host (Leave blank for none)'
-              type='text'
-              fullWidth
+            >
+              Enable Follower Mode
+            </Checkbox>
+            <Input
+              placeholder='Follower API Host (Leave blank for none)'
               defaultValue={dialogContext.followerApiHost}
-              variant='standard'
               onChange={(e) => updateContext('followerApiHost', e.target.value)}
             />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button onClick={saveUpdate}>Update</Button>
-          </DialogActions>
-        </Dialog>
+          </Space>
+        </Modal>
       )}
     </PaperLayout>
   );

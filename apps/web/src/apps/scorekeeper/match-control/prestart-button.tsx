@@ -15,7 +15,7 @@ import { matchAtom } from 'src/stores/state/event.js';
 export const PrestartButton: FC = () => {
   const [loading, setLoading] = useState(false);
   const { canPrestart, canCancelPrestart } = useMatchControl();
-  const { showSnackbar } = useSnackbar();
+  const { showErrorSnackbar } = useSnackbar();
   const replayDialog = useModal(ReplayDialog);
   const match = useAtomValue<any>(matchAtom);
   const prestart = usePrestartCallback();
@@ -32,8 +32,7 @@ export const PrestartButton: FC = () => {
       await prestart();
       setLoading(false);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while prestarting', error);
+      showErrorSnackbar('Error while prestarting.', e);
       setLoading(false);
     }
   };
@@ -41,8 +40,7 @@ export const PrestartButton: FC = () => {
     try {
       await cancelPrestart();
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
-      showSnackbar('Error while cancelling prestart', error);
+      showErrorSnackbar('Error while cancelling prestart.', e);
     }
   };
   return (

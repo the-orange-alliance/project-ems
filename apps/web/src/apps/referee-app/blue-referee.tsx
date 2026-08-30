@@ -4,7 +4,6 @@ import { useComponents } from '@seasons/index.js';
 import { useAtomValue } from 'jotai';
 import { getSeasonKeyFromEventKey } from '@toa-lib/models';
 import { eventKeyAtom } from 'src/stores/state/event.js';
-import { useEventState } from 'src/stores/hooks/use-event-state.js';
 
 export const BlueReferee: FC = () => {
   const eventKey = useAtomValue(eventKeyAtom);

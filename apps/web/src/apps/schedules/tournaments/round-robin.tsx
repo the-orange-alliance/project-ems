@@ -1,4 +1,4 @@
-import { Row, Col, Button, Typography } from 'antd';
+import { Row, Col, Button, Typography, Input } from 'antd';
 import {
   AllianceMember,
   ScheduleParams,
@@ -6,11 +6,7 @@ import {
   FGCSchedule
 } from '@toa-lib/models';
 import { FC, useEffect, useState } from 'react';
-import {
-  deleteAllianceMembers,
-  postAllianceMembers,
-  useAllianceMembers
-} from 'src/api/use-alliance-data.js';
+import { allianceApi, useAllianceMembers } from 'src/api/use-alliance-data.js';
 import { useRankingsForTournament } from 'src/api/use-ranking-data.js';
 import { useTeamsForEvent } from 'src/api/use-team-data.js';
 import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team.js';
@@ -22,6 +18,12 @@ interface ParticipantsProps {
   disabled?: boolean;
 }
 const ALLIANCE_SIZE = 4;
+
+const defaultAllianceName = (i: number) => ({
+  long: `Alliance ${i + 1}`,
+  short: `#${i + 1}`
+});
+
 export const RoundRobinParticipants: FC<ParticipantsProps> = ({
   eventSchedule,
   onEventScheduleChange
@@ -37,20 +39,63 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
   );
   const [allianceRows, setAllianceRows] = useState(0);
   const [pickedTeamKeys, setPickedTeamKeys] = useState<(number | null)[]>([]);
-  const { showSnackbar } = useSnackbar();
+  const [allianceNames, setAllianceNames] = useState<
+    { long: string; short: string }[]
+  >([]);
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const hasDuplicates = pickedTeamKeys.some(
     (v, i) => pickedTeamKeys.indexOf(v) !== i
   );
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (alliances) {
-      setAllianceRows(alliances.length / ALLIANCE_SIZE);
-      setPickedTeamKeys(alliances.map((a) => a.teamKey));
+      const numAlliances = alliances.length / ALLIANCE_SIZE;
+      setAllianceRows(numAlliances);
+
+      // Alliance members are keyed by allianceRank, not returned in rank
+      // order (the API sorts by allianceNameLong). Sort defensively before
+      // mapping positionally into team slots, otherwise custom alliance
+      // names reorder the rows and teams reload under the wrong alliance.
+      const sorted = [...alliances].sort(
+        (a, b) => a.allianceRank - b.allianceRank || a.pickOrder - b.pickOrder
+      );
+      setPickedTeamKeys(sorted.map((a) => a.teamKey));
+
+      // Extract alliance names from existing alliances
+      const names: { long: string; short: string }[] = [];
+      for (let i = 0; i < numAlliances; i++) {
+        const allianceMember = alliances.find((a) => a.allianceRank === i + 1);
+        names.push(
+          allianceMember
+            ? {
+                long: allianceMember.allianceNameLong,
+                short: allianceMember.allianceNameShort
+              }
+            : defaultAllianceName(i)
+        );
+      }
+      setAllianceNames(names);
     }
   }, [alliances]);
 
-  const addAlliance = () => setAllianceRows(allianceRows + 1);
-  const removeAlliance = () => setAllianceRows(allianceRows - 1);
+  const updateAllianceName = (
+    i: number,
+    field: 'long' | 'short',
+    value: string
+  ) => {
+    const newNames = [...allianceNames];
+    newNames[i] = { ...defaultAllianceName(i), ...newNames[i], [field]: value };
+    setAllianceNames(newNames);
+  };
+
+  const addAlliance = () => {
+    setAllianceRows(allianceRows + 1);
+    setAllianceNames([...allianceNames, defaultAllianceName(allianceRows)]);
+  };
+  const removeAlliance = () => {
+    setAllianceRows(allianceRows - 1);
+    setAllianceNames(allianceNames.slice(0, -1));
+  };
   const autoAssign = () => {
     if (!ranks || !teams) return;
     const rankMap = FGCSchedule.FGC2024.fgcAllianceOrder;
@@ -97,8 +142,10 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
           eventKey,
           tournamentKey,
           teamKey,
-          allianceNameShort: `#${i + 1}`,
-          allianceNameLong: `Alliance ${i + 1}`,
+          allianceNameShort:
+            allianceNames[i]?.short || defaultAllianceName(i).short,
+          allianceNameLong:
+            allianceNames[i]?.long || defaultAllianceName(i).long,
           allianceRank: i + 1,
           isCaptain: j === 0 ? 1 : 0,
           pickOrder: j + 1
@@ -108,9 +155,9 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
     }
     try {
       if (alliances) {
-        await deleteAllianceMembers(eventKey, tournamentKey);
+        await allianceApi.delete.members(eventKey, tournamentKey);
       }
-      await postAllianceMembers(eventKey, allianceMembers);
+      await allianceApi.create.members(eventKey, allianceMembers);
 
       onEventScheduleChange?.({
         ...eventSchedule,
@@ -123,9 +170,8 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
       setLoading(false);
       showSnackbar(`Successfully uploaded alliance members.`);
     } catch (e) {
-      const error = e instanceof Error ? `${e.name} ${e.message}` : String(e);
       setLoading(false);
-      showSnackbar('Error while uploading alliance members.', error);
+      showErrorSnackbar('Error while uploading alliance members.', e);
     }
   };
   return (
@@ -139,7 +185,35 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
                 key={`alliance-${i + 1}-header`}
                 style={{ marginTop: '1rem' }}
               >
-                <Typography.Title level={4}>Alliance {i + 1}</Typography.Title>
+                <Row gutter={[8, 8]} align='middle'>
+                  <Col>
+                    <Typography.Title level={4} style={{ margin: 0 }}>
+                      #{i + 1}
+                    </Typography.Title>
+                  </Col>
+                  <Col flex='auto'>
+                    <Input
+                      placeholder='Alliance Name (e.g., Alliance 1)'
+                      value={allianceNames[i]?.long || ''}
+                      maxLength={50}
+                      onChange={(e) =>
+                        updateAllianceName(i, 'long', e.target.value)
+                      }
+                      style={{ maxWidth: '300px' }}
+                    />
+                  </Col>
+                  <Col>
+                    <Input
+                      placeholder='Short (e.g., #1)'
+                      value={allianceNames[i]?.short || ''}
+                      maxLength={5}
+                      onChange={(e) =>
+                        updateAllianceName(i, 'short', e.target.value)
+                      }
+                      style={{ maxWidth: '120px' }}
+                    />
+                  </Col>
+                </Row>
               </Col>
               {Array.from({ length: ALLIANCE_SIZE }).map((__, j) => {
                 const handleChange = (team: Team | null) => {

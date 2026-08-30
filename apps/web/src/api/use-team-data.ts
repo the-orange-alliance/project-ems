@@ -1,41 +1,54 @@
-import { apiFetcher } from '@toa-lib/client';
-import { ApiResponseError, Team } from '@toa-lib/models';
+import { ApiResponseError, Team, teamZod } from '@toa-lib/models';
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
+import { localClient } from './http-clients.js';
 
-export const getTeams = async (
-  eventKey: string | null | undefined
-): Promise<Team[]> => apiFetcher(`teams/${eventKey}`, 'GET');
-
-export const postTeams = async (
-  eventKey: string,
-  teams: Team[]
-): Promise<void> => apiFetcher(`teams/${eventKey}`, 'POST', teams);
-
-export const patchTeam = async (
-  eventKey: string,
-  teamKey: number,
-  team: Team
-): Promise<void> => apiFetcher(`teams/${eventKey}/${teamKey}`, 'PATCH', team);
-
-export const deleteTeam = async (team: Team): Promise<void> =>
-  apiFetcher(`teams/${team.eventKey}/${team.teamKey}`, `DELETE`, team);
-
-/**
- * Promotes yellow cards issued in a match onto the teams that received them, so
- * they carry for the rest of the qualification or playoff phase.
- *
- * The tournament is passed rather than a phase: the server derives the phase
- * from it, so the carry rule has one definition. Entries that are not a yellow
- * are ignored and a team already carrying a card for this phase is untouched,
- * so this is safe to call with every participant of a match rather than
- * pre-filtering. Cards from test and practice tournaments are dropped entirely.
- */
-export const postCarriedCards = async (
-  eventKey: string,
-  tournamentKey: string,
-  cards: { teamKey: number; cardStatus: number }[]
-): Promise<void> =>
-  apiFetcher(`teams/carry-cards/${eventKey}/${tournamentKey}`, 'POST', cards);
+export const teamsApi = {
+  get: {
+    teams: async (
+      eventKey: string | null | undefined,
+      averageScore?: boolean
+    ): Promise<Team[]> => {
+      if (!eventKey) return [];
+      const payload = await localClient.get<unknown[]>(
+        `/teams/${eventKey}${averageScore ? '?averageScore=true' : ''}`
+      );
+      return teamZod.array().parse(payload ?? []);
+    }
+  },
+  create: {
+    teams: async (eventKey: string, teams: Team[]): Promise<void> => {
+      await localClient.post<void>(`/teams/${eventKey}`, { body: teams });
+    },
+    carriedCards: async (
+      eventKey: string,
+      tournamentKey: string,
+      cards: { teamKey: number; cardStatus: number }[]
+    ): Promise<void> => {
+      await localClient.post<void>(
+        `/teams/carry-cards/${eventKey}/${tournamentKey}`,
+        {
+          body: cards
+        }
+      );
+    }
+  },
+  update: {
+    team: async (
+      eventKey: string,
+      teamKey: number,
+      team: Team
+    ): Promise<void> => {
+      await localClient.patch<void>(`/teams/${eventKey}/${teamKey}`, {
+        body: team
+      });
+    }
+  },
+  delete: {
+    team: async (team: Team): Promise<void> => {
+      await localClient.delete<void>(`/teams/${team.eventKey}/${team.teamKey}`);
+    }
+  }
+};
 
 // `useTeams` was removed alongside the `GET /teams` route it called: that route
 // queried a `team` table on the global database, which does not exist, so it
@@ -43,10 +56,11 @@ export const postCarriedCards = async (
 
 export const useTeamsForEvent = (
   eventKey: string | null | undefined,
+  averageScore?: boolean,
   config?: SWRConfiguration
 ): SWRResponse<Team[], ApiResponseError> =>
-  useSWR(
-    eventKey ? `teams/${eventKey}` : undefined,
-    (url) => apiFetcher(url, 'GET'),
+  useSWR<Team[], ApiResponseError, readonly [string, string, boolean] | null>(
+    eventKey ? (['/teams', eventKey, Boolean(averageScore)] as const) : null,
+    ([, eKey, avg]) => teamsApi.get.teams(eKey, avg),
     config ?? { revalidateOnFocus: false }
   );

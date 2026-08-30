@@ -1,9 +1,7 @@
 import { FC } from 'react';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { Displays, MatchSocketEvent } from '@toa-lib/models';
-import Grid from '@mui/material/Grid';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import { Button, Col, Row, Typography } from 'antd';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 
 export const StreamApp: FC = () => {
@@ -27,45 +25,45 @@ export const StreamApp: FC = () => {
   return (
     <PaperLayout
       containerWidth='lg'
-      header={<Typography variant='h4'>Streaming App</Typography>}
+      header={<Typography.Title level={4}>Streaming App</Typography.Title>}
     >
-      <Grid container spacing={3} sx={{ padding: (theme) => theme.spacing(3) }}>
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <Button variant='contained' fullWidth onClick={sendBlank}>
+      <Row gutter={[24, 24]} style={{ padding: 24 }}>
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Button type='primary' block onClick={sendBlank}>
             Blank Screen
           </Button>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <Button variant='contained' fullWidth onClick={sendChroma}>
+        </Col>
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Button type='primary' block onClick={sendChroma}>
             Chroma Background
           </Button>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <Button variant='contained' fullWidth onClick={sendPreview}>
+        </Col>
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Button type='primary' block onClick={sendPreview}>
             Match Preview
           </Button>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <Button variant='contained' fullWidth onClick={sendPlay}>
+        </Col>
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Button type='primary' block onClick={sendPlay}>
             Match Play
           </Button>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <Button variant='contained' fullWidth onClick={sendResults}>
+        </Col>
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Button type='primary' block onClick={sendResults}>
             Match Results
           </Button>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <Button variant='contained' fullWidth onClick={sendRankingsRR}>
+        </Col>
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Button type='primary' block onClick={sendRankingsRR}>
             Rankings (Round Robin)
           </Button>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <Button variant='contained' fullWidth onClick={sendRankingsF}>
+        </Col>
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <Button type='primary' block onClick={sendRankingsF}>
             Rankings (Finals)
           </Button>
-        </Grid>
-      </Grid>
+        </Col>
+      </Row>
     </PaperLayout>
   );
 };

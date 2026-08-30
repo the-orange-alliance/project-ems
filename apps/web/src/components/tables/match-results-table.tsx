@@ -51,9 +51,9 @@ export const MatchResultsTable: FC<Props> = ({
       renderRow={(e) => {
         const participants = e.participants
           ? e.participants?.map((p) => {
-            const team = teams?.find((t) => t.teamKey === p.teamKey);
-            return team ? identifiers[p.teamKey] : p.teamKey;
-          })
+              const team = teams?.find((t) => t.teamKey === p.teamKey);
+              return team ? identifiers[p.teamKey] : p.teamKey;
+            })
           : [];
         return [
           e.name,
@@ -64,12 +64,14 @@ export const MatchResultsTable: FC<Props> = ({
           ...participants.map((p, i) => (
             <span
               key={`${e.eventKey}-${e.tournamentKey}-${e.id}-${i}`}
-              className={colored ? (i >= allianceSize ? 'blue' : 'red') : undefined}
+              className={
+                colored ? (i >= allianceSize ? 'blue' : 'red') : undefined
+              }
             >
               {p}
             </span>
           )),
-          <span>
+          <span key={`${e.eventKey}-${e.tournamentKey}-${e.id}-uploaded`}>
             <Checkbox checked={!!e.uploaded} disabled />
           </span>,
           <span
@@ -85,6 +87,7 @@ export const MatchResultsTable: FC<Props> = ({
             {e.result > RESULT_NOT_PLAYED ? e.blueScore : '--'}
           </span>
         ];
-      } }    />
+      }}
+    />
   );
 };

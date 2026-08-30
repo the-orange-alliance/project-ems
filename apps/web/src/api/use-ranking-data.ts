@@ -1,36 +1,73 @@
-import { apiFetcher } from '@toa-lib/client';
-import { MatchKey, Team, Ranking, rankingZod } from '@toa-lib/models';
-import useSWR from 'swr';
+import {
+  ApiResponseError,
+  MatchKey,
+  Team,
+  Ranking,
+  rankingZod
+} from '@toa-lib/models';
+import useSWR, { SWRResponse } from 'swr';
+import { localClient } from './http-clients.js';
 import { withRetry } from './with-retry.js';
 
-export const createRankings = (
-  tournamentKey: string,
-  teams: Team[]
-): Promise<void> =>
-  apiFetcher(`ranking/create/${tournamentKey}`, 'POST', teams);
-
-export const postRankings = (
-  eventKey: string,
-  rankings: Ranking[]
-): Promise<void> => apiFetcher(`ranking/${eventKey}`, 'POST', rankings);
-
-export const recalculateRankings = (
-  eventKey: string,
-  tournamentKey: string
-): Promise<Ranking[]> =>
-  apiFetcher(`ranking/calculate/${eventKey}/${tournamentKey}`, 'POST');
-
-export const recalculatePlayoffsRankings = (
-  eventKey: string,
-  tournamentKey: string
-): Promise<Ranking[]> =>
-  apiFetcher(
-    `ranking/calculate/${eventKey}/${tournamentKey}?playoffs=true`,
-    'POST'
-  );
-
-export const deleteRankings = (eventKey: string, tournamentKey: string) =>
-  apiFetcher(`ranking/${eventKey}/${tournamentKey}`, 'DELETE');
+export const rankingsApi = {
+  create: {
+    rankingsForTournament: async (
+      tournamentKey: string,
+      teams: Team[]
+    ): Promise<void> => {
+      await localClient.post<void>(`/ranking/create/${tournamentKey}`, {
+        body: teams
+      });
+    },
+    rankingsForEvent: async (
+      eventKey: string,
+      rankings: Ranking[]
+    ): Promise<void> => {
+      await localClient.post<void>(`/ranking/${eventKey}`, {
+        body: rankings
+      });
+    },
+    recalculate: async (
+      eventKey: string,
+      tournamentKey: string,
+      playoffs: boolean = false
+    ): Promise<Ranking[]> => {
+      const payload = await localClient.post<unknown[]>(
+        `/ranking/calculate/${eventKey}/${tournamentKey}${playoffs ? '?playoffs=true' : ''}`
+      );
+      return rankingZod.array().parse(payload ?? []);
+    }
+  },
+  get: {
+    matchRankings: async ({
+      eventKey,
+      tournamentKey,
+      id
+    }: MatchKey): Promise<Ranking[]> => {
+      const payload = await localClient.get<unknown[]>(
+        `/ranking/${eventKey}/${tournamentKey}/${id}`
+      );
+      return rankingZod.array().parse(payload ?? []);
+    },
+    tournamentRankings: async (
+      eventKey: string,
+      tournamentKey: string
+    ): Promise<Ranking[]> => {
+      const payload = await localClient.get<unknown[]>(
+        `/ranking/${eventKey}/${tournamentKey}`
+      );
+      return rankingZod.array().parse(payload ?? []);
+    }
+  },
+  delete: {
+    rankings: async (
+      eventKey: string,
+      tournamentKey: string
+    ): Promise<void> => {
+      await localClient.delete<void>(`/ranking/${eventKey}/${tournamentKey}`);
+    }
+  }
+};
 
 /**
  * Fetches the rankings for the teams participating in the given match.
@@ -44,21 +81,16 @@ export const fetchMatchRankings = ({
   id
 }: MatchKey): Promise<Ranking[]> =>
   withRetry(() =>
-    apiFetcher(
-      `ranking/${eventKey}/${tournamentKey}/${id}`,
-      'GET',
-      undefined,
-      rankingZod.array().parse
-    )
+    rankingsApi.get.matchRankings({ eventKey, tournamentKey, id })
   );
 
 export const useRankingsForTournament = (
   eventKey: string | null | undefined,
   tournamentKey: string | null | undefined
-) =>
-  useSWR<Ranking[]>(
+): SWRResponse<Ranking[], ApiResponseError> =>
+  useSWR<Ranking[], ApiResponseError, readonly [string, string, string] | null>(
     eventKey && tournamentKey
-      ? `ranking/${eventKey}/${tournamentKey}`
-      : undefined,
-    (url) => apiFetcher(url, 'GET')
+      ? (['/ranking', eventKey, tournamentKey] as const)
+      : null,
+    ([, eKey, tKey]) => rankingsApi.get.tournamentRankings(eKey, tKey)
   );

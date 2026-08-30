@@ -8,6 +8,13 @@ import { EventKeyParams, EmptySchema, EventTeamKeyParams, EventTournamentKeyPara
 
 const teamsZod = z.array(teamZod);
 
+// `averageScore` is only populated when `?averageScore=true` is passed to
+// `GET /:eventKey` — see the route below.
+const teamWithAverageScoreZod = teamZod.extend({
+  averageScore: z.number().nullable().optional()
+});
+const teamsWithAverageScoreZod = z.array(teamWithAverageScoreZod);
+
 const carryCardsZod = z.array(
   z.object({ teamKey: z.number(), cardStatus: z.number() })
 );
@@ -18,20 +25,45 @@ async function teamController(fastify: FastifyInstance) {
   // returned a 500 on every call. It had no callers. Teams are only meaningful
   // scoped to an event — use `GET /:eventKey`.
 
-  // Get teams by eventKey
+  // Get teams by eventKey. `?averageScore=true` additionally attaches each
+  // team's average `rankingScore` across every tournament it's ranked in for
+  // this event, excluding Practice/Test tournaments (setup/testing, not real
+  // competition) — see issue #237.
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/:eventKey',
-    { schema: { params: EventKeyParams, response: errorableSchema<typeof teamsZod, typeof DataNotFoundError>(teamsZod, DataNotFoundError), tags: ['Teams'] } },
+    { schema: { params: EventKeyParams, response: errorableSchema<typeof teamsWithAverageScoreZod, typeof DataNotFoundError>(teamsWithAverageScoreZod, DataNotFoundError), tags: ['Teams'] } },
     async (request, reply) => {
       try {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
+        const { averageScore } = request.query as { averageScore?: string };
         const db = await getDB(eventKey);
         const data = await db.selectAllWhere('team', `eventKey = "${eventKey}"`);
         if (!data) {
           reply.code(DataNotFoundError.code).send(DataNotFoundError);
-        } else {
-          reply.send(data);
+          return;
         }
+        if (averageScore) {
+          const rankings = await db.selectAllJoinWhereAdvanced(
+            'ranking',
+            'tournament',
+            '"ranking".tournamentKey = "tournament".tournamentKey AND "ranking".eventKey = "tournament".eventKey',
+            `"ranking".eventKey = "${eventKey}" AND "tournament".tournamentType NOT IN ('Practice', 'Test')`
+          );
+          const scoresByTeam = new Map<number, number[]>();
+          for (const r of rankings) {
+            if (typeof r.rankingScore !== 'number') continue;
+            const list = scoresByTeam.get(r.teamKey) ?? [];
+            list.push(r.rankingScore);
+            scoresByTeam.set(r.teamKey, list);
+          }
+          for (const team of data) {
+            const scores = scoresByTeam.get(team.teamKey);
+            team.averageScore = scores?.length
+              ? scores.reduce((a, b) => a + b, 0) / scores.length
+              : null;
+          }
+        }
+        reply.send(data);
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
       }

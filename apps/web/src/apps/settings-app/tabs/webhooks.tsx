@@ -20,9 +20,8 @@ import {
 } from '@ant-design/icons';
 import { Webhook, WebhookEvent } from '@toa-lib/models';
 import {
-  deleteWebhook,
+  webhooksApi,
   testWebhook,
-  upsertWebhook,
   useWebhooks
 } from 'src/api/use-webhook-data.js';
 
@@ -51,12 +50,12 @@ const WebhooksTab = () => {
   };
 
   const handleUpdate = async (webhook: Webhook) => {
-    await upsertWebhook(webhook);
+    await webhooksApi.update.webhook(webhook);
     mutate();
   };
 
   const handleDelete = async (id: number) => {
-    await deleteWebhook(id);
+    await webhooksApi.delete.webhook(id);
     mutate();
   };
 
@@ -70,7 +69,7 @@ const WebhooksTab = () => {
       field: record.field,
       note: record.note ? `${record.note} (copy)` : 'Copy'
     };
-    await upsertWebhook(duplicate as Webhook);
+    await webhooksApi.update.webhook(duplicate as Webhook);
     mutate();
     message.success('Webhook duplicated.');
   };
@@ -116,7 +115,7 @@ const WebhooksTab = () => {
   };
 
   const handleAdd = async () => {
-    await upsertWebhook(newWebhook as Webhook);
+    await webhooksApi.update.webhook(newWebhook as Webhook);
     mutate();
     setNewWebhook({
       url: '',

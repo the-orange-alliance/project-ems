@@ -15,8 +15,8 @@ export class WledController {
 
   private socket: WebSocket | null;
   private initPacket: WledInitParameters;
-  private keepAlive: NodeJS.Timeout | null;
-  private heartbeat: NodeJS.Timeout | null;
+  private keepAlive: ReturnType<typeof setTimeout> | null;
+  private heartbeat: ReturnType<typeof setTimeout> | null ;
 
   private latestState: WledUpdateParameters | undefined;
   private connected = false;
