@@ -8,10 +8,22 @@ import {
   Select,
   Card,
   Row,
-  Col
+  Col,
+  Tooltip,
+  message
 } from 'antd';
+import {
+  SendOutlined,
+  CopyOutlined,
+  ClearOutlined,
+  DeleteOutlined
+} from '@ant-design/icons';
 import { Webhook, WebhookEvent } from '@toa-lib/models';
-import { webhooksApi, useWebhooks } from 'src/api/use-webhook-data.js';
+import {
+  webhooksApi,
+  testWebhook,
+  useWebhooks
+} from 'src/api/use-webhook-data.js';
 
 const WebhooksTab = () => {
   const { data: webhooks, mutate } = useWebhooks();
@@ -22,6 +34,9 @@ const WebhooksTab = () => {
     subscribedEvent: WebhookEvent.PRESTARTED,
     note: ''
   });
+  // Keyed by webhook id for existing rows, or 'new' for the Add New Webhook
+  // card, so only the button that was clicked shows a loading state.
+  const [testingKey, setTestingKey] = useState<number | 'new' | null>(null);
 
   useEffect(() => {
     setLocalWebhooks(webhooks || []);
@@ -42,6 +57,61 @@ const WebhooksTab = () => {
   const handleDelete = async (id: number) => {
     await webhooksApi.delete.webhook(id);
     mutate();
+  };
+
+  const handleDuplicate = async (record: Webhook) => {
+    // No `id`/error-tracking fields — this is a new, untested row, not a
+    // continuation of the original's history.
+    const duplicate: Partial<Webhook> = {
+      url: record.url,
+      enabled: record.enabled,
+      subscribedEvent: record.subscribedEvent,
+      field: record.field,
+      note: record.note ? `${record.note} (copy)` : 'Copy'
+    };
+    await webhooksApi.update.webhook(duplicate as Webhook);
+    mutate();
+    message.success('Webhook duplicated.');
+  };
+
+  const handleResetErrors = async (record: Webhook) => {
+    const updated: Webhook = {
+      ...record,
+      errorCount: 0,
+      lastErrorMessage: null,
+      lastErrorTime: null
+    };
+    setLocalWebhooks((prev) =>
+      prev.map((w) => (w.id === record.id ? updated : w))
+    );
+    await handleUpdate(updated);
+    message.success('Error counter reset.');
+  };
+
+  const handleTest = async (
+    key: number | 'new',
+    url: string | undefined,
+    event: WebhookEvent | undefined
+  ) => {
+    if (!url || !event) {
+      message.error('Enter a URL and event before testing.');
+      return;
+    }
+    setTestingKey(key);
+    try {
+      const result = await testWebhook(url, event);
+      if (result.success) {
+        message.success(
+          `Test webhook delivered${result.status ? ` (${result.status})` : ''}.`
+        );
+      } else {
+        message.error(
+          `Test webhook failed: ${result.error || `${result.status} ${result.statusText}`}`
+        );
+      }
+    } finally {
+      setTestingKey(null);
+    }
   };
 
   const handleAdd = async () => {
@@ -125,9 +195,57 @@ const WebhooksTab = () => {
     {
       title: 'Actions',
       render: (record: Webhook) => (
-        <Button danger onClick={() => handleDelete(record.id!)}>
-          Delete
-        </Button>
+        <Row gutter={8} wrap={false}>
+          <Col>
+            <Tooltip title='Send a test payload to this URL'>
+              <Button
+                shape='circle'
+                icon={<SendOutlined />}
+                color='blue'
+                variant='outlined'
+                loading={testingKey === record.id}
+                disabled={testingKey !== null && testingKey !== record.id}
+                onClick={() =>
+                  handleTest(record.id!, record.url, record.subscribedEvent)
+                }
+              />
+            </Tooltip>
+          </Col>
+          <Col>
+            <Tooltip title='Duplicate webhook'>
+              <Button
+                shape='circle'
+                icon={<CopyOutlined />}
+                color='purple'
+                variant='outlined'
+                onClick={() => handleDuplicate(record)}
+              />
+            </Tooltip>
+          </Col>
+          <Col>
+            <Tooltip title='Reset error counter'>
+              <Button
+                shape='circle'
+                icon={<ClearOutlined />}
+                color='orange'
+                variant='outlined'
+                disabled={!record.errorCount}
+                onClick={() => handleResetErrors(record)}
+              />
+            </Tooltip>
+          </Col>
+          <Col>
+            <Tooltip title='Delete webhook'>
+              <Button
+                shape='circle'
+                icon={<DeleteOutlined />}
+                color='danger'
+                variant='outlined'
+                onClick={() => handleDelete(record.id!)}
+              />
+            </Tooltip>
+          </Col>
+        </Row>
       )
     }
   ];
@@ -188,6 +306,16 @@ const WebhooksTab = () => {
             labelCol={{ span: 0 }}
             wrapperCol={{ span: 24, style: { textAlign: 'right' } }}
           >
+            <Button
+              style={{ marginRight: 8 }}
+              loading={testingKey === 'new'}
+              disabled={testingKey !== null && testingKey !== 'new'}
+              onClick={() =>
+                handleTest('new', newWebhook.url, newWebhook.subscribedEvent)
+              }
+            >
+              Send Test
+            </Button>
             <Button type='primary' onClick={handleAdd}>
               Add Webhook
             </Button>

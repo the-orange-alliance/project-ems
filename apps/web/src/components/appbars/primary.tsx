@@ -2,7 +2,7 @@ import { FC, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LoginButton } from 'src/components/buttons/login-button.js';
 import emsAvatar from '@assets/favicon.ico';
-import { Layout, Avatar, Typography, Button, theme } from 'antd';
+import { Layout, Avatar, Typography, Button, Dropdown, theme } from 'antd';
 import {
   SettingOutlined,
   FullscreenOutlined,
@@ -14,6 +14,10 @@ import { appbarConfigAtom } from 'src/stores/state/ui.js';
 import { eventKeyAtom } from 'src/stores/state/event.js';
 import { ConnectionChip } from '../util/connection-chip.js';
 import { VersionChip } from '../util/version-chip.js';
+import {
+  toMenuItems,
+  useProductionOptionsItems
+} from 'src/apps/scorekeeper/hooks/use-production-options.js';
 
 const { Header } = Layout;
 
@@ -24,6 +28,7 @@ const PrimaryAppbar: FC = () => {
   const user = true; // useAtomValue(userAtom);
   const eventKey = useAtomValue(eventKeyAtom);
   const navigate = useNavigate();
+  const productionOptionsItems = useProductionOptionsItems();
 
   const navSettings = () => {
     // get user's current location
@@ -89,6 +94,18 @@ const PrimaryAppbar: FC = () => {
       {user ? (
         <>
           {/* <Button type='link'>Docs</Button> */}
+
+          {/* Production Options */}
+          {!showFullscreen && (
+            <Dropdown
+              menu={{ items: toMenuItems(productionOptionsItems) }}
+              trigger={['click']}
+            >
+              <Button style={{ marginLeft: '8px' }} size='large'>
+                Production Options
+              </Button>
+            </Dropdown>
+          )}
 
           {/* Settings */}
           {!showFullscreen && (
