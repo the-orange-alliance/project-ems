@@ -1,8 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-ss" viewBox="0 0 640 480">
-  <path fill="#078930" d="M0 336h640v144H0z"/>
-  <path fill="#fff" d="M0 144h640v192H0z"/>
-  <path fill="#000001" d="M0 0h640v144H0z"/>
-  <path fill="#da121a" d="M0 168h640v144H0z"/>
-  <path fill="#0f47af" d="m0 0 415.7 240L0 480z"/>
-  <path fill="#fcdd09" d="M200.7 194.8 61.7 240l139 45.1L114.9 167v146z"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg1"
+   width="1600"
+   height="960"
+   viewBox="0 0 1600 960"
+   sodipodi:docname="South Sudan.pdf"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1">
+    <inkscape:page
+       x="0"
+       y="0"
+       inkscape:label="1"
+       id="page1"
+       width="1600"
+       height="960"
+       margin="0"
+       bleed="0" />
+  </sodipodi:namedview>
+  <g
+     id="g1"
+     inkscape:groupmode="layer"
+     inkscape:label="1">
+    <g
+       id="group-MC0">
+      <path
+         id="path2"
+         d="M 0,0 H 1200 V 360 H 0 Z"
+         style="fill:#009000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         transform="matrix(1.3333333,0,0,-1.3333333,0,960)" />
+      <path
+         id="path3"
+         d="M 0,360 H 1200 V 720 H 0 Z"
+         style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         transform="matrix(1.3333333,0,0,-1.3333333,0,960)" />
+      <path
+         id="path4"
+         d="M 0,216 H 1200 V 504 H 0 Z"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         transform="matrix(1.3333333,0,0,-1.3333333,0,960)" />
+      <path
+         id="path5"
+         d="M 0,255 H 1200 V 465.001 H 0 Z"
+         style="fill:#c70000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         transform="matrix(1.3333333,0,0,-1.3333333,0,960)" />
+      <path
+         id="path6"
+         d="M 0,252 H 1200 V 468 H 0 Z"
+         style="fill:#c70000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         transform="matrix(1.3333333,0,0,-1.3333333,0,960)" />
+      <path
+         id="path7"
+         d="m 0,0 v -720 l 600,360 z"
+         style="fill:#0090de;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         transform="scale(1.3333333,-1.3333333)" />
+      <path
+         id="path8"
+         d="m 0,0 72.77,-0.027 22.21,69.298 22.462,-69.217 72.769,0.291 -58.888,-42.751 22.764,-69.118 -58.856,42.795 -58.701,-43.008 22.513,69.2 z"
+         style="fill:#ffc700;fill-opacity:1;fill-rule:evenodd;stroke:none"
+         transform="matrix(1.3333333,0,0,-1.3333333,139.16853,442.94053)" />
+    </g>
+  </g>
 </svg>
