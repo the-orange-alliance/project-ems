@@ -26,3 +26,27 @@ ALTER TABLE "match_detail" ADD COLUMN redClimbMultiplier REAL NOT NULL DEFAULT 0
 ALTER TABLE "match_detail" ADD COLUMN blueClimbMultiplier REAL NOT NULL DEFAULT 0;
 ALTER TABLE "match_detail" ADD COLUMN redPartnerClimbPoints INT NOT NULL DEFAULT 0;
 ALTER TABLE "match_detail" ADD COLUMN bluePartnerClimbPoints INT NOT NULL DEFAULT 0;
+
+ALTER TABLE "match_detail_history" ADD COLUMN wildfireInRedSuppressionUnit INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN wildfireInBlueSuppressionUnit INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN wildfireInExtinguisher INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN approximateWildfireInRedSuppressionUnit INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN approximateWildfireInBlueSuppressionUnit INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN approximateWildfireInExtinguisher INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN redRobotOneBraceState REAL NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN redRobotTwoBraceState REAL NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN redRobotThreeBraceState REAL NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN blueRobotOneBraceState REAL NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN blueRobotTwoBraceState REAL NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN blueRobotThreeBraceState REAL NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN redRobotOnePartnerClimb INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN redRobotTwoPartnerClimb INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN redRobotThreePartnerClimb INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN blueRobotOnePartnerClimb INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN blueRobotTwoPartnerClimb INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN blueRobotThreePartnerClimb INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN coopertition INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN redClimbMultiplier REAL NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN blueClimbMultiplier REAL NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN redPartnerClimbPoints INT NOT NULL DEFAULT 0;
+ALTER TABLE "match_detail_history" ADD COLUMN bluePartnerClimbPoints INT NOT NULL DEFAULT 0;
