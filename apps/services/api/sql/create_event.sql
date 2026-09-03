@@ -149,3 +149,91 @@ CREATE TABLE IF NOT EXISTS "match_detail" (
     FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
     FOREIGN KEY (id) REFERENCES "match"(id)
 );
+
+CREATE TABLE IF NOT EXISTS "match_history_base" (
+    "historyId" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "eventKey" VARCHAR(25) NOT NULL,
+    "tournamentKey" VARCHAR(25) NOT NULL,
+    "id" INT NOT NULL,
+    "revision" INT NOT NULL,
+    "actionType" VARCHAR(50) NOT NULL,
+    "source" VARCHAR(50) NOT NULL,
+    "actorId" VARCHAR(255),
+    "actorName" VARCHAR(255),
+    "clientId" VARCHAR(255),
+    "socketId" VARCHAR(255),
+    "correlationId" VARCHAR(255),
+    "occurredAtUtc" VARCHAR(255) NOT NULL,
+    "name" VARCHAR(50),
+    "scheduledTime" VARCHAR(255),
+    "actualStartTime" VARCHAR(255),
+    "prestartTime" VARCHAR(255),
+    "fieldNumber" INT,
+    "cycleTime" REAL,
+    "redScore" INT,
+    "redMinPen" INT,
+    "redMajPen" INT,
+    "blueScore" INT,
+    "blueMinPen" INT,
+    "blueMajPen" INT,
+    "active" INT,
+    "result" INT,
+    "uploaded" INT,
+    "updatedAtUtc" VARCHAR(255),
+    UNIQUE (eventKey, tournamentKey, id, revision),
+    FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
+    FOREIGN KEY (id) REFERENCES "match"(id)
+);
+
+CREATE INDEX IF NOT EXISTS "idx_match_history_base_lookup" ON "match_history_base" ("eventKey", "tournamentKey", "id", "revision");
+CREATE INDEX IF NOT EXISTS "idx_match_history_base_time" ON "match_history_base" ("eventKey", "tournamentKey", "id", "occurredAtUtc");
+CREATE INDEX IF NOT EXISTS "idx_match_history_base_correlation" ON "match_history_base" ("correlationId");
+
+CREATE TABLE IF NOT EXISTS "match_detail_history" (
+    "historyId" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "eventKey" VARCHAR(25) NOT NULL,
+    "tournamentKey" VARCHAR(25) NOT NULL,
+    "id" INT NOT NULL,
+    "revision" INT NOT NULL,
+    "actionType" VARCHAR(50) NOT NULL,
+    "source" VARCHAR(50) NOT NULL,
+    "actorId" VARCHAR(255),
+    "actorName" VARCHAR(255),
+    "clientId" VARCHAR(255),
+    "socketId" VARCHAR(255),
+    "correlationId" VARCHAR(255),
+    "occurredAtUtc" VARCHAR(255) NOT NULL,
+    UNIQUE (eventKey, tournamentKey, id, revision),
+    FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
+    FOREIGN KEY (id) REFERENCES "match"(id)
+);
+
+CREATE INDEX IF NOT EXISTS "idx_match_detail_history_lookup" ON "match_detail_history" ("eventKey", "tournamentKey", "id", "revision");
+CREATE INDEX IF NOT EXISTS "idx_match_detail_history_time" ON "match_detail_history" ("eventKey", "tournamentKey", "id", "occurredAtUtc");
+CREATE INDEX IF NOT EXISTS "idx_match_detail_history_correlation" ON "match_detail_history" ("correlationId");
+
+CREATE TABLE IF NOT EXISTS "match_action_event" (
+    "actionEventId" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "eventKey" VARCHAR(25) NOT NULL,
+    "tournamentKey" VARCHAR(25) NOT NULL,
+    "id" INT NOT NULL,
+    "revision" INT,
+    "sourceEvent" VARCHAR(100) NOT NULL,
+    "fieldPath" VARCHAR(255),
+    "oldValueJson" TEXT,
+    "newValueJson" TEXT,
+    "deltaNumber" REAL,
+    "actorId" VARCHAR(255),
+    "actorName" VARCHAR(255),
+    "clientId" VARCHAR(255),
+    "socketId" VARCHAR(255),
+    "correlationId" VARCHAR(255),
+    "occurredAtUtc" VARCHAR(255) NOT NULL,
+    "persisted" INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (tournamentKey) REFERENCES "tournament"(tournamentKey),
+    FOREIGN KEY (id) REFERENCES "match"(id)
+);
+
+CREATE INDEX IF NOT EXISTS "idx_match_action_event_lookup" ON "match_action_event" ("eventKey", "tournamentKey", "id", "occurredAtUtc");
+CREATE INDEX IF NOT EXISTS "idx_match_action_event_correlation" ON "match_action_event" ("correlationId");
+CREATE INDEX IF NOT EXISTS "idx_match_action_event_persisted" ON "match_action_event" ("eventKey", "tournamentKey", "id", "persisted");

@@ -23,12 +23,23 @@ import { Server, Socket } from "socket.io";
 import logger from "../util/Logger.js";
 import Room from "./Room.js";
 
+type ActionEventLog = {
+  sourceEvent: string;
+  fieldPath?: string;
+  oldValue?: unknown;
+  newValue?: unknown;
+  deltaNumber?: number;
+  correlationId?: string;
+  socket?: Socket;
+};
+
 export default class Match extends Room {
   private key: MatchKey | null;
   private match: MatchObj<any> | null;
   private timer: MatchTimer;
   private state: MatchState;
   private displayID: number;
+  private readonly auditApiBaseUrl: string;
   private bonuses: Map<
     BonusPeriodConfig,
     { matchAtStartState: MatchObj<any>; timeout: any }
@@ -43,6 +54,9 @@ export default class Match extends Room {
     this.timer = new MatchTimer();
     this.state = MatchState.MATCH_NOT_SELECTED;
     this.displayID = 0;
+    this.auditApiBaseUrl = (
+      process.env.MATCH_AUDIT_API_BASE_URL ?? "http://127.0.0.1:8080"
+    ).replace(/\/$/, "");
     this.localEmitter = new EventEmitter();
 
     // Needed for FCS room to send events here
@@ -184,17 +198,27 @@ export default class Match extends Room {
     socket.on(MatchSocketEvent.MATCH_UPDATE_ITEM, (itemUpdate: ItemUpdate) => {
       const match: any = this.match;
       if (match) {
+        const oldValue = match[itemUpdate.key];
         match[itemUpdate.key] = itemUpdate.value;
         this.handlePartiallyUpdatedMatch(match);
+        void this.logActionEvent({
+          sourceEvent: MatchSocketEvent.MATCH_UPDATE_ITEM,
+          fieldPath: String(itemUpdate.key),
+          oldValue,
+          newValue: itemUpdate.value,
+          correlationId: (itemUpdate as any).correlationId,
+          socket,
+        });
       }
     });
     socket.on(
       MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
-      this.onMatchUpdateDetailsItem,
+      (itemUpdate: ItemUpdate) => this.onMatchUpdateDetailsItem(itemUpdate, socket),
     );
     socket.on(
       MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
-      this.onMatchAdjustNumber,
+      (numberAdjustment: NumberAdjustment) =>
+        this.onMatchAdjustNumber(numberAdjustment, socket),
     );
     socket.on(
       MatchSocketEvent.UPDATE_CARD_STATUS,
@@ -203,8 +227,17 @@ export default class Match extends Room {
           (participant) => participant.teamKey == teamCard.teamKey,
         );
         if (participant) {
+          const oldValue = participant.cardStatus;
           participant.cardStatus = teamCard.cardStatus;
           this.handlePartiallyUpdatedMatch(this.match!);
+          void this.logActionEvent({
+            sourceEvent: MatchSocketEvent.UPDATE_CARD_STATUS,
+            fieldPath: `participants.${participant.station}.cardStatus`,
+            oldValue,
+            newValue: teamCard.cardStatus,
+            correlationId: (teamCard as any).correlationId,
+            socket,
+          });
         }
       },
     );
@@ -258,22 +291,48 @@ export default class Match extends Room {
     );
   }
 
-  onMatchUpdateDetailsItem = (itemUpdate: ItemUpdate) => {
+  onMatchUpdateDetailsItem = (itemUpdate: ItemUpdate, socket?: Socket) => {
     const matchDetails = this.match?.details;
     if (matchDetails) {
       const keys = itemUpdate.key.split(".");
-      keys.slice(0, -1).reduce((obj, key) => obj[key], matchDetails)[
-        keys[keys.length - 1]
-      ] = itemUpdate.value;
+      const target = keys
+        .slice(0, -1)
+        .reduce((obj, key) => obj?.[key], matchDetails as any);
+      const key = keys[keys.length - 1];
+      if (target) {
+        const oldValue = target[key];
+        target[key] = itemUpdate.value;
+        void this.logActionEvent({
+          sourceEvent: MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
+          fieldPath: `details.${itemUpdate.key}`,
+          oldValue,
+          newValue: itemUpdate.value,
+          correlationId: (itemUpdate as any).correlationId,
+          socket,
+        });
+      }
       this.handlePartiallyUpdatedMatch(this.match!);
     }
   };
 
-  onMatchAdjustNumber = (numberAdjustment: NumberAdjustment) => {
+  onMatchAdjustNumber = (
+    numberAdjustment: NumberAdjustment,
+    socket?: Socket,
+  ) => {
     const matchDetails = this.match?.details;
     if (matchDetails) {
       try {
+        const oldValue = matchDetails[numberAdjustment.key];
         matchDetails[numberAdjustment.key] += numberAdjustment.adjustment;
+        void this.logActionEvent({
+          sourceEvent: MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
+          fieldPath: `details.${numberAdjustment.key}`,
+          oldValue,
+          newValue: matchDetails[numberAdjustment.key],
+          deltaNumber: numberAdjustment.adjustment,
+          correlationId: (numberAdjustment as any).correlationId,
+          socket,
+        });
         this.handlePartiallyUpdatedMatch(this.match!);
       } catch (e) {
         // Don't take down the server if a client tries to adjust a non-numeric value
@@ -289,6 +348,71 @@ export default class Match extends Room {
       );
     }
   };
+
+  private getAuditKey(): MatchKey | null {
+    if (this.match) {
+      return {
+        eventKey: this.match.eventKey,
+        tournamentKey: this.match.tournamentKey,
+        id: this.match.id,
+      };
+    }
+    return this.key;
+  }
+
+  private async logActionEvent(log: ActionEventLog): Promise<void> {
+    const key = this.getAuditKey();
+    if (!key) return;
+
+    const actor = (log.socket as any)?.decoded;
+    const payload = {
+      sourceEvent: log.sourceEvent,
+      fieldPath: log.fieldPath,
+      oldValueJson:
+        typeof log.oldValue === "undefined"
+          ? undefined
+          : JSON.stringify(log.oldValue),
+      newValueJson:
+        typeof log.newValue === "undefined"
+          ? undefined
+          : JSON.stringify(log.newValue),
+      deltaNumber: log.deltaNumber,
+      actorId:
+        typeof actor?.id !== "undefined" ? String(actor.id) : undefined,
+      actorName: actor?.username,
+      clientId: log.socket?.handshake?.address,
+      socketId: log.socket?.id,
+      correlationId: log.correlationId,
+      occurredAtUtc: new Date().toISOString(),
+      persisted: 0,
+    };
+
+    try {
+      const response = await fetch(
+        `${this.auditApiBaseUrl}/match/action-event/${encodeURIComponent(
+          key.eventKey,
+        )}/${encodeURIComponent(key.tournamentKey)}/${key.id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+      if (!response.ok) {
+        logger.warn(
+          `failed to log action event ${log.sourceEvent} (${response.status}) for ${key.eventKey}-${key.tournamentKey}-${key.id}`,
+        );
+      }
+    } catch (e) {
+      logger.warn(
+        `failed to log action event ${log.sourceEvent} for ${key.eventKey}-${key.tournamentKey}-${key.id}: ${String(
+          e,
+        )}`,
+      );
+    }
+  }
 
   private handlePartiallyUpdatedMatch(
     partiallyUpdatedMatch: MatchObj<any>,

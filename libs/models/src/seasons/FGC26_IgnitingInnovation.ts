@@ -74,6 +74,12 @@ export function ballCountToLedCount(ballCount: number, ratio: number): number {
   return Math.ceil(clampCount(ballCount) / clampRatio(ratio));
 }
 
+const finiteOrZero = (value: unknown): number => {
+  const numeric =
+    typeof value === 'number' ? value : Number(value ?? Number.NaN);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
 /**
  * Score Table
  */
@@ -84,14 +90,14 @@ export const ScoreTable = {
   // Sum of the BraceState values of the three ROBOTS + 1 (Table 3-4)
   ClimbMultiplierRed: (details: MatchDetails) =>
     1 +
-    details.redRobotOneBraceState +
-    details.redRobotTwoBraceState +
-    details.redRobotThreeBraceState,
+    finiteOrZero(details.redRobotOneBraceState) +
+    finiteOrZero(details.redRobotTwoBraceState) +
+    finiteOrZero(details.redRobotThreeBraceState),
   ClimbMultiplierBlue: (details: MatchDetails) =>
-    1 + 
-    details.blueRobotOneBraceState +
-    details.blueRobotTwoBraceState +
-    details.blueRobotThreeBraceState,
+    1 +
+    finiteOrZero(details.blueRobotOneBraceState) +
+    finiteOrZero(details.blueRobotTwoBraceState) +
+    finiteOrZero(details.blueRobotThreeBraceState),
   // 25 points per red ROBOT with a PARTNER CLIMB flag set (Table 3-5).
   PartnerClimbRed: (details: MatchDetails) =>
     ((details.redRobotOnePartnerClimb ? 1 : 0) +
@@ -114,10 +120,7 @@ export const ScoreTable = {
       details.blueRobotOneBraceState,
       details.blueRobotTwoBraceState,
       details.blueRobotThreeBraceState
-    ].reduce(
-      (count, state) => count + (state >= BraceState.Zone3 ? 1 : 0),
-      0
-    );
+    ].reduce((count, state) => count + (state >= BraceState.Zone3 ? 1 : 0), 0);
 
     if (zone3Count >= 6) return CoopertitionBonus.Six;
     if (zone3Count === 5) return CoopertitionBonus.Five;
@@ -645,9 +648,11 @@ export function calculateScore(
   // values shared equally by both REGIONAL ALLIANCES.
 
   const redSuppressionUnitPoints =
-    details.wildfireInRedSuppressionUnit * ScoreTable.WildfireContainedSuppression;
+    details.wildfireInRedSuppressionUnit *
+    ScoreTable.WildfireContainedSuppression;
   const blueSuppressionUnitPoints =
-    details.wildfireInBlueSuppressionUnit * ScoreTable.WildfireContainedSuppression;
+    details.wildfireInBlueSuppressionUnit *
+    ScoreTable.WildfireContainedSuppression;
 
   const redClimbMultiplier = ScoreTable.ClimbMultiplierRed(details);
   const blueClimbMultiplier = ScoreTable.ClimbMultiplierBlue(details);
