@@ -44,7 +44,7 @@ export const ScheduleManager: FC = () => {
   // Until the first Parameters save, the API hands back defaultScheduleParams
   // (type: 'Test'), so the Participants/Parameters tabs render the qualification
   // UI even for a playoff tournament. The tournament's own type is authoritative
-  // (and is what a save writes back anyway), so overlay it here (BUG-026).
+  // (and is what a save writes back anyway), so overlay it here.
   const effectiveScheduleParams =
     scheduleParams && currentTournament
       ? { ...scheduleParams, type: currentTournament.tournamentType }
