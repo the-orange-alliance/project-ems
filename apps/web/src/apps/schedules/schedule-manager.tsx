@@ -37,16 +37,26 @@ export const ScheduleManager: FC = () => {
   const { data: scheduleParams, mutate: refetchScheduleParams } =
     useScheduleParamsForTournament(event?.eventKey, tournamentKey);
 
+  const currentTournament = tournaments.find(
+    (t) => t.tournamentKey === tournamentKey
+  );
+
+  // Until the first Parameters save, the API hands back defaultScheduleParams
+  // (type: 'Test'), so the Participants/Parameters tabs render the qualification
+  // UI even for a playoff tournament. The tournament's own type is authoritative
+  // (and is what a save writes back anyway), so overlay it here (BUG-026).
+  const effectiveScheduleParams =
+    scheduleParams && currentTournament
+      ? { ...scheduleParams, type: currentTournament.tournamentType }
+      : scheduleParams;
+
   const scheduleMatches = matches.filter(
     (m) => tournamentKey && m.tournamentKey === tournamentKey
   );
 
   const onScheduleParamsChange = (schedule: ScheduleParams) => {
-    const tournament = tournaments.find(
-      (t) => t.tournamentKey === tournamentKey
-    );
-    if (!tournament) return;
-    schedule.type = tournament.tournamentType;
+    if (!currentTournament) return;
+    schedule.type = currentTournament.tournamentType;
     scheduleApi.update.params(schedule).then(() => {
       return refetchScheduleParams();
     });
@@ -110,7 +120,7 @@ export const ScheduleManager: FC = () => {
       <Suspense fallback={<PageLoader />}>
         <ScheduleTabs
           tournamentKey={tournamentKey}
-          eventSchedule={scheduleParams}
+          eventSchedule={effectiveScheduleParams}
           onEventScheduleChange={onScheduleParamsChange}
           savedMatches={scheduleMatches}
           hasMatches={scheduleMatches.length > 0}

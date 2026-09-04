@@ -99,35 +99,55 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
   const autoAssign = () => {
     if (!ranks || !teams) return;
     const rankMap = FGCSchedule.FGC2024.fgcAllianceOrder;
+    if (allianceRows > rankMap.length) {
+      showErrorSnackbar(
+        'Cannot auto-assign alliances.',
+        `Auto-Assign supports at most ${rankMap.length} alliances (FGC Table 6-1); you currently have ${allianceRows}. Remove some alliances or assign the extras by hand.`
+      );
+      return;
+    }
+
+    // rankMap only defines the first three picks (captain + 2). Slot 4 — and any
+    // pick whose rank has no ranked team — is filled afterwards from the teams
+    // not already on an alliance (BUG-027).
     const teamKeys: (number | null)[] = [];
     for (let i = 0; i < allianceRows; i++) {
       for (let j = 0; j < ALLIANCE_SIZE; j++) {
-        const teamKey = ranks.find((r) => r.rank === rankMap[i][j])?.teamKey;
-        if (teamKey) {
-          teamKeys.push(teamKey);
-        } else {
-          // FGC2024/25 - this is the 4th robot, assign -1 for now, and we'll handle it after the rest of the assignments are in
-          teamKeys.push(-1);
-        }
+        const rank = rankMap[i]?.[j];
+        const teamKey =
+          rank !== undefined
+            ? ranks.find((r) => r.rank === rank)?.teamKey
+            : undefined;
+        teamKeys.push(teamKey ?? null);
       }
     }
 
-    // Now handle any -1 assignments (randomly assign remaining teams)
+    const assigned = new Set(teamKeys.filter((k): k is number => k !== null));
+    const remaining = teams
+      .map((t) => t.teamKey)
+      .filter((k) => !assigned.has(k));
+    // Fisher-Yates so the 4th-robot draw isn't just the lowest team numbers.
+    for (let i = remaining.length - 1; i > 0; i--) {
+      const r = Math.floor(Math.random() * (i + 1));
+      [remaining[i], remaining[r]] = [remaining[r], remaining[i]];
+    }
+    let next = 0;
     for (let i = 0; i < teamKeys.length; i++) {
-      if (teamKeys[i] === -1) {
-        // Randomly assign.
-        let [teamKey] = teamKeys;
-
-        // Make sure we don't assign a team that is already picked. Keep picking randomly until we find one.
-        while (teamKeys.includes(teamKey)) {
-          const randomIndex = Math.floor(Math.random() * ranks.length);
-          ({ teamKey } = ranks[randomIndex]);
-        }
-
-        teamKeys[i] = teamKey;
+      if (teamKeys[i] === null && next < remaining.length) {
+        teamKeys[i] = remaining[next++];
       }
     }
+
     setPickedTeamKeys(teamKeys);
+    const filled = teamKeys.filter((k) => k !== null).length;
+    const total = allianceRows * ALLIANCE_SIZE;
+    showSnackbar(
+      filled === total
+        ? `Auto-assigned ${allianceRows} alliance(s) (${filled} teams).`
+        : `Auto-assigned ${allianceRows} alliance(s); ${
+            total - filled
+          } slot(s) left empty — not enough teams to fill every alliance.`
+    );
   };
   const saveAlliances = async () => {
     if (!teams) return;
