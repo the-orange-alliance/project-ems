@@ -28,6 +28,20 @@ export const MatchReport: FC<Props> = ({
   const fieldMatches = matches.filter(
     (m) => fields.indexOf(m.fieldNumber) > -1
   );
+
+  // Schedule items are named "<type> Match N" while matches are named
+  // "<tournament name> Match N", so they can only be joined on the trailing
+  // match number, not the full name (BUG-025).
+  const matchNumberOf = (name?: string): number | null => {
+    const found = /(\d+)\s*$/.exec(name ?? '');
+    return found ? parseInt(found[1], 10) : null;
+  };
+  const matchForItem = (itemName?: string) => {
+    const n = matchNumberOf(itemName);
+    return n === null
+      ? undefined
+      : fieldMatches.find((m) => matchNumberOf(m.name) === n);
+  };
   const allianceSize = matches?.[0]?.participants?.length
     ? matches[0].participants.length / 2
     : 3;
@@ -57,19 +71,26 @@ export const MatchReport: FC<Props> = ({
     download(csvConfig)(csv);
   };
 
-  // Prepare data for UpgradedTable
-  const tableData = items
-    .filter((i) => !i.isMatch || fieldMatches.find((m) => m.name === i.name))
-    .map((i, index) => {
-      const m = fieldMatches.find((m) => m.name === i.name);
-      return {
-        id: i.id,
-        isMatch: i.isMatch,
-        match: m,
-        item: i,
-        tableIndex: index
-      };
-    });
+  // Prepare data for UpgradedTable. Fall back to the matches themselves when a
+  // tournament has no stored schedule items, so the report is never empty when
+  // matches exist.
+  const source =
+    items.length > 0
+      ? items
+      : fieldMatches.map((m) => ({
+          id: m.id,
+          name: m.name,
+          isMatch: true
+        }));
+  const tableData = source
+    .filter((i: any) => !i.isMatch || matchForItem(i.name))
+    .map((i: any, index) => ({
+      id: i.id,
+      isMatch: i.isMatch,
+      match: matchForItem(i.name),
+      item: i,
+      tableIndex: index
+    }));
 
   // Dynamic headers based on alliance size
   const headers = [
@@ -121,7 +142,7 @@ export const MatchReport: FC<Props> = ({
       </div>
       <div>
         <Button onClick={downloadCSV} className='no-print'>
-          Greg CSV
+          Download CSV
         </Button>
       </div>
       <Report name={`${tournament.name} Match Schedule`}>

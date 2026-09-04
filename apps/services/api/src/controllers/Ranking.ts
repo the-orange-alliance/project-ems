@@ -175,6 +175,17 @@ async function rankingController(fastify: FastifyInstance) {
           wins: 0
         }));
         const db = await getDB(teams[0].eventKey);
+        // Idempotent: if rankings already exist for this tournament, leave them
+        // be rather than 500ing on the (eventKey, tournamentKey, teamKey) UNIQUE
+        // constraint (BUG-021).
+        const existing = await db.selectAllWhere(
+          'ranking',
+          `eventKey = "${teams[0].eventKey}" AND tournamentKey = "${tournamentKey}"`
+        );
+        if (existing && existing.length > 0) {
+          reply.status(200).send({});
+          return;
+        }
         await db.insertValue('ranking', rankings);
         reply.status(200).send({});
       } catch (e) {

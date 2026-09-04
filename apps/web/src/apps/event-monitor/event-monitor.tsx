@@ -568,6 +568,7 @@ export const EventMonitor: FC = () => {
 
   const [monitors, setMonitors] = useState<Monitor[]>([]);
   const [inputValue, setInputValue] = useState('');
+  const [inputError, setInputError] = useState('');
   const screens = useBreakpoint();
 
   // Load monitors from localStorage on component mount
@@ -621,9 +622,25 @@ export const EventMonitor: FC = () => {
     }
   }, [monitors]);
 
+  // Monitors address realtime services by LAN IPv4 (see the default list), so
+  // require a valid IPv4 — anything else (e.g. "not-an-ip") is a typo (BUG-023).
+  const isValidIpv4 = (value: string): boolean =>
+    /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(
+      value
+    );
+
   const handleAddMonitor = () => {
     const trimmedValue = inputValue.trim();
     if (!trimmedValue) return;
+
+    if (!isValidIpv4(trimmedValue)) {
+      setInputError('Enter a valid IPv4 address (e.g. 192.168.80.111).');
+      return;
+    }
+    if (monitors.some((m) => m.address === trimmedValue)) {
+      setInputError('That monitor is already in the list.');
+      return;
+    }
 
     // Generate next field number
     const nextField =
@@ -637,6 +654,7 @@ export const EventMonitor: FC = () => {
 
     setMonitors((prev) => [...prev, newMonitor]);
     setInputValue('');
+    setInputError('');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -661,7 +679,11 @@ export const EventMonitor: FC = () => {
             <Input
               placeholder='Enter IP address (e.g., 192.168.80.111)'
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              status={inputError ? 'error' : undefined}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                if (inputError) setInputError('');
+              }}
               onKeyPress={handleKeyPress}
             />
             <Button
@@ -672,6 +694,11 @@ export const EventMonitor: FC = () => {
               Add
             </Button>
           </Space.Compact>
+          {inputError && (
+            <Text type='danger' style={{ display: 'block', marginTop: 4 }}>
+              {inputError}
+            </Text>
+          )}
         </Card>
 
         <Text type='secondary'>
