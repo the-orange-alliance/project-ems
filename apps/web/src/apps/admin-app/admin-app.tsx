@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import { Button, Divider, Typography, Space } from 'antd';
+import { KeyOutlined } from '@ant-design/icons';
 import { rankingsApi } from 'src/api/use-ranking-data.js';
 import { resultsSyncApi } from 'src/api/use-results-sync.js';
 import { eventsApi } from 'src/api/use-event-data.js';
@@ -13,6 +14,7 @@ import { useTeamsForEvent } from 'src/api/use-team-data.js';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data.js';
 import { useSyncConfig } from 'src/hooks/use-sync-config.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { useElevatedAction } from 'src/hooks/use-elevated-action.js';
 
 export const AdminApp: FC = () => {
   const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
@@ -21,11 +23,13 @@ export const AdminApp: FC = () => {
   const { data: tournaments } = useTournamentsForEvent(eventKey);
   const { apiKey, platform } = useSyncConfig();
   const { showSnackbar, showErrorSnackbar } = useSnackbar();
+  const { requireElevation } = useElevatedAction();
 
   // Every Admin action is fire-and-forget with no visible result otherwise.
   // Wrap each one so it always reports success or the error.
   const CANCELLED = Symbol('cancelled');
   const run = (label: string, action: () => Promise<unknown>) => async () => {
+    if (!(await requireElevation())) return;
     try {
       const result = await action();
       if (result !== CANCELLED) showSnackbar(`${label} completed.`);
@@ -140,25 +144,25 @@ export const AdminApp: FC = () => {
     >
       <Divider />
       <Space direction='vertical' size='large' style={{ padding: 16 }}>
-        <Button type='primary' danger onClick={syncMatches}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={syncMatches}>
           Sync Matches
         </Button>
-        <Button type='primary' danger onClick={syncRankings}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={syncRankings}>
           Sync Rankings
         </Button>
-        <Button type='primary' danger onClick={syncAlliances}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={syncAlliances}>
           Sync Alliances
         </Button>
-        <Button type='primary' danger onClick={handleRankingsCreate}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={handleRankingsCreate}>
           Create Rankings
         </Button>
-        <Button type='primary' danger onClick={handleRankings}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={handleRankings}>
           Re-Calculate Rankings
         </Button>
-        <Button type='primary' danger onClick={handleRankingsDelete}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={handleRankingsDelete}>
           Delete Rankings
         </Button>
-        <Button type='primary' danger onClick={handlePurge}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={handlePurge}>
           Purge Event Data
         </Button>
       </Space>

@@ -11,6 +11,10 @@ export const DEFAULT_SOCKET_PORT = 8081;
 // Default User constants
 export const DEFAULT_ADMIN_USERNAME = 'localhost';
 export const DEFAULT_ADMIN_PASSWORD = 'admin';
+// Password required for destructive (elevated) actions in the UI.
+// To rotate: change this value here and restart the API.
+// Future: swap for process.env.ELEVATED_PASSWORD ?? 'FGCfta#1' or a DB lookup.
+export const DEFAULT_ELEVATED_PASSWORD = 'FGCfta#1';
 export const DEFAULT_ADMIN_USER: User = {
   id: 0,
   username: 'localhost',

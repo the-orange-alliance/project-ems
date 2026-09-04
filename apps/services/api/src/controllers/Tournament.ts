@@ -72,6 +72,42 @@ async function tournamentController(fastify: FastifyInstance) {
       }
     }
   );
+
+  // Delete tournament (and its dependent schedule/alliance/ranking/match data)
+  fastify.withTypeProvider<ZodTypeProvider>().delete(
+    '/:eventKey/:tournamentKey',
+    {
+      schema: {
+        params: EventTournamentKeyParams,
+        response: errorableSchema(EmptySchema),
+        tags: ['Tournaments']
+      }
+    },
+    async (request, reply) => {
+      try {
+        const { eventKey, tournamentKey } = request.params as z.infer<
+          typeof EventTournamentKeyParams
+        >;
+        const db = await getDB(eventKey);
+        const where = `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`;
+        for (const table of [
+          'match_detail',
+          'match_participant',
+          'match',
+          'schedule',
+          'schedule_params',
+          'alliance',
+          'ranking',
+          'tournament'
+        ]) {
+          await db.deleteWhere(table, where);
+        }
+        reply.status(200).send({});
+      } catch (e) {
+        reply.code(500).send(InternalServerError(e));
+      }
+    }
+  );
 }
 
 export default tournamentController;

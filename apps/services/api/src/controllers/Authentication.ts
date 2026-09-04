@@ -3,7 +3,10 @@ import {
   User,
   UserLoginResponse,
   DEFAULT_ADMIN_USERNAME,
-  userLoginZod
+  DEFAULT_ELEVATED_PASSWORD,
+  userLoginZod,
+  elevatedAuthZod,
+  elevatedAuthResponseZod
 } from '@toa-lib/models';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -23,6 +26,24 @@ import { EventKeyParams, EmptySchema } from '../util/GlobalSchema.js';
 const UserArraySchema = z.array(z.any());
 
 async function authenticationController(fastify: FastifyInstance) {
+  // POST: validate elevated-action password (used by the client password-gate modal).
+  // Returns { ok: true } on match, { ok: false } on mismatch — always 200 so the
+  // client can show an inline error rather than catching a thrown exception.
+  fastify.withTypeProvider<ZodTypeProvider>().post(
+    '/elevated',
+    {
+      schema: {
+        body: elevatedAuthZod,
+        response: errorableSchema(elevatedAuthResponseZod),
+        tags: ['Auth']
+      }
+    },
+    async (request, reply) => {
+      const { password } = request.body as z.infer<typeof elevatedAuthZod>;
+      reply.send({ ok: password === DEFAULT_ELEVATED_PASSWORD });
+    }
+  );
+
   // GET: current authentication status
   fastify.withTypeProvider<ZodTypeProvider>().get(
     '/',
