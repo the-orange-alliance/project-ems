@@ -22,7 +22,7 @@ export const MatchInfoTab: FC<Props> = ({ match, onUpdate }) => {
   const handleUpdates = (name: string, value: string | number | null) => {
     // Red/Blue Score are entered directly and are independent of each other.
     // Routing them through calculateScore both discards the entered value and
-    // lets a NaN from one field bleed into the other (BUG-019).
+    // lets a NaN from one field bleed into the other.
     if (name === 'redScore' || name === 'blueScore') {
       onUpdate({ ...match, [name]: toFiniteNumber(value) });
       return;
