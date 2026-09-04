@@ -214,6 +214,13 @@ export class EventDatabase {
 
   public async createEventGameSpecifics(seasonKey: string): Promise<void> {
     try {
+      if (!seasonKey?.trim()) {
+        // Without this guard an empty key builds the path `seasons/.sql`, whose
+        // ENOENT (with its absolute path) would be forwarded to the client.
+        throw new Error(
+          'Cannot set up game-specific tables: seasonKey is missing.'
+        );
+      }
       const createQuery = await this.getQueryFromFile(
         `seasons/${seasonKey}.sql`
       );
