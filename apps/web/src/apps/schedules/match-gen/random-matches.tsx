@@ -12,6 +12,7 @@ import { FC, useState } from 'react';
 import { matchApi } from 'src/api/use-match-data.js';
 import { MatchMakerQualityDropdown } from 'src/components/dropdowns/match-maker-dropdown.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { useTeamsForEvent } from 'src/api/use-team-data.js';
 
 interface Props {
   eventSchedule?: ScheduleParams;
@@ -29,6 +30,7 @@ export const RandomMatches: FC<Props> = ({
   const [quality, setQuality] = useState('best');
   const [loading, setLoading] = useState(false);
   const { showSnackbar, showErrorSnackbar } = useSnackbar();
+  const { data: teams } = useTeamsForEvent(eventSchedule?.eventKey);
   const createMatches = async () => {
     setLoading(true);
     try {
@@ -36,6 +38,25 @@ export const RandomMatches: FC<Props> = ({
       if (!tournament) return;
       if (!scheduleItems) return;
       const { eventKey, tournamentKey, teamKeys } = eventSchedule;
+
+      // A participant with no team number produces a match slot that renders
+      // blank everywhere (no identifier to show), so the resulting schedule is
+      // unusable. Fail loudly and name the offenders instead of running the
+      // matchmaker and reporting success over an unreadable schedule.
+      const numberless = (teams ?? [])
+        .filter((t) => teamKeys.includes(t.teamKey))
+        .filter((t) => !String(t.teamNumber).trim());
+      if (numberless.length > 0) {
+        const names = numberless
+          .map((t) => t.teamNameShort || t.teamNameLong || `team ${t.teamKey}`)
+          .join(', ');
+        showErrorSnackbar(
+          'Cannot create a match schedule.',
+          `${numberless.length} selected participant(s) have no Team Number: ${names}. Set a Team Number for each, or remove them from the participant list.`
+        );
+        setLoading(false);
+        return;
+      }
       const { fieldCount: fields, name } = tournament;
       const matches = await matchApi.create.schedule({
         eventKey,
