@@ -14,7 +14,7 @@ const AllianceTeams: React.FC<AllianceTeamsProps> = ({
   large,
   isPlayoffs
 }) => (
-  <Space direction='vertical' size={16} style={{ width: '100%' }}>
+  <Space orientation='vertical' size={16} style={{ width: '100%' }}>
     {teams.map((team, idx) => (
       <AllianceTeam
         key={idx}

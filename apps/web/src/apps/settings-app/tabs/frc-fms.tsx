@@ -51,14 +51,14 @@ const FrcFmsSettingsTab: FC = () => {
 
   if (!connected) {
     return (
-      <Space direction='vertical' style={{ width: '100%' }}>
+      <Space orientation='vertical' style={{ width: '100%' }}>
         <Typography.Text>Please login to edit FMS settings!</Typography.Text>
       </Space>
     );
   }
 
   return (
-    <Space direction='vertical' style={{ width: '100%' }}>
+    <Space orientation='vertical' style={{ width: '100%' }}>
       {loading && <Spin />}
       <Typography>Select an FMS field set to edit its settings</Typography>
       <List>

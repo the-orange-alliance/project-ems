@@ -17,7 +17,7 @@ export const MatchResultsStream: FC<DisplayProps> = ({
         marginLeft: '1em'
       }}
     >
-      <Space direction='vertical' size={40} style={{ width: '30vw' }}>
+      <Space orientation='vertical' size={40} style={{ width: '30vw' }}>
         <MatchTitle match={match} noMargin />
         <AllianceResult
           alliance='red'

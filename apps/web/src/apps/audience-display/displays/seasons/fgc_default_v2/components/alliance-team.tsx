@@ -151,7 +151,7 @@ export const AllianceTeamStream: React.FC<AllianceTeamProps> = ({
 
       <CountryFlag size={'2.5rem'} cc={team.team?.countryCode ?? ''} />
 
-      <Space direction='horizontal' align='center'>
+      <Space orientation='horizontal' align='center'>
         {!!team.cardStatus && (
           <div style={{ width: '1rem', height: '1rem' }}>
             <CardStatus cardStatus={team.cardStatus} />

@@ -41,7 +41,7 @@ const MainSettingsTab: FC = () => {
   };
 
   return (
-    <Space direction='vertical' style={{ width: '100%' }}>
+    <Space orientation='vertical' style={{ width: '100%' }}>
       <DropdownRow
         title='Field Control'
         value={fieldControl.map((f) => f)}

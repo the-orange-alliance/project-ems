@@ -189,7 +189,7 @@ export const AudienceDisplayManager: FC = () => {
             </Button>
           ]}
         >
-          <Space direction='vertical' style={{ width: '100%' }}>
+          <Space orientation='vertical' style={{ width: '100%' }}>
             <Input
               placeholder='Audience Display Chroma'
               defaultValue={dialogContext.audienceDisplayChroma?.replaceAll(

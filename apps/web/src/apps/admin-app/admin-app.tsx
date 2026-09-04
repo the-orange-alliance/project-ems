@@ -110,7 +110,7 @@ export const AdminApp: FC = () => {
       }
     >
       <Divider />
-      <Space direction='vertical' size='large' style={{ padding: 16 }}>
+      <Space orientation='vertical' size='large' style={{ padding: 16 }}>
         <Button type='primary' danger onClick={syncMatches}>
           Sync Matches
         </Button>
