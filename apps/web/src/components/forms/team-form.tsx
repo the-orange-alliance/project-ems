@@ -9,11 +9,18 @@ const FormField: FC<{
   value: string | number;
   type?: string;
   disabled?: boolean;
+  required?: boolean;
+  error?: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-}> = ({ name, label, value, type, disabled, onChange }) => {
+}> = ({ name, label, value, type, disabled, required, error, onChange }) => {
   return (
     <Col xs={24} sm={12} md={8}>
-      <Form.Item label={label}>
+      <Form.Item
+        label={label}
+        required={required}
+        validateStatus={error ? 'error' : undefined}
+        help={error}
+      >
         <Input
           name={name}
           value={value}
@@ -41,15 +48,35 @@ export const TeamForm: FC<Props> = ({
   returnTo
 }) => {
   const [team, setTeam] = useState({ ...(initialTeam ?? defaultTeam) });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (initialTeam) setTeam(initialTeam);
   }, [initialTeam]);
 
-  const handleSubmit = () => onSubmit?.(team);
+  const validate = (): boolean => {
+    const next: Record<string, string> = {};
+    if (!String(team.teamNumber).trim())
+      next.teamNumber = 'Team Number is required.';
+    if (!team.teamNameShort.trim())
+      next.teamNameShort = 'Team Name (Short) is required.';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (!validate()) return;
+    onSubmit?.(team);
+  };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { type, name, value } = e.target;
+    setErrors((prev) => {
+      if (!prev[name]) return prev;
+      const rest = { ...prev };
+      delete rest[name];
+      return rest;
+    });
     setTeam({
       ...team,
       [name]: type === 'number' ? parseInt(value) : value
@@ -86,6 +113,8 @@ export const TeamForm: FC<Props> = ({
           value={team.teamNumber}
           onChange={handleChange}
           disabled={loading}
+          required
+          error={errors.teamNumber}
         />
         <FormField
           name='teamNameShort'
@@ -93,6 +122,8 @@ export const TeamForm: FC<Props> = ({
           value={team.teamNameShort}
           onChange={handleChange}
           disabled={loading}
+          required
+          error={errors.teamNameShort}
         />
         <FormField
           name='teamNameLong'

@@ -1,7 +1,7 @@
 ﻿import { useModal } from '@ebay/nice-modal-react';
 import { Space, Typography } from 'antd';
 import { Team, defaultTeam, teamZod } from '@toa-lib/models';
-import { ChangeEvent, FC, Suspense } from 'react';
+import { ChangeEvent, FC, Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resultsSyncApi } from 'src/api/use-results-sync.js';
 import { teamsApi } from 'src/api/use-team-data.js';
@@ -39,6 +39,20 @@ export const TeamManager: FC = () => {
   const removeModal = useModal(TeamRemovalDialog);
 
   const remoteUrl = useAtomValue(remoteApiUrlAtom);
+
+  // Team Manager stages every add/edit/delete locally; nothing is persisted
+  // until "Save Teams". Warn before a reload/close/external navigation would
+  // silently discard staged changes (BUG-004).
+  const hasUnsavedChanges = state.staged.teams.length > 0;
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [hasUnsavedChanges]);
 
   useUpdateAppbar(
     {
@@ -80,7 +94,7 @@ export const TeamManager: FC = () => {
     if (!event) return;
     const { eventKey } = event;
     setModifiedTeams((prev) => [
-      { ...defaultTeam, eventKey, teamKey: state.staged.teams.length + 1 },
+      { ...defaultTeam, eventKey, teamKey: state.local.teams.length + 1 },
       ...prev
     ]);
   };
@@ -103,11 +117,13 @@ export const TeamManager: FC = () => {
     ];
     const randCountry =
       countryCodes[Math.floor(Math.random() * countryCodes.length)];
+    const nextNumber = state.local.teams.length + 1;
     setModifiedTeams((prev) => [
       {
         ...defaultTeam,
         eventKey,
-        teamKey: state.local.teams.length + 1,
+        teamKey: nextNumber,
+        teamNumber: `${nextNumber}`,
         countryCode: randCountry,
         teamNameShort: `Test ${prev.length + 1} (${randCountry})`
       },
@@ -217,7 +233,14 @@ export const TeamManager: FC = () => {
           <Space direction='vertical' style={{ width: '100%' }}>
             <Shortcut disableRender action={handleAdd} shortcut='alt + a' />
             <Shortcut disableRender action={handleAddTest} shortcut='alt + t' />
-            <Typography.Text>{teams.length} Teams</Typography.Text>
+            <Space>
+              <Typography.Text>{teams.length} Teams</Typography.Text>
+              {hasUnsavedChanges && (
+                <Typography.Text type='warning' strong>
+                  • Unsaved changes — choose “Save Teams” to persist
+                </Typography.Text>
+              )}
+            </Space>
             <TeamsTable
               event={event}
               teams={teams}
