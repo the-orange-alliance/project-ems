@@ -31,7 +31,7 @@ export const MatchReport: FC<Props> = ({
 
   // Schedule items are named "<type> Match N" while matches are named
   // "<tournament name> Match N", so they can only be joined on the trailing
-  // match number, not the full name (BUG-025).
+  // match number, not the full name.
   const matchNumberOf = (name?: string): number | null => {
     const found = /(\d+)\s*$/.exec(name ?? '');
     return found ? parseInt(found[1], 10) : null;

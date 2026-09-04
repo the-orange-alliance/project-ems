@@ -22,8 +22,8 @@ export const AdminApp: FC = () => {
   const { apiKey, platform } = useSyncConfig();
   const { showSnackbar, showErrorSnackbar } = useSnackbar();
 
-  // Every Admin action is fire-and-forget with no visible result otherwise
-  // (BUG-021). Wrap each one so it always reports success or the error.
+  // Every Admin action is fire-and-forget with no visible result otherwise.
+  // Wrap each one so it always reports success or the error.
   const CANCELLED = Symbol('cancelled');
   const run = (label: string, action: () => Promise<unknown>) => async () => {
     try {

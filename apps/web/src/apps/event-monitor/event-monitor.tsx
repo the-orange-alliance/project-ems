@@ -623,7 +623,7 @@ export const EventMonitor: FC = () => {
   }, [monitors]);
 
   // Monitors address realtime services by LAN IPv4 (see the default list), so
-  // require a valid IPv4 — anything else (e.g. "not-an-ip") is a typo (BUG-023).
+  // require a valid IPv4 — anything else (e.g. "not-an-ip") is a typo.
   const isValidIpv4 = (value: string): boolean =>
     /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(
       value

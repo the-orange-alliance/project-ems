@@ -177,7 +177,7 @@ async function rankingController(fastify: FastifyInstance) {
         const db = await getDB(teams[0].eventKey);
         // Idempotent: if rankings already exist for this tournament, leave them
         // be rather than 500ing on the (eventKey, tournamentKey, teamKey) UNIQUE
-        // constraint (BUG-021).
+        // constraint.
         const existing = await db.selectAllWhere(
           'ranking',
           `eventKey = "${teams[0].eventKey}" AND tournamentKey = "${tournamentKey}"`
