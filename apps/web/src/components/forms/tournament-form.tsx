@@ -11,11 +11,18 @@ const FormField: FC<{
   value: string | number;
   type?: string;
   disabled?: boolean;
+  required?: boolean;
+  error?: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-}> = ({ name, label, value, type, disabled, onChange }) => {
+}> = ({ name, label, value, type, disabled, required, error, onChange }) => {
   return (
     <Col xs={24} sm={12} md={6}>
-      <Form.Item label={label}>
+      <Form.Item
+        label={label}
+        required={required}
+        validateStatus={error ? 'error' : undefined}
+        help={error}
+      >
         <Input
           name={name}
           value={value}
@@ -103,15 +110,23 @@ export const TournamentForm: FC<Props> = ({
   const [tournament, setTournament] = useState<Tournament>({
     ...(initialTournament ?? defaultTournament)
   });
+  const [nameError, setNameError] = useState<string | undefined>();
 
   useEffect(() => {
     if (initialTournament) setTournament(initialTournament);
   }, [initialTournament]);
 
-  const handleSubmit = () => onSubmit?.(tournament);
+  const handleSubmit = () => {
+    if (!tournament.name.trim()) {
+      setNameError('Name is required.');
+      return;
+    }
+    onSubmit?.(tournament);
+  };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { type, name, value } = e.target;
+    if (name === 'name' && value.trim()) setNameError(undefined);
     setTournament({
       ...tournament,
       [name]: type === 'number' ? parseInt(value) : value
@@ -156,6 +171,8 @@ export const TournamentForm: FC<Props> = ({
           value={tournament.name}
           onChange={handleChange}
           disabled={loading}
+          required
+          error={nameError}
         />
         <Col xs={24} sm={12} md={6}>
           <Form.Item label='Tournament Level'>
