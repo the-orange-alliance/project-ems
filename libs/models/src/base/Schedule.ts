@@ -337,7 +337,10 @@ export function calculateTotalMatches(schedule: ScheduleParams): number {
     case 'Round Robin':
     case 'Eliminations':
       if (!allianceCount) return 0;
-      return (allianceCount / 2) * rounds;
+      // Round up: an odd alliance count gives a half-match per round, and the
+      // per-day "scheduled matches" inputs are whole numbers, so a fractional
+      // target can never be satisfied and Generate Schedule stays blocked.
+      return Math.ceil((allianceCount / 2) * rounds);
     // if (rounds) {
     //   return (playoffsOptions.allianceCount / 2) * playoffsOptions.rounds;
     // } else {
