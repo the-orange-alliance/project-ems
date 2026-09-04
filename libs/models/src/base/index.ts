@@ -8,6 +8,7 @@ export * from './ApiErrors.js';
 export * from './ApiStorage.js';
 export * from '../types.js';
 export * from './Schedule.js';
+export * from './PlayoffStructure.js';
 export * from './Match.js';
 export * from './MatchTimer.js';
 export * from './FieldControl.js';
