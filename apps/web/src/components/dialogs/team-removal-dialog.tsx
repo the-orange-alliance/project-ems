@@ -1,5 +1,5 @@
 import { Modal, Typography, Button } from 'antd';
-import { create, useModal, antdModalV5 } from '@ebay/nice-modal-react';
+import { create, useModal } from '@ebay/nice-modal-react';
 import { Team } from '@toa-lib/models';
 
 const { Text } = Typography;
@@ -23,10 +23,9 @@ export const TeamRemovalDialog = create(({ team }: Props) => {
 
   return (
     <Modal
-      {...antdModalV5(modal)}
       open={modal.visible}
-      onOk={handleOk}
       onCancel={handleCancel}
+      afterClose={() => modal.remove()}
       centered
       title={
         <div
