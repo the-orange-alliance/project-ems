@@ -40,7 +40,7 @@ export const NumberInput: FC<Props> = ({
   };
 
   return (
-    <Space direction='horizontal'>
+    <Space orientation='horizontal'>
       <Button
         onClick={decrement}
         disabled={disabled}

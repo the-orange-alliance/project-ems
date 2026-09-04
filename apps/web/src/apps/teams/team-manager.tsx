@@ -214,7 +214,7 @@ export const TeamManager: FC = () => {
     >
       <Suspense>
         {event && (
-          <Space direction='vertical' style={{ width: '100%' }}>
+          <Space orientation='vertical' style={{ width: '100%' }}>
             <Shortcut disableRender action={handleAdd} shortcut='alt + a' />
             <Shortcut disableRender action={handleAddTest} shortcut='alt + t' />
             <Typography.Text>{teams.length} Teams</Typography.Text>

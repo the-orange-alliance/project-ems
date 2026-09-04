@@ -81,7 +81,7 @@ export const LoginDialog: FC<Props> = ({ open, onSubmit }) => {
       confirmLoading={loading}
     >
       <Space
-        direction='vertical'
+        orientation='vertical'
         size='large'
         style={{ width: '100%' }}
         onKeyUp={dialogKeyUp}

@@ -395,7 +395,7 @@ export const Settings: FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Space direction='vertical' style={{ width: '100%' }}>
+      <Space orientation='vertical' style={{ width: '100%' }}>
         <Form layout='vertical'>
           <Form.Item label='Select Field'>
             <Select

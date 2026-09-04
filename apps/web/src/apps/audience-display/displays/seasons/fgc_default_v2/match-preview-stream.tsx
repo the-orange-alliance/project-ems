@@ -79,7 +79,7 @@ export const MatchPreviewStream: FC<DisplayProps> = ({ match }) => {
         }}
       >
         <AllianceBox allianceColor='red'>
-          <Space direction='vertical' style={{ flex: 1, gap: '.75rem' }}>
+          <Space orientation='vertical' style={{ flex: 1, gap: '.75rem' }}>
             {redTeams.map((team) => (
               <AllianceTeam
                 key={team.teamKey}
@@ -93,7 +93,7 @@ export const MatchPreviewStream: FC<DisplayProps> = ({ match }) => {
           </Space>
         </AllianceBox>
         <AllianceBox allianceColor='blue'>
-          <Space direction='vertical' style={{ flex: 1, gap: '.75rem' }}>
+          <Space orientation='vertical' style={{ flex: 1, gap: '.75rem' }}>
             {blueTeams.map((team) => (
               <AllianceTeam
                 key={team.teamKey}

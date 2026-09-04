@@ -16,7 +16,7 @@ export const ReportView: FC<Props> = ({ onReturn, children }) => {
   });
 
   return (
-    <Space direction='vertical' size='large' style={{ width: '100%' }}>
+    <Space orientation='vertical' size='large' style={{ width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <ViewReturn title='Reports' onClick={onReturn} />
         <Button type='primary' onClick={() => handlePrint()}>

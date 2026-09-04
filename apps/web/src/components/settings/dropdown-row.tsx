@@ -47,7 +47,7 @@ const DropdownRow: React.FC<DropdownRowProps> = ({
     <SettingsRow
       title={title}
       inputComponent={
-        <Space direction='vertical' style={{ width: '100%' }}>
+        <Space orientation='vertical' style={{ width: '100%' }}>
           <Select
             value={value}
             options={options}

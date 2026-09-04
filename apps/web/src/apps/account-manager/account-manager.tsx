@@ -16,7 +16,7 @@ const AccountManager: FC = () => {
       <Card>
         <Typography.Title level={4}>Account Manager</Typography.Title>
         <Divider />
-        <Space direction='vertical'>
+        <Space orientation='vertical'>
           {users && users.length > 0 && !error && (
             <Typography.Text>{JSON.stringify(users)}</Typography.Text>
           )}
