@@ -42,7 +42,7 @@ export const TeamManager: FC = () => {
 
   // Team Manager stages every add/edit/delete locally; nothing is persisted
   // until "Save Teams". Warn before a reload/close/external navigation would
-  // silently discard staged changes (BUG-004).
+  // silently discard staged changes.
   const hasUnsavedChanges = state.staged.teams.length > 0;
   useEffect(() => {
     if (!hasUnsavedChanges) return;
