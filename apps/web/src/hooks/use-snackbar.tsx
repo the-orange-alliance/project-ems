@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { notification, Button } from 'antd';
+import { App, Button } from 'antd';
 import { useModal } from '@ebay/nice-modal-react';
 import { ErrorDialog } from 'src/components/dialogs/error-dialog.js';
 
@@ -75,7 +75,7 @@ const getErrorSummary = (error: unknown): string => {
 const getErrorDetailPayload = (error: unknown): unknown => {
   if (!isRecord(error)) return error;
 
-  const payload = error.payload;
+  const { payload } = error;
   if (payload !== undefined) {
     return {
       response: {
@@ -130,21 +130,26 @@ const ModalButton: FC<{ detail: unknown }> = ({ detail }) => {
 };
 
 export const useSnackbar: SnackbarHook = () => {
+  // App context notification (not the static one) so it consumes the app theme
+  // and no longer logs the antd deprecation warnings.
+  const { notification } = App.useApp();
+
   const showSnackbar = (msg: string, detail?: unknown) => {
     notification.open({
-      message: msg,
+      title: msg,
       duration: 5,
-      btn: detail !== undefined ? <ModalButton detail={detail} /> : undefined
+      actions:
+        detail !== undefined ? <ModalButton detail={detail} /> : undefined
     });
   };
 
   const showErrorSnackbar = (context: string, error: unknown) => {
     const summary = getErrorSummary(error);
     notification.open({
-      message: context,
+      title: context,
       description: summary,
       duration: 8,
-      btn: <ModalButton detail={getErrorDetailPayload(error)} />
+      actions: <ModalButton detail={getErrorDetailPayload(error)} />
     });
   };
 

@@ -145,8 +145,15 @@ export const TeamManager: FC = () => {
   };
 
   const handleDownload = async () => {
+    if (!event?.eventKey) return;
+    if (!remoteUrl?.trim()) {
+      showErrorSnackbar(
+        'Cannot download teams.',
+        new Error('Set a Remote API URL in Settings → Global first.')
+      );
+      return;
+    }
     try {
-      if (!event?.eventKey) return;
       remoteClient.setBaseUrl(normalizeRemoteApiHost(remoteUrl));
       const teams =
         (await remoteClient.get<Team[]>(`/teams/${event.eventKey}`, {
