@@ -9,7 +9,7 @@ import { AppContainer } from './App.js';
 import { useCurrentEvent } from './api/use-event-data.js';
 import { createStore, Provider, useAtomValue } from 'jotai';
 import { darkModeAtom } from './stores/state/ui.js';
-import { ConfigProvider } from 'antd';
+import { App as AntApp, ConfigProvider } from 'antd';
 import 'antd/dist/reset.css';
 import { localClient, remoteClient } from './api/http-clients.js';
 
@@ -50,9 +50,11 @@ function Main() {
     <ConfigProvider
       theme={useMemo(() => customfgcTheme(darkMode), [darkMode, eventKey])}
     >
-      <ModalProvider>
-        <AppContainer />
-      </ModalProvider>
+      <AntApp component={false}>
+        <ModalProvider>
+          <AppContainer />
+        </ModalProvider>
+      </AntApp>
     </ConfigProvider>
   );
 }

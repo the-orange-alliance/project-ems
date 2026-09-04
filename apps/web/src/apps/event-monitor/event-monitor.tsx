@@ -30,11 +30,13 @@ import {
   Match,
   Team,
   Displays,
-  FGC25FCS
+  FGC25FCS,
+  getSeasonKeyFromEventKey
 } from '@toa-lib/models';
 import { io, Socket } from 'socket.io-client';
 import { useEventState } from '../../stores/hooks/use-event-state.js';
 import { useAtomValue } from 'jotai';
+import { eventKeyAtom } from '../../stores/state/event.js';
 import { darkModeAtom } from '../../stores/state/ui.js';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 
@@ -77,6 +79,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
   );
   const [fcsStatus, setFcsStatus] = useState<FGC25FCS.FcsStatus | null>(null);
   const seasonComponents = useSeasonComponents();
+  const eventKey = useAtomValue(eventKeyAtom);
+  const isRopeDropSeason =
+    getSeasonKeyFromEventKey(eventKey ?? '') === 'fgc_2025';
 
   const handleRefresh = () => {
     console.log('Refresh but idk how to');
@@ -359,13 +364,16 @@ const MonitorCard: FC<MonitorCardProps> = ({
               >
                 Awards Mode
               </Button>
-              <Button
-                type='primary'
-                block
-                onClick={() => socket?.emit('fcs:ropeDrop')}
-              >
-                Force Rope Drop (2025)
-              </Button>
+              {/* Rope Drop is a 2025 (Eco Equilibrium) mechanic — BUG-024 */}
+              {isRopeDropSeason && (
+                <Button
+                  type='primary'
+                  block
+                  onClick={() => socket?.emit('fcs:ropeDrop')}
+                >
+                  Force Rope Drop
+                </Button>
+              )}
             </Flex>
           </Flex>
 

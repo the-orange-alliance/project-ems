@@ -1,11 +1,16 @@
-import { Layout, theme } from 'antd';
+import { Layout, Spin, Typography, theme } from 'antd';
 import { FC } from 'react';
 
-export const PageLoader: FC = () => {
+/**
+ * Suspense / route fallback. Renders a clearly-visible centered spinner (not
+ * just a near-invisible top bar over an otherwise blank dark panel — BUG-007)
+ * plus the original animated progress bar.
+ */
+export const PageLoader: FC<{ tip?: string }> = ({ tip = 'Loading…' }) => {
   const { token } = theme.useToken();
 
   return (
-    <Layout style={{ height: '100%' }}>
+    <Layout style={{ height: '100%', background: 'transparent' }}>
       <div
         style={{
           left: 0,
@@ -23,6 +28,20 @@ export const PageLoader: FC = () => {
             animation: 'muiLoadingBar 1s linear infinite'
           }}
         />
+      </div>
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 16,
+          padding: 24
+        }}
+      >
+        <Spin size='large' />
+        <Typography.Text type='secondary'>{tip}</Typography.Text>
       </div>
       <style>
         {`
