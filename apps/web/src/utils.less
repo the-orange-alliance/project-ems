@@ -5,6 +5,13 @@
 @yellow: #c7d100;
 @red: #ce0000;
 
+// antd's reset.css gives html/body height: 100%; the app root needs to carry
+// it through so full-height layouts (e.g. PaperLayout's `calc(100% - 56px)`)
+// resolve and the themed background fills the viewport.
+#root {
+  height: 100%;
+}
+
 .error {
   color: @red;
 }
