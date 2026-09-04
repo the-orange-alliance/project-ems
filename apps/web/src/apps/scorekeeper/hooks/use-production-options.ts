@@ -89,7 +89,7 @@ export const useFieldControlOptionsItems = (): ActionItem[] => {
       onClick: () => fieldControl?.awardsMode?.()
     },
     // Rope Drop is an Eco Equilibrium (2025) field mechanic; only offer it for
-    // that season (BUG-024).
+    // that season.
     ...(seasonKey === 'fgc_2025'
       ? [
           {

@@ -131,7 +131,7 @@ const ModalButton: FC<{ detail: unknown }> = ({ detail }) => {
 
 export const useSnackbar: SnackbarHook = () => {
   // App context notification (not the static one) so it consumes the app theme
-  // and no longer logs the antd deprecation warnings (BUG-008).
+  // and no longer logs the antd deprecation warnings.
   const { notification } = App.useApp();
 
   const showSnackbar = (msg: string, detail?: unknown) => {

@@ -364,7 +364,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
               >
                 Awards Mode
               </Button>
-              {/* Rope Drop is a 2025 (Eco Equilibrium) mechanic — BUG-024 */}
+              {/* Rope Drop is a 2025 (Eco Equilibrium) mechanic */}
               {isRopeDropSeason && (
                 <Button
                   type='primary'

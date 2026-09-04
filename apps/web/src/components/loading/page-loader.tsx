@@ -3,8 +3,8 @@ import { FC } from 'react';
 
 /**
  * Suspense / route fallback. Renders a clearly-visible centered spinner (not
- * just a near-invisible top bar over an otherwise blank dark panel — BUG-007)
- * plus the original animated progress bar.
+ * just a near-invisible top bar over an otherwise blank dark panel) plus the
+ * original animated progress bar.
  */
 export const PageLoader: FC<{ tip?: string }> = ({ tip = 'Loading…' }) => {
   const { token } = theme.useToken();
