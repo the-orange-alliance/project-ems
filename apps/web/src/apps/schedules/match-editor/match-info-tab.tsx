@@ -12,14 +12,32 @@ interface Props {
 }
 
 export const MatchInfoTab: FC<Props> = ({ match, onUpdate }) => {
+  // antd InputNumber hands back `number | null` (null while the field is empty);
+  // coerce anything non-finite to 0 so `NaN` can never be stored or rendered.
+  const toFiniteNumber = (value: string | number | null): number => {
+    const n = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(n) ? Math.max(0, n) : 0;
+  };
+
   const handleUpdates = (name: string, value: string | number | null) => {
-    const typedValue = typeof value === 'number' ? value : value;
+    // Red/Blue Score are entered directly and are independent of each other.
+    // Routing them through calculateScore both discards the entered value and
+    // lets a NaN from one field bleed into the other (BUG-019).
+    if (name === 'redScore' || name === 'blueScore') {
+      onUpdate({ ...match, [name]: toFiniteNumber(value) });
+      return;
+    }
+    const typedValue = name === 'name' ? value : toFiniteNumber(value);
     const newMatch = { ...match, [name]: typedValue };
     const seasonKey = getSeasonKeyFromEventKey(match.eventKey);
     const functions = getFunctionsBySeasonKey(seasonKey);
     if (!functions) return;
     const [redScore, blueScore] = functions.calculateScore(newMatch);
-    onUpdate({ ...newMatch, redScore, blueScore });
+    onUpdate({
+      ...newMatch,
+      redScore: Number.isFinite(redScore) ? redScore : newMatch.redScore,
+      blueScore: Number.isFinite(blueScore) ? blueScore : newMatch.blueScore
+    });
   };
   return (
     <Row gutter={[24, 24]}>
