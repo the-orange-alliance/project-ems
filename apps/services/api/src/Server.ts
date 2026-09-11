@@ -23,6 +23,9 @@ import rankingController from './controllers/Ranking.js';
 import allianceController from './controllers/Alliance.js';
 import tournamentController from './controllers/Tournament.js';
 import frcFmsController from './controllers/FrcFms.js';
+import statsController from './controllers/Stats.js';
+import graphicsController from './controllers/Graphics.js';
+import graphicsPlaybackController from './controllers/GraphicsPlayback.js';
 import heartbeatController from './controllers/Heartbeat.js';
 import resultsController from './controllers/Results.js';
 import socketClientsController from './controllers/SocketClients.js';
@@ -41,15 +44,37 @@ import { join } from 'path';
 import webhooksController from './controllers/Webhooks.js';
 import seasonSpecificController from './controllers/SeasonSpecific.js';
 import { throttledUploadDatabase, initS3Client } from './util/S3Backup.js';
+import { getPlaybackCoordinator } from './graphics/PlaybackCoordinatorService.js';
 
 // Setup our environment
 const workingDir = process.env.WORKDIR ?? '../';
 const path = join(workingDir, '/api/.env');
 env.loadAndSetDefaults(process.env, path);
 
-// App setup - if any of these fail the server should exit.
+// App setup - if any of these fail the server should exit, but a cold start can
+// race a filesystem that isn't settled yet (WAL lock from a prior process, a
+// slow network appdata mount), so give transient failures a few chances before
+// giving up. Every step in initGlobal() is idempotent, so a retry is safe.
+async function initGlobalWithRetry(attempts = 3, delayMs = 500): Promise<void> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await initGlobal();
+      return;
+    } catch (e) {
+      if (attempt >= attempts) throw e;
+      logger.warn(
+        `initGlobal failed (attempt ${attempt}/${attempts}), retrying in ${delayMs}ms: ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      delayMs *= 2;
+    }
+  }
+}
+
 try {
-  await initGlobal();
+  await initGlobalWithRetry();
 } catch (e) {
   logger.error(e);
   process.exit(1);
@@ -106,6 +131,11 @@ await fastify.register(fastifySwagger, {
       { name: 'Alliances', description: 'Alliance related endpoints' },
       { name: 'Tournaments', description: 'Tournament related endpoints' },
       { name: 'FrcFms', description: 'FRC FMS related endpoints' },
+      { name: 'Stats', description: 'Production statistics and worker queue' },
+      {
+        name: 'Graphics',
+        description: 'Producer-authored graphics timeline endpoints'
+      },
       { name: 'Heartbeat', description: 'Heartbeat/health-check endpoint' },
       { name: 'Results', description: 'Results related endpoints' },
       {
@@ -148,6 +178,9 @@ await fastify.register(authController, { prefix: '/auth' });
 await fastify.register(eventController, { prefix: '/event' });
 await fastify.register(fcsController, { prefix: '/fcs' });
 await fastify.register(frcFmsController, { prefix: '/frc/fms' });
+await fastify.register(statsController, { prefix: '/stats' });
+await fastify.register(graphicsController, { prefix: '/graphics' });
+await fastify.register(graphicsPlaybackController, { prefix: '/graphics' });
 await fastify.register(heartbeatController, { prefix: '/heartbeat' });
 await fastify.register(matchController, { prefix: '/match' });
 await fastify.register(rankingController, { prefix: '/ranking' });
@@ -163,12 +196,22 @@ await fastify.register(tournamentController, { prefix: '/tournament' });
 await fastify.register(webhooksController, { prefix: '/webhooks' });
 await fastify.register(seasonSpecificController, { prefix: '/seasonSpecific' });
 
+// The HTTP live-command surface (graphicsPlaybackController, registered above under
+// '/graphics') already reaches the process-wide graphics playback coordinator via
+// getPlaybackCoordinator(fastify), which creates it - and registers its graceful-shutdown
+// drain hook (see PlaybackCoordinatorService.ts's onClose) - on that FIRST call. This call
+// is kept as a defensive no-op (getPlaybackCoordinator returns the same cached instance
+// once created) so the coordinator and its shutdown hook still exist even if controller
+// registration order above ever changes. Realtime publish bridging remains a separate,
+// sibling-owned task and still reaches this same instance the same way.
+getPlaybackCoordinator(fastify);
+
 // 🧩 Global hook: triggers after any mutating request
 fastify.addHook('onResponse', (request, reply, done) => {
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
     const { eventKey } = (request.params as { eventKey?: string }) ?? {};
 
-    if (eventKey) {
+    if (eventKey && !request.routeOptions.url?.startsWith('/stats/')) {
       throttledUploadDatabase(eventKey);
     }
   }
@@ -208,3 +251,11 @@ fastify.listen(
     );
   }
 );
+
+// Graceful shutdown: triggers each registered service's onClose hook
+// (including the playback coordinator's) instead of dropping the process.
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+  process.once(signal, () => {
+    void fastify.close();
+  });
+}

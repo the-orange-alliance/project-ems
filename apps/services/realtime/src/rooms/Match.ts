@@ -124,48 +124,61 @@ export default class Match extends Room {
     // Event listeners for matches
     socket.on(MatchSocketEvent.PRESTART, (key: MatchKey) => {
       this.key = key;
+      this.match = null;
+      this.timer.reset();
       this.emitToAll(MatchSocketEvent.PRESTART, key);
       this.emitToAll(MatchSocketEvent.DISPLAY, 1);
       this.displayID = 1;
-      this.state = MatchState.PRESTART_COMPLETE;
+      this.transition(
+        MatchState.PRESTART_COMPLETE,
+        MatchSocketEvent.PRESTART,
+        socket,
+      );
       logger.info(`prestarting ${key.eventKey}-${key.tournamentKey}-${key.id}`);
     });
     socket.on(MatchSocketEvent.ABORT, () => {
-      this.key = null;
       this.timer.abort();
-      this.state = MatchState.MATCH_ABORTED;
+      this.transition(MatchState.MATCH_ABORTED, MatchSocketEvent.ABORT, socket);
+      this.key = null;
+      this.match = null;
     });
     socket.on(MatchSocketEvent.START, () => {
       if (this.timer.inProgress()) return;
       this.timer.once("timer:start", () => {
         this.emitToAll(MatchSocketEvent.START, "start");
-        this.state = MatchState.MATCH_IN_PROGRESS;
+        this.transition(MatchState.MATCH_IN_PROGRESS, "timer:start", socket);
         logger.info("match in progress");
       });
       this.timer.once("timer:auto", () => {
+        this.transition(this.state, "timer:auto", socket);
         this.emitToAll(MatchSocketEvent.AUTONOMOUS);
         logger.info("match auto");
       });
       this.timer.once("timer:tele", () => {
+        this.transition(this.state, "timer:tele", socket);
         this.emitToAll(MatchSocketEvent.TELEOPERATED);
         logger.info("match tele");
       });
       this.timer.once("timer:endgame", () => {
+        this.transition(this.state, "timer:endgame", socket);
         this.emitToAll(MatchSocketEvent.ENDGAME);
         logger.info("match endgame");
       });
       this.timer.once("timer:end", () => {
         this.emitToAll(MatchSocketEvent.END);
         this.timer.removeListeners();
-        this.state = MatchState.MATCH_COMPLETE;
+        this.transition(MatchState.MATCH_COMPLETE, "timer:end", socket);
         logger.info("match completed");
       });
       this.timer.once("timer:abort", () => {
         this.emitToAll(MatchSocketEvent.ABORT);
         this.timer.removeListeners();
-        this.state = MatchState.PRESTART_READY;
+        // The abort handler records the anchor before clearing the key.
         logger.info("match aborted");
       });
+      this.timer.once("timer:transition", () =>
+        this.transition(this.state, "timer:transition", socket),
+      );
       this.displayID = 2;
 
       // Get season key frome event key
@@ -188,7 +201,11 @@ export default class Match extends Room {
     socket.on(MatchSocketEvent.DISPLAY, (id: number) => {
       this.displayID = id;
       if (id === Displays.MATCH_RESULTS) {
-        this.state = MatchState.RESULTS_POSTED;
+        this.transition(
+          MatchState.RESULTS_POSTED,
+          MatchSocketEvent.DISPLAY,
+          socket,
+        );
       }
       this.emitToAll(MatchSocketEvent.DISPLAY, id);
     });
@@ -196,7 +213,7 @@ export default class Match extends Room {
       this.handlePartiallyUpdatedMatch(match);
     });
     socket.on(MatchSocketEvent.MATCH_UPDATE_ITEM, (itemUpdate: ItemUpdate) => {
-      const match: any = this.match;
+      const { match } = this;
       if (match) {
         const oldValue = match[itemUpdate.key];
         match[itemUpdate.key] = itemUpdate.value;
@@ -213,7 +230,8 @@ export default class Match extends Room {
     });
     socket.on(
       MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
-      (itemUpdate: ItemUpdate) => this.onMatchUpdateDetailsItem(itemUpdate, socket),
+      (itemUpdate: ItemUpdate) =>
+        this.onMatchUpdateDetailsItem(itemUpdate, socket),
     );
     socket.on(
       MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
@@ -243,8 +261,12 @@ export default class Match extends Room {
     );
     socket.on(MatchSocketEvent.COMMIT, (key: MatchKey) => {
       this.emitToAll(MatchSocketEvent.COMMIT, key);
+      this.transition(
+        MatchState.RESULTS_COMMITTED,
+        MatchSocketEvent.COMMIT,
+        socket,
+      );
       this.match = null;
-      this.state = MatchState.RESULTS_COMMITTED;
       logger.info(
         `committing scores for ${key.eventKey}-${key.tournamentKey}-${key.id}`,
       );
@@ -349,7 +371,30 @@ export default class Match extends Room {
     }
   };
 
+  private transition(
+    state: MatchState,
+    sourceEvent: string,
+    socket?: Socket,
+  ): void {
+    const anchor = (matchState: MatchState) => ({
+      matchState,
+      mode: this.timer.mode,
+      timeLeft: this.timer.timeLeft,
+      modeTimeLeft: this.timer.modeTimeLeft,
+      inProgress: matchState === MatchState.MATCH_IN_PROGRESS,
+    });
+    void this.logActionEvent({
+      sourceEvent,
+      fieldPath: "lifecycle",
+      oldValue: anchor(this.state),
+      newValue: anchor(state),
+      socket,
+    });
+    this.state = state;
+  }
+
   private getAuditKey(): MatchKey | null {
+    if (this.key) return this.key;
     if (this.match) {
       return {
         eventKey: this.match.eventKey,
@@ -377,8 +422,7 @@ export default class Match extends Room {
           ? undefined
           : JSON.stringify(log.newValue),
       deltaNumber: log.deltaNumber,
-      actorId:
-        typeof actor?.id !== "undefined" ? String(actor.id) : undefined,
+      actorId: typeof actor?.id !== "undefined" ? String(actor.id) : undefined,
       actorName: actor?.username,
       clientId: log.socket?.handshake?.address,
       socketId: log.socket?.id,
@@ -394,6 +438,7 @@ export default class Match extends Room {
         )}/${encodeURIComponent(key.tournamentKey)}/${key.id}`,
         {
           method: "POST",
+          signal: AbortSignal.timeout(2000),
           headers: {
             "Content-Type": "application/json",
           },
@@ -418,6 +463,12 @@ export default class Match extends Room {
     partiallyUpdatedMatch: MatchObj<any>,
   ): void {
     this.match = { ...partiallyUpdatedMatch };
+    if (
+      this.state === MatchState.MATCH_COMPLETE &&
+      partiallyUpdatedMatch.details
+    ) {
+      this.transition(MatchState.RESULTS_READY, MatchSocketEvent.UPDATE);
+    }
     const seasonKey = getSeasonKeyFromEventKey(partiallyUpdatedMatch.eventKey);
     const functions = getFunctionsBySeasonKey(seasonKey);
     if (

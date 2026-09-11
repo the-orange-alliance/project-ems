@@ -15,6 +15,12 @@ import { matchAtom, matchOccurringRanksAtom } from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
+import {
+  createEmptyLiveGraphicState,
+  graphicsStateMapAtom
+} from 'src/stores/state/graphics.js';
+import { StatsGraphicDisplay } from './graphics/stats-graphic-display.js';
+import { StatsGraphicPreviewDisplay } from './graphics/stats-graphic-preview-display.js';
 
 /**
  * Classic audience display that handles all scenarios.
@@ -24,11 +30,12 @@ export interface DisplayModeProps {
   id: Displays;
   eventKey: string | null;
 }
-export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
+export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
   const match = useAtomValue(matchAtom);
   const ranks = useAtomValue(matchOccurringRanksAtom);
   const [audDispChroma, setAudDisplayChroma] = useAtom(displayChromaKeyAtom);
   const matchState = useAtomValue(matchStateAtom);
+  const graphicsStateMap = useAtomValue(graphicsStateMapAtom);
   const [searchParams] = useSearchParams();
 
   const {
@@ -64,6 +71,41 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   // the one loaded from the url.
   const { data: event } = useEvent(match?.eventKey);
   const displays = getDisplays(event?.seasonKey || '');
+
+  // The stats graphics screen is keyed off the explicit event this audience
+  // route is bound to, not whatever match state happens to be selected in the
+  // global store. This leaves the on-air audience fully event-scoped and lets
+  // the shared transition engine finish a Clear exit even after the server has
+  // already flipped `onAir` back to false.
+  const liveGraphicState =
+    eventKey && graphicsStateMap[eventKey]
+      ? graphicsStateMap[eventKey]
+      : createEmptyLiveGraphicState();
+
+  if (pin === AudienceScreens.STATS) {
+    return (
+      <StatsGraphicDisplay
+        spec={liveGraphicState.spec}
+        frame={liveGraphicState.frame}
+      />
+    );
+  }
+
+  // The "preview" (PVW bus) to STATS's "program" (PGM bus): always the item
+  // one step ahead of what is on air - see `previewSpec`'s own doc comment
+  // on `LiveGraphicState`, and `StatsGraphicPreviewDisplay` for why the
+  // frame is calculated client-side rather than arriving with the spec.
+  if (pin === AudienceScreens.STATS_PREVIEW) {
+    return (
+      <StatsGraphicPreviewDisplay
+        eventKey={eventKey}
+        spec={liveGraphicState.previewSpec}
+        programSpec={liveGraphicState.spec}
+        programFrame={liveGraphicState.frame}
+      />
+    );
+  }
+
   // TODO - Have better error handling here.
   if (!match || !event || !ranks || !displays) return null;
 

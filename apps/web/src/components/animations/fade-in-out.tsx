@@ -39,6 +39,12 @@ const FadeInOut: React.FC<AnimationProps> = ({
   return (
     <div
       style={{
+        // Fills its parent explicitly rather than shrink-wrapping content -
+        // see the `inset: 0` comment in `stats-graphic-display.tsx`. Without
+        // this, an unsized ancestor plus an unsized child here left nothing
+        // in the chain to resolve a real box from.
+        width: '100%',
+        height: '100%',
         opacity: localIn ? 1 : 0,
         transition: `opacity ${duration ?? 0.3}s ease-in-out`
       }}

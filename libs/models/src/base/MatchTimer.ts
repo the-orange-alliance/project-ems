@@ -127,6 +127,7 @@ export class MatchTimer extends EventEmitter {
   public removeListeners(): void {
     this.removeAllListeners('timer:start');
     this.removeAllListeners('timer:auto');
+    this.removeAllListeners('timer:transition');
     this.removeAllListeners('timer:tele');
     this.removeAllListeners('timer:endgame');
     this.removeAllListeners('timer:end');

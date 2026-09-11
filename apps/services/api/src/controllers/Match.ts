@@ -122,103 +122,49 @@ const makeAuditContext = (
   correlationId: getHeaderValue(request, 'x-correlation-id')
 });
 
-const insertHistoryRecord = async (
-  db: EventDatabase,
-  table: 'match_history_base' | 'match_detail_history',
-  value: Record<string, unknown>
-) => {
-  const entries = Object.entries(value);
-  const columns = entries.map(([k]) => `"${k}"`).join(', ');
-  const placeholders = entries.map(() => '?').join(', ');
-  await db.db.all(
-    `INSERT INTO "${table}" (${columns}) VALUES (${placeholders});`,
-    entries.map(([, v]) => (typeof v === 'undefined' ? null : v))
-  );
-};
-
-const isRevisionConflictError = (error: unknown): boolean => {
-  const message = String((error as { message?: unknown })?.message ?? error);
-  return (
-    message.includes('SQLITE_CONSTRAINT: UNIQUE constraint failed') &&
-    message.includes('match_history_base.eventKey') &&
-    message.includes('match_history_base.revision')
-  );
-};
-
-const writeMatchRevisionSnapshot = async (
+export const writeMatchRevisionSnapshot = async (
   db: EventDatabase,
   eventKey: string,
   tournamentKey: string,
   id: string,
   audit: MatchAuditContext
-) => {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    try {
-      const revisionRows = (await db.db.all(
-        'SELECT COALESCE(MAX("revision"), 0) + 1 AS "nextRevision" FROM "match_history_base" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
-        [eventKey, tournamentKey, Number(id)]
-      )) as { nextRevision: number }[];
-      const revision = Number(revisionRows[0]?.nextRevision ?? 1);
-      const occurredAtUtc = nowUtc();
-
-      const matchRows = (await db.db.all(
-        'SELECT * FROM "match" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
-        [eventKey, tournamentKey, Number(id)]
-      )) as Record<string, unknown>[];
-
-      if (matchRows.length === 0) {
-        return;
-      }
-
-      const detailRows = (await db.db.all(
-        'SELECT * FROM "match_detail" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
-        [eventKey, tournamentKey, Number(id)]
-      )) as Record<string, unknown>[];
-
-      const auditColumns = {
-        revision,
-        actionType: audit.actionType,
-        source: audit.source,
-        actorId: audit.actorId,
-        actorName: audit.actorName,
-        clientId: audit.clientId,
-        socketId: audit.socketId,
-        correlationId: audit.correlationId,
-        occurredAtUtc
-      };
-
-      await insertHistoryRecord(db, 'match_history_base', {
-        ...matchRows[0],
-        ...auditColumns
-      });
-
-      await insertHistoryRecord(db, 'match_detail_history', {
-        ...(detailRows[0] ?? {
-          eventKey,
-          tournamentKey,
-          id: Number(id)
-        }),
-        ...auditColumns
-      });
-
-      if (audit.correlationId) {
-        await db.db.all(
-          'UPDATE "match_action_event" SET "revision" = ?, "persisted" = 1 WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ? AND "correlationId" = ? AND "persisted" = 0;',
-          [revision, eventKey, tournamentKey, Number(id), audit.correlationId]
-        );
-      }
-
-      return;
-    } catch (e) {
-      if (attempt < 4 && isRevisionConflictError(e)) {
-        continue;
-      }
-      throw e;
-    }
-  }
-
-  throw new Error('Unable to write match history snapshot after retries');
-};
+) =>
+  db.withRevisionConnection(async (connection) => {
+    // Quote values as SQLite literals; identifiers below come only from schema metadata.
+    const literal = (value: unknown): string =>
+      value == null
+        ? 'NULL'
+        : typeof value === 'number'
+          ? String(value)
+          : "'" + String(value).replace(/'/g, "''") + "'";
+    const key = `"eventKey" = ${literal(eventKey)} AND "tournamentKey" = ${literal(tournamentKey)} AND "id" = ${literal(Number(id))}`;
+    const envelope = { ...audit, occurredAtUtc: nowUtc() };
+    const auditColumns = Object.keys(envelope).map((k) => `"${k}"`);
+    const auditValues = Object.values(envelope).map(literal);
+    const snapshot = async (source: string, target: string) => {
+      const columns = await connection.all<{ name: string }>(
+        `PRAGMA table_info("${source}")`
+      );
+      const names = columns.map((c) => `"${c.name}"`).join(',');
+      return `INSERT INTO "${target}" (${names},revision,${auditColumns.join(',')}) SELECT ${names},(SELECT revision FROM snapshot_envelope),${auditValues.join(',')} FROM "${source}" WHERE ${key};`;
+    };
+    const base = await snapshot('match', 'match_history_base');
+    const detail = await snapshot('match_detail', 'match_detail_history');
+    // One native exec keeps BEGIN/reads/writes/COMMIT together. Awaiting individual
+    // statements while holding the lock can starve libuv behind waiting writers.
+    await connection.exec(`BEGIN IMMEDIATE;
+    CREATE TEMP TABLE snapshot_envelope (revision INTEGER, watermark INTEGER, hasDetails INTEGER CHECK(hasDetails = 1), hasBase INTEGER CHECK(hasBase = 1));
+    INSERT INTO snapshot_envelope SELECT
+      (SELECT COALESCE(MAX(revision),0)+1 FROM match_history_base WHERE ${key}),
+      (SELECT COALESCE(MAX(actionEventId),0) FROM match_action_event WHERE ${key}),
+      (SELECT COUNT(*) FROM match_detail WHERE ${key}),
+      (SELECT COUNT(*) FROM match WHERE ${key});
+    ${base}
+    ${detail}
+    UPDATE match_action_event SET revision=(SELECT revision FROM snapshot_envelope),persisted=1
+      WHERE ${key} AND persisted=0 AND actionEventId <= (SELECT watermark FROM snapshot_envelope);
+    COMMIT;`);
+  });
 
 const MatchScoreSchema = z.object({
   redScore: z.number(),
@@ -717,7 +663,7 @@ async function matchController(fastify: FastifyInstance) {
 
         // Cycle time is derived, never client-supplied, so that every client
         // agrees on it. Recomputed only on the patch that first records this
-        // match's actual start — later patches (commit, score edits) resend the
+        // match's actual start â€” later patches (commit, score edits) resend the
         // same actualStartTime and must not disturb the stored value.
         const [stored] = await db.selectAllWhere(
           'match',
@@ -957,7 +903,7 @@ async function matchController(fastify: FastifyInstance) {
             continue;
           }
           // Parse the row the same way GET /all does before handing it to
-          // season code — the raw row is not the season's detail shape.
+          // season code â€” the raw row is not the season's detail shape.
           const detail = funcs?.detailsFromJson
             ? (funcs.detailsFromJson(stored) ?? stored)
             : stored;

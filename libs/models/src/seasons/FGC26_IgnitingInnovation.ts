@@ -430,7 +430,7 @@ function calculateRankings(
       // Red Alliance
       if (participant.station < 20) {
         ranking.wins = ranking.wins + (redWin ? 1 : 0);
-        ranking.losses = ranking.losses + (redWin ? 0 : 1);
+        ranking.losses = ranking.losses + (blueWin ? 1 : 0);
 
         if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.redScore]);
@@ -452,7 +452,7 @@ function calculateRankings(
       // Blue Alliance
       if (participant.station >= 20) {
         ranking.wins = ranking.wins + (blueWin ? 1 : 0);
-        ranking.losses = ranking.losses + (blueWin ? 0 : 1);
+        ranking.losses = ranking.losses + (redWin ? 1 : 0);
 
         if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
@@ -498,11 +498,16 @@ function calculateRankings(
 
     const qualifiedScores = scores.filter((s) => s >= 0);
 
-    const lowestScore = ranking.played > 0 ? Math.min(...qualifiedScores) : 0;
-    const index = scores.findIndex((s) => s === lowestScore);
-    const newScores = (
-      scores.length > 1 ? scores.filter((_, i) => i !== index) : scores
-    ).map((score) => (score >= 0 ? score : 0));
+    // Red-card sentinels are excluded from both the sum and denominator.
+    // Drop one lowest eligible score only when at least two eligible scores exist.
+    const lowestScore = qualifiedScores.length
+      ? Math.min(...qualifiedScores)
+      : 0;
+    const index = qualifiedScores.findIndex((score) => score === lowestScore);
+    const newScores =
+      qualifiedScores.length > 1
+        ? qualifiedScores.filter((_, i) => i !== index)
+        : qualifiedScores;
     if (newScores.length > 0) {
       ranking.rankingScore = Number(
         (

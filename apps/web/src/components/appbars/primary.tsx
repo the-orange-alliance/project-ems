@@ -30,6 +30,11 @@ const PrimaryAppbar: FC = () => {
   const navigate = useNavigate();
   const productionOptionsItems = useProductionOptionsItems();
 
+  // The header bar is always the primary green in both themes, so its text is
+  // white in both. (Previously it borrowed `colorTextSecondary`, which forced
+  // that token to an inverted value and broke secondary text everywhere else.)
+  const headerFg = '#ffffff';
+
   const navSettings = () => {
     // get user's current location
     const currentPath = window.location.pathname;
@@ -58,7 +63,7 @@ const PrimaryAppbar: FC = () => {
         alignItems: 'center',
         padding: '10px 16px',
         background: token.colorPrimary,
-        color: token.colorTextSecondary
+        color: headerFg
       }}
     >
       <Link to='/' style={{ display: 'flex', alignItems: 'center' }}>
@@ -72,10 +77,7 @@ const PrimaryAppbar: FC = () => {
       </Link>
       {titleLink ? (
         <Link to={titleLink} style={{ flexGrow: 1 }}>
-          <Typography.Title
-            level={3}
-            style={{ color: token.colorTextSecondary, margin: 0 }}
-          >
+          <Typography.Title level={3} style={{ color: headerFg, margin: 0 }}>
             {title ||
               `Event Management System${import.meta.env.VITE_BUILD_TYPE === 'production' ? ' - online' : ''}`}
           </Typography.Title>
@@ -83,7 +85,7 @@ const PrimaryAppbar: FC = () => {
       ) : (
         <Typography.Title
           level={3}
-          style={{ flexGrow: 1, margin: 0, color: token.colorTextSecondary }}
+          style={{ flexGrow: 1, margin: 0, color: headerFg }}
         >
           {title ||
             `Event Management System${import.meta.env.VITE_BUILD_TYPE === 'production' ? ' - online' : ''}`}

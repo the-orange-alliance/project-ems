@@ -127,6 +127,13 @@ const AudienceDisplay = lazy(() =>
   }))
 );
 
+// Graphics Controller Routes
+const GraphicsController = lazy(() =>
+  import('./apps/graphics-controller/index.js').then((m) => ({
+    default: m.GraphicsController
+  }))
+);
+
 // Misc routes
 const EventMonitor = lazy(() =>
   import('./apps/event-monitor/index.js').then((m) => ({
@@ -143,6 +150,7 @@ import {
   FormOutlined,
   FundProjectionScreenOutlined,
   HistoryOutlined,
+  PlaySquareOutlined,
   PrinterOutlined,
   RobotOutlined,
   SettingOutlined,
@@ -321,6 +329,15 @@ const AppRoutes: AppRoute[] = [
       <FundProjectionScreenOutlined
         style={{ fontSize: '100px', marginBottom: '50px' }}
       />
+    )
+  },
+  {
+    name: 'Graphics',
+    path: '/:eventKey/graphics',
+    group: 0,
+    element: GraphicsController,
+    icon: (
+      <PlaySquareOutlined style={{ fontSize: '100px', marginBottom: '50px' }} />
     )
   },
   {

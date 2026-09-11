@@ -5,6 +5,8 @@ import SharedSocketWorker from '@workers/shared-socket-worker?sharedworker';
 import { SocketOptions } from '@toa-lib/client';
 import {
   FieldControlUpdatePacket,
+  GraphicsQueueSocketEvent,
+  GraphicsSocketEvent,
   MatchKey,
   MatchSocketEvent
 } from '@toa-lib/models/base';
@@ -96,7 +98,16 @@ export function useSocketWorker() {
     sendUpdateFrcFmsSettings: (hwFingerprint: string) =>
       socket?.emit('update-frc-fms-settings', hwFingerprint),
     sendFCSPacket: (packet: FieldControlUpdatePacket) =>
-      socket?.emit('fcs:update', packet)
+      socket?.emit('fcs:update', packet),
+    graphicsLoad: (v: any) => socket?.emit(GraphicsSocketEvent.LOAD, v),
+    graphicsAdvance: (v: any) => socket?.emit(GraphicsSocketEvent.ADVANCE, v),
+    graphicsPrevious: (v: any) => socket?.emit(GraphicsSocketEvent.PREVIOUS, v),
+    graphicsGo: (v: any) => socket?.emit(GraphicsSocketEvent.GO, v),
+    graphicsTake: (v: any) => socket?.emit(GraphicsSocketEvent.TAKE, v),
+    graphicsClear: (v: any) => socket?.emit(GraphicsSocketEvent.CLEAR, v),
+    graphicsPreview: (v: any) => socket?.emit(GraphicsSocketEvent.PREVIEW, v),
+    graphicsQueueSnapshot: (v: any) =>
+      socket?.emit(GraphicsQueueSocketEvent.SNAPSHOT, v)
   };
 
   return {

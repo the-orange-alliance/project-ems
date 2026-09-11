@@ -28,7 +28,7 @@ export const Settings: FC = () => {
   );
   const [localData, setLocalData] = useState<FGC26FCS.SettingsType>();
   const [isSaving, setIsSaving] = useState(false);
-  const saveTimeoutRef = useRef<number | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (tournament?.fields && tournament.fields.length > 0 && !selectedField) {

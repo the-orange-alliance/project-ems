@@ -7,7 +7,9 @@
   "types": "./build/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "npm run build && node --test build/seasons/stats/tests/*.test.js",
+    "check-types": "tsc --noEmit"
   },
   "exports": {
     ".": {
@@ -32,6 +34,14 @@
     "./base": {
       "types": "./src/base/index.ts",
       "default": "./build/base/index.js"
+    },
+    "./seasons/stats": {
+      "types": "./src/seasons/stats/index.ts",
+      "default": "./build/seasons/stats/index.js"
+    },
+    "./seasons/stats/presentation": {
+      "types": "./src/seasons/stats/presentation/index.ts",
+      "default": "./build/seasons/stats/presentation/index.js"
     }
   },
   "devDependencies": {
@@ -44,6 +54,7 @@
     "eventemitter3": "^5.0.4",
     "events": "^3.3.0",
     "luxon": "^3.7.2",
+    "ml-matrix": "^6.12.1",
     "zod": "^4.4.3"
   }
 }

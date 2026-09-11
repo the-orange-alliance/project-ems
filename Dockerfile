@@ -29,6 +29,7 @@ ENV WORKDIR=/workspace/apps/services
 
 # Copy only the built backend and production dependencies
 COPY --from=build /workspace/apps/services/api/build ./apps/services/api/build
+COPY --from=build /workspace/apps/services/api/package.json ./apps/services/api/package.json
 COPY --from=build /workspace/apps/services/realtime/build ./apps/services/realtime/build
 COPY --from=build /workspace/node_modules ./node_modules
 
@@ -44,6 +45,8 @@ COPY --from=build /workspace/scripts ./scripts
 RUN sed -i 's/\r$//' ./scripts/backend_entrypoint.sh
 RUN chmod +x /workspace/apps/services/api/bin/MatchMaker
 RUN chmod +x ./scripts/backend_entrypoint.sh
+
+RUN test -f ./apps/services/api/build/stats/StatsWorker.js
 
 EXPOSE 8080 8081
 ENTRYPOINT ["./scripts/backend_entrypoint.sh"]
