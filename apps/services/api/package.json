@@ -1,13 +1,18 @@
 {
   "name": "api",
-  "version": "26.0.8",
+  "version": "26.0.14",
   "description": "Realtime service for EMS.",
   "main": "build/Server.js",
   "type": "module",
   "scripts": {
     "start": "tsc -p . && node build/Server.js",
     "build": "tsc -p .",
-    "dist": "ncc build build/Server.js -e sqlite3 -o dist"
+    "dist": "npm run dist:index && npm run dist:worker",
+    "test:history": "tsx --test src/tests/match-history.integration.test.ts",
+    "dist:index": "ncc build build/Server.js -e sqlite3 -o dist",
+    "dist:worker": "ncc build build/stats/StatsWorker.js -e sqlite3 -o dist/stats-worker",
+    "test": "npm run build && node --test build/tests/*.test.js",
+    "check-types": "tsc --noEmit"
   },
   "author": "Kyle Flynn",
   "license": "ISC",

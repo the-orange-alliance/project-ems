@@ -58,16 +58,30 @@ function notifyReady(v: boolean) {
 }
 
 function fanoutEvent(event: string, data: any) {
-  eventBus.lastEventPayload.set(event, data);
+  const payloads =
+    eventBus.lastEventPayload.get(event) ?? new Map<string, any>();
+  const messageKey =
+    data && typeof data === 'object' && typeof data.eventKey === 'string'
+      ? data.eventKey
+      : '__all__';
+
+  payloads.set(messageKey, data);
+  eventBus.lastEventPayload.set(event, payloads);
 
   const listeners = eventBus.eventListeners.get(event);
   if (!listeners) return;
 
-  for (const cb of listeners) {
-    try {
-      safeCall(event, cb, data);
-    } catch (err) {
-      console.error(`[worker] listener failed for ${event}`, err);
+  for (const [listenerKey, set] of listeners.entries()) {
+    if (listenerKey !== '__all__' && listenerKey !== messageKey) {
+      continue;
+    }
+
+    for (const cb of Array.from(set)) {
+      try {
+        safeCall(event, cb, data);
+      } catch (err) {
+        console.error(`[worker] listener failed for ${event}`, err);
+      }
     }
   }
 }
@@ -83,7 +97,7 @@ function ensureSocket(token: string, props: SocketProperties) {
   socket.on('connect', () => {
     console.log('[worker] socket CONNECT');
     notifyConnected(true);
-    socket?.emit('rooms', ['match', 'fcs', 'frc-fms']);
+    socket?.emit('rooms', ['match', 'fcs', 'frc-fms', 'graphics']);
     notifyReady(true);
   });
 
@@ -166,7 +180,9 @@ export const socketService: SocketService = {
     return ready;
   },
   getLastEvent(key) {
-    return eventBus.lastEventPayload.get(key);
+    const payloads = eventBus.lastEventPayload.get(key);
+    if (!payloads) return undefined;
+    return payloads.get('__all__') ?? payloads.values().next().value;
   },
 
   destroy() {
