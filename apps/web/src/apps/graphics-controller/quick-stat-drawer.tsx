@@ -283,7 +283,7 @@ export const QuickStatDrawer: FC<QuickStatDrawerProps> = ({
                   description={
                     <Typography.Text
                       type='secondary'
-                      ellipsis
+                      ellipsis={{ tooltip: entry.description }}
                       style={{ fontSize: 12, display: 'block' }}
                     >
                       {entry.description}
