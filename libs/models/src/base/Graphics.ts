@@ -430,6 +430,26 @@ export interface LiveGraphicState {
   queueEntryId: string | null;
   armed: boolean;
   /**
+   * The variable-name -> value map that resolved the CURRENTLY loaded
+   * timeline's template bindings (mirrors `LoadedGraphicsSnapshot.values` -
+   * see its own doc comment). `null` for an untemplated timeline, a rundown
+   * (each rundown entry carries its own values instead of one shared map -
+   * see `queueEntryId` above), or nothing loaded.
+   *
+   * This is the producer UI's ONLY way to recover "what values is the live
+   * item currently resolved with" after the fact - e.g. to silently reuse
+   * them for a Refresh/recalculate instead of re-prompting the operator for
+   * values it already filled in once. Before this field existed, the web
+   * producer UI (`graphics-controller.tsx`) tried to reconstruct this by
+   * looking up `queueEntryId` in its OWN on-deck cue queue - which not only
+   * doesn't carry a rundown's values (`queueEntryId` is a rundown entry id,
+   * a disjoint id space from the cue queue's own entry ids - see
+   * `queueEntryId` above), but is also gone entirely once that queue entry
+   * has been consumed onto the transport. Both gaps silently dropped the
+   * already-known values and re-opened the variable-fill modal instead.
+   */
+  values: Record<string, number> | null;
+  /**
    * The item ONE STEP AHEAD of what is on air, for a "preview" (PVW-bus)
    * screen - the next graphic in the loaded running order, never what is
    * currently broadcasting.
@@ -461,6 +481,15 @@ export const liveGraphicStateZod = z
     generation: z.number(),
     queueEntryId: z.string().nullable().default(null),
     armed: z.boolean().default(false),
+    // Inlined (not `variableValuesZod` from `GraphicsTemplates.ts`, which
+    // imports FROM this file) for the same reason `playbackCommandZod`'s own
+    // `values` field is inlined above. Defaulted, like `queueEntryId`/
+    // `armed` above, so a payload from before this field existed still
+    // parses instead of failing `.strict()`.
+    values: z
+      .record(z.string().min(1), z.number().int().positive())
+      .nullable()
+      .default(null),
     // Defaulted, like `queueEntryId`/`armed` above, so a payload from
     // before this field existed (or `fromLegacyPlaybackState`'s adoption of
     // truly old in-memory state) still parses instead of failing `.strict()`.
@@ -844,6 +873,48 @@ export const graphicsCueZod = z.discriminatedUnion('status', [
     .strict()
 ]);
 export type GraphicsCue = z.infer<typeof graphicsCueZod>;
+/**
+ * Human-readable, EXACT reason a cue is not ready to `take`/`refresh` — one
+ * message per possible `GraphicsCue.status`, so a `NOT_READY` rejection
+ * tells the operator precisely what's wrong instead of a bare
+ * `(status: calculating)`/`(status: failed)` suffix.
+ *
+ * A `'failed'` cue is the one case that isn't really "not ready" so much as
+ * "ready, and it's a rejection" — its own captured `error` (the actual
+ * calculation/presentation failure, e.g. a missing template binding or a
+ * stat query that came back `insufficient_data`) IS the exact reason, so
+ * that `code`/`message` is propagated verbatim rather than replaced with a
+ * generic `NOT_READY`.
+ */
+export function describeCueNotReady(cue: GraphicsCue): {
+  code: GraphicsError['code'];
+  message: string;
+} {
+  switch (cue.status) {
+    case 'empty':
+      return {
+        code: 'NOT_READY',
+        message: 'The cue is empty; nothing has been loaded or cued yet.'
+      };
+    case 'calculating':
+      return {
+        code: 'NOT_READY',
+        message:
+          'The cue is still calculating its data; try again in a moment.'
+      };
+    case 'failed':
+      return { code: cue.error.code, message: cue.error.message };
+    case 'ready':
+      // Never actually reached by a real "not ready" rejection — callers
+      // only invoke this after confirming `status !== 'ready'` — but every
+      // status must produce a message so a future caller can't skip that
+      // check and get `undefined`.
+      return {
+        code: 'NOT_READY',
+        message: 'The cue is ready.'
+      };
+  }
+}
 export const graphicsTransitionZod = z
   .object({
     revision: graphicRevisionZod,
@@ -892,6 +963,29 @@ export const graphicsStagedUpdateZod = z.discriminatedUnion('status', [
     .strict()
 ]);
 export type GraphicsStagedUpdate = z.infer<typeof graphicsStagedUpdateZod>;
+/** `describeCueNotReady`'s sibling for a `GraphicsStagedUpdate` (see that doc comment) — same four statuses, same reasoning. */
+export function describeStagedUpdateNotReady(staged: GraphicsStagedUpdate): {
+  code: GraphicsError['code'];
+  message: string;
+} {
+  switch (staged.status) {
+    case 'empty':
+      return {
+        code: 'NOT_READY',
+        message: 'There is no staged update; nothing has been refreshed yet.'
+      };
+    case 'calculating':
+      return {
+        code: 'NOT_READY',
+        message:
+          'The staged update is still calculating its data; try again in a moment.'
+      };
+    case 'failed':
+      return { code: staged.error.code, message: staged.error.message };
+    case 'ready':
+      return { code: 'NOT_READY', message: 'The staged update is ready.' };
+  }
+}
 export const playbackStateZod = z
   .object({
     schemaVersion: z.literal(2),

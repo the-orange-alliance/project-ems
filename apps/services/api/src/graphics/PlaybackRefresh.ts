@@ -4,6 +4,7 @@ import { AsyncDatabase } from 'promised-sqlite3';
 import sqlite3 from 'sqlite3';
 import { getAppData } from '@toa-lib/server';
 import {
+  describeStagedUpdateNotReady,
   graphicsTransitionZod,
   playbackAcknowledgmentZod,
   presentationFrameZod,
@@ -482,9 +483,12 @@ export class PlaybackRefresh {
     return this.coordinator.mutate(eventKey, command, (draft, context) => {
       const staged = draft.stagedUpdate;
       if (staged.status !== 'ready') {
+        // Code stays `NOT_READY` even for a `'failed'` staged update (mirrors
+        // `PlaybackProgram.take`'s identical reasoning for a failed cue) —
+        // the failure IS surfaced, just in the message.
         throw new PlaybackCoordinatorError({
           code: 'NOT_READY',
-          message: `The staged update is not ready to push (status: ${staged.status}).`,
+          message: describeStagedUpdateNotReady(staged).message,
           retryable: false
         });
       }

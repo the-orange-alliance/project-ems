@@ -18,6 +18,14 @@
 import { catalogue } from '../catalogue.js';
 import { familyFor, type VizFamily } from './families.js';
 import type { GraphicKind } from '../../../base/Graphics.js';
+// Imported for `presentationFor`'s own function body ONLY (see the doc
+// comment there) - never touched at this module's own top level - so this
+// stays safe despite `semantic-registry.ts` -> `adapters.ts` -> this same
+// file already being a real (and otherwise one-directional) import cycle.
+import {
+  FGC2026_SEASON_KEY,
+  semanticRegistrationFor
+} from './semantic-registry.js';
 
 export interface StatPresentation {
   family: VizFamily;
@@ -664,12 +672,44 @@ for (const row of catalogue) {
   };
 }
 
+/**
+ * `defaultKind`/`allowedKinds` on the family-classified `presentations` map
+ * above are a GUESS (family -> plausible default chart types), not the
+ * truth - the actual, ENFORCED set of kinds a stat can render as lives on
+ * its semantic registration (`SEMANTIC_PRESENTATION_REGISTRY`'s
+ * `metadata.defaultKind`/`supportedKinds` - see `semantic-registry.ts`),
+ * whose `adapt()` throws `SemanticPreparationError: unsupported
+ * presentation kind` for anything outside that set.
+ *
+ * Those two had drifted apart for the large majority of stats (e.g. F1
+ * "Full Breakdown" only actually supports `grouped-bar`, but its family
+ * guess offered `bar`/`table` too) - every producer-facing consumer of a
+ * stat's kind (the Kind `Select` in `graphic-inspector.tsx`, its own
+ * corrective effect, and `build-default-spec.ts`'s initial spec) reads
+ * `presentationFor(...).defaultKind`/`.allowedKinds`, so that drift meant
+ * the UI would happily offer, or even default to, a kind the stat's real
+ * adapter rejects outright - reproducibly hitting exactly that thrown error
+ * the moment the producer tried to cue/take it.
+ *
+ * Overridden here (lazily, inside this function - see the import comment
+ * above) so every one of those call sites is correct for free, without
+ * hunting down and re-deriving the right kind at each one individually -
+ * and so the two can never drift apart again.
+ */
 export function presentationFor(catalogueId: string): StatPresentation {
   const presentation = presentations[catalogueId];
   if (!presentation) {
     throw new Error('Unknown catalogue id: ' + catalogueId);
   }
-  return presentation;
+  const semantic = semanticRegistrationFor(FGC2026_SEASON_KEY, catalogueId);
+  if (!semantic) return presentation;
+  return {
+    ...presentation,
+    defaultKind: semantic.metadata.defaultKind,
+    // `supportedKinds` is `readonly GraphicKind[]` (see `SemanticMetadata`);
+    // `StatPresentation.allowedKinds` is a plain mutable array, hence the copy.
+    allowedKinds: [...semantic.metadata.supportedKinds]
+  };
 }
 
 export function allPresentations(): Record<string, StatPresentation> {

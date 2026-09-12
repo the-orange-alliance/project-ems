@@ -171,6 +171,7 @@ if (!isGraphicsDisabled()) {
     generation: 0,
     queueEntryId: null,
     armed: false,
+    values: null,
     previewSpec: null,
   };
 

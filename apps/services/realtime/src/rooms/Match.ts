@@ -215,8 +215,14 @@ export default class Match extends Room {
     socket.on(MatchSocketEvent.MATCH_UPDATE_ITEM, (itemUpdate: ItemUpdate) => {
       const { match } = this;
       if (match) {
-        const oldValue = match[itemUpdate.key];
-        match[itemUpdate.key] = itemUpdate.value;
+        // `itemUpdate.key` is an arbitrary string field path (e.g. from a
+        // dynamic form field), not a keyof `Match<any>` - `Match` itself has
+        // no index signature, so this dynamic read/write is cast through
+        // `Record<string, unknown>` at the point of use only, matching the
+        // existing loose typing on `itemUpdate` itself just below.
+        const target = match as unknown as Record<string, unknown>;
+        const oldValue = target[itemUpdate.key];
+        target[itemUpdate.key] = itemUpdate.value;
         this.handlePartiallyUpdatedMatch(match);
         void this.logActionEvent({
           sourceEvent: MatchSocketEvent.MATCH_UPDATE_ITEM,

@@ -4,6 +4,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
+  describeCueNotReady,
   graphicIdentifierZod,
   graphicRevisionZod,
   graphicsTargetZod,
@@ -366,15 +367,22 @@ export default async function graphicsPlaybackController(
     if (explicit) return { target: explicit };
     const state = await coordinator.getState(eventKey);
     if (source === 'take-cue' || source === 'refresh-cue') {
-      if (state.cue.status !== 'ready')
+      if (state.cue.status !== 'ready') {
+        // Code stays `NOT_READY` regardless of *why* (even a `'failed'` cue)
+        // so this auto-resolved-target path rejects identically to the
+        // explicit-target path once it reaches `program.take`'s own
+        // `NOT_READY` check (see `PlaybackProgram.take`) — only the message
+        // gets more specific here.
+        const { message } = describeCueNotReady(state.cue);
         return {
           reject: rejectAck(
             requestId,
             'NOT_READY',
-            `The cue is not ready (status: ${state.cue.status}); nothing to ${source === 'take-cue' ? 'take' : 'refresh'}.`,
+            `${message} Nothing to ${source === 'take-cue' ? 'take' : 'refresh'}.`,
             state
           )
         };
+      }
       return { target: state.cue.graphic.target };
     }
     if (source === 'refresh-program') {
@@ -465,23 +473,21 @@ export default async function graphicsPlaybackController(
 
       // Mirrors `remapQuickTakeFailure`'s reasoning: a failed cue is a normal, durable `load` outcome
       // (e.g. an unfilled template binding), but quick-cue is ABOUT to take it live, so that failure
-      // must surface as this call's own rejection instead of a silent no-op take.
+      // must surface as this call's own rejection instead of a silent no-op take. `describeCueNotReady`
+      // already propagates a `'failed'` cue's own captured error verbatim, so one branch covers both.
       const { cue } = loadAck.state;
-      if (cue.status === 'failed')
-        return sendAck(
-          reply,
-          rejectAck(requestId, cue.error.code, cue.error.message, loadAck.state)
-        );
-      if (cue.status !== 'ready')
+      if (cue.status !== 'ready') {
+        const { code, message } = describeCueNotReady(cue);
         return sendAck(
           reply,
           rejectAck(
             requestId,
-            'NOT_READY',
-            `The cue is not ready (status: ${cue.status}); cannot take it live.`,
+            code,
+            `${message} Cannot take it live.`,
             loadAck.state
           )
         );
+      }
 
       const takeAck = await dispatch(eventKey, {
         type: 'take',

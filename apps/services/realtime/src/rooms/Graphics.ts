@@ -694,6 +694,10 @@ export default class Graphics extends Room {
       generation: state.revision,
       queueEntryId: currentItem?.entryId ?? null,
       armed: false,
+      // Mirrors `LoadedGraphicsSnapshot.values` (see its own doc comment and
+      // `LiveGraphicState.values`'s) - null for a rundown load or nothing
+      // loaded, exactly like `loaded?.values` itself.
+      values: loaded?.values ?? null,
       previewSpec,
     };
   }

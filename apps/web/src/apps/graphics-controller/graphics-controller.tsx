@@ -401,15 +401,22 @@ export const GraphicsController: FC = () => {
       }
       const bindingNames = boundVariableNames(cueTarget);
       if (bindingNames.length > 0) {
-        // The loaded graphic came from a queue entry - reuse its values
-        // automatically rather than prompting. The producer already filled
-        // these in at enqueue time; re-prompting mid-show would be a
+        // The live item is already resolved with known values (it was
+        // loaded via a queue entry, or is being re-cued after a Save) -
+        // reuse them automatically rather than prompting. The producer
+        // already filled these in once; re-prompting mid-show would be a
         // serious usability failure.
+        //
+        // Read from `liveState.values` - the server's own record of what
+        // resolved THIS load (mirrors `LoadedGraphicsSnapshot.values`) -
+        // rather than trying to reconstruct it from `cueQueue.entries`:
+        // that queue entry is normally already gone by the time this runs
+        // (`pullOnDeckEntry`/`handleQuickPlayQueueEntry` both remove it
+        // immediately after loading), so that lookup used to fail here
+        // every time and fall through to the modal below despite the
+        // values already being known and in effect on air.
         const queuedValues =
-          cueTarget === activeItem && liveState.queueEntryId != null
-            ? cueQueue.entries.find((e) => e.entryId === liveState.queueEntryId)
-                ?.values
-            : undefined;
+          cueTarget === activeItem ? (liveState.values ?? undefined) : undefined;
         if (queuedValues) {
           const result = await cue.cue(cueTarget, queuedValues);
           if (result) emitPreview(result.spec, result.frame);

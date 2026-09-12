@@ -4,6 +4,7 @@ import { AsyncDatabase } from 'promised-sqlite3';
 import sqlite3 from 'sqlite3';
 import { getAppData } from '@toa-lib/server';
 import {
+  describeCueNotReady,
   graphicsTransitionZod,
   playbackAcknowledgmentZod,
   presentationFrameZod,
@@ -422,9 +423,13 @@ export class PlaybackProgram {
   ): Promise<PlaybackAcknowledgment> {
     return this.coordinator.mutate(eventKey, command, (draft, context) => {
       if (draft.cue.status !== 'ready') {
+        // Code stays `NOT_READY` even for a `'failed'` cue (see
+        // `describeCueNotReady`'s doc comment on why that status is really
+        // "ready, and it's a rejection") — the failure IS surfaced, just in
+        // the message rather than replacing this command's own error code.
         throw new PlaybackCoordinatorError({
           code: 'NOT_READY',
-          message: `The cue is not ready to take (status: ${draft.cue.status}).`,
+          message: describeCueNotReady(draft.cue).message,
           retryable: false
         });
       }
