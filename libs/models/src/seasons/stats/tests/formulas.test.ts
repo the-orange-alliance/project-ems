@@ -215,6 +215,15 @@ test('official season rankings exclude red-card denominator and keep ties out of
   );
 });
 
+test('G9 reports white cards per match rather than per participant', async () => {
+  const ctx = fixture();
+  ctx.matches = [ctx.matches[0]];
+  ctx.matches[0].participants![0].cardStatus = 3;
+  const result = await calculate('G9', ctx);
+  assert.equal(result.status, 'ok');
+  assert.equal((result as any).data, 1);
+});
+
 test('match selectors retain historical reference observations for live projections', async () => {
   const ctx = fixture();
   ctx.matches = ctx.matches.filter((m) => m.tournamentKey === 'q');

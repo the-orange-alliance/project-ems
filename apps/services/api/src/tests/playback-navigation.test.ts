@@ -158,7 +158,7 @@ class FakeStats implements PlaybackNavigationStats {
   async catalogue(): Promise<{ slug: string; catalogueId: string }[]> {
     return this.catalogueEntries;
   }
-  async query(
+  async queryFresh(
     eventKey: string,
     input: unknown
   ): Promise<{ result: StatResult; calculatedAsOfUtc: string }> {

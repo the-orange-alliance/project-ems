@@ -126,6 +126,7 @@ export const TimelineList: FC<TimelineListProps> = ({
         eventKey,
         name: `${t.name} (copy)`,
         description: t.description,
+        variables: t.variables,
         items: t.items
       });
       if (created) onSelect(created.timelineId);

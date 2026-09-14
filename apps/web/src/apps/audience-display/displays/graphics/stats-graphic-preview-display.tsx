@@ -1,6 +1,7 @@
 import type { CSSProperties, FC } from 'react';
 import type { GraphicSpec, VizFrame } from '@toa-lib/models';
 
+import { PreviewNotReadyAlarm } from './preview-not-ready-alarm.js';
 import { StatsGraphicDisplay } from './stats-graphic-display.js';
 import { fontFamily } from './theme.js';
 import { usePreviewFrame } from './use-preview-frame.js';
@@ -71,7 +72,7 @@ const labelStyle: CSSProperties = {
 export const StatsGraphicPreviewDisplay: FC<
   StatsGraphicPreviewDisplayProps
 > = ({ eventKey, spec, programSpec, programFrame }) => {
-  const preview = usePreviewFrame(eventKey, spec);
+  const { result: preview, failure } = usePreviewFrame(eventKey, spec);
   // Bumped when the producer presses "Replay in Preview" - replays the
   // transition without re-querying, since the data has not changed.
   const replayNonce = usePreviewReplayNonce(eventKey);
@@ -126,6 +127,15 @@ export const StatsGraphicPreviewDisplay: FC<
           replayNonce={replayNonce}
           replayFrom={replayFrom}
         />
+
+        {/*
+          The next cue cannot be prepared, so a Go will put nothing on air.
+          Rendered INSIDE the graphic area (above `StatsGraphicDisplay`, which
+          has already rendered nothing for this item) so the alarm stays within
+          the preview chrome rather than covering the PREVIEW label bars that
+          identify this tile as off-air.
+        */}
+        {failure && <PreviewNotReadyAlarm reason={failure.reason} />}
       </div>
 
       <div style={labelStyle}>Preview</div>

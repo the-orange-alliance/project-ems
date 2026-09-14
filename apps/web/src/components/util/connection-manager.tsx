@@ -7,12 +7,14 @@ import { FC, useEffect, useMemo } from 'react';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import * as Events from 'src/api/events/index.js';
 import { proxy } from 'comlink';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { eventKeyAtom } from 'src/stores/state/event.js';
+import { graphicsStateMapAtom } from 'src/stores/state/graphics.js';
 
 export const ConnectionManager: FC = () => {
   const { worker, connected } = useSocketWorker();
   const eventKey = useAtomValue(eventKeyAtom);
+  const setGraphicsStateMap = useSetAtom(graphicsStateMapAtom);
   const handleDisplay = Events.useDisplayEvent();
   const handleCommit = Events.useCommitEvent();
   const handleUpdate = Events.useMatchUpdateEvent();
@@ -61,14 +63,6 @@ export const ConnectionManager: FC = () => {
   );
 
   useEffect(() => {
-    if (!worker || !connected || !eventKey) return;
-    worker.emit('graphics:subscribe', { eventKey });
-    return () => {
-      worker.emit('graphics:unsubscribe', { eventKey });
-    };
-  }, [worker, connected, eventKey]);
-
-  useEffect(() => {
     if (!worker || !connected) return;
     worker.on(MatchSocketEvent.ABORT, abortProxy);
     worker.on(MatchSocketEvent.END, endProxy);
@@ -86,6 +80,19 @@ export const ConnectionManager: FC = () => {
         graphicsPreviewReplayProxy,
         eventKey
       );
+      // A generation is ordered only within one server/database lifetime.
+      // Drop the prior connection's baseline before asking for the new full
+      // snapshot, otherwise a reset service at revision 0 can be rejected
+      // forever behind a browser-held revision from the previous lifetime.
+      setGraphicsStateMap((previous) => {
+        if (!(eventKey in previous)) return previous;
+        const next = { ...previous };
+        delete next[eventKey];
+        return next;
+      });
+      // Subscribe only after the listener exists so a fast initial replay
+      // cannot race ahead of registration.
+      worker.emit('graphics:subscribe', { eventKey });
     }
     return () => {
       worker.off(MatchSocketEvent.ABORT, abortProxy);
@@ -98,6 +105,7 @@ export const ConnectionManager: FC = () => {
       worker.off(MatchSocketEvent.COMMIT, commitProxy);
       worker.off(MatchSocketEvent.PRESTART, prestartProxy);
       if (eventKey) {
+        worker.emit('graphics:unsubscribe', { eventKey });
         worker.off(GraphicsSocketEvent.STATE, graphicsStateProxy, eventKey);
         worker.off(
           GraphicsSocketEvent.PREVIEW_REPLAY,
@@ -106,6 +114,6 @@ export const ConnectionManager: FC = () => {
         );
       }
     };
-  }, [worker, connected, eventKey]);
+  }, [worker, connected, eventKey, setGraphicsStateMap]);
   return null;
 };

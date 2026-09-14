@@ -91,7 +91,7 @@ export function penalties(
   if (id === 9)
     return ok(
       participants.filter((p) => p.cardStatus === 3).length /
-        participants.length
+        games.length
     );
   if (id === 10)
     return ok(

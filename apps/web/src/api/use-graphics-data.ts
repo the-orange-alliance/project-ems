@@ -1,6 +1,7 @@
 import {
   ApiResponseError,
   CueQueue,
+  GraphicSpec,
   LiveGraphicState,
   QueueEntry,
   Timeline,
@@ -235,6 +236,18 @@ export const graphicsApi = {
       const state = await realtimeClient.post<LiveGraphicState>(
         `/graphics/${eventKey}/live/take`,
         { schema: liveGraphicStateZod }
+      );
+      mutate(liveStateKey(eventKey), state);
+      return state;
+    },
+    /** Calculates and takes this exact ad-hoc graphic in one authoritative command. */
+    quickTake: async (
+      eventKey: string,
+      spec: GraphicSpec
+    ): Promise<LiveGraphicState | null> => {
+      const state = await realtimeClient.post<LiveGraphicState>(
+        `/graphics/${eventKey}/live/quick-take`,
+        { body: { spec }, schema: liveGraphicStateZod }
       );
       mutate(liveStateKey(eventKey), state);
       return state;

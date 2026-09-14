@@ -6,6 +6,7 @@ import type {
 } from '@toa-lib/models';
 import {
   KIND_FOR_SELECTOR,
+  SUPPORTED_GRAPHIC_MODES,
   TournamentTypes,
   type TournamentType
 } from '@toa-lib/models';
@@ -203,6 +204,10 @@ export const GraphicInspector: FC<GraphicInspectorProps> = ({
     if (!presentation.allowedKinds.includes(spec.kind)) {
       nextKind = presentation.defaultKind;
     }
+    const allowedModes = SUPPORTED_GRAPHIC_MODES[nextKind];
+    const nextMode = allowedModes.includes(spec.mode)
+      ? spec.mode
+      : allowedModes[0];
 
     const supported = new Set(catalogueEntry.supportedSelectors);
     let selectorsChanged = false;
@@ -252,17 +257,20 @@ export const GraphicInspector: FC<GraphicInspectorProps> = ({
 
     if (
       nextKind !== spec.kind ||
+      nextMode !== spec.mode ||
       selectorsChanged ||
       bindingsChanged ||
       filtersChanged
     ) {
-      const { bindings: _droppedBindings, ...specWithoutBindings } = spec;
+      const specWithoutBindings = { ...spec };
+      delete specWithoutBindings.bindings;
       const nextBindingsCount = Object.keys(nextBindings).length;
       onChange({
         ...(bindingsChanged && nextBindingsCount === 0
           ? specWithoutBindings
           : spec),
         kind: nextKind,
+        mode: nextMode,
         selectors: selectorsChanged ? nextSelectors : spec.selectors,
         ...(bindingsChanged && nextBindingsCount > 0
           ? { bindings: nextBindings }
@@ -276,7 +284,6 @@ export const GraphicInspector: FC<GraphicInspectorProps> = ({
     // or when the timeline's variables change - a rename/removal of a bound
     // variable must be caught even while the catalogue entry stays put.
     // Not on every keystroke elsewhere in the spec.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [catalogueEntry.catalogueId, variables]);
 
   const patch = (partial: Partial<GraphicSpec>) =>
@@ -327,7 +334,8 @@ export const GraphicInspector: FC<GraphicInspectorProps> = ({
     if (Object.keys(nextBindings).length > 0) {
       onChange({ ...spec, bindings: nextBindings, selectors: nextSelectors });
     } else {
-      const { bindings: _droppedBindings, ...rest } = spec;
+      const rest = { ...spec };
+      delete rest.bindings;
       onChange({ ...rest, selectors: nextSelectors });
     }
   };
@@ -443,7 +451,15 @@ export const GraphicInspector: FC<GraphicInspectorProps> = ({
               value: kind,
               label: KIND_LABEL[kind]
             }))}
-            onChange={(kind: GraphicKind) => patch({ kind })}
+            onChange={(kind: GraphicKind) => {
+              const allowedModes = SUPPORTED_GRAPHIC_MODES[kind];
+              patch({
+                kind,
+                mode: allowedModes.includes(spec.mode)
+                  ? spec.mode
+                  : allowedModes[0]
+              });
+            }}
           />
         </Field>
 
@@ -451,7 +467,9 @@ export const GraphicInspector: FC<GraphicInspectorProps> = ({
           <Select
             style={{ width: '100%' }}
             value={spec.mode}
-            options={MODE_OPTIONS}
+            options={MODE_OPTIONS.filter(({ value }) =>
+              SUPPORTED_GRAPHIC_MODES[spec.kind].includes(value)
+            )}
             onChange={(mode: PresentationMode) => patch({ mode })}
           />
         </Field>

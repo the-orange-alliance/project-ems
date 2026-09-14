@@ -45,7 +45,7 @@ export interface RendererProps {
  * one rather than reusing that fallback.
  */
 class GraphicErrorBoundary extends Component<
-  { children: ReactNode },
+  { children: ReactNode; frame: VizFrame; spec: GraphicSpec },
   { hasError: boolean }
 > {
   state = { hasError: false };
@@ -56,6 +56,21 @@ class GraphicErrorBoundary extends Component<
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('[GraphicRenderer] renderer crashed:', error, info);
+  }
+
+  componentDidUpdate(
+    previous: Readonly<{
+      children: ReactNode;
+      frame: VizFrame;
+      spec: GraphicSpec;
+    }>
+  ) {
+    if (
+      this.state.hasError &&
+      (previous.frame !== this.props.frame || previous.spec !== this.props.spec)
+    ) {
+      this.setState({ hasError: false });
+    }
   }
 
   render() {
@@ -111,7 +126,11 @@ function renderGraphic({ frame, spec }: RendererProps): ReactNode {
  * producer preview/live-monitor use to render a graphic.
  */
 export const GraphicRenderer: FC<RendererProps> = (props) => {
-  return <GraphicErrorBoundary>{renderGraphic(props)}</GraphicErrorBoundary>;
+  return (
+    <GraphicErrorBoundary frame={props.frame} spec={props.spec}>
+      {renderGraphic(props)}
+    </GraphicErrorBoundary>
+  );
 };
 
 export default GraphicRenderer;

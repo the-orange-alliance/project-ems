@@ -123,7 +123,29 @@ function signatureOf(
   frame: VizFrame | null
 ): string | null {
   if (!spec) return null;
-  return `${spec.id}::${frame?.asOfUtc ?? ''}`;
+  // Content, configuration, and provenance all participate. A refresh or
+  // correction is allowed to retain both the authored id and asOfUtc; using
+  // only those two fields caused the production display to discard a real
+  // title/options/data change as a duplicate.
+  return JSON.stringify([spec, frame]);
+}
+
+function initialEngineState(
+  spec: GraphicSpec | null,
+  frame: VizFrame | null
+): EngineState {
+  // A component that mounts while a graphic is already live is a late join,
+  // not a new Take. Render the authoritative snapshot settled; a component
+  // that was already mounted at idle will still animate a later null->graphic
+  // prop change through the effect below.
+  return spec && frame
+    ? {
+        phase: 'shown',
+        displayedSpec: spec,
+        displayedFrame: frame,
+        cutting: false
+      }
+    : INITIAL_STATE;
 }
 
 /**
@@ -154,17 +176,19 @@ export function useGraphicTransition(
   replayNonce = 0,
   replayFrom: GraphicSnapshot | null = null
 ): GraphicTransitionResult {
-  const [state, setState] = useState<EngineState>(INITIAL_STATE);
+  const [state, setState] = useState<EngineState>(() =>
+    initialEngineState(spec, frame)
+  );
 
   // Mirrors `state` synchronously so effect/timer callbacks always read the
   // latest values instead of a stale closure over the last render's state.
-  const stateRef = useRef<EngineState>(INITIAL_STATE);
+  const stateRef = useRef<EngineState>(state);
 
   // The signature of the last (spec, frame) pair we actually started
   // processing a transition for — guards against re-running the machine
   // when props are referentially new but semantically unchanged (e.g. a
   // parent re-render with an equivalent object).
-  const lastSignatureRef = useRef<string | null>(null);
+  const lastSignatureRef = useRef<string | null>(signatureOf(spec, frame));
 
   // The `replayNonce` the last effect run observed. Seeded with the initial
   // prop so mounting never counts as a replay request.

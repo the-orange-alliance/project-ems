@@ -2,6 +2,7 @@ import type { GraphicSpec } from '@toa-lib/models';
 import useSWR from 'swr';
 import {
   queryGraphicFrame,
+  type GraphicFrameOutcome,
   type GraphicFrameResult
 } from 'src/api/graphic-frame-query.js';
 import { useMatchesForEvent } from 'src/api/use-match-data.js';
@@ -30,10 +31,28 @@ import { useTeamsForEvent } from 'src/api/use-team-data.js';
  * so the two always describe the same graphic. `stats-graphic-display.tsx`'s
  * transition engine depends on `spec`/`frame` moving in lockstep.
  */
+export interface PreviewFrameState {
+  /** The calculated graphic, or `null` when there is nothing to show (or it could not be calculated). */
+  result: GraphicFrameResult | null;
+  /**
+   * Why the NEXT cue cannot be calculated, when it cannot be.
+   *
+   * This is the same `{ ok: false }` outcome `PlaybackNavigation.prepareCueAt`
+   * will hit when the transport advances onto this item - at which point it
+   * writes `cue.status = 'failed'` and the following `take` rejects
+   * `NOT_READY`. In other words: a non-null `failure` here means the next Go
+   * WILL NOT put anything on air. It used to be discarded (the hook returned a
+   * bare `null`, indistinguishable from "nothing is queued next"), which is
+   * exactly why that failure could only ever be discovered by pressing the
+   * button.
+   */
+  failure: { reason: string } | null;
+}
+
 export const usePreviewFrame = (
   eventKey: string | null | undefined,
   spec: GraphicSpec | null
-): GraphicFrameResult | null => {
+): PreviewFrameState => {
   const { data: catalogue = [] } = useStatsCatalogue(eventKey);
   const { data: teams = [] } = useTeamsForEvent(eventKey);
   const { data: matches = [] } = useMatchesForEvent(eventKey);
@@ -45,7 +64,7 @@ export const usePreviewFrame = (
   // "the entity lookups have arrived" signal: when they land, the frame is
   // recalculated once with real labels instead of bare team keys.
   const { data } = useSWR<
-    GraphicFrameResult | null,
+    GraphicFrameOutcome,
     Error,
     readonly [string, string, string, number, number] | null
   >(
@@ -58,18 +77,24 @@ export const usePreviewFrame = (
           matches.length
         ]
       : null,
-    async ([, key, serializedSpec]) => {
-      const outcome = await queryGraphicFrame(
-        key,
-        JSON.parse(serializedSpec) as GraphicSpec,
-        { refresh: false, values: {}, context: { catalogue, teams, matches } }
-      );
-      // A normal "cannot compute this yet" outcome (an unfilled template
-      // binding, insufficient data) renders as nothing at all, exactly like
-      // an off-air program does - never a placeholder or an error card on
-      // what may well be a transparent broadcast source.
-      return outcome.ok ? outcome.result : null;
-    },
+    async ([, key, serializedSpec]) =>
+      // The WHOLE outcome is cached, failure included. A "cannot compute
+      // this" result (an unfilled template binding, insufficient data) still
+      // renders no GRAPHIC - this remains a transparent broadcast source and
+      // must never paint a placeholder where a graphic would go - but the
+      // reason is now kept so the preview chrome can raise an alarm about the
+      // next cue. Collapsing it to `null` here was what made a broken next
+      // cue indistinguishable from an empty one.
+      queryGraphicFrame(key, JSON.parse(serializedSpec) as GraphicSpec, {
+        // `values: {}` is correct, not an oversight: `previewSpec` comes from
+        // the loaded snapshot's items, whose bindings `buildItems` already
+        // resolved at LOAD time against the load's own values. A binding still
+        // present here is one the server could not resolve either - so this
+        // item genuinely will fail, and reporting that is the point.
+        refresh: false,
+        values: {},
+        context: { catalogue, teams, matches }
+      }),
     {
       revalidateOnFocus: false,
       /**
@@ -99,7 +124,11 @@ export const usePreviewFrame = (
   // `keepPreviousData` deliberately outlives the key going null, so the
   // end of the running order (no next item at all) has to be honoured here
   // explicitly - otherwise the last previewed graphic would linger on the
-  // PVW screen forever instead of clearing.
-  if (!spec) return null;
-  return data ?? null;
+  // PVW screen forever instead of clearing. The alarm clears with it: no next
+  // item is not a broken next item.
+  if (!spec) return { result: null, failure: null };
+  if (!data) return { result: null, failure: null };
+  return data.ok
+    ? { result: data.result, failure: null }
+    : { result: null, failure: { reason: data.unavailable.reason } };
 };

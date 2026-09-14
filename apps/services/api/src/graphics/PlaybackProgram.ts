@@ -267,7 +267,8 @@ function buildClearTransition(
 
 export interface PlaybackProgramStats {
   catalogue(eventKey: string): Promise<{ slug: string; catalogueId: string }[]>;
-  query(
+  /** Atomic quick-take preparation must await a newly calculated result. */
+  queryFresh(
     eventKey: string,
     input: unknown
   ): Promise<{ result: StatResult; calculatedAsOfUtc: string }>;
@@ -580,7 +581,7 @@ export class PlaybackProgram {
           retryable: false
         });
       }
-      const response = await this.stats.query(eventKey, {
+      const response = await this.stats.queryFresh(eventKey, {
         stat: command.spec.stat,
         selectors: command.spec.selectors,
         filters: command.spec.filters,

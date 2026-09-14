@@ -10,7 +10,10 @@ import {
   type AuditRow
 } from '@toa-lib/models/seasons/stats';
 import { EventDatabase } from '../db/EventDatabase.js';
-import { writeMatchRevisionSnapshot } from '../controllers/Match.js';
+import {
+  commitMatchRevision,
+  writeMatchRevisionSnapshot
+} from '../controllers/Match.js';
 import { StatsWorkerPool } from '../stats/StatsWorkerPool.js';
 import { StatsDatabase } from '../stats/StatsDatabase.js';
 import { StatsCache } from '../stats/StatsCache.js';
@@ -140,14 +143,28 @@ test('revision rollback is atomic and high watermark excludes later action arriv
     const before = await f.db.get<{ count: number }>(
       'SELECT COUNT(*) AS count FROM match_history_base'
     );
+    const liveBefore = await f.db.get<{ redScore: number }>(
+      'SELECT redScore FROM "match" WHERE eventKey=? AND tournamentKey=? AND id=?',
+      [f.ctx.eventKey, 'q', 1]
+    );
     await f.db.exec(
       "CREATE TRIGGER reject_detail BEFORE INSERT ON match_detail_history BEGIN SELECT RAISE(ABORT, 'forced detail failure'); END;"
     );
     await assert.rejects(
-      writeMatchRevisionSnapshot(database, f.ctx.eventKey, 'q', '1', {
-        source: 'api',
-        actionType: 'MATCH_PATCH'
-      }),
+      commitMatchRevision(
+        database,
+        f.ctx.eventKey,
+        'q',
+        '1',
+        { source: 'api', actionType: 'MATCH_PATCH' },
+        [
+          {
+            table: 'match',
+            values: { redScore: 987 },
+            where: { eventKey: f.ctx.eventKey, tournamentKey: 'q', id: 1 }
+          }
+        ]
+      ),
       /forced detail failure/
     );
     assert.equal(
@@ -157,6 +174,15 @@ test('revision rollback is atomic and high watermark excludes later action arriv
         )
       ).count,
       before.count
+    );
+    assert.equal(
+      (
+        await f.db.get<{ redScore: number }>(
+          'SELECT redScore FROM "match" WHERE eventKey=? AND tournamentKey=? AND id=?',
+          [f.ctx.eventKey, 'q', 1]
+        )
+      ).redScore,
+      liveBefore.redScore
     );
     await f.db.exec('DROP TRIGGER reject_detail');
     await f.db.run(
@@ -186,6 +212,53 @@ test('revision rollback is atomic and high watermark excludes later action arriv
     );
     assert.equal(late.persisted, 0);
     assert.equal(late.revision, null);
+  } finally {
+    await f.close();
+  }
+});
+test('concurrent aggregate mutations are captured by their own revision', async () => {
+  const f = await eventFixture(),
+    database = new EventDatabase(
+      f.ctx.eventKey,
+      join(f.root, f.ctx.eventKey + '.db')
+    );
+  database.db = f.db;
+  try {
+    const writes = Array.from({ length: 20 }, (_, index) => ({
+      score: 1000 + index,
+      correlationId: `concurrent-${index}`
+    }));
+    await Promise.all(
+      writes.map(({ score, correlationId }) =>
+        commitMatchRevision(
+          database,
+          f.ctx.eventKey,
+          'q',
+          '1',
+          { source: 'api', actionType: 'MATCH_PATCH', correlationId },
+          [
+            {
+              table: 'match',
+              values: { redScore: score },
+              where: { eventKey: f.ctx.eventKey, tournamentKey: 'q', id: 1 }
+            }
+          ]
+        )
+      )
+    );
+    const snapshots = await f.db.all<{
+      correlationId: string;
+      redScore: number;
+    }>(
+      'SELECT correlationId,redScore FROM match_history_base WHERE correlationId LIKE ?',
+      ['concurrent-%']
+    );
+    assert.equal(snapshots.length, writes.length);
+    const expected = new Map(
+      writes.map(({ correlationId, score }) => [correlationId, score])
+    );
+    for (const snapshot of snapshots)
+      assert.equal(snapshot.redScore, expected.get(snapshot.correlationId));
   } finally {
     await f.close();
   }

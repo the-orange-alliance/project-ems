@@ -185,7 +185,8 @@ export interface PlaybackNavigationRepository {
 
 export interface PlaybackNavigationStats {
   catalogue(eventKey: string): Promise<{ slug: string; catalogueId: string }[]>;
-  query(
+  /** Authoritative cue preparation must await a newly calculated result. */
+  queryFresh(
     eventKey: string,
     input: unknown
   ): Promise<{ result: StatResult; calculatedAsOfUtc: string }>;
@@ -783,7 +784,7 @@ export class PlaybackNavigation {
           retryable: false
         });
       }
-      const response = await this.stats.query(eventKey, {
+      const response = await this.stats.queryFresh(eventKey, {
         stat: item.spec.stat,
         selectors: item.spec.selectors,
         filters: item.spec.filters,

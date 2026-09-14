@@ -1,6 +1,7 @@
 import {
   GraphicsQueueSocketEvent,
   GraphicsSocketEvent,
+  type GraphicSpec,
   LiveGraphicState,
   type GraphicsPreviewReplay,
   type PlaybackState,
@@ -389,6 +390,21 @@ export default class Graphics extends Room {
       `/graphics/${eventKey}/live/take`,
       "POST",
       throwOnError,
+    );
+  }
+
+  /** Calculates and takes this exact ad-hoc spec atomically in the API. */
+  public async quickTake(
+    eventKey: string,
+    spec: GraphicSpec,
+    throwOnError = false,
+  ): Promise<LiveGraphicState | null> {
+    return this.fetchLegacyState(
+      eventKey,
+      `/graphics/${eventKey}/live/quick-take`,
+      "POST",
+      throwOnError,
+      { spec },
     );
   }
 

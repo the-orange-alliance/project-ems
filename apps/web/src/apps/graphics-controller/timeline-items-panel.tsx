@@ -5,6 +5,7 @@ import type { StatCatalogueEntry } from '../../api/use-stats-data.js';
 import { GraphicInspector } from './graphic-inspector.js';
 import { TimelineItems } from './timeline-items.js';
 import type { UseTimelineEditorResult } from './use-timeline-editor.js';
+import type { CueReadiness } from './use-timeline-preflight.js';
 import { VariableEditor } from './variable-editor.js';
 
 export interface TimelineItemsPanelProps {
@@ -16,6 +17,13 @@ export interface TimelineItemsPanelProps {
   editor: UseTimelineEditorResult;
   /** Stat catalogue, used to resolve the selected item's params schema. */
   catalogue: StatCatalogueEntry[];
+  /**
+   * Predicted cue readiness per `GraphicSpec.id` (see `use-timeline-preflight.ts`),
+   * rendered as a per-row badge by `TimelineItems`. Only the Live tab supplies
+   * this - the Editor tab has no transport behind it, so nothing there can
+   * meaningfully "fail to fire".
+   */
+  readiness?: Record<string, CueReadiness>;
   /** Index of the item under the transport playhead, or `null` if the
    * transport is not sitting on this panel's timeline. */
   liveIndex: number | null;
@@ -44,6 +52,7 @@ export interface TimelineItemsPanelProps {
 export const TimelineItemsPanel: FC<TimelineItemsPanelProps> = ({
   editor,
   catalogue,
+  readiness,
   liveIndex,
   liveOnAir = false,
   selectedItemId,
@@ -86,6 +95,7 @@ export const TimelineItemsPanel: FC<TimelineItemsPanelProps> = ({
       <div style={{ marginTop: 8 }}>
         <TimelineItems
           items={editor.items}
+          readiness={readiness}
           liveIndex={liveIndex}
           liveOnAir={liveOnAir}
           selectedItemId={selectedItemId}

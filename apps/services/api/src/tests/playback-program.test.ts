@@ -82,6 +82,7 @@ class FakeStats implements PlaybackProgramStats {
   catalogueEntries: { slug: string; catalogueId: string }[] = [
     { slug: 'score', catalogueId: 'CAT-SCORE' }
   ];
+  queryFreshCount = 0;
   queryImpl: (
     eventKey: string,
     input: unknown
@@ -98,10 +99,11 @@ class FakeStats implements PlaybackProgramStats {
   async catalogue(): Promise<{ slug: string; catalogueId: string }[]> {
     return this.catalogueEntries;
   }
-  async query(
+  async queryFresh(
     eventKey: string,
     input: unknown
   ): Promise<{ result: StatResult; calculatedAsOfUtc: string }> {
+    this.queryFreshCount++;
     return this.queryImpl(eventKey, input);
   }
 }
@@ -478,8 +480,8 @@ test('clear: clearing an already-empty program is a success, not an error, and s
 /* quick-take                                                            */
 /* -------------------------------------------------------------------- */
 
-test('quick-take: headlessly prepares a full spec and airs it in one commit - cue becomes ready AND program is set in the SAME revision', async () => {
-  const { program, coordinator } = setup();
+test('quick-take: headlessly prepares fresh data and airs it in one commit - cue becomes ready AND program is set in the SAME revision', async () => {
+  const { program, coordinator, stats } = setup();
 
   const ack = await program.quickTake('event-a', {
     type: 'quick-take',
@@ -489,6 +491,7 @@ test('quick-take: headlessly prepares a full spec and airs it in one commit - cu
   assert.equal(ack.ok, true);
   if (!ack.ok) return;
   assert.equal(ack.state.cue.status, 'ready');
+  assert.equal(stats.queryFreshCount, 1);
   assert.ok(ack.state.program);
   assert.equal(
     ack.state.program?.revision,

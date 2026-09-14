@@ -139,7 +139,7 @@ function ackOf(res: { json(): unknown }): PlaybackAcknowledgment {
 }
 
 test('headless show: drives a complete broadcast over plain HTTP with no browser and no socket client connected', async (t) => {
-  const { app, repository } = await playbackFixture(t);
+  const { app, repository, stats } = await playbackFixture(t);
   const eventKey = 'event-a';
   await seedTimeline(repository, eventKey, 'timeline-1', ['item-0', 'item-1']);
 
@@ -229,6 +229,8 @@ test('headless show: drives a complete broadcast over plain HTTP with no browser
   if (!cleared.ok) return;
   assert.equal(cleared.state.program, null);
   assert.equal(cleared.state.cue.status, 'ready');
+  assert.equal(stats.queryCount, 0, 'authoritative cue never accepts SWR data');
+  assert.equal(stats.queryFreshCount, 2, 'load and advance each await fresh data');
 });
 
 test('every body-less command works over GET with no payload (the Companion path)', async (t) => {

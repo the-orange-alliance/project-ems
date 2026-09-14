@@ -149,6 +149,20 @@ test('isolated harness: ready-only Take rejects before a cue exists, and quick-t
   assert.equal(afterFailureState.cue.status, 'failed');
 });
 
+test('isolated harness: relay quick-take airs the exact requested ad-hoc graphic', async (t) => {
+  const { realtime, stats } =
+    await createGraphicsBroadcastReliabilityHarness(t);
+
+  const requested = sampleGraphic('quick-stat');
+  const state = await realtime.quickTake('event-a', requested, true);
+
+  assert.ok(state);
+  assert.equal(state.onAir, true);
+  assert.equal(state.spec?.id, requested.id);
+  assert.equal(stats.queryCount, 0);
+  assert.equal(stats.queryFreshCount, 1);
+});
+
 test('isolated harness: refresh stages a new program and explicit push-update promotes it', async (t) => {
   const { app, repository } =
     await createGraphicsBroadcastReliabilityHarness(t);

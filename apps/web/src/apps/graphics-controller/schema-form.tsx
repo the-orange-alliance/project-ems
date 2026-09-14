@@ -298,16 +298,16 @@ const NumberArrayField: FC<NumberArrayFieldProps> = ({
 
   const [text, setText] = useState(() => (initial ?? []).join(', '));
   const [error, setError] = useState<string | null>(null);
+  const externalValueKey = JSON.stringify(initial ?? []);
 
-  // Re-sync local text only when the field identity itself changes underfoot
-  // (e.g. the whole `GraphicSpec` was swapped out from above) rather than on
-  // every keystroke's round-trip through the parent - the parent is only
-  // ever told about a value once it has already validated here.
+  // Re-sync when either the field identity or its external value changes.
+  // The latter matters when two selected specs expose the same field name:
+  // React keeps this component mounted, so a fieldKey-only dependency would
+  // display and potentially re-submit the previous spec's value.
   useEffect(() => {
     setText((initial ?? []).join(', '));
     setError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fieldKey]);
+  }, [fieldKey, externalValueKey]);
 
   const handleTextChange = (raw: string) => {
     setText(raw);
@@ -384,7 +384,8 @@ export const SchemaForm: FC<SchemaFormProps> = ({
 
   const setField = (key: string, next: unknown) => {
     if (next === undefined) {
-      const { [key]: _omit, ...rest } = value;
+      const rest = { ...value };
+      delete rest[key];
       onChange(rest);
       return;
     }

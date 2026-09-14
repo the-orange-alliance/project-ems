@@ -51,6 +51,7 @@ import { TimelineItemsPanel } from './timeline-items-panel.js';
 import { TimelineList } from './timeline-list.js';
 import { useCue } from './use-cue.js';
 import { useCueQueue } from './use-cue-queue.js';
+import { useTimelinePreflight } from './use-timeline-preflight.js';
 import { useQueueRowRefresh } from './use-queue-row-refresh.js';
 import { useTimelineEditor } from './use-timeline-editor.js';
 import { VariableFillModal } from './variable-fill-modal.js';
@@ -215,6 +216,23 @@ export const GraphicsController: FC = () => {
     !!cueTarget &&
     (cue.active?.spec.id === cueTarget.id ||
       cue.activeUnavailable?.spec.id === cueTarget.id);
+
+  // Walks ahead of the playhead and predicts, for every remaining item of the
+  // cued timeline, whether its cue will actually be ready when the transport
+  // gets there - so a broken item is visible in the list BEFORE a Go lands on
+  // it, rather than arriving as a mid-show `NOT_READY` snackbar.
+  //
+  // Fed from `liveState.values` (the server's own record of what resolved this
+  // load - see `LiveGraphicState.values`) rather than the queue entry's, which
+  // is normally already gone by the time a timeline is on the transport.
+  // Re-checks from the playhead onward on every advance, so an item that
+  // becomes valid as matches are played stops being flagged.
+  const livePreflight = useTimelinePreflight(
+    eventKey,
+    liveEditor.items,
+    liveState.values ?? {},
+    liveState.timelineId !== null ? liveState.index : 0
+  );
 
   // Per-entry display info for the queue list - joins each entry to its
   // timeline's current name/variables. An entry whose `timelineId` no
@@ -424,7 +442,7 @@ export const GraphicsController: FC = () => {
         }
         // No known values for this spec's bindings - prompt for only the
         // variables it actually references.
-        const variables = (editor.timeline?.variables ?? []).filter((v) =>
+        const variables = (liveEditor.timeline?.variables ?? []).filter((v) =>
           bindingNames.includes(v.name)
         );
         setVariableModal({ kind: 'cue-spec', spec: cueTarget, variables });
@@ -635,10 +653,8 @@ export const GraphicsController: FC = () => {
   const handleQuickStatTakeNow = async (spec: GraphicSpec) => {
     if (!eventKey) return;
     try {
-      const result = await cue.cue(spec);
-      if (!result) return; // A 422 "unavailable" outcome - surfaced in the ACTIVE bar, never sent to air.
-      emitPreview(result.spec, result.frame);
-      await graphicsApi.live.take(eventKey);
+      await graphicsApi.live.quickTake(eventKey, spec);
+      cue.reset();
     } catch (e) {
       showErrorSnackbar('Error while sending graphic to air.', e);
     }
@@ -1140,6 +1156,7 @@ export const GraphicsController: FC = () => {
                         <TimelineItemsPanel
                           editor={liveEditor}
                           catalogue={catalogue}
+                          readiness={livePreflight.readiness}
                           liveIndex={
                             liveEditor.timeline ? liveState.index : null
                           }

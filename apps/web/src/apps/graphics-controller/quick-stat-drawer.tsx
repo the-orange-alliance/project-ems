@@ -169,7 +169,7 @@ export const QuickStatDrawer: FC<QuickStatDrawerProps> = ({
       <Input
         ref={searchRef}
         aria-label='Search stats'
-        placeholder='Search stats... (Enter sends the top result to air)'
+        placeholder='Search stats... (Enter previews the top result)'
         prefix={<SearchOutlined />}
         allowClear
         value={search}

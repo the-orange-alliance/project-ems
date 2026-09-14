@@ -331,6 +331,12 @@ if (!isGraphicsDisabled()) {
     ),
   );
 
+  app.post("/graphics/:eventKey/live/quick-take", (req, res) =>
+    relayCommand(res, req.params.eventKey, (room) =>
+      room.quickTake(req.params.eventKey, req.body?.spec, true),
+    ),
+  );
+
   app.post("/graphics/:eventKey/live/clear", (req, res) =>
     relayCommand(res, req.params.eventKey, (room) =>
       room.clear(req.params.eventKey, true),

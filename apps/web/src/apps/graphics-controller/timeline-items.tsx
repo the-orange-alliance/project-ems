@@ -1,7 +1,9 @@
 import {
   CopyOutlined,
   DeleteOutlined,
-  HolderOutlined
+  ExclamationCircleFilled,
+  HolderOutlined,
+  LoadingOutlined
 } from '@ant-design/icons';
 import {
   DndContext,
@@ -21,11 +23,54 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GraphicSpec } from '@toa-lib/models';
-import { Button, Popconfirm, Space, Tag, Typography } from 'antd';
+import { Button, Popconfirm, Space, Tag, Tooltip, Typography } from 'antd';
 import { CSSProperties, FC } from 'react';
+import type { CueReadiness } from './use-timeline-preflight.js';
+
+const NOT_READY_PULSE = 'ems-cue-not-ready-pulse';
+
+/**
+ * The pulsing border for an item whose cue WILL NOT FIRE.
+ *
+ * Injected as a plain `<style>` tag rather than an emotion/antd style, the
+ * same way the graphics package injects its own animations (see
+ * `content-crossfade.tsx` and `theme.ts`'s `liveBackgroundKeyframes`), so the
+ * keyframes exist exactly once no matter how many rows are on screen.
+ *
+ * Reduced motion keeps the amber border and drops only the MOTION. This is a
+ * failure indicator on a live broadcast surface: it must never be animated
+ * away into invisibility just because a producer asked for less movement.
+ */
+const notReadyKeyframes = `
+@keyframes ${NOT_READY_PULSE} {
+  0%, 100% {
+    border-color: var(--ant-color-warning);
+    box-shadow: 0 0 0 0 rgba(250, 173, 20, 0.55);
+  }
+  50% {
+    border-color: var(--ant-color-warning-border-hover, var(--ant-color-warning));
+    box-shadow: 0 0 0 4px rgba(250, 173, 20, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .${NOT_READY_PULSE} {
+    animation: none !important;
+    border-color: var(--ant-color-warning) !important;
+    box-shadow: 0 0 0 2px rgba(250, 173, 20, 0.45) !important;
+  }
+}
+`;
 
 export interface TimelineItemsProps {
   items: GraphicSpec[];
+  /**
+   * Predicted cue readiness per `GraphicSpec.id` (see `use-timeline-preflight.ts`).
+   * Omitted by the Editor tab, which is an authoring surface with no transport
+   * behind it - only the Live tab, where "will not fire" is an imminent
+   * consequence, passes this.
+   */
+  readiness?: Record<string, CueReadiness>;
   liveIndex: number | null;
   /** Whether the item at `liveIndex` is actually on air (animated in), as
    * opposed to merely loaded/cued there but not yet taken. Ignored when
@@ -65,6 +110,8 @@ interface SortableRowProps {
   /** Only meaningful when `isLive` - true once this item is actually on air. */
   isOnAir: boolean;
   isSelected: boolean;
+  /** Predicted readiness of this item's cue, or `undefined` when unchecked. */
+  readiness: CueReadiness | undefined;
   onSelect: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
@@ -89,6 +136,7 @@ const SortableRow: FC<SortableRowProps> = ({
   isLive,
   isOnAir,
   isSelected,
+  readiness,
   onSelect,
   onDelete,
   onDuplicate
@@ -102,6 +150,13 @@ const SortableRow: FC<SortableRowProps> = ({
     isDragging
   } = useSortable({ id: item.id });
 
+  // Only a hard 'error' earns the alarm treatment. 'calculating' means this
+  // item's own check is still in flight, which is emphatically NOT a
+  // prediction that it will fail - dressing it up the same way would train a
+  // producer to ignore the real thing.
+  const willNotFire = readiness?.state === 'error';
+  const isChecking = readiness?.state === 'calculating';
+
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -112,9 +167,18 @@ const SortableRow: FC<SortableRowProps> = ({
     gap: 8,
     padding: '6px 8px',
     borderRadius: 6,
-    border: isSelected
-      ? '1px solid var(--ant-color-primary)'
-      : '1px solid transparent',
+    // The not-ready border deliberately OUTRANKS both the selection and the
+    // live borders: "this will not fire" is the most important thing the row
+    // can say, and a selected broken item must not lose its warning just
+    // because the producer clicked it to look at the inspector.
+    border: willNotFire
+      ? '2px solid var(--ant-color-warning)'
+      : isSelected
+        ? '1px solid var(--ant-color-primary)'
+        : '1px solid transparent',
+    animation: willNotFire
+      ? `${NOT_READY_PULSE} 1.4s ease-in-out infinite`
+      : undefined,
     background: isLive
       ? isOnAir
         ? 'var(--ant-color-error-bg)'
@@ -128,9 +192,18 @@ const SortableRow: FC<SortableRowProps> = ({
   return (
     <div
       ref={setNodeRef}
+      className={willNotFire ? NOT_READY_PULSE : undefined}
       style={style}
       role='option'
       aria-selected={isSelected}
+      aria-invalid={willNotFire || undefined}
+      // The reason rides in the accessible name too - the badge must not be
+      // colour-and-animation only.
+      aria-label={
+        willNotFire && readiness.state === 'error'
+          ? `${item.title} - will not fire: ${readiness.reason}`
+          : undefined
+      }
       onClick={onSelect}
     >
       <Button
@@ -163,6 +236,33 @@ const SortableRow: FC<SortableRowProps> = ({
           </Typography.Text>
         )}
       </div>
+      {willNotFire && readiness.state === 'error' && (
+        <Tooltip
+          title={`Will not fire - ${readiness.reason}`}
+          // Open on focus as well as hover, so the reason is reachable without
+          // a mouse.
+          trigger={['hover', 'focus']}
+        >
+          <ExclamationCircleFilled
+            role='img'
+            aria-label={`Will not fire: ${readiness.reason}`}
+            tabIndex={0}
+            style={{
+              color: 'var(--ant-color-error)',
+              fontSize: 18,
+              flexShrink: 0
+            }}
+          />
+        </Tooltip>
+      )}
+      {isChecking && (
+        <Tooltip title='Checking whether this cue is ready…'>
+          <LoadingOutlined
+            aria-label='Checking whether this cue is ready'
+            style={{ color: 'var(--ant-color-text-quaternary)', flexShrink: 0 }}
+          />
+        </Tooltip>
+      )}
       <Tag>{KIND_LABEL[item.kind]}</Tag>
       <Tag color='blue'>{MODE_LABEL[item.mode]}</Tag>
       {isLive && (
@@ -214,6 +314,7 @@ const SortableRow: FC<SortableRowProps> = ({
  */
 export const TimelineItems: FC<TimelineItemsProps> = ({
   items,
+  readiness,
   liveIndex,
   liveOnAir,
   selectedItemId,
@@ -256,6 +357,7 @@ export const TimelineItems: FC<TimelineItemsProps> = ({
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
+      <style>{notReadyKeyframes}</style>
       <SortableContext
         items={items.map((i) => i.id)}
         strategy={verticalListSortingStrategy}
@@ -273,6 +375,7 @@ export const TimelineItems: FC<TimelineItemsProps> = ({
               isLive={liveIndex === index}
               isOnAir={liveIndex === index && liveOnAir}
               isSelected={selectedItemId === item.id}
+              readiness={readiness?.[item.id]}
               onSelect={() => onSelectItem(item.id)}
               onDelete={() => onDeleteItem(item.id)}
               onDuplicate={() => onDuplicateItem(item.id)}
