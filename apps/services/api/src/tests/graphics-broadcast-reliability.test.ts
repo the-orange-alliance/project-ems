@@ -6,6 +6,148 @@ import {
   seedRundown,
   seedTimeline
 } from './graphics-broadcast-reliability-harness.js';
+// @ts-expect-error realtime does not emit declarations; the harness exercises its compiled boundary.
+import { PlaybackPublicationReceiver } from '../../../realtime/build/PlaybackPublication.js';
+
+function publicationAudience() {
+  const states: any[] = [];
+  const server = {
+    in(room: string) {
+      return {
+        emit(_event: string, payload: unknown) {
+          states.push({ room, payload });
+        }
+      };
+    }
+  };
+  const receiver = new PlaybackPublicationReceiver(server as any);
+  return {
+    states,
+    publish: (eventKey: string, state: unknown) =>
+      receiver.accept({ authorityEpoch: 'api-test-epoch', eventKey, state })
+  };
+}
+
+test('direct API quick-take publication reaches the subscribed event audience', async (t) => {
+  const audience = publicationAudience();
+  const { app, coordinator } =
+    await createGraphicsBroadcastReliabilityHarness(t, {
+      publish: audience.publish
+    });
+  const requested = sampleGraphic('direct-quick-stat');
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/graphics/event-a/live/quick-take',
+    payload: { spec: requested }
+  });
+  assert.equal(response.statusCode, 200);
+  const acknowledgment = response.json();
+  await coordinator.retryPublication('event-a');
+
+  const delivered = audience.states.filter(
+    (entry) => entry.payload.generation === acknowledgment.state.revision
+  );
+  assert.equal(delivered.length, 1);
+  assert.equal(delivered[0].room, 'graphics:event-a');
+  assert.equal(delivered[0].payload.spec.id, requested.id);
+  assert.equal(delivered[0].payload.onAir, true);
+
+  const health = await app.inject(
+    '/graphics/event-a/live/publication-health'
+  );
+  assert.equal(health.statusCode, 200);
+  assert.equal(health.json().pendingRevision, null);
+  assert.equal(
+    health.json().lastDeliveredRevision,
+    acknowledgment.state.revision
+  );
+});
+
+test('relay-mediated command converges on API publication without a duplicate final broadcast', async (t) => {
+  const audience = publicationAudience();
+  const { realtime, coordinator } =
+    await createGraphicsBroadcastReliabilityHarness(t, {
+      publish: audience.publish
+    });
+  const requested = sampleGraphic('relayed-quick-stat');
+
+  const returned = await realtime.quickTake('event-a', requested, true);
+  assert.ok(returned);
+  await coordinator.retryPublication('event-a');
+
+  const finalRevision = returned.generation;
+  assert.equal(
+    audience.states.filter(
+      (entry) => entry.payload.generation === finalRevision
+    ).length,
+    1
+  );
+  assert.equal(audience.states.at(-1).payload.spec.id, requested.id);
+});
+
+test('each playback mutation type publishes the exact committed acknowledgment revision', async (t) => {
+  const audience = publicationAudience();
+  const { app, repository, coordinator } =
+    await createGraphicsBroadcastReliabilityHarness(t, {
+      publish: audience.publish
+    });
+  await seedTimeline(repository, 'event-a', 'timeline-a', ['item-a', 'item-b']);
+  await seedRundown(repository, 'event-a', 'rundown-a', [
+    { timelineId: 'timeline-a' }
+  ]);
+
+  async function committed(
+    label: string,
+    method: 'GET' | 'POST',
+    url: string,
+    payload?: unknown
+  ) {
+    const response = await app.inject({ method, url, payload: payload as any });
+    assert.equal(response.statusCode, 200, `${label}: ${response.payload}`);
+    const acknowledgment = response.json();
+    assert.equal(acknowledgment.ok, true, label);
+    await coordinator.retryPublication('event-a');
+    assert.equal(
+      audience.states.filter(
+        (entry) =>
+          entry.room === 'graphics:event-a' &&
+          entry.payload.generation === acknowledgment.state.revision
+      ).length,
+      1,
+      `${label} did not publish its exact committed revision once`
+    );
+  }
+
+  await committed('load', 'POST', '/graphics/event-a/live/load/timeline-a', {
+    requestId: 'publish-load'
+  });
+  await committed('advance', 'GET', '/graphics/event-a/live/advance');
+  await committed('previous', 'GET', '/graphics/event-a/live/previous');
+  await committed('go', 'GET', '/graphics/event-a/live/go/1');
+  await committed('take', 'GET', '/graphics/event-a/live/take');
+  await committed(
+    'refresh',
+    'GET',
+    '/graphics/event-a/live/refresh/program'
+  );
+  await committed('push-update', 'GET', '/graphics/event-a/live/push-update');
+  await committed('clear', 'GET', '/graphics/event-a/live/clear');
+  await committed('cue', 'POST', '/graphics/event-a/live/cue', {
+    requestId: 'publish-cue',
+    spec: sampleGraphic('ad-hoc-cue')
+  });
+  await committed('quick-take', 'POST', '/graphics/event-a/live/quick-take', {
+    requestId: 'publish-quick-take',
+    spec: sampleGraphic('ad-hoc-live')
+  });
+  await committed('unload', 'GET', '/graphics/event-a/live/unload');
+  await committed(
+    'load-rundown',
+    'GET',
+    '/graphics/event-a/live/load-rundown/rundown-a'
+  );
+});
 
 test('isolated harness: event-scoped playback stays independent and persisted clear survives relay reads', async (t) => {
   const { app, realtime, repository } =

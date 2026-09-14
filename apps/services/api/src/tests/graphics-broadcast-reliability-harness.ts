@@ -1,11 +1,17 @@
 import type { TestContext } from 'node:test';
-import { presentationFrameZod, type GraphicSpec } from '@toa-lib/models/base';
+import {
+  presentationFrameZod,
+  type GraphicSpec,
+  type PlaybackState
+} from '@toa-lib/models/base';
 import type {
   prepareGraphicFrame,
   StatResult
 } from '@toa-lib/models/seasons/stats/presentation';
 import graphicsPlaybackController from '../controllers/GraphicsPlayback.js';
 import type { GraphicsRepository } from '../graphics/GraphicsRepository.js';
+import { getPlaybackCoordinator } from '../graphics/PlaybackCoordinatorService.js';
+import type { PlaybackCoordinator } from '../graphics/PlaybackCoordinator.js';
 // Imports the realtime package's ALREADY-COMPILED output, not its .ts source: a source import here would pull
 // realtime's entire src tree into this package's own tsc compilation, corrupting rootDir inference for the
 // WHOLE api build (it would silently nest every emitted path under build/api/src/..., breaking package.json's
@@ -27,6 +33,7 @@ const API_BASE_URL = 'http://127.0.0.1:9999';
 
 export type HarnessOptions = {
   statsOverrides?: Partial<Pick<FakeStats, 'queryImpl' | 'catalogueEntries'>>;
+  publish?: (eventKey: string, state: PlaybackState) => Promise<void> | void;
 };
 
 export type GraphicsBroadcastHarness = {
@@ -34,6 +41,7 @@ export type GraphicsBroadcastHarness = {
   repository: GraphicsRepository;
   stats: FakeStats;
   realtime: Graphics;
+  coordinator: PlaybackCoordinator;
   apiBaseUrl: string;
 };
 
@@ -115,6 +123,16 @@ export async function createGraphicsBroadcastReliabilityHarness(
 
   process.env.GRAPHICS_API_BASE_URL = API_BASE_URL;
 
+  let coordinator: PlaybackCoordinator | undefined;
+  if (options.publish) {
+    coordinator = getPlaybackCoordinator(app, {
+      repository,
+      publish: options.publish,
+      publicationRetryBaseMs: 5,
+      publicationRetryMaxMs: 10
+    });
+  }
+
   await app.register(graphicsPlaybackController, {
     prefix: '/graphics',
     repository,
@@ -123,6 +141,7 @@ export async function createGraphicsBroadcastReliabilityHarness(
     now: () => NOW,
     newRequestId: () => `test-request-${Math.random().toString(16).slice(2)}`
   });
+  coordinator ??= getPlaybackCoordinator(app, { repository });
 
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async (
@@ -178,7 +197,14 @@ export async function createGraphicsBroadcastReliabilityHarness(
     }
   });
 
-  return { app, repository, stats, realtime, apiBaseUrl: API_BASE_URL };
+  return {
+    app,
+    repository,
+    stats,
+    realtime,
+    coordinator,
+    apiBaseUrl: API_BASE_URL
+  };
 }
 
 export async function seedTimeline(

@@ -188,12 +188,7 @@ export default class Graphics extends Room {
           return;
         }
 
-        const state = await this.load(eventKey, timelineId);
-        if (state) {
-          this.server
-            .in(`graphics:${eventKey}`)
-            .emit(GraphicsSocketEvent.STATE, state);
-        }
+        await this.load(eventKey, timelineId);
       },
     );
 
@@ -204,10 +199,7 @@ export default class Graphics extends Room {
         if (!eventKey) {
           return;
         }
-        const state = await this.advance(eventKey);
-        if (state) {
-          this.emitState(eventKey, state);
-        }
+        await this.advance(eventKey);
       },
     );
 
@@ -218,12 +210,7 @@ export default class Graphics extends Room {
         if (!eventKey) {
           return;
         }
-        const state = await this.previous(eventKey);
-        if (state) {
-          this.server
-            .in(`graphics:${eventKey}`)
-            .emit(GraphicsSocketEvent.STATE, state);
-        }
+        await this.previous(eventKey);
       },
     );
 
@@ -239,10 +226,7 @@ export default class Graphics extends Room {
         }
         const index =
           typeof payload === "number" ? payload : (payload?.index ?? 0);
-        const state = await this.go(eventKey, index);
-        if (state) {
-          this.emitState(eventKey, state);
-        }
+        await this.go(eventKey, index);
       },
     );
 
@@ -253,10 +237,7 @@ export default class Graphics extends Room {
         if (!eventKey) {
           return;
         }
-        const state = await this.take(eventKey);
-        if (state) {
-          this.emitState(eventKey, state);
-        }
+        await this.take(eventKey);
       },
     );
 
@@ -267,10 +248,7 @@ export default class Graphics extends Room {
         if (!eventKey) {
           return;
         }
-        const state = await this.clear(eventKey);
-        if (state) {
-          this.emitState(eventKey, state);
-        }
+        await this.clear(eventKey);
       },
     );
 
@@ -463,13 +441,6 @@ export default class Graphics extends Room {
     }
   }
 
-  private emitState(eventKey: string, state: LiveGraphicState): void {
-    this.server.in(`graphics:${eventKey}`).emit(GraphicsSocketEvent.STATE, {
-      ...state,
-      eventKey,
-    });
-  }
-
   /**
    * Broadcasts a preview-replay request to an event's clients and returns the
    * payload that was sent.
@@ -623,17 +594,17 @@ export default class Graphics extends Room {
     }
 
     if (body && typeof body === "object" && "state" in body) {
-      return this.toLegacyState(body.state as PlaybackState);
+      return Graphics.toLegacyState(body.state as PlaybackState);
     }
 
     if (body && typeof body === "object" && "schemaVersion" in body) {
-      return this.toLegacyState(body as PlaybackState);
+      return Graphics.toLegacyState(body as PlaybackState);
     }
 
     return body as LiveGraphicState | null;
   }
 
-  private toLegacyState(state: PlaybackState): LiveGraphicState {
+  public static toLegacyState(state: PlaybackState): LiveGraphicState {
     const { loaded } = state;
     const currentItem = loaded?.items[loaded.index] ?? null;
 

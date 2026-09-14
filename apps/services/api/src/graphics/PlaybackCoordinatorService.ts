@@ -13,6 +13,9 @@ export interface PlaybackCoordinatorServiceOptions extends GraphicsRepositoryOpt
   repository?: GraphicsRepository;
   publish?: (eventKey: string, state: PlaybackState) => Promise<void> | void;
   onPublicationError?: PlaybackCoordinatorOptions['onPublicationError'];
+  publicationRetryBaseMs?: PlaybackCoordinatorOptions['publicationRetryBaseMs'];
+  publicationRetryMaxMs?: PlaybackCoordinatorOptions['publicationRetryMaxMs'];
+  shutdownTimeoutMs?: number;
   now?: PlaybackCoordinatorOptions['now'];
   newId?: PlaybackCoordinatorOptions['newId'];
 }
@@ -26,16 +29,12 @@ const coordinators = new WeakMap<
   FastifyInstance['server'],
   PlaybackCoordinator
 >();
-const knownEventKeysByServer = new WeakMap<
-  FastifyInstance['server'],
-  Set<string>
->();
 
 /**
  * Returns the process-wide PlaybackCoordinator for this Fastify app, creating
- * it on first call. Later tasks (HTTP routes, realtime bridging) call this
- * with the same `app` to reach the one instance created at startup; no
- * playback operations (navigation/take/refresh/etc.) are implemented here.
+ * it on first call. Server startup supplies the realtime publisher before any
+ * controller plugin can resolve this singleton; encapsulated plugins then
+ * reach the same instance through the shared raw HTTP server.
  */
 export function getPlaybackCoordinator(
   app: FastifyInstance,
@@ -45,39 +44,21 @@ export function getPlaybackCoordinator(
   if (existing) return existing;
 
   const repository = options.repository ?? new GraphicsRepository(options);
-  const knownEventKeys = new Set<string>();
-  const userPublish = options.publish;
 
   const coordinator = new PlaybackCoordinator({
     storage: repository,
     now: options.now,
     newId: options.newId,
     onPublicationError: options.onPublicationError,
-    // Only wrap publish when the caller actually configured one: an absent
-    // publish must remain absent so the coordinator skips delivery entirely.
-    ...(userPublish
-      ? {
-          publish: (eventKey: string, state: PlaybackState) => {
-            knownEventKeys.add(eventKey);
-            return userPublish(eventKey, state);
-          }
-        }
-      : {})
+    publicationRetryBaseMs: options.publicationRetryBaseMs,
+    publicationRetryMaxMs: options.publicationRetryMaxMs,
+    ...(options.publish ? { publish: options.publish } : {})
   });
 
   coordinators.set(app.server, coordinator);
-  knownEventKeysByServer.set(app.server, knownEventKeys);
   app.addHook('onClose', async () => {
     coordinators.delete(app.server);
-    knownEventKeysByServer.delete(app.server);
-    // Best-effort: give any in-flight publication retries a chance to land
-    // before the process exits. Durable state was already committed;
-    // failure here can never roll anything back.
-    await Promise.allSettled(
-      [...knownEventKeys].map((eventKey) =>
-        coordinator.retryPublication(eventKey)
-      )
-    );
+    await coordinator.shutdown(options.shutdownTimeoutMs);
   });
 
   return coordinator;

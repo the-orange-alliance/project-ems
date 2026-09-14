@@ -43,8 +43,20 @@ export interface PlaybackCoordinatorOptions {
   storage: PlaybackStorage;
   publish?: (eventKey: string, state: PlaybackState) => Promise<void> | void;
   onPublicationError?: (eventKey: string, error: unknown) => void;
+  publicationRetryBaseMs?: number;
+  publicationRetryMaxMs?: number;
   now?: () => string;
   newId?: () => string;
+}
+
+export interface PlaybackDeliveryHealth {
+  configured: boolean;
+  pendingRevision: number | null;
+  attempts: number;
+  nextRetryAtUtc: string | null;
+  lastDeliveredRevision: number | null;
+  lastDeliveredAtUtc: string | null;
+  error: string | null;
 }
 
 export class PlaybackCoordinatorError extends Error {
@@ -121,12 +133,33 @@ export class PlaybackCoordinator {
   private readonly pendingPublications = new Map<string, PlaybackState>();
   private readonly publicationFlights = new Map<string, Promise<void>>();
   private readonly publicationErrors = new Map<string, unknown>();
+  private readonly publicationAttempts = new Map<string, number>();
+  private readonly publicationRetryTimers = new Map<
+    string,
+    ReturnType<typeof setTimeout>
+  >();
+  private readonly nextPublicationRetries = new Map<string, string>();
+  private readonly lastDeliveries = new Map<
+    string,
+    { revision: number; atUtc: string }
+  >();
   private readonly now: () => string;
   private readonly newId: () => string;
+  private readonly publicationRetryBaseMs: number;
+  private readonly publicationRetryMaxMs: number;
+  private closing = false;
 
   constructor(private readonly options: PlaybackCoordinatorOptions) {
     this.now = options.now ?? (() => new Date().toISOString());
     this.newId = options.newId ?? randomUUID;
+    this.publicationRetryBaseMs = Math.max(
+      1,
+      options.publicationRetryBaseMs ?? 250
+    );
+    this.publicationRetryMaxMs = Math.max(
+      this.publicationRetryBaseMs,
+      options.publicationRetryMaxMs ?? 10_000
+    );
   }
 
   private serial<T>(eventKey: string, operation: () => Promise<T>): Promise<T> {
@@ -196,9 +229,36 @@ export class PlaybackCoordinator {
 
   private queuePublication(state: PlaybackState) {
     if (!this.options.publish) return;
-    this.pendingPublications.set(state.eventKey, clone(state));
+    const pending = this.pendingPublications.get(state.eventKey);
+    if (!pending || state.revision >= pending.revision)
+      this.pendingPublications.set(state.eventKey, clone(state));
     // Network delivery must not hold the state-mutation lock or delay Clear.
     void this.retryPublication(state.eventKey).catch(() => {});
+  }
+
+  private schedulePublicationRetry(eventKey: string): void {
+    if (
+      this.closing ||
+      this.publicationRetryTimers.has(eventKey) ||
+      !this.pendingPublications.has(eventKey)
+    )
+      return;
+    const attempts = this.publicationAttempts.get(eventKey) ?? 1;
+    const delayMs = Math.min(
+      this.publicationRetryMaxMs,
+      this.publicationRetryBaseMs * 2 ** Math.min(attempts - 1, 16)
+    );
+    this.nextPublicationRetries.set(
+      eventKey,
+      new Date(Date.now() + delayMs).toISOString()
+    );
+    const timer = setTimeout(() => {
+      this.publicationRetryTimers.delete(eventKey);
+      this.nextPublicationRetries.delete(eventKey);
+      void this.retryPublication(eventKey).catch(() => {});
+    }, delayMs);
+    timer.unref?.();
+    this.publicationRetryTimers.set(eventKey, timer);
   }
 
   /** Retries the latest pending snapshot. Failed delivery never rolls back durable acceptance. */
@@ -212,6 +272,15 @@ export class PlaybackCoordinator {
           try {
             await this.options.publish(eventKey, clone(state));
             this.publicationErrors.delete(eventKey);
+            this.publicationAttempts.delete(eventKey);
+            this.nextPublicationRetries.delete(eventKey);
+            const retryTimer = this.publicationRetryTimers.get(eventKey);
+            if (retryTimer) clearTimeout(retryTimer);
+            this.publicationRetryTimers.delete(eventKey);
+            this.lastDeliveries.set(eventKey, {
+              revision: state.revision,
+              atUtc: this.now()
+            });
             if (
               this.pendingPublications.get(eventKey)?.revision ===
               state.revision
@@ -219,11 +288,16 @@ export class PlaybackCoordinator {
               this.pendingPublications.delete(eventKey);
           } catch (error) {
             this.publicationErrors.set(eventKey, error);
+            this.publicationAttempts.set(
+              eventKey,
+              (this.publicationAttempts.get(eventKey) ?? 0) + 1
+            );
             try {
               this.options.onPublicationError?.(eventKey, error);
             } catch {
               /* Logging cannot affect durability. */
             }
+            this.schedulePublicationRetry(eventKey);
             throw error;
           }
         }
@@ -233,13 +307,41 @@ export class PlaybackCoordinator {
     return flight;
   }
 
-  deliveryHealth(eventKey: string) {
+  deliveryHealth(eventKey: string): PlaybackDeliveryHealth {
+    const lastDelivery = this.lastDeliveries.get(eventKey);
     return {
+      configured: !!this.options.publish,
       pendingRevision: this.pendingPublications.get(eventKey)?.revision ?? null,
+      attempts: this.publicationAttempts.get(eventKey) ?? 0,
+      nextRetryAtUtc: this.nextPublicationRetries.get(eventKey) ?? null,
+      lastDeliveredRevision: lastDelivery?.revision ?? null,
+      lastDeliveredAtUtc: lastDelivery?.atUtc ?? null,
       error: this.publicationErrors.has(eventKey)
         ? String(this.publicationErrors.get(eventKey))
         : null
     };
+  }
+
+  /** Stops retry timers and gives every latest pending event one bounded final drain. */
+  async shutdown(timeoutMs = 3_000): Promise<void> {
+    this.closing = true;
+    for (const timer of this.publicationRetryTimers.values()) clearTimeout(timer);
+    this.publicationRetryTimers.clear();
+    this.nextPublicationRetries.clear();
+
+    const drain = Promise.allSettled(
+      [...this.pendingPublications.keys()].map((eventKey) =>
+        this.retryPublication(eventKey)
+      )
+    ).then(() => undefined);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([
+      drain,
+      new Promise<void>((resolve) => {
+        timeout = setTimeout(resolve, Math.max(0, timeoutMs));
+      })
+    ]);
+    if (timeout) clearTimeout(timeout);
   }
 
   private error(error: unknown): GraphicsError {

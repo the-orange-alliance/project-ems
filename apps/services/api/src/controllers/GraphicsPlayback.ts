@@ -162,6 +162,17 @@ const stateResponses = {
   500: errorEnvelopeZod,
   503: errorEnvelopeZod
 };
+const publicationHealthZod = z
+  .object({
+    configured: z.boolean(),
+    pendingRevision: graphicRevisionZod.nullable(),
+    attempts: z.number().int().nonnegative(),
+    nextRetryAtUtc: z.string().nullable(),
+    lastDeliveredRevision: graphicRevisionZod.nullable(),
+    lastDeliveredAtUtc: z.string().nullable(),
+    error: z.string().nullable()
+  })
+  .strict();
 
 /** GRAPHICS_PLAYBACK_POLICY has no `restore` step to run here: PlaybackCoordinator.getState/current lazily loads the persisted PlaybackState from GraphicsRepository.loadPlayback on first touch per event, so "the last program is restored exactly" already holds with no eager warm-up (see this task's report). */
 const STATUS_BY_CODE: Record<GraphicsError['code'], number> = {
@@ -501,6 +512,19 @@ export default async function graphicsPlaybackController(
   }
 
   const app = fastify.withTypeProvider<ZodTypeProvider>();
+
+  /** Operational delivery status; a pending revision or error is alertable. */
+  app.get(
+    '/:eventKey/live/publication-health',
+    {
+      schema: {
+        tags: ['Graphics'],
+        params: eventParams,
+        response: { 200: publicationHealthZod }
+      }
+    },
+    (request) => coordinator.deliveryHealth(request.params.eventKey)
+  );
 
   /**
    * Fastify refuses a `body` schema on a GET route outright (`FST_ERR_ROUTE_BODY_VALIDATION_SCHEMA_NOT_SUPPORTED`),

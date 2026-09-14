@@ -1008,6 +1008,28 @@ export const playbackStateZod = z
   );
 export type PlaybackState = z.infer<typeof playbackStateZod>;
 
+/**
+ * Complete state sent from the durable API authority to the stateless realtime
+ * fan-out service. `authorityEpoch` identifies one API process lifetime so a
+ * realtime process can retire a previous writer without confusing a restarted
+ * authority's revision stream with an in-flight delivery from the old writer.
+ */
+export const playbackPublicationZod = z
+  .object({
+    authorityEpoch: graphicIdentifierZod,
+    eventKey: graphicIdentifierZod,
+    state: playbackStateZod
+  })
+  .strict()
+  .refine(
+    (publication) => publication.eventKey === publication.state.eventKey,
+    {
+      message: 'Published playback state must match the envelope event',
+      path: ['state', 'eventKey']
+    }
+  );
+export type PlaybackPublication = z.infer<typeof playbackPublicationZod>;
+
 export function createEmptyPlaybackState(
   eventKey: string,
   atUtc = new Date().toISOString()

@@ -21,6 +21,35 @@ test('getPlaybackCoordinator returns one coordinator per Fastify server and a di
   assert.notEqual(first, third);
 });
 
+test('publisher configuration survives later Fastify plugin registration order', async (t) => {
+  const { repository } = await graphicsFixture(t);
+  const app = Fastify();
+  const delivered: number[] = [];
+  const configured = getPlaybackCoordinator(app, {
+    repository,
+    publish: async (_eventKey, state) => {
+      delivered.push(state.revision);
+    }
+  });
+
+  let fromPlugin: typeof configured | undefined;
+  await app.register(async (plugin) => {
+    fromPlugin = getPlaybackCoordinator(plugin);
+  });
+  await app.ready();
+
+  assert.equal(fromPlugin, configured);
+  const ack = await fromPlugin!.mutate(
+    'event-a',
+    { type: 'clear', requestId: 'plugin-order-1' },
+    () => {}
+  );
+  assert.equal(ack.ok, true);
+  await configured.retryPublication('event-a');
+  assert.ok(delivered.includes(ack.ok ? ack.state.revision : -1));
+  await app.close();
+});
+
 test('graceful shutdown drains an in-flight publication before the app finishes closing', async (t) => {
   const { repository } = await graphicsFixture(t);
   const app = Fastify();
@@ -70,9 +99,39 @@ test('getPlaybackCoordinator with no publish configured never attempts delivery,
   );
   assert.equal(ack.ok, true);
   assert.deepEqual(coordinator.deliveryHealth('event-b'), {
+    configured: false,
     pendingRevision: null,
+    attempts: 0,
+    nextRetryAtUtc: null,
+    lastDeliveredRevision: null,
+    lastDeliveredAtUtc: null,
     error: null
   });
 
   await app.close();
+});
+
+test('graceful shutdown is bounded when realtime never completes a request', async (t) => {
+  const { repository } = await graphicsFixture(t);
+  const app = Fastify();
+  const coordinator = getPlaybackCoordinator(app, {
+    repository,
+    publish: () => new Promise<void>(() => {}),
+    shutdownTimeoutMs: 20
+  });
+
+  const ack = await coordinator.mutate(
+    'event-a',
+    { type: 'clear', requestId: 'bounded-shutdown-1' },
+    () => {}
+  );
+  assert.equal(ack.ok, true);
+  assert.equal(
+    coordinator.deliveryHealth('event-a').pendingRevision,
+    ack.ok ? ack.state.revision : -1
+  );
+
+  const started = Date.now();
+  await app.close();
+  assert.ok(Date.now() - started < 500, 'shutdown exceeded its bounded drain');
 });

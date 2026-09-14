@@ -73,6 +73,14 @@ By default (`refresh` omitted or `false`), you get stale-while-revalidate behavi
 
 ## 2. Stats Audience Display & Producer/Graphics API
 
+**Port 8080 is the only supported public mutation ingress.** Point browser,
+Companion, button-box, and automation commands at this API. Port 8081 still
+contains deprecated command proxies for migration compatibility, but clients
+must not adopt those routes; Task 16 removes them after the compatibility
+window. Realtime publication is initiated by the API's durable commit, so a
+successful API command is accepted even while realtime is temporarily down and
+the newest pending revision is retried after recovery.
+
 Base path: `/graphics` (two controllers share this prefix: CRUD under `/graphics/:eventKey/...`, and the live command surface under `/graphics/:eventKey/live/...`).
 
 This section is for a consumer building an **external "simple" controller** for the audience display (e.g. a Bitfocus Companion panel, a physical button box, or a minimal custom web control). The live command routes were explicitly designed to also support **body-less GET requests** for this exact use case — every command below (except `quick-take`, which requires a full graphic spec) has a GET alias that needs no JSON body, so a simple HTTP button can drive it directly.
@@ -89,6 +97,7 @@ This section is for a consumer building an **external "simple" controller** for 
 | Route | Purpose |
 |---|---|
 | `GET /graphics/:eventKey/live` | Read the current `PlaybackState` (loaded item, cue, program, staged update). Plain read, not a command. |
+| `GET /graphics/:eventKey/live/publication-health` | Inspect delivery configuration, pending revision, retry/error details, and the last delivered revision. |
 | `.../live/load/:timelineId` | Load a timeline onto the cue slot, reset to its first item. Optional body: `values` (template variable bindings). |
 | `.../live/load-rundown/:rundownId` | Load a rundown. |
 | `.../live/unload` | Durably clear the loaded timeline/rundown back to nothing. |

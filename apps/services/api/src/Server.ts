@@ -45,6 +45,7 @@ import webhooksController from './controllers/Webhooks.js';
 import seasonSpecificController from './controllers/SeasonSpecific.js';
 import { throttledUploadDatabase, initS3Client } from './util/S3Backup.js';
 import { getPlaybackCoordinator } from './graphics/PlaybackCoordinatorService.js';
+import { createRealtimePlaybackPublisher } from './graphics/RealtimePlaybackPublisher.js';
 
 // Setup our environment
 const workingDir = process.env.WORKDIR ?? '../';
@@ -91,6 +92,32 @@ try {
 const fastify = Fastify({
   logger:
     env.get().nodeEnv === 'production' ? { level: 'warn' } : { level: 'info' }
+});
+
+// Configure the process-wide coordinator before registering any encapsulated
+// controller. The first lookup owns the singleton's immutable publication
+// options, so doing this here prevents plugin order from caching an
+// unconfigured coordinator.
+const realtimePublisher = createRealtimePlaybackPublisher({
+  baseUrl: process.env.GRAPHICS_REALTIME_BASE_URL,
+  token: process.env.GRAPHICS_PUBLICATION_TOKEN ?? env.get().jwtSecret,
+  authorityEpoch: process.env.PLAYBACK_AUTHORITY_EPOCH,
+  timeoutMs: Number(process.env.GRAPHICS_PUBLICATION_TIMEOUT_MS) || undefined
+});
+getPlaybackCoordinator(fastify, {
+  publish: realtimePublisher.publish,
+  publicationRetryBaseMs:
+    Number(process.env.GRAPHICS_PUBLICATION_RETRY_BASE_MS) || undefined,
+  publicationRetryMaxMs:
+    Number(process.env.GRAPHICS_PUBLICATION_RETRY_MAX_MS) || undefined,
+  shutdownTimeoutMs:
+    Number(process.env.GRAPHICS_PUBLICATION_SHUTDOWN_MS) || undefined,
+  onPublicationError: (eventKey, error) =>
+    logger.warn(
+      `Playback publication pending for ${eventKey}: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    )
 });
 
 // Register Error handler for all routes
@@ -195,16 +222,6 @@ await fastify.register(teamController, { prefix: '/teams' });
 await fastify.register(tournamentController, { prefix: '/tournament' });
 await fastify.register(webhooksController, { prefix: '/webhooks' });
 await fastify.register(seasonSpecificController, { prefix: '/seasonSpecific' });
-
-// The HTTP live-command surface (graphicsPlaybackController, registered above under
-// '/graphics') already reaches the process-wide graphics playback coordinator via
-// getPlaybackCoordinator(fastify), which creates it - and registers its graceful-shutdown
-// drain hook (see PlaybackCoordinatorService.ts's onClose) - on that FIRST call. This call
-// is kept as a defensive no-op (getPlaybackCoordinator returns the same cached instance
-// once created) so the coordinator and its shutdown hook still exist even if controller
-// registration order above ever changes. Realtime publish bridging remains a separate,
-// sibling-owned task and still reaches this same instance the same way.
-getPlaybackCoordinator(fastify);
 
 // 🧩 Global hook: triggers after any mutating request
 fastify.addHook('onResponse', (request, reply, done) => {

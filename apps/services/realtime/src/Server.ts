@@ -14,8 +14,12 @@ import {
   leaveRooms,
 } from "./rooms/Rooms.js";
 import Graphics, { RelayError } from "./rooms/Graphics.js";
-import { GraphicsSocketEvent, type LiveGraphicState } from "@toa-lib/models";
+import type { LiveGraphicState } from "@toa-lib/models";
 import { join } from "path";
+import {
+  PlaybackPublicationReceiver,
+  registerPlaybackPublicationEndpoint,
+} from "./PlaybackPublication.js";
 
 // Setup our environment
 const workingDir = process.env.WORKDIR ?? "../";
@@ -147,6 +151,14 @@ io.on("connection", (socket) => {
 
 initRooms(io);
 
+if (!isGraphicsDisabled()) {
+  registerPlaybackPublicationEndpoint(
+    app,
+    new PlaybackPublicationReceiver(io),
+    process.env.GRAPHICS_PUBLICATION_TOKEN ?? env.get().jwtSecret,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Graphics REST endpoints
 //
@@ -232,15 +244,10 @@ if (!isGraphicsDisabled()) {
    * empty body" - a genuine nothing-to-report, not a failure - and is passed
    * through as the empty state.
    *
-   * CRITICAL: a successful command is also BROADCAST to `graphics:${eventKey}`
-   * here, exactly like the socket event handlers in `Graphics.ts` already do
-   * for themselves (see `emitState`). Without this, these HTTP routes update
-   * the API's durable state but tell nobody: every connected client - the
-   * audience display, other producer tabs, the one that made the request -
-   * keeps rendering its last-known (now stale) `LiveGraphicState` until some
-   * unrelated event happens to resubscribe it (e.g. a page reload). The
-   * request appears to silently do nothing even though the server-side command
-   * fully succeeded.
+   * These routes are deprecated compatibility proxies. They deliberately do
+   * not broadcast the returned acknowledgment: every successful API commit is
+   * independently published through the authenticated internal endpoint, so
+   * broadcasting here would create a second, racing publication path.
    */
   async function relayCommand(
     res: express.Response,
@@ -260,12 +267,11 @@ if (!isGraphicsDisabled()) {
 
     try {
       const state = await run(room);
-      if (state) {
-        io.in(`graphics:${eventKey}`).emit(GraphicsSocketEvent.STATE, {
-          ...state,
-          eventKey,
-        });
-      }
+      res.setHeader("Deprecation", "true");
+      res.setHeader(
+        "Link",
+        `<${process.env.GRAPHICS_API_BASE_URL ?? "http://127.0.0.1:8080"}/graphics/${encodeURIComponent(eventKey)}/live>; rel="successor-version"`,
+      );
       res.status(200).json(state ?? defaultLiveGraphicState);
     } catch (error) {
       if (error instanceof RelayError) {

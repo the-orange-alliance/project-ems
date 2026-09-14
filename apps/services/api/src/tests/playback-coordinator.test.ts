@@ -321,6 +321,66 @@ test('retryPublication recovers a pending publication once the delivery target s
   assert.equal(delivered[0].revision, ack.state.revision);
 });
 
+test('automatic retry publishes only the newest pending revision after realtime recovers', async (t) => {
+  const { repository } = await graphicsFixture(t);
+  let available = false;
+  let failedAttempts = 0;
+  const delivered: PlaybackState[] = [];
+  let resolveDelivered!: () => void;
+  const deliveredSignal = new Promise<void>((resolve) => {
+    resolveDelivered = resolve;
+  });
+  const coordinator = new PlaybackCoordinator({
+    storage: repository,
+    publicationRetryBaseMs: 5,
+    publicationRetryMaxMs: 10,
+    publish: async (_eventKey, state) => {
+      if (!available) {
+        failedAttempts++;
+        throw new Error('realtime down');
+      }
+      delivered.push(state);
+      resolveDelivered();
+    }
+  });
+
+  const first = await coordinator.mutate(
+    'event-a',
+    { type: 'clear', requestId: 'automatic-retry-1' },
+    clearMutation
+  );
+  assert.equal(first.ok, true);
+  await coordinator.retryPublication('event-a').catch(() => {});
+
+  const second = await coordinator.mutate(
+    'event-a',
+    { type: 'clear', requestId: 'automatic-retry-2' },
+    clearMutation
+  );
+  assert.equal(second.ok, true);
+  await coordinator.retryPublication('event-a').catch(() => {});
+  assert.equal(
+    coordinator.deliveryHealth('event-a').pendingRevision,
+    second.ok ? second.state.revision : -1
+  );
+
+  available = true;
+  await Promise.race([
+    deliveredSignal,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('automatic publication did not retry')), 500)
+    )
+  ]);
+
+  assert.ok(failedAttempts >= 1);
+  assert.deepEqual(
+    delivered.map((state) => state.revision),
+    [second.ok ? second.state.revision : -1]
+  );
+  assert.equal(coordinator.deliveryHealth('event-a').pendingRevision, null);
+  await coordinator.shutdown();
+});
+
 test('revisions are monotonic across a simulated process restart backed by the same storage', async (t) => {
   const { repository } = await graphicsFixture(t);
   const eventKey = 'event-a';
