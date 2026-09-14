@@ -26,6 +26,7 @@ interface JsonSchemaProperty {
   maximum?: number;
   exclusiveMinimum?: number;
   exclusiveMaximum?: number;
+  multipleOf?: number;
   minItems?: number;
   maxItems?: number;
   items?: JsonSchemaProperty;
@@ -102,24 +103,13 @@ const NumberField: FC<NumberFieldProps> = ({
   onChange
 }) => {
   const isInteger = singleType(schema.type) === 'integer';
-  // `.positive()` / `.max()` on the zod side often surfaces here as
-  // `exclusiveMinimum`/`exclusiveMaximum` rather than `minimum`/`maximum`
-  // (see e.g. `windowSeconds`/`lambda`/`balls` in `commonParamsSchema`).
-  // `InputNumber` only understands inclusive bounds, so an exclusive bound
-  // is nudged in by one step - the boundary value itself is then rejected,
-  // which is what keeps a strictly-positive param from ever being
-  // authored as 0 (and rejected by the API).
-  const step = isInteger ? 1 : 0.01;
-  const min =
-    schema.minimum ??
-    (schema.exclusiveMinimum !== undefined
-      ? schema.exclusiveMinimum + step
-      : undefined);
-  const max =
-    schema.maximum ??
-    (schema.exclusiveMaximum !== undefined
-      ? schema.exclusiveMaximum - step
-      : undefined);
+  const [error, setError] = useState<string | null>(null);
+  // InputNumber only models inclusive min/max. Passing an adjusted exclusive
+  // boundary would invent a precision (formerly 0.01) that is not present in
+  // the Zod schema. Keep inclusive bounds native and validate strict bounds
+  // directly, while using multipleOf only when the schema actually declares
+  // a discrete step.
+  const step = schema.multipleOf ?? (isInteger ? 1 : undefined);
   const current =
     typeof value === 'number'
       ? value
@@ -132,17 +122,63 @@ const NumberField: FC<NumberFieldProps> = ({
       label={humanize(fieldKey)}
       description={schema.description}
       required={required}
+      error={error}
     >
       <InputNumber
         style={{ width: '100%' }}
         value={current}
-        min={min}
-        max={max}
+        min={schema.minimum}
+        max={schema.maximum}
         precision={isInteger ? 0 : undefined}
-        step={isInteger ? 1 : undefined}
-        onChange={(next) =>
-          onChange(typeof next === 'number' ? next : undefined)
-        }
+        step={step}
+        status={error ? 'error' : undefined}
+        onChange={(next) => {
+          if (typeof next !== 'number') {
+            setError(null);
+            onChange(undefined);
+            return;
+          }
+          if (schema.minimum !== undefined && next < schema.minimum) {
+            setError(`Must be at least ${schema.minimum}.`);
+            return;
+          }
+          if (
+            schema.exclusiveMinimum !== undefined &&
+            next <= schema.exclusiveMinimum
+          ) {
+            setError(`Must be greater than ${schema.exclusiveMinimum}.`);
+            return;
+          }
+          if (schema.maximum !== undefined && next > schema.maximum) {
+            setError(`Must be at most ${schema.maximum}.`);
+            return;
+          }
+          if (
+            schema.exclusiveMaximum !== undefined &&
+            next >= schema.exclusiveMaximum
+          ) {
+            setError(`Must be less than ${schema.exclusiveMaximum}.`);
+            return;
+          }
+          if (isInteger && !Number.isInteger(next)) {
+            setError('Must be a whole number.');
+            return;
+          }
+          if (schema.multipleOf !== undefined) {
+            const quotient = next / schema.multipleOf;
+            // Match Zod's float-safe multipleOf comparison: tolerate only
+            // rounding error scaled to the quotient, not an arbitrary decimal
+            // epsilon that could admit a genuinely invalid nearby value.
+            const tolerance =
+              4 * Number.EPSILON * Math.max(Math.abs(quotient), 1);
+            if (Math.abs(quotient - Math.round(quotient)) >= tolerance) {
+              setError(`Must be a multiple of ${schema.multipleOf}.`);
+              return;
+            }
+          }
+          setError(null);
+          onChange(next);
+        }}
       />
     </FieldShell>
   );
