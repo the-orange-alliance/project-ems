@@ -1,22 +1,46 @@
 import { GraphicSpec, TemplateVariable, Timeline } from '@toa-lib/models';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { graphicsApi, useTimelines } from 'src/api/use-graphics-data.js';
+import { isRevisionConflict } from './revision-conflict.js';
 
 export interface UseTimelineEditorResult {
   /**
-   * The selected timeline as last seen from the server, with any staged
-   * `setVariables()` edit merged in (mirroring how `items` below mirrors
-   * `modifiedItems` over remote data) - so `timeline.variables` reflects
-   * in-progress edits the same way `items` does. `null` when nothing is
-   * selected.
+   * The DRAFT timeline: the selected timeline as last seen from the server,
+   * with any staged `setVariables()` edit merged in (mirroring how `items`
+   * below mirrors `modifiedItems` over remote data) - so `timeline.variables`
+   * reflects in-progress edits the same way `items` does. `null` when nothing
+   * is selected.
+   *
+   * NOT a description of anything on the transport. What the server is really
+   * playing lives in the authoritative loaded snapshot; see
+   * `live-timeline-sync.ts` for the rule that decides whether a draft may be
+   * decorated with transport state at all (F21).
    */
   timeline: Timeline | null;
-  /** The items to render: the dirty buffer if there is one, else remote. */
+  /** The draft items to render: the dirty buffer if there is one, else remote. */
   items: GraphicSpec[];
+  /**
+   * `revision` of the SAVED row this draft is staged on, or `null` before the
+   * timelines have loaded. The optimistic-concurrency token `save()` writes
+   * against, and what a caller compares with the loaded snapshot's own
+   * `timelineRevision` to detect "saved but not reloaded to the transport".
+   */
+  remoteRevision: number | null;
   /** True once any mutator below has staged a change since the last save/revert. */
   isDirty: boolean;
   /** True while `save()`'s PATCH request is in flight. */
   isSaving: boolean;
+  /**
+   * True when the last `save()` lost an optimistic-concurrency race: someone
+   * else committed a newer revision, so NOTHING of this draft was written and
+   * the buffer is still staged here untouched. Cleared by `revert()`, by a
+   * later successful `save()`, or by switching timeline. Pressing Save again
+   * is the operator's explicit "mine wins" - by then the banner has named
+   * both revisions and their version is readable in the timelines cache
+   * (a conflict re-reads it), so neither version is discarded behind the
+   * operator's back.
+   */
+  saveConflict: boolean;
   save: () => Promise<void>;
   revert: () => void;
   reorder: (items: GraphicSpec[]) => void;
@@ -65,7 +89,8 @@ export const useTimelineEditor = (
   eventKey: string | null | undefined,
   timelineId: string | null
 ): UseTimelineEditorResult => {
-  const { data: timelines } = useTimelines(eventKey);
+  const { data: timelines, mutate: revalidateTimelines } =
+    useTimelines(eventKey);
 
   const remoteTimeline =
     timelines?.find((t) => t.timelineId === timelineId) ?? null;
@@ -77,6 +102,7 @@ export const useTimelineEditor = (
     TemplateVariable[] | null
   >(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveConflict, setSaveConflict] = useState(false);
 
   // Switching to a DIFFERENT timeline starts a fresh buffer. Switching
   // which ITEM is selected for editing within the same timeline must NOT
@@ -87,6 +113,7 @@ export const useTimelineEditor = (
       bufferTimelineId.current = timelineId;
       setModifiedItems(null);
       setModifiedVariables(null);
+      setSaveConflict(false);
     }
   }, [timelineId]);
 
@@ -166,6 +193,7 @@ export const useTimelineEditor = (
   const revert = useCallback(() => {
     setModifiedItems(null);
     setModifiedVariables(null);
+    setSaveConflict(false);
   }, []);
 
   const save = useCallback(async () => {
@@ -190,14 +218,31 @@ export const useTimelineEditor = (
       // SECOND revalidation of the same key concurrently with the first, and
       // whichever response happened to land last won - including a stale one
       // (F22). One invalidation, at the layer that owns the write.
-      await graphicsApi.update.timeline(
-        eventKey,
-        timelineId,
-        patch,
-        remoteTimeline.revision
-      );
+      try {
+        await graphicsApi.update.timeline(
+          eventKey,
+          timelineId,
+          patch,
+          remoteTimeline.revision
+        );
+      } catch (error) {
+        // A lost revision race writes NOTHING, so the buffer stays exactly as
+        // it is - discarding it here would destroy the only copy of the
+        // operator's edit. Re-read the timelines so the (now provably stale)
+        // remote copy is replaced by the revision that actually won, which is
+        // what the out-of-sync banner names back to the operator. This is the
+        // failure path: the success path still leaves the single
+        // invalidation inside `graphicsApi.update.timeline` to do the work
+        // (F22).
+        if (isRevisionConflict(error)) {
+          setSaveConflict(true);
+          await revalidateTimelines();
+        }
+        throw error;
+      }
       setModifiedItems(null);
       setModifiedVariables(null);
+      setSaveConflict(false);
     } finally {
       setIsSaving(false);
     }
@@ -206,14 +251,17 @@ export const useTimelineEditor = (
     timelineId,
     remoteTimeline,
     modifiedItems,
-    modifiedVariables
+    modifiedVariables,
+    revalidateTimelines
   ]);
 
   return {
     timeline,
     items,
+    remoteRevision: remoteTimeline?.revision ?? null,
     isDirty,
     isSaving,
+    saveConflict,
     save,
     revert,
     reorder,

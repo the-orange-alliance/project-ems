@@ -10,6 +10,7 @@ import {
   mutateProducerShow,
   useProducerShow
 } from 'src/api/use-graphics-data.js';
+import { isRevisionConflict } from './revision-conflict.js';
 
 /** How many times a mutation re-reads and re-applies after losing a revision race. */
 const CONFLICT_RETRIES = 3;
@@ -300,14 +301,6 @@ function newEntryId(): string {
     globalThis.crypto?.randomUUID?.() ??
     `entry-${Date.now()}-${Math.random().toString(16).slice(2)}`
   );
-}
-
-/** The API answers a lost optimistic-concurrency race with 409 CONFLICT. */
-function isRevisionConflict(error: unknown): boolean {
-  const code = (error as { code?: unknown } | undefined)?.code;
-  if (code === 409 || code === 'CONFLICT') return true;
-  const message = (error as { message?: unknown } | undefined)?.message;
-  return typeof message === 'string' && message.includes('CONFLICT');
 }
 
 export { PRODUCER_SHOW_RUNDOWN_ID };

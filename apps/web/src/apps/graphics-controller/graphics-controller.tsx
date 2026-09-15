@@ -26,6 +26,7 @@ import {
   type ButtonProps,
   Col,
   Divider,
+  Popconfirm,
   Row,
   Select,
   Space,
@@ -51,15 +52,17 @@ import {
   playbackProgramForEventAtom,
   playbackStagedUpdateForEventAtom
 } from 'src/stores/state/graphics.js';
+import {
+  describeDraftSync,
+  readLoadedRunningOrder
+} from './live-timeline-sync.js';
+import { LoadedRunningOrderList } from './loaded-running-order.js';
 import { RundownList, type RundownRowInfo } from './rundown-list.js';
 import { LiveMonitor } from './live-monitor.js';
 import { QuickStatDrawer } from './quick-stat-drawer.js';
 import { TimelineItemsPanel } from './timeline-items-panel.js';
 import { TimelineList } from './timeline-list.js';
-import {
-  useShowRundown,
-  type ConsumeOptions
-} from './use-show-rundown.js';
+import { useShowRundown, type ConsumeOptions } from './use-show-rundown.js';
 import { useTimelinePreflight } from './use-timeline-preflight.js';
 import { useQueueRowRefresh } from './use-queue-row-refresh.js';
 import { useTimelineEditor } from './use-timeline-editor.js';
@@ -79,15 +82,23 @@ import { VariableFillModal } from './variable-fill-modal.js';
  *  - "Editor" - the timeline list plus the item/inspector panel for whichever
  *    timeline the producer has selected there.
  *  - "Live" - the "Show Rundown" (`RundownList`) on the
- *    left, and the same item/inspector panel on the right, bound to the
- *    timeline currently present in the authoritative loaded snapshot.
- *    Edits made here hit the real cued timeline the instant they are saved;
- *    this is deliberate (see the warning banner the tab renders). A queue
- *    row is not a picker - it has no click-to-load - its Quick Play button
- *    loads AND takes it to air in one press, and Delete removes it.
+ *    left, and on the right the loaded running order plus a DRAFT editor for
+ *    the timeline the transport loaded. A queue row is not a picker - it has
+ *    no click-to-load - its Quick Play button loads AND takes it to air in one
+ *    press, and Delete removes it.
  * Each tab keeps its own `useTimelineEditor` staged buffer, so switching tabs
  * never discards in-progress edits, and Save/Revert always act on the tab
  * that is showing.
+ *
+ * DRAFT vs TRANSPORT (F21): the Live tab's item list is an editor buffer, not
+ * a description of the show. Everything that states or implies transport
+ * position - the ACTIVE/CUE/LOADED bar, the loaded running order list, the
+ * live row highlight, cue-readiness badges, and Cue's target - is read from
+ * the authoritative loaded snapshot via `readLoadedRunningOrder`, and the
+ * draft may only be decorated with any of it while `describeDraftSync` proves
+ * the two are the same running order. Save writes the draft and nothing else;
+ * putting it on the transport is the separate, confirmed "Reload to transport"
+ * command (`handleReloadToTransport`).
  *
  * DATA FRESHNESS: every playback calculation is an API coordinator command.
  * This component never calculates a transport frame in the browser and keeps
@@ -198,9 +209,19 @@ export const GraphicsController: FC = () => {
   const [variableModal, setVariableModal] = useState<VariableModalState | null>(
     null
   );
+  // The explicit reload command's own state (see `handleReloadToTransport`).
+  // A failed reload has to stay on screen: the transport keeps running the
+  // version it already had, and the operator needs to know the retry is
+  // theirs to make.
+  const [isReloading, setIsReloading] = useState(false);
+  const [reloadError, setReloadError] = useState<string | null>(null);
   const activeEventRef = useRef(eventKey);
   activeEventRef.current = eventKey;
   useEffect(() => setVariableModal(null), [eventKey]);
+  // A new snapshot id means a load landed (this one or anyone else's), so the
+  // previous failure no longer describes anything. Event switches clear it for
+  // the same reason.
+  useEffect(() => setReloadError(null), [eventKey, loaded?.snapshotId]);
 
   // One buffer for the producer's hand-picked timeline (Editor tab) and a
   // separate one for whatever is cued to the transport (Live tab). They are
@@ -215,6 +236,13 @@ export const GraphicsController: FC = () => {
   const show = useShowRundown(eventKey);
   const queueRowRefresh = useQueueRowRefresh();
 
+  // THE authoritative running order: the immutable snapshot the server loaded,
+  // projected for display (`live-timeline-sync.ts`). Everything the transport
+  // surface says about position, titles and what is next is read from here -
+  // the Live tab's editable item list is a DRAFT and is never allowed to
+  // stand in for it (F21).
+  const running = useMemo(() => readLoadedRunningOrder(loaded), [loaded]);
+
   // The item actually under the transport playhead, straight from the loaded
   // immutable server snapshot - never from a dirty editor buffer.
   const activeLoadedTimeline = currentLoadedItem
@@ -226,6 +254,18 @@ export const GraphicsController: FC = () => {
     ? (activeLoadedTimeline?.items[currentLoadedItem.itemIndex] ??
       currentLoadedItem.spec)
     : null;
+
+  // Whether the Live tab's draft may be decorated with transport state at all.
+  // One predicate, computed from the loaded snapshot's own revision and item
+  // order versus the saved revision the draft is staged on - see
+  // `describeDraftSync` for why nothing less conservative is safe.
+  const liveSync = describeDraftSync({
+    running,
+    remoteRevision: liveEditor.remoteRevision,
+    draftItems: liveEditor.items,
+    isDirty: liveEditor.isDirty,
+    saveConflict: liveEditor.saveConflict
+  });
 
   // The item selected in the LIVE tab - used as Cue/Recalculate's fallback
   // target when nothing is live yet. Deliberately `null` while on the
@@ -361,7 +401,6 @@ export const GraphicsController: FC = () => {
   // last item steps onto "n+1" (animate out AND clear, advancing the
   // Show Rundown - see `handleGo`/`handleClearAndAdvanceQueue`).
   // ------------------------------------------------------------------
-  const loadedTimeline = activeLoadedTimeline;
   const loadedItemCount = loaded?.items.length ?? 0;
   const isAtFirstItem = (loaded?.index ?? 0) <= 0;
   const isAtLastItem =
@@ -440,6 +479,23 @@ export const GraphicsController: FC = () => {
     (!cueTarget
       ? 'Select an item in the Live tab, or put the transport on one.'
       : undefined);
+
+  // "Reload to transport" (`handleReloadToTransport`) - the ONLY action that
+  // makes the transport adopt the saved timeline, and the counterpart to a
+  // Save that deliberately leaves the running order alone. `liveSync` supplies
+  // the domain reasons it cannot run (nothing loaded, a rundown snapshot,
+  // already current); the live-command preconditions are the same ones every
+  // other transport button is judged against.
+  const reloadReason =
+    noEventReason ??
+    deliveryReason ??
+    (liveEditor.isSaving ? 'Wait for the save to finish.' : undefined) ??
+    liveSync.reloadReason;
+  const reloadConfirmText = `${
+    liveEditor.isDirty
+      ? 'Your unsaved edits are NOT included - only the last saved revision is loaded. '
+      : ''
+  }The transport rewinds to item 1 of this timeline and re-prepares its cue. Whatever is on air stays on air until the next Animate In / Next.`;
 
   // There is nothing to replay until the preview bus actually has a graphic
   // on it - `previewSpec` is exactly what every PVW screen is showing (see
@@ -661,7 +717,7 @@ export const GraphicsController: FC = () => {
   // it says: take what's already cued right here, don't move first.
   //
   // Once on air, each one special-cases its theoretical boundary slot (see
-  // the big comment above `loadedTimeline`): Prev at item 1 steps onto "0"
+  // the big comment above `loadedItemCount`): Prev at item 1 steps onto "0"
   // (animate out only); Go at the last item steps onto "n+1" (animate out
   // AND clear, advancing the queue) instead of asking the server to move
   // somewhere that doesn't exist.
@@ -791,36 +847,69 @@ export const GraphicsController: FC = () => {
     editor.addItem(spec);
   };
 
+  // Save writes the DRAFT to the timeline row. That is all it does.
+  //
+  // It deliberately no longer chains a `live/load` of the saved timeline. That
+  // silent reload made "Save" a transport command wearing an editor's clothes:
+  // `load` rebuilds the loaded snapshot from item 0 and re-prepares the cue
+  // (see `loadTimelineInternal` in `PlaybackNavigation.ts`), so saving a typo
+  // fix on item 7 mid-show rewound the running order to item 1; and when the
+  // transport was running a RUNDOWN snapshot spanning several timelines, it
+  // replaced that whole running order with this one timeline. Neither is
+  // something a save should be able to do without being asked.
+  //
+  // Putting the saved version on the transport is now `handleReloadToTransport`
+  // below - explicit, confirmed, and disabled when it cannot be done safely.
+  // Until it is pressed, the loaded snapshot is untouched and the Live tab
+  // says so (`liveSync`).
   const handleSaveTimeline = async () => {
+    const savingLive = activeTab === 'live';
     try {
       await activeEditor.save();
     } catch (e) {
       showErrorSnackbar('Error while saving timeline.', e);
       return;
     }
-    // Only the LIVE tab's save is allowed to touch the transport - it is
-    // by definition editing the timeline that's cued there, and the
-    // transport's loaded snapshot is the pre-save item list until reloaded,
-    // so Prev/Go would otherwise drift from what was just saved. An Editor
-    // tab save must NEVER call a `live/*` endpoint, even when the timeline
-    // being edited there happens to also be the live one right now - the
-    // Editor is purely a client-side editing surface.
-    if (activeTab === 'live' && eventKey && liveTimelineId) {
-      try {
-        await graphicsApi.live.load(
-          eventKey,
-          liveTimelineId,
-          loaded?.values ?? undefined
-        );
-        showSnackbar('Timeline saved and reloaded to the transport.');
-      } catch (e) {
-        showErrorSnackbar(
-          'Timeline saved, but reloading it to the transport failed.',
-          e
-        );
-      }
-    } else {
-      showSnackbar('Timeline saved.');
+    showSnackbar(
+      savingLive
+        ? 'Timeline saved. The transport is still running the previously loaded version - use Reload to transport to put this on air.'
+        : 'Timeline saved.'
+    );
+  };
+
+  // The authoritative "make the transport run the saved timeline" command, as
+  // its own explicit action (see `handleSaveTimeline`). Reloads the SAVED row -
+  // never the draft buffer - and carries the snapshot's own resolved values
+  // forward so template bindings that were already filled in are not dropped.
+  //
+  // Rewinds the running order to item 1 by definition, which is why it is
+  // behind a confirmation and is refused outright for a rundown snapshot.
+  const handleReloadToTransport = async () => {
+    if (!eventKey || !liveTimelineId) return;
+    const commandEvent = eventKey;
+    setReloadError(null);
+    setIsReloading(true);
+    try {
+      await graphicsApi.live.load(
+        commandEvent,
+        liveTimelineId,
+        loaded?.values ?? undefined
+      );
+      if (activeEventRef.current === commandEvent)
+        showSnackbar('Timeline reloaded to the transport.');
+    } catch (e) {
+      if (activeEventRef.current !== commandEvent) return;
+      // Recoverable and visible: the loaded snapshot is whatever it was
+      // before, the draft is still staged, and the banner keeps saying the two
+      // disagree until a reload actually succeeds.
+      const message = e instanceof Error ? e.message : String(e);
+      setReloadError(message);
+      showErrorSnackbar(
+        'Error while reloading the timeline to the transport.',
+        e
+      );
+    } finally {
+      setIsReloading(false);
     }
   };
 
@@ -1099,6 +1188,40 @@ export const GraphicsController: FC = () => {
             )}
           </Space>
 
+          {/* The transport's own identity, read only from the authoritative
+              loaded snapshot: which timeline, which position, which title,
+              at which revision. This is the target Prev/Go operate on, and it
+              is stated here on EVERY tab - a producer must be able to name
+              what the next press will air without having to trust an editor
+              list that may be mid-edit (F21). */}
+          <Space size={8} wrap>
+            <Tag
+              color={
+                transportOnAir ? 'red' : transportOnDeck ? 'green' : 'default'
+              }
+            >
+              LOADED
+            </Tag>
+            <Typography.Text>
+              {running?.current
+                ? `${running.timelineName ?? 'Timeline'} · item ${running.index + 1} of ${running.rows.length}: ${running.current.title}`
+                : 'Nothing loaded'}
+            </Typography.Text>
+            {running?.timelineRevision !== null &&
+              running?.timelineRevision !== undefined && (
+                <Typography.Text type='secondary'>
+                  revision {running.timelineRevision}
+                </Typography.Text>
+              )}
+            {liveSync.message && (
+              <Tooltip title={liveSync.message}>
+                <Tag color={liveSync.severity === 'error' ? 'red' : 'orange'}>
+                  Live tab draft is not the running order
+                </Tag>
+              </Tooltip>
+            )}
+          </Space>
+
           {authoritativeCue?.status === 'failed' && (
             <Alert
               type='error'
@@ -1268,9 +1391,7 @@ export const GraphicsController: FC = () => {
                         }}
                       >
                         <Space size={8}>
-                          <Typography.Text strong>
-                            Show Rundown
-                          </Typography.Text>
+                          <Typography.Text strong>Show Rundown</Typography.Text>
                         </Space>
                         {/* Not a picker: clicking a row does nothing.
                             Quick Play takes it to air now; Delete removes it. */}
@@ -1315,9 +1436,22 @@ export const GraphicsController: FC = () => {
                         <TimelineItemsPanel
                           editor={liveEditor}
                           catalogue={catalogue}
-                          readiness={livePreflight.readiness}
+                          // Transport decoration is allowed on the draft rows
+                          // ONLY while the draft provably IS the loaded
+                          // running order. Out of sync, a positional highlight
+                          // or a readiness badge computed from the snapshot
+                          // would be attached to whichever row happens to sit
+                          // at that index in the DRAFT - the exact lie F21
+                          // describes - so both are withheld and the banner
+                          // above sends the operator to the authoritative
+                          // running order instead.
+                          readiness={
+                            liveSync.describesLoaded
+                              ? livePreflight.readiness
+                              : undefined
+                          }
                           liveIndex={
-                            liveEditor.timeline
+                            liveSync.describesLoaded
                               ? (currentLoadedItem?.itemIndex ?? null)
                               : null
                           }
@@ -1329,12 +1463,69 @@ export const GraphicsController: FC = () => {
                           onSelectItem={setLiveSelectedItemId}
                           header={
                             liveEditor.timeline ? (
-                              <Alert
-                                type='warning'
-                                showIcon
-                                style={{ marginBottom: 12 }}
-                                message={`Editing "${liveEditor.timeline.name}" - the timeline cued to the transport. Saved changes affect the live show immediately.`}
-                              />
+                              <div style={{ marginBottom: 12 }}>
+                                <Alert
+                                  type='warning'
+                                  showIcon
+                                  message={`Editing "${liveEditor.timeline.name}" - the timeline the transport loaded. Nothing you change here reaches the transport until you save it and reload it.`}
+                                />
+                                {liveSync.message && (
+                                  <Alert
+                                    type={
+                                      liveSync.severity === 'error'
+                                        ? 'error'
+                                        : 'warning'
+                                    }
+                                    showIcon
+                                    style={{ marginTop: 8 }}
+                                    message='Draft is not the running order'
+                                    description={liveSync.message}
+                                    action={
+                                      <Popconfirm
+                                        title='Reload this timeline to the transport?'
+                                        description={reloadConfirmText}
+                                        okText='Reload'
+                                        okButtonProps={{ danger: true }}
+                                        disabled={reloadReason !== undefined}
+                                        onConfirm={handleReloadToTransport}
+                                      >
+                                        <TransportButton
+                                          size='small'
+                                          icon={<ReloadOutlined />}
+                                          loading={isReloading}
+                                          reason={reloadReason}
+                                        >
+                                          Reload to transport
+                                        </TransportButton>
+                                      </Popconfirm>
+                                    }
+                                  />
+                                )}
+                                {reloadError && (
+                                  <Alert
+                                    type='error'
+                                    showIcon
+                                    style={{ marginTop: 8 }}
+                                    message='Reload to transport failed'
+                                    description={`${reloadError} The transport is still running the version it already had - nothing was lost, and your draft is untouched. Try again when the cause is cleared.`}
+                                  />
+                                )}
+                                <div style={{ marginTop: 8 }}>
+                                  <Typography.Text strong>
+                                    Loaded running order
+                                  </Typography.Text>
+                                  <Typography.Text
+                                    type='secondary'
+                                    style={{ marginLeft: 8 }}
+                                  >
+                                    what Prev/Go will actually air
+                                  </Typography.Text>
+                                  <LoadedRunningOrderList
+                                    running={running}
+                                    onAir={transportOnAir}
+                                  />
+                                </div>
+                              </div>
                             ) : undefined
                           }
                           emptyText='No timeline is cued to the transport. Load one from the Editor tab or Quick Play one from the Show Rundown.'

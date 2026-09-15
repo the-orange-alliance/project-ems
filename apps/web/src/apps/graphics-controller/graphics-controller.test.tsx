@@ -21,13 +21,28 @@ const mocks = vi.hoisted(() => ({
   refresh: vi.fn(),
   pushUpdate: vi.fn(),
   clear: vi.fn(),
+  load: vi.fn(),
   consume: vi.fn(),
   refreshEntry: vi.fn(),
+  save: vi.fn(),
+  showSnackbar: vi.fn(),
   showErrorSnackbar: vi.fn(),
   // Mutable so a test can model the orders SWR really delivers in - notably
   // the show arriving before the timelines (F19).
   entries: { current: [] as RundownEntry[] },
-  timelines: { current: undefined as VersionedTimeline[] | undefined }
+  timelines: { current: undefined as VersionedTimeline[] | undefined },
+  // The Live tab's DRAFT buffer, as the tests want it staged for each case.
+  liveDraft: {
+    current: {
+      items: null as GraphicSpec[] | null,
+      remoteRevision: 3 as number | null,
+      isDirty: false,
+      saveConflict: false
+    }
+  },
+  // Every prop the (mocked) items panel was last rendered with, so a test can
+  // assert what transport state the DRAFT list was allowed to carry.
+  panelProps: { current: null as Record<string, unknown> | null }
 }));
 
 vi.mock('@ant-design/icons', () => ({
@@ -77,7 +92,7 @@ vi.mock('src/api/use-graphics-data.js', () => ({
       quickTake: vi.fn(),
       clear: mocks.clear,
       unload: vi.fn(),
-      load: vi.fn(),
+      load: mocks.load,
       advance: vi.fn(),
       previous: vi.fn(),
       replayPreview: vi.fn()
@@ -92,25 +107,32 @@ vi.mock('src/api/use-stats-data.js', () => ({
 }));
 vi.mock('src/hooks/use-snackbar.js', () => ({
   useSnackbar: () => ({
-    showSnackbar: vi.fn(),
+    showSnackbar: mocks.showSnackbar,
     showErrorSnackbar: mocks.showErrorSnackbar
   })
 }));
+// The Live tab's hook is the DRAFT buffer; `mocks.liveDraft` is how a test
+// stages "the producer has reordered/deleted rows that are not saved yet".
 vi.mock('./use-timeline-editor.js', () => ({
-  useTimelineEditor: (_eventKey: string, timelineId: string | null) => ({
-    timeline: timelineId ? timeline : null,
-    items: timelineId ? timeline.items : [],
-    isDirty: false,
-    isSaving: false,
-    save: vi.fn(),
-    revert: vi.fn(),
-    reorder: vi.fn(),
-    updateItem: vi.fn(),
-    addItem: vi.fn(),
-    removeItem: vi.fn(),
-    duplicateItem: vi.fn(),
-    setVariables: vi.fn()
-  })
+  useTimelineEditor: (_eventKey: string, timelineId: string | null) => {
+    const draft = mocks.liveDraft.current;
+    return {
+      timeline: timelineId ? timeline : null,
+      items: timelineId ? (draft.items ?? timeline.items) : [],
+      remoteRevision: timelineId ? draft.remoteRevision : null,
+      isDirty: draft.isDirty,
+      isSaving: false,
+      saveConflict: draft.saveConflict,
+      save: mocks.save,
+      revert: vi.fn(),
+      reorder: vi.fn(),
+      updateItem: vi.fn(),
+      addItem: vi.fn(),
+      removeItem: vi.fn(),
+      duplicateItem: vi.fn(),
+      setVariables: vi.fn()
+    };
+  }
 }));
 vi.mock('./use-show-rundown.js', () => ({
   ON_DECK: '#on-deck',
@@ -138,13 +160,38 @@ vi.mock('./use-timeline-preflight.js', () => ({
 vi.mock('./rundown-list.js', () => ({ RundownList: () => null }));
 vi.mock('./live-monitor.js', () => ({ LiveMonitor: () => null }));
 vi.mock('./quick-stat-drawer.js', () => ({ QuickStatDrawer: () => null }));
+// Records what the panel was handed and renders only its `header`, which is
+// where the Live tab's out-of-sync banner, the authoritative running order and
+// the Reload-to-transport action live.
 vi.mock('./timeline-items-panel.js', () => ({
-  TimelineItemsPanel: () => null
+  TimelineItemsPanel: (props: Record<string, unknown>) => {
+    mocks.panelProps.current = props;
+    return <>{props.header as ReactNode}</>;
+  }
 }));
 vi.mock('./timeline-list.js', () => ({ TimelineList: () => null }));
 vi.mock('./variable-fill-modal.js', () => ({ VariableFillModal: () => null }));
+// Renders the overflow menu inline so a test can press Save without driving
+// an antd dropdown - the labels are plain anchors the component builds itself.
 vi.mock('src/components/buttons/more-button.js', () => ({
-  MoreButton: () => null
+  MoreButton: ({
+    menuItems
+  }: {
+    menuItems: {
+      key?: string;
+      type?: string;
+      label?: ReactNode;
+      disabled?: boolean;
+    }[];
+  }) => (
+    <>
+      {menuItems.map((item, index) =>
+        item.type === 'divider' || item.disabled ? null : (
+          <div key={item.key ?? index}>{item.label}</div>
+        )
+      )}
+    </>
+  )
 }));
 vi.mock('src/components/util/two-column-header.js', () => ({
   TwoColumnHeader: ({ left, right }: { left: ReactNode; right: ReactNode }) => (
@@ -225,6 +272,17 @@ function envelope(
   } as PlaybackStateEnvelope;
 }
 
+/** The Live draft back to "clean, and exactly the loaded revision". */
+function resetLiveDraft() {
+  mocks.liveDraft.current = {
+    items: null,
+    remoteRevision: 3,
+    isDirty: false,
+    saveConflict: false
+  };
+  mocks.panelProps.current = null;
+}
+
 function renderController(authoritative = envelope()) {
   return renderWithJotai(<GraphicsController />, (store) => {
     store.set(eventKeyAtom, 'event-a');
@@ -243,6 +301,7 @@ describe('GraphicsController authoritative controls', () => {
     vi.clearAllMocks();
     mocks.entries.current = [];
     mocks.timelines.current = [timeline];
+    resetLiveDraft();
   });
 
   it('uses loaded authoritative values when cueing the Live timeline item', async () => {
@@ -388,6 +447,7 @@ describe('GraphicsController show advance', () => {
     vi.clearAllMocks();
     mocks.entries.current = [showEntry];
     mocks.timelines.current = [timeline];
+    resetLiveDraft();
     mocks.consume.mockResolvedValue(loadedAdvance());
     mocks.refreshEntry.mockResolvedValue({
       attempted: 1,
@@ -519,5 +579,217 @@ describe('GraphicsController show advance', () => {
 
       await waitFor(() => expect(mocks.refreshEntry).toHaveBeenCalledTimes(2));
     });
+  });
+});
+
+/**
+ * Task 08 / F21: the Live tab's editable item list is a DRAFT, and the
+ * transport runs the immutable loaded snapshot. These cover the boundary
+ * between them - what the draft is allowed to claim about the transport, and
+ * the now-explicit Save / Reload-to-transport split.
+ */
+const item = (id: string, title: string): GraphicSpec => ({
+  ...rawSpec,
+  id,
+  title,
+  bindings: undefined
+});
+const liveItems = [
+  item('one', 'Opening stat'),
+  item('two', 'Mid-match stat'),
+  item('three', 'Closing stat')
+];
+const liveTimeline: VersionedTimeline = {
+  ...timeline,
+  items: liveItems
+};
+
+/** Three saved items, transport parked on the second. */
+function liveEnvelope(
+  loadedOverrides: Record<string, unknown> = {}
+): PlaybackStateEnvelope {
+  return envelope({
+    loaded: {
+      snapshotId: 'snapshot-a',
+      source: { kind: 'timeline', timelineId: 'timeline-a', revision: 3 },
+      timelines: [liveTimeline],
+      items: liveItems.map((spec, itemIndex) => ({
+        timelineId: 'timeline-a',
+        timelineRevision: 3,
+        itemIndex,
+        spec
+      })),
+      index: 1,
+      loadedAtUtc: '2026-09-14T12:00:00.000Z',
+      values: { featured: 254 },
+      ...loadedOverrides
+    }
+  });
+}
+
+const openLiveTab = () =>
+  fireEvent.click(screen.getByRole('tab', { name: 'Live' }));
+
+describe('GraphicsController live draft vs loaded running order', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.entries.current = [];
+    mocks.timelines.current = [liveTimeline];
+    resetLiveDraft();
+    mocks.liveDraft.current.items = liveItems;
+    mocks.save.mockResolvedValue(undefined);
+    mocks.load.mockResolvedValue(null);
+  });
+
+  it('names the loaded target from the snapshot, on every tab', () => {
+    renderController(liveEnvelope());
+    // Stated before the producer has opened any tab: the transport is on item
+    // 2 of 3, and that item is "Mid-match stat".
+    expect(screen.getByText(/item 2 of 3: Mid-match stat/)).toBeInTheDocument();
+    expect(screen.getByText(/revision 3/)).toBeInTheDocument();
+  });
+
+  it('lets a clean draft of the loaded revision carry the live position', () => {
+    renderController(liveEnvelope());
+    openLiveTab();
+
+    expect(mocks.panelProps.current?.liveIndex).toBe(1);
+    expect(mocks.panelProps.current?.readiness).toEqual({});
+    expect(
+      screen.queryByText('Draft is not the running order')
+    ).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['reordered', [liveItems[1], liveItems[0], liveItems[2]]],
+    ['deleted', [liveItems[1], liveItems[2]]],
+    ['inserted', [item('new', 'Inserted stat'), ...liveItems]]
+  ])(
+    'withholds the live position from a draft with a row %s before the playhead',
+    (_label, draftItems) => {
+      mocks.liveDraft.current.items = draftItems;
+      mocks.liveDraft.current.isDirty = true;
+      renderController(liveEnvelope());
+      openLiveTab();
+
+      // The F21 bug: index 1 painted onto this list highlights a row the
+      // transport would never play, and Prev/Go would air something else.
+      expect(mocks.panelProps.current?.liveIndex).toBeNull();
+      expect(mocks.panelProps.current?.readiness).toBeUndefined();
+      expect(
+        screen.getByText('Draft is not the running order')
+      ).toBeInTheDocument();
+      // The authoritative order is still on screen, and still says the truth.
+      expect(
+        screen.getByText(/item 2 of 3: Mid-match stat/)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('list', { name: 'Loaded running order' })
+      ).toBeInTheDocument();
+    }
+  );
+
+  it('flags a save the transport has not reloaded yet', () => {
+    mocks.liveDraft.current.remoteRevision = 4;
+    renderController(liveEnvelope());
+    openLiveTab();
+
+    expect(mocks.panelProps.current?.liveIndex).toBeNull();
+    expect(screen.getByText(/Saved as revision 4/)).toBeInTheDocument();
+  });
+
+  it('saves the live timeline without moving the transport', async () => {
+    mocks.liveDraft.current.isDirty = true;
+    renderController(liveEnvelope());
+    openLiveTab();
+
+    fireEvent.click(screen.getByText(/Save Live Timeline/));
+
+    await waitFor(() => expect(mocks.save).toHaveBeenCalled());
+    // The old Save chained a `live/load`, which rewound the running order to
+    // item 1 mid-show. Saving is now only a save.
+    expect(mocks.load).not.toHaveBeenCalled();
+    expect(mocks.showSnackbar).toHaveBeenCalledWith(
+      expect.stringContaining('Reload to transport')
+    );
+  });
+
+  it('reloads to the transport only on the confirmed explicit command', async () => {
+    mocks.liveDraft.current.remoteRevision = 4;
+    renderController(liveEnvelope());
+    openLiveTab();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /Reload to transport/ })
+    );
+    expect(mocks.load).not.toHaveBeenCalled();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Reload' }));
+
+    await waitFor(() => expect(mocks.load).toHaveBeenCalled());
+    // Carries the snapshot's own resolved values, so template bindings that
+    // were already filled in are not dropped by the reload.
+    expect(mocks.load).toHaveBeenCalledWith('event-a', 'timeline-a', {
+      featured: 254
+    });
+  });
+
+  it('keeps a failed reload on screen with the transport untouched', async () => {
+    mocks.liveDraft.current.remoteRevision = 4;
+    mocks.load.mockRejectedValue(new Error('relay unreachable'));
+    renderController(liveEnvelope());
+    openLiveTab();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /Reload to transport/ })
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Reload' }));
+
+    expect(
+      await screen.findByText('Reload to transport failed')
+    ).toBeInTheDocument();
+    expect(mocks.showErrorSnackbar).toHaveBeenCalled();
+    // Still out of sync, still saying so, still naming the real target.
+    expect(screen.getByText(/item 2 of 3: Mid-match stat/)).toBeInTheDocument();
+  });
+
+  it('refuses to reload one timeline out of a rundown running order', () => {
+    mocks.liveDraft.current.remoteRevision = 4;
+    renderController(
+      liveEnvelope({
+        source: { kind: 'rundown', rundownId: 'producer-show', revision: 2 }
+      })
+    );
+    openLiveTab();
+
+    expect(
+      screen.getByRole('button', { name: /Reload to transport/ })
+    ).toBeDisabled();
+  });
+
+  it('surfaces a lost save race without discarding either version', () => {
+    mocks.liveDraft.current.isDirty = true;
+    mocks.liveDraft.current.saveConflict = true;
+    renderController(liveEnvelope());
+    openLiveTab();
+
+    expect(
+      screen.getByText(/Nothing you changed was written/)
+    ).toBeInTheDocument();
+    expect(mocks.panelProps.current?.liveIndex).toBeNull();
+  });
+
+  it('drops the live position when the event switches under it', async () => {
+    const { store } = renderController(liveEnvelope());
+    openLiveTab();
+    expect(mocks.panelProps.current?.liveIndex).toBe(1);
+
+    await act(async () => {
+      store.set(eventKeyAtom, 'event-b');
+    });
+
+    // Nothing is loaded for the new event, so there is no position to claim.
+    expect(mocks.panelProps.current?.liveIndex).toBeNull();
+    expect(screen.getByText(/Nothing loaded/)).toBeInTheDocument();
   });
 });
