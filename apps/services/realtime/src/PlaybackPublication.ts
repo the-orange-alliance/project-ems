@@ -11,7 +11,7 @@ import logger from "./util/Logger.js";
 
 export type PlaybackPublicationResult = {
   accepted: boolean;
-  reason: "broadcast" | "duplicate" | "stale" | "retired-epoch";
+  reason: "broadcast" | "observed" | "duplicate" | "stale" | "retired-epoch";
   authorityEpoch: string;
   eventKey: string;
   revision: number;
@@ -34,6 +34,22 @@ export class PlaybackPublicationReceiver {
   public constructor(private readonly server: Server) {}
 
   public accept(input: unknown): PlaybackPublicationResult {
+    return this.process(input, true);
+  }
+
+  /**
+   * Adopts an authoritative API replay into the same retirement cursor without
+   * broadcasting it. This closes the realtime-restart race where a delayed
+   * publication from the previous API epoch arrives after replay hydration.
+   */
+  public observe(input: unknown): PlaybackPublicationResult {
+    return this.process(input, false);
+  }
+
+  private process(
+    input: unknown,
+    broadcast: boolean,
+  ): PlaybackPublicationResult {
     const publication = playbackPublicationZod.parse(input);
     const { authorityEpoch, eventKey, state } = publication;
     const current = this.cursors.get(eventKey);
@@ -62,31 +78,24 @@ export class PlaybackPublicationReceiver {
     } else if (current) {
       retired.add(current.authorityEpoch);
       this.retiredEpochs.set(eventKey, retired);
-
-      // A restarted API commonly republishes its already durable latest state.
-      // Adopt the new epoch without broadcasting an equal revision twice.
-      if (state.revision === current.revision) {
-        this.cursors.set(eventKey, { authorityEpoch, revision: state.revision });
-        return {
-          accepted: false,
-          reason: "duplicate",
-          authorityEpoch,
-          eventKey,
-          revision: state.revision,
-        };
-      }
     }
 
     this.cursors.set(eventKey, { authorityEpoch, revision: state.revision });
-    this.server
-      .in(`graphics:${eventKey}`)
-      .emit(GraphicsSocketEvent.STATE, {
+    if (broadcast) {
+      // A changed epoch is a browser ordering reset and must be delivered even
+      // at an equal/lower revision. This is the lossless authoritative event.
+      this.server
+        .in(`graphics:${eventKey}`)
+        .emit(GraphicsSocketEvent.PLAYBACK_STATE_V1, publication);
+      // TODO(Task 16): remove this lossy compatibility projection/event.
+      this.server.in(`graphics:${eventKey}`).emit(GraphicsSocketEvent.STATE, {
         ...Graphics.toLegacyState(state),
         eventKey,
       });
+    }
     return {
       accepted: true,
-      reason: "broadcast",
+      reason: broadcast ? "broadcast" : "observed",
       authorityEpoch,
       eventKey,
       revision: state.revision,

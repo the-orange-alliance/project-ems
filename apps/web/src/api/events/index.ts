@@ -1,6 +1,7 @@
 import { useDisplayEvent } from './display-event.js';
 import { useGraphicsPreviewReplayEvent } from './graphics-preview-replay-event.js';
 import { useGraphicsStateEvent } from './graphics-state-event.js';
+import { usePlaybackStateEvent } from './playback-state-event.js';
 import { useCommitEvent } from './match-commit-event.js';
 import { usePrestartEvent } from './match-prestart-event.js';
 import { useMatchStateEvents } from './match-state-event.js';
@@ -10,6 +11,7 @@ export {
   useDisplayEvent,
   useGraphicsPreviewReplayEvent,
   useGraphicsStateEvent,
+  usePlaybackStateEvent,
   useCommitEvent,
   usePrestartEvent,
   useMatchStateEvents,

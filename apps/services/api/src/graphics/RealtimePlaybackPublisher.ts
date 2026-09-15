@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
-  playbackPublicationZod,
+  createPlaybackStateEnvelope,
   type PlaybackState
 } from '@toa-lib/models/base';
 
@@ -38,11 +38,9 @@ export function createRealtimePlaybackPublisher(
   return {
     authorityEpoch,
     async publish(eventKey, state) {
-      const publication = playbackPublicationZod.parse({
-        authorityEpoch,
-        eventKey,
-        state
-      });
+      if (eventKey !== state.eventKey)
+        throw new Error('Published playback state must match the event key.');
+      const publication = createPlaybackStateEnvelope(authorityEpoch, state);
       const response = await fetchImpl(
         `${baseUrl}/internal/graphics/playback`,
         {

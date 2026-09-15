@@ -3,11 +3,13 @@ import {
   CueQueue,
   GraphicSpec,
   LiveGraphicState,
+  PlaybackStateEnvelope,
   QueueEntry,
   Timeline,
   VersionedTimeline,
   cueQueueZod,
   liveGraphicStateZod,
+  playbackStateEnvelopeZod,
   versionedTimelineZod
 } from '@toa-lib/models';
 import { HttpClient } from '@toa-lib/client';
@@ -158,6 +160,14 @@ export const graphicsApi = {
     }
   },
   live: {
+    /** Lossless authoritative read. Command methods remain legacy until Task 05. */
+    authoritativeState: (
+      eventKey: string
+    ): Promise<PlaybackStateEnvelope | null> =>
+      realtimeClient.get<PlaybackStateEnvelope>(
+        `/graphics/${eventKey}/live/state/v1`,
+        { schema: playbackStateEnvelopeZod }
+      ),
     state: (eventKey: string): Promise<LiveGraphicState | null> =>
       realtimeClient.get<LiveGraphicState>(`/graphics/${eventKey}/live`, {
         schema: liveGraphicStateZod

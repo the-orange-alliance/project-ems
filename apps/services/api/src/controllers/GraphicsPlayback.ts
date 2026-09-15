@@ -9,6 +9,7 @@ import {
   graphicRevisionZod,
   graphicsTargetZod,
   playbackAcknowledgmentZod,
+  playbackStateEnvelopeZod,
   playbackStateZod,
   preparedGraphicSpecZod,
   type GraphicsError,
@@ -23,7 +24,11 @@ import {
   GraphicsRepositoryError,
   type GraphicsRepositoryOptions
 } from '../graphics/GraphicsRepository.js';
-import { getPlaybackCoordinator } from '../graphics/PlaybackCoordinatorService.js';
+import {
+  getPlaybackAuthorityEpoch,
+  getPlaybackCoordinator
+} from '../graphics/PlaybackCoordinatorService.js';
+import { createPlaybackStateEnvelope } from '@toa-lib/models/base';
 import {
   PlaybackNavigation,
   type LoadEntities,
@@ -74,6 +79,8 @@ export interface GraphicsPlaybackControllerOptions extends GraphicsRepositoryOpt
   newId?: () => string;
   /** Generates a `requestId` for a command whose caller sent none (the Companion path). Defaults to `randomUUID`. Tests may override for determinism. */
   newRequestId?: () => string;
+  /** Test/deployment override; otherwise generated once with the coordinator. */
+  authorityEpoch?: string;
 }
 
 const eventParams = z.object({ eventKey: graphicIdentifierZod });
@@ -162,6 +169,13 @@ const stateResponses = {
   500: errorEnvelopeZod,
   503: errorEnvelopeZod
 };
+const envelopeResponses = {
+  200: playbackStateEnvelopeZod,
+  400: errorEnvelopeZod,
+  404: errorEnvelopeZod,
+  500: errorEnvelopeZod,
+  503: errorEnvelopeZod
+};
 const publicationHealthZod = z
   .object({
     configured: z.boolean(),
@@ -218,7 +232,11 @@ export default async function graphicsPlaybackController(
   // getPlaybackCoordinator's WeakMap returns the one instance created there. Options are ignored once
   // that instance exists (see PlaybackCoordinatorService.ts), so passing `repository` here only matters
   // the first time this is reached - which, for the real app, was already at startup.
-  const coordinator = getPlaybackCoordinator(fastify, { repository });
+  const coordinator = getPlaybackCoordinator(fastify, {
+    repository,
+    authorityEpoch: options.authorityEpoch
+  });
+  const authorityEpoch = getPlaybackAuthorityEpoch(fastify);
   // Reuses the same app-scoped singleton the CRUD Stats controller created (getStatsQueryService's own
   // WeakMap) rather than constructing a second StatsQueryService/StatsWorkerPool.
   const stats = options.stats ?? getStatsQueryService(fastify);
@@ -581,6 +599,31 @@ export default async function graphicsPlaybackController(
     async (request, reply) => {
       try {
         return reply.send(await coordinator.getState(request.params.eventKey));
+      } catch (error) {
+        return sendUnexpected(reply, error);
+      }
+    }
+  );
+
+  // Versioned browser/realtime read. It is the exact same envelope sent by
+  // the publication channel, including this API authority's process epoch.
+  app.get(
+    '/:eventKey/live/state/v1',
+    {
+      schema: {
+        tags: ['Graphics'],
+        params: eventParams,
+        response: envelopeResponses
+      }
+    },
+    async (request, reply) => {
+      try {
+        return reply.send(
+          createPlaybackStateEnvelope(
+            authorityEpoch,
+            await coordinator.getState(request.params.eventKey)
+          )
+        );
       } catch (error) {
         return sendUnexpected(reply, error);
       }

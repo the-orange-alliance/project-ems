@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import type { PlaybackState } from '@toa-lib/models/base';
 import {
@@ -16,6 +17,8 @@ export interface PlaybackCoordinatorServiceOptions extends GraphicsRepositoryOpt
   publicationRetryBaseMs?: PlaybackCoordinatorOptions['publicationRetryBaseMs'];
   publicationRetryMaxMs?: PlaybackCoordinatorOptions['publicationRetryMaxMs'];
   shutdownTimeoutMs?: number;
+  /** Stable for one API authority lifetime; changes whenever its ordering can restart. */
+  authorityEpoch?: string;
   now?: PlaybackCoordinatorOptions['now'];
   newId?: PlaybackCoordinatorOptions['newId'];
 }
@@ -29,6 +32,7 @@ const coordinators = new WeakMap<
   FastifyInstance['server'],
   PlaybackCoordinator
 >();
+const authorityEpochs = new WeakMap<FastifyInstance['server'], string>();
 
 /**
  * Returns the process-wide PlaybackCoordinator for this Fastify app, creating
@@ -56,10 +60,21 @@ export function getPlaybackCoordinator(
   });
 
   coordinators.set(app.server, coordinator);
+  authorityEpochs.set(app.server, options.authorityEpoch ?? randomUUID());
   app.addHook('onClose', async () => {
     coordinators.delete(app.server);
+    authorityEpochs.delete(app.server);
     await coordinator.shutdown(options.shutdownTimeoutMs);
   });
 
   return coordinator;
+}
+
+/** Returns the epoch paired with the process-wide playback coordinator. */
+export function getPlaybackAuthorityEpoch(app: FastifyInstance): string {
+  getPlaybackCoordinator(app);
+  const authorityEpoch = authorityEpochs.get(app.server);
+  if (!authorityEpoch)
+    throw new Error('Playback authority epoch is unavailable.');
+  return authorityEpoch;
 }

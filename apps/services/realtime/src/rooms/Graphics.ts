@@ -5,6 +5,8 @@ import {
   LiveGraphicState,
   type GraphicsPreviewReplay,
   type PlaybackState,
+  playbackStateEnvelopeZod,
+  type PlaybackStateEnvelope,
   type QueueSnapshot,
 } from "@toa-lib/models";
 import { Server, Socket } from "socket.io";
@@ -125,12 +127,19 @@ export class RelayError extends Error {
  */
 export default class Graphics extends Room {
   private readonly apiBaseUrl: string;
+  private observePlaybackEnvelope?: (envelope: PlaybackStateEnvelope) => void;
   /** Guarantees a strictly increasing `replayId` even for two replays in the same millisecond - see `emitPreviewReplay`. */
   private lastPreviewReplayId = 0;
 
   public constructor(server: Server) {
     super(server, "graphics");
     this.apiBaseUrl = process.env.GRAPHICS_API_BASE_URL ?? DEFAULT_API_BASE_URL;
+  }
+
+  public setPlaybackEnvelopeObserver(
+    observer: (envelope: PlaybackStateEnvelope) => void,
+  ): void {
+    this.observePlaybackEnvelope = observer;
   }
 
   public initializeEvents(socket: Socket): void {
@@ -146,13 +155,7 @@ export default class Graphics extends Room {
         socket.join(`graphics:${eventKey}`);
         socket.data.graphicsEventKey = eventKey;
 
-        const state = await this.getState(eventKey);
-        if (state) {
-          socket.emit(GraphicsSocketEvent.STATE, {
-            ...state,
-            eventKey,
-          });
-        }
+        await this.replayState(socket, eventKey);
       },
     );
 
@@ -289,6 +292,62 @@ export default class Graphics extends Room {
       "GET",
       throwOnError,
     );
+  }
+
+  /** Reads the same strict envelope the API publishes and browsers receive. */
+  public async getPlaybackEnvelope(
+    eventKey: string,
+    throwOnError = false,
+  ): Promise<PlaybackStateEnvelope | null> {
+    const path = `/graphics/${encodeURIComponent(eventKey)}/live/state/v1`;
+    let response: Response | undefined;
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= CONNECTION_RETRY_ATTEMPTS; attempt++) {
+      try {
+        response = await fetch(`${this.apiBaseUrl}${path}`, {
+          headers: { accept: "application/json" },
+        });
+        lastError = undefined;
+        break;
+      } catch (error) {
+        lastError = error;
+        if (!isConnectionError(error) || attempt === CONNECTION_RETRY_ATTEMPTS)
+          break;
+        await delay(CONNECTION_RETRY_BASE_MS * attempt);
+      }
+    }
+    if (lastError !== undefined || !response) {
+      if (throwOnError)
+        throw new RelayError(502, "The graphics API is not reachable.", true);
+      logger.warn(`graphics authoritative replay failed for ${eventKey}`);
+      return null;
+    }
+    const body: unknown = await response.json().catch(() => null);
+    if (!response.ok) {
+      const { code, message } = describePlaybackError(body);
+      const reason =
+        code && message
+          ? `${code}: ${message}`
+          : (message ?? `${response.status} ${response.statusText}`);
+      if (throwOnError)
+        throw new RelayError(response.status, reason, response.status >= 500);
+      logger.warn(
+        `graphics authoritative replay rejected for ${eventKey}: ${reason}`,
+      );
+      return null;
+    }
+    try {
+      const envelope = playbackStateEnvelopeZod.parse(body);
+      this.observePlaybackEnvelope?.(envelope);
+      return envelope;
+    } catch (error) {
+      const message = `Graphics API returned an invalid playback envelope: ${
+        error instanceof Error ? error.message : String(error)
+      }`;
+      if (throwOnError) throw new RelayError(502, message, true);
+      logger.error(message);
+      return null;
+    }
   }
 
   public async load(
@@ -432,10 +491,12 @@ export default class Graphics extends Room {
   }
 
   private async replayState(socket: Socket, eventKey: string): Promise<void> {
-    const state = await this.getState(eventKey);
-    if (state) {
+    const envelope = await this.getPlaybackEnvelope(eventKey);
+    if (envelope) {
+      socket.emit(GraphicsSocketEvent.PLAYBACK_STATE_V1, envelope);
+      // TODO(Task 16): remove the legacy event once all consumers migrate.
       socket.emit(GraphicsSocketEvent.STATE, {
-        ...state,
+        ...Graphics.toLegacyState(envelope.state),
         eventKey,
       });
     }

@@ -24,6 +24,7 @@ vi.mock('src/api/events/index.js', () => ({
   useDisplayEvent: () => mocks.handler,
   useGraphicsPreviewReplayEvent: () => mocks.handler,
   useGraphicsStateEvent: () => mocks.handler,
+  usePlaybackStateEvent: () => mocks.handler,
   useMatchStateEvents: () => ({
     handleMatchAbort: mocks.handler,
     handleMatchEnd: mocks.handler,
@@ -54,7 +55,7 @@ describe('ConnectionManager graphics subscription', () => {
       expect(view.store.get(graphicsStateMapAtom).event).toBeUndefined()
     );
     const stateListenerCall = worker.on.mock.calls.findIndex(
-      ([event]) => event === GraphicsSocketEvent.STATE
+      ([event]) => event === GraphicsSocketEvent.PLAYBACK_STATE_V1
     );
     const subscribeCall = worker.emit.mock.calls.findIndex(
       ([event]) => event === 'graphics:subscribe'

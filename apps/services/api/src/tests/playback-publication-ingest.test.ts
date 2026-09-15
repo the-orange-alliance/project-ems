@@ -4,13 +4,17 @@ import type { AddressInfo } from 'node:net';
 import express from 'express';
 import {
   createEmptyPlaybackState,
+  GraphicsSocketEvent,
   playbackStateZod
 } from '@toa-lib/models/base';
 import { createRealtimePlaybackPublisher } from '../graphics/RealtimePlaybackPublisher.js';
 // The reliability harness intentionally tests the already-compiled realtime
 // boundary without pulling its source tree into the API TypeScript rootDir.
 // @ts-expect-error realtime does not emit declarations.
-import { PlaybackPublicationReceiver, registerPlaybackPublicationEndpoint } from '../../../realtime/build/PlaybackPublication.js';
+import * as realtimePlayback from '../../../realtime/build/PlaybackPublication.js';
+
+const { PlaybackPublicationReceiver, registerPlaybackPublicationEndpoint } =
+  realtimePlayback;
 
 function state(eventKey: string, revision: number) {
   return playbackStateZod.parse({
@@ -77,26 +81,44 @@ test('authenticated internal ingestion validates complete state and broadcasts o
   await publisher.publish('event-a', state('event-a', 1));
   await publisher.publish('event-a', state('event-a', 1));
 
-  assert.equal(sockets.emissions.length, 1);
-  assert.equal(sockets.emissions[0].room, 'graphics:event-a');
-  assert.equal(sockets.emissions[0].payload.eventKey, 'event-a');
-  assert.equal(sockets.emissions[0].payload.generation, 1);
+  assert.equal(sockets.emissions.length, 2);
+  const authoritative = sockets.emissions.filter(
+    (entry) => entry.event === GraphicsSocketEvent.PLAYBACK_STATE_V1
+  );
+  const legacy = sockets.emissions.filter(
+    (entry) => entry.event === GraphicsSocketEvent.STATE
+  );
+  assert.equal(authoritative.length, 1);
+  assert.equal(legacy.length, 1);
+  assert.equal(authoritative[0].room, 'graphics:event-a');
+  assert.equal(authoritative[0].payload.eventKey, 'event-a');
+  assert.equal(authoritative[0].payload.state.revision, 1);
+  assert.equal(legacy[0].payload.generation, 1);
 });
 
 test('realtime dedupe isolates events, drops reordering, and retires prior authority epochs', () => {
   const sockets = fakeSocketServer();
   const receiver = new PlaybackPublicationReceiver(sockets.server as any);
-  const publish = (authorityEpoch: string, eventKey: string, revision: number) =>
-    receiver.accept({ authorityEpoch, eventKey, state: state(eventKey, revision) });
+  const publish = (
+    authorityEpoch: string,
+    eventKey: string,
+    revision: number
+  ) =>
+    receiver.accept({
+      schemaVersion: 1,
+      authorityEpoch,
+      eventKey,
+      state: state(eventKey, revision)
+    });
 
   assert.equal(publish('epoch-a', 'event-a', 2).accepted, true);
   assert.equal(publish('epoch-a', 'event-a', 1).reason, 'stale');
   assert.equal(publish('epoch-a', 'event-a', 2).reason, 'duplicate');
   assert.equal(publish('epoch-a', 'event-b', 1).accepted, true);
 
-  // Equal state from a restarted authority adopts the epoch without another
-  // audience event, and any delayed request from the retired process is inert.
-  assert.equal(publish('epoch-b', 'event-a', 2).reason, 'duplicate');
+  // Even an equal state from a restarted authority is broadcast: epoch change
+  // is the browser's atomic ordering reset boundary.
+  assert.equal(publish('epoch-b', 'event-a', 2).reason, 'broadcast');
   assert.equal(publish('epoch-a', 'event-a', 99).reason, 'retired-epoch');
   assert.equal(publish('epoch-b', 'event-a', 3).accepted, true);
 
@@ -107,13 +129,54 @@ test('realtime dedupe isolates events, drops reordering, and retires prior autho
   assert.equal(publish('epoch-a', 'event-c', 99).reason, 'retired-epoch');
 
   assert.deepEqual(
-    sockets.emissions.map((entry) => [entry.room, entry.payload.generation]),
+    sockets.emissions
+      .filter((entry) => entry.event === GraphicsSocketEvent.STATE)
+      .map((entry) => [entry.room, entry.payload.generation]),
     [
       ['graphics:event-a', 2],
       ['graphics:event-b', 1],
+      ['graphics:event-a', 2],
       ['graphics:event-a', 3],
       ['graphics:event-c', 5],
       ['graphics:event-c', 1]
     ]
+  );
+});
+
+test('API replay observation retires the old publisher before delayed delivery', () => {
+  const sockets = fakeSocketServer();
+  const receiver = new PlaybackPublicationReceiver(sockets.server as any);
+  const publication = (
+    authorityEpoch: string,
+    eventKey: string,
+    revision: number
+  ) => ({
+    schemaVersion: 1,
+    authorityEpoch,
+    eventKey,
+    state: state(eventKey, revision)
+  });
+
+  assert.equal(
+    receiver.accept(publication('epoch-a', 'event-a', 9)).accepted,
+    true
+  );
+  const emissionCount = sockets.emissions.length;
+  assert.equal(
+    receiver.observe(publication('epoch-b', 'event-a', 1)).accepted,
+    true
+  );
+  assert.equal(
+    sockets.emissions.length,
+    emissionCount,
+    'observation never rebroadcasts'
+  );
+  assert.equal(
+    receiver.accept(publication('epoch-a', 'event-a', 99)).reason,
+    'retired-epoch'
+  );
+  assert.equal(
+    receiver.accept(publication('epoch-b', 'event-a', 2)).accepted,
+    true
   );
 });

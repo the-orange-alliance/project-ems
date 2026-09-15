@@ -24,16 +24,23 @@ function publicationAudience() {
   return {
     states,
     publish: (eventKey: string, state: unknown) =>
-      receiver.accept({ authorityEpoch: 'api-test-epoch', eventKey, state })
+      receiver.accept({
+        schemaVersion: 1,
+        authorityEpoch: 'api-test-epoch',
+        eventKey,
+        state
+      })
   };
 }
 
 test('direct API quick-take publication reaches the subscribed event audience', async (t) => {
   const audience = publicationAudience();
-  const { app, coordinator } =
-    await createGraphicsBroadcastReliabilityHarness(t, {
+  const { app, coordinator } = await createGraphicsBroadcastReliabilityHarness(
+    t,
+    {
       publish: audience.publish
-    });
+    }
+  );
   const requested = sampleGraphic('direct-quick-stat');
 
   const response = await app.inject({
@@ -53,9 +60,7 @@ test('direct API quick-take publication reaches the subscribed event audience', 
   assert.equal(delivered[0].payload.spec.id, requested.id);
   assert.equal(delivered[0].payload.onAir, true);
 
-  const health = await app.inject(
-    '/graphics/event-a/live/publication-health'
-  );
+  const health = await app.inject('/graphics/event-a/live/publication-health');
   assert.equal(health.statusCode, 200);
   assert.equal(health.json().pendingRevision, null);
   assert.equal(
@@ -126,11 +131,7 @@ test('each playback mutation type publishes the exact committed acknowledgment r
   await committed('previous', 'GET', '/graphics/event-a/live/previous');
   await committed('go', 'GET', '/graphics/event-a/live/go/1');
   await committed('take', 'GET', '/graphics/event-a/live/take');
-  await committed(
-    'refresh',
-    'GET',
-    '/graphics/event-a/live/refresh/program'
-  );
+  await committed('refresh', 'GET', '/graphics/event-a/live/refresh/program');
   await committed('push-update', 'GET', '/graphics/event-a/live/push-update');
   await committed('clear', 'GET', '/graphics/event-a/live/clear');
   await committed('cue', 'POST', '/graphics/event-a/live/cue', {

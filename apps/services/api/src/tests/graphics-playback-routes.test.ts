@@ -1,12 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { TestContext } from 'node:test';
+import Fastify from 'fastify';
+import {
+  serializerCompiler,
+  validatorCompiler
+} from 'fastify-type-provider-zod';
 import {
   presentationFrameZod,
   type GraphicSpec,
   type GraphicsTarget,
   type PlaybackAcknowledgment,
-  type PlaybackState
+  type PlaybackState,
+  type PlaybackStateEnvelope
 } from '@toa-lib/models/base';
 import type {
   prepareGraphicFrame,
@@ -111,7 +117,8 @@ async function playbackFixture(
     repository,
     stats,
     prepareFrame: fakePrepareFrame,
-    now: () => NOW
+    now: () => NOW,
+    authorityEpoch: 'route-test-authority'
   });
   return { app, repository, stats, root };
 }
@@ -230,7 +237,77 @@ test('headless show: drives a complete broadcast over plain HTTP with no browser
   assert.equal(cleared.state.program, null);
   assert.equal(cleared.state.cue.status, 'ready');
   assert.equal(stats.queryCount, 0, 'authoritative cue never accepts SWR data');
-  assert.equal(stats.queryFreshCount, 2, 'load and advance each await fresh data');
+  assert.equal(
+    stats.queryFreshCount,
+    2,
+    'load and advance each await fresh data'
+  );
+});
+
+test('versioned state read restores the complete persisted cue/program/staged state', async (t) => {
+  const { app, repository, stats } = await playbackFixture(t);
+  const eventKey = 'event-a';
+  await seedTimeline(repository, eventKey, 'timeline-1', ['item-0']);
+
+  assert.equal(
+    (
+      await app.inject({
+        method: 'POST',
+        url: `/graphics/${eventKey}/live/load/timeline-1`
+      })
+    ).statusCode,
+    200
+  );
+  assert.equal(
+    (
+      await app.inject({
+        method: 'POST',
+        url: `/graphics/${eventKey}/live/take`
+      })
+    ).statusCode,
+    200
+  );
+  const refreshResponse = await app.inject({
+    method: 'POST',
+    url: `/graphics/${eventKey}/live/refresh/program`
+  });
+  assert.equal(refreshResponse.statusCode, 200);
+  const refreshed = ackOf(refreshResponse);
+  assert.equal(refreshed.ok, true);
+  if (!refreshed.ok) return;
+  assert.equal(refreshed.state.stagedUpdate.status, 'ready');
+
+  // A different app/coordinator forces a repository restore instead of reading
+  // the first coordinator's in-memory cache.
+  const restarted = Fastify({ logger: false });
+  restarted.setValidatorCompiler(validatorCompiler);
+  restarted.setSerializerCompiler(serializerCompiler);
+  await restarted.register(graphicsPlaybackController, {
+    prefix: '/graphics',
+    repository,
+    stats,
+    prepareFrame: fakePrepareFrame,
+    now: () => NOW,
+    authorityEpoch: 'restarted-route-authority'
+  });
+  t.after(() => restarted.close());
+
+  const response = await restarted.inject({
+    method: 'GET',
+    url: `/graphics/${eventKey}/live/state/v1`
+  });
+  assert.equal(response.statusCode, 200);
+  const envelope = response.json() as PlaybackStateEnvelope;
+  assert.equal(envelope.schemaVersion, 1);
+  assert.equal(envelope.authorityEpoch, 'restarted-route-authority');
+  assert.equal(envelope.eventKey, eventKey);
+  assert.deepEqual(envelope.state, refreshed.state);
+  assert.equal(envelope.state.loaded?.source.kind, 'timeline');
+  assert.equal(envelope.state.loaded?.index, 0);
+  assert.equal(envelope.state.cue.status, 'ready');
+  assert.ok(envelope.state.program?.graphic.target);
+  assert.equal(envelope.state.stagedUpdate.status, 'ready');
+  assert.ok(envelope.state.transition?.effectiveAtUtc);
 });
 
 test('every body-less command works over GET with no payload (the Companion path)', async (t) => {

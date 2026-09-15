@@ -3,10 +3,7 @@ import { FC } from 'react';
 import { palette } from '../audience-display/displays/graphics/theme.js';
 import { StatsGraphicDisplay } from '../audience-display/displays/graphics/stats-graphic-display.js';
 import { eventKeyAtom } from '../../stores/state/event.js';
-import {
-  createEmptyLiveGraphicState,
-  graphicsStateMapAtom
-} from '../../stores/state/graphics.js';
+import { playbackProgramForEventAtom } from '../../stores/state/graphics.js';
 
 // A fixed-size box the shared `Stage` (see `composition.tsx`) scales the
 // 1920x1080 broadcast canvas into. Sizing lives entirely in `Stage` now —
@@ -30,19 +27,13 @@ const MONITOR_HEIGHT = Math.round((MONITOR_WIDTH * 1080) / 1920);
  * enter/exit transitions included, since it's the exact same component
  * (`StatsGraphicDisplay`) driving both, not a settled-state-only snapshot.
  *
- * Reads `liveGraphicStateAtom` only - the same jotai atom the socket layer
- * (`useGraphicsStateEvent`, wired up in `connection-manager.tsx`) keeps
- * current on every `graphics:state` broadcast. No fetch, no polling: this
- * component is purely reactive to state that already exists.
+ * Reads the authoritative event-scoped program selector. No fetch, no polling:
+ * the versioned playback socket event keeps it current.
  */
 export const LiveMonitor: FC = () => {
   const eventKey = useAtomValue(eventKeyAtom);
-  const graphicsStateMap = useAtomValue(graphicsStateMapAtom);
-  const liveState =
-    eventKey && graphicsStateMap[eventKey]
-      ? graphicsStateMap[eventKey]
-      : createEmptyLiveGraphicState();
-  const onAir = liveState.onAir && !!liveState.spec && !!liveState.frame;
+  const program = useAtomValue(playbackProgramForEventAtom(eventKey));
+  const onAir = program !== null;
 
   return (
     <div
@@ -96,7 +87,10 @@ export const LiveMonitor: FC = () => {
           background: 'transparent'
         }}
       >
-        <StatsGraphicDisplay spec={liveState.spec} frame={liveState.frame} />
+        <StatsGraphicDisplay
+          spec={program?.graphic.spec ?? null}
+          frame={program?.graphic.frame ?? null}
+        />
       </div>
     </div>
   );

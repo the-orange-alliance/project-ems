@@ -24,7 +24,7 @@ export enum AudienceScreens {
   RESULTS_STREAM = 'results-stream',
   RANKINGS = 'rankings',
   STATS = 'stats-graphics',
-  /** Always shows the next cued item (`state.cue`), never what's on air - the "PVW bus" to `STATS`'s "PGM bus". */
+  /** Shows the best-effort next-item preview, never authoritative cue/program state - the "PVW bus" to `STATS`'s "PGM bus". */
   STATS_PREVIEW = 'stats-graphics-preview'
 }
 

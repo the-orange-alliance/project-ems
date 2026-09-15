@@ -14,7 +14,10 @@ import {
   leaveRooms,
 } from "./rooms/Rooms.js";
 import Graphics, { RelayError } from "./rooms/Graphics.js";
-import type { LiveGraphicState } from "@toa-lib/models";
+import {
+  playbackStateEnvelopeZod,
+  type LiveGraphicState,
+} from "@toa-lib/models";
 import { join } from "path";
 import {
   PlaybackPublicationReceiver,
@@ -152,9 +155,13 @@ io.on("connection", (socket) => {
 initRooms(io);
 
 if (!isGraphicsDisabled()) {
+  const playbackReceiver = new PlaybackPublicationReceiver(io);
+  getGraphicsRoom()?.setPlaybackEnvelopeObserver((envelope) => {
+    playbackReceiver.observe(envelope);
+  });
   registerPlaybackPublicationEndpoint(
     app,
-    new PlaybackPublicationReceiver(io),
+    playbackReceiver,
     process.env.GRAPHICS_PUBLICATION_TOKEN ?? env.get().jwtSecret,
   );
 }
@@ -227,6 +234,47 @@ if (!isGraphicsDisabled()) {
 
   app.get("/graphics/:eventKey/live", async (req, res) => {
     await sendLiveGraphicState(res, req.params.eventKey, "", "GET");
+  });
+
+  /** Lossless, versioned read; identical to publication/socket delivery. */
+  app.get("/graphics/:eventKey/live/state/v1", async (req, res) => {
+    const room = getGraphicsRoom();
+    if (!room) {
+      res.status(503).json({
+        error: "UNAVAILABLE",
+        code: "UNAVAILABLE",
+        message: "Graphics relay is unavailable",
+        retryable: true,
+      });
+      return;
+    }
+    try {
+      const envelope = await room.getPlaybackEnvelope(
+        req.params.eventKey,
+        true,
+      );
+      if (!envelope) {
+        res.status(503).json({
+          error: "UNAVAILABLE",
+          code: "UNAVAILABLE",
+          message: "Authoritative playback state is unavailable",
+          retryable: true,
+        });
+        return;
+      }
+      res.status(200).json(playbackStateEnvelopeZod.parse(envelope));
+    } catch (error) {
+      const status = error instanceof RelayError ? error.status : 503;
+      res.status(status).json({
+        error: "UPSTREAM_ERROR",
+        code: "UPSTREAM_ERROR",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Graphics relay request failed",
+        retryable: status >= 500,
+      });
+    }
   });
 
   /**

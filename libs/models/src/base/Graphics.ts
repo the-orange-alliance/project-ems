@@ -499,6 +499,8 @@ export const liveGraphicStateZod = z
 
 export enum GraphicsSocketEvent {
   STATE = 'graphics:state',
+  /** Schema-versioned, event-scoped authoritative playback envelope. */
+  PLAYBACK_STATE_V1 = 'graphics:playback-state:v1',
   LOAD = 'graphics:load',
   ADVANCE = 'graphics:advance',
   PREVIOUS = 'graphics:previous',
@@ -899,8 +901,7 @@ export function describeCueNotReady(cue: GraphicsCue): {
     case 'calculating':
       return {
         code: 'NOT_READY',
-        message:
-          'The cue is still calculating its data; try again in a moment.'
+        message: 'The cue is still calculating its data; try again in a moment.'
       };
     case 'failed':
       return { code: cue.error.code, message: cue.error.message };
@@ -1014,8 +1015,11 @@ export type PlaybackState = z.infer<typeof playbackStateZod>;
  * realtime process can retire a previous writer without confusing a restarted
  * authority's revision stream with an in-flight delivery from the old writer.
  */
-export const playbackPublicationZod = z
+export const PLAYBACK_STATE_ENVELOPE_SCHEMA_VERSION = 1 as const;
+
+export const playbackStateEnvelopeZod = z
   .object({
+    schemaVersion: z.literal(PLAYBACK_STATE_ENVELOPE_SCHEMA_VERSION),
     authorityEpoch: graphicIdentifierZod,
     eventKey: graphicIdentifierZod,
     state: playbackStateZod
@@ -1028,7 +1032,23 @@ export const playbackPublicationZod = z
       path: ['state', 'eventKey']
     }
   );
-export type PlaybackPublication = z.infer<typeof playbackPublicationZod>;
+export type PlaybackStateEnvelope = z.infer<typeof playbackStateEnvelopeZod>;
+
+/** API-to-realtime publication and browser delivery intentionally share one wire contract. */
+export const playbackPublicationZod = playbackStateEnvelopeZod;
+export type PlaybackPublication = PlaybackStateEnvelope;
+
+export function createPlaybackStateEnvelope(
+  authorityEpoch: string,
+  state: PlaybackState
+): PlaybackStateEnvelope {
+  return playbackStateEnvelopeZod.parse({
+    schemaVersion: PLAYBACK_STATE_ENVELOPE_SCHEMA_VERSION,
+    authorityEpoch,
+    eventKey: state.eventKey,
+    state
+  });
+}
 
 export function createEmptyPlaybackState(
   eventKey: string,

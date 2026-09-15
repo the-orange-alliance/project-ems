@@ -101,11 +101,11 @@ const fastify = Fastify({
 const realtimePublisher = createRealtimePlaybackPublisher({
   baseUrl: process.env.GRAPHICS_REALTIME_BASE_URL,
   token: process.env.GRAPHICS_PUBLICATION_TOKEN ?? env.get().jwtSecret,
-  authorityEpoch: process.env.PLAYBACK_AUTHORITY_EPOCH,
   timeoutMs: Number(process.env.GRAPHICS_PUBLICATION_TIMEOUT_MS) || undefined
 });
 getPlaybackCoordinator(fastify, {
   publish: realtimePublisher.publish,
+  authorityEpoch: realtimePublisher.authorityEpoch,
   publicationRetryBaseMs:
     Number(process.env.GRAPHICS_PUBLICATION_RETRY_BASE_MS) || undefined,
   publicationRetryMaxMs:

@@ -9,17 +9,22 @@ import * as Events from 'src/api/events/index.js';
 import { proxy } from 'comlink';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { eventKeyAtom } from 'src/stores/state/event.js';
-import { graphicsStateMapAtom } from 'src/stores/state/graphics.js';
+import {
+  graphicsStateMapAtom,
+  playbackDeliveryMapAtom
+} from 'src/stores/state/graphics.js';
 
 export const ConnectionManager: FC = () => {
   const { worker, connected } = useSocketWorker();
   const eventKey = useAtomValue(eventKeyAtom);
   const setGraphicsStateMap = useSetAtom(graphicsStateMapAtom);
+  const setPlaybackDeliveryMap = useSetAtom(playbackDeliveryMapAtom);
   const handleDisplay = Events.useDisplayEvent();
   const handleCommit = Events.useCommitEvent();
   const handleUpdate = Events.useMatchUpdateEvent();
   const handlePrestart = Events.usePrestartEvent();
   const handleGraphicsState = Events.useGraphicsStateEvent();
+  const handlePlaybackState = Events.usePlaybackStateEvent();
   const handleGraphicsPreviewReplay = Events.useGraphicsPreviewReplayEvent();
   const {
     handleMatchAbort,
@@ -57,13 +62,25 @@ export const ConnectionManager: FC = () => {
     () => proxy(handleGraphicsState),
     [handleGraphicsState]
   );
+  const playbackStateProxy = useMemo(
+    () => proxy(handlePlaybackState),
+    [handlePlaybackState]
+  );
   const graphicsPreviewReplayProxy = useMemo(
     () => proxy(handleGraphicsPreviewReplay),
     [handleGraphicsPreviewReplay]
   );
 
   useEffect(() => {
-    if (!worker || !connected) return;
+    if (!worker) return;
+    if (!connected) {
+      if (eventKey)
+        setPlaybackDeliveryMap((previous) => ({
+          ...previous,
+          [eventKey]: { phase: 'disconnected', error: null }
+        }));
+      return;
+    }
     worker.on(MatchSocketEvent.ABORT, abortProxy);
     worker.on(MatchSocketEvent.END, endProxy);
     worker.on(MatchSocketEvent.ENDGAME, endgameProxy);
@@ -74,6 +91,11 @@ export const ConnectionManager: FC = () => {
     worker.on(MatchSocketEvent.COMMIT, commitProxy);
     worker.on(MatchSocketEvent.PRESTART, prestartProxy);
     if (eventKey) {
+      worker.on(
+        GraphicsSocketEvent.PLAYBACK_STATE_V1,
+        playbackStateProxy,
+        eventKey
+      );
       worker.on(GraphicsSocketEvent.STATE, graphicsStateProxy, eventKey);
       worker.on(
         GraphicsSocketEvent.PREVIEW_REPLAY,
@@ -90,6 +112,10 @@ export const ConnectionManager: FC = () => {
         delete next[eventKey];
         return next;
       });
+      setPlaybackDeliveryMap((previous) => ({
+        ...previous,
+        [eventKey]: { phase: 'hydrating', error: null }
+      }));
       // Subscribe only after the listener exists so a fast initial replay
       // cannot race ahead of registration.
       worker.emit('graphics:subscribe', { eventKey });
@@ -106,6 +132,11 @@ export const ConnectionManager: FC = () => {
       worker.off(MatchSocketEvent.PRESTART, prestartProxy);
       if (eventKey) {
         worker.emit('graphics:unsubscribe', { eventKey });
+        worker.off(
+          GraphicsSocketEvent.PLAYBACK_STATE_V1,
+          playbackStateProxy,
+          eventKey
+        );
         worker.off(GraphicsSocketEvent.STATE, graphicsStateProxy, eventKey);
         worker.off(
           GraphicsSocketEvent.PREVIEW_REPLAY,
@@ -114,6 +145,13 @@ export const ConnectionManager: FC = () => {
         );
       }
     };
-  }, [worker, connected, eventKey, setGraphicsStateMap]);
+  }, [
+    worker,
+    connected,
+    eventKey,
+    setGraphicsStateMap,
+    setPlaybackDeliveryMap,
+    playbackStateProxy
+  ]);
   return null;
 };
