@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import type {
   GraphicSpec,
   MeasureFormat,
-  PresentationMode
+  PresentationMode,
+  VizFrame
 } from '@toa-lib/models';
 import {
   formatSemanticCell,
@@ -13,16 +14,9 @@ import {
  * Pure, framework-free formatting/paging helpers shared by the scalar
  * (`stat-tile`), `ranking-table`, and generic `table` renderers.
  *
- * `apps/web` has no test runner configured (no vitest/jest dependency, no
- * config, no `test` script) — verified before writing this module. Every
- * function below is deliberately pure and side-effect-free (the one
- * exception, `useAutoPageIndex`, is a thin React wrapper around the pure
- * `wrapPageIndex`) so a future runner can exercise them directly without a
- * DOM or React tree: legacy-number formatting, typed-cell formatting
- * (precision/unit/percent-scale honored, `null` vs `0` kept distinct, text
- * cells never coerced through number formatting), non-interactive paging
- * math, and authoritative-rank resolution (rank 7/8 must stay 7/8 — never
- * renumbered by array position).
+ * Broadcast numeric text follows model `formatSemanticCell`: fixed decimal
+ * precision, decimal point, no digit grouping, and toFixed rounding. This
+ * locale-independent contract is identical on PGM and PVW machines.
  */
 
 /* ------------------------------------------------------------------ */
@@ -33,15 +27,12 @@ import {
 export function resolveLegacyPrecision(spec: GraphicSpec): number {
   const precision = spec.options?.precision;
   return typeof precision === 'number' && Number.isFinite(precision)
-    ? precision
+    ? Math.min(12, Math.max(0, Math.floor(precision)))
     : 1;
 }
 
 export function formatLegacyNumber(value: number, precision: number): string {
-  return value.toLocaleString(undefined, {
-    minimumFractionDigits: precision,
-    maximumFractionDigits: precision
-  });
+  return formatSemanticCell(value, { style: 'number', scale: 1, precision });
 }
 
 /* ------------------------------------------------------------------ */
@@ -50,10 +41,9 @@ export function formatLegacyNumber(value: number, precision: number): string {
 
 /**
  * Formats one typed semantic cell honoring its measure's precision, unit,
- * and percentage scaling. `null` is "no observation was made" and is
- * handled by the caller (rendered as a colored em-dash) — this function is
- * only ever called for a non-null cell so a measured `0` never collapses
- * into the same code path as a missing value.
+ * and percentage scaling. `null` is "no observation was made" and renders
+ * as an em-dash; DOM renderers can also color it with the neutral palette.
+ * A measured `0` remains a number and uses the measure's format.
  *
  * Booleans get a broadcast-friendly Yes/No instead of the generic
  * `formatSemanticCell` stringification; every other type (number, text)
@@ -61,11 +51,82 @@ export function formatLegacyNumber(value: number, precision: number): string {
  * single source of truth with the season semantic layer.
  */
 export function formatTypedCell(
-  value: Exclude<SemanticCell, null>,
+  value: SemanticCell,
   format: MeasureFormat
 ): string {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   return formatSemanticCell(value, format);
+}
+
+/** Legacy cells still preserve boolean/text/null types; only numbers use precision. */
+export function formatLegacyCell(value: unknown, precision: number): string {
+  if (value === null || value === undefined) return '—';
+  if (typeof value === 'number') return formatLegacyNumber(value, precision);
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'string') return value;
+  return JSON.stringify(value) ?? '—';
+}
+
+/** Bridge chart values remain in storage units: apply scale only to display text. */
+export function resolveChartFormat(
+  frame: VizFrame,
+  spec: GraphicSpec,
+  seriesIndex = 0
+): MeasureFormat {
+  const { data } = frame;
+  if (
+    data?.kind === 'bar' ||
+    data?.kind === 'grouped-bar' ||
+    data?.kind === 'line'
+  ) {
+    const format = data.series[seriesIndex]?.measure.format;
+    if (format) return format;
+  }
+  if (
+    data?.kind === 'histogram' ||
+    data?.kind === 'heatmap' ||
+    data?.kind === 'geo-map'
+  ) {
+    return data.measure.format;
+  }
+  return { style: 'number', scale: 1, precision: resolveLegacyPrecision(spec) };
+}
+
+/** A mixed-measure axis has no single unit/scale; its ticks show raw storage numbers. */
+export function resolveChartAxisFormat(
+  frame: VizFrame,
+  spec: GraphicSpec
+): MeasureFormat {
+  const first = resolveChartFormat(frame, spec);
+  const { data } = frame;
+  if (
+    data?.kind === 'bar' ||
+    data?.kind === 'grouped-bar' ||
+    data?.kind === 'line'
+  ) {
+    const sameFormat = data.series.every(
+      ({ measure: { format } }) =>
+        format.style === first.style &&
+        format.scale === first.scale &&
+        format.precision === first.precision &&
+        format.unit === first.unit
+    );
+    if (!sameFormat)
+      return {
+        style: 'number',
+        scale: 1,
+        precision: resolveLegacyPrecision(spec)
+      };
+  }
+  return first;
+}
+
+/** Missing plotted observations retain gaps; labels use the shared missing-value text. */
+export function formatChartValue(
+  value: number | null | undefined,
+  format: MeasureFormat
+): string {
+  return formatTypedCell(value ?? null, format);
 }
 
 /* ------------------------------------------------------------------ */

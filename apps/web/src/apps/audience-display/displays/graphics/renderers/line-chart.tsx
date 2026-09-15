@@ -1,3 +1,8 @@
+import {
+  formatChartValue,
+  resolveChartAxisFormat,
+  resolveLegacyPrecision
+} from './presentation-format.js';
 /**
  * Time-series line chart renderer for the broadcast stats-graphics system.
  *
@@ -33,16 +38,8 @@ interface RendererProps {
   spec: GraphicSpec;
 }
 
-const DEFAULT_PRECISION = 1;
 /** Entry animation duration, per broadcast spec (~600-800ms, cubicOut). */
 const ENTRY_ANIMATION_MS = 700;
-
-function resolvePrecision(spec: GraphicSpec): number {
-  const precision = spec.options?.precision;
-  return typeof precision === 'number' && Number.isFinite(precision)
-    ? precision
-    : DEFAULT_PRECISION;
-}
 
 /**
  * Builds an ordered, de-duplicated list of x-axis category labels from every
@@ -68,7 +65,8 @@ export default function LineChart({
   frame,
   spec
 }: RendererProps): React.JSX.Element {
-  const precision = resolvePrecision(spec);
+  const axisFormat = resolveChartAxisFormat(frame, spec);
+  const coordinatePrecision = resolveLegacyPrecision(spec);
   const series = frame.series ?? [];
   const xType = frame.axis?.xType ?? 'category';
   const fontScale = 1;
@@ -166,6 +164,16 @@ export default function LineChart({
         axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.35)' } },
         axisTick: { show: false },
         axisLabel: {
+          ...(xType === 'value'
+            ? {
+                formatter: (value: number) =>
+                  formatChartValue(value, {
+                    style: 'number',
+                    scale: 1,
+                    precision: coordinatePrecision
+                  })
+              }
+            : {}),
           color: palette.textSecondary,
           fontSize: 11 * fontScale,
           fontFamily
@@ -186,7 +194,7 @@ export default function LineChart({
           color: palette.textSecondary,
           fontSize: 11 * fontScale,
           fontFamily,
-          formatter: (value: number) => value.toFixed(precision)
+          formatter: (value: number) => formatChartValue(value, axisFormat)
         },
         splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.12)' } }
       },
@@ -199,7 +207,15 @@ export default function LineChart({
       },
       series: echartsSeries
     };
-  }, [series, xType, precision, frame.axis?.xLabel, frame.axis?.yLabel]);
+  }, [
+    series,
+    xType,
+    axisFormat,
+    coordinatePrecision,
+    frame.data,
+    frame.axis?.xLabel,
+    frame.axis?.yLabel
+  ]);
 
   return (
     <ReactECharts

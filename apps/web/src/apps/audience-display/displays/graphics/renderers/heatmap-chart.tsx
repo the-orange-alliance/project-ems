@@ -1,3 +1,4 @@
+import { formatChartValue, resolveChartFormat } from './presentation-format.js';
 /**
  * Matrix / correlation heatmap renderer for the broadcast stats-graphics
  * system. Data arrives as `frame.columns` + `frame.rows` (a metric x metric
@@ -29,16 +30,8 @@ interface RendererProps {
   spec: GraphicSpec;
 }
 
-const DEFAULT_PRECISION = 1;
 /** Entry animation duration, per broadcast spec (~600-800ms, cubicOut). */
 const ENTRY_ANIMATION_MS = 700;
-
-function resolvePrecision(spec: GraphicSpec): number {
-  const precision = spec.options?.precision;
-  return typeof precision === 'number' && Number.isFinite(precision)
-    ? precision
-    : DEFAULT_PRECISION;
-}
 
 type Column = NonNullable<VizFrame['columns']>[number];
 type Row = NonNullable<VizFrame['rows']>[number];
@@ -52,9 +45,37 @@ export default function HeatmapChart({
   frame,
   spec
 }: RendererProps): React.JSX.Element {
-  const precision = resolvePrecision(spec);
-  const columns = frame.columns ?? [];
-  const rows = frame.rows ?? [];
+  const format = resolveChartFormat(frame, spec);
+  const semantic = frame.data?.kind === 'heatmap' ? frame.data : undefined;
+  const { columns, rows } = useMemo(() => {
+    if (!semantic)
+      return { columns: frame.columns ?? [], rows: frame.rows ?? [] };
+    const cells = new Map(
+      semantic.cells.map((cell) => [
+        JSON.stringify([cell.xId, cell.yId]),
+        cell.value
+      ])
+    );
+    return {
+      columns: [
+        { key: '__label', label: 'Entity', align: 'left' as const },
+        ...semantic.xEntities.map((entity, i) => ({
+          key: `x-${i}`,
+          label: entity.label
+        }))
+      ],
+      rows: semantic.yEntities.map(
+        (entity) =>
+          Object.fromEntries([
+            ['__label', entity.label],
+            ...semantic.xEntities.map((x, i) => [
+              `x-${i}`,
+              cells.get(JSON.stringify([x.id, entity.id])) ?? null
+            ])
+          ]) as Row
+      )
+    };
+  }, [semantic, frame.columns, frame.rows]);
   const fontScale = 1;
 
   const option: EChartsOption = useMemo(() => {
@@ -94,7 +115,7 @@ export default function HeatmapChart({
           // The `0` here is a placeholder z-value required by the heatmap
           // series data shape (it is never used: this series' itemStyle
           // color is hard-set below to `palette.nullNeutral` and its label
-          // is a fixed "N/A" string, so the placeholder is never read as,
+          // is a fixed missing-value string, so the placeholder is never read as,
           // displayed as, or mapped to a data value).
           missingData.push([xi, yi, 0]);
         }
@@ -182,7 +203,7 @@ export default function HeatmapChart({
             show: true,
             ...cellLabelStyle,
             formatter: (p: { value: [number, number, number] }) =>
-              p.value[2].toFixed(precision)
+              formatChartValue(p.value[2], format)
           },
           itemStyle: {
             borderColor: 'rgba(255, 255, 255, 0.08)',
@@ -208,7 +229,7 @@ export default function HeatmapChart({
             ...cellLabelStyle,
             color: palette.textSecondary,
             // Fixed text — never derived from the placeholder `0` value.
-            formatter: () => 'N/A'
+            formatter: () => formatChartValue(null, format)
           },
           emphasis: { disabled: true },
           universalTransition: true
@@ -221,7 +242,7 @@ export default function HeatmapChart({
         textBorderWidth: 2
       }
     };
-  }, [columns, rows, precision, frame.title]);
+  }, [columns, rows, format, frame.data, frame.title]);
 
   return (
     <ReactECharts

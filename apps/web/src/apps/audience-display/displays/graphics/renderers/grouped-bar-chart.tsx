@@ -1,3 +1,8 @@
+import {
+  formatChartValue,
+  resolveChartFormat,
+  resolveChartAxisFormat
+} from './presentation-format.js';
 import React, { useMemo } from 'react';
 import ReactEChartsImport from 'echarts-for-react';
 import type { GraphicSpec, VizFrame } from '@toa-lib/models';
@@ -39,8 +44,7 @@ export interface RendererProps {
 export const GroupedBarChart: React.FC<RendererProps> = ({ frame, spec }) => {
   const seriesList = frame.series ?? [];
 
-  const precision =
-    typeof spec.options?.precision === 'number' ? spec.options.precision : 1;
+  const axisFormat = resolveChartAxisFormat(frame, spec);
 
   const fontSize = 16;
   const legendFontSize = 13;
@@ -108,14 +112,13 @@ export const GroupedBarChart: React.FC<RendererProps> = ({ frame, spec }) => {
           textBorderColor: palette.scrim,
           textBorderWidth: strokeWidth,
           formatter: (params: { value: number | null }) =>
-            params.value === null || params.value === undefined
-              ? ''
-              : params.value.toFixed(precision)
+            formatChartValue(
+              params.value,
+              resolveChartFormat(frame, spec, seriesIndex)
+            )
         }
       };
     });
-
-    const hasSubtitle = Boolean(frame.subtitle);
 
     return {
       backgroundColor: 'transparent',
@@ -128,7 +131,7 @@ export const GroupedBarChart: React.FC<RendererProps> = ({ frame, spec }) => {
       // never overlaps the title text.
       legend: {
         show: seriesCount > 1,
-        top: hasSubtitle ? '16%' : '11%',
+        top: 0,
         left: 'center',
         textStyle: {
           color: palette.textSecondary,
@@ -142,14 +145,7 @@ export const GroupedBarChart: React.FC<RendererProps> = ({ frame, spec }) => {
       grid: {
         left: '6%',
         right: '6%',
-        top:
-          seriesCount > 1
-            ? hasSubtitle
-              ? '30%'
-              : '24%'
-            : hasSubtitle
-              ? '18%'
-              : '14%',
+        top: seriesCount > 1 ? '18%' : '8%',
         bottom: '8%',
         containLabel: true
       },
@@ -171,6 +167,7 @@ export const GroupedBarChart: React.FC<RendererProps> = ({ frame, spec }) => {
         type: 'value' as const,
         name: frame.axis?.yLabel,
         axisLabel: {
+          formatter: (value: number) => formatChartValue(value, axisFormat),
           color: palette.textPrimary,
           fontSize,
           fontFamily,
@@ -183,7 +180,14 @@ export const GroupedBarChart: React.FC<RendererProps> = ({ frame, spec }) => {
       },
       series: echartsSeries
     };
-  }, [seriesList, frame.axis?.xLabel, frame.axis?.yLabel, precision]);
+  }, [
+    seriesList,
+    frame.axis?.xLabel,
+    frame.axis?.yLabel,
+    axisFormat,
+    frame.data,
+    spec
+  ]);
 
   return (
     <ReactECharts

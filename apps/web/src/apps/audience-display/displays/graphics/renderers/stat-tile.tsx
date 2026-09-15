@@ -135,7 +135,7 @@ export default function StatTile({ frame, spec }: RendererProps) {
   }
 
   if (tiles.length === 1) {
-    const tile = tiles[0];
+    const [tile] = tiles;
     const heroStyle: CSSProperties = {
       ...textStrokeStyle,
       fontSize: vw(8),

@@ -104,7 +104,11 @@ export const LowerThirdPayload: FC<LowerThirdPayloadProps> = ({
       <div style={{ flex: '0 0 auto' }}>
         {title && (
           <div
+            title={title}
             style={{
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
               ...textStrokeStyle,
               fontSize: vh(2.4),
               fontWeight: 700,
@@ -116,7 +120,12 @@ export const LowerThirdPayload: FC<LowerThirdPayloadProps> = ({
         )}
         {subtitle && (
           <div
+            title={subtitle}
             style={{
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              lineHeight: 1.2,
               ...textStrokeStyle,
               color: palette.textSecondary,
               fontSize: vh(1.5),

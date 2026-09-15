@@ -1,3 +1,8 @@
+import {
+  formatChartValue,
+  resolveChartFormat,
+  resolveChartAxisFormat
+} from './presentation-format.js';
 import React, { useMemo } from 'react';
 import ReactEChartsImport from 'echarts-for-react';
 import type { GraphicSpec, VizFrame } from '@toa-lib/models';
@@ -28,8 +33,8 @@ export interface RendererProps {
 export const HistogramChart: React.FC<RendererProps> = ({ frame, spec }) => {
   const points = frame.series?.[0]?.points ?? [];
 
-  const precision =
-    typeof spec.options?.precision === 'number' ? spec.options.precision : 1;
+  const format = resolveChartFormat(frame, spec);
+  const axisFormat = resolveChartAxisFormat(frame, spec);
 
   const fontSize = 16;
   const strokeWidth = 3;
@@ -50,7 +55,7 @@ export const HistogramChart: React.FC<RendererProps> = ({ frame, spec }) => {
       grid: {
         left: '6%',
         right: '6%',
-        top: frame.subtitle ? '18%' : '14%',
+        top: '8%',
         bottom: '8%',
         containLabel: true
       },
@@ -75,6 +80,7 @@ export const HistogramChart: React.FC<RendererProps> = ({ frame, spec }) => {
         type: 'value' as const,
         name: frame.axis?.yLabel,
         axisLabel: {
+          formatter: (value: number) => formatChartValue(value, axisFormat),
           color: palette.textPrimary,
           fontSize,
           fontFamily,
@@ -108,14 +114,20 @@ export const HistogramChart: React.FC<RendererProps> = ({ frame, spec }) => {
             textBorderColor: palette.scrim,
             textBorderWidth: strokeWidth,
             formatter: (params: { value: number | null }) =>
-              params.value === null || params.value === undefined
-                ? ''
-                : params.value.toFixed(precision)
+              formatChartValue(params.value, format)
           }
         }
       ]
     };
-  }, [points, frame.axis?.xLabel, frame.axis?.yLabel, precision]);
+  }, [
+    points,
+    frame.axis?.xLabel,
+    frame.axis?.yLabel,
+    format,
+    axisFormat,
+    frame.data,
+    spec
+  ]);
 
   return (
     <ReactECharts

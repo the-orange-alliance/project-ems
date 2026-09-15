@@ -1,3 +1,4 @@
+import { formatChartValue, resolveChartFormat } from './presentation-format.js';
 /**
  * Geographic distribution renderer for the broadcast stats-graphics system
  * (e.g. "teams by country").
@@ -45,19 +46,11 @@ interface RendererProps {
   compact?: boolean;
 }
 
-const DEFAULT_PRECISION = 1;
 /** Entry animation duration, per broadcast spec (~600-800ms, cubicOut). */
 const ENTRY_ANIMATION_MS = 700;
 /** Name a world map must be registered under (via `echarts.registerMap`)
  *  for this component to switch into choropleth mode. */
 const WORLD_MAP_NAME = 'world';
-
-function resolvePrecision(spec: GraphicSpec): number {
-  const precision = spec.options?.precision;
-  return typeof precision === 'number' && Number.isFinite(precision)
-    ? precision
-    : DEFAULT_PRECISION;
-}
 
 type Point = VizFrame['series'][number]['points'][number];
 
@@ -131,7 +124,7 @@ export default function GeoMap({
   spec,
   compact
 }: RendererProps): React.JSX.Element {
-  const precision = resolvePrecision(spec);
+  const format = resolveChartFormat(frame, spec);
   const series = frame.series ?? [];
   const fontScale = compact ? 0.75 : 1;
   const choroplethAvailable = useMemo(hasWorldMapRegistered, []);
@@ -261,7 +254,7 @@ export default function GeoMap({
             ...sharedTextStyle,
             fontSize: 12 * fontScale,
             formatter: (p: { value: number | null }) =>
-              typeof p.value === 'number' ? p.value.toFixed(precision) : 'N/A'
+              formatChartValue(p.value, format)
           },
           emphasis: { disabled: true },
           universalTransition: true
@@ -274,7 +267,8 @@ export default function GeoMap({
     spec.options?.limit,
     choroplethAvailable,
     compact,
-    precision,
+    format,
+    frame.data,
     fontScale,
     frame.title
   ]);

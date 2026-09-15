@@ -2,7 +2,7 @@ import {
   type CSSProperties,
   type FC,
   type ReactNode,
-  useEffect,
+  useLayoutEffect,
   useRef,
   useState
 } from 'react';
@@ -77,39 +77,35 @@ export interface StageProps {
  */
 export const Stage: FC<StageProps> = ({ children, style, className }) => {
   const hostRef = useRef<HTMLDivElement>(null);
-  const [box, setBox] = useState<{ width: number; height: number }>(() => ({
-    width: typeof window !== 'undefined' ? window.innerWidth : STAGE_WIDTH,
-    height: typeof window !== 'undefined' ? window.innerHeight : STAGE_HEIGHT
-  }));
+  const [box, setBox] = useState({ width: STAGE_WIDTH, height: STAGE_HEIGHT });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const host = hostRef.current;
-    if (!host || typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver((entries) => {
-      const rect = entries[0]?.contentRect;
-      // A zero-size read means the host isn't a real sized box (an
-      // unconstrained absolutely-positioned ancestor, most likely) rather
-      // than an intentional zero — keep whatever the last good
-      // measurement was (initially the viewport) instead of scaling the
-      // whole stage to nothing.
-      if (rect && rect.width > 0 && rect.height > 0) {
-        setBox({ width: rect.width, height: rect.height });
-      }
-    });
-    observer.observe(host);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    // Keeps the viewport fallback live for hosts that never resolve a real
-    // box, so a full-bleed browser source still tracks window resizes.
-    const onResize = () => {
-      const rect = hostRef.current?.getBoundingClientRect();
-      if (rect && rect.width > 0 && rect.height > 0) return;
-      setBox({ width: window.innerWidth, height: window.innerHeight });
+    if (!host) return;
+    const measure = () => {
+      // Read before paint, in untransformed CSS pixels, including on browsers
+      // without ResizeObserver. Unconstrained hosts keep the viewport fallback.
+      const next =
+        host.clientWidth > 0 && host.clientHeight > 0
+          ? { width: host.clientWidth, height: host.clientHeight }
+          : { width: window.innerWidth, height: window.innerHeight };
+      setBox((previous) =>
+        previous.width === next.width && previous.height === next.height
+          ? previous
+          : next
+      );
     };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    measure();
+    const observer =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(measure)
+        : undefined;
+    observer?.observe(host);
+    window.addEventListener('resize', measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
   }, []);
 
   const scale =

@@ -8,19 +8,23 @@ import {
   rampColor,
   textStrokeStyle
 } from '../theme.js';
-import { vh, vw } from '../composition.js';
+import { vw } from '../composition.js';
 import {
-  computePageCount,
   formatLegacyNumber,
+  formatLegacyCell,
   formatTypedCell,
   legacyRowAllianceGroup,
   paginate,
   resolveLegacyPrecision,
-  resolvePageDwellMs,
-  resolveRowRank,
-  resolveRowsPerPage,
-  useAutoPageIndex
+  resolveRowRank
 } from './presentation-format.js';
+import {
+  BroadcastPageIndicator,
+  TABLE_PADDING,
+  RANKING_ROW_HEIGHT,
+  RANKING_ROW_GAP,
+  useBroadcastTablePage
+} from './broadcast-table-layout.js';
 
 /**
  * `ranking-table` renderer — an on-air leaderboard.
@@ -148,11 +152,11 @@ function buildFromLegacyColumns(
     group: legacyRowAllianceGroup(row as Record<string, unknown>),
     cells: columns.map((c) => {
       const raw = row[c.key];
-      const value = typeof raw === 'number' ? raw : null;
+      const value = raw ?? null;
       return {
         key: c.key,
         label: c.label,
-        text: value === null ? null : formatLegacyNumber(value, precision)
+        text: value === null ? null : formatLegacyCell(value, precision)
       };
     })
   }));
@@ -211,12 +215,13 @@ function buildDisplayData(
 }
 
 export default function RankingTable({ frame, spec }: RendererProps) {
-  const { columns, rows } = buildDisplayData(frame, spec);
+  const { rows } = buildDisplayData(frame, spec);
 
-  const rowsPerPage = resolveRowsPerPage(spec.mode);
-  const pageCount = computePageCount(rows.length, rowsPerPage);
-  const dwellMs = resolvePageDwellMs(spec.holdMs);
-  const activePage = useAutoPageIndex(pageCount, dwellMs);
+  const { rootRef, rowsPerPage, pageCount, activePage } = useBroadcastTablePage(
+    spec,
+    rows.length,
+    true
+  );
   const visibleRows = paginate(rows, rowsPerPage, activePage);
 
   const rootStyle: CSSProperties = {
@@ -225,9 +230,12 @@ export default function RankingTable({ frame, spec }: RendererProps) {
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
-    padding: `${vh(2)}px ${vw(2)}px`,
+    padding: TABLE_PADDING,
+    minWidth: 0,
+    minHeight: 0,
     color: palette.textPrimary,
     fontFamily,
+    lineHeight: 1.2,
     overflow: 'hidden'
   };
 
@@ -237,19 +245,20 @@ export default function RankingTable({ frame, spec }: RendererProps) {
     // No `overflow: auto` — an audience member cannot scroll a broadcast
     // graphic. Rows beyond capacity are paged, not scrolled.
     overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: vh(0.6)
+    display: 'grid',
+    gridAutoRows: RANKING_ROW_HEIGHT,
+    alignContent: 'start',
+    gap: RANKING_ROW_GAP
   };
 
-  const rankFontSize = vw(1.6);
-  const labelFontSize = vw(1.3);
-  const statFontSize = vw(1.3);
-  const rowPadding = `${vh(0.9)}px ${vw(1.2)}px`;
+  const rankFontSize = 28;
+  const labelFontSize = 24;
+  const statFontSize = 24;
+  const rowPadding = '8px 12px';
 
   if (rows.length === 0) {
     return (
-      <div style={rootStyle}>
+      <div ref={rootRef} style={rootStyle}>
         <div style={{ color: palette.textSecondary, fontSize: labelFontSize }}>
           {frame.emptyReason ?? 'No data available'}
         </div>
@@ -258,8 +267,12 @@ export default function RankingTable({ frame, spec }: RendererProps) {
   }
 
   return (
-    <div style={rootStyle}>
-      <div style={listStyle}>
+    <div ref={rootRef} style={rootStyle}>
+      <div
+        role='list'
+        aria-label={spec.title || frame.title || 'Ranking'}
+        style={listStyle}
+      >
         {visibleRows.map((row) => {
           // Ramp position is purely a color accent, keyed to the row's
           // position WITHIN the current page — it never feeds the rank
@@ -273,10 +286,13 @@ export default function RankingTable({ frame, spec }: RendererProps) {
           return (
             <div
               key={row.id}
+              role='listitem'
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: vw(1.2),
+                gap: 12,
+                minWidth: 0,
+                height: RANKING_ROW_HEIGHT,
                 padding: rowPadding,
                 boxSizing: 'border-box',
                 backgroundColor: 'rgba(0, 0, 0, 0.55)',
@@ -302,7 +318,7 @@ export default function RankingTable({ frame, spec }: RendererProps) {
                 style={{
                   fontSize: labelFontSize,
                   fontWeight: 700,
-                  flex: '1 1 auto',
+                  flex: '1.5 1 0',
                   minWidth: 0,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -318,17 +334,22 @@ export default function RankingTable({ frame, spec }: RendererProps) {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-end',
-                    flex: '0 0 auto',
-                    minWidth: vw(6)
+                    minWidth: 0,
+                    flex: '1 1 0',
+                    overflow: 'hidden'
                   }}
                 >
                   {row.cells.length > 1 && (
                     <span
                       style={{
-                        fontSize: vw(0.85),
+                        fontSize: 16,
                         color: palette.textSecondary,
                         textTransform: 'uppercase',
-                        letterSpacing: '0.02em'
+                        letterSpacing: '0.02em',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis'
                       }}
                     >
                       {cell.label}
@@ -337,6 +358,10 @@ export default function RankingTable({ frame, spec }: RendererProps) {
                   <span
                     style={{
                       fontSize: statFontSize,
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
                       fontWeight: 800,
                       color:
                         cell.text === null
@@ -352,33 +377,7 @@ export default function RankingTable({ frame, spec }: RendererProps) {
           );
         })}
       </div>
-      {pageCount > 1 && (
-        <div
-          style={{
-            flex: '0 0 auto',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: vw(0.5),
-            paddingTop: vh(1)
-          }}
-        >
-          {Array.from({ length: pageCount }, (_, page) => (
-            <div
-              key={page}
-              style={{
-                width: vw(0.5),
-                height: vw(0.5),
-                borderRadius: '50%',
-                backgroundColor:
-                  page === activePage
-                    ? palette.textPrimary
-                    : 'rgba(255, 255, 255, 0.3)'
-              }}
-            />
-          ))}
-        </div>
-      )}
+      <BroadcastPageIndicator pageCount={pageCount} activePage={activePage} />
     </div>
   );
 }

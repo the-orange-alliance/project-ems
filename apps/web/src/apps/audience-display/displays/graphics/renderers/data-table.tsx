@@ -1,20 +1,35 @@
 import type { CSSProperties, ReactNode } from 'react';
-import type { VizFrame, GraphicSpec } from '@toa-lib/models';
+import type { VizFrame, GraphicSpec, MeasureFormat } from '@toa-lib/models';
 import {
   allianceColor,
   fontFamily,
   palette,
-  overlayCardStyle,
-  textStrokeStyle
+  overlayCardStyle
 } from '../theme.js';
 import { vh, vw } from '../composition.js';
-import { legacyRowAllianceGroup } from './presentation-format.js';
+import {
+  formatLegacyCell,
+  formatTypedCell,
+  legacyRowAllianceGroup,
+  paginate,
+  resolveLegacyPrecision,
+  resolveChartFormat,
+  formatChartValue
+} from './presentation-format.js';
+import type { SemanticCell } from '@toa-lib/models/seasons/stats/presentation';
+import {
+  BroadcastPageIndicator,
+  TABLE_PADDING,
+  TABLE_HEADER_HEIGHT,
+  TABLE_ROW_HEIGHT,
+  useBroadcastTablePage
+} from './broadcast-table-layout.js';
 
 /**
  * `table` renderer — the universal fallback.
  *
  * Renders `frame.columns` + `frame.rows` when present; otherwise derives a
- * two-column (label / value) table from `frame.series`. Scrolls internally
+ * two-column (label / value) table from `frame.series`. Pages automatically
  * rather than overflowing its container, and stays legible at small
  * (producer-preview) sizes.
  *
@@ -41,44 +56,25 @@ interface Column {
   key: string;
   label: string;
   align?: 'left' | 'right';
+  format?: MeasureFormat;
 }
 
 type CellValue = unknown;
 
-function resolvePrecision(spec: GraphicSpec): number {
-  const precision = spec.options?.precision;
-  return typeof precision === 'number' && Number.isFinite(precision)
-    ? precision
-    : 1;
-}
-
-function formatNumber(value: number, precision: number): string {
-  return value.toLocaleString(undefined, {
-    minimumFractionDigits: precision,
-    maximumFractionDigits: precision
-  });
-}
-
-function renderCell(value: CellValue, precision: number): ReactNode {
-  if (value === null) {
+function renderCell(
+  value: CellValue,
+  precision: number,
+  format?: MeasureFormat
+): ReactNode {
+  if (value === null)
     return <span style={{ color: palette.nullNeutral }}>&mdash;</span>;
-  }
-  if (typeof value === 'number') {
-    return formatNumber(value, precision);
-  }
-  if (typeof value === 'boolean') {
-    return value ? 'Yes' : 'No';
-  }
-  if (typeof value === 'string') {
-    return value;
-  }
-  // Arrays / nested objects are not expected on-air, but render something
-  // sane rather than crashing.
-  return JSON.stringify(value);
+  return format
+    ? formatTypedCell(value as SemanticCell, format)
+    : formatLegacyCell(value, precision);
 }
 
 export default function DataTable({ frame, spec }: RendererProps) {
-  const precision = resolvePrecision(spec);
+  const precision = resolveLegacyPrecision(spec);
 
   const rootStyle: CSSProperties = {
     width: '100%',
@@ -86,42 +82,35 @@ export default function DataTable({ frame, spec }: RendererProps) {
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
-    padding: `${vh(2)}px ${vw(2)}px`,
+    padding: TABLE_PADDING,
+    minWidth: 0,
+    minHeight: 0,
     color: palette.textPrimary,
     fontFamily,
     overflow: 'hidden'
   };
 
-  const titleStyle: CSSProperties = {
-    ...textStrokeStyle,
-    fontSize: vw(2),
-    fontWeight: 700,
-    marginBottom: vh(1.2),
-    flex: '0 0 auto'
-  };
-
-  const scrollStyle: CSSProperties = {
+  const contentStyle: CSSProperties = {
     ...overlayCardStyle,
     flex: '1 1 auto',
     minHeight: 0,
-    overflow: 'auto',
+    overflow: 'hidden',
     boxSizing: 'border-box',
-    padding: `${vh(0.8)}px ${vw(1)}px`
+    minWidth: 0
   };
 
-  const cellFontSize = vw(1.15);
-  const headerFontSize = vw(1.05);
-  const cellPadding = `${vh(0.7)}px ${vw(1)}px`;
+  const cellFontSize = 22;
+  const headerFontSize = 20;
+  const cellPadding = '0 12px';
 
   const tableStyle: CSSProperties = {
     width: '100%',
+    tableLayout: 'fixed',
     borderCollapse: 'collapse',
     fontSize: cellFontSize
   };
 
   const headerCellStyle: CSSProperties = {
-    position: 'sticky',
-    top: 0,
     background: palette.scrim,
     color: palette.textSecondary,
     fontSize: headerFontSize,
@@ -130,56 +119,88 @@ export default function DataTable({ frame, spec }: RendererProps) {
     letterSpacing: '0.02em',
     padding: cellPadding,
     borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-    whiteSpace: 'nowrap'
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    lineHeight: '28px'
   };
 
   const bodyCellStyle: CSSProperties = {
     padding: cellPadding,
     borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-    whiteSpace: 'nowrap'
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    lineHeight: '28px'
   };
 
   const hasColumnarData =
     !!frame.columns && frame.columns.length > 0 && !!frame.rows;
 
+  const rowGroups = new Map<
+    Record<string, unknown>,
+    'red' | 'blue' | undefined
+  >();
+  const rowGroup = (row: Record<string, unknown>) =>
+    rowGroups.has(row) ? rowGroups.get(row) : legacyRowAllianceGroup(row);
   let columns: Column[];
   let rows: Record<string, CellValue>[];
 
-  if (hasColumnarData) {
+  const semantic =
+    frame.data?.kind === 'table' || frame.data?.kind === 'ranking-table'
+      ? frame.data
+      : undefined;
+  if (semantic) {
+    // Choose a collision-free identity key without changing semantic columns/cells.
+    let identityKey = '__entity';
+    while (semantic.columns.some((column) => column.id === identityKey))
+      identityKey += '_';
+    columns = [
+      { key: identityKey, label: 'Entity', align: 'left' },
+      ...semantic.columns.map((column) => ({ ...column, key: column.id }))
+    ];
+    rows = semantic.rows.map((row) => {
+      const cells = { ...row.cells, [identityKey]: row.label };
+      rowGroups.set(cells, row.group);
+      return cells;
+    });
+  } else if (hasColumnarData) {
     columns = frame.columns as Column[];
     const rawRows = frame.rows as Record<string, CellValue>[];
-    const rawGroups = rawRows.map((row) =>
-      legacyRowAllianceGroup(row as Record<string, unknown>)
-    );
-    // Cluster red-alliance before blue-alliance ONLY once at least one row
-    // is actually grouped - stable within each cluster.
-    rows = rawGroups.some((g) => g !== undefined)
-      ? rawRows
-          .map((row, i) => ({ row, i, group: rawGroups[i] }))
-          .sort((a, b) => {
-            const rank = (g: 'red' | 'blue' | undefined) =>
-              g === 'red' ? 0 : g === 'blue' ? 1 : 2;
-            return rank(a.group) - rank(b.group) || a.i - b.i;
-          })
-          .map(({ row }) => row)
-      : rawRows;
+    rows = rawRows;
   } else {
     columns = [
       { key: 'label', label: frame.axis?.xLabel ?? 'Label', align: 'left' },
       { key: 'value', label: frame.axis?.yLabel ?? 'Value', align: 'right' }
     ];
-    rows = frame.series.flatMap((series) =>
+    rows = frame.series.flatMap((series, seriesIndex) =>
       series.points.map((point) => ({
         label: series.name ? `${series.name} — ${point.label}` : point.label,
-        value: point.value
+        value:
+          point.value === null
+            ? null
+            : formatChartValue(
+                point.value,
+                resolveChartFormat(frame, spec, seriesIndex)
+              )
       }))
     );
   }
 
+  const groupOrder = (row: Record<string, unknown>) => {
+    const group = rowGroup(row);
+    return group === 'red' ? 0 : group === 'blue' ? 1 : 2;
+  };
+  rows = [...rows].sort((a, b) => groupOrder(a) - groupOrder(b));
+  const { rootRef, rowsPerPage, pageCount, activePage } = useBroadcastTablePage(
+    spec,
+    rows.length
+  );
+  const visibleRows = paginate(rows, rowsPerPage, activePage);
+
   return (
-    <div style={rootStyle}>
-      <div style={titleStyle}>{frame.title}</div>
-      <div style={scrollStyle}>
+    <div ref={rootRef} style={rootStyle}>
+      <div style={contentStyle}>
         {rows.length === 0 || columns.length === 0 ? (
           <div
             style={{
@@ -188,15 +209,20 @@ export default function DataTable({ frame, spec }: RendererProps) {
               padding: `${vh(1)}px ${vw(1)}px`
             }}
           >
-            No data available
+            {frame.emptyReason ?? 'No data available'}
           </div>
         ) : (
-          <table style={tableStyle}>
+          <table
+            aria-label={spec.title || frame.title || 'Data'}
+            style={tableStyle}
+          >
             <thead>
-              <tr>
+              <tr style={{ height: TABLE_HEADER_HEIGHT }}>
                 {columns.map((column) => (
                   <th
                     key={column.key}
+                    scope='col'
+                    title={column.label}
                     style={{
                       ...headerCellStyle,
                       textAlign: column.align ?? 'left'
@@ -208,17 +234,18 @@ export default function DataTable({ frame, spec }: RendererProps) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, rowIndex) => {
-                const group = legacyRowAllianceGroup(
-                  row as Record<string, unknown>
-                );
+              {visibleRows.map((row, rowIndex) => {
+                const group = rowGroup(row as Record<string, unknown>);
                 // The cluster boundary (Option 2): a brighter top border on
                 // the first row whose alliance differs from the row before
                 // it - only ever fires once, right at the red/blue seam.
                 const previousGroup =
-                  rowIndex > 0
-                    ? legacyRowAllianceGroup(
-                        rows[rowIndex - 1] as Record<string, unknown>
+                  activePage * rowsPerPage + rowIndex > 0
+                    ? rowGroup(
+                        rows[activePage * rowsPerPage + rowIndex - 1] as Record<
+                          string,
+                          unknown
+                        >
                       )
                     : undefined;
                 const isClusterBoundary =
@@ -226,7 +253,10 @@ export default function DataTable({ frame, spec }: RendererProps) {
                   previousGroup !== undefined &&
                   group !== previousGroup;
                 return (
-                  <tr key={rowIndex}>
+                  <tr
+                    key={activePage * rowsPerPage + rowIndex}
+                    style={{ height: TABLE_ROW_HEIGHT }}
+                  >
                     {columns.map((column, columnIndex) => {
                       const align =
                         column.align ??
@@ -236,6 +266,14 @@ export default function DataTable({ frame, spec }: RendererProps) {
                       return (
                         <td
                           key={column.key}
+                          title={
+                            column.format
+                              ? formatTypedCell(
+                                  (row[column.key] ?? null) as SemanticCell,
+                                  column.format
+                                )
+                              : formatLegacyCell(row[column.key], precision)
+                          }
                           style={{
                             ...bodyCellStyle,
                             textAlign: align,
@@ -254,7 +292,11 @@ export default function DataTable({ frame, spec }: RendererProps) {
                               : {})
                           }}
                         >
-                          {renderCell(row[column.key] ?? null, precision)}
+                          {renderCell(
+                            row[column.key] ?? null,
+                            precision,
+                            column.format
+                          )}
                         </td>
                       );
                     })}
@@ -265,6 +307,7 @@ export default function DataTable({ frame, spec }: RendererProps) {
           </table>
         )}
       </div>
+      <BroadcastPageIndicator pageCount={pageCount} activePage={activePage} />
     </div>
   );
 }
