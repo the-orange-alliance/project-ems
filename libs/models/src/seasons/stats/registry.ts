@@ -127,16 +127,19 @@ export const definitions: StatDefinition[] = catalogue.map((entry) => {
   return {
     ...entry,
     seasonKey: entry.seasonKey ?? undefined,
-    version: 1,
+    version: id === 'H7' ? 2 : 1,
     scope,
-    units: /(rate|share|probability|percent|efficiency)/i.test(entry.name)
-      ? 'ratio'
-      : /(time|latency|cadence|drought|split)/i.test(entry.name)
-        ? 'seconds'
-        : /(score|points|opr|epa|margin)/i.test(entry.name)
-          ? 'points'
-          : 'structured',
-    precision: 4,
+    units:
+      id === 'H7'
+        ? 'balls'
+        : /(rate|share|probability|percent|efficiency)/i.test(entry.name)
+          ? 'ratio'
+          : /(time|latency|cadence|drought|split)/i.test(entry.name)
+            ? 'seconds'
+            : /(score|points|opr|epa|margin)/i.test(entry.name)
+              ? 'points'
+              : 'structured',
+    precision: id === 'H7' ? 0 : 4,
     dependencies,
     supportedSelectors:
       scope === 'team'
@@ -324,9 +327,11 @@ export const definitions: StatDefinition[] = catalogue.map((entry) => {
           return unavailable(
             id === 'B17' || id === 'B18'
               ? 'Per-field wildfireBallsPerLed is not recorded for these matches'
-              : id === 'M15'
-                ? 'No complete base/detail snapshot exists at or before atUtc'
-                : 'Required captured data or sufficient samples are absent for every selected entity'
+              : id === 'H7'
+                ? 'No strict lead is possible within legal capacity, or scoring data is incomplete/invalid, for every selected match'
+                : id === 'M15'
+                  ? 'No complete base/detail snapshot exists at or before atUtc'
+                  : 'Required captured data or sufficient samples are absent for every selected entity'
           );
         const reconciliationWarnings =
           needsActions.has(id) &&

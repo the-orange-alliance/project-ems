@@ -1217,9 +1217,10 @@ export const catalogue = [
   },
   {
     catalogueId: 'H7',
-    name: 'Balls needed to take the lead',
+    name: 'Additional legal suppression balls needed to lead',
     slug: 'fgc2026.balls-needed-to-take-the-lead',
-    description: '`ceil((oppScore − ownScore) / mult)` at current multiplier',
+    description:
+      'Minimum N in 0..(500 - totalContained) with officialOwnScore(N) > officialOpponentScore(N); add N only to own suppression, freeze all other inputs, and recalculate both foul awards and ceiling rounding. 0 = already leading; null = impossible or incomplete/invalid data. Cards do not change alliance scores.',
     family: 'EMS',
     seasonKey: 'fgc_2026'
   },

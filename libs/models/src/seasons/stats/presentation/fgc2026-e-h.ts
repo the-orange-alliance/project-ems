@@ -1542,7 +1542,7 @@ const H6: SemanticRegistration = {
 const H7 = matchScalarBar(
   'H7',
   'ballsNeededForLead',
-  'Balls needed to take the lead',
+  'Additional legal suppression balls needed to lead',
   countFmt('balls')
 );
 const H8 = matchScalarBar(

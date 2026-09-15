@@ -55,3 +55,51 @@ H1/H2 velocity isolates changes in physical wildfire counts with the current sco
 K13 simulations and top-two selection run independently for each selected tournament, with numeric alliance seed breaking simulated ties. L10 describes an increase to an existing kept score with other teams held fixed; L11 describes one additional match. They do not predict other teams' future results.
 
 Velocity windows use cleaned physical count replay, including window boundaries. M15 retains raw captured input states for exact entry-time inspection. Strength of schedule uses all selected scheduled rosters with ratings trained on played matches; unseen partners or opponents are insufficient data.
+
+## H7: additional legal suppression balls needed to lead (formula version 2)
+
+H7 asks for the minimum additional whole balls in the selected alliance's own
+suppression unit that give it a strict lead in the official rounded alliance
+score. Freeze the replayed/current opponent suppression, extinguisher, all brace
+states, partner-climb flags and both alliances' minor/major penalty counts. Only
+uncontained balls are available: C = 500 - redSuppression - blueSuppression -
+extinguisher. This is a count-capacity counterfactual, not a prediction of time or
+robot capability. Cards and participant disqualification affect ranking
+eligibility, not the authoritative alliance score used here.
+
+Let A and B be own and opponent pre-penalty scores (suppression times the actual
+brace multiplier, plus partner-climb, extinguisher and coopertition points), m
+be own multiplier, and fA/fB be own/opponent foul factors (0.05 times minor count
+plus 0.10 times major count). Adding n gives:
+
+- Own(n) = ceil(A + m*n + fB*B).
+- Opponent(n) = ceil(B + fA*(A + m*n)).
+- H7 = min { n integer in [0,C] : Own(n) > Opponent(n) }.
+
+The implementation calls the existing pure calculateScore for each ascending
+candidate, preserving its separate major/minor operations and floating-point
+ceiling behavior. Before rounding, the margin slope is m*(1-fA): positive below
+fA=1, zero at 1, negative above 1. Rounded margins can fluctuate even when the raw
+margin is increasing; do not binary-search or divide the current rounded gap by
+m. A zero true multiplier would give constant scores, but legal brace states give
+m in [1,1.9]; a cached derived multiplier of zero is recomputed from braces.
+
+Return 0 only for an existing strict lead, including at zero remaining capacity.
+A tie requires a candidate that leads. Return null if no legal candidate leads,
+or if complete scoring data or a valid nonnegative capacity is absent. If every
+selected match has null, the existing registry returns unavailable with an H7
+reason; mixed results retain null rows. Live replay and snapshot fallback follow
+the existing H-family behavior. No source
+match or details are modified; the slug is unchanged.
+
+Independent hand fixtures with multiplier 1 and no shared points: own=10,
+opponent=10 needs 1 ball with no fouls, 2 with one own minor foul (11 vs 11 at
+n=1, 12 vs 11 at n=2), and 3 with one own major foul (12 vs 12 at n=2, 13 vs 12
+at n=3). Own=0/opponent=250 cannot lead with the 250 remaining balls. Own=0,
+opponent=249, extinguisher=1 leads at exactly the last available ball, n=250
+(251 vs 250). These and an independent bounded oracle cover both alliances.
+
+A rounded nonmonotonic example uses own suppression 0, opponent suppression 1,
+own multiplier 1.1 and 19 own minor fouls (fA=0.95), with no other scoring terms:
+n=20 ties 22-22, n=21 leads 24-23, and n=23 ties 26-26. H7 must return 21;
+its prior gap/multiplier approximation returned 1.

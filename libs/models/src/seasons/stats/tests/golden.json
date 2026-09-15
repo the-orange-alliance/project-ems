@@ -15821,7 +15821,8 @@
     "quality": "best_effort",
     "status": "ok",
     "warnings": [
-      "Live values are a best-effort replay at calculatedAsOfUtc; cached values do not advance the clock"
+      "Live values are a best-effort replay at calculatedAsOfUtc; cached values do not advance the clock",
+      "Minimum additional own suppression balls for a strict official-score lead; other counts, braces, partner climbs and penalties are frozen. Both scores include recalculated foul awards and ceiling rounding. Search is limited to the 500-ball field load; 0 means already leading, null means impossible within capacity or incomplete/invalid data. Cards do not alter alliance scores."
     ]
   },
   "H8": {

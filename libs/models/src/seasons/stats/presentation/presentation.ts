@@ -438,7 +438,7 @@ const overrides: Record<string, Override> = {
   H4: { unitLabel: 's', precision: 1, higherIsBetter: false },
   H5: { unitLabel: '', precision: 0, valuePaths: ['entries'] },
   H6: { unitLabel: '', precision: 0, valuePaths: ['balls'] },
-  H7: { unitLabel: '', precision: 0, higherIsBetter: false },
+  H7: { unitLabel: 'balls', precision: 0, higherIsBetter: false },
   H8: { unitLabel: '', precision: 0, higherIsBetter: false },
   H9: { unitLabel: '', precision: 0, higherIsBetter: false },
   H10: { unitLabel: 'pts', precision: 0 },

@@ -182,12 +182,27 @@ export function live(
               }))
             : null;
           break;
-        case 7:
-          value = Math.max(
-            0,
-            Math.floor((g.score[1 - side] - g.score[side]) / g.mult[side]) + 1
-          );
+        case 7: {
+          // Only uncontained balls can be added; neither other unit is emptied.
+          // Ceiling rounding can make the lead predicate nonmonotonic, so inspect
+          // every legal candidate in ascending order using the official scorer.
+          const capacity = 500 - g.total;
+          value = null;
+          if (!Number.isSafeInteger(capacity) || capacity < 0) break;
+          const field =
+            side === 0
+              ? 'wildfireInRedSuppressionUnit'
+              : 'wildfireInBlueSuppressionUnit';
+          for (let balls = 0; balls <= capacity; balls++) {
+            const details = { ...g.d, [field]: g.d[field] + balls };
+            const scores = calculateScore({ ...current, details });
+            if (scores[side] > scores[1 - side]) {
+              value = balls;
+              break;
+            }
+          }
           break;
+        }
         case 8: {
           const played = ctx.matches.filter((m) => m.result !== -1);
           value = played.length
@@ -296,7 +311,12 @@ export function live(
       return { ...identity(m), value };
     }),
     [
-      'Live values are a best-effort replay at calculatedAsOfUtc; cached values do not advance the clock'
+      'Live values are a best-effort replay at calculatedAsOfUtc; cached values do not advance the clock',
+      ...(id === 7
+        ? [
+            'Minimum additional own suppression balls for a strict official-score lead; other counts, braces, partner climbs and penalties are frozen. Both scores include recalculated foul awards and ceiling rounding. Search is limited to the 500-ball field load; 0 means already leading, null means impossible within capacity or incomplete/invalid data. Cards do not alter alliance scores.'
+          ]
+        : [])
     ]
   );
 }
