@@ -74,7 +74,9 @@ vi.mock('src/api/use-graphics-data.js', () => ({
       replayPreview: vi.fn()
     }
   },
-  useTimelines: () => ({ data: [timeline] })
+  useTimelines: () => ({ data: [timeline] }),
+  useProducerShow: () => ({ data: null, mutate: vi.fn() }),
+  mutateProducerShow: vi.fn()
 }));
 vi.mock('src/api/use-stats-data.js', () => ({
   useStatsCatalogue: () => ({ data: [] })
@@ -101,9 +103,10 @@ vi.mock('./use-timeline-editor.js', () => ({
     setVariables: vi.fn()
   })
 }));
-vi.mock('./use-cue-queue.js', () => ({
-  useCueQueue: () => ({
+vi.mock('./use-show-rundown.js', () => ({
+  useShowRundown: () => ({
     entries: [],
+    revision: 0,
     isSaving: false,
     addEntry: vi.fn(),
     removeEntry: vi.fn(),
@@ -117,7 +120,7 @@ vi.mock('./use-queue-row-refresh.js', () => ({
 vi.mock('./use-timeline-preflight.js', () => ({
   useTimelinePreflight: () => ({ readiness: {} })
 }));
-vi.mock('./cue-queue.js', () => ({ CueQueueList: () => null }));
+vi.mock('./rundown-list.js', () => ({ RundownList: () => null }));
 vi.mock('./live-monitor.js', () => ({ LiveMonitor: () => null }));
 vi.mock('./quick-stat-drawer.js', () => ({ QuickStatDrawer: () => null }));
 vi.mock('./timeline-items-panel.js', () => ({

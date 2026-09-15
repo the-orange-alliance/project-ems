@@ -83,3 +83,30 @@ Port 8081 temporarily proxies load, unload, advance, previous, go, take,
 quick-take, clear, refresh, push-update, and the legacy queue aliases. It does
 not define the full authoritative command surface and must not be used for new
 integrations.
+
+## Ordered show storage
+
+The ordered show is one durable, revisioned `Rundown` per list, in
+`graphics_rundown`. The producer's own show is the rundown `producer-show`,
+created on first read of `GET /graphics/:eventKey/show`; every mutation is a
+revision-checked `PATCH /graphics/:eventKey/rundowns/producer-show`. There is
+no second store: the former `CueQueue` document held the same ordered entries
+in `graphics_queue` with no revision, and the realtime room's
+`graphics:queue` snapshot event was never stored by the room at all.
+
+On first open of an event database after this change, any `graphics_queue` row
+is folded into that event's `producer-show` rundown inside the same
+transaction that records the marker `graphics-queue-to-producer-show-v1` in
+`graphics_migration`. The marker is what makes restarts idempotent; the
+original `graphics_queue` row is deliberately left in place so the
+pre-migration order stays recoverable by hand until Task 16 drops the table.
+An event that already has a `producer-show` rundown is skipped rather than
+overwritten, and a `graphics_queue` row whose JSON no longer parses is logged
+and skipped rather than throwing - that migration runs at the top of every
+graphics transaction, so failing it would take the event's graphics offline
+mid-show over a legacy row that is preserved on disk regardless.
+
+A rundown entry may reference a timeline that has since been deleted. Writes do
+not reject it (that would block every later reorder or removal and force the
+operator to discard their own show order); `load-rundown` does, naming the
+entry and its timeline, so nothing broken reaches air.

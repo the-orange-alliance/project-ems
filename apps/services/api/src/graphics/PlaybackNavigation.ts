@@ -485,8 +485,15 @@ export class PlaybackNavigation {
     const timelineCache = new Map<string, VersionedTimeline>();
     const timelinesUsed: VersionedTimeline[] = [];
     const items: LoadedGraphicsSnapshot['items'] = [];
+    // A rundown may legitimately hold an entry whose timeline was deleted -
+    // the document keeps operator order rather than discarding the row (see
+    // `GraphicsRepository.checkRundown`). Cueing is where that becomes an
+    // error, so say WHICH entry, not just "Timeline does not exist": the
+    // producer's fix is to that one row.
+    let cueing: { entryId: string; timelineId: string } | null = null;
     try {
       for (const entry of rundown.entries) {
+        cueing = { entryId: entry.entryId, timelineId: entry.timelineId };
         let timeline = timelineCache.get(entry.timelineId);
         if (!timeline) {
           timeline = await this.repository.loadTimeline(
@@ -502,11 +509,13 @@ export class PlaybackNavigation {
       }
     } catch (error) {
       // Do not partially load: one missing/invalid entry timeline fails the whole rundown load.
-      return this.rejected(
-        eventKey,
-        command.requestId,
-        this.mapInputError(error)
-      );
+      const mapped = this.mapInputError(error);
+      return this.rejected(eventKey, command.requestId, {
+        ...mapped,
+        message: cueing
+          ? `Rundown "${command.rundownId}" entry "${cueing.entryId}" references timeline "${cueing.timelineId}": ${mapped.message}`
+          : mapped.message
+      });
     }
     if (items.length === 0) {
       return this.rejected(eventKey, command.requestId, {

@@ -1,4 +1,4 @@
-import type { QueueEntry, Timeline } from '@toa-lib/models';
+import type { RundownEntry, Timeline } from '@toa-lib/models';
 import { resolveSpec, unresolvedBindings } from '@toa-lib/models';
 import { useCallback, useRef, useState } from 'react';
 import { localClient } from '../../api/http-clients.js';
@@ -32,14 +32,14 @@ export interface UseQueueRowRefreshResult {
    */
   refreshEntry: (
     eventKey: string,
-    entry: QueueEntry,
+    entry: RundownEntry,
     timeline: Timeline | undefined
   ) => Promise<void>;
 }
 
 /**
  * Owns the "last refreshed" / "fetching" indicator shown on each Timeline
- * Queue row's refresh icon (see `cue-queue.tsx`'s `RowActions`). One
+ * rundown row's refresh icon (see `rundown-list.tsx`'s `RowActions`). One
  * instance is shared by every row in the queue, keyed by `entryId`.
  */
 export const useQueueRowRefresh = (): UseQueueRowRefreshResult => {
@@ -53,7 +53,7 @@ export const useQueueRowRefresh = (): UseQueueRowRefreshResult => {
   const refreshEntry = useCallback(
     async (
       eventKey: string,
-      entry: QueueEntry,
+      entry: RundownEntry,
       timeline: Timeline | undefined
     ): Promise<void> => {
       if (!eventKey) throw new Error('No event selected');

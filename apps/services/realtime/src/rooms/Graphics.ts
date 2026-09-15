@@ -171,9 +171,14 @@ export default class Graphics extends Room {
       }
     });
 
+    // DEAD COMPATIBILITY HANDLER, removed in Task 16. It has always only
+    // logged: the room never stored a snapshot and no navigation reads one.
+    // The producer app stopped emitting this in Task 06, when ordered show
+    // state was consolidated onto the durable `producer-show` rundown; this
+    // only absorbs emits from an older client build still on the wire.
     socket.on(GraphicsQueueSocketEvent.SNAPSHOT, (payload: QueueSnapshot) => {
       logger.debug(
-        `graphics queue snapshot received for relay: ${payload.entries.length} entry(s)`,
+        `graphics queue snapshot received from a legacy client and discarded: ${payload.entries.length} entry(s)`,
       );
     });
 

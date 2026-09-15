@@ -712,6 +712,17 @@ export function migrateTimeline(input: unknown): VersionedTimeline {
     revision: 0
   });
 }
+/**
+ * The durable ordered show: the single model that owns what the producer runs,
+ * in order, with which per-entry template values. It supersedes the parallel
+ * `CueQueue` document (see `GraphicsShow.ts` for the invariants, the producer
+ * show's well-known id, and the entry-status derivation both the API and the
+ * producer app share).
+ *
+ * An entry's `timelineId` is deliberately NOT validated against the event's
+ * timelines at write time: a deleted timeline must leave an explicit, fixable
+ * entry behind rather than blocking every subsequent reorder or removal.
+ */
 export const rundownBaseZod = z
   .object({
     schemaVersion: z.literal(2),

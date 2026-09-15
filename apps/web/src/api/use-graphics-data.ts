@@ -1,20 +1,20 @@
 import {
   ApiResponseError,
-  CueQueue,
   GraphicSpec,
   GraphicsTarget,
   LiveGraphicState,
   PlaybackAcknowledgment,
   PlaybackStateEnvelope,
-  QueueEntry,
+  PRODUCER_SHOW_RUNDOWN_ID,
+  Rundown,
   Timeline,
   VersionedTimeline,
-  cueQueueZod,
   graphicSpecZod,
   graphicsTargetZod,
   liveGraphicStateZod,
   playbackAcknowledgmentZod,
   playbackStateEnvelopeZod,
+  rundownZod,
   variableValuesZod,
   versionedTimelineZod
 } from '@toa-lib/models';
@@ -94,8 +94,8 @@ const isTimelinesKeyFor = (eventKey: string) => (key: unknown) =>
   key[1] === eventKey &&
   key[2] === 'timelines';
 
-const queueKey = (eventKey: string) =>
-  ['/graphics', eventKey, 'queue'] as const;
+const showKey = (eventKey: string) =>
+  ['/graphics', eventKey, 'show'] as const;
 
 export interface PlaybackCommandOptions {
   requestId?: string;
@@ -190,22 +190,27 @@ export const graphicsApi = {
       mutate(isTimelinesKeyFor(eventKey));
     }
   },
-  queue: {
-    get: (eventKey: string): Promise<CueQueue | null> =>
-      localClient.get<CueQueue>(`/graphics/${eventKey}/queue`, {
-        schema: cueQueueZod
+  /**
+   * The producer's ordered show - one durable, revisioned `Rundown` per event
+   * (`PRODUCER_SHOW_RUNDOWN_ID`), replacing the old whole-array `CueQueue`
+   * PUT. `get` creates the empty document server-side on first read, so
+   * `patch` always has a real `expectedRevision` to write against; a `patch`
+   * whose revision is stale 409s rather than overwriting a concurrent edit.
+   */
+  show: {
+    get: (eventKey: string): Promise<Rundown | null> =>
+      localClient.get<Rundown>(`/graphics/${eventKey}/show`, {
+        schema: rundownZod
       }),
-    put: async (
+    patch: async (
       eventKey: string,
-      entries: QueueEntry[]
-    ): Promise<CueQueue | null> => {
-      const updated = await localClient.put<CueQueue>(
-        `/graphics/${eventKey}/queue`,
-        { body: { entries }, schema: cueQueueZod }
-      );
-      mutate(queueKey(eventKey));
-      return updated;
-    }
+      entries: Rundown['entries'],
+      expectedRevision: number
+    ): Promise<Rundown | null> =>
+      localClient.patch<Rundown>(
+        `/graphics/${eventKey}/rundowns/${PRODUCER_SHOW_RUNDOWN_ID}`,
+        { body: { entries, expectedRevision }, schema: rundownZod }
+      )
   },
   live: {
     /** Lossless authoritative read. Command methods remain legacy until Task 05. */
@@ -414,20 +419,29 @@ export const useTimelines = (
     { revalidateOnFocus: false }
   );
 
-export const useCueQueue = (
+/**
+ * The event's producer-show rundown. `graphicsApi.show.get` creates the empty
+ * document on first read, so this resolves to a real revisioned `Rundown` for
+ * every event rather than to "not saved yet".
+ */
+export const useProducerShow = (
   eventKey: string | null | undefined
-): SWRResponse<CueQueue | null, ApiResponseError> =>
+): SWRResponse<Rundown | null, ApiResponseError> =>
   useSWR<
-    CueQueue | null,
+    Rundown | null,
     ApiResponseError,
     readonly [string, string, string] | null
   >(
-    eventKey ? queueKey(eventKey) : null,
-    ([, eKey]) => graphicsApi.queue.get(eKey),
+    eventKey ? showKey(eventKey) : null,
+    ([, eKey]) => graphicsApi.show.get(eKey),
     {
       revalidateOnFocus: false,
-      // Queue CRUD owns this cache; playback state is delivered separately
+      // Show CRUD owns this cache; playback state is delivered separately
       // through the authoritative event-scoped Jotai store.
       refreshInterval: 0
     }
   );
+
+/** Revalidates the producer-show cache after a write commits. */
+export const mutateProducerShow = (eventKey: string) =>
+  mutate(showKey(eventKey));

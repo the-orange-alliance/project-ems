@@ -22,7 +22,7 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { QueueEntry } from '@toa-lib/models';
+import type { RundownEntry, RundownEntryView } from '@toa-lib/models';
 import { Button, Popconfirm, Space, Tag, Tooltip, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { CSSProperties, FC } from 'react';
@@ -36,27 +36,52 @@ function refreshTooltip(info: QueueRowRefreshInfo | undefined): string {
 }
 
 /**
- * Per-entry display info the parent resolves (it knows the timeline
- * catalog; this component only renders what it's given).
+ * Per-entry display info the parent resolves. `describeRundownEntries`
+ * (`@toa-lib/models`) derives the timeline join and `status`; the parent adds
+ * the value summary, which needs the timeline's variable declarations.
  */
-export interface CueQueueRowInfo {
-  /** Display name of the referenced timeline. */
-  timelineName: string;
+export interface RundownRowInfo extends RundownEntryView {
   /** Human-readable resolved variable values, e.g. "featured: 1234". */
   valueSummary: string;
-  /** True when the timeline this entry points at no longer exists. */
-  missing: boolean;
 }
 
-export interface CueQueueProps {
-  entries: QueueEntry[];
+/** Used when the parent has no info for an entry yet (timelines still loading): treat it as unresolvable rather than as ready. */
+function fallbackRowInfo(entry: RundownEntry): RundownRowInfo {
+  return {
+    entryId: entry.entryId,
+    timelineId: entry.timelineId,
+    timelineName: entry.timelineId,
+    itemCount: 0,
+    status: 'missing-timeline',
+    missingValues: [],
+    valueSummary: ''
+  };
+}
+
+/** Short, actionable reason a row cannot be cued as written, or `null` when it can. */
+function blockedReason(info: RundownRowInfo): string | null {
+  switch (info.status) {
+    case 'missing-timeline':
+      return `Missing timeline "${info.timelineId}"`;
+    case 'empty-timeline':
+      return 'Timeline has no items';
+    case 'missing-values':
+      return `Needs a value for ${info.missingValues.join(', ')}`;
+    default:
+      return null;
+  }
+}
+
+export interface RundownListProps {
+  entries: RundownEntry[];
   /** Per-entry display info, keyed by entryId — the parent resolves timeline names. */
-  rowInfo: Record<string, CueQueueRowInfo>;
+  rowInfo: Record<string, RundownRowInfo>;
   /** Per-entry refresh state (fetching / last-refreshed), keyed by entryId — absent means never refreshed this session. Auto-fires when a row is promoted to On Deck (see `graphics-controller.tsx`); the icon here also lets the producer trigger one manually. */
   refreshInfo: Record<string, QueueRowRefreshInfo>;
   /** entryId currently loaded on the transport, or null. */
   loadedEntryId: string | null;
-  onReorder: (entries: QueueEntry[]) => void;
+  /** Emits the complete new order as entry ids — never as entry objects, so a concurrent edit to another entry's values survives the reorder. */
+  onReorder: (entryIds: string[]) => void;
   onRemove: (entryId: string) => void;
   /** Takes this entry to air immediately (load + take in one press). */
   onQuickPlay: (entryId: string) => void;
@@ -66,26 +91,29 @@ export interface CueQueueProps {
 
 /** Name + resolved-values text, shared by the On Deck row and every
  * sortable row below it. */
-const RowLabel: FC<{ info: CueQueueRowInfo }> = ({ info }) => (
-  <div style={{ flex: 1, minWidth: 0 }}>
-    <Typography.Text
-      strong
-      ellipsis
-      type={info.missing ? 'danger' : undefined}
-      style={{ display: 'block' }}
-    >
-      {info.missing && <WarningOutlined style={{ marginRight: 4 }} />}
-      {info.missing ? 'Missing timeline' : info.timelineName}
-    </Typography.Text>
-    <Typography.Text
-      type='secondary'
-      ellipsis
-      style={{ display: 'block', fontSize: 12 }}
-    >
-      {info.valueSummary}
-    </Typography.Text>
-  </div>
-);
+const RowLabel: FC<{ info: RundownRowInfo }> = ({ info }) => {
+  const blocked = blockedReason(info);
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <Typography.Text
+        strong
+        ellipsis
+        type={blocked ? 'danger' : undefined}
+        style={{ display: 'block' }}
+      >
+        {blocked && <WarningOutlined style={{ marginRight: 4 }} />}
+        {info.timelineName}
+      </Typography.Text>
+      <Typography.Text
+        type={blocked ? 'danger' : 'secondary'}
+        ellipsis
+        style={{ display: 'block', fontSize: 12 }}
+      >
+        {blocked ?? info.valueSummary}
+      </Typography.Text>
+    </div>
+  );
+};
 
 /** Take (quick play) + Refresh + Delete, shared by the On Deck row and every
  * sortable row below it. Take is styled green/play rather than red/
@@ -94,24 +122,24 @@ const RowLabel: FC<{ info: CueQueueRowInfo }> = ({ info }) => (
  * warms this row's stat data on demand - the same thing On Deck promotion
  * already triggers automatically (see `graphics-controller.tsx`). */
 const RowActions: FC<{
-  info: CueQueueRowInfo;
+  info: RundownRowInfo;
   refresh: QueueRowRefreshInfo | undefined;
   onQuickPlay: () => void;
   onRefresh: () => void;
   onRemove: () => void;
-}> = ({ info, refresh, onQuickPlay, onRefresh, onRemove }) => (
+}> = ({ info, refresh, onQuickPlay, onRefresh, onRemove }) => {
+  const blocked = blockedReason(info);
+  return (
   <Space size={4} onClick={(e) => e.stopPropagation()}>
-    <Tooltip title={info.missing ? 'Missing timeline' : 'Take'}>
+    <Tooltip title={blocked ?? 'Take'}>
       <span>
         <Button
           type='text'
           size='small'
           icon={<PlayCircleOutlined />}
-          style={
-            info.missing ? undefined : { color: 'var(--ant-color-success)' }
-          }
+          style={blocked ? undefined : { color: 'var(--ant-color-success)' }}
           aria-label={`Take ${info.timelineName} to air now`}
-          disabled={info.missing}
+          disabled={blocked !== null}
           onClick={onQuickPlay}
         />
       </span>
@@ -123,7 +151,7 @@ const RowActions: FC<{
           size='small'
           icon={<SyncOutlined spin={refresh?.fetching} />}
           aria-label={`Refresh ${info.timelineName}'s stat data`}
-          disabled={info.missing || refresh?.fetching}
+          disabled={info.status === 'missing-timeline' || refresh?.fetching}
           onClick={onRefresh}
         />
       </span>
@@ -144,10 +172,11 @@ const RowActions: FC<{
       />
     </Popconfirm>
   </Space>
-);
+  );
+};
 
 interface OnDeckRowProps {
-  info: CueQueueRowInfo;
+  info: RundownRowInfo;
   refresh: QueueRowRefreshInfo | undefined;
   isLoaded: boolean;
   onQuickPlay: () => void;
@@ -184,7 +213,7 @@ const OnDeckRow: FC<OnDeckRowProps> = ({
       border: '2px solid var(--ant-color-success)',
       background: isLoaded
         ? 'var(--ant-color-success-bg)'
-        : info.missing
+        : blockedReason(info)
           ? 'var(--ant-color-error-bg)'
           : undefined
     }}
@@ -202,9 +231,9 @@ const OnDeckRow: FC<OnDeckRowProps> = ({
 );
 
 interface SortableRowProps {
-  entry: QueueEntry;
+  entry: RundownEntry;
   position: number;
-  info: CueQueueRowInfo;
+  info: RundownRowInfo;
   refresh: QueueRowRefreshInfo | undefined;
   isLoaded: boolean;
   onQuickPlay: () => void;
@@ -259,7 +288,7 @@ const SortableRow: FC<SortableRowProps> = ({
       : '1px solid transparent',
     background: isLoaded
       ? 'var(--ant-color-success-bg)'
-      : info.missing
+      : blockedReason(info)
         ? 'var(--ant-color-error-bg)'
         : undefined
   };
@@ -296,14 +325,21 @@ const SortableRow: FC<SortableRowProps> = ({
 };
 
 /**
- * Drag-to-reorder cue queue — the ordered list of timelines a broadcast
- * producer runs in order during a show. Fully controlled: the parent owns
+ * Drag-to-reorder show rundown — the ordered list of timelines a broadcast
+ * producer runs in order during a show, rendered from the event's single
+ * durable `Rundown` document. Fully controlled: the parent owns
  * `entries`/`rowInfo`/`loadedEntryId` and this component only emits intent
  * callbacks.
  *
  * The first entry is pulled out into a fixed "On Deck" row above the rest
- * (see `OnDeckRow`) - it is always queue position 1, marked with a yellow
+ * (see `OnDeckRow`) - it is always show position 1, marked with a yellow
  * border rather than being just another row in the sortable list.
+ *
+ * An entry the show cannot cue as written - deleted timeline, empty timeline,
+ * a declared variable with no value - keeps its position and is rendered with
+ * an actionable reason (see `blockedReason`) instead of being hidden or
+ * silently dropped: the operator authored that order and only they should
+ * change it.
  *
  * Mirrors `timeline-items.tsx`'s `@dnd-kit` setup (the reference
  * implementation for drag-and-drop in this repo) for the REMAINING entries:
@@ -317,16 +353,16 @@ const SortableRow: FC<SortableRowProps> = ({
  * looks its dragged siblings up by id in the full array, so the reordered
  * result it emits keeps On Deck exactly where it was).
  *
- * Named `CueQueue*` deliberately avoids colliding with `@toa-lib/models`'s
- * `CueQueue` document type (`{ eventKey, entries, updatedAtUtc }`) — this
- * export is `CueQueueList`, not `CueQueue`.
+ * `onReorder` emits the new order as entry IDS rather than entry objects, so
+ * a reorder can never carry this render's copy of another entry's values back
+ * to the server over a concurrent edit (see `use-show-rundown.ts`).
  *
- * Renders as "Timeline Queue" in the Live tab, to the left of the live
+ * Renders as "Show Rundown" in the Live tab, to the left of the live
  * item/inspector panel. Not a picker: a row has no click-to-load - the only
  * per-row actions are the explicit Take (load + take, right now), Refresh
  * (warm stat data), and Delete buttons.
  */
-export const CueQueueList: FC<CueQueueProps> = ({
+export const RundownList: FC<RundownListProps> = ({
   entries,
   rowInfo,
   refreshInfo,
@@ -353,23 +389,20 @@ export const CueQueueList: FC<CueQueueProps> = ({
     if (oldIndex === -1 || newIndex === -1) return;
     // Immutable: `arrayMove` returns a new array, the source `entries` is
     // never spliced/mutated in place.
-    onReorder(arrayMove(entries, oldIndex, newIndex));
+    onReorder(arrayMove(entries, oldIndex, newIndex).map((e) => e.entryId));
   };
 
   if (entries.length === 0) {
     return (
       <Typography.Text type='secondary' style={{ padding: 12 }}>
-        The timeline queue is empty.
+        The show rundown is empty.
       </Typography.Text>
     );
   }
 
   const [onDeckEntry, ...restEntries] = entries;
-  const onDeckInfo: CueQueueRowInfo = rowInfo[onDeckEntry.entryId] ?? {
-    timelineName: onDeckEntry.timelineId,
-    valueSummary: '',
-    missing: true
-  };
+  const onDeckInfo: RundownRowInfo =
+    rowInfo[onDeckEntry.entryId] ?? fallbackRowInfo(onDeckEntry);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -400,15 +433,12 @@ export const CueQueueList: FC<CueQueueProps> = ({
             >
               <div
                 role='listbox'
-                aria-label='Timeline queue'
+                aria-label='Show rundown'
                 style={{ display: 'flex', flexDirection: 'column', gap: 4 }}
               >
                 {restEntries.map((entry, index) => {
-                  const info: CueQueueRowInfo = rowInfo[entry.entryId] ?? {
-                    timelineName: entry.timelineId,
-                    valueSummary: '',
-                    missing: true
-                  };
+                  const info: RundownRowInfo =
+                    rowInfo[entry.entryId] ?? fallbackRowInfo(entry);
                   return (
                     <SortableRow
                       key={entry.entryId}

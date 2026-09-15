@@ -7,8 +7,9 @@ import {
   rundownZod,
   playbackStateZod,
   playbackAcknowledgmentZod,
-  cueQueueZod,
-  emptyCueQueue,
+  PRODUCER_SHOW_RUNDOWN_ID,
+  emptyProducerShow,
+  queueEntriesFromShow,
   type VersionedTimeline,
   type Rundown,
   type PlaybackState,
@@ -422,7 +423,19 @@ export class GraphicsRepository {
       })
     );
   }
-  private async checkRundown(db: AsyncDatabase, value: Rundown): Promise<void> {
+  /**
+   * Entry ids must be unique; entry `timelineId`s are deliberately NOT checked
+   * against the event's timelines.
+   *
+   * Requiring the referenced timeline to exist made a deleted timeline poison
+   * the whole document: every later reorder and every attempt to remove the
+   * offending entry 404'd, so the only way out was discarding operator-authored
+   * show order. A dangling reference is instead a first-class, reportable entry
+   * state (`missing-timeline`, see `describeRundownEntries`) that the producer
+   * can see and fix. Cueing still refuses it - `load-rundown` rejects the load
+   * naming the entry - so nothing broken reaches air.
+   */
+  private checkRundown(value: Rundown): void {
     if (
       new Set(value.entries.map((e) => e.entryId)).size !== value.entries.length
     )
@@ -430,10 +443,6 @@ export class GraphicsRepository {
         400,
         'INVALID_INPUT',
         'Rundown entry IDs must be unique'
-      );
-    for (const entry of value.entries)
-      timelineFromRow(
-        await this.timeline(db, value.eventKey, entry.timelineId)
       );
   }
   listRundowns(eventKey: string): Promise<Rundown[]> {
@@ -472,7 +481,7 @@ export class GraphicsRepository {
         [eventKey, value.rundownId]
       );
       if (exists) throw conflict('Rundown already exists');
-      await this.checkRundown(db, value);
+      this.checkRundown(value);
       await db.run(
         'INSERT INTO graphics_rundown(eventKey,rundownId,data,revision) VALUES(?,?,?,0)',
         [eventKey, value.rundownId, JSON.stringify(value)]
@@ -497,7 +506,7 @@ export class GraphicsRepository {
         revision: current.revision + 1,
         updatedAtUtc: new Date().toISOString()
       });
-      await this.checkRundown(db, value);
+      this.checkRundown(value);
       await db.run(
         'UPDATE graphics_rundown SET data=?,revision=? WHERE eventKey=? AND rundownId=?',
         [JSON.stringify(value), value.revision, eventKey, id]
@@ -649,53 +658,53 @@ export class GraphicsRepository {
       return value;
     });
   }
-  loadQueue(eventKey: string): Promise<CueQueue> {
+  /**
+   * Idempotently returns the event's producer-show rundown, creating the empty
+   * document on first read.
+   *
+   * The producer app needs a revision to write against before it can add its
+   * first entry, so the show has to exist as a row rather than as an implied
+   * empty value; creating it here keeps that a single round trip and makes
+   * "the show exists" true for every event the moment anyone looks at it. The
+   * create is conditional inside the same transaction, so two concurrent first
+   * reads cannot produce two documents or bump a revision.
+   */
+  loadProducerShow(eventKey: string): Promise<Rundown> {
     return this.transaction(eventKey, async (db) => {
-      const [row] = await db.all<{ data: string; updatedAtUtc: string }>(
-        'SELECT data,updatedAtUtc FROM graphics_queue WHERE eventKey=?',
-        [eventKey]
-      );
-      if (!row) return emptyCueQueue(eventKey, new Date().toISOString());
-      // Read-only: a corrupt queue row degrades to entries: [] instead of throwing.
-      return degradeCorruptOnRead(
-        eventKey,
-        eventKey,
-        'Cue queue',
-        () =>
-          cueQueueZod.parse({
-            eventKey,
-            entries: JSON.parse(row.data),
-            updatedAtUtc: row.updatedAtUtc
-          }),
-        () => emptyCueQueue(eventKey, row.updatedAtUtc)
-      );
-    });
-  }
-  saveQueue(eventKey: string, entries: CueQueue['entries']): Promise<CueQueue> {
-    return this.transaction(eventKey, async (db) => {
-      const [row] = await db.all<{ data: string; updatedAtUtc: string }>(
-        'SELECT data,updatedAtUtc FROM graphics_queue WHERE eventKey=?',
-        [eventKey]
+      const [row] = await db.all<StoredRow>(
+        'SELECT data,revision FROM graphics_rundown WHERE eventKey=? AND rundownId=?',
+        [eventKey, PRODUCER_SHOW_RUNDOWN_ID]
       );
       if (row)
-        parseStored('Cue queue', () =>
-          cueQueueZod.parse({
-            eventKey,
-            entries: JSON.parse(row.data),
-            updatedAtUtc: row.updatedAtUtc
-          })
+        return degradeCorruptOnRead(
+          eventKey,
+          PRODUCER_SHOW_RUNDOWN_ID,
+          `Rundown ${PRODUCER_SHOW_RUNDOWN_ID}`,
+          () => this.rundownFromRow(row, eventKey, PRODUCER_SHOW_RUNDOWN_ID),
+          () => emptyProducerShow(eventKey, new Date(0).toISOString())
         );
-      const value = cueQueueZod.parse({
-        eventKey,
-        entries,
-        updatedAtUtc: new Date().toISOString()
-      });
+      const value = emptyProducerShow(eventKey, new Date().toISOString());
       await db.run(
-        `INSERT INTO graphics_queue(eventKey,data,updatedAtUtc) VALUES(?,?,?)
-        ON CONFLICT(eventKey) DO UPDATE SET data=excluded.data,updatedAtUtc=excluded.updatedAtUtc`,
-        [eventKey, JSON.stringify(value.entries), value.updatedAtUtc]
+        'INSERT INTO graphics_rundown(eventKey,rundownId,data,revision) VALUES(?,?,?,0)',
+        [eventKey, PRODUCER_SHOW_RUNDOWN_ID, JSON.stringify(value)]
       );
       return value;
     });
+  }
+  /**
+   * @deprecated Read compatibility only, for `GET /graphics/:eventKey/queue`.
+   * Projects the producer-show rundown - the one durable owner of show order -
+   * into the retired `CueQueue` shape. There is deliberately no write
+   * counterpart: the legacy `PUT` is gone, so nothing can resurrect a stale
+   * full-array snapshot behind the rundown's revision. Removed in Task 16
+   * along with the route, `graphics_queue`, and the `CueQueue` model.
+   */
+  async loadQueue(eventKey: string): Promise<CueQueue> {
+    const show = await this.loadProducerShow(eventKey);
+    return {
+      eventKey,
+      entries: queueEntriesFromShow(show),
+      updatedAtUtc: show.updatedAtUtc
+    };
   }
 }

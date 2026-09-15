@@ -126,7 +126,7 @@ interface SortableRowProps {
  * ATEM-style color for the live row: red once it's genuinely on air,
  * green while it's cued/loaded here but not yet taken - mirroring the
  * Timeline Queue's green "On Deck" row and the transport box's red
- * Program border (see `cue-queue.tsx` / `graphics-controller.tsx`). A row
+ * Program border (see `rundown-list.tsx` / `graphics-controller.tsx`). A row
  * that is merely `isLive` (loaded) but not `isOnAir` must never look the
  * same as one actually broadcasting.
  */

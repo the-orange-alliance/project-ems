@@ -252,6 +252,12 @@ CREATE TABLE IF NOT EXISTS "graphics_timeline" (
     PRIMARY KEY (eventKey, timelineId)
 );
 
+-- DEPRECATED. Superseded by "graphics_rundown" below, which owns ordered show
+-- entries and their per-entry template values with a revision this table never
+-- had. Existing rows migrate into the event's "producer-show" rundown exactly
+-- once (marker "graphics-queue-to-producer-show-v1" in "graphics_migration")
+-- and are then left untouched so the pre-migration order stays recoverable.
+-- Nothing writes here any more; Task 16 drops the table.
 CREATE TABLE IF NOT EXISTS "graphics_queue" (
     "eventKey"     VARCHAR(25) NOT NULL,
     "data"         TEXT NOT NULL,
@@ -259,6 +265,8 @@ CREATE TABLE IF NOT EXISTS "graphics_queue" (
     PRIMARY KEY (eventKey)
 );
 
+-- The durable ordered show. "data" is a Rundown document (schemaVersion 2);
+-- the producer's own show is rundownId "producer-show".
 CREATE TABLE IF NOT EXISTS "graphics_rundown" (
     "eventKey" TEXT NOT NULL, "rundownId" TEXT NOT NULL,
     "data" TEXT NOT NULL, "revision" INTEGER NOT NULL,
@@ -271,4 +279,9 @@ CREATE TABLE IF NOT EXISTS "graphics_command" (
     "eventKey" TEXT NOT NULL, "requestId" TEXT NOT NULL,
     "fingerprint" TEXT NOT NULL, "acknowledgment" TEXT NOT NULL,
     PRIMARY KEY (eventKey, requestId)
+);
+-- One row per applied data migration; its presence is what keeps a restart
+-- from re-running the migration and duplicating what it already imported.
+CREATE TABLE IF NOT EXISTS "graphics_migration" (
+    "name" TEXT PRIMARY KEY, "appliedAtUtc" TEXT NOT NULL, "detail" TEXT
 );

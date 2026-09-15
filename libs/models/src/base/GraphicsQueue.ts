@@ -2,6 +2,15 @@ import { z } from 'zod';
 import { variableValuesZod, type VariableValues } from './GraphicsTemplates.js';
 
 /**
+ * @deprecated Compatibility shapes only. The durable ordered-show model is
+ * `Rundown` (`Graphics.ts` / `GraphicsShow.ts`): it carries the same ordered
+ * entries and per-entry template values, plus the revision and event identity
+ * this document never had. Stored `graphics_queue` rows migrate into the
+ * event's producer-show rundown exactly once (`GraphicsSchema.ts`), and these
+ * types survive only to type the deprecated `GET /graphics/:eventKey/queue`
+ * read adapter and the realtime room's unread snapshot event. Task 16 deletes
+ * both, and this file with them. Nothing writes through these shapes.
+ *
  * Producer-facing queue of timeline runs: each entry names a timeline and
  * carries the template-variable values for that particular run (e.g. the
  * same "team spotlight" timeline queued three times for three different

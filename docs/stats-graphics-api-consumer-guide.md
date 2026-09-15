@@ -99,7 +99,7 @@ This section is for a consumer building an **external "simple" controller** for 
 | `GET /graphics/:eventKey/live` | Read the current `PlaybackState` (loaded item, cue, program, staged update). Plain read, not a command. |
 | `GET /graphics/:eventKey/live/publication-health` | Inspect delivery configuration, pending revision, retry/error details, and the last delivered revision. |
 | `.../live/load/:timelineId` | Load a timeline onto the cue slot, reset to its first item. Optional body: `values` (template variable bindings). |
-| `.../live/load-rundown/:rundownId` | Load a rundown. |
+| `.../live/load-rundown/:rundownId` | Load a rundown: its entries' timelines flattened into one ordered item list, each item resolved against its own entry's `values`. Rejected (naming the entry) if any entry references a timeline that no longer exists. |
 | `.../live/unload` | Durably clear the loaded timeline/rundown back to nothing. |
 | `POST .../live/cue` (POST only) | Ready an ad-hoc prepared graphic spec onto the cue without touching `loaded`/`program`. |
 | `.../live/advance` | Step the loaded timeline/rundown forward one item. |
@@ -132,15 +132,75 @@ GET /graphics/:eventKey/timelines?published=true
 
 Returns only timelines marked `published` (i.e. producer-approved, ready for a simple controller to trigger) — omit the query param (or pass `false`) to see drafts too. Pair this with `quick-cue`/`load` above: fetch the published list to populate your controller's buttons, then call `quick-cue/:timelineId` per button press.
 
-### Quick-adding a timeline to the producer queue
+### The ordered show (rundowns)
 
-There is **no single "append one" endpoint** — the on-deck queue is read and replaced as a whole list:
+A **rundown** is the one durable model for "what runs, in order, with which
+template values". It replaced the separate `CueQueue` document, which held the
+same ordered entries in a second table with no revision of its own.
 
-1. `GET /graphics/:eventKey/queue` → returns the current `CueQueue` (`{ eventKey, entries, updatedAtUtc }`).
-2. Append a new entry to `entries`: `{ entryId: <new unique id>, timelineId: <target timeline>, values: {...template vars...}, note?: string }`.
-3. `PUT /graphics/:eventKey/queue` with body `{ entries: [...full updated array...] }` → saves and returns the new `CueQueue`.
+```
+GET /graphics/:eventKey/rundowns                  # list
+GET /graphics/:eventKey/rundowns/:rundownId       # read one
+POST /graphics/:eventKey/rundowns                 # create
+PATCH /graphics/:eventKey/rundowns/:rundownId     # update (requires expectedRevision)
+DELETE /graphics/:eventKey/rundowns/:rundownId?expectedRevision=N
+```
 
-Generate `entryId` client-side (any string matching `^[A-Za-z0-9_-]{1,64}$`, e.g. a UUID) — it's how the producer UI/audience queue identifies and later dequeues that run.
+A rundown is `{ schemaVersion: 2, revision, rundownId, eventKey, name, entries, updatedAtUtc }`,
+and each entry is `{ entryId, timelineId, values?, note? }`. Identifiers
+(`rundownId`, `entryId`, `timelineId`) match `^[a-zA-Z0-9_-]{1,150}$` — a UUID
+is fine. `values` is the same variable-name → positive-integer map `load` takes,
+applied to that entry alone, so the same timeline can appear three times with
+three different teams.
+
+Guarantees you can rely on:
+
+- **Order is the entry order.** There is no separate position field, and
+  nothing reorders entries behind your back.
+- **`entryId` is stable.** Reordering, editing values, or removing neighbours
+  never renumbers an entry. Duplicate ids in one write are rejected (`400`).
+- **Writes are revision-checked.** Every `PATCH`/`DELETE` names the `revision`
+  it was computed from; a mismatch is a `409 CONFLICT`. Re-read, re-apply your
+  change to what came back, and retry — never replay the array you were
+  holding, or you will silently undo someone else's edit.
+- **A dangling `timelineId` is allowed and preserved.** Deleting a timeline
+  does not rewrite rundowns that reference it: the entry stays in place so an
+  operator can see and fix it. It is only `load-rundown` that refuses, naming
+  the entry. Judge an entry before cueing it by joining `timelineId` against
+  `GET /graphics/:eventKey/timelines`.
+
+### The producer show
+
+```
+GET /graphics/:eventKey/show
+```
+
+Returns the event's single producer-facing rundown (`rundownId:
+"producer-show"`), **creating the empty document on first read** so you always
+have a revision to write against. Mutate it through
+`PATCH /graphics/:eventKey/rundowns/producer-show` like any other rundown:
+
+1. `GET /graphics/:eventKey/show` → note `revision` and `entries`.
+2. Apply your change to *those* entries — e.g. append
+   `{ entryId: <new unique id>, timelineId: <target>, values: {...} }`.
+3. `PATCH .../rundowns/producer-show` with `{ entries: [...], expectedRevision: <that revision> }`.
+4. On `409`, go back to step 1. Do not retry with the same array.
+
+#### Migrating off `GET /graphics/:eventKey/queue`
+
+`GET /graphics/:eventKey/queue` still answers, but it is **deprecated and
+read-only**: it is now a projection of the producer show above into the old
+`CueQueue` shape (`{ eventKey, entries, updatedAtUtc }`), where every entry
+carries an explicit `values` map even when the rundown omits an empty one.
+`PUT /graphics/:eventKey/queue` **has been removed** — a whole-array write with
+no expected revision could resurrect entries a concurrent edit had removed.
+Move reads to `GET /graphics/:eventKey/show` and writes to the rundown `PATCH`.
+
+Existing `graphics_queue` data is migrated into `producer-show` automatically
+and exactly once per event database, preserving order, entry ids, timeline
+ids, values, notes, and the operator's last-touched timestamp; a duplicate
+legacy entry id is suffixed (`entry-1` → `entry-1-2`) rather than dropped. The
+original row is left on disk, so the pre-migration order stays recoverable.
 
 ### Error shape
 

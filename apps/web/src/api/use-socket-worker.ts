@@ -5,7 +5,6 @@ import SharedSocketWorker from '@workers/shared-socket-worker?sharedworker';
 import { SocketOptions } from '@toa-lib/client';
 import {
   FieldControlUpdatePacket,
-  GraphicsQueueSocketEvent,
   GraphicsSocketEvent,
   MatchKey,
   MatchSocketEvent
@@ -104,9 +103,7 @@ export function useSocketWorker() {
     graphicsPrevious: (v: any) => socket?.emit(GraphicsSocketEvent.PREVIOUS, v),
     graphicsGo: (v: any) => socket?.emit(GraphicsSocketEvent.GO, v),
     graphicsTake: (v: any) => socket?.emit(GraphicsSocketEvent.TAKE, v),
-    graphicsClear: (v: any) => socket?.emit(GraphicsSocketEvent.CLEAR, v),
-    graphicsQueueSnapshot: (v: any) =>
-      socket?.emit(GraphicsQueueSocketEvent.SNAPSHOT, v)
+    graphicsClear: (v: any) => socket?.emit(GraphicsSocketEvent.CLEAR, v)
   };
 
   return {

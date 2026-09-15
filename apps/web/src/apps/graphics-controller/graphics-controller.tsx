@@ -15,6 +15,7 @@ import type {
 } from '@toa-lib/models';
 import {
   AudienceScreens,
+  describeRundownEntries,
   isTemplatedTimeline,
   timelineBoundVariables,
   unresolvedBindings
@@ -50,12 +51,12 @@ import {
   playbackProgramForEventAtom,
   playbackStagedUpdateForEventAtom
 } from 'src/stores/state/graphics.js';
-import { CueQueueList, type CueQueueRowInfo } from './cue-queue.js';
+import { RundownList, type RundownRowInfo } from './rundown-list.js';
 import { LiveMonitor } from './live-monitor.js';
 import { QuickStatDrawer } from './quick-stat-drawer.js';
 import { TimelineItemsPanel } from './timeline-items-panel.js';
 import { TimelineList } from './timeline-list.js';
-import { useCueQueue } from './use-cue-queue.js';
+import { useShowRundown } from './use-show-rundown.js';
 import { useTimelinePreflight } from './use-timeline-preflight.js';
 import { useQueueRowRefresh } from './use-queue-row-refresh.js';
 import { useTimelineEditor } from './use-timeline-editor.js';
@@ -66,7 +67,7 @@ import { VariableFillModal } from './variable-fill-modal.js';
  *
  * Assembles already-built pieces (`TimelineList`, `TimelineItemsPanel`,
  * `QuickStatDrawer`, `useTimelineEditor`, `LiveMonitor`,
- * `CueQueueList`, `useCueQueue`, `VariableFillModal`) into the layout
+ * `RundownList`, `useShowRundown`, `VariableFillModal`) into the layout
  * described in the design brief: an ACTIVE/transport bar on top, then a
  * tabbed working area below it, and the live monitor pinned to the
  * bottom-left at all times.
@@ -74,7 +75,7 @@ import { VariableFillModal } from './variable-fill-modal.js';
  * The working area is two tabs sharing one always-visible Quick Stat column:
  *  - "Editor" - the timeline list plus the item/inspector panel for whichever
  *    timeline the producer has selected there.
- *  - "Live" - the "Timeline Queue" (`CueQueueList`, renamed in the UI) on the
+ *  - "Live" - the "Show Rundown" (`RundownList`) on the
  *    left, and the same item/inspector panel on the right, bound to the
  *    timeline currently present in the authoritative loaded snapshot.
  *    Edits made here hit the real cued timeline the instant they are saved;
@@ -120,7 +121,7 @@ function boundVariableNames(spec: GraphicSpec): string[] {
   );
 }
 
-/** Short human-readable rendering of a queue entry's resolved values, e.g. "featured: 1234, opponent: 5678". */
+/** Short human-readable rendering of a rundown entry's resolved values, e.g. "featured: 1234, opponent: 5678". */
 function formatValueSummary(
   timeline: Timeline | undefined,
   values: VariableValues
@@ -177,8 +178,8 @@ export const GraphicsController: FC = () => {
   const { showSnackbar, showErrorSnackbar } = useSnackbar();
 
   const { data: timelines } = useTimelines(eventKey);
-  // Published-only, for the Timeline Queue's "Search timelines to add…"
-  // picker below - everything else on this page (queue row name lookups,
+  // Published-only, for the Show Rundown's "Search timelines to add…"
+  // picker below - everything else on this page (rundown row name lookups,
   // the Editor tab's list) keeps using the unfiltered `timelines` above.
   const { data: publishedTimelines } = useTimelines(eventKey, true);
   const { data: catalogue = [] } = useStatsCatalogue(eventKey);
@@ -208,7 +209,7 @@ export const GraphicsController: FC = () => {
   const liveTimelineId = currentLoadedItem?.timelineId ?? null;
   const liveEditor = useTimelineEditor(eventKey, liveTimelineId);
   const activeEditor = activeTab === 'live' ? liveEditor : editor;
-  const cueQueue = useCueQueue(eventKey);
+  const show = useShowRundown(eventKey);
   const queueRowRefresh = useQueueRowRefresh();
 
   // The item actually under the transport playhead, straight from the loaded
@@ -268,49 +269,48 @@ export const GraphicsController: FC = () => {
     loaded?.index ?? 0
   );
 
-  // Per-entry display info for the queue list - joins each entry to its
-  // timeline's current name/variables. An entry whose `timelineId` no
-  // longer matches any timeline is marked `missing` rather than dropped
-  // (the persisted queue keeps it - see `use-cue-queue.ts`).
-  const queueRowInfo = useMemo<Record<string, CueQueueRowInfo>>(() => {
-    const info: Record<string, CueQueueRowInfo> = {};
-    for (const entry of cueQueue.entries) {
-      const timeline = timelines?.find(
-        (t) => t.timelineId === entry.timelineId
-      );
-      info[entry.entryId] = {
-        timelineName: timeline?.name ?? entry.timelineId,
-        valueSummary: formatValueSummary(timeline, entry.values),
-        missing: !timeline
+  // Per-entry display info for the rundown list. `describeRundownEntries`
+  // (`@toa-lib/models`) is the single shared definition of an entry's status -
+  // the same one the API docs and the `missing-timeline` cue rejection refer
+  // to - so an entry whose timeline was deleted keeps its position with an
+  // actionable reason rather than being dropped.
+  const rundownRowInfo = useMemo<Record<string, RundownRowInfo>>(() => {
+    const info: Record<string, RundownRowInfo> = {};
+    for (const view of describeRundownEntries(show.entries, timelines)) {
+      const entry = show.entries.find((e) => e.entryId === view.entryId);
+      const timeline = timelines?.find((t) => t.timelineId === view.timelineId);
+      info[view.entryId] = {
+        ...view,
+        valueSummary: formatValueSummary(timeline, entry?.values ?? {})
       };
     }
     return info;
-  }, [cueQueue.entries, timelines]);
+  }, [show.entries, timelines]);
 
-  // Auto-warms the FIRST queue entry's stat data as soon as it becomes On
+  // Auto-warms the FIRST rundown entry's stat data as soon as it becomes On
   // Deck (position 1) - whether that's because the show just started, the
   // previous On Deck entry was taken/removed, or the producer reordered the
-  // queue. Purely a stats-cache warm (see `use-queue-row-refresh.ts`) -
+  // rundown. Purely a stats-cache warm (see `use-queue-row-refresh.ts`) -
   // never touches the live transport, so it's safe to fire regardless of
   // what else is on air. `refreshedOnDeckRef` fires this once per
   // PROMOTION (keyed by entryId), not on every render the same entry
   // happens to still be on deck for - the row's own Refresh icon covers
   // "it's been sitting a while, refresh it again".
-  const onDeckEntryId = cueQueue.entries[0]?.entryId ?? null;
+  const onDeckEntryId = show.entries[0]?.entryId ?? null;
   const refreshedOnDeckRef = useRef<string | null>(null);
   useEffect(() => {
     if (!eventKey || !onDeckEntryId) return;
     if (refreshedOnDeckRef.current === onDeckEntryId) return;
     refreshedOnDeckRef.current = onDeckEntryId;
-    const entry = cueQueue.entries.find((e) => e.entryId === onDeckEntryId);
+    const entry = show.entries.find((e) => e.entryId === onDeckEntryId);
     if (!entry) return;
     const timeline = timelines?.find((t) => t.timelineId === entry.timelineId);
     void queueRowRefresh.refreshEntry(eventKey, entry, timeline);
-  }, [eventKey, onDeckEntryId, cueQueue.entries, timelines, queueRowRefresh]);
+  }, [eventKey, onDeckEntryId, show.entries, timelines, queueRowRefresh]);
 
-  const handleRefreshQueueEntry = (entryId: string) => {
+  const handleRefreshEntry = (entryId: string) => {
     if (!eventKey) return;
-    const entry = cueQueue.entries.find((e) => e.entryId === entryId);
+    const entry = show.entries.find((e) => e.entryId === entryId);
     if (!entry) return;
     const timeline = timelines?.find((t) => t.timelineId === entry.timelineId);
     void queueRowRefresh.refreshEntry(eventKey, entry, timeline);
@@ -333,7 +333,7 @@ export const GraphicsController: FC = () => {
   // the first/last item instead of disabling there: pressing Prev on item 1
   // steps onto "0" (animate out - see `handlePrev`), and pressing Go on the
   // last item steps onto "n+1" (animate out AND clear, advancing the
-  // Timeline Queue - see `handleGo`/`handleClearAndAdvanceQueue`).
+  // Show Rundown - see `handleGo`/`handleClearAndAdvanceQueue`).
   // ------------------------------------------------------------------
   const loadedTimeline = activeLoadedTimeline;
   const loadedItemCount = loaded?.items.length ?? 0;
@@ -343,7 +343,7 @@ export const GraphicsController: FC = () => {
 
   // ATEM-style Program/Preview border for the transport box (see the JSX
   // below): RED only while something is genuinely animated in (on air) -
-  // never merely because the Timeline Queue has entries waiting. GREEN
+  // never merely because the Show Rundown has entries waiting. GREEN
   // while a timeline is loaded but not yet taken (the "on deck"/"0" state -
   // e.g. right after the idle-queue effect auto-pulls one in). Neither
   // color once nothing is loaded at all.
@@ -396,14 +396,14 @@ export const GraphicsController: FC = () => {
     (!transportOnAir ? 'Nothing is on air to hide.' : undefined);
 
   // Unlike Hide, this one is worth pressing even with nothing on air - it
-  // also advances the Timeline Queue (see `handleClearAndAdvanceQueue`) -
+  // also advances the Show Rundown (see `handleClearAndAdvanceQueue`) -
   // so it's only disabled when there is truly nothing anywhere to act on.
   const clearDisabledReason =
     noEventReason ??
     deliveryReason ??
     (!transportOnAir &&
     !loaded &&
-    cueQueue.entries.length === 0 &&
+    show.entries.length === 0 &&
     authoritativeCue?.status === 'empty'
       ? 'Nothing to clear.'
       : undefined);
@@ -442,9 +442,9 @@ export const GraphicsController: FC = () => {
   // what to edit - it must never touch the live transport. This used to also
   // `graphicsApi.live.load()` the timeline (so "open it in the Editor" and
   // "put it on the transport" were the same click), which made the Editor
-  // tab a second, confusing way to change what's live. The Timeline Queue
+  // tab a second, confusing way to change what's live. The Show Rundown
   // (in the Live tab) is now the only path onto the transport - see
-  // `pullOnDeckEntry`/`handleQuickPlayQueueEntry`.
+  // `pullOnDeckEntry`/`handleQuickPlayEntry`.
   const handleSelectTimeline = (id: string) => {
     setSelectedTimelineId(id);
     setSelectedItemId(null);
@@ -478,9 +478,9 @@ export const GraphicsController: FC = () => {
         //
         // Read from `loaded.values` - the server's own record of what
         // resolved THIS load (mirrors `LoadedGraphicsSnapshot.values`) -
-        // rather than trying to reconstruct it from `cueQueue.entries`:
-        // that queue entry is normally already gone by the time this runs
-        // (`pullOnDeckEntry`/`handleQuickPlayQueueEntry` both remove it
+        // rather than trying to reconstruct it from `show.entries`:
+        // that rundown entry is normally already gone by the time this runs
+        // (`pullOnDeckEntry`/`handleQuickPlayEntry` both remove it
         // immediately after loading), so that lookup used to fail here
         // every time and fall through to the modal below despite the
         // values already being known and in effect on air.
@@ -549,29 +549,37 @@ export const GraphicsController: FC = () => {
     })();
   };
 
-  // Pulls the Timeline Queue's On Deck entry (position 1) onto the
-  // transport and removes it from the queue. The ONE place "advance the
-  // timeline queue" happens - used explicitly by
-  // `handleClearAndAdvanceQueue` and automatically by the idle-queue effect
-  // below. Passes the entry's own bound `values` through to `load` so a
-  // templated entry's bindings actually resolve - `handleEnqueueTimeline`
-  // already collects these via the variable-fill modal before the entry
-  // is ever queued.
+  // Pulls the Show Rundown's On Deck entry (position 1) onto the transport
+  // and removes it from the rundown. The ONE place "advance the show"
+  // happens - used explicitly by `handleClearAndAdvanceQueue` and
+  // automatically by the idle effect below. Passes the entry's own bound
+  // `values` through to `load` so a templated entry's bindings actually
+  // resolve - `handleEnqueueTimeline` already collects these via the
+  // variable-fill modal before the entry is ever added.
+  //
+  // STILL NOT ATOMIC: load and remove are two calls, so a failure between
+  // them leaves the entry both loaded and still in the rundown. Task 07 owns
+  // collapsing this into one server operation (and the single-flight guard
+  // F9 asks for); Task 06 only moved the writes onto the revisioned model.
   const pullOnDeckEntry = async () => {
     if (!eventKey) return;
-    const [onDeck] = cueQueue.entries;
+    const [onDeck] = show.entries;
     if (!onDeck) return;
     try {
-      await graphicsApi.live.load(eventKey, onDeck.timelineId, onDeck.values);
+      await graphicsApi.live.load(
+        eventKey,
+        onDeck.timelineId,
+        onDeck.values ?? {}
+      );
       refreshCueSilently(eventKey);
-      await cueQueue.removeEntry(onDeck.entryId);
+      await show.removeEntry(onDeck.entryId);
     } catch (e) {
-      showErrorSnackbar('Error while advancing the timeline queue.', e);
+      showErrorSnackbar('Error while advancing the show rundown.', e);
     }
   };
 
   // Whenever the transport is fully idle (nothing loaded at all - not just
-  // off air) and the Timeline Queue has something waiting, pull it straight
+  // off air) and the Show Rundown has something waiting, pull it straight
   // into the controller: loaded, but deliberately NOT taken to air. Fires
   // once per idle-then-queued transition - once `pullOnDeckEntry` succeeds,
   // `loaded` becomes non-null and this effect's guard stops it from firing
@@ -579,9 +587,9 @@ export const GraphicsController: FC = () => {
   useEffect(() => {
     if (!eventKey) return;
     if (loaded !== null) return;
-    if (cueQueue.entries.length === 0) return;
+    if (show.entries.length === 0) return;
     void pullOnDeckEntry();
-  }, [eventKey, loaded, cueQueue.entries.length]);
+  }, [eventKey, loaded, show.entries.length]);
 
   // Prev/Go replace the old four-button Prev/Go/Take/Next row. There is no
   // longer a separate cue-only step: each press moves the transport (back
@@ -661,7 +669,7 @@ export const GraphicsController: FC = () => {
   };
 
   // Animate Out and Clear: takes the program off air and advances the
-  // Timeline Queue - loading the On Deck entry if one exists,
+  // Show Rundown - loading the On Deck entry if one exists,
   // or fully unloading the transport (`live/unload`) if the queue is empty
   // so it goes genuinely idle rather than leaving the just-cleared show
   // sitting there as "loaded". Also what Go does automatically at the last
@@ -670,13 +678,13 @@ export const GraphicsController: FC = () => {
     if (!eventKey) return;
     try {
       await graphicsApi.live.clear(eventKey);
-      if (cueQueue.entries.length > 0) {
+      if (show.entries.length > 0) {
         await pullOnDeckEntry();
       } else {
         await graphicsApi.live.unload(eventKey);
       }
     } catch (e) {
-      showErrorSnackbar('Error while clearing and advancing the queue.', e);
+      showErrorSnackbar('Error while clearing and advancing the show.', e);
     }
   };
 
@@ -773,7 +781,7 @@ export const GraphicsController: FC = () => {
   // Cue queue flows (Change 4).
   // --------------------------------------------------------------------
 
-  // Adds a timeline to the queue by id - the target of the Timeline Queue's
+  // Adds a timeline to the queue by id - the target of the Show Rundown's
   // search/typeahead field, so any saved timeline can be queued regardless
   // of what's selected in the Editor tab. A templated timeline can't be
   // queued with unfilled bindings, so it opens the variable-fill modal
@@ -793,8 +801,8 @@ export const GraphicsController: FC = () => {
         variables
       });
     } else {
-      cueQueue.addEntry(timeline.timelineId, {}).catch((e) => {
-        showErrorSnackbar('Error while adding to the cue queue.', e);
+      show.addEntry(timeline.timelineId, {}).catch((e) => {
+        showErrorSnackbar('Error while adding to the show rundown.', e);
       });
     }
   };
@@ -809,17 +817,17 @@ export const GraphicsController: FC = () => {
   // same as `pullOnDeckEntry` - it's gone once it's played. There is
   // deliberately no "load only" row action any more - the row's one button
   // either puts this on air now or does nothing at all.
-  const handleQuickPlayQueueEntry = async (entryId: string) => {
+  const handleQuickPlayEntry = async (entryId: string) => {
     if (!eventKey) return;
-    const entry = cueQueue.entries.find((e) => e.entryId === entryId);
+    const entry = show.entries.find((e) => e.entryId === entryId);
     if (!entry) return;
     try {
       await graphicsApi.live.load(eventKey, entry.timelineId, entry.values);
       refreshCueSilently(eventKey);
       await graphicsApi.live.take(eventKey);
-      await cueQueue.removeEntry(entry.entryId);
+      await show.removeEntry(entry.entryId);
     } catch (e) {
-      showErrorSnackbar('Error while taking the queued timeline to air.', e);
+      showErrorSnackbar('Error while taking the rundown timeline to air.', e);
     }
   };
 
@@ -843,7 +851,7 @@ export const GraphicsController: FC = () => {
     if (activeEventRef.current !== modal.eventKey) return;
     try {
       if (modal.kind === 'enqueue-timeline') {
-        await cueQueue.addEntry(modal.timelineId, values);
+        await show.addEntry(modal.timelineId, values);
       } else {
         await graphicsApi.live.cue(modal.eventKey, modal.spec, values);
       }
@@ -852,7 +860,7 @@ export const GraphicsController: FC = () => {
         showErrorSnackbar(
           modal.kind === 'cue-spec'
             ? 'Error while cueing stat data.'
-            : 'Error while adding to the cue queue.',
+            : 'Error while adding to the show rundown.',
           e
         );
     }
@@ -960,13 +968,13 @@ export const GraphicsController: FC = () => {
       >
         {/* ---------------------------------------------------------------- */}
         {/* Transport control box - the ACTIVE bar + transport buttons. The  */}
-        {/* Timeline Queue used to share this box; it now lives in the Live */}
+        {/* Show Rundown used to share this box; it now lives in the Live */}
         {/* tab, to the left of the live item/inspector panel.              */}
         {/* ATEM-style Program/Preview border: red while `transportOnAir`,   */}
         {/* green while `transportOnDeck` (loaded but not yet taken) -       */}
-        {/* mirroring the Timeline Queue's own red/green live-row colors     */}
+        {/* mirroring the Show Rundown's own red/green live-row colors     */}
         {/* (`timeline-items.tsx`) and its green On Deck row                 */}
-        {/* (`cue-queue.tsx`).                                               */}
+        {/* (`rundown-list.tsx`).                                               */}
         {/* ---------------------------------------------------------------- */}
         <div
           role='region'
@@ -1217,20 +1225,20 @@ export const GraphicsController: FC = () => {
                       >
                         <Space size={8}>
                           <Typography.Text strong>
-                            Timeline Queue
+                            Show Rundown
                           </Typography.Text>
                         </Space>
                         {/* Not a picker: clicking a row does nothing.
                             Quick Play takes it to air now; Delete removes it. */}
-                        <CueQueueList
-                          entries={cueQueue.entries}
-                          rowInfo={queueRowInfo}
+                        <RundownList
+                          entries={show.entries}
+                          rowInfo={rundownRowInfo}
                           refreshInfo={queueRowRefresh.refreshInfo}
                           loadedEntryId={currentLoadedItem?.entryId ?? null}
-                          onReorder={cueQueue.reorder}
-                          onRemove={cueQueue.removeEntry}
-                          onQuickPlay={handleQuickPlayQueueEntry}
-                          onRefresh={handleRefreshQueueEntry}
+                          onReorder={show.reorder}
+                          onRemove={show.removeEntry}
+                          onQuickPlay={handleQuickPlayEntry}
+                          onRefresh={handleRefreshEntry}
                         />
                         {/* Search-to-add: picking a timeline here queues it
                             (prompting for template values first if it has
@@ -1244,7 +1252,7 @@ export const GraphicsController: FC = () => {
                           size='small'
                           style={{ width: '100%' }}
                           placeholder='Search timelines to add…'
-                          disabled={!eventKey || cueQueue.isSaving}
+                          disabled={!eventKey || show.isSaving}
                           optionFilterProp='label'
                           options={(publishedTimelines ?? []).map((t) => ({
                             value: t.timelineId,
@@ -1284,7 +1292,7 @@ export const GraphicsController: FC = () => {
                               />
                             ) : undefined
                           }
-                          emptyText='No timeline is cued to the transport. Load one from the Editor tab or Quick Play one from the Timeline Queue.'
+                          emptyText='No timeline is cued to the transport. Load one from the Editor tab or Quick Play one from the Show Rundown.'
                         />
                       </Col>
                     </Row>
@@ -1322,7 +1330,7 @@ export const GraphicsController: FC = () => {
             : undefined
         }
         confirmText={
-          variableModal?.kind === 'cue-spec' ? 'Cue' : 'Add to queue'
+          variableModal?.kind === 'cue-spec' ? 'Cue' : 'Add to rundown'
         }
         onCancel={() => setVariableModal(null)}
         onSubmit={handleVariableModalSubmit}
