@@ -1,0 +1,40 @@
+name: EMS Graphics System Smoke (Non-Blocking)
+
+# The end-to-end graphics smoke test builds every workspace, starts the api and
+# realtime services, serves the built web bundle and drives it with a headless
+# Chromium-family browser. It takes minutes and depends on a browser binary, so
+# it is deliberately NOT part of the per-push pull-request gate in build.yml.
+# It runs on demand and on a weekly schedule, and no branch protection should
+# require it.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays 07:00 UTC.
+    - cron: '0 7 * * 1'
+
+jobs:
+  smoke:
+    name: Graphics system smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v3
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify graphics system
+        env:
+          # The script defaults to a Windows Edge path; point it at the Chrome
+          # preinstalled on the Ubuntu runner image.
+          EMS_LAYOUT_BROWSER: /usr/bin/google-chrome
+        run: npm run verify:graphics-system

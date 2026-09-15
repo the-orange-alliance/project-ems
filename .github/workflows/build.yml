@@ -27,5 +27,8 @@ jobs:
       - name: Check types
         run: npm run check-types
 
-      # - name: Run tests
-      #   run: npm test
+      - name: Run tests
+        run: npm test
+
+      - name: Check graphics legacy contract
+        run: npm run check:graphics-contract
