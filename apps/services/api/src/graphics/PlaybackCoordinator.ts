@@ -15,6 +15,7 @@ import {
   type PlaybackAcknowledgment,
   type PlaybackCommand,
   type PlaybackState,
+  type RundownEntryRef,
   type PreparedGraphic
 } from '@toa-lib/models/base';
 import { canonicalJson } from '@toa-lib/models/seasons/stats';
@@ -27,11 +28,19 @@ export interface PlaybackCommandRecord {
 
 export interface PlaybackStorage {
   loadPlayback(eventKey: string): Promise<PlaybackState>;
+  /**
+   * `consume` (only ever set for a `load` command that declared one - see
+   * `rundownEntryRefZod`) must be applied in the SAME durable transaction as
+   * the state write, or not at all. The coordinator relies on that: it is what
+   * makes "this entry is on the transport AND out of the show" a single fact
+   * rather than two writes with a window between them.
+   */
   savePlayback(
     eventKey: string,
     state: PlaybackState,
     expectedRevision: number,
-    command?: PlaybackCommandRecord
+    command?: PlaybackCommandRecord,
+    consume?: RundownEntryRef
   ): Promise<PlaybackState>;
   loadCommand(
     eventKey: string,
@@ -397,11 +406,27 @@ export class PlaybackCoordinator {
     }
   }
 
+  /**
+   * The ordered-show entry this command consumes, if any. Derived from the
+   * command itself rather than passed alongside it so the consumption is part
+   * of the command's fingerprint: replaying the request id returns the
+   * original acknowledgment and cannot remove a second entry.
+   *
+   * Deliberately read only on the command-bearing commit (the `mutate` /
+   * `beginPreparation` one that sets `state.loaded`). `completePreparation` /
+   * `failPreparation` commit no command record and therefore never re-consume.
+   */
+  private consumptionOf(
+    command: PlaybackCommand | undefined
+  ): RundownEntryRef | undefined {
+    return command?.type === 'load' ? command.consume : undefined;
+  }
+
   private async commit(
     previous: PlaybackState,
     draft: PlaybackState,
     requestId: string,
-    command?: { fingerprint: string; type: PlaybackCommand['type'] }
+    command?: { fingerprint: string; command: PlaybackCommand }
   ): Promise<PlaybackAcknowledgment> {
     if (draft.eventKey !== previous.eventKey)
       throw new PlaybackCoordinatorError({
@@ -429,12 +454,13 @@ export class PlaybackCoordinator {
             fingerprint: command.fingerprint,
             acknowledgment: clone(acknowledgment)
           }
-        : undefined
+        : undefined,
+      this.consumptionOf(command?.command)
     );
     this.states.set(state.eventKey, clone(state));
     if (
-      command?.type === 'clear' ||
-      command?.type === 'take' ||
+      command?.command.type === 'clear' ||
+      command?.command.type === 'take' ||
       canonicalJson(previous.program) !== canonicalJson(state.program)
     )
       this.programEpochs.set(
@@ -499,7 +525,7 @@ export class PlaybackCoordinator {
         });
         return await this.commit(current, draft, command.requestId, {
           fingerprint,
-          type: command.type
+          command
         });
       } catch (error) {
         // A failed write must not update memory or publish the uncommitted draft.

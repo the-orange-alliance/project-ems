@@ -56,7 +56,10 @@ import { LiveMonitor } from './live-monitor.js';
 import { QuickStatDrawer } from './quick-stat-drawer.js';
 import { TimelineItemsPanel } from './timeline-items-panel.js';
 import { TimelineList } from './timeline-list.js';
-import { useShowRundown } from './use-show-rundown.js';
+import {
+  useShowRundown,
+  type ConsumeOptions
+} from './use-show-rundown.js';
 import { useTimelinePreflight } from './use-timeline-preflight.js';
 import { useQueueRowRefresh } from './use-queue-row-refresh.js';
 import { useTimelineEditor } from './use-timeline-editor.js';
@@ -292,20 +295,43 @@ export const GraphicsController: FC = () => {
   // previous On Deck entry was taken/removed, or the producer reordered the
   // rundown. Purely a stats-cache warm (see `use-queue-row-refresh.ts`) -
   // never touches the live transport, so it's safe to fire regardless of
-  // what else is on air. `refreshedOnDeckRef` fires this once per
-  // PROMOTION (keyed by entryId), not on every render the same entry
-  // happens to still be on deck for - the row's own Refresh icon covers
-  // "it's been sitting a while, refresh it again".
+  // what else is on air. Fires once per PROMOTION, not on every render the
+  // same entry happens to still be on deck for - the row's own Refresh icon
+  // covers "it's been sitting a while, refresh it again".
+  //
+  // The completion key is the entry AND the timeline revision it warms, and
+  // it is recorded only once `refreshEntry` reports that it actually had
+  // items to fetch. It used to be the entry id alone, written BEFORE the
+  // timeline lookup: when the show's SWR response arrived before the
+  // timelines' one (a coin flip on a cold page), the warm ran with
+  // `undefined`, returned immediately with nothing to do, and the ref then
+  // blocked every retry - so the On Deck entry was never warmed at all for
+  // the rest of the session (F19). Keying on the timeline revision also
+  // re-warms an entry whose timeline was edited while it sat on deck.
   const onDeckEntryId = show.entries[0]?.entryId ?? null;
-  const refreshedOnDeckRef = useRef<string | null>(null);
+  const warmedOnDeckRef = useRef<string | null>(null);
   useEffect(() => {
     if (!eventKey || !onDeckEntryId) return;
-    if (refreshedOnDeckRef.current === onDeckEntryId) return;
-    refreshedOnDeckRef.current = onDeckEntryId;
     const entry = show.entries.find((e) => e.entryId === onDeckEntryId);
     if (!entry) return;
     const timeline = timelines?.find((t) => t.timelineId === entry.timelineId);
-    void queueRowRefresh.refreshEntry(eventKey, entry, timeline);
+    // No timeline yet (still loading, or genuinely missing): record nothing,
+    // so the next render with real timelines in hand tries again.
+    if (!timeline) return;
+    const key = `${onDeckEntryId}:${timeline.timelineId}:${timeline.revision}`;
+    if (warmedOnDeckRef.current === key) return;
+    warmedOnDeckRef.current = key;
+    void queueRowRefresh.refreshEntry(eventKey, entry, timeline).then(
+      (counts) => {
+        // `null` means the warm never started (no items, or one was already
+        // running for this row). Release the key so a later attempt can run.
+        if (counts === null && warmedOnDeckRef.current === key)
+          warmedOnDeckRef.current = null;
+      },
+      () => {
+        if (warmedOnDeckRef.current === key) warmedOnDeckRef.current = null;
+      }
+    );
   }, [eventKey, onDeckEntryId, show.entries, timelines, queueRowRefresh]);
 
   const handleRefreshEntry = (entryId: string) => {
@@ -549,47 +575,69 @@ export const GraphicsController: FC = () => {
     })();
   };
 
-  // Pulls the Show Rundown's On Deck entry (position 1) onto the transport
-  // and removes it from the rundown. The ONE place "advance the show"
-  // happens - used explicitly by `handleClearAndAdvanceQueue` and
-  // automatically by the idle effect below. Passes the entry's own bound
-  // `values` through to `load` so a templated entry's bindings actually
-  // resolve - `handleEnqueueTimeline` already collects these via the
-  // variable-fill modal before the entry is ever added.
+  // Advances the show: consumes an entry and puts it on the transport, as ONE
+  // atomic server command (`POST /live/show/advance`, see `advanceShow` in
+  // `controllers/GraphicsPlayback.ts`). The ONE place "advance the show"
+  // happens - the row Take buttons, "Animate Out and Clear", and the idle
+  // effect below all go through here.
   //
-  // STILL NOT ATOMIC: load and remove are two calls, so a failure between
-  // them leaves the entry both loaded and still in the rundown. Task 07 owns
-  // collapsing this into one server operation (and the single-flight guard
-  // F9 asks for); Task 06 only moved the writes onto the revisioned model.
-  const pullOnDeckEntry = async () => {
+  // This used to be a browser sequence: `live.load`, then a rundown removal,
+  // with `clear` before and `take` between it depending on the caller. That
+  // sequence could not be made safe from here. A failure between the load and
+  // the removal left the entry both loaded and still queued - so the show
+  // could run it twice - and every caller had its own chance to fire twice
+  // (F8/F9). The server now removes the entry inside the same durable
+  // transaction that loads it, keyed by one request id, and answers with both
+  // authoritative documents.
+  //
+  // A rejection is reported, never swallowed: `outcome: 'rejected'` carries
+  // the server's own reason (a lost revision race, an entry someone else
+  // consumed, a cue that cannot go to air) and the producer sees it.
+  const advance = async (
+    options: ConsumeOptions,
+    failureContext: string
+  ): Promise<void> => {
     if (!eventKey) return;
-    const [onDeck] = show.entries;
-    if (!onDeck) return;
+    const commandEvent = eventKey;
     try {
-      await graphicsApi.live.load(
-        eventKey,
-        onDeck.timelineId,
-        onDeck.values ?? {}
-      );
-      refreshCueSilently(eventKey);
-      await show.removeEntry(onDeck.entryId);
+      const result = await show.consume(options);
+      if (!result || activeEventRef.current !== commandEvent) return;
+      if (result.outcome === 'rejected') {
+        showErrorSnackbar(
+          failureContext,
+          result.acknowledgment.ok
+            ? 'The show could not be advanced.'
+            : result.acknowledgment.error.message
+        );
+        return;
+      }
+      // Something new is on the transport: kick off the same best-effort cue
+      // recalculation the old two-call path did.
+      if (result.consumedEntryId !== null) refreshCueSilently(commandEvent);
     } catch (e) {
-      showErrorSnackbar('Error while advancing the show rundown.', e);
+      if (activeEventRef.current === commandEvent)
+        showErrorSnackbar(failureContext, e);
     }
   };
 
   // Whenever the transport is fully idle (nothing loaded at all - not just
   // off air) and the Show Rundown has something waiting, pull it straight
-  // into the controller: loaded, but deliberately NOT taken to air. Fires
-  // once per idle-then-queued transition - once `pullOnDeckEntry` succeeds,
-  // `loaded` becomes non-null and this effect's guard stops it from firing
-  // again after the authoritative envelope arrives.
+  // into the controller: loaded, but deliberately NOT taken to air.
+  //
+  // Held stable in a ref so this effect depends only on the three facts that
+  // decide whether to fire, not on the identity of a handler that is rebuilt
+  // every render. `show.consume` is single-flight per entry and its request id
+  // is derived, so a StrictMode double-invoke, a re-render mid-flight, or a
+  // remount all join the one in-flight advance instead of consuming a second
+  // entry (F9).
+  const advanceRef = useRef(advance);
+  advanceRef.current = advance;
   useEffect(() => {
     if (!eventKey) return;
     if (loaded !== null) return;
-    if (show.entries.length === 0) return;
-    void pullOnDeckEntry();
-  }, [eventKey, loaded, show.entries.length]);
+    if (onDeckEntryId === null) return;
+    void advanceRef.current({}, 'Error while advancing the show rundown.');
+  }, [eventKey, loaded, onDeckEntryId]);
 
   // Prev/Go replace the old four-button Prev/Go/Take/Next row. There is no
   // longer a separate cue-only step: each press moves the transport (back
@@ -674,18 +722,17 @@ export const GraphicsController: FC = () => {
   // so it goes genuinely idle rather than leaving the just-cleared show
   // sitting there as "loaded". Also what Go does automatically at the last
   // item (see `handleGo`).
+  //
+  // One command now, not three: the server clears, consumes the on-deck entry
+  // and loads it - or, with an empty show, clears and unloads - under a single
+  // request id. The browser no longer decides between those paths from a
+  // possibly-stale `show.entries`, which is what let a concurrently-added
+  // entry be skipped (or a just-consumed one be counted twice).
   const handleClearAndAdvanceQueue = async () => {
-    if (!eventKey) return;
-    try {
-      await graphicsApi.live.clear(eventKey);
-      if (show.entries.length > 0) {
-        await pullOnDeckEntry();
-      } else {
-        await graphicsApi.live.unload(eventKey);
-      }
-    } catch (e) {
-      showErrorSnackbar('Error while clearing and advancing the show.', e);
-    }
+    await advance(
+      { clearFirst: true },
+      'Error while clearing and advancing the show.'
+    );
   };
 
   // Replays the entrance animation on every preview (PVW) screen, so the
@@ -807,28 +854,25 @@ export const GraphicsController: FC = () => {
     }
   };
 
-  // Quick Play: loads the queue entry's OWN timeline onto the transport
-  // (not `queueGo`/`go`, which jumps by item index WITHIN whatever is
-  // already loaded - meaningless for an entry pointing at a different
-  // timeline), then takes it to air immediately. The existing Take
-  // pipeline (see `PlaybackProgram` / the audience display's transition
-  // machine) handles animating the current graphic out and this one in,
-  // exactly as pressing Take would. Consumes the entry from the queue,
-  // same as `pullOnDeckEntry` - it's gone once it's played. There is
+  // Quick Play: loads the entry's OWN timeline onto the transport (not
+  // `queueGo`/`go`, which jumps by item index WITHIN whatever is already
+  // loaded - meaningless for an entry pointing at a different timeline), then
+  // takes it to air immediately. The existing Take pipeline (see
+  // `PlaybackProgram` / the audience display's transition machine) handles
+  // animating the current graphic out and this one in, exactly as pressing
+  // Take would. Consumes the entry - it's gone once it's played. There is
   // deliberately no "load only" row action any more - the row's one button
   // either puts this on air now or does nothing at all.
+  //
+  // Load, take and removal are ONE server command keyed by one derived request
+  // id, so a double click (or a click landing while the first is still in
+  // flight) cannot consume two entries or double-take: the second press joins
+  // the first advance, and the row's button is disabled while it runs.
   const handleQuickPlayEntry = async (entryId: string) => {
-    if (!eventKey) return;
-    const entry = show.entries.find((e) => e.entryId === entryId);
-    if (!entry) return;
-    try {
-      await graphicsApi.live.load(eventKey, entry.timelineId, entry.values);
-      refreshCueSilently(eventKey);
-      await graphicsApi.live.take(eventKey);
-      await show.removeEntry(entry.entryId);
-    } catch (e) {
-      showErrorSnackbar('Error while taking the rundown timeline to air.', e);
-    }
+    await advance(
+      { entryId, take: true },
+      'Error while taking the rundown timeline to air.'
+    );
   };
 
   // Opens the audience display "pinned" to the stats-graphics PGM or PVW bus
@@ -1239,6 +1283,7 @@ export const GraphicsController: FC = () => {
                           onRemove={show.removeEntry}
                           onQuickPlay={handleQuickPlayEntry}
                           onRefresh={handleRefreshEntry}
+                          pendingEntryIds={show.pendingEntryIds}
                         />
                         {/* Search-to-add: picking a timeline here queues it
                             (prompting for template values first if it has

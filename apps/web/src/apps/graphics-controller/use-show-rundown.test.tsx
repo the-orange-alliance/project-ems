@@ -1,18 +1,21 @@
-import type { Rundown } from '@toa-lib/models';
-import { renderHook, waitFor } from '@testing-library/react';
+import type { Rundown, ShowAdvanceResult } from '@toa-lib/models';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useShowRundown } from './use-show-rundown.js';
+import { ON_DECK, useShowRundown } from './use-show-rundown.js';
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
   patch: vi.fn(),
+  advance: vi.fn(),
   revalidate: vi.fn(),
   mutateProducerShow: vi.fn(),
   swrData: { current: null as Rundown | null }
 }));
 
 vi.mock('src/api/use-graphics-data.js', () => ({
-  graphicsApi: { show: { get: mocks.get, patch: mocks.patch } },
+  graphicsApi: {
+    show: { get: mocks.get, patch: mocks.patch, advance: mocks.advance }
+  },
   useProducerShow: () => ({
     data: mocks.swrData.current,
     mutate: mocks.revalidate
@@ -41,11 +44,23 @@ const conflict = () =>
     code: 'CONFLICT'
   });
 
+const advanceResult = (
+  overrides: Partial<ShowAdvanceResult> = {}
+): ShowAdvanceResult =>
+  ({
+    outcome: 'loaded',
+    consumedEntryId: 'e1',
+    acknowledgment: { ok: true, requestId: 'r', state: {}, replayed: false },
+    show: show(5, []),
+    ...overrides
+  }) as ShowAdvanceResult;
+
 describe('useShowRundown', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.swrData.current = null;
     mocks.patch.mockResolvedValue(show(1, []));
+    mocks.advance.mockResolvedValue(advanceResult());
   });
 
   it('cannot resurrect entries a concurrent edit removed', async () => {
@@ -137,7 +152,9 @@ describe('useShowRundown', () => {
 
   it('keeps an entry the caller did not name rather than dropping it from the order', async () => {
     mocks.swrData.current = null;
-    mocks.get.mockResolvedValue(show(2, [entry('e1'), entry('e2'), entry('e3')]));
+    mocks.get.mockResolvedValue(
+      show(2, [entry('e1'), entry('e2'), entry('e3')])
+    );
 
     const { result } = renderHook(() => useShowRundown('event-a'));
     await result.current.reorder(['e2', 'e1']);
@@ -148,6 +165,121 @@ describe('useShowRundown', () => {
       'e1',
       'e3'
     ]);
+  });
+
+  it('applies the document a successful write returned, without revalidating behind it', async () => {
+    mocks.swrData.current = show(2, [entry('e1')]);
+    mocks.patch.mockResolvedValue(show(3, []));
+
+    const { result } = renderHook(() => useShowRundown('event-a'));
+    await result.current.removeEntry('e1');
+
+    // The API layer applies the returned document to SWR once; a second
+    // re-read from here would race the first and could land staler (F22).
+    expect(mocks.patch).toHaveBeenCalledTimes(1);
+    expect(mocks.mutateProducerShow).not.toHaveBeenCalled();
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+
+  it('sends one advance command rather than a load-then-remove sequence', async () => {
+    mocks.swrData.current = show(4, [entry('e1'), entry('e2')]);
+    const { result } = renderHook(() => useShowRundown('event-a'));
+
+    await result.current.consume({ entryId: 'e1', take: true });
+
+    expect(mocks.advance).toHaveBeenCalledTimes(1);
+    expect(mocks.advance).toHaveBeenCalledWith('event-a', {
+      requestId: 'advance-e1-r4',
+      entryId: 'e1',
+      take: true
+    });
+    // No rundown PATCH: the server removed the entry as part of the command.
+    expect(mocks.patch).not.toHaveBeenCalled();
+  });
+
+  it('coalesces a double invocation into one advance (double click, StrictMode effect replay)', async () => {
+    mocks.swrData.current = show(4, [entry('e1')]);
+    let release!: (value: ShowAdvanceResult) => void;
+    mocks.advance.mockReturnValue(
+      new Promise<ShowAdvanceResult>((resolve) => {
+        release = resolve;
+      })
+    );
+    const { result } = renderHook(() => useShowRundown('event-a'));
+
+    const first = result.current.consume();
+    const second = result.current.consume();
+    release(advanceResult());
+    const [a, b] = await Promise.all([first, second]);
+
+    expect(mocks.advance).toHaveBeenCalledTimes(1);
+    expect(a).toBe(b);
+  });
+
+  it('derives the request id from the entry and show revision, so a retry is the SAME request', async () => {
+    mocks.swrData.current = show(9, [entry('e1')]);
+    const { result } = renderHook(() => useShowRundown('event-a'));
+
+    await result.current.consume();
+    await result.current.consume();
+
+    // Both advances of the on-deck position at revision 9 carry one id, so the
+    // server executes the operator's action exactly once however many times
+    // the browser is provoked into sending it.
+    expect(mocks.advance.mock.calls[0][1].requestId).toBe('advance-on-deck-r9');
+    expect(mocks.advance.mock.calls[1][1].requestId).toBe('advance-on-deck-r9');
+  });
+
+  it('marks the entry pending while its advance is in flight, and clears it after', async () => {
+    mocks.swrData.current = show(4, [entry('e1')]);
+    let release!: (value: ShowAdvanceResult) => void;
+    mocks.advance.mockReturnValue(
+      new Promise<ShowAdvanceResult>((resolve) => {
+        release = resolve;
+      })
+    );
+    const { result } = renderHook(() => useShowRundown('event-a'));
+
+    let pending!: Promise<unknown>;
+    act(() => {
+      pending = result.current.consume();
+    });
+    await waitFor(() =>
+      expect(result.current.pendingEntryIds).toEqual([ON_DECK])
+    );
+
+    await act(async () => {
+      release(advanceResult());
+      await pending;
+    });
+    expect(result.current.pendingEntryIds).toEqual([]);
+  });
+
+  it('returns a rejected advance rather than throwing, so the caller can report the server’s own reason', async () => {
+    mocks.swrData.current = show(4, [entry('e1')]);
+    mocks.advance.mockResolvedValue(
+      advanceResult({
+        outcome: 'rejected',
+        consumedEntryId: null,
+        acknowledgment: {
+          ok: false,
+          requestId: 'r',
+          error: {
+            code: 'CONFLICT',
+            message:
+              'Show revision changed; reload the rundown before advancing.',
+            retryable: true
+          }
+        },
+        show: show(6, [entry('e2')])
+      } as Partial<ShowAdvanceResult>)
+    );
+    const { result } = renderHook(() => useShowRundown('event-a'));
+
+    const outcome = await result.current.consume();
+
+    expect(outcome?.outcome).toBe('rejected');
+    expect(result.current.pendingEntryIds).toEqual([]);
   });
 
   it('exposes the entries and revision the server last committed', () => {

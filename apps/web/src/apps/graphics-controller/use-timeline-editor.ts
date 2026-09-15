@@ -57,15 +57,15 @@ export interface UseTimelineEditorResult {
  *    survives switching `selectedItemId` around within the same timeline -
  *    only switching to a *different* timeline resets the buffer, since at
  *    that point there is a different timeline's items to stage.
- *  - `save()` PATCHes the staged items, `mutate()`s the timelines SWR
- *    cache, then clears the buffer. `revert()` just clears the buffer,
+ *  - `save()` PATCHes the staged items (the API layer invalidates the
+ *    timelines SWR cache once, as part of the write), then clears the buffer. `revert()` just clears the buffer,
  *    snapping `items` back to whatever is on the server.
  */
 export const useTimelineEditor = (
   eventKey: string | null | undefined,
   timelineId: string | null
 ): UseTimelineEditorResult => {
-  const { data: timelines, mutate } = useTimelines(eventKey);
+  const { data: timelines } = useTimelines(eventKey);
 
   const remoteTimeline =
     timelines?.find((t) => t.timelineId === timelineId) ?? null;
@@ -184,13 +184,18 @@ export const useTimelineEditor = (
       // `remoteTimeline.revision` is the optimistic-concurrency token the
       // PATCH requires - the server rejects a save whose `expectedRevision`
       // doesn't match the row's current `revision` with a 409.
+      // `graphicsApi.update.timeline` already invalidates every timelines
+      // cache entry for this event (see `isTimelinesKeyFor`), which includes
+      // the key this hook reads. Calling the bound `mutate()` as well fired a
+      // SECOND revalidation of the same key concurrently with the first, and
+      // whichever response happened to land last won - including a stale one
+      // (F22). One invalidation, at the layer that owns the write.
       await graphicsApi.update.timeline(
         eventKey,
         timelineId,
         patch,
         remoteTimeline.revision
       );
-      await mutate();
       setModifiedItems(null);
       setModifiedVariables(null);
     } finally {
@@ -201,8 +206,7 @@ export const useTimelineEditor = (
     timelineId,
     remoteTimeline,
     modifiedItems,
-    modifiedVariables,
-    mutate
+    modifiedVariables
   ]);
 
   return {

@@ -1129,6 +1129,33 @@ const commandFields = {
   requestId: graphicIdentifierZod,
   expectedRevision: graphicRevisionZod.optional()
 };
+
+/**
+ * Names the ordered-show entry a `load` CONSUMES as part of the same durable
+ * write that puts it on the transport.
+ *
+ * Loading the on-deck entry and removing it from the rundown used to be two
+ * browser requests (`live.load` then a rundown PATCH). A failure between them
+ * left the entry both loaded and still queued - so the producer could run it
+ * twice - and a retry or a StrictMode effect replay could consume two entries
+ * for one operator action. With this field the removal happens inside the SAME
+ * SQLite transaction as the playback commit that sets `state.loaded`: either
+ * the entry is gone AND the show is on the transport, or neither happened.
+ *
+ * `expectedRundownRevision` is the show revision the caller chose this entry
+ * from. A mismatch (someone reordered or removed in between) rolls the whole
+ * command back with CONFLICT rather than consuming an entry the operator never
+ * saw in that position. Omit it only for a caller that genuinely wants
+ * "whatever that entry id is now", not "the entry I was looking at".
+ */
+export const rundownEntryRefZod = z
+  .object({
+    rundownId: graphicIdentifierZod,
+    entryId: graphicIdentifierZod,
+    expectedRundownRevision: graphicRevisionZod.optional()
+  })
+  .strict();
+export type RundownEntryRef = z.infer<typeof rundownEntryRefZod>;
 export const playbackCommandZod = z.discriminatedUnion('type', [
   // `values` resolves any of the timeline's items' template bindings at load
   // time (the same variable-name -> positive-integer map `load-rundown`
@@ -1143,7 +1170,11 @@ export const playbackCommandZod = z.discriminatedUnion('type', [
       timelineId: graphicIdentifierZod,
       values: z
         .record(z.string().min(1), z.number().int().positive())
-        .optional()
+        .optional(),
+      // Atomic consume-and-load: see `rundownEntryRefZod`. Part of the
+      // command's own fingerprint, so replaying this request id returns the
+      // original acknowledgment and never removes a second entry.
+      consume: rundownEntryRefZod.optional()
     })
     .strict(),
   z
@@ -1224,6 +1255,44 @@ export const playbackAcknowledgmentZod = z.discriminatedUnion('ok', [
     .strict()
 ]);
 export type PlaybackAcknowledgment = z.infer<typeof playbackAcknowledgmentZod>;
+
+/**
+ * What one operator "advance the show" action did.
+ *
+ * `POST /graphics/:eventKey/live/show/advance` replaces the browser sequences
+ * that used to spell this out as three or four separate requests (clear ->
+ * load -> take -> rundown PATCH). One request, one request id, one answer -
+ * carrying BOTH authoritative documents the producer app renders from, so the
+ * caller applies them to its caches once instead of revalidating twice and
+ * racing itself.
+ *
+ * `outcome` distinguishes the cases the old code could not report at all:
+ *  - `loaded` / `loaded-and-taken`: the entry was consumed and is on the
+ *    transport (and, for the latter, on air).
+ *  - `empty`: there was nothing to advance to. With `clearFirst`, the
+ *    transport was unloaded; this is a normal outcome, never an error.
+ *  - `rejected`: nothing was consumed. `acknowledgment.ok` is false and names
+ *    the reason; `show` is still the server's current document.
+ */
+export const showAdvanceOutcomeZod = z.enum([
+  'loaded',
+  'loaded-and-taken',
+  'empty',
+  'rejected'
+]);
+export type ShowAdvanceOutcome = z.infer<typeof showAdvanceOutcomeZod>;
+export const showAdvanceResultZod = z
+  .object({
+    outcome: showAdvanceOutcomeZod,
+    /** The entry this action consumed, or `null` when it consumed nothing. */
+    consumedEntryId: graphicIdentifierZod.nullable(),
+    /** The acknowledgment of the command that determined `outcome` (the load, the take, or the rejection). */
+    acknowledgment: playbackAcknowledgmentZod,
+    /** The show as it stands AFTER this action - apply it to the client cache verbatim. */
+    show: rundownZod
+  })
+  .strict();
+export type ShowAdvanceResult = z.infer<typeof showAdvanceResultZod>;
 
 /** Semantics shared by API, Companion relay, and browser clients. */
 export const GRAPHICS_PLAYBACK_POLICY = {

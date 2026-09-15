@@ -9,6 +9,11 @@ import {
   queryGraphicFrame,
   type GraphicFrameContext
 } from '../../api/graphic-frame-query.js';
+import {
+  backgroundQueries,
+  statQueryKey,
+  MAX_BACKGROUND_QUERIES
+} from '../../api/bounded-query-scheduler.js';
 import { useMatchesForEvent } from '../../api/use-match-data.js';
 import {
   useStatsCatalogue,
@@ -46,8 +51,17 @@ export interface UseTimelinePreflightResult {
   recheck: () => void;
 }
 
-/** How many item queries may be in flight at once. A 20-item timeline must not slam the stats worker pool mid-show. */
-const MAX_PARALLEL_CHECKS = 4;
+/**
+ * How many item checks this hook runs at once.
+ *
+ * Kept at the shared page-wide ceiling rather than a private one: the limit
+ * that matters is how many background stat queries the PAGE has outstanding,
+ * and preflight is only one of the things making them (On Deck warming is the
+ * other, and around a promotion both run together). Each consumer still walks
+ * its own work list; `backgroundQueries` is what actually holds the ceiling
+ * and coalesces a spec both of them want.
+ */
+const MAX_PARALLEL_CHECKS = MAX_BACKGROUND_QUERIES;
 
 /**
  * Identity of "this exact spec, resolved against these exact values". Changing
@@ -134,11 +148,14 @@ function thrownReason(error: unknown): string {
  * Deliberately `refresh: false`: this is a prediction, not a recalculation. It
  * reads the cache the on-deck warm (`use-queue-row-refresh.ts`) has usually
  * already populated, and a cold miss simply warms the entry that the cue is
- * about to need anyway. It must never force recomputation mid-show.
+ * about to need anyway. It must never force recomputation mid-show. That is
+ * also why `refresh` is part of the scheduler key below: a prediction read and
+ * a forced warm of the same spec are NOT interchangeable requests.
  *
- * Structured after `use-queue-row-refresh.ts`, which already fans a query out
- * across every item of a timeline - the difference is that this one KEEPS each
- * outcome instead of `allSettled`-ing them into the void.
+ * Shares its concurrency ceiling and its request de-duplication with the On
+ * Deck warm (`use-queue-row-refresh.ts`) through `bounded-query-scheduler.ts`:
+ * both walk a timeline's items around the same promotion, and neither may
+ * bound the other's fan-out on its own.
  */
 export const useTimelinePreflight = (
   eventKey: string | null | undefined,
@@ -236,11 +253,22 @@ export const useTimelinePreflight = (
         const entry = needsQuery[cursor++];
         if (!entry) return;
         try {
-          const outcome = await queryGraphicFrame(eventKey, entry.spec, {
-            refresh: false,
-            values: values ?? {},
-            context: contextRef.current
-          });
+          // Through the shared scheduler, so a spec the On Deck warm is
+          // already fetching is joined rather than queried a second time, and
+          // both fan-outs together stay under one ceiling.
+          const outcome = await backgroundQueries.run(
+            statQueryKey(
+              eventKey,
+              { spec: entry.spec, values: values ?? {} },
+              false
+            ),
+            () =>
+              queryGraphicFrame(eventKey, entry.spec, {
+                refresh: false,
+                values: values ?? {},
+                context: contextRef.current
+              })
+          );
           settle(
             entry.key,
             outcome.ok

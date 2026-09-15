@@ -7,6 +7,7 @@ import {
   PlaybackStateEnvelope,
   PRODUCER_SHOW_RUNDOWN_ID,
   Rundown,
+  ShowAdvanceResult,
   Timeline,
   VersionedTimeline,
   graphicSpecZod,
@@ -15,6 +16,7 @@ import {
   playbackAcknowledgmentZod,
   playbackStateEnvelopeZod,
   rundownZod,
+  showAdvanceResultZod,
   variableValuesZod,
   versionedTimelineZod
 } from '@toa-lib/models';
@@ -202,15 +204,60 @@ export const graphicsApi = {
       localClient.get<Rundown>(`/graphics/${eventKey}/show`, {
         schema: rundownZod
       }),
+    // Every write below returns the document the server committed, and applies
+    // it to the SWR cache HERE, once (`applyProducerShow`). Callers must not
+    // follow a write with a `mutate()` of their own: that second revalidation
+    // raced the first, and whichever response landed last won - including a
+    // stale one (F22).
     patch: async (
       eventKey: string,
       entries: Rundown['entries'],
       expectedRevision: number
-    ): Promise<Rundown | null> =>
-      localClient.patch<Rundown>(
+    ): Promise<Rundown | null> => {
+      const updated = await localClient.patch<Rundown>(
         `/graphics/${eventKey}/rundowns/${PRODUCER_SHOW_RUNDOWN_ID}`,
         { body: { entries, expectedRevision }, schema: rundownZod }
-      )
+      );
+      if (updated) applyProducerShow(eventKey, updated);
+      return updated;
+    },
+    /**
+     * The atomic ordered-show operation: consume one entry, load it onto the
+     * transport, and optionally clear what was on air first / take it to air
+     * after - as ONE server command with one request id.
+     *
+     * This replaces the browser sequences that used to spell the same thing
+     * out as `live.load` + a rundown removal (+ `clear`/`take`), which were
+     * neither atomic nor replay-safe: a failure between them left an entry
+     * both loaded and still queued, and a retry or a StrictMode effect replay
+     * consumed a second entry. Retrying with the SAME `requestId` now returns
+     * the original outcome and consumes nothing more.
+     *
+     * The response carries the authoritative show, which is applied to the
+     * cache here - including when the command was rejected, which is exactly
+     * when the caller most needs to see what the server really holds. That is
+     * why this route answers 200 with `outcome: 'rejected'` rather than a
+     * throwing status: an HTTP error would discard that document.
+     */
+    advance: async (
+      eventKey: string,
+      options: {
+        requestId: string;
+        /** Omit to consume whatever is on deck (position 1). */
+        entryId?: string;
+        /** The show revision this action was decided from, when the caller has one. */
+        expectedShowRevision?: number;
+        take?: boolean;
+        clearFirst?: boolean;
+      }
+    ): Promise<ShowAdvanceResult | null> => {
+      const result = await playbackClient.post<ShowAdvanceResult>(
+        `/graphics/${eventKey}/live/show/advance`,
+        { body: options, schema: showAdvanceResultZod }
+      );
+      if (result) applyProducerShow(eventKey, result.show);
+      return result;
+    }
   },
   live: {
     /** Lossless authoritative read. Command methods remain legacy until Task 05. */
@@ -442,6 +489,20 @@ export const useProducerShow = (
     }
   );
 
-/** Revalidates the producer-show cache after a write commits. */
+/**
+ * Re-reads the producer-show cache from the server.
+ *
+ * Only for recovering after a write FAILED, where the client has no committed
+ * document to trust. A successful write never needs this - it already returned
+ * the authoritative document, which `applyProducerShow` below writes straight
+ * into the cache.
+ */
 export const mutateProducerShow = (eventKey: string) =>
   mutate(showKey(eventKey));
+
+/**
+ * Publishes a document the server just returned as the cached show, with no
+ * revalidation - the single-source SWR update this module's writes use.
+ */
+export const applyProducerShow = (eventKey: string, show: Rundown) =>
+  mutate(showKey(eventKey), show, false);

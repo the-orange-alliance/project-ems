@@ -27,12 +27,34 @@ import { Button, Popconfirm, Space, Tag, Tooltip, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { CSSProperties, FC } from 'react';
 import type { QueueRowRefreshInfo } from './use-queue-row-refresh.js';
+import { ON_DECK } from './use-show-rundown.js';
 
-/** "Refresh (last refresh at 14:32)" / "Refresh (never refreshed)" / "Refreshing…" - shared by the On Deck row and every sortable row's refresh icon tooltip. */
+/**
+ * The refresh icon's tooltip, shared by the On Deck row and every sortable row.
+ *
+ * It reports what the last warm actually DID, because the old version reported
+ * an attempt as a success: every item could fail and the row still said "last
+ * refresh at 14:32" (F10). A warm in which nothing succeeded now says so, and
+ * a partial one names the count rather than implying the whole row is warm.
+ */
 function refreshTooltip(info: QueueRowRefreshInfo | undefined): string {
   if (info?.fetching) return 'Refreshing…';
-  if (!info?.lastRefreshedAtUtc) return 'Refresh (never refreshed)';
-  return `Refresh (last refresh at ${dayjs(info.lastRefreshedAtUtc).format('HH:mm')})`;
+  if (!info) return 'Refresh (never refreshed)';
+  const at = info.lastRefreshedAtUtc
+    ? `last refresh at ${dayjs(info.lastRefreshedAtUtc).format('HH:mm')}`
+    : 'never refreshed';
+  if (info.failed > 0 && info.succeeded === 0)
+    return `Refresh (last attempt failed for all ${info.failed} item${info.failed === 1 ? '' : 's'}; ${at})`;
+  if (info.failed > 0)
+    return `Refresh (${info.succeeded} of ${info.attempted} items refreshed, ${info.failed} failed; ${at})`;
+  if (info.unavailable > 0 && info.attempted === 0)
+    return `Refresh (nothing to refresh yet: ${info.unavailable} item${info.unavailable === 1 ? '' : 's'} still need values)`;
+  return `Refresh (${at})`;
+}
+
+/** True when the last warm brought nothing back at all - the row is showing cold data and says so. */
+function refreshFailed(info: QueueRowRefreshInfo | undefined): boolean {
+  return !!info && !info.fetching && info.failed > 0 && info.succeeded === 0;
 }
 
 /**
@@ -87,6 +109,15 @@ export interface RundownListProps {
   onQuickPlay: (entryId: string) => void;
   /** Manually warms this row's stat data ahead of time - the same thing that fires automatically on promotion to On Deck. */
   onRefresh: (entryId: string) => void;
+  /**
+   * Entries with an advance (consume + load, possibly + take) in flight.
+   *
+   * Their Take and Delete buttons are disabled while it runs: a second press
+   * cannot start a second consume - the hook and the server both de-duplicate
+   * it - but a button that still looks pressable during a live take reads as
+   * "nothing happened" and invites exactly that press (F8).
+   */
+  pendingEntryIds: string[];
 }
 
 /** Name + resolved-values text, shared by the On Deck row and every
@@ -124,22 +155,24 @@ const RowLabel: FC<{ info: RundownRowInfo }> = ({ info }) => {
 const RowActions: FC<{
   info: RundownRowInfo;
   refresh: QueueRowRefreshInfo | undefined;
+  pending: boolean;
   onQuickPlay: () => void;
   onRefresh: () => void;
   onRemove: () => void;
-}> = ({ info, refresh, onQuickPlay, onRefresh, onRemove }) => {
+}> = ({ info, refresh, pending, onQuickPlay, onRefresh, onRemove }) => {
   const blocked = blockedReason(info);
   return (
   <Space size={4} onClick={(e) => e.stopPropagation()}>
-    <Tooltip title={blocked ?? 'Take'}>
+    <Tooltip title={pending ? 'Taking…' : (blocked ?? 'Take')}>
       <span>
         <Button
           type='text'
           size='small'
+          loading={pending}
           icon={<PlayCircleOutlined />}
           style={blocked ? undefined : { color: 'var(--ant-color-success)' }}
           aria-label={`Take ${info.timelineName} to air now`}
-          disabled={blocked !== null}
+          disabled={blocked !== null || pending}
           onClick={onQuickPlay}
         />
       </span>
@@ -149,6 +182,7 @@ const RowActions: FC<{
         <Button
           type='text'
           size='small'
+          danger={refreshFailed(refresh)}
           icon={<SyncOutlined spin={refresh?.fetching} />}
           aria-label={`Refresh ${info.timelineName}'s stat data`}
           disabled={info.status === 'missing-timeline' || refresh?.fetching}
@@ -161,12 +195,14 @@ const RowActions: FC<{
       description='This cannot be undone.'
       okText='Remove'
       okType='danger'
+      disabled={pending}
       onConfirm={onRemove}
     >
       <Button
         type='text'
         size='small'
         danger
+        disabled={pending}
         icon={<DeleteOutlined />}
         aria-label={`Remove ${info.timelineName}`}
       />
@@ -178,6 +214,7 @@ const RowActions: FC<{
 interface OnDeckRowProps {
   info: RundownRowInfo;
   refresh: QueueRowRefreshInfo | undefined;
+  pending: boolean;
   isLoaded: boolean;
   onQuickPlay: () => void;
   onRefresh: () => void;
@@ -196,6 +233,7 @@ interface OnDeckRowProps {
 const OnDeckRow: FC<OnDeckRowProps> = ({
   info,
   refresh,
+  pending,
   isLoaded,
   onQuickPlay,
   onRefresh,
@@ -223,6 +261,7 @@ const OnDeckRow: FC<OnDeckRowProps> = ({
     <RowActions
       info={info}
       refresh={refresh}
+      pending={pending}
       onQuickPlay={onQuickPlay}
       onRefresh={onRefresh}
       onRemove={onRemove}
@@ -235,6 +274,7 @@ interface SortableRowProps {
   position: number;
   info: RundownRowInfo;
   refresh: QueueRowRefreshInfo | undefined;
+  pending: boolean;
   isLoaded: boolean;
   onQuickPlay: () => void;
   onRefresh: () => void;
@@ -259,6 +299,7 @@ const SortableRow: FC<SortableRowProps> = ({
   position,
   info,
   refresh,
+  pending,
   isLoaded,
   onQuickPlay,
   onRefresh,
@@ -316,6 +357,7 @@ const SortableRow: FC<SortableRowProps> = ({
       <RowActions
         info={info}
         refresh={refresh}
+        pending={pending}
         onQuickPlay={onQuickPlay}
         onRefresh={onRefresh}
         onRemove={onRemove}
@@ -370,8 +412,17 @@ export const RundownList: FC<RundownListProps> = ({
   onReorder,
   onRemove,
   onQuickPlay,
-  onRefresh
+  onRefresh,
+  pendingEntryIds
 }) => {
+  const pending = new Set(pendingEntryIds);
+  // An advance in flight is consuming an entry whose position the server has
+  // not told us about yet, so dragging right now would compute a new order
+  // from a list that is about to change under it. The reorder is expressed as
+  // ids against the server's own entries (see `use-show-rundown.ts`), so it
+  // could not corrupt anything - but it WOULD be applied to a different list
+  // than the operator was looking at, which is its own kind of wrong.
+  const reordering = pending.size > 0;
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 4 }
@@ -383,6 +434,7 @@ export const RundownList: FC<RundownListProps> = ({
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    if (reordering) return;
     if (!over || active.id === over.id) return;
     const oldIndex = entries.findIndex((e) => e.entryId === active.id);
     const newIndex = entries.findIndex((e) => e.entryId === over.id);
@@ -413,6 +465,9 @@ export const RundownList: FC<RundownListProps> = ({
         <OnDeckRow
           info={onDeckInfo}
           refresh={refreshInfo[onDeckEntry.entryId]}
+          // The on-deck row is also what an advance that named NO entry
+          // consumes, so it is pending for that too (`ON_DECK`).
+          pending={pending.has(onDeckEntry.entryId) || pending.has(ON_DECK)}
           isLoaded={loadedEntryId === onDeckEntry.entryId}
           onQuickPlay={() => onQuickPlay(onDeckEntry.entryId)}
           onRefresh={() => onRefresh(onDeckEntry.entryId)}
@@ -446,6 +501,7 @@ export const RundownList: FC<RundownListProps> = ({
                       position={index + 2}
                       info={info}
                       refresh={refreshInfo[entry.entryId]}
+                      pending={pending.has(entry.entryId)}
                       isLoaded={loadedEntryId === entry.entryId}
                       onQuickPlay={() => onQuickPlay(entry.entryId)}
                       onRefresh={() => onRefresh(entry.entryId)}

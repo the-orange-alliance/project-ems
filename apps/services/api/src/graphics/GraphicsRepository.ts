@@ -10,6 +10,7 @@ import {
   PRODUCER_SHOW_RUNDOWN_ID,
   emptyProducerShow,
   queueEntriesFromShow,
+  type RundownEntryRef,
   type VersionedTimeline,
   type Rundown,
   type PlaybackState,
@@ -600,12 +601,65 @@ export class GraphicsRepository {
       this.command(db, eventKey, requestId)
     );
   }
-  /** Command records are intentionally retained indefinitely: an old request ID must never execute again. */
+  /**
+   * Removes one entry from a rundown INSIDE the caller's open transaction.
+   *
+   * Only `savePlayback` calls this, and only for a command that declared a
+   * `consume` (see `rundownEntryRefZod`): the point is that the entry leaves
+   * the show in the very same SQLite transaction that commits the playback
+   * state which loaded it. Either both writes land or neither does, so an
+   * entry can never be simultaneously on the transport and still queued.
+   *
+   * Removing an entry that is already gone is a deliberate no-op rather than a
+   * 404: a retried consume must be able to finish the rest of its work, and
+   * `savePlayback`'s own command-replay check already guarantees the retry is
+   * the SAME operation and not a second one. The revision is only bumped when
+   * something actually changed.
+   */
+  private async consumeRundownEntry(
+    db: AsyncDatabase,
+    eventKey: string,
+    consume: RundownEntryRef
+  ): Promise<void> {
+    const current = await this.rundown(db, eventKey, consume.rundownId);
+    if (
+      consume.expectedRundownRevision !== undefined &&
+      current.revision !== consume.expectedRundownRevision
+    )
+      throw conflict(
+        'Show revision changed; reload the rundown before advancing'
+      );
+    const entries = current.entries.filter(
+      (entry) => entry.entryId !== consume.entryId
+    );
+    if (entries.length === current.entries.length) return;
+    const value = rundownZod.parse({
+      ...current,
+      entries,
+      revision: current.revision + 1,
+      updatedAtUtc: new Date().toISOString()
+    });
+    await db.run(
+      'UPDATE graphics_rundown SET data=?,revision=? WHERE eventKey=? AND rundownId=?',
+      [JSON.stringify(value), value.revision, eventKey, consume.rundownId]
+    );
+  }
+  /**
+   * Command records are intentionally retained indefinitely: an old request ID
+   * must never execute again.
+   *
+   * `consume`, when present, makes this write atomic across BOTH documents the
+   * show model spans - see `consumeRundownEntry`. A conflict on the rundown
+   * side rolls the playback write back with it, which is exactly what the
+   * caller wants: the operator's action either happened completely or not at
+   * all.
+   */
   savePlayback(
     eventKey: string,
     state: PlaybackState,
     expectedRevision: number,
-    command?: GraphicsCommandRecord
+    command?: GraphicsCommandRecord,
+    consume?: RundownEntryRef
   ): Promise<PlaybackState> {
     return this.transaction(eventKey, async (db) => {
       graphicRevisionZod.parse(expectedRevision);
@@ -655,6 +709,7 @@ export class GraphicsRepository {
         ON CONFLICT(eventKey) DO UPDATE SET data=excluded.data,revision=excluded.revision`,
         [eventKey, JSON.stringify(value), value.revision]
       );
+      if (consume) await this.consumeRundownEntry(db, eventKey, consume);
       return value;
     });
   }

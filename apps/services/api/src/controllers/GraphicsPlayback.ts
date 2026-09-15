@@ -10,8 +10,11 @@ import {
   graphicRevisionZod,
   graphicsTargetZod,
   playbackAcknowledgmentZod,
+  playbackCommandZod,
   playbackStateEnvelopeZod,
   playbackStateZod,
+  showAdvanceResultZod,
+  PRODUCER_SHOW_RUNDOWN_ID,
   preparedGraphicSpecZod,
   resolveSpec,
   unresolvedBindings,
@@ -20,7 +23,10 @@ import {
   type GraphicsTarget,
   type PlaybackAcknowledgment,
   type PlaybackCommand,
-  type PlaybackState
+  type PlaybackState,
+  type Rundown,
+  type RundownEntryRef,
+  type ShowAdvanceOutcome
 } from '@toa-lib/models/base';
 import type { prepareGraphicFrame } from '@toa-lib/models/seasons/stats/presentation';
 import {
@@ -137,6 +143,28 @@ const loadBody = z
   .nullish();
 /** quick-cue takes the same body shape as `load` - `requestId`/`expectedRevision` apply to its own `load` step; see `quick-cue` below. */
 const quickCueBody = loadBody;
+/**
+ * `show/advance`: one operator action over the ordered show. Every field is
+ * optional so the bare "advance to whatever is on deck" call - the idle
+ * auto-pull, and Companion - is a body-less POST.
+ *
+ *  - `entryId` names a specific entry (Quick Play). Omitted means "position
+ *    1", whatever now sits there.
+ *  - `expectedShowRevision` is the revision the caller chose from. Supplying
+ *    it turns "advance the show" into "advance the show I am looking at".
+ *  - `take` also puts the loaded entry on air; `clearFirst` takes whatever is
+ *    on air off first (the "Animate Out and Clear" step).
+ */
+const showAdvanceBody = z
+  .object({
+    ...requestFields,
+    entryId: graphicIdentifierZod.optional(),
+    expectedShowRevision: graphicRevisionZod.optional(),
+    take: z.boolean().optional(),
+    clearFirst: z.boolean().optional()
+  })
+  .strict()
+  .nullish();
 const targetBody = z
   .object({ ...requestFields, target: graphicsTargetZod.optional() })
   .strict()
@@ -173,6 +201,25 @@ const commandResponses = {
   422: ackOrEnvelope,
   500: ackOrEnvelope,
   503: ackOrEnvelope
+};
+/**
+ * `show/advance` answers 200 even when it rejected the command, and its body
+ * carries the rejection instead of the status code doing so.
+ *
+ * That is deliberate and specific to this route: its whole purpose is to hand
+ * back BOTH authoritative documents so the producer app applies them once. A
+ * 4xx makes the browser HTTP client throw, which would discard the very
+ * `show` the caller needs in order to recover from the conflict it just lost.
+ * `outcome === 'rejected'` plus `acknowledgment.ok === false` is the failure
+ * signal here; the error inside it carries the same code every other route
+ * would have mapped to a status.
+ */
+const showAdvanceResponses = {
+  200: showAdvanceResultZod,
+  400: errorEnvelopeZod,
+  404: errorEnvelopeZod,
+  500: errorEnvelopeZod,
+  503: errorEnvelopeZod
 };
 const stateResponses = {
   200: playbackStateZod,
@@ -578,6 +625,237 @@ export default async function graphicsPlaybackController(
         target: cue.graphic.target
       });
       return sendAck(reply, takeAck);
+    } catch (error) {
+      return sendUnexpected(reply, error);
+    }
+  }
+
+  /**
+   * Derives the request id for a SECONDARY command inside one composite
+   * operation (the clear, the take, the unload that `show/advance` may also
+   * need). Deterministic, so replaying the operation replays those steps too
+   * instead of executing a second take under a fresh id - the same
+   * "one operator action happens once" guarantee the primary command gets from
+   * its own caller-supplied id. Truncated to stay inside
+   * `graphicIdentifierZod`'s 150-character limit.
+   */
+  function derivedRequestId(requestId: string, suffix: string): string {
+    return `${requestId.slice(0, 149 - suffix.length)}-${suffix}`;
+  }
+
+  /**
+   * ONE operator action over the ordered show: consume the chosen entry, put
+   * it on the transport, and (optionally) clear what was on air first and take
+   * the new one to air after.
+   *
+   * WHY THIS EXISTS. The producer app used to spell this out as a sequence of
+   * independent requests - `live.load`, then a rundown PATCH to remove the
+   * entry, sometimes `clear` before and `take` between. Three things went
+   * wrong with that and all three are fixed here:
+   *
+   *  1. it was not atomic. A failure after the load left the entry both loaded
+   *     and still queued, so the show could run it twice. The `consume` on the
+   *     load command now removes the entry in the same durable transaction as
+   *     the state write (see `rundownEntryRefZod` / `GraphicsRepository`).
+   *  2. it was not idempotent. A retry, a double click, or a StrictMode effect
+   *     replay each consumed another entry. Every step here is keyed off the
+   *     caller's one `requestId` (secondary steps by `derivedRequestId`), so
+   *     replaying it returns the original outcome and consumes nothing more.
+   *  3. it could not report what actually happened. The answer now carries the
+   *     outcome, the consumed entry, the command acknowledgment, and the show
+   *     as it stands afterwards - so the caller applies one authoritative
+   *     document instead of revalidating and racing itself.
+   *
+   * Entry selection: an explicit `entryId` means "this entry" and survives a
+   * concurrent reorder; no `entryId` means "position 1", which a concurrent
+   * reorder genuinely changes - so that case pins the show revision it read
+   * and rejects rather than consuming an entry the operator never saw on deck.
+   */
+  async function advanceShow(
+    eventKey: string,
+    body: z.infer<typeof showAdvanceBody>,
+    requestId: string,
+    reply: FastifyReply
+  ) {
+    try {
+      const before = await repository.loadProducerShow(eventKey);
+      const answer = async (
+        outcome: ShowAdvanceOutcome,
+        consumedEntryId: string | null,
+        acknowledgment: PlaybackAcknowledgment,
+        show?: Rundown
+      ) =>
+        reply.code(200).send(
+          showAdvanceResultZod.parse({
+            outcome,
+            consumedEntryId,
+            acknowledgment,
+            show: show ?? (await repository.loadProducerShow(eventKey))
+          })
+        );
+      const reject = async (code: GraphicsError['code'], message: string) =>
+        answer(
+          'rejected',
+          null,
+          rejectAck(
+            requestId,
+            code,
+            message,
+            await coordinator.getState(eventKey)
+          ),
+          before
+        );
+
+      // Whole-operation replay, BEFORE anything is chosen.
+      //
+      // The load's own de-duplication is not enough here: this function picks
+      // WHICH entry to consume, so a repeat would re-run that choice against
+      // an already-advanced show and consume the next entry while the load
+      // underneath it merely replayed. The durable command record is the
+      // memory that makes the whole action idempotent - it holds the exact
+      // command that ran, so the entry this request consumed is recovered
+      // from the record rather than re-derived from today's show.
+      const recorded = await repository.loadCommand(eventKey, requestId);
+      if (recorded) {
+        const original = playbackCommandZod.safeParse(
+          JSON.parse(recorded.fingerprint)
+        );
+        const consumed =
+          original.success && original.data.type === 'load'
+            ? (original.data.consume?.entryId ?? null)
+            : undefined;
+        if (consumed === undefined)
+          // Same id, different command: the coordinator's own contract
+          // (`requestReplay`) calls this a conflict rather than guessing.
+          return await reject(
+            'CONFLICT',
+            'Request ID was already used for a different command.'
+          );
+        // The take, if this action took one, carries the outcome the caller
+        // originally saw; its id is derived from this one, so it is findable.
+        const takeRecord = await repository.loadCommand(
+          eventKey,
+          derivedRequestId(requestId, 'take')
+        );
+        // The state travels with the CURRENT authoritative snapshot, not the
+        // one frozen in the record. A load's durable record is written at the
+        // "calculating" commit - the cue becomes ready a revision later and
+        // records no command of its own - so replaying the stored state would
+        // hand the caller a snapshot that was already superseded when the
+        // original call returned. What must be identical across a replay is
+        // the OUTCOME (this entry, consumed once, taken or not); the state is
+        // always simply the truth right now.
+        return await answer(
+          takeRecord ? 'loaded-and-taken' : 'loaded',
+          consumed,
+          playbackAcknowledgmentZod.parse({
+            ok: true,
+            requestId,
+            state: await coordinator.getState(eventKey),
+            replayed: true
+          }),
+          before
+        );
+      }
+
+      if (
+        body?.expectedShowRevision !== undefined &&
+        before.revision !== body.expectedShowRevision
+      )
+        return await reject(
+          'CONFLICT',
+          'Show revision changed; reload the rundown before advancing.'
+        );
+
+      const entry = body?.entryId
+        ? before.entries.find((e) => e.entryId === body.entryId)
+        : before.entries[0];
+      if (body?.entryId && !entry)
+        return await reject(
+          'NOT_FOUND',
+          `Entry "${body.entryId}" is no longer in the show.`
+        );
+
+      if (body?.clearFirst) {
+        const clearAck = await dispatch(eventKey, {
+          type: 'clear',
+          requestId: derivedRequestId(requestId, 'clear')
+        });
+        if (!clearAck.ok)
+          return await answer('rejected', null, clearAck, before);
+      }
+
+      // Nothing queued. With `clearFirst` this is the "Animate Out and Clear
+      // with an empty show" case: unload so the transport goes genuinely idle
+      // rather than leaving the just-cleared show sitting there as `loaded`.
+      // A normal, reportable outcome - never an error.
+      if (!entry) {
+        const ack = body?.clearFirst
+          ? await dispatch(eventKey, {
+              type: 'unload',
+              requestId: derivedRequestId(requestId, 'unload')
+            })
+          : playbackAcknowledgmentZod.parse({
+              ok: true,
+              requestId,
+              state: await coordinator.getState(eventKey),
+              replayed: false
+            });
+        return await answer(ack.ok ? 'empty' : 'rejected', null, ack, before);
+      }
+
+      const consume: RundownEntryRef = {
+        rundownId: PRODUCER_SHOW_RUNDOWN_ID,
+        entryId: entry.entryId,
+        // Only the on-deck selection pins the revision: see this function's
+        // doc comment. An explicit entry id already names what to consume.
+        ...(body?.entryId === undefined ||
+        body.expectedShowRevision !== undefined
+          ? { expectedRundownRevision: before.revision }
+          : {})
+      };
+      const loadAck = await dispatch(eventKey, {
+        type: 'load',
+        requestId,
+        expectedRevision: body?.expectedRevision,
+        timelineId: entry.timelineId,
+        ...(entry.values && Object.keys(entry.values).length > 0
+          ? { values: entry.values }
+          : {}),
+        consume
+      });
+      if (!loadAck.ok) return await answer('rejected', null, loadAck);
+      if (!body?.take) return await answer('loaded', entry.entryId, loadAck);
+
+      // Same reasoning as `quickCue`: the entry IS consumed and loaded, but
+      // this action promised to put it on air, so a cue that cannot be taken
+      // must surface as this action's own rejection rather than a silent
+      // no-op. `consumedEntryId` still names the entry - it really did leave
+      // the show - so the producer sees exactly what happened.
+      const { cue } = loadAck.state;
+      if (cue.status !== 'ready') {
+        const { code, message } = describeCueNotReady(cue);
+        return await answer(
+          'rejected',
+          entry.entryId,
+          rejectAck(
+            requestId,
+            code,
+            `${message} Cannot take it live.`,
+            loadAck.state
+          )
+        );
+      }
+      const takeAck = await dispatch(eventKey, {
+        type: 'take',
+        requestId: derivedRequestId(requestId, 'take'),
+        target: cue.graphic.target
+      });
+      return await answer(
+        takeAck.ok ? 'loaded-and-taken' : 'rejected',
+        entry.entryId,
+        takeAck
+      );
     } catch (error) {
       return sendUnexpected(reply, error);
     }
@@ -1043,5 +1321,46 @@ export default async function graphicsPlaybackController(
         return sendUnexpected(reply, error);
       }
     }
+  );
+
+  // --- show/advance: the atomic ordered-show operation. See `advanceShow`.
+  // POST and GET are registered directly rather than via `registerBothMethods`
+  // because this route answers with `showAdvanceResponses` (both authoritative
+  // documents), not the shared command envelope. ---
+  app.post(
+    '/:eventKey/live/show/advance',
+    {
+      schema: {
+        tags: ['Graphics'],
+        params: eventParams,
+        body: showAdvanceBody,
+        response: showAdvanceResponses
+      }
+    },
+    (
+      request: FastifyRequest<{
+        Params: z.infer<typeof eventParams>;
+        Body: z.infer<typeof showAdvanceBody>;
+      }>,
+      reply
+    ) =>
+      advanceShow(
+        request.params.eventKey,
+        request.body,
+        request.body?.requestId ?? newRequestId(),
+        reply
+      )
+  );
+  app.get(
+    '/:eventKey/live/show/advance',
+    {
+      schema: {
+        tags: ['Graphics'],
+        params: eventParams,
+        response: showAdvanceResponses
+      }
+    },
+    (request: FastifyRequest<{ Params: z.infer<typeof eventParams> }>, reply) =>
+      advanceShow(request.params.eventKey, undefined, newRequestId(), reply)
   );
 }
