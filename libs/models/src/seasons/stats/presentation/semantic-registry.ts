@@ -16,11 +16,8 @@
  * function (`prepareGraphicFrame`) that the production path calls instead
  * of talking to the legacy generic adapter directly.
  *
- * `adapters.ts`'s `adaptResult` is left completely unchanged and keeps
- * working exactly as documented there — it is still the fallback for any
- * catalogue id with no semantic registration (there are none today, since
- * every FGC2026 id is covered, but the generic fallback remains the
- * contract for a future catalogue id added without a registration yet).
+ * Every shipped catalogue id has an explicit semantic registration.
+ * Unknown ids fail preparation; there is no generic v1 fallback.
  */
 import { FGC2026_A_D_REGISTRATIONS } from './fgc2026-a-d.js';
 import { FGC2026_E_H_SEMANTIC_REGISTRATIONS } from './fgc2026-e-h.js';
@@ -30,7 +27,8 @@ import {
   semanticRegistrationKey,
   type SemanticRegistration
 } from './semantic-helpers.js';
-import { adaptResult, type AdaptContext } from './adapters.js';
+import type { AdaptContext } from './adapt-context.js';
+import { SemanticPreparationError } from './semantic-helpers.js';
 import type { GraphicSpec, VizFrame } from '../../../base/Graphics.js';
 import type { StatResult } from '../types.js';
 
@@ -101,23 +99,7 @@ export function semanticRegistrationFor(
   );
 }
 
-/**
- * THE production entry point. Replaces a direct call to `adaptResult` at
- * every real call site (see `apps/web/src/apps/graphics-controller/use-cue.ts`):
- *
- *   - A catalogue id with an explicit semantic registration ALWAYS resolves
- *     through that registration's `adapt()`, never the generic fallback.
- *     `adapt()` (via `createSemanticFrame` / `requireOkResult` in
- *     `./semantic-helpers.ts`) throws a `SemanticPreparationError` — never
- *     returns an empty-but-`ready` frame — for a non-ok source result, an
- *     unsupported kind/mode combination, or any other invalid payload. That
- *     error is meant to propagate to the caller's own error handling (the
- *     producer sees an actionable message), not to be swallowed here.
- *   - A catalogue id with no registration falls back to the legacy
- *     `adaptResult`, unchanged, which keeps its own "never throws, degrades
- *     to an empty valid frame" contract exactly as documented in
- *     `./adapters.ts`.
- */
+/** One production frame preparation path for all shipped catalogue registrations. */
 export function prepareGraphicFrame(
   result: StatResult,
   spec: GraphicSpec,
@@ -130,5 +112,5 @@ export function prepareGraphicFrame(
   if (registration) {
     return registration.adapt(result, spec, ctx);
   }
-  return adaptResult(result, spec, ctx);
+  throw new SemanticPreparationError('No semantic presentation registered for catalogue id: ' + ctx.catalogueId);
 }

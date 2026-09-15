@@ -4,7 +4,7 @@ import { fixture } from './fixture.js';
 import { definitions } from '../registry.js';
 import { fixtureParams } from '../parameter-schemas.js';
 import { prepareGraphicFrame } from '../presentation/semantic-registry.js';
-import type { AdaptContext } from '../presentation/adapters.js';
+import type { AdaptContext } from '../presentation/adapt-context.js';
 import type { GraphicSpec, PresentationData } from '../../../base/Graphics.js';
 import type { StatResult, StatsQuery } from '../types.js';
 

@@ -12,7 +12,7 @@ import {
   type VizFrame
 } from '../../../base/Graphics.js';
 import type { StatResult } from '../types.js';
-import type { AdaptContext } from './adapters.js';
+import type { AdaptContext } from './adapt-context.js';
 
 export type SemanticCell = string | number | boolean | null;
 export interface SemanticMeasure {

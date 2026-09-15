@@ -6,7 +6,6 @@ import {
   type PlaybackPublication,
 } from "@toa-lib/models";
 import type { Server } from "socket.io";
-import Graphics from "./rooms/Graphics.js";
 import logger from "./util/Logger.js";
 
 export type PlaybackPublicationResult = {
@@ -87,11 +86,6 @@ export class PlaybackPublicationReceiver {
       this.server
         .in(`graphics:${eventKey}`)
         .emit(GraphicsSocketEvent.PLAYBACK_STATE_V1, publication);
-      // TODO(Task 16): remove this lossy compatibility projection/event.
-      this.server.in(`graphics:${eventKey}`).emit(GraphicsSocketEvent.STATE, {
-        ...Graphics.toLegacyState(state),
-        eventKey,
-      });
     }
     return {
       accepted: true,

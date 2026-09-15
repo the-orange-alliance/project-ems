@@ -20,5 +20,4 @@ export * from './Sync.js';
 export * from './Webhook.js';
 export * from './Graphics.js';
 export * from './GraphicsTemplates.js';
-export * from './GraphicsQueue.js';
 export * from './GraphicsShow.js';

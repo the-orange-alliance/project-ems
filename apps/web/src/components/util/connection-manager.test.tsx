@@ -5,8 +5,7 @@ import { createWorkerMock } from '../../test/mock-worker.js';
 import { renderWithJotai } from '../../test/render-with-jotai.js';
 import { eventKeyAtom } from '../../stores/state/event.js';
 import {
-  createEmptyLiveGraphicState,
-  graphicsStateMapAtom
+  playbackDeliveryMapAtom
 } from '../../stores/state/graphics.js';
 import { ConnectionManager } from './connection-manager.js';
 
@@ -23,7 +22,6 @@ vi.mock('src/api/events/index.js', () => ({
   useCommitEvent: () => mocks.handler,
   useDisplayEvent: () => mocks.handler,
   useGraphicsPreviewReplayEvent: () => mocks.handler,
-  useGraphicsStateEvent: () => mocks.handler,
   usePlaybackStateEvent: () => mocks.handler,
   useMatchStateEvents: () => ({
     handleMatchAbort: mocks.handler,
@@ -38,21 +36,19 @@ vi.mock('src/api/events/index.js', () => ({
 }));
 
 describe('ConnectionManager graphics subscription', () => {
-  it('installs listeners and resets the old ordering baseline before subscribe', async () => {
+  it('installs authoritative listeners before subscribe and marks hydration', async () => {
     const worker = createWorkerMock();
     mocks.useSocketWorker.mockReturnValue({ worker, connected: false });
-    const oldState = { ...createEmptyLiveGraphicState(), generation: 87 };
     const view = renderWithJotai(<ConnectionManager />, (store) => {
       store.set(eventKeyAtom, 'event');
-      store.set(graphicsStateMapAtom, { event: oldState });
     });
 
-    expect(view.store.get(graphicsStateMapAtom).event?.generation).toBe(87);
+    expect(view.store.get(playbackDeliveryMapAtom).event?.phase).toBe('disconnected');
     mocks.useSocketWorker.mockReturnValue({ worker, connected: true });
     view.rerender(<ConnectionManager />);
 
     await waitFor(() =>
-      expect(view.store.get(graphicsStateMapAtom).event).toBeUndefined()
+      expect(view.store.get(playbackDeliveryMapAtom).event?.phase).toBe('hydrating')
     );
     const stateListenerCall = worker.on.mock.calls.findIndex(
       ([event]) => event === GraphicsSocketEvent.PLAYBACK_STATE_V1

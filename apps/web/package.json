@@ -10,7 +10,7 @@
     "test": "vitest run",
     "preview": "vite preview",
     "lint": "npx eslint ./src --ext .ts,.tsx,.js,.jsx",
-    "selftest:transitions": "tsc -p ../../temp/tsconfig.selftest.json && node ../../temp/transition-machine.selftest.js"
+    "selftest:transitions": "vitest run src/apps/audience-display/displays/graphics/transition-engine.test.tsx"
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.2",

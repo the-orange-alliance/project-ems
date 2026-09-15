@@ -12,10 +12,10 @@ import type { GraphicFrameResult } from 'src/api/graphic-frame-query.js';
 
 export interface StatsGraphicPreviewDisplayProps {
   eventKey: string | null;
-  /** The item one step ahead of the program - `LiveGraphicState.previewSpec`. */
+  /** The item one step ahead of the program - the authoritative loaded snapshot. */
   spec: GraphicSpec | null;
   /**
-   * What is on the program bus right now - `LiveGraphicState.spec`/`.frame`.
+   * What is on the program bus right now - the authoritative program graphic.
    * Used ONLY as the starting point of a replay: the transition this screen
    * previews is the one FROM the on-air graphic INTO this one, so a replay
    * cuts back to it first. Both null means nothing is on air, and a replay

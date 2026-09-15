@@ -4,7 +4,8 @@ import {
   AudienceScreens,
   Displays,
   LayoutMode,
-  MatchState
+  MatchState,
+  nextPlaybackPreviewSpec
 } from '@toa-lib/models';
 import { getDisplays } from './displays.js';
 import { FadeInOut, SlideInBottom } from 'src/components/animations/index.js';
@@ -16,8 +17,6 @@ import { matchStateAtom } from 'src/stores/state/match.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
 import {
-  createEmptyLiveGraphicState,
-  graphicsStateMapAtom,
   playbackEnvelopeForEventAtom
 } from 'src/stores/state/graphics.js';
 import { StatsGraphicDisplay } from './graphics/stats-graphic-display.js';
@@ -37,7 +36,6 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
   const ranks = useAtomValue(matchOccurringRanksAtom);
   const [audDispChroma, setAudDisplayChroma] = useAtom(displayChromaKeyAtom);
   const matchState = useAtomValue(matchStateAtom);
-  const graphicsStateMap = useAtomValue(graphicsStateMapAtom);
   const playbackEnvelope = useAtomValue(playbackEnvelopeForEventAtom(eventKey));
   const authoritativeProgram = playbackEnvelope?.state.program;
   const [searchParams] = useSearchParams();
@@ -81,11 +79,6 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
   // global store. This leaves the on-air audience fully event-scoped and lets
   // the shared transition engine finish a Clear exit even after the server has
   // already flipped `onAir` back to false.
-  const liveGraphicState =
-    eventKey && graphicsStateMap[eventKey]
-      ? graphicsStateMap[eventKey]
-      : createEmptyLiveGraphicState();
-
   if (pin === AudienceScreens.STATS) {
     return (
       <StatsGraphicDisplay
@@ -97,17 +90,14 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
     );
   }
 
-  // The "preview" (PVW bus) to STATS's "program" (PGM bus): always the item
-  // one step ahead of what is on air - see `previewSpec`'s own doc comment
-  // on `LiveGraphicState`, and `StatsGraphicPreviewDisplay` for why the
-  // frame is calculated client-side rather than arriving with the spec.
+  // PVW calculates the next loaded spec off-air, anchored to the program snapshot.
   if (pin === AudienceScreens.STATS_PREVIEW) {
     return (
       <StatsGraphicPreviewDisplay
         eventKey={eventKey}
-        spec={liveGraphicState.previewSpec}
-        programSpec={liveGraphicState.spec}
-        programFrame={liveGraphicState.frame}
+        spec={nextPlaybackPreviewSpec(playbackEnvelope?.state ?? null)}
+        programSpec={authoritativeProgram?.graphic.spec ?? null}
+        programFrame={authoritativeProgram?.graphic.frame ?? null}
       />
     );
   }

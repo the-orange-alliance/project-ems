@@ -252,18 +252,14 @@ CREATE TABLE IF NOT EXISTS "graphics_timeline" (
     PRIMARY KEY (eventKey, timelineId)
 );
 
--- DEPRECATED. Superseded by "graphics_rundown" below, which owns ordered show
--- entries and their per-entry template values with a revision this table never
--- had. Existing rows migrate into the event's "producer-show" rundown exactly
--- once (marker "graphics-queue-to-producer-show-v1" in "graphics_migration")
--- and are then left untouched so the pre-migration order stays recoverable.
--- Nothing writes here any more; Task 16 drops the table.
-CREATE TABLE IF NOT EXISTS "graphics_queue" (
-    "eventKey"     VARCHAR(25) NOT NULL,
-    "data"         TEXT NOT NULL,
-    "updatedAtUtc" VARCHAR(32),
-    PRIMARY KEY (eventKey)
-);
+-- REMOVED: "graphics_queue". Fresh event databases no longer create it;
+-- "graphics_rundown" below owns ordered show entries, their per-entry template
+-- values, and a revision the old table never had. Event databases created
+-- before this change keep their existing rows: the queue is folded into that
+-- event's "producer-show" rundown exactly once (marker
+-- "graphics-queue-to-producer-show-v1" in "graphics_migration") and the
+-- original rows are then left untouched so the pre-migration order stays
+-- recoverable. Nothing writes to the old table any more.
 
 -- The durable ordered show. "data" is a Rundown document (schemaVersion 2);
 -- the producer's own show is rundownId "producer-show".

@@ -29,7 +29,7 @@ import {
   type PresentationMode
 } from '../../../base/Graphics.js';
 import type { StatResult } from '../types.js';
-import type { AdaptContext } from './adapters.js';
+import type { AdaptContext } from './adapt-context.js';
 import {
   SemanticPreparationError,
   arrayElementId,

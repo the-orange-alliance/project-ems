@@ -499,7 +499,7 @@ export const GraphicsController: FC = () => {
 
   // There is nothing to replay until the preview bus actually has a graphic
   // on it - `previewSpec` is exactly what every PVW screen is showing (see
-  // its doc comment on `LiveGraphicState`), so this disables in lockstep
+  // the loaded snapshot contract), so this disables in lockstep
   // with them rather than guessing from transport state.
   const programAnchorsLoaded =
     !!program &&
@@ -944,7 +944,7 @@ export const GraphicsController: FC = () => {
   };
 
   // Quick Play: loads the entry's OWN timeline onto the transport (not
-  // `queueGo`/`go`, which jumps by item index WITHIN whatever is already
+  // `go`, which jumps by item index WITHIN whatever is already
   // loaded - meaningless for an entry pointing at a different timeline), then
   // takes it to air immediately. The existing Take pipeline (see
   // `PlaybackProgram` / the audience display's transition machine) handles

@@ -420,94 +420,9 @@ export const timelineZod = z
   })
   .strict();
 
-export interface LiveGraphicState {
-  timelineId: string | null;
-  index: number;
-  spec: GraphicSpec | null;
-  frame: VizFrame | null;
-  onAir: boolean;
-  generation: number;
-  queueEntryId: string | null;
-  armed: boolean;
-  /**
-   * The variable-name -> value map that resolved the CURRENTLY loaded
-   * timeline's template bindings (mirrors `LoadedGraphicsSnapshot.values` -
-   * see its own doc comment). `null` for an untemplated timeline, a rundown
-   * (each rundown entry carries its own values instead of one shared map -
-   * see `queueEntryId` above), or nothing loaded.
-   *
-   * This is the producer UI's ONLY way to recover "what values is the live
-   * item currently resolved with" after the fact - e.g. to silently reuse
-   * them for a Refresh/recalculate instead of re-prompting the operator for
-   * values it already filled in once. Before this field existed, the web
-   * producer UI (`graphics-controller.tsx`) tried to reconstruct this by
-   * looking up `queueEntryId` in its OWN on-deck cue queue - which not only
-   * doesn't carry a rundown's values (`queueEntryId` is a rundown entry id,
-   * a disjoint id space from the cue queue's own entry ids - see
-   * `queueEntryId` above), but is also gone entirely once that queue entry
-   * has been consumed onto the transport. Both gaps silently dropped the
-   * already-known values and re-opened the variable-fill modal instead.
-   */
-  values: Record<string, number> | null;
-  /**
-   * The item ONE STEP AHEAD of what is on air, for a "preview" (PVW-bus)
-   * screen - the next graphic in the loaded running order, never what is
-   * currently broadcasting.
-   *
-   * Deliberately NOT `state.cue`'s graphic. `take` copies the cue into
-   * `program` and leaves the cue untouched (GRAPHICS_PLAYBACK_POLICY.take,
-   * and see `PlaybackProgram`), and the producer's Go is `advance` + `take`
-   * together, so from the moment anything is aired the cue holds *exactly
-   * what is already on air*. A PVW fed from the cue therefore mirrors PGM
-   * instead of previewing it - the bug this field exists to fix.
-   *
-   * Carries the SPEC ONLY, with no accompanying frame, because the next
-   * item is by definition unprepared: the coordinator only ever calculates
-   * the cue lane (GRAPHICS_PLAYBACK_POLICY.navigation:
-   * 'prepare-cue-only'). A preview client renders this by running its own
-   * stats query for the spec - an off-air, best-effort surface that must
-   * never add a second calculation to the on-air path.
-   */
-  previewSpec: GraphicSpec | null;
-}
-
-export const liveGraphicStateZod = z
-  .object({
-    timelineId: z.string().nullable(),
-    index: z.number(),
-    spec: graphicSpecZod.nullable(),
-    frame: vizFrameZod.nullable(),
-    onAir: z.boolean(),
-    generation: z.number(),
-    queueEntryId: z.string().nullable().default(null),
-    armed: z.boolean().default(false),
-    // Inlined (not `variableValuesZod` from `GraphicsTemplates.ts`, which
-    // imports FROM this file) for the same reason `playbackCommandZod`'s own
-    // `values` field is inlined above. Defaulted, like `queueEntryId`/
-    // `armed` above, so a payload from before this field existed still
-    // parses instead of failing `.strict()`.
-    values: z
-      .record(z.string().min(1), z.number().int().positive())
-      .nullable()
-      .default(null),
-    // Defaulted, like `queueEntryId`/`armed` above, so a payload from
-    // before this field existed (or `fromLegacyPlaybackState`'s adoption of
-    // truly old in-memory state) still parses instead of failing `.strict()`.
-    previewSpec: graphicSpecZod.nullable().default(null)
-  })
-  .strict();
-
 export enum GraphicsSocketEvent {
-  STATE = 'graphics:state',
   /** Schema-versioned, event-scoped authoritative playback envelope. */
   PLAYBACK_STATE_V1 = 'graphics:playback-state:v1',
-  LOAD = 'graphics:load',
-  ADVANCE = 'graphics:advance',
-  PREVIOUS = 'graphics:previous',
-  GO = 'graphics:go',
-  TAKE = 'graphics:take',
-  CLEAR = 'graphics:clear',
-  PREVIEW = 'graphics:preview',
   /** Asks preview (PVW) screens to re-run their entrance animation - see `graphicsPreviewReplayZod`. */
   PREVIEW_REPLAY = 'graphics:preview-replay'
 }
@@ -528,7 +443,7 @@ export enum GraphicsSocketEvent {
  * newly-attached listener (see `event-bus.ts`), so a receiver needs to tell
  * "a replay was requested just now" from "this is the backlog I got on
  * mount"; and it lets a receiver drop an out-of-order redelivery, exactly
- * as `LiveGraphicState.generation` does for state broadcasts.
+ * as authority epochs and revisions do for state broadcasts.
  */
 export interface GraphicsPreviewReplay {
   eventKey: string;
@@ -1079,52 +994,6 @@ export function createEmptyPlaybackState(
   });
 }
 
-/**
- * One-time, explicit adoption of old in-memory state. This cannot infer typed
- * presentation semantics: the caller must re-adapt a legacy frame or provide an
- * already validated v2 frame. Never silently restore an empty substitute.
- * Legacy queue/armed behavior remains on the legacy state; it is not autoplay.
- */
-export function fromLegacyPlaybackState(
-  eventKey: string,
-  input: unknown,
-  atUtc: string,
-  upgradeFrame: (frame: VizFrame, spec: GraphicSpec) => PresentationFrame = (
-    frame
-  ) => presentationFrameZod.parse(frame)
-): PlaybackState {
-  const legacy = liveGraphicStateZod.parse(input);
-  const state = createEmptyPlaybackState(eventKey, atUtc);
-  state.revision = graphicRevisionZod.parse(legacy.generation);
-  if (legacy.onAir && (!legacy.spec || !legacy.frame)) {
-    throw new Error(
-      'Cannot restore on-air legacy state without its exact spec and frame'
-    );
-  }
-  if (legacy.spec && legacy.frame) {
-    const graphic = preparedGraphicZod.parse({
-      target: {
-        targetId: `legacy-${state.revision}`,
-        targetRevision: state.revision,
-        requestId: `legacy-${state.revision}`,
-        snapshotId: null,
-        index: null
-      },
-      spec: legacy.spec,
-      frame: upgradeFrame(legacy.frame, legacy.spec),
-      preparedAtUtc: atUtc
-    });
-    state.cue = { status: 'ready', graphic };
-    if (legacy.onAir)
-      state.program = {
-        revision: state.revision,
-        graphic: snapshotPreparedGraphic(graphic),
-        takenAtUtc: atUtc
-      };
-  }
-  return playbackStateZod.parse(state);
-}
-
 const commandFields = {
   requestId: graphicIdentifierZod,
   expectedRevision: graphicRevisionZod.optional()
@@ -1309,3 +1178,14 @@ export const GRAPHICS_PLAYBACK_POLICY = {
   concurrency: 'expected-revision-or-target-token',
   timestampCoordinates: 'epoch-milliseconds'
 } as const;
+
+/** Next loaded item after program; falls back to the cursor for a different snapshot or black. */
+export function nextPlaybackPreviewSpec(state: PlaybackState | null): GraphicSpec | null {
+  const loaded = state?.loaded;
+  if (!loaded) return null;
+  const target = state?.program?.graphic.target;
+  const index = target?.snapshotId === loaded.snapshotId && target.index !== null
+    ? target.index + 1
+    : loaded.index;
+  return loaded.items[index]?.spec ?? null;
+}

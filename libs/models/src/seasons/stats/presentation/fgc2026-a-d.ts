@@ -59,7 +59,7 @@ import {
   type PresentationMode
 } from '../../../base/Graphics.js';
 import type { StatResult } from '../types.js';
-import type { AdaptContext } from './adapters.js';
+import type { AdaptContext } from './adapt-context.js';
 
 const SEASON = 'fgc_2026';
 type OkResult = Extract<StatResult, { status: 'ok' }>;

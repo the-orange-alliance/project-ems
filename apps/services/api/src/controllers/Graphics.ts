@@ -2,8 +2,7 @@ import {
   graphicIdentifierZod,
   graphicRevisionZod,
   versionedTimelineZod,
-  rundownZod,
-  cueQueueZod
+  rundownZod
 } from '@toa-lib/models';
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -314,27 +313,5 @@ export default async function graphicsController(
       respond(reply, () =>
         repository.loadProducerShow(request.params.eventKey)
       )
-  );
-  // DEPRECATED read adapter, removed in Task 16 together with the `CueQueue`
-  // model and the `graphics_queue` table. It projects the producer-show
-  // rundown above into the retired queue shape for external consumers that
-  // have not migrated yet. The matching `PUT /:eventKey/queue` is GONE: a
-  // whole-array write with no expected revision could silently resurrect a
-  // stale show order over a concurrent edit, so ordered-show writes now exist
-  // only as revision-checked rundown patches.
-  app.get(
-    '/:eventKey/queue',
-    {
-      schema: {
-        tags: ['Graphics'],
-        deprecated: true,
-        description:
-          'Deprecated: read-only projection of GET /graphics/:eventKey/show. Use the rundown routes.',
-        params: eventParams,
-        response: { 200: cueQueueZod, ...errors }
-      }
-    },
-    (request, reply) =>
-      respond(reply, () => repository.loadQueue(request.params.eventKey))
   );
 }

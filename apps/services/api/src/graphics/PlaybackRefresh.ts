@@ -358,12 +358,13 @@ export class PlaybackRefresh {
     command: Extract<PlaybackCommand, { type: 'refresh' }>
   ): Promise<PlaybackAcknowledgment> {
     const state = await this.coordinator.getState(eventKey);
-    const liveSpec: GraphicSpec | undefined =
+    const liveGraphic =
       command.destination === 'program'
-        ? state.program?.graphic.spec
+        ? state.program?.graphic
         : state.cue.status === 'ready'
-          ? state.cue.graphic.spec
+          ? state.cue.graphic
           : undefined;
+    const liveSpec: GraphicSpec | undefined = liveGraphic?.spec;
     if (!liveSpec) {
       // Nothing is currently live at that destination at all: the origin cannot possibly still be current.
       // No ticket is ever created and queryFresh is never called.
@@ -379,6 +380,17 @@ export class PlaybackRefresh {
       );
     }
 
+    // A refresh recalculates the graphic ALREADY live at this destination; it does
+    // not move it. Carry its show coordinates forward so the promoted copy still
+    // knows where it sits in the loaded show - PVW and anything else that reads the
+    // program's position depends on that surviving a push. An ad-hoc graphic that
+    // never had a position keeps none: a show coordinate is never invented here.
+    const liveTarget = liveGraphic?.target;
+    const livePosition: { snapshotId: string; index: number } | { snapshotId?: null; index?: null } =
+      liveTarget && liveTarget.snapshotId !== null && liveTarget.index !== null
+        ? { snapshotId: liveTarget.snapshotId, index: liveTarget.index }
+        : { snapshotId: null, index: null };
+
     let acceptance: PreparationAcceptance;
     try {
       acceptance = await this.coordinator.beginPreparation(eventKey, command, {
@@ -386,8 +398,7 @@ export class PlaybackRefresh {
         destination: command.destination,
         origin: command.target,
         spec: liveSpec,
-        snapshotId: null,
-        index: null
+        ...livePosition
       });
     } catch (error) {
       // e.g. the live spec itself somehow fails preparedGraphicSpecZod: no ticket was ever created, nothing changed.

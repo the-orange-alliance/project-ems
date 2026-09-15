@@ -1,25 +1,9 @@
 import {
   playbackStateEnvelopeZod,
-  type LiveGraphicState,
   type PlaybackStateEnvelope
 } from '@toa-lib/models';
 import { atom, type Atom } from 'jotai';
 import { eventKeyAtom } from './event.js';
-
-export const createEmptyLiveGraphicState = (): LiveGraphicState => ({
-  timelineId: null,
-  index: 0,
-  spec: null,
-  frame: null,
-  onAir: false,
-  generation: 0,
-  queueEntryId: null,
-  armed: false,
-  values: null,
-  previewSpec: null
-});
-
-export const graphicsStateMapAtom = atom<Record<string, LiveGraphicState>>({});
 
 /**
  * The most recent preview-replay request per event key, as the monotonic
@@ -34,17 +18,6 @@ export const graphicsStateMapAtom = atom<Record<string, LiveGraphicState>>({});
  * reloaded. `usePreviewReplayNonce` is the hook that gets this right.
  */
 export const graphicsPreviewReplayAtom = atom<Record<string, number>>({});
-
-export const liveGraphicStateAtom = atom((get) => {
-  const eventKey = get(eventKeyAtom);
-  const stateMap = get(graphicsStateMapAtom);
-
-  if (!eventKey) {
-    return createEmptyLiveGraphicState();
-  }
-
-  return stateMap[eventKey] ?? createEmptyLiveGraphicState();
-});
 
 export interface PlaybackEventRecord {
   envelope: PlaybackStateEnvelope;

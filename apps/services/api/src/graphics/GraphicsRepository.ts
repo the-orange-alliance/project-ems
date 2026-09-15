@@ -9,13 +9,11 @@ import {
   playbackAcknowledgmentZod,
   PRODUCER_SHOW_RUNDOWN_ID,
   emptyProducerShow,
-  queueEntriesFromShow,
   type RundownEntryRef,
   type VersionedTimeline,
   type Rundown,
   type PlaybackState,
-  type PlaybackAcknowledgment,
-  type CueQueue
+  type PlaybackAcknowledgment
 } from '@toa-lib/models';
 import { getAppData } from '@toa-lib/server';
 import { AsyncDatabase } from 'promised-sqlite3';
@@ -745,21 +743,5 @@ export class GraphicsRepository {
       );
       return value;
     });
-  }
-  /**
-   * @deprecated Read compatibility only, for `GET /graphics/:eventKey/queue`.
-   * Projects the producer-show rundown - the one durable owner of show order -
-   * into the retired `CueQueue` shape. There is deliberately no write
-   * counterpart: the legacy `PUT` is gone, so nothing can resurrect a stale
-   * full-array snapshot behind the rundown's revision. Removed in Task 16
-   * along with the route, `graphics_queue`, and the `CueQueue` model.
-   */
-  async loadQueue(eventKey: string): Promise<CueQueue> {
-    const show = await this.loadProducerShow(eventKey);
-    return {
-      eventKey,
-      entries: queueEntriesFromShow(show),
-      updatedAtUtc: show.updatedAtUtc
-    };
   }
 }

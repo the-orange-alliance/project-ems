@@ -61,17 +61,10 @@ Current-event convenience selectors are also exported as `playbackStateAtom`,
 `playbackDeliveryAtom`. Explicit-event selectors must be used by pinned display
 routes so global event selection cannot redirect an audience screen.
 
-The audience program display and producer live monitor now read the authoritative
-program selector. The preview bus remains on the legacy projection because it
-uses the existing best-effort next-item behavior; producer command handlers and
-`useCue` remain unchanged for Task 05.
-
-## Temporary compatibility period
-
-Realtime currently emits both the authoritative event and
-`graphics:state`. The latter is produced only by the explicit
-`Graphics.toLegacyState` adapter and exists for the remaining controller and
-preview consumers. Compatibility command routes also continue returning
-`LiveGraphicState`. Both sites are marked for Task 16 removal. New consumers
-must not use `LiveGraphicState`, infer cue from program, or infer cue readiness
-from the loaded index.
+The producer, audience program display, preview display and live monitor now
+consume this authoritative store. All producer playback commands go to port
+8080 and return acknowledgments. PVW uses `nextPlaybackPreviewSpec` over the
+loaded snapshot, anchored to the program position, and calculates off-air.
+Realtime emits only the authoritative envelope. The former state projection,
+store and command proxies are removed. See [architecture](graphics-architecture.md)
+for retained data/presentation compatibility and owners.

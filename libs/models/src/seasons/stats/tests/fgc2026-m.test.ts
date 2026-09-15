@@ -15,7 +15,7 @@ import {
   SemanticPreparationError,
   type SemanticRegistration
 } from '../presentation/semantic-helpers.js';
-import type { AdaptContext } from '../presentation/adapters.js';
+import type { AdaptContext } from '../presentation/adapt-context.js';
 import {
   presentationFrameZod,
   type GraphicKind,

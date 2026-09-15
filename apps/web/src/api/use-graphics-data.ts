@@ -2,7 +2,6 @@ import {
   ApiResponseError,
   GraphicSpec,
   GraphicsTarget,
-  LiveGraphicState,
   PlaybackAcknowledgment,
   PlaybackStateEnvelope,
   PRODUCER_SHOW_RUNDOWN_ID,
@@ -12,7 +11,6 @@ import {
   VersionedTimeline,
   graphicSpecZod,
   graphicsTargetZod,
-  liveGraphicStateZod,
   playbackAcknowledgmentZod,
   playbackStateEnvelopeZod,
   rundownZod,
@@ -26,18 +24,7 @@ import { localClient } from './http-clients.js';
 import { EMSApiErrorSchema } from './http-errors.js';
 import { requireCollection } from './load-state.js';
 
-// The realtime service (Socket.IO + this "live control" REST surface) is a
-// separate process/origin from the station API that `localClient` talks to
-// (port 8080) - it listens on port 8081 (see `SocketOptions.port` in
-// `main.tsx`). Derived the same way `localClient`/`remoteClient` are in
-// `http-clients.ts` - from `window.location.hostname`, never a hardcoded
-// `localhost` - because at a venue the browser is frequently on a different
-// machine than the one running the services.
-//
-// COMPATIBILITY ONLY. Port 8080 is the sole supported public playback
-// mutation ingress (Task 03); these 8081 command proxies are deprecated and
-// Task 16 removes them. The authoritative transport commands already use
-// `playbackClient` below - do not route anything new through here.
+// Realtime owns only off-air preview replay; all playback reads/mutations use API.
 const realtimeClient = new HttpClient({
   baseUrl: `${window.location.protocol}//${window.location.hostname}:8081`,
   // The relay's error bodies don't match `EMSApiErrorSchema` (its `code` is a
@@ -57,16 +44,7 @@ const realtimeClient = new HttpClient({
   errorSchema: EMSApiErrorSchema
 });
 
-// Playback MUTATIONS go to the station API on port 8080, which is the sole
-// supported public playback mutation ingress (Task 03). The port-8081 relay
-// still proxies the older navigation commands below for compatibility only and
-// is scheduled for removal in Task 16 - nothing new should be routed there.
-// This is `localClient`'s origin with the relay's error handling, because the
-// playback controller answers with the same `{ error, code, message,
-// retryable }` envelope the relay does (its `code` is a playback error CODE
-// string like "CONFLICT", not the number `EMSApiErrorSchema` expects), and
-// that "CODE: human-readable reason" must be surfaced verbatim rather than
-// collapsed into "409 Conflict".
+// API commands preserve structured playback error messages.
 const playbackClient = new HttpClient({
   baseUrl: `${window.location.protocol}//${window.location.hostname}:8080`,
   getErrorMessage: (error) => {
@@ -260,18 +238,14 @@ export const graphicsApi = {
     }
   },
   live: {
-    /** Lossless authoritative read. Command methods remain legacy until Task 05. */
+    /** Lossless authoritative read from the API. */
     authoritativeState: (
       eventKey: string
     ): Promise<PlaybackStateEnvelope | null> =>
-      realtimeClient.get<PlaybackStateEnvelope>(
+      playbackClient.get<PlaybackStateEnvelope>(
         `/graphics/${eventKey}/live/state/v1`,
         { schema: playbackStateEnvelopeZod }
       ),
-    state: (eventKey: string): Promise<LiveGraphicState | null> =>
-      realtimeClient.get<LiveGraphicState>(`/graphics/${eventKey}/live`, {
-        schema: liveGraphicStateZod
-      }),
     /**
      * Loads a timeline by id and resets to its first item.
      *
@@ -288,13 +262,13 @@ export const graphicsApi = {
       eventKey: string,
       timelineId: string,
       values?: Record<string, number>
-    ): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
+    ): Promise<PlaybackAcknowledgment | null> => {
+      const state = await playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/load/${timelineId}`,
         {
           body:
-            values && Object.keys(values).length > 0 ? { values } : undefined,
-          schema: liveGraphicStateZod
+            { ...commandBody(), ...(values ? { values } : {}) },
+          schema: playbackAcknowledgmentZod
         }
       );
       return state;
@@ -306,34 +280,34 @@ export const graphicsApi = {
      * check sees a genuine "nothing loaded" rather than the just-cleared
      * show lingering as `state.loaded`.
      */
-    unload: async (eventKey: string): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
+    unload: async (eventKey: string): Promise<PlaybackAcknowledgment | null> => {
+      const state = await playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/unload`,
-        { schema: liveGraphicStateZod }
+        { body: commandBody(), schema: playbackAcknowledgmentZod }
       );
       return state;
     },
-    advance: async (eventKey: string): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
+    advance: async (eventKey: string): Promise<PlaybackAcknowledgment | null> => {
+      const state = await playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/advance`,
-        { schema: liveGraphicStateZod }
+        { body: commandBody(), schema: playbackAcknowledgmentZod }
       );
       return state;
     },
-    previous: async (eventKey: string): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
+    previous: async (eventKey: string): Promise<PlaybackAcknowledgment | null> => {
+      const state = await playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/previous`,
-        { schema: liveGraphicStateZod }
+        { body: commandBody(), schema: playbackAcknowledgmentZod }
       );
       return state;
     },
     go: async (
       eventKey: string,
       index: number
-    ): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
+    ): Promise<PlaybackAcknowledgment | null> => {
+      const state = await playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/go/${index}`,
-        { schema: liveGraphicStateZod }
+        { body: commandBody(), schema: playbackAcknowledgmentZod }
       );
       return state;
     },
@@ -381,10 +355,10 @@ export const graphicsApi = {
           schema: playbackAcknowledgmentZod
         }
       ),
-    clear: async (eventKey: string): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
+    clear: async (eventKey: string): Promise<PlaybackAcknowledgment | null> => {
+      const state = await playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/clear`,
-        { schema: liveGraphicStateZod }
+        { body: commandBody(), schema: playbackAcknowledgmentZod }
       );
       return state;
     },
@@ -415,30 +389,13 @@ export const graphicsApi = {
      * Asks every preview (PVW) screen on this event to replay its entrance
      * animation.
      *
-     * Unlike every other call in here it returns no `LiveGraphicState` and
+     * This returns no playback acknowledgment and
      * never touches playback state - nothing durable changes and nothing on
      * air moves (see `GraphicsPreviewReplay` in the models package). The relay answers with the
      * replay token it broadcast, which is useful only for debugging.
      */
     replayPreview: async (eventKey: string): Promise<void> => {
       await realtimeClient.post(`/graphics/${eventKey}/preview/replay`);
-    },
-    queueNext: async (eventKey: string): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
-        `/graphics/${eventKey}/queue/next`,
-        { schema: liveGraphicStateZod }
-      );
-      return state;
-    },
-    queueGo: async (
-      eventKey: string,
-      index: number
-    ): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
-        `/graphics/${eventKey}/queue/go/${index}`,
-        { schema: liveGraphicStateZod }
-      );
-      return state;
     }
   }
 };

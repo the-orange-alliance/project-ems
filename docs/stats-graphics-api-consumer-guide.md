@@ -74,16 +74,14 @@ By default (`refresh` omitted or `false`), you get stale-while-revalidate behavi
 ## 2. Stats Audience Display & Producer/Graphics API
 
 **Port 8080 is the only supported public mutation ingress.** Point browser,
-Companion, button-box, and automation commands at this API. Port 8081 still
-contains deprecated command proxies for migration compatibility, but clients
-must not adopt those routes; Task 16 removes them after the compatibility
-window. Realtime publication is initiated by the API's durable commit, so a
+Companion, button-box, and automation commands at this API. Port 8081 playback
+command proxies and queue aliases have been removed. Realtime publication is initiated by the API's durable commit, so a
 successful API command is accepted even while realtime is temporarily down and
 the newest pending revision is retried after recovery.
 
 Base path: `/graphics` (two controllers share this prefix: CRUD under `/graphics/:eventKey/...`, and the live command surface under `/graphics/:eventKey/live/...`).
 
-This section is for a consumer building an **external "simple" controller** for the audience display (e.g. a Bitfocus Companion panel, a physical button box, or a minimal custom web control). The live command routes were explicitly designed to also support **body-less GET requests** for this exact use case — every command below (except `quick-take`, which requires a full graphic spec) has a GET alias that needs no JSON body, so a simple HTTP button can drive it directly.
+This section is for a consumer building an **external "simple" controller** for the audience display (e.g. a Bitfocus Companion panel, a physical button box, or a minimal custom web control). The live command routes were explicitly designed to also support **body-less GET requests** for this exact use case — every command below except POST-only `cue` and `quick-take` has a GET alias that needs no JSON body, so a simple HTTP button can drive it directly.
 
 ### Concepts
 
@@ -109,7 +107,7 @@ This section is for a consumer building an **external "simple" controller** for 
 | `.../live/take` | Send the current cue to air (becomes `program`). Optional body `target` — if omitted, resolves to whatever is currently `ready` on the cue. |
 | `POST .../live/quick-take` (POST only) | Prepare-and-air a full graphic spec in one call. Requires a `spec` in the body — no GET alias, since GET can't carry one. |
 | `.../live/quick-cue/:timelineId` | **Load a timeline and decide whether it also goes to air, in one call** — see below. |
-| `.../live/refresh/:destination` where `destination` is `cue` or `program` | Recalculate and re-render whatever is currently on the given destination (e.g. after underlying stats change). |
+| `.../live/refresh/:destination` where `destination` is `cue` or `program` | Calculate fresh data into a staged update for that destination; cue/program stay unchanged until Push. |
 | `.../live/push-update` | Push a previously staged update live. |
 
 All commands accept an optional `requestId` (for idempotent replay/retry safety) and `expectedRevision` (optimistic concurrency) when sent via POST with a JSON body; the GET aliases auto-generate a `requestId` and skip revision checking, which is fine for a fire-and-forget button.
@@ -186,15 +184,13 @@ have a revision to write against. Mutate it through
 3. `PATCH .../rundowns/producer-show` with `{ entries: [...], expectedRevision: <that revision> }`.
 4. On `409`, go back to step 1. Do not retry with the same array.
 
-#### Migrating off `GET /graphics/:eventKey/queue`
+#### Migrated queue storage
 
-`GET /graphics/:eventKey/queue` still answers, but it is **deprecated and
-read-only**: it is now a projection of the producer show above into the old
-`CueQueue` shape (`{ eventKey, entries, updatedAtUtc }`), where every entry
-carries an explicit `values` map even when the rundown omits an empty one.
-`PUT /graphics/:eventKey/queue` **has been removed** — a whole-array write with
-no expected revision could resurrect entries a concurrent edit had removed.
-Move reads to `GET /graphics/:eventKey/show` and writes to the rundown `PATCH`.
+The old queue read/write routes are removed. Read `GET /graphics/:eventKey/show`
+and write revision-checked rundown patches. Use
+`POST|GET /graphics/:eventKey/live/show/advance` to consume/load a show entry
+atomically. Its response includes playback acknowledgment, updated show, and
+`outcome`; inspect `outcome: 'rejected'` even when HTTP status is 200.
 
 Existing `graphics_queue` data is migrated into `producer-show` automatically
 and exactly once per event database, preserving order, entry ids, timeline
@@ -205,3 +201,8 @@ original row is left on disk, so the pre-migration order stays recoverable.
 ### Error shape
 
 Every route in this section responds with either the normal `PlaybackAcknowledgment` (business-level success/rejection — `ok:false` with a structured `error.code`, e.g. `NOT_READY`, `CONFLICT`) or, for unexpected failures, an envelope `{ error, code, message, retryable }`. A simple controller should treat `ok:false`/non-2xx as "show the error and let the operator retry" rather than crashing — `retryable` tells you whether it's worth an automatic retry.
+
+Playback subscription/read details and retained compatibility owners are documented
+in [web state](authoritative-playback-web-state.md) and
+[architecture](graphics-architecture.md). Tasks 02, 12, 13 and 14 were explicitly
+excluded from final legacy removal; existing auth/history/cache boundaries remain.

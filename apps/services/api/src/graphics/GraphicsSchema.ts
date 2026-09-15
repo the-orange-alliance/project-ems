@@ -1,13 +1,21 @@
 import {
   PRODUCER_SHOW_RUNDOWN_ID,
   PRODUCER_SHOW_RUNDOWN_NAME,
-  cueQueueZod,
   rundownZod,
   showEntriesFromQueue,
   type Rundown
 } from '@toa-lib/models';
+import { z } from 'zod';
 import type { AsyncDatabase } from 'promised-sqlite3';
 import logger from '../util/Logger.js';
+
+// Read-only decoder for databases written before show consolidation.
+const legacyQueueEntryZod = z.object({
+  entryId: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
+  timelineId: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
+  values: z.record(z.string().min(1), z.number().int().positive()),
+  note: z.string().max(500).optional()
+}).strict();
 
 /** Recorded in `graphics_migration` once the queue->rundown consolidation has run for a database. */
 const QUEUE_TO_RUNDOWN = 'graphics-queue-to-producer-show-v1';
@@ -22,8 +30,6 @@ export async function migrateGraphicsDatabase(
       description TEXT, data TEXT NOT NULL, sortOrder INTEGER NOT NULL DEFAULT 0,
       updatedAtUtc TEXT, schemaVersion INTEGER NOT NULL DEFAULT 1,
       revision INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(eventKey, timelineId));
-    CREATE TABLE IF NOT EXISTS graphics_queue (
-      eventKey TEXT PRIMARY KEY, data TEXT NOT NULL, updatedAtUtc TEXT);
     CREATE TABLE IF NOT EXISTS graphics_rundown (
       eventKey TEXT NOT NULL, rundownId TEXT NOT NULL, data TEXT NOT NULL,
       revision INTEGER NOT NULL, PRIMARY KEY(eventKey, rundownId));
@@ -62,8 +68,8 @@ export async function migrateGraphicsDatabase(
  * idempotent rather than duplicating entries.
  *
  * Deliberately NON-destructive: the `graphics_queue` row is left exactly as it
- * was, so the pre-migration order remains recoverable by hand until Task 16
- * drops the table. A queue row for an event that already has a producer-show
+ * was, so the pre-migration order remains recoverable by hand. Fresh databases
+ * do not create this obsolete table. A queue row for an event that already has a producer-show
  * rundown is skipped rather than overwriting live show order.
  */
 async function migrateQueueToProducerShow(db: AsyncDatabase): Promise<void> {
@@ -72,6 +78,10 @@ async function migrateQueueToProducerShow(db: AsyncDatabase): Promise<void> {
     [QUEUE_TO_RUNDOWN]
   );
   if (applied) return;
+  const [queueTable] = await db.all(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='graphics_queue'"
+  );
+  if (!queueTable) return;
   const rows = await db.all<{
     eventKey: string;
     data: string;
@@ -121,11 +131,7 @@ function producerShowFromQueueRow(row: {
 }): Rundown | null {
   let entries;
   try {
-    entries = cueQueueZod.parse({
-      eventKey: row.eventKey,
-      entries: JSON.parse(row.data),
-      updatedAtUtc: row.updatedAtUtc ?? new Date(0).toISOString()
-    }).entries;
+    entries = z.array(legacyQueueEntryZod).parse(JSON.parse(row.data));
   } catch {
     logger.warn(
       `Graphics: the legacy graphics_queue row for event ${row.eventKey} is corrupt or uses an unsupported schema; it was preserved on disk and NOT migrated into a rundown.`

@@ -40,8 +40,7 @@ export function initRooms(server: Server) {
 }
 
 /**
- * Returns the graphics relay room instance so the HTTP layer can forward
- * compatibility requests to the authoritative API playback service.
+ * Returns the graphics room for authoritative hydration and off-air preview replay.
  */
 export function getGraphicsRoom(): Graphics | undefined {
   return roomsMap.get("graphics") as Graphics | undefined;

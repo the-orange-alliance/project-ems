@@ -282,6 +282,7 @@ test('migration: an existing producer-show rundown is never overwritten by a leg
   // A legacy row shows up afterwards (e.g. a restored older database file)
   // together with a cleared marker, so the migration genuinely re-runs.
   await withDatabase(eventKey, async (db) => {
+    await db.exec('CREATE TABLE graphics_queue (eventKey TEXT PRIMARY KEY, data TEXT NOT NULL, updatedAtUtc TEXT)');
     await db.run(
       'INSERT INTO graphics_queue(eventKey,data,updatedAtUtc) VALUES (?,?,?)',
       [
@@ -469,65 +470,18 @@ test('writes: two events keep separate shows', async (t) => {
   assert.equal(b.revision, 0);
 });
 
-test('legacy read adapter: GET /queue projects the producer show and there is no PUT left to write through', async (t) => {
-  const { app, withDatabase } = await graphicsFixture(t);
-  const eventKey = 'event-a';
-  await seedLegacyQueue(withDatabase, eventKey, [
-    { entryId: 'entry-1', timelineId: 'timeline-a', values: { featured: 7 } },
-    { entryId: 'entry-2', timelineId: 'timeline-b', values: {}, note: 'n' }
-  ]);
-
-  const res = await app.inject({
-    method: 'GET',
-    url: `/graphics/${eventKey}/queue`
-  });
-  assert.equal(res.statusCode, 200);
-  const queue = res.json() as {
-    eventKey: string;
-    entries: { entryId: string; values: Record<string, number> }[];
-    updatedAtUtc: string;
-  };
-  assert.equal(queue.eventKey, eventKey);
-  assert.deepEqual(
-    queue.entries.map((e) => e.entryId),
-    ['entry-1', 'entry-2']
-  );
-  // The queue shape always carries a values map, even where the rundown omits it.
-  assert.deepEqual(queue.entries[0].values, { featured: 7 });
-  assert.deepEqual(queue.entries[1].values, {});
-
-  const write = await app.inject({
-    method: 'PUT',
-    url: `/graphics/${eventKey}/queue`,
-    payload: { entries: [] }
-  });
-  assert.equal(write.statusCode, 404);
+test('obsolete queue read and write routes are absent', async (t) => {
+  const { app } = await graphicsFixture(t);
+  for (const method of ['GET', 'PUT'] as const) {
+    const response = await app.inject({ method, url: '/graphics/event-a/queue' });
+    assert.equal(response.statusCode, 404);
+  }
 });
-
-test('legacy read adapter: the projection tracks later rundown writes rather than the stale queue row', async (t) => {
+test('fresh event databases do not create obsolete queue storage', async (t) => {
   const { app, withDatabase } = await graphicsFixture(t);
-  const eventKey = 'event-a';
-  await seedLegacyQueue(withDatabase, eventKey, [
-    { entryId: 'entry-1', timelineId: 'timeline-a', values: {} }
-  ]);
-  const show = await getShow(app, eventKey);
-  await patchShow(
-    app,
-    eventKey,
-    [
-      ...show.entries,
-      { entryId: 'entry-2', timelineId: 'timeline-b', values: { x: 1 } }
-    ],
-    show.revision
-  );
-
-  const res = await app.inject({
-    method: 'GET',
-    url: `/graphics/${eventKey}/queue`
-  });
-  const queue = res.json() as { entries: { entryId: string }[] };
-  assert.deepEqual(
-    queue.entries.map((e) => e.entryId),
-    ['entry-1', 'entry-2']
-  );
+  await getShow(app, 'event-a');
+  const rows = await withDatabase('event-a', db => db.all(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='graphics_queue'"
+  ));
+  assert.deepEqual(rows, []);
 });

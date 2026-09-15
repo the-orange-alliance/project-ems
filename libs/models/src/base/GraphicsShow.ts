@@ -5,7 +5,6 @@ import {
   type Rundown,
   type Timeline
 } from './Graphics.js';
-import type { QueueEntry } from './GraphicsQueue.js';
 
 /**
  * The ordered-show model.
@@ -155,7 +154,7 @@ export function normalizeShowEntries(
  * producer app would write today.
  */
 export function showEntriesFromQueue(
-  entries: readonly QueueEntry[]
+  entries: readonly (RundownEntry & { values: Record<string, number> })[]
 ): RundownEntry[] {
   return normalizeShowEntries(
     entries.map((entry) => ({
@@ -167,17 +166,4 @@ export function showEntriesFromQueue(
       ...(entry.note !== undefined ? { note: entry.note } : {})
     }))
   );
-}
-
-/**
- * The inverse projection, for the deprecated `GET /graphics/:eventKey/queue`
- * read adapter only. Removed with that route in Task 16.
- */
-export function queueEntriesFromShow(rundown: Rundown): QueueEntry[] {
-  return rundown.entries.map((entry) => ({
-    entryId: entry.entryId,
-    timelineId: entry.timelineId,
-    values: entry.values ?? {},
-    ...(entry.note !== undefined ? { note: entry.note } : {})
-  }));
 }

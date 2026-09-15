@@ -10,20 +10,17 @@ import { proxy } from 'comlink';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { eventKeyAtom } from 'src/stores/state/event.js';
 import {
-  graphicsStateMapAtom,
   playbackDeliveryMapAtom
 } from 'src/stores/state/graphics.js';
 
 export const ConnectionManager: FC = () => {
   const { worker, connected } = useSocketWorker();
   const eventKey = useAtomValue(eventKeyAtom);
-  const setGraphicsStateMap = useSetAtom(graphicsStateMapAtom);
   const setPlaybackDeliveryMap = useSetAtom(playbackDeliveryMapAtom);
   const handleDisplay = Events.useDisplayEvent();
   const handleCommit = Events.useCommitEvent();
   const handleUpdate = Events.useMatchUpdateEvent();
   const handlePrestart = Events.usePrestartEvent();
-  const handleGraphicsState = Events.useGraphicsStateEvent();
   const handlePlaybackState = Events.usePlaybackStateEvent();
   const handleGraphicsPreviewReplay = Events.useGraphicsPreviewReplayEvent();
   const {
@@ -58,10 +55,6 @@ export const ConnectionManager: FC = () => {
   const updateProxy = useMemo(() => proxy(handleUpdate), [handleUpdate]);
   const displayProxy = useMemo(() => proxy(handleDisplay), [handleDisplay]);
   const commitProxy = useMemo(() => proxy(handleCommit), [handleCommit]);
-  const graphicsStateProxy = useMemo(
-    () => proxy(handleGraphicsState),
-    [handleGraphicsState]
-  );
   const playbackStateProxy = useMemo(
     () => proxy(handlePlaybackState),
     [handlePlaybackState]
@@ -96,22 +89,11 @@ export const ConnectionManager: FC = () => {
         playbackStateProxy,
         eventKey
       );
-      worker.on(GraphicsSocketEvent.STATE, graphicsStateProxy, eventKey);
       worker.on(
         GraphicsSocketEvent.PREVIEW_REPLAY,
         graphicsPreviewReplayProxy,
         eventKey
       );
-      // A generation is ordered only within one server/database lifetime.
-      // Drop the prior connection's baseline before asking for the new full
-      // snapshot, otherwise a reset service at revision 0 can be rejected
-      // forever behind a browser-held revision from the previous lifetime.
-      setGraphicsStateMap((previous) => {
-        if (!(eventKey in previous)) return previous;
-        const next = { ...previous };
-        delete next[eventKey];
-        return next;
-      });
       setPlaybackDeliveryMap((previous) => ({
         ...previous,
         [eventKey]: { phase: 'hydrating', error: null }
@@ -137,7 +119,6 @@ export const ConnectionManager: FC = () => {
           playbackStateProxy,
           eventKey
         );
-        worker.off(GraphicsSocketEvent.STATE, graphicsStateProxy, eventKey);
         worker.off(
           GraphicsSocketEvent.PREVIEW_REPLAY,
           graphicsPreviewReplayProxy,
@@ -149,7 +130,6 @@ export const ConnectionManager: FC = () => {
     worker,
     connected,
     eventKey,
-    setGraphicsStateMap,
     setPlaybackDeliveryMap,
     playbackStateProxy
   ]);

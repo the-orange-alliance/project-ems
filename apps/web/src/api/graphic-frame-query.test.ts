@@ -106,39 +106,6 @@ describe('query decoding and adaptation', () => {
       result: { frame: { emptyReason: 'No eligible matches' } }
     });
   });
-  it('promotes the legacy adapter exception fallback into an adaptation error', async () => {
-    mocks.adapt.mockReturnValue({
-      kind: 'stat-tile',
-      series: [],
-      notes: ['Adapter error: Missing value path']
-    });
-    await expect(
-      queryGraphicFrame('event', spec, options)
-    ).rejects.toMatchObject({
-      source: 'adaptation',
-      kind: 'adaptation',
-      message: 'Adapter error: Missing value path'
-    });
-  });
-  it('labels a legitimate legacy empty frame as ready without losing normal notes', async () => {
-    mocks.adapt.mockReturnValue({
-      kind: 'table',
-      series: [],
-      rows: [],
-      notes: ['No played matches']
-    });
-    await expect(
-      queryGraphicFrame('event', spec, options)
-    ).resolves.toMatchObject({
-      ok: true,
-      result: {
-        frame: {
-          emptyReason: 'No data to display',
-          notes: ['No played matches']
-        }
-      }
-    });
-  });
   it('diagnoses an unknown stat in a loaded empty catalogue', async () => {
     await expect(
       queryGraphicFrame('event', spec, {

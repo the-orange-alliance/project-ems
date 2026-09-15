@@ -195,12 +195,16 @@ async function readyCueTarget(
   coordinator: PlaybackCoordinator,
   eventKey: string,
   requestId: string,
-  s: GraphicSpec
+  s: GraphicSpec,
+  /** Show coordinates for the cued graphic; the default is an ad-hoc graphic with no show position. */
+  position:
+    | { snapshotId: string; index: number }
+    | { snapshotId?: null; index?: null } = { snapshotId: null, index: null }
 ): Promise<GraphicsTarget> {
   const acceptance = await coordinator.beginPreparation(
     eventKey,
     { type: 'cue', requestId, spec: s },
-    { lane: 'cue', snapshotId: null, index: null, spec: s }
+    { lane: 'cue', ...position, spec: s }
   );
   if (!acceptance.ticket) throw new Error('expected a preparation ticket');
   const { ticket } = acceptance;
@@ -1225,4 +1229,94 @@ test('handle: dispatches refresh/push-update and throws for anything else', asyn
   assert.throws(() =>
     refresh.handle('event-a', { type: 'advance', requestId: 'adv1' })
   );
+});
+
+/**
+ * Regression: a refresh recalculates the graphic ALREADY live at a destination
+ * with fresh data - it never moves it. If the promoted copy came back without
+ * the show coordinates the graphic was taken at, every consumer that reads the
+ * program's position silently regresses after a push; PVW in particular falls
+ * back to the loaded cursor and previews the on-air item instead of the next one.
+ */
+test('push-update (program): the promoted graphic keeps the show coordinates it was taken at', async () => {
+  const { refresh, coordinator, stats } = setup();
+  const position = { snapshotId: 'snapshot-1', index: 0 } as const;
+  const target = await readyCueTarget(
+    coordinator,
+    'event-a',
+    'cue1',
+    spec('g1'),
+    position
+  );
+  assert.equal(target.snapshotId, position.snapshotId);
+  assert.equal(target.index, position.index);
+  await takeOntoProgram(coordinator, 'event-a', 'take1', target);
+
+  stats.queryFreshImpl = async () => ({
+    result: {
+      status: 'ok',
+      data: { value: 7 },
+      quality: 'complete',
+      warnings: []
+    },
+    calculatedAsOfUtc: NOW
+  });
+  const refreshAck = await refresh.refresh('event-a', {
+    type: 'refresh',
+    requestId: 'r1',
+    destination: 'program',
+    target
+  });
+  assert.equal(refreshAck.ok, true);
+  if (!refreshAck.ok) return;
+  const staged =
+    refreshAck.state.stagedUpdate.status === 'ready'
+      ? refreshAck.state.stagedUpdate.graphic
+      : undefined;
+  assert.ok(staged);
+  // The staged copy already carries the position, so the promotion cannot lose it.
+  assert.equal(staged.target.snapshotId, position.snapshotId);
+  assert.equal(staged.target.index, position.index);
+
+  const pushAck = await refresh.pushUpdate('event-a', {
+    type: 'push-update',
+    requestId: 'p1',
+    target
+  });
+  assert.equal(pushAck.ok, true);
+  if (!pushAck.ok) return;
+  assert.equal(pushAck.state.program?.graphic.target.snapshotId, position.snapshotId);
+  assert.equal(pushAck.state.program?.graphic.target.index, position.index);
+});
+
+/** A refresh of an ad-hoc graphic that never had a show position must not invent one. */
+test('push-update (program): an ad-hoc graphic still promotes with no show coordinates', async () => {
+  const { refresh, coordinator, stats } = setup();
+  const target = await readyCueTarget(coordinator, 'event-a', 'cue1', spec('g1'));
+  await takeOntoProgram(coordinator, 'event-a', 'take1', target);
+  stats.queryFreshImpl = async () => ({
+    result: {
+      status: 'ok',
+      data: { value: 7 },
+      quality: 'complete',
+      warnings: []
+    },
+    calculatedAsOfUtc: NOW
+  });
+  const refreshAck = await refresh.refresh('event-a', {
+    type: 'refresh',
+    requestId: 'r1',
+    destination: 'program',
+    target
+  });
+  assert.equal(refreshAck.ok, true);
+  const pushAck = await refresh.pushUpdate('event-a', {
+    type: 'push-update',
+    requestId: 'p1',
+    target
+  });
+  assert.equal(pushAck.ok, true);
+  if (!pushAck.ok) return;
+  assert.equal(pushAck.state.program?.graphic.target.snapshotId, null);
+  assert.equal(pushAck.state.program?.graphic.target.index, null);
 });

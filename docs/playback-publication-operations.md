@@ -5,17 +5,14 @@
 The API on port 8080 is the sole public playback mutation ingress and durable
 authority. A successful commit queues its complete, schema-validated
 `PlaybackState` for authenticated delivery to realtime. Realtime keeps no
-playback store: it validates and deduplicates the publication, projects it to
-the existing `LiveGraphicState` browser shape, and fans it out to the event's
-`graphics:<eventKey>` socket room.
+playback store: it validates and deduplicates publication and fans the exact
+`PlaybackStateEnvelope` out as `graphics:playback-state:v1` to the event's
+`graphics:<eventKey>` socket room. Subscription reads use the same contract.
 
-Port 8081 `/graphics/:eventKey/live/*` command routes are deprecated proxies.
-They forward to port 8080 and return `Deprecation: true`; they no longer
-broadcast the returned acknowledgment. This makes relayed and direct commands
-converge on the same commit-driven publication path. Task 16 removes the
-proxies after external Companion and automation clients have moved to 8080.
-The relay-only preview replay signal is presentational and is not a playback
-mutation.
+Port 8081 serves authoritative reads and ephemeral preview replay only. Playback
+command proxies and queue aliases are removed after operator confirmation that
+deployed Companion and automation consumers use 8080. Preview replay affects
+PVW presentation only and is not a playback mutation.
 
 ## Startup and credentials
 
@@ -41,7 +38,7 @@ Realtime settings:
 
 - `GRAPHICS_PUBLICATION_TOKEN`
 - `GRAPHICS_API_BASE_URL` (default `http://127.0.0.1:8080`, used only by
-  compatibility proxies and subscription hydration)
+  subscription hydration)
 - `DISABLE_GRAPHICS` disables both graphics relay routes and publication ingest
 
 The internal `POST /internal/graphics/playback` endpoint requires
@@ -74,15 +71,10 @@ realtime.
 
 Port 8080 supports state reads plus these mutations: load timeline, load
 rundown, unload, cue, advance, previous, go (path or query index), take, clear,
-quick-take, quick-cue, refresh cue/program, and push-update. Every command except
+quick-take, quick-cue, refresh cue/program, push-update, and atomic show advance. Every command except
 cue and quick-take has a body-less Companion GET form; cue and quick-take require
 a complete graphic spec and are POST-only. See the consumer guide and Swagger
 for request schemas.
-
-Port 8081 temporarily proxies load, unload, advance, previous, go, take,
-quick-take, clear, refresh, push-update, and the legacy queue aliases. It does
-not define the full authoritative command surface and must not be used for new
-integrations.
 
 ## Ordered show storage
 
@@ -99,7 +91,8 @@ is folded into that event's `producer-show` rundown inside the same
 transaction that records the marker `graphics-queue-to-producer-show-v1` in
 `graphics_migration`. The marker is what makes restarts idempotent; the
 original `graphics_queue` row is deliberately left in place so the
-pre-migration order stays recoverable by hand until Task 16 drops the table.
+pre-migration order stays recoverable by hand. Fresh databases do not create
+this table; no runtime queue API or adapter remains.
 An event that already has a `producer-show` rundown is skipped rather than
 overwritten, and a `graphics_queue` row whose JSON no longer parses is logged
 and skipped rather than throwing - that migration runs at the top of every
@@ -110,3 +103,19 @@ A rundown entry may reference a timeline that has since been deleted. Writes do
 not reject it (that would block every later reorder or removal and force the
 operator to discard their own show order); `load-rundown` does, naming the
 entry and its timeline, so nothing broken reaches air.
+
+## Coordinated rollout and rollback
+
+1. Confirm Companion/automation uses 8080 and deploy current producer/PGM/PVW
+   clients together. Clear stale browser/service-worker assets before the show.
+2. Back up event databases and publication configuration. Start updated realtime,
+   then API, using the same publication token; verify hydration for each event.
+3. Check publication health, Cue/Take/Refresh/Push/Clear and rundown consumption
+   off-air before enabling production output.
+
+If client rollout fails, restore the prior API/realtime/web release together.
+Playback/rundown schemas and program semantics are unchanged; old queue rows are
+preserved for recovery, but their contents become stale after rundown edits.
+Restore a database backup only when data rollback is intended. Restarting API
+creates an epoch and rehydrates displays; do not reuse an epoch across writers.
+See [architecture and compatibility owners](graphics-architecture.md).

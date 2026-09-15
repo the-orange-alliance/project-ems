@@ -299,3 +299,14 @@ Every row below is implemented. The fixture key is the same catalogue ID in gold
 | M25 | `fgc2026.event-wide-correction-rate` | [fgc2026/audit-trail.ts](../libs/models/src/seasons/stats/fgc2026/audit-trail.ts) | Golden `M25`; contract/partial-data checks |
 | M26 | `fgc2026.coopertition-flip-timing` | [fgc2026/audit-trail.ts](../libs/models/src/seasons/stats/fgc2026/audit-trail.ts) | Golden `M26`; contract/partial-data checks |
 | M27 | `fgc2026.multiplier-trajectory` | [fgc2026/audit-trail.ts](../libs/models/src/seasons/stats/fgc2026/audit-trail.ts) | Golden `M27`; contract/partial-data checks |
+
+## Final graphics consolidation
+
+The current executable graphics flow and retained compatibility inventory are in
+[graphics architecture](graphics-architecture.md) and
+[publication operations](playback-publication-operations.md). Playback commands
+use the API; realtime publishes one authoritative envelope; show entries use
+rundowns; displays share the production transition machine and renderer. Run
+`npm run check:graphics-contract` to prevent removed contracts returning.
+Final verification is recorded separately from this document's historical test
+counts. Tasks 02, 12, 13 and 14 remain excluded and unchanged.

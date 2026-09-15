@@ -41,6 +41,7 @@ export type GraphicsBroadcastHarness = {
   repository: GraphicsRepository;
   stats: FakeStats;
   realtime: Graphics;
+  commands: ReturnType<typeof apiCommands>;
   coordinator: PlaybackCoordinator;
   apiBaseUrl: string;
 };
@@ -180,6 +181,7 @@ export async function createGraphicsBroadcastReliabilityHarness(
     return {
       ok: response.statusCode >= 200 && response.statusCode < 400,
       status: response.statusCode,
+      async json() { return response.json(); },
       async text() {
         return response.payload;
       }
@@ -202,6 +204,7 @@ export async function createGraphicsBroadcastReliabilityHarness(
     repository,
     stats,
     realtime,
+    commands: apiCommands(app),
     coordinator,
     apiBaseUrl: API_BASE_URL
   };
@@ -238,3 +241,20 @@ export async function seedRundown(
 }
 
 export { supportSampleGraphic as sampleGraphic };
+
+/** Test convenience only: exercises the supported API ingress and returns exact state. */
+function apiCommands(app: GraphicsBroadcastHarness['app']) {
+  async function command(eventKey: string, path: string, payload?: unknown): Promise<PlaybackState> {
+    const response = await app.inject({ method: 'POST', url: '/graphics/' + eventKey + '/live/' + path, payload: payload as any });
+    if (response.statusCode !== 200) throw new Error(response.payload);
+    return response.json().state;
+  }
+  return {
+    load: (event: string, timeline: string) => command(event, 'load/' + timeline),
+    take: (event: string) => command(event, 'take'),
+    advance: (event: string) => command(event, 'advance'),
+    clear: (event: string) => command(event, 'clear'),
+    quickTake: (event: string, spec: GraphicSpec, _throwOnError?: boolean) => command(event, 'quick-take', { spec }),
+    getState: async (event: string): Promise<PlaybackState> => (await app.inject('/graphics/' + event + '/live')).json()
+  };
+}

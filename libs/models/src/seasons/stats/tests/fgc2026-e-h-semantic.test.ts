@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { catalogue } from '../catalogue.js';
 import { FGC2026_E_H_SEMANTIC_REGISTRATIONS } from '../presentation/fgc2026-e-h.js';
 import { semanticRegistrationKey } from '../presentation/semantic-helpers.js';
-import type { AdaptContext } from '../presentation/adapters.js';
+import type { AdaptContext } from '../presentation/adapt-context.js';
 import type { StatResult } from '../types.js';
 import type {
   GraphicKind,

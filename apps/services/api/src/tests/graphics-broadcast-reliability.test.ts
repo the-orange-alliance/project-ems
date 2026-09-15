@@ -6,6 +6,7 @@ import {
   seedRundown,
   seedTimeline
 } from './graphics-broadcast-reliability-harness.js';
+import { nextPlaybackPreviewSpec } from '@toa-lib/models';
 // @ts-expect-error realtime does not emit declarations; the harness exercises its compiled boundary.
 import { PlaybackPublicationReceiver } from '../../../realtime/build/PlaybackPublication.js';
 
@@ -53,12 +54,12 @@ test('direct API quick-take publication reaches the subscribed event audience', 
   await coordinator.retryPublication('event-a');
 
   const delivered = audience.states.filter(
-    (entry) => entry.payload.generation === acknowledgment.state.revision
+    (entry) => entry.payload.state.revision === acknowledgment.state.revision
   );
   assert.equal(delivered.length, 1);
   assert.equal(delivered[0].room, 'graphics:event-a');
-  assert.equal(delivered[0].payload.spec.id, requested.id);
-  assert.equal(delivered[0].payload.onAir, true);
+  assert.equal(delivered[0].payload.state.program.graphic.spec.id, requested.id);
+  assert.equal(delivered[0].payload.state.program !== null, true);
 
   const health = await app.inject('/graphics/event-a/live/publication-health');
   assert.equal(health.statusCode, 200);
@@ -69,26 +70,31 @@ test('direct API quick-take publication reaches the subscribed event audience', 
   );
 });
 
-test('relay-mediated command converges on API publication without a duplicate final broadcast', async (t) => {
+test('realtime hydration reads the exact API acknowledgment without another broadcast', async (t) => {
   const audience = publicationAudience();
-  const { realtime, coordinator } =
+  const { commands, realtime, coordinator } =
     await createGraphicsBroadcastReliabilityHarness(t, {
       publish: audience.publish
     });
   const requested = sampleGraphic('relayed-quick-stat');
 
-  const returned = await realtime.quickTake('event-a', requested, true);
+  const returned = await commands.quickTake('event-a', requested, true);
   assert.ok(returned);
   await coordinator.retryPublication('event-a');
 
-  const finalRevision = returned.generation;
+  const finalRevision = returned.revision;
+  const beforeReplay = audience.states.length;
+  const replay = await realtime.getPlaybackEnvelope('event-a', true);
+  assert.deepEqual(replay.state, returned);
+  assert.equal(replay.eventKey, 'event-a');
+  assert.equal(audience.states.length, beforeReplay);
   assert.equal(
     audience.states.filter(
-      (entry) => entry.payload.generation === finalRevision
+      (entry) => entry.payload.state.revision === finalRevision
     ).length,
     1
   );
-  assert.equal(audience.states.at(-1).payload.spec.id, requested.id);
+  assert.equal(audience.states.at(-1).payload.state.program.graphic.spec.id, requested.id);
 });
 
 test('each playback mutation type publishes the exact committed acknowledgment revision', async (t) => {
@@ -117,7 +123,7 @@ test('each playback mutation type publishes the exact committed acknowledgment r
       audience.states.filter(
         (entry) =>
           entry.room === 'graphics:event-a' &&
-          entry.payload.generation === acknowledgment.state.revision
+          entry.payload.state.revision === acknowledgment.state.revision
       ).length,
       1,
       `${label} did not publish its exact committed revision once`
@@ -150,34 +156,34 @@ test('each playback mutation type publishes the exact committed acknowledgment r
   );
 });
 
-test('isolated harness: event-scoped playback stays independent and persisted clear survives relay reads', async (t) => {
-  const { app, realtime, repository } =
+test('isolated harness: event-scoped playback stays independent and persisted clear survives API reads', async (t) => {
+  const { app, commands, repository } =
     await createGraphicsBroadcastReliabilityHarness(t);
 
   await seedTimeline(repository, 'event-a', 'timeline-a', ['item-0']);
   await seedTimeline(repository, 'event-b', 'timeline-b', ['item-1']);
 
-  const loadA = await realtime.load('event-a', 'timeline-a');
+  const loadA = await commands.load('event-a', 'timeline-a');
   assert.ok(loadA);
-  assert.equal(loadA.timelineId, 'timeline-a');
-  assert.equal(loadA.onAir, false);
+  assert.equal(loadA.loaded?.source.kind === 'timeline' ? loadA.loaded.source.timelineId : null, 'timeline-a');
+  assert.equal((loadA.program !== null), false);
 
-  const stateB = await realtime.getState('event-b');
+  const stateB = await commands.getState('event-b');
   assert.ok(stateB);
-  assert.equal(stateB.timelineId, null);
-  assert.equal(stateB.generation, 0);
+  assert.equal(stateB.loaded, null);
+  assert.equal(stateB.revision, 0);
 
-  const takenA = await realtime.take('event-a');
+  const takenA = await commands.take('event-a');
   assert.ok(takenA);
-  assert.equal(takenA.onAir, true);
-  assert.equal(takenA.spec?.id, 'item-0');
+  assert.equal((takenA.program !== null), true);
+  assert.equal(takenA.program?.graphic.spec?.id, 'item-0');
 
-  const clearedA = await realtime.clear('event-a');
+  const clearedA = await commands.clear('event-a');
   assert.ok(clearedA);
-  assert.equal(clearedA.onAir, false);
+  assert.equal((clearedA.program !== null), false);
   // generation mirrors state.revision (rooms/Graphics.ts: `generation: state.revision`). load's prepared
   // cue consumes 2 durable commits (calculating checkpoint, then ready), take and clear consume 1 each: 4 total.
-  assert.equal(clearedA.generation, 4);
+  assert.equal(clearedA.revision, 4);
 
   const persisted = await app.inject({
     method: 'GET',
@@ -190,7 +196,7 @@ test('isolated harness: event-scoped playback stays independent and persisted cl
 });
 
 test('isolated harness: load-rundown advances across entry boundaries without leaking state across events', async (t) => {
-  const { app, realtime, repository } =
+  const { app, commands, repository } =
     await createGraphicsBroadcastReliabilityHarness(t);
 
   await seedTimeline(repository, 'event-a', 'timeline-a', ['item-a']);
@@ -211,9 +217,9 @@ test('isolated harness: load-rundown advances across entry boundaries without le
   assert.equal(loaded.loaded.items.length, 2);
   assert.equal(loaded.cue.status, 'ready');
 
-  const advanced = await realtime.advance('event-a');
+  const advanced = await commands.advance('event-a');
   assert.ok(advanced);
-  assert.equal(advanced.timelineId, 'timeline-b');
+  assert.equal(advanced.loaded?.items[advanced.loaded.index].timelineId, 'timeline-b');
   // Nothing has been taken, so `spec`/`frame` are correctly null: they track
   // `program` and NOTHING else, staying in lockstep with `onAir` (see
   // `toLegacyState`'s own doc comment - preferring a ready cue here is the
@@ -221,9 +227,9 @@ test('isolated harness: load-rundown advances across entry boundaries without le
   // checking - that advance crossed the rundown entry boundary onto
   // timeline-b's item - is now expressed by `previewSpec`, the item that a
   // take would put up next.
-  assert.equal(advanced.spec, null);
-  assert.equal(advanced.onAir, false);
-  assert.equal(advanced.previewSpec?.id, 'item-b');
+  assert.equal(advanced.program, null);
+  assert.equal((advanced.program !== null), false);
+  assert.equal(nextPlaybackPreviewSpec(advanced)?.id, 'item-b');
 
   const live = await app.inject({
     method: 'GET',
@@ -292,16 +298,16 @@ test('isolated harness: ready-only Take rejects before a cue exists, and quick-t
   assert.equal(afterFailureState.cue.status, 'failed');
 });
 
-test('isolated harness: relay quick-take airs the exact requested ad-hoc graphic', async (t) => {
-  const { realtime, stats } =
+test('isolated harness: API quick-take airs the exact requested ad-hoc graphic', async (t) => {
+  const { commands, stats } =
     await createGraphicsBroadcastReliabilityHarness(t);
 
   const requested = sampleGraphic('quick-stat');
-  const state = await realtime.quickTake('event-a', requested, true);
+  const state = await commands.quickTake('event-a', requested, true);
 
   assert.ok(state);
-  assert.equal(state.onAir, true);
-  assert.equal(state.spec?.id, requested.id);
+  assert.equal((state.program !== null), true);
+  assert.equal(state.program?.graphic.spec?.id, requested.id);
   assert.equal(stats.queryCount, 0);
   assert.equal(stats.queryFreshCount, 1);
 });

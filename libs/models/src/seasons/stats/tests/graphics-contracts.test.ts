@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createEmptyPlaybackState,
-  fromLegacyPlaybackState,
   graphicSpecZod,
   graphicsTargetZod,
   migrateTimeline,
+  nextPlaybackPreviewSpec,
   playbackCommandZod,
   playbackStateZod,
   preparedGraphicZod,
@@ -14,6 +14,7 @@ import {
   snapshotPreparedGraphic,
   vizFrameZod,
   type GraphicSpec,
+  type PlaybackState,
   type PresentationFrame
 } from '../../../base/Graphics.js';
 
@@ -209,40 +210,6 @@ test('loaded timelines cannot leak across event scope', () => {
   assert.equal(playbackStateZod.safeParse(state).success, false);
 });
 
-test('legacy adoption preserves exact program and refuses missing or untyped on-air frames', () => {
-  const legacy = {
-    timelineId: 't-1',
-    index: 0,
-    spec,
-    frame,
-    onAir: true,
-    generation: 5,
-    queueEntryId: 'e-1',
-    armed: true
-  };
-  const state = fromLegacyPlaybackState('event-1', legacy, atUtc);
-  assert.deepEqual(state.program?.graphic.frame, frame);
-  assert.equal(state.revision, 5);
-  assert.equal(
-    fromLegacyPlaybackState(
-      'event-1',
-      { ...legacy, onAir: false, frame: null },
-      atUtc
-    ).program,
-    null
-  );
-  assert.throws(() =>
-    fromLegacyPlaybackState('event-1', { ...legacy, frame: null }, atUtc)
-  );
-  assert.throws(() =>
-    fromLegacyPlaybackState(
-      'event-1',
-      { ...legacy, frame: { ...frame, data: undefined } },
-      atUtc
-    )
-  );
-});
-
 test('semantic frames validate chronology, shared domain, authoritative rank, and empty reasons', () => {
   const measure = {
     id: 'score',
@@ -316,4 +283,101 @@ test('semantic frames validate chronology, shared domain, authoritative rank, an
     }).success,
     true
   );
+});
+
+/*
+ * `nextPlaybackPreviewSpec` is what PVW previews. It answers one question: given
+ * authoritative playback state, which loaded item comes after what is on air?
+ */
+const previewItem = (id: string, itemIndex: number) => ({
+  timelineId: 'tl-1',
+  timelineRevision: 1,
+  itemIndex,
+  spec: { ...spec, id, title: id }
+});
+function loadedState(index: number, ids: string[]): PlaybackState {
+  const state = createEmptyPlaybackState('event-a', atUtc);
+  return playbackStateZod.parse({
+    ...state,
+    loaded: {
+      snapshotId: 'snapshot-1',
+      source: { kind: 'timeline', timelineId: 'tl-1', revision: 1 },
+      timelines: [],
+      items: ids.map(previewItem),
+      index,
+      loadedAtUtc: atUtc
+    }
+  });
+}
+function onProgram(
+  state: PlaybackState,
+  target: { snapshotId: string | null; index: number | null }
+): PlaybackState {
+  return playbackStateZod.parse({
+    ...state,
+    program: {
+      revision: 1,
+      takenAtUtc: atUtc,
+      graphic: {
+        target: {
+          targetId: 'target-1',
+          targetRevision: 1,
+          requestId: 'req-1',
+          ...target
+        },
+        spec,
+        frame,
+        preparedAtUtc: atUtc
+      }
+    }
+  });
+}
+
+test('nextPlaybackPreviewSpec: nothing loaded previews nothing', () => {
+  assert.equal(nextPlaybackPreviewSpec(null), null);
+  assert.equal(
+    nextPlaybackPreviewSpec(createEmptyPlaybackState('event-a', atUtc)),
+    null
+  );
+});
+
+test('nextPlaybackPreviewSpec: with nothing on air, previews the loaded cursor', () => {
+  const state = loadedState(0, ['a', 'b', 'c']);
+  assert.equal(nextPlaybackPreviewSpec(state)?.id, 'a');
+  assert.equal(nextPlaybackPreviewSpec(loadedState(2, ['a', 'b', 'c']))?.id, 'c');
+});
+
+test('nextPlaybackPreviewSpec: with a program from this snapshot, previews the item AFTER it', () => {
+  const state = onProgram(loadedState(0, ['a', 'b', 'c']), {
+    snapshotId: 'snapshot-1',
+    index: 0
+  });
+  assert.equal(nextPlaybackPreviewSpec(state)?.id, 'b');
+});
+
+test('nextPlaybackPreviewSpec: the last loaded item previews nothing after it', () => {
+  const state = onProgram(loadedState(0, ['a', 'b']), {
+    snapshotId: 'snapshot-1',
+    index: 1
+  });
+  assert.equal(nextPlaybackPreviewSpec(state), null);
+});
+
+/*
+ * An ad-hoc graphic (Quick Take) and a program left over from a previous load
+ * both name no position in THIS snapshot, so the cursor is the only honest
+ * answer. Regression: when a refresh/push dropped the program's coordinates,
+ * this fallback made PVW preview the item already on air.
+ */
+test('nextPlaybackPreviewSpec: a program with no position in this snapshot falls back to the cursor', () => {
+  const adHoc = onProgram(loadedState(1, ['a', 'b', 'c']), {
+    snapshotId: null,
+    index: null
+  });
+  assert.equal(nextPlaybackPreviewSpec(adHoc)?.id, 'b');
+  const stale = onProgram(loadedState(1, ['a', 'b', 'c']), {
+    snapshotId: 'snapshot-0',
+    index: 0
+  });
+  assert.equal(nextPlaybackPreviewSpec(stale)?.id, 'b');
 });

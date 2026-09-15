@@ -68,7 +68,7 @@ import {
   flattenTableRows,
   SemanticPreparationError
 } from './semantic-helpers.js';
-import type { AdaptContext } from './adapters.js';
+import type { AdaptContext } from './adapt-context.js';
 import {
   SUPPORTED_GRAPHIC_MODES,
   type GraphicSpec,

@@ -81,19 +81,14 @@ test('authenticated internal ingestion validates complete state and broadcasts o
   await publisher.publish('event-a', state('event-a', 1));
   await publisher.publish('event-a', state('event-a', 1));
 
-  assert.equal(sockets.emissions.length, 2);
+  assert.equal(sockets.emissions.length, 1);
   const authoritative = sockets.emissions.filter(
     (entry) => entry.event === GraphicsSocketEvent.PLAYBACK_STATE_V1
   );
-  const legacy = sockets.emissions.filter(
-    (entry) => entry.event === GraphicsSocketEvent.STATE
-  );
   assert.equal(authoritative.length, 1);
-  assert.equal(legacy.length, 1);
   assert.equal(authoritative[0].room, 'graphics:event-a');
   assert.equal(authoritative[0].payload.eventKey, 'event-a');
   assert.equal(authoritative[0].payload.state.revision, 1);
-  assert.equal(legacy[0].payload.generation, 1);
 });
 
 test('realtime dedupe isolates events, drops reordering, and retires prior authority epochs', () => {
@@ -130,8 +125,8 @@ test('realtime dedupe isolates events, drops reordering, and retires prior autho
 
   assert.deepEqual(
     sockets.emissions
-      .filter((entry) => entry.event === GraphicsSocketEvent.STATE)
-      .map((entry) => [entry.room, entry.payload.generation]),
+      .filter((entry) => entry.event === GraphicsSocketEvent.PLAYBACK_STATE_V1)
+      .map((entry) => [entry.room, entry.payload.state.revision]),
     [
       ['graphics:event-a', 2],
       ['graphics:event-b', 1],

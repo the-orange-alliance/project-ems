@@ -33,7 +33,7 @@ import {
   SemanticPreparationError,
   type SemanticRegistration
 } from '../presentation/semantic-helpers.js';
-import { adaptResult, type AdaptContext } from '../presentation/adapters.js';
+import type { AdaptContext } from '../presentation/adapt-context.js';
 import {
   presentationFrameZod,
   graphicKindZod,
@@ -354,49 +354,10 @@ test('a kind NOT advertised by a registration is an actionable preparation error
 // Production wiring: prepareGraphicFrame's fallback policy.
 // ---------------------------------------------------------------------------
 
-test('prepareGraphicFrame: an unregistered catalogue id falls back to the untouched legacy adapter', () => {
-  const unregisteredId = 'ZZ999-NOT-A-REAL-CATALOGUE-ID';
-  assert.equal(
-    semanticRegistrationFor(FGC2026_SEASON_KEY, unregisteredId),
-    undefined,
-    'fixture assumption: this id must have no registration'
-  );
-  const okResult: OkResult = {
-    status: 'ok',
-    data: 42,
-    quality: 'complete',
-    warnings: []
-  };
-  const spec: GraphicSpec = {
-    id: 'x',
-    title: 'x',
-    stat: unregisteredId,
-    selectors: {},
-    filters: {},
-    params: {},
-    kind: 'stat-tile',
-    mode: 'fullscreen',
-    options: {}
-  };
-  const context = ctx(unregisteredId);
-
-  const viaWrapper = prepareGraphicFrame(okResult, spec, context);
-  const viaLegacy = adaptResult(okResult, spec, context);
-  assert.deepEqual(
-    viaWrapper,
-    viaLegacy,
-    'an unregistered id must be byte-identical to calling the legacy adaptResult directly'
-  );
-  assert.equal(
-    viaWrapper.schemaVersion,
-    undefined,
-    'the legacy fallback never claims schemaVersion 2'
-  );
-  assert.equal(
-    viaWrapper.data,
-    undefined,
-    'the legacy fallback never claims v2 semantic data'
-  );
+test('prepareGraphicFrame rejects unknown catalogue IDs instead of fabricating a v1 frame', () => {
+  const result: OkResult = { status: 'ok', data: 42, quality: 'complete', warnings: [] };
+  const spec = buildSpec(SEMANTIC_PRESENTATION_REGISTRY.values().next().value!);
+  assert.throws(() => prepareGraphicFrame(result, spec, ctx('ZZ999')), SemanticPreparationError);
 });
 
 test('prepareGraphicFrame: a registered id ALWAYS takes the semantic path, even when it must throw', () => {

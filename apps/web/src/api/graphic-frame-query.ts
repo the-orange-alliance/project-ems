@@ -239,22 +239,6 @@ export async function queryGraphicFrame(
     let frame: VizFrame;
     try {
       frame = prepareGraphicFrame(res.result, resolved, ctx);
-      // The legacy generic adapter encodes caught exceptions in notes. Promote
-      // that explicit fallback to an off-air error instead of claiming it is empty.
-      const adapterFailure = frame.notes?.find((note) =>
-        note.startsWith('Adapter error:')
-      );
-      if (adapterFailure) throw new Error(adapterFailure);
-      if (
-        !frame.data &&
-        !frame.rows?.length &&
-        !frame.series.some((series) => series.points.length > 0)
-      ) {
-        frame = {
-          ...frame,
-          emptyReason: frame.emptyReason || 'No data to display'
-        };
-      }
     } catch (cause) {
       throw new LoadError(
         'adaptation',

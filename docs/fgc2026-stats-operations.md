@@ -73,3 +73,14 @@ docker run --rm --entrypoint node -w /workspace/apps/services/api ems-fgc2026-st
 ```
 
 The backend entrypoint forwards Docker shutdown signals to both services, allowing Fastify to drain its worker pool. Full-container verification checked HTTP 200 from the queue, heartbeat and realtime handshake, then stopped the owned container in 1.861 seconds with a 10-second Docker timeout.
+
+## Final graphics consolidation
+
+The current executable graphics flow and retained compatibility inventory are in
+[graphics architecture](graphics-architecture.md) and
+[publication operations](playback-publication-operations.md). Playback commands
+use the API; realtime publishes one authoritative envelope; show entries use
+rundowns; displays share the production transition machine and renderer. Run
+`npm run check:graphics-contract` to prevent removed contracts returning.
+Final verification is recorded separately from this document's historical test
+counts. Tasks 02, 12, 13 and 14 remain excluded and unchanged.

@@ -16,12 +16,11 @@ import {
   describeRundownEntries,
   emptyProducerShow,
   normalizeShowEntries,
-  queueEntriesFromShow,
   showEntriesFromQueue,
   type RundownEntry
 } from '../../../base/GraphicsShow.js';
 import { rundownZod, type Timeline } from '../../../base/Graphics.js';
-import type { QueueEntry } from '../../../base/GraphicsQueue.js';
+type QueueEntry = RundownEntry & { values: Record<string, number> };
 
 type TimelineLike = Pick<Timeline, 'name' | 'items' | 'variables'> & {
   timelineId: string;
@@ -126,25 +125,6 @@ test('normalize: an id that is not a valid identifier is replaced positionally',
   assert.equal(entries[0].entryId, 'ok-1');
   assert.equal(entries[1].entryId, 'entry-2');
   assert.equal(entries[1].timelineId, 'timeline-b');
-});
-
-test('queue read adapter: the round trip back to queue shape restores an explicit empty values map', () => {
-  const show = rundownZod.parse({
-    schemaVersion: 2,
-    revision: 4,
-    rundownId: PRODUCER_SHOW_RUNDOWN_ID,
-    eventKey: 'event-a',
-    name: 'Producer Show',
-    entries: [
-      { entryId: 'entry-1', timelineId: 'timeline-a', values: { x: 7 } },
-      { entryId: 'entry-2', timelineId: 'timeline-b', note: 'n' }
-    ],
-    updatedAtUtc: '2026-09-14T12:00:00.000Z'
-  });
-  assert.deepEqual(queueEntriesFromShow(show), [
-    { entryId: 'entry-1', timelineId: 'timeline-a', values: { x: 7 } },
-    { entryId: 'entry-2', timelineId: 'timeline-b', values: {}, note: 'n' }
-  ]);
 });
 
 test('entry status: a deleted timeline yields an explicit missing-timeline entry in place, not a dropped row', () => {
