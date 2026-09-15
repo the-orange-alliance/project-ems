@@ -42,17 +42,15 @@ const alarmKeyframes = `
 export interface PreviewNotReadyAlarmProps {
   /** Exact producer-facing reason the next cue cannot be prepared. */
   reason: string;
+  retry?: () => unknown;
 }
 
 /**
- * Full-bleed alarm for the preview (PVW) screen: the NEXT cue is broken and
- * pressing Go will put nothing on air.
+ * Full-bleed alarm for the preview (PVW) screen: the next cue's off-air
+ * calculation is unavailable. It does not certify authoritative cue readiness.
  *
- * The failure it reports is not a guess. `usePreviewFrame` runs the identical
- * `queryGraphicFrame` round trip that `PlaybackNavigation.prepareCueAt` will
- * run when the transport advances onto this item, so a reason shown here is
- * the reason the cue will be marked `failed` and the following `take` will
- * reject `NOT_READY`.
+ * The reason comes from preview's query/adapter or a failed prerequisite.
+ * Service failures can recover; operators can retry without changing playback.
  *
  * WHY THIS IS ALLOWED TO BE LOUD, AND WHERE IT MUST NEVER GO:
  * The PVW screen already carries multiviewer chrome (a red border and two
@@ -65,7 +63,8 @@ export interface PreviewNotReadyAlarmProps {
  * source composited over live video.
  */
 export const PreviewNotReadyAlarm: FC<PreviewNotReadyAlarmProps> = ({
-  reason
+  reason,
+  retry
 }) => (
   <div
     className={ALARM_CLASS}
@@ -108,7 +107,7 @@ export const PreviewNotReadyAlarm: FC<PreviewNotReadyAlarmProps> = ({
     >
       Next cue
       <br />
-      will not fire
+      unavailable
     </div>
 
     <div
@@ -132,8 +131,19 @@ export const PreviewNotReadyAlarm: FC<PreviewNotReadyAlarmProps> = ({
         opacity: 0.92
       }}
     >
-      Fix or skip this item before taking
+      Check or skip this item before taking
     </div>
+    {retry && (
+      <button
+        type='button'
+        style={{ pointerEvents: 'auto' }}
+        onClick={() => {
+          void retry();
+        }}
+      >
+        Retry preview
+      </button>
+    )}
   </div>
 );
 

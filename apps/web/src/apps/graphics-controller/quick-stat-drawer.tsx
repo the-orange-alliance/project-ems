@@ -23,6 +23,8 @@ import {
   type StatCatalogueEntry
 } from '../../api/use-stats-data.js';
 import { buildDefaultSpec } from './build-default-spec.js';
+import { requestLoadState } from '../../api/load-state.js';
+import { LoadStateNotice } from '../../components/util/load-state-notice.js';
 
 export interface QuickStatDrawerProps {
   eventKey: string;
@@ -89,7 +91,9 @@ export const QuickStatDrawer: FC<QuickStatDrawerProps> = ({
   onAppendToTimeline,
   onTakeNow
 }) => {
-  const { data: catalogue = [], isLoading } = useStatsCatalogue(eventKey);
+  const request = useStatsCatalogue(eventKey);
+  const { data: catalogue = [] } = request;
+  const loadState = requestLoadState('catalogue', request);
   const [search, setSearch] = useState('');
   const [scopes, setScopes] = useState<Set<string>>(new Set());
   const [letters, setLetters] = useState<Set<string>>(new Set());
@@ -118,7 +122,8 @@ export const QuickStatDrawer: FC<QuickStatDrawerProps> = ({
     });
   }, [catalogue, search, scopes, letters]);
 
-  const visible = filtered.slice(0, MAX_RESULTS);
+  const visible =
+    loadState.status === 'ready' ? filtered.slice(0, MAX_RESULTS) : [];
 
   // Builds the complete draft `GraphicSpec` for one catalogue entry. This is
   // the entire "one click" step: `presentationFor` supplies the
@@ -191,23 +196,23 @@ export const QuickStatDrawer: FC<QuickStatDrawerProps> = ({
           </Tag.CheckableTag>
         ))}
       </Space>
-      <Typography.Text type='secondary' style={{ fontSize: 12 }}>
-        {isLoading
-          ? 'Loading catalogue...'
-          : `${filtered.length} match${filtered.length === 1 ? '' : 'es'}${
-              filtered.length > MAX_RESULTS
-                ? ` - showing first ${MAX_RESULTS}, refine your search`
-                : ''
-            }`}
-      </Typography.Text>
+      {loadState.status === 'ready' && (
+        <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+          {`${filtered.length} match${filtered.length === 1 ? '' : 'es'}${
+            filtered.length > MAX_RESULTS
+              ? ` - showing first ${MAX_RESULTS}, refine your search`
+              : ''
+          }`}
+        </Typography.Text>
+      )}
+      <LoadStateNotice state={loadState} retry={() => request.mutate()} />
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-        {!isLoading && visible.length === 0 ? (
+        {loadState.status !== 'ready' ? null : visible.length === 0 ? (
           <Empty description='No stats match' style={{ marginTop: 24 }} />
         ) : (
           <List
             size='small'
             dataSource={visible}
-            loading={isLoading}
             renderItem={(entry) => (
               <List.Item
                 key={entry.catalogueId}

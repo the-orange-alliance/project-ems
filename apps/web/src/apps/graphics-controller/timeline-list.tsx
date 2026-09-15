@@ -19,6 +19,8 @@ import {
 import { FC, useState } from 'react';
 import { graphicsApi, useTimelines } from 'src/api/use-graphics-data.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { requestLoadState } from 'src/api/load-state.js';
+import { LoadStateNotice } from 'src/components/util/load-state-notice.js';
 
 export interface TimelineListProps {
   eventKey: string;
@@ -43,7 +45,10 @@ export const TimelineList: FC<TimelineListProps> = ({
   selectedId,
   onSelect
 }) => {
-  const { data: timelines, isLoading } = useTimelines(eventKey);
+  const request = useTimelines(eventKey);
+  const { data: timelines } = request;
+  const loadState = requestLoadState('timelines', request);
+  const isLoading = loadState.status === 'loading';
   const { showErrorSnackbar } = useSnackbar();
 
   const [creating, setCreating] = useState(false);
@@ -217,119 +222,125 @@ export const TimelineList: FC<TimelineListProps> = ({
         </div>
       )}
 
-      <Spin spinning={isLoading}>
-        <List
-          size='small'
-          dataSource={timelines ?? []}
-          locale={{ emptyText: 'No timelines yet' }}
-          rowKey='timelineId'
-          renderItem={(t) => {
-            const isSelected = t.timelineId === selectedId;
-            const isEditing = editingId === t.timelineId;
-            const isBusy = busyId === t.timelineId;
-            return (
-              <List.Item
-                style={{
-                  cursor: 'pointer',
-                  padding: '6px 12px',
-                  background: isSelected
-                    ? 'var(--ant-color-primary-bg)'
-                    : undefined
-                }}
-                onClick={() => !isEditing && onSelect(t.timelineId)}
-              >
-                {isEditing ? (
-                  <Input
-                    autoFocus
-                    size='small'
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') commitRename(t);
-                      if (e.key === 'Escape') cancelRename();
-                    }}
-                    onBlur={() => commitRename(t)}
-                  />
-                ) : (
-                  // Title on its own row, actions on the row below it -
-                  // rather than antd's default `actions` placement (a fixed
-                  // column to the right of the title), which squeezed long
-                  // names like "Demo Match Start 1" down into a sliver and
-                  // wrapped them one word per line.
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 4,
-                      width: '100%'
-                    }}
-                  >
-                    <Typography.Text
-                      strong={isSelected}
-                      style={{ display: 'block' }}
+      <LoadStateNotice state={loadState} retry={() => request.mutate()} />
+      {loadState.status === 'ready' && (
+        <Spin spinning={isLoading}>
+          <List
+            size='small'
+            dataSource={timelines ?? []}
+            locale={{ emptyText: 'No timelines yet' }}
+            rowKey='timelineId'
+            renderItem={(t) => {
+              const isSelected = t.timelineId === selectedId;
+              const isEditing = editingId === t.timelineId;
+              const isBusy = busyId === t.timelineId;
+              return (
+                <List.Item
+                  style={{
+                    cursor: 'pointer',
+                    padding: '6px 12px',
+                    background: isSelected
+                      ? 'var(--ant-color-primary-bg)'
+                      : undefined
+                  }}
+                  onClick={() => !isEditing && onSelect(t.timelineId)}
+                >
+                  {isEditing ? (
+                    <Input
+                      autoFocus
+                      size='small'
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') commitRename(t);
+                        if (e.key === 'Escape') cancelRename();
+                      }}
+                      onBlur={() => commitRename(t)}
+                    />
+                  ) : (
+                    // Title on its own row, actions on the row below it -
+                    // rather than antd's default `actions` placement (a fixed
+                    // column to the right of the title), which squeezed long
+                    // names like "Demo Match Start 1" down into a sliver and
+                    // wrapped them one word per line.
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 4,
+                        width: '100%'
+                      }}
                     >
-                      {t.name}
-                    </Typography.Text>
-                    <Space size={4} onClick={(e) => e.stopPropagation()}>
-                      <Tooltip
-                        title={
-                          t.published
-                            ? 'Published - shown in the Timeline Queue search'
-                            : 'Unpublished - hidden from the Timeline Queue search'
-                        }
+                      <Typography.Text
+                        strong={isSelected}
+                        style={{ display: 'block' }}
                       >
-                        <Switch
-                          size='small'
-                          checked={!!t.published}
-                          disabled={isBusy}
-                          aria-label={`${t.name} published`}
-                          onChange={(checked) => togglePublished(t, checked)}
-                        />
-                      </Tooltip>
-                      <Button
-                        size='small'
-                        type='text'
-                        icon={<EditOutlined />}
-                        aria-label={`Rename ${t.name}`}
-                        disabled={isBusy}
-                        onClick={() => startRename(t)}
-                      />
-                      <Button
-                        size='small'
-                        type='text'
-                        icon={<CopyOutlined />}
-                        aria-label={`Duplicate ${t.name}`}
-                        disabled={isBusy}
-                        onClick={() => duplicate(t)}
-                      />
-                      <Popconfirm
-                        title='Delete this timeline?'
-                        description='This cannot be undone.'
-                        okText='Delete'
-                        okType='danger'
-                        onConfirm={() => remove(t)}
-                      >
+                        {t.name}
+                      </Typography.Text>
+                      <Space size={4} onClick={(e) => e.stopPropagation()}>
+                        <Tooltip
+                          title={
+                            t.published
+                              ? 'Published - shown in the Timeline Queue search'
+                              : 'Unpublished - hidden from the Timeline Queue search'
+                          }
+                        >
+                          <Switch
+                            size='small'
+                            checked={!!t.published}
+                            disabled={isBusy}
+                            aria-label={`${t.name} published`}
+                            onChange={(checked) => togglePublished(t, checked)}
+                          />
+                        </Tooltip>
                         <Button
                           size='small'
                           type='text'
-                          danger
-                          icon={<DeleteOutlined />}
-                          aria-label={`Delete ${t.name}`}
+                          icon={<EditOutlined />}
+                          aria-label={`Rename ${t.name}`}
                           disabled={isBusy}
+                          onClick={() => startRename(t)}
                         />
-                      </Popconfirm>
-                    </Space>
-                    <Typography.Text type='secondary' style={{ fontSize: 12 }}>
-                      {t.items.length} item{t.items.length === 1 ? '' : 's'}
-                    </Typography.Text>
-                  </div>
-                )}
-              </List.Item>
-            );
-          }}
-        />
-      </Spin>
+                        <Button
+                          size='small'
+                          type='text'
+                          icon={<CopyOutlined />}
+                          aria-label={`Duplicate ${t.name}`}
+                          disabled={isBusy}
+                          onClick={() => duplicate(t)}
+                        />
+                        <Popconfirm
+                          title='Delete this timeline?'
+                          description='This cannot be undone.'
+                          okText='Delete'
+                          okType='danger'
+                          onConfirm={() => remove(t)}
+                        >
+                          <Button
+                            size='small'
+                            type='text'
+                            danger
+                            icon={<DeleteOutlined />}
+                            aria-label={`Delete ${t.name}`}
+                            disabled={isBusy}
+                          />
+                        </Popconfirm>
+                      </Space>
+                      <Typography.Text
+                        type='secondary'
+                        style={{ fontSize: 12 }}
+                      >
+                        {t.items.length} item{t.items.length === 1 ? '' : 's'}
+                      </Typography.Text>
+                    </div>
+                  )}
+                </List.Item>
+              );
+            }}
+          />
+        </Spin>
+      )}
     </div>
   );
 };

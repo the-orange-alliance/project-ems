@@ -48,6 +48,18 @@ const frame = (title: string): VizFrame => ({
 });
 
 describe('GraphicRenderer', () => {
+  it('fails closed with no audience diagnostic chrome and logs the failed spec', () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { container } = render(
+      <GraphicRenderer frame={frame('broken')} spec={spec} />
+    );
+    expect(container).toBeEmptyDOMElement();
+    expect(log).toHaveBeenCalledWith(
+      '[GraphicRenderer] renderer crashed:',
+      expect.objectContaining({ spec })
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
   it('recovers when a corrected frame follows a renderer exception', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const { rerender } = render(

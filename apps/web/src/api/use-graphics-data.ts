@@ -24,6 +24,7 @@ import { HttpClient } from '@toa-lib/client';
 import useSWR, { mutate, SWRResponse } from 'swr';
 import { localClient } from './http-clients.js';
 import { EMSApiErrorSchema } from './http-errors.js';
+import { requireCollection } from './load-state.js';
 
 // The realtime service (Socket.IO + this "live control" REST surface) is a
 // separate process/origin from the station API that `localClient` talks to
@@ -96,8 +97,7 @@ const isTimelinesKeyFor = (eventKey: string) => (key: unknown) =>
   key[1] === eventKey &&
   key[2] === 'timelines';
 
-const showKey = (eventKey: string) =>
-  ['/graphics', eventKey, 'show'] as const;
+const showKey = (eventKey: string) => ['/graphics', eventKey, 'show'] as const;
 
 export interface PlaybackCommandOptions {
   requestId?: string;
@@ -462,7 +462,9 @@ export const useTimelines = (
   >(
     eventKey ? timelinesKey(eventKey, published) : null,
     ([, eKey, , pub]) =>
-      graphicsApi.get.timelines(eKey, pub).then((res) => res ?? []),
+      graphicsApi.get
+        .timelines(eKey, pub)
+        .then((res) => requireCollection(res, 'timelines')),
     { revalidateOnFocus: false }
   );
 

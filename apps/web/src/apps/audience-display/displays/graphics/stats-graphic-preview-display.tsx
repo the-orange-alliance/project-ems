@@ -1,4 +1,4 @@
-import type { CSSProperties, FC } from 'react';
+import { useState, type CSSProperties, type FC } from 'react';
 import type { GraphicSpec, VizFrame } from '@toa-lib/models';
 
 import { PreviewNotReadyAlarm } from './preview-not-ready-alarm.js';
@@ -6,6 +6,9 @@ import { StatsGraphicDisplay } from './stats-graphic-display.js';
 import { fontFamily } from './theme.js';
 import { usePreviewFrame } from './use-preview-frame.js';
 import { usePreviewReplayNonce } from './use-preview-replay-nonce.js';
+import { failedLoad, LoadError } from 'src/api/load-state.js';
+import { LoadStateNotice } from 'src/components/util/load-state-notice.js';
+import type { GraphicFrameResult } from 'src/api/graphic-frame-query.js';
 
 export interface StatsGraphicPreviewDisplayProps {
   eventKey: string | null;
@@ -65,17 +68,38 @@ const labelStyle: CSSProperties = {
  * on screen even when there is no graphic at all (a blank monitor with no
  * frame or label is indistinguishable from a dead one).
  *
- * The chrome is the ONLY thing this adds - there is no background fill, so
- * the screen remains just as transparent as the on-air source and can be
- * composited over live video the same way.
+ * The ready graphic remains transparent; calculating/failure overlays live
+ * exclusively on this off-air surface.
  */
 export const StatsGraphicPreviewDisplay: FC<
   StatsGraphicPreviewDisplayProps
 > = ({ eventKey, spec, programSpec, programFrame }) => {
-  const { result: preview, failure } = usePreviewFrame(eventKey, spec);
+  const state = usePreviewFrame(eventKey, spec);
+  const preview =
+    state.status === 'ready'
+      ? state.data
+      : state.status === 'loading'
+        ? state.previous
+        : null;
+  const [rendererFailure, setRendererFailure] = useState<{
+    identity?: string;
+    cause: Error;
+    result: GraphicFrameResult;
+  } | null>(null);
+  const [rendererAttempt, setRendererAttempt] = useState(0);
   // Bumped when the producer presses "Replay in Preview" - replays the
   // transition without re-querying, since the data has not changed.
   const replayNonce = usePreviewReplayNonce(eventKey);
+  // Freeze the applied replay nonce while previous content is retained. A replay
+  // arriving during calculation runs only once the requested result is ready.
+  const [appliedReplay, setAppliedReplay] = useState(replayNonce);
+  if (state.status === 'ready' && appliedReplay !== replayNonce)
+    setAppliedReplay(replayNonce);
+  const renderError =
+    rendererFailure?.identity === state.requestedIdentity &&
+    rendererFailure?.result === preview
+      ? rendererFailure
+      : null;
 
   // Only a complete program graphic can be cut back to; a spec with no
   // frame (or vice versa) would render as nothing and make the replay look
@@ -122,20 +146,93 @@ export const StatsGraphicPreviewDisplay: FC<
           `stats-graphic-display.tsx`.
         */}
         <StatsGraphicDisplay
+          key={`${eventKey}:${rendererAttempt}`}
           spec={preview?.spec ?? null}
           frame={preview?.frame ?? null}
-          replayNonce={replayNonce}
+          replayNonce={state.status === 'ready' ? replayNonce : appliedReplay}
           replayFrom={replayFrom}
+          onRenderError={(cause, failedSpec, failedFrame) => {
+            if (
+              state.status === 'ready' &&
+              failedSpec === preview?.spec &&
+              failedFrame === preview.frame
+            ) {
+              setRendererFailure({
+                identity: state.requestedIdentity,
+                cause,
+                result: preview
+              });
+            }
+          }}
         />
 
         {/*
-          The next cue cannot be prepared, so a Go will put nothing on air.
-          Rendered INSIDE the graphic area (above `StatsGraphicDisplay`, which
-          has already rendered nothing for this item) so the alarm stays within
-          the preview chrome rather than covering the PREVIEW label bars that
-          identify this tile as off-air.
+          Preview calculation is unavailable. Keep its diagnostics inside the
+          graphic area so the PREVIEW bars always identify this tile as off-air.
         */}
-        {failure && <PreviewNotReadyAlarm reason={failure.reason} />}
+        {state.status === 'unavailable' && (
+          <PreviewNotReadyAlarm reason={state.reason} retry={state.retry} />
+        )}
+        {(state.status === 'loading' ||
+          state.status === 'error' ||
+          renderError) && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 11,
+              display: 'grid',
+              placeContent: 'center',
+              textAlign: 'center',
+              padding: 24,
+              background: 'rgba(0,0,0,0.72)',
+              color: '#fff',
+              fontFamily
+            }}
+          >
+            <LoadStateNotice
+              state={
+                renderError
+                  ? {
+                      ...failedLoad(
+                        'preview',
+                        new LoadError(
+                          'preview',
+                          'renderer',
+                          renderError.cause.message,
+                          renderError.cause
+                        )
+                      ),
+                      requestedIdentity: state.requestedIdentity
+                    }
+                  : state
+              }
+              loadingText='CALCULATING NEXT CUE'
+              retry={
+                renderError
+                  ? () => {
+                      setRendererFailure(null);
+                      setRendererAttempt((n) => n + 1);
+                    }
+                  : state.retry
+              }
+            />
+            {state.status === 'loading' && (
+              <div>
+                Requested cue: {spec?.title || spec?.id}
+                {state.previous ? ' — previous cue shown underneath' : ''}
+              </div>
+            )}
+          </div>
+        )}
+        {state.status === 'ready' && !state.data && (
+          <div role='status'>No next cue</div>
+        )}
+        {state.status === 'ready' && state.data?.frame.emptyReason && (
+          <div role='status'>
+            Next cue calculated: {state.data.frame.emptyReason}
+          </div>
+        )}
       </div>
 
       <div style={labelStyle}>Preview</div>

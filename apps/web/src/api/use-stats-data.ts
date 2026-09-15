@@ -1,7 +1,10 @@
 import { ApiResponseError, TournamentType } from '@toa-lib/models';
 import type { StatDependency } from '@toa-lib/models/seasons/stats/presentation';
+import { tournamentTypes } from '@toa-lib/models/seasons/stats';
 import useSWR, { SWRResponse } from 'swr';
+import { z } from 'zod';
 import { localClient } from './http-clients.js';
+import { requireCollection } from './load-state.js';
 
 /**
  * One row of `GET /stats/:eventKey/catalogue` - the 232-entry stats
@@ -47,6 +50,55 @@ export interface StatCatalogueEntry {
 const catalogueKey = (eventKey: string) =>
   ['/stats', eventKey, 'catalogue'] as const;
 
+/** Validate the metadata producer forms consume, including selector/schema arrays.
+ * The API omits seasonKey for generic stats; normalize that to the public type.
+ */
+const catalogueSchema = z.array(
+  z.object({
+    catalogueId: z.string(),
+    name: z.string(),
+    slug: z.string(),
+    description: z.string(),
+    family: z.enum(['EMS', 'DER', 'REF']),
+    seasonKey: z
+      .string()
+      .nullish()
+      .transform((value) => value ?? null),
+    version: z.number().int(),
+    scope: z.enum(['event', 'team', 'match', 'alliance']),
+    units: z.string(),
+    precision: z.number().int(),
+    dependencies: z.array(
+      z.enum([
+        'matches',
+        'details',
+        'participants',
+        'teams',
+        'rankings',
+        'alliances',
+        'actions',
+        'history',
+        'settings'
+      ])
+    ),
+    qualityNotes: z.array(z.string()),
+    supportedSelectors: z.array(
+      z.enum([
+        'teamKey',
+        'matchId',
+        'allianceSeed',
+        'teamsInMatchId',
+        'teamKeyList'
+      ])
+    ),
+    defaultTournamentTypes: z.array(z.enum(tournamentTypes)).optional(),
+    allowedTournamentTypes: z.array(z.enum(tournamentTypes)).optional(),
+    paramsSchema: z.record(z.string(), z.unknown()),
+    resultSchema: z.record(z.string(), z.unknown()),
+    supportedFilters: z.array(z.string())
+  })
+);
+
 export const statsApi = {
   get: {
     catalogue: (eventKey: string): Promise<StatCatalogueEntry[] | null> =>
@@ -68,6 +120,11 @@ export const useStatsCatalogue = (
     readonly [string, string, string] | null
   >(
     eventKey ? catalogueKey(eventKey) : null,
-    ([, eKey]) => statsApi.get.catalogue(eKey).then((res) => res ?? []),
+    ([, eKey]) =>
+      statsApi.get
+        .catalogue(eKey)
+        .then((res) =>
+          catalogueSchema.parse(requireCollection(res, 'catalogue'))
+        ),
     { revalidateOnFocus: false }
   );

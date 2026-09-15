@@ -1,4 +1,4 @@
-import { type FC, type ReactNode } from 'react';
+import { useState, type FC, type ReactNode } from 'react';
 import type { GraphicSpec, VizFrame } from '@toa-lib/models';
 
 import {
@@ -34,6 +34,8 @@ export interface StatsGraphicDisplayProps {
   replayNonce?: number;
   /** The graphic a replay cuts back to before transitioning - for a preview screen, what is on the program bus. */
   replayFrom?: GraphicSnapshot | null;
+  /** Off-air consumers may report renderer errors; PGM adds no diagnostic UI. */
+  onRenderError?: (error: Error, spec: GraphicSpec, frame: VizFrame) => void;
 }
 
 /**
@@ -56,10 +58,22 @@ export const StatsGraphicDisplay: FC<StatsGraphicDisplayProps> = ({
   spec,
   frame,
   replayNonce,
-  replayFrom
+  replayFrom,
+  onRenderError
 }) => {
   const { phase, displayedSpec, displayedFrame, cutting } =
     useGraphicTransition(spec, frame, replayNonce, replayFrom);
+  const [failedGraphic, setFailedGraphic] = useState<GraphicSnapshot | null>(
+    null
+  );
+  const reportRenderError = (
+    error: Error,
+    failedSpec: GraphicSpec,
+    failedFrame: VizFrame
+  ) => {
+    setFailedGraphic({ spec: failedSpec, frame: failedFrame });
+    onRenderError?.(error, failedSpec, failedFrame);
+  };
 
   // A replay's hard cut must land instantaneously. Every shared animation
   // component starts at `localIn: false` and animates toward `in` on mount,
@@ -95,6 +109,13 @@ export const StatsGraphicDisplay: FC<StatsGraphicDisplayProps> = ({
   if (!displayedSpec || !displayedFrame) {
     return null;
   }
+  // Remove the shell/title as well as the renderer after a crash. A corrected
+  // snapshot recovers naturally; diagnostic chrome is owned by off-air callers.
+  if (
+    failedGraphic?.spec === displayedSpec &&
+    failedGraphic.frame === displayedFrame
+  )
+    return null;
 
   // True for both 'entering' and 'shown', false for 'exiting' (and,
   // vacuously, 'idle'/'holding' — already handled by the guard above).
@@ -159,7 +180,11 @@ export const StatsGraphicDisplay: FC<StatsGraphicDisplayProps> = ({
                   title={layerSpec.title}
                   subtitle={layerSpec.subtitle}
                 >
-                  <GraphicRenderer frame={layerFrame} spec={layerSpec} />
+                  <GraphicRenderer
+                    frame={layerFrame}
+                    spec={layerSpec}
+                    onRenderError={reportRenderError}
+                  />
                 </FullscreenPayload>
               ))}
             </FullscreenShell>
@@ -181,7 +206,11 @@ export const StatsGraphicDisplay: FC<StatsGraphicDisplayProps> = ({
                   title={layerSpec.title}
                   subtitle={layerSpec.subtitle}
                 >
-                  <GraphicRenderer frame={layerFrame} spec={layerSpec} />
+                  <GraphicRenderer
+                    frame={layerFrame}
+                    spec={layerSpec}
+                    onRenderError={reportRenderError}
+                  />
                 </DrawerPayload>
               ))}
             </DrawerShell>
@@ -203,7 +232,11 @@ export const StatsGraphicDisplay: FC<StatsGraphicDisplayProps> = ({
                   title={layerSpec.title}
                   subtitle={layerSpec.subtitle}
                 >
-                  <GraphicRenderer frame={layerFrame} spec={layerSpec} />
+                  <GraphicRenderer
+                    frame={layerFrame}
+                    spec={layerSpec}
+                    onRenderError={reportRenderError}
+                  />
                 </DrawerPayload>
               ))}
             </DrawerShell>
@@ -225,7 +258,11 @@ export const StatsGraphicDisplay: FC<StatsGraphicDisplayProps> = ({
                   title={layerSpec.title}
                   subtitle={layerSpec.subtitle}
                 >
-                  <GraphicRenderer frame={layerFrame} spec={layerSpec} />
+                  <GraphicRenderer
+                    frame={layerFrame}
+                    spec={layerSpec}
+                    onRenderError={reportRenderError}
+                  />
                 </LowerThirdPayload>
               ))}
             </LowerThirdShell>

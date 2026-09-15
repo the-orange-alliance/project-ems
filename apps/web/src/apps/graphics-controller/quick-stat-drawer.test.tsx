@@ -50,6 +50,43 @@ const entry: StatCatalogueEntry = {
 };
 
 describe('QuickStatDrawer authoritative actions', () => {
+  it('distinguishes loading/error/empty and supports retry recovery', () => {
+    const mutate = vi.fn();
+    const onCue = vi.fn();
+    const ui = () => (
+      <QuickStatDrawer
+        eventKey='event'
+        onCue={onCue}
+        onAppendToTimeline={vi.fn()}
+        onTakeNow={vi.fn()}
+      />
+    );
+    mocks.useStatsCatalogue.mockReturnValue({ mutate });
+    const { rerender } = renderWithAnt(ui());
+    expect(screen.getByRole('status')).toHaveTextContent('Loading catalogue');
+    expect(screen.queryByText('No stats match')).not.toBeInTheDocument();
+    mocks.useStatsCatalogue.mockReturnValue({
+      data: [entry],
+      error: new Error('Connection lost'),
+      mutate
+    });
+    rerender(ui());
+    expect(screen.getByRole('alert')).toHaveTextContent('Connection lost');
+    expect(screen.queryByText('No stats match')).not.toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'Search stats' }), {
+      key: 'Enter'
+    });
+    expect(onCue).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry catalogue' }));
+    expect(mutate).toHaveBeenCalledOnce();
+    mocks.useStatsCatalogue.mockReturnValue({ data: [], mutate });
+    rerender(ui());
+    expect(screen.getByText('No stats match')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    mocks.useStatsCatalogue.mockReturnValue({ data: [entry], mutate });
+    rerender(ui());
+    expect(screen.getByText('Event Score')).toBeInTheDocument();
+  });
   it('routes row clicks and Enter to Cue and exposes no browser-local Preview action', async () => {
     mocks.useStatsCatalogue.mockReturnValue({
       data: [entry],

@@ -7,6 +7,39 @@ import {
 } from '@toa-lib/models/seasons/stats/presentation';
 import { localClient } from './http-clients.js';
 import type { StatCatalogueEntry } from './use-stats-data.js';
+import { resultSchema } from '@toa-lib/models/seasons/stats';
+import { z } from 'zod';
+import { LoadError } from './load-state.js';
+
+const queryResponseSchema = z.object({
+  result: resultSchema,
+  calculatedAsOfUtc: z.iso.datetime({ offset: true }),
+  latestPlayedMatch: z
+    .object({
+      eventKey: z.string(),
+      tournamentKey: z.string(),
+      id: z.number(),
+      name: z.string(),
+      actualStartTime: z.string(),
+      updatedAtUtc: z.string().nullable()
+    })
+    .nullable(),
+  cache: z.enum(['fresh', 'stale', 'miss']),
+  refreshQueued: z.boolean(),
+  cacheAgeMs: z.number().nonnegative()
+});
+
+function decodeQuery(payload: unknown): StatsQueryResponseBody {
+  const parsed = queryResponseSchema.safeParse(payload);
+  if (!parsed.success)
+    throw new LoadError(
+      'query',
+      'validation',
+      'Invalid stats query response.',
+      parsed.error
+    );
+  return parsed.data;
+}
 
 /**
  * The one query-and-adapt round trip against `POST /stats/:eventKey/query`,
@@ -115,18 +148,6 @@ function isHttpErrorLike(e: unknown): e is HttpErrorLike {
   );
 }
 
-function isStatsQueryResponseBody(
-  payload: unknown
-): payload is StatsQueryResponseBody {
-  return (
-    !!payload &&
-    typeof payload === 'object' &&
-    'result' in payload &&
-    !!(payload as { result: unknown }).result &&
-    typeof (payload as { result: unknown }).result === 'object'
-  );
-}
-
 /**
  * Queries `spec` and adapts the result into a render-ready frame.
  *
@@ -155,7 +176,11 @@ export async function queryGraphicFrame(
     (c: StatCatalogueEntry) => c.slug === spec.stat
   );
   if (!entry) {
-    throw new Error(`Unknown stat "${spec.stat}" - catalogue not loaded`);
+    throw new LoadError(
+      'catalogue',
+      'validation',
+      `Unknown stat "${spec.stat}" in the loaded catalogue.`
+    );
   }
 
   // Resolve template variables into concrete selectors BEFORE anything
@@ -179,7 +204,7 @@ export async function queryGraphicFrame(
   const resolved = resolveSpec(spec, values);
 
   try {
-    const res = await localClient.post<StatsQueryResponseBody>(
+    const payload = await localClient.post<unknown>(
       `/stats/${eventKey}/query`,
       {
         body: {
@@ -191,7 +216,7 @@ export async function queryGraphicFrame(
         }
       }
     );
-    if (!res) throw new Error('Empty response from stats query');
+    const res = decodeQuery(payload);
 
     if (res.result.status !== 'ok') {
       return {
@@ -211,7 +236,35 @@ export async function queryGraphicFrame(
       matches: context.matches,
       asOfUtc: res.calculatedAsOfUtc
     };
-    const frame = prepareGraphicFrame(res.result, resolved, ctx);
+    let frame: VizFrame;
+    try {
+      frame = prepareGraphicFrame(res.result, resolved, ctx);
+      // The legacy generic adapter encodes caught exceptions in notes. Promote
+      // that explicit fallback to an off-air error instead of claiming it is empty.
+      const adapterFailure = frame.notes?.find((note) =>
+        note.startsWith('Adapter error:')
+      );
+      if (adapterFailure) throw new Error(adapterFailure);
+      if (
+        !frame.data &&
+        !frame.rows?.length &&
+        !frame.series.some((series) => series.points.length > 0)
+      ) {
+        frame = {
+          ...frame,
+          emptyReason: frame.emptyReason || 'No data to display'
+        };
+      }
+    } catch (cause) {
+      throw new LoadError(
+        'adaptation',
+        'adaptation',
+        cause instanceof Error
+          ? cause.message
+          : 'Unable to adapt the stats result.',
+        cause
+      );
+    }
 
     return {
       ok: true,
@@ -234,13 +287,14 @@ export async function queryGraphicFrame(
     // from the thrown error's payload and treat it exactly like the
     // 200/`result.status !== 'ok'` branch above, rather than letting it
     // propagate as a generic request failure.
-    if (
-      isHttpErrorLike(e) &&
-      e.status === 422 &&
-      isStatsQueryResponseBody(e.payload) &&
-      e.payload.result.status !== 'ok'
-    ) {
-      const { result } = e.payload;
+    if (isHttpErrorLike(e) && e.status === 422) {
+      const { result } = decodeQuery(e.payload);
+      if (result.status === 'ok')
+        throw new LoadError(
+          'query',
+          'validation',
+          'Invalid successful result on HTTP 422.'
+        );
       return {
         ok: false,
         unavailable: {
