@@ -18,9 +18,10 @@ import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
 import {
   createEmptyLiveGraphicState,
   graphicsStateMapAtom,
-  playbackProgramForEventAtom
+  playbackEnvelopeForEventAtom
 } from 'src/stores/state/graphics.js';
 import { StatsGraphicDisplay } from './graphics/stats-graphic-display.js';
+import { programTransitionAuthority } from './graphics/transition-machine.js';
 import { StatsGraphicPreviewDisplay } from './graphics/stats-graphic-preview-display.js';
 
 /**
@@ -37,9 +38,8 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
   const [audDispChroma, setAudDisplayChroma] = useAtom(displayChromaKeyAtom);
   const matchState = useAtomValue(matchStateAtom);
   const graphicsStateMap = useAtomValue(graphicsStateMapAtom);
-  const authoritativeProgram = useAtomValue(
-    playbackProgramForEventAtom(eventKey)
-  );
+  const playbackEnvelope = useAtomValue(playbackEnvelopeForEventAtom(eventKey));
+  const authoritativeProgram = playbackEnvelope?.state.program;
   const [searchParams] = useSearchParams();
 
   const {
@@ -89,6 +89,8 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
   if (pin === AudienceScreens.STATS) {
     return (
       <StatsGraphicDisplay
+        key={eventKey}
+        authority={programTransitionAuthority(playbackEnvelope)}
         spec={authoritativeProgram?.graphic.spec ?? null}
         frame={authoritativeProgram?.graphic.frame ?? null}
       />

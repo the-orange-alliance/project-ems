@@ -3,7 +3,9 @@ import { FC } from 'react';
 import { palette } from '../audience-display/displays/graphics/theme.js';
 import { StatsGraphicDisplay } from '../audience-display/displays/graphics/stats-graphic-display.js';
 import { eventKeyAtom } from '../../stores/state/event.js';
-import { playbackProgramForEventAtom } from '../../stores/state/graphics.js';
+import { playbackEnvelopeForEventAtom } from '../../stores/state/graphics.js';
+
+import { programTransitionAuthority } from '../audience-display/displays/graphics/transition-machine.js';
 
 // A fixed-size box the shared `Stage` (see `composition.tsx`) scales the
 // 1920x1080 broadcast canvas into. Sizing lives entirely in `Stage` now —
@@ -32,7 +34,8 @@ const MONITOR_HEIGHT = Math.round((MONITOR_WIDTH * 1080) / 1920);
  */
 export const LiveMonitor: FC = () => {
   const eventKey = useAtomValue(eventKeyAtom);
-  const program = useAtomValue(playbackProgramForEventAtom(eventKey));
+  const envelope = useAtomValue(playbackEnvelopeForEventAtom(eventKey));
+  const program = envelope?.state.program ?? null;
   const onAir = program !== null;
 
   return (
@@ -88,6 +91,8 @@ export const LiveMonitor: FC = () => {
         }}
       >
         <StatsGraphicDisplay
+          key={eventKey}
+          authority={programTransitionAuthority(envelope)}
           spec={program?.graphic.spec ?? null}
           frame={program?.graphic.frame ?? null}
         />

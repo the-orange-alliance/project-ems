@@ -2,6 +2,7 @@ import type { GraphicSpec, VizFrame } from '@toa-lib/models';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { GraphicRenderer } from './index.js';
+import { createTransitionCommit, renderKey } from '../transition-engine.js';
 
 vi.mock('../composition.js', () => ({
   isSupportedGraphicCombo: () => true,
@@ -71,4 +72,43 @@ describe('GraphicRenderer', () => {
 
     expect(screen.getByText('corrected')).toBeInTheDocument();
   });
+});
+
+it('production recovery keys remount a failed boundary for a PVW replay with identical spec/frame references', () => {
+  vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  const broken = frame('broken');
+  const report = vi.fn();
+  const firstKey = renderKey(
+    createTransitionCommit(spec, broken, undefined, true, 1)
+  );
+  const nextKey = renderKey(
+    createTransitionCommit(spec, broken, undefined, true, 2)
+  );
+  const { rerender } = render(
+    <GraphicRenderer
+      key={firstKey}
+      spec={spec}
+      frame={broken}
+      onRenderError={report}
+    />
+  );
+  expect(report).toHaveBeenCalledTimes(1);
+  rerender(
+    <GraphicRenderer
+      key={firstKey}
+      spec={spec}
+      frame={broken}
+      onRenderError={report}
+    />
+  );
+  expect(report).toHaveBeenCalledTimes(1);
+  rerender(
+    <GraphicRenderer
+      key={nextKey}
+      spec={spec}
+      frame={broken}
+      onRenderError={report}
+    />
+  );
+  expect(report).toHaveBeenCalledTimes(2);
 });

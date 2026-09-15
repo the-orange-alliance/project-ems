@@ -146,6 +146,7 @@ export const StatsGraphicPreviewDisplay: FC<
           `stats-graphic-display.tsx`.
         */}
         <StatsGraphicDisplay
+          preview
           key={`${eventKey}:${rendererAttempt}`}
           spec={preview?.spec ?? null}
           frame={preview?.frame ?? null}

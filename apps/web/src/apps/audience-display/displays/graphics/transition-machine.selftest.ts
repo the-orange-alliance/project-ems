@@ -1,22 +1,4 @@
-/**
- * Plain-script exercise of `transition-machine.ts`'s pure, clock-injected
- * state machine.
- *
- * `apps/web` has NO test runner configured — no vitest/jest dependency, no
- * config file, no `test` script (verified before writing this). This is
- * deliberately NOT a test-framework suite: it is a plain TypeScript script,
- * runnable with nothing but Node's built-in type stripping and
- * `node:assert/strict`, exercising the exact pure module any real runner
- * (vitest, jest, node's own `node:test`, ...) could import and test the same
- * way once one exists in this package. It must never be wired into
- * `package.json` `scripts` — see the task constraints.
- *
- * Run with:
- *   node --experimental-strip-types transition-machine.selftest.ts
- * (from this directory), or
- *   node --experimental-strip-types apps/web/src/apps/audience-display/displays/graphics/transition-machine.selftest.ts
- * from the repo root.
- */
+/** Plain-script regression checks for the same pure machine exported by production. Run npm run selftest:transitions --workspace ems-web. */
 
 import assert from 'node:assert/strict';
 import type { GraphicSpec, PresentationMode, VizFrame } from '@toa-lib/models';
@@ -358,6 +340,11 @@ check(
     );
     assert.equal(m.schedule.kind, 'enter-only');
     const v = deriveVisual(m.schedule, 100);
+    assert.equal(
+      v.nextWakeAtMs,
+      500,
+      'late entrance retains its effective-time deadline'
+    );
     assert.equal(v.phase, 'entering');
     assert.equal(
       v.layers.every((l) => l.role !== 'exit'),
