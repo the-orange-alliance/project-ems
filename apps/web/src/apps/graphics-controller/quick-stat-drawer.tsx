@@ -1,5 +1,4 @@
 import {
-  EyeOutlined,
   PlusOutlined,
   SearchOutlined,
   SendOutlined,
@@ -27,7 +26,6 @@ import { buildDefaultSpec } from './build-default-spec.js';
 
 export interface QuickStatDrawerProps {
   eventKey: string;
-  onPreview: (spec: GraphicSpec) => void;
   onCue: (spec: GraphicSpec) => void;
   onAppendToTimeline: (spec: GraphicSpec) => void;
   onTakeNow: (spec: GraphicSpec) => void;
@@ -87,7 +85,6 @@ const toggle = (set: ReadonlySet<string>, value: string): Set<string> => {
  */
 export const QuickStatDrawer: FC<QuickStatDrawerProps> = ({
   eventKey,
-  onPreview,
   onCue,
   onAppendToTimeline,
   onTakeNow
@@ -132,9 +129,6 @@ export const QuickStatDrawer: FC<QuickStatDrawerProps> = ({
   const draftFor = (entry: StatCatalogueEntry): GraphicSpec =>
     buildDefaultSpec(entry, presentationFor(entry.catalogueId));
 
-  const handlePreview = (entry: StatCatalogueEntry) =>
-    onPreview(draftFor(entry));
-
   const handleCue = (entry: StatCatalogueEntry) => onCue(draftFor(entry));
 
   const handleAppend = (entry: StatCatalogueEntry) =>
@@ -143,11 +137,10 @@ export const QuickStatDrawer: FC<QuickStatDrawerProps> = ({
   const handleTakeNow = (entry: StatCatalogueEntry) =>
     onTakeNow(draftFor(entry));
 
-  // Enter, without ever leaving the keyboard, previews the top result -
-  // the fastest possible path to a ready preview before a deliberate cue or take.
+  // Enter, without ever leaving the keyboard, authoritatively cues the top result.
   const handleSearchPressEnter = () => {
     const [top] = visible;
-    if (top) handlePreview(top);
+    if (top) handleCue(top);
   };
 
   return (
@@ -169,7 +162,7 @@ export const QuickStatDrawer: FC<QuickStatDrawerProps> = ({
       <Input
         ref={searchRef}
         aria-label='Search stats'
-        placeholder='Search stats... (Enter previews the top result)'
+        placeholder='Search stats... (Enter cues the top result)'
         prefix={<SearchOutlined />}
         allowClear
         value={search}
@@ -219,20 +212,8 @@ export const QuickStatDrawer: FC<QuickStatDrawerProps> = ({
               <List.Item
                 key={entry.catalogueId}
                 style={{ cursor: 'pointer', paddingInline: 4 }}
-                onClick={() => handlePreview(entry)}
+                onClick={() => handleCue(entry)}
                 actions={[
-                  <Tooltip title='Preview' key='preview'>
-                    <Button
-                      type='text'
-                      size='small'
-                      icon={<EyeOutlined />}
-                      aria-label={`Preview ${entry.name}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePreview(entry);
-                      }}
-                    />
-                  </Tooltip>,
                   <Tooltip title='Cue' key='cue'>
                     <Button
                       type='text'

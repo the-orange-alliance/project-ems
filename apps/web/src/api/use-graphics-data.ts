@@ -2,14 +2,20 @@ import {
   ApiResponseError,
   CueQueue,
   GraphicSpec,
+  GraphicsTarget,
   LiveGraphicState,
+  PlaybackAcknowledgment,
   PlaybackStateEnvelope,
   QueueEntry,
   Timeline,
   VersionedTimeline,
   cueQueueZod,
+  graphicSpecZod,
+  graphicsTargetZod,
   liveGraphicStateZod,
+  playbackAcknowledgmentZod,
   playbackStateEnvelopeZod,
+  variableValuesZod,
   versionedTimelineZod
 } from '@toa-lib/models';
 import { HttpClient } from '@toa-lib/client';
@@ -24,6 +30,11 @@ import { EMSApiErrorSchema } from './http-errors.js';
 // `http-clients.ts` - from `window.location.hostname`, never a hardcoded
 // `localhost` - because at a venue the browser is frequently on a different
 // machine than the one running the services.
+//
+// COMPATIBILITY ONLY. Port 8080 is the sole supported public playback
+// mutation ingress (Task 03); these 8081 command proxies are deprecated and
+// Task 16 removes them. The authoritative transport commands already use
+// `playbackClient` below - do not route anything new through here.
 const realtimeClient = new HttpClient({
   baseUrl: `${window.location.protocol}//${window.location.hostname}:8081`,
   // The relay's error bodies don't match `EMSApiErrorSchema` (its `code` is a
@@ -34,6 +45,27 @@ const realtimeClient = new HttpClient({
   // realtime relay built (see `describePlaybackError` in
   // `rooms/Graphics.ts`), and MUST be surfaced verbatim rather than
   // re-wrapped, or a 409 conflict again shows nothing but "409 Conflict".
+  getErrorMessage: (error) => {
+    if (error instanceof Error) return `${error.name} ${error.message}`;
+    const message = (error as { message?: unknown } | undefined)?.message;
+    if (typeof message === 'string' && message.length > 0) return message;
+    return `Status ${error?.code}: ${error?.message}`;
+  },
+  errorSchema: EMSApiErrorSchema
+});
+
+// Playback MUTATIONS go to the station API on port 8080, which is the sole
+// supported public playback mutation ingress (Task 03). The port-8081 relay
+// still proxies the older navigation commands below for compatibility only and
+// is scheduled for removal in Task 16 - nothing new should be routed there.
+// This is `localClient`'s origin with the relay's error handling, because the
+// playback controller answers with the same `{ error, code, message,
+// retryable }` envelope the relay does (its `code` is a playback error CODE
+// string like "CONFLICT", not the number `EMSApiErrorSchema` expects), and
+// that "CODE: human-readable reason" must be surfaced verbatim rather than
+// collapsed into "409 Conflict".
+const playbackClient = new HttpClient({
+  baseUrl: `${window.location.protocol}//${window.location.hostname}:8080`,
   getErrorMessage: (error) => {
     if (error instanceof Error) return `${error.name} ${error.message}`;
     const message = (error as { message?: unknown } | undefined)?.message;
@@ -62,11 +94,27 @@ const isTimelinesKeyFor = (eventKey: string) => (key: unknown) =>
   key[1] === eventKey &&
   key[2] === 'timelines';
 
-const liveStateKey = (eventKey: string) =>
-  ['/graphics', eventKey, 'live'] as const;
-
 const queueKey = (eventKey: string) =>
   ['/graphics', eventKey, 'queue'] as const;
+
+export interface PlaybackCommandOptions {
+  requestId?: string;
+  target?: GraphicsTarget;
+}
+
+const newPlaybackRequestId = (): string =>
+  globalThis.crypto?.randomUUID?.() ??
+  `web-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+/** Every producer command carries a stable identity; explicit targets are validated before transport. */
+function commandBody(options: PlaybackCommandOptions = {}) {
+  return {
+    requestId: options.requestId ?? newPlaybackRequestId(),
+    ...(options.target
+      ? { target: graphicsTargetZod.parse(options.target) }
+      : {})
+  };
+}
 
 export const graphicsApi = {
   get: {
@@ -197,7 +245,6 @@ export const graphicsApi = {
           schema: liveGraphicStateZod
         }
       );
-      mutate(liveStateKey(eventKey), state);
       return state;
     },
     /**
@@ -212,7 +259,6 @@ export const graphicsApi = {
         `/graphics/${eventKey}/live/unload`,
         { schema: liveGraphicStateZod }
       );
-      mutate(liveStateKey(eventKey), state);
       return state;
     },
     advance: async (eventKey: string): Promise<LiveGraphicState | null> => {
@@ -220,7 +266,6 @@ export const graphicsApi = {
         `/graphics/${eventKey}/live/advance`,
         { schema: liveGraphicStateZod }
       );
-      mutate(liveStateKey(eventKey), state);
       return state;
     },
     previous: async (eventKey: string): Promise<LiveGraphicState | null> => {
@@ -228,7 +273,6 @@ export const graphicsApi = {
         `/graphics/${eventKey}/live/previous`,
         { schema: liveGraphicStateZod }
       );
-      mutate(liveStateKey(eventKey), state);
       return state;
     },
     go: async (
@@ -239,35 +283,57 @@ export const graphicsApi = {
         `/graphics/${eventKey}/live/go/${index}`,
         { schema: liveGraphicStateZod }
       );
-      mutate(liveStateKey(eventKey), state);
       return state;
     },
-    take: async (eventKey: string): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
+    take: async (
+      eventKey: string,
+      options?: PlaybackCommandOptions
+    ): Promise<PlaybackAcknowledgment | null> =>
+      playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/take`,
-        { schema: liveGraphicStateZod }
-      );
-      mutate(liveStateKey(eventKey), state);
-      return state;
-    },
+        { body: commandBody(options), schema: playbackAcknowledgmentZod }
+      ),
+    /** Calculates and readies this exact ad-hoc graphic without changing program. */
+    cue: async (
+      eventKey: string,
+      spec: GraphicSpec,
+      values: Record<string, number> = {},
+      options?: PlaybackCommandOptions
+    ): Promise<PlaybackAcknowledgment | null> =>
+      playbackClient.post<PlaybackAcknowledgment>(
+        `/graphics/${eventKey}/live/cue`,
+        {
+          body: {
+            ...commandBody(options),
+            spec: graphicSpecZod.parse(spec),
+            values: variableValuesZod.parse(values)
+          },
+          schema: playbackAcknowledgmentZod
+        }
+      ),
     /** Calculates and takes this exact ad-hoc graphic in one authoritative command. */
     quickTake: async (
       eventKey: string,
-      spec: GraphicSpec
-    ): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
+      spec: GraphicSpec,
+      values: Record<string, number> = {},
+      options?: PlaybackCommandOptions
+    ): Promise<PlaybackAcknowledgment | null> =>
+      playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/quick-take`,
-        { body: { spec }, schema: liveGraphicStateZod }
-      );
-      mutate(liveStateKey(eventKey), state);
-      return state;
-    },
+        {
+          body: {
+            ...commandBody(options),
+            spec: graphicSpecZod.parse(spec),
+            values: variableValuesZod.parse(values)
+          },
+          schema: playbackAcknowledgmentZod
+        }
+      ),
     clear: async (eventKey: string): Promise<LiveGraphicState | null> => {
       const state = await realtimeClient.post<LiveGraphicState>(
         `/graphics/${eventKey}/live/clear`,
         { schema: liveGraphicStateZod }
       );
-      mutate(liveStateKey(eventKey), state);
       return state;
     },
     /**
@@ -277,32 +343,29 @@ export const graphicsApi = {
      */
     refresh: async (
       eventKey: string,
-      destination: 'cue' | 'program'
-    ): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
+      destination: 'cue' | 'program',
+      options?: PlaybackCommandOptions
+    ): Promise<PlaybackAcknowledgment | null> =>
+      playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/refresh/${destination}`,
-        { schema: liveGraphicStateZod }
-      );
-      mutate(liveStateKey(eventKey), state);
-      return state;
-    },
+        { body: commandBody(options), schema: playbackAcknowledgmentZod }
+      ),
     /** Promotes the most recently staged `refresh` result onto whichever of `cue`/`program` it was computed for. Rejects SUPERSEDED if that target has since moved on. */
-    pushUpdate: async (eventKey: string): Promise<LiveGraphicState | null> => {
-      const state = await realtimeClient.post<LiveGraphicState>(
+    pushUpdate: async (
+      eventKey: string,
+      options?: PlaybackCommandOptions
+    ): Promise<PlaybackAcknowledgment | null> =>
+      playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/push-update`,
-        { schema: liveGraphicStateZod }
-      );
-      mutate(liveStateKey(eventKey), state);
-      return state;
-    },
+        { body: commandBody(options), schema: playbackAcknowledgmentZod }
+      ),
     /**
      * Asks every preview (PVW) screen on this event to replay its entrance
      * animation.
      *
      * Unlike every other call in here it returns no `LiveGraphicState` and
-     * never touches `liveStateKey` - nothing durable changes and nothing on
-     * air moves (see `GraphicsPreviewReplay` in the models package), so
-     * there is no state to mutate into the cache. The relay answers with the
+     * never touches playback state - nothing durable changes and nothing on
+     * air moves (see `GraphicsPreviewReplay` in the models package). The relay answers with the
      * replay token it broadcast, which is useful only for debugging.
      */
     replayPreview: async (eventKey: string): Promise<void> => {
@@ -313,7 +376,6 @@ export const graphicsApi = {
         `/graphics/${eventKey}/queue/next`,
         { schema: liveGraphicStateZod }
       );
-      mutate(liveStateKey(eventKey), state);
       return state;
     },
     queueGo: async (
@@ -324,7 +386,6 @@ export const graphicsApi = {
         `/graphics/${eventKey}/queue/go/${index}`,
         { schema: liveGraphicStateZod }
       );
-      mutate(liveStateKey(eventKey), state);
       return state;
     }
   }
@@ -353,27 +414,6 @@ export const useTimelines = (
     { revalidateOnFocus: false }
   );
 
-export const useLiveGraphicState = (
-  eventKey: string | null | undefined
-): SWRResponse<LiveGraphicState | null, ApiResponseError> =>
-  useSWR<
-    LiveGraphicState | null,
-    ApiResponseError,
-    readonly [string, string, string] | null
-  >(
-    eventKey ? liveStateKey(eventKey) : null,
-    ([, eKey]) => graphicsApi.live.state(eKey),
-    {
-      revalidateOnFocus: false,
-      // The socket layer (see `useGraphicsStateEvent` / `liveGraphicStateAtom`)
-      // already pushes live state into a jotai atom on every change, so this
-      // hook must NOT poll - that would be redundant with, and could race,
-      // the socket-pushed state. This is for the initial load and for an
-      // explicit `mutate()`-triggered refresh only.
-      refreshInterval: 0
-    }
-  );
-
 export const useCueQueue = (
   eventKey: string | null | undefined
 ): SWRResponse<CueQueue | null, ApiResponseError> =>
@@ -386,11 +426,8 @@ export const useCueQueue = (
     ([, eKey]) => graphicsApi.queue.get(eKey),
     {
       revalidateOnFocus: false,
-      // Same rationale as `useLiveGraphicState` above: the socket layer
-      // already pushes live state, so this hook must NOT poll - that would
-      // be redundant with, and could race, the socket-pushed state. This is
-      // for the initial load and for an explicit `mutate()`-triggered
-      // refresh only.
+      // Queue CRUD owns this cache; playback state is delivered separately
+      // through the authoritative event-scoped Jotai store.
       refreshInterval: 0
     }
   );

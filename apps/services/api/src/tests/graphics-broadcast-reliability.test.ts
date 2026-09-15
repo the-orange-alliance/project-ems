@@ -306,6 +306,72 @@ test('isolated harness: relay quick-take airs the exact requested ad-hoc graphic
   assert.equal(stats.queryFreshCount, 1);
 });
 
+// Producer cue goes to the port-8080 API ingress, never the port-8081 relay:
+// the relay has no `cue` proxy and must not grow one (Task 03's boundary,
+// Task 16 removes the proxies it still has).
+test('isolated harness: authoritative cue resolves values and readies the exact spec without changing program', async (t) => {
+  const { app, stats } = await createGraphicsBroadcastReliabilityHarness(t);
+  const requested = {
+    ...sampleGraphic('bound-cue'),
+    selectors: { teamKey: 999 },
+    bindings: { teamKey: 'featured' }
+  };
+
+  const cueRes = await app.inject({
+    method: 'POST',
+    url: '/graphics/event-a/live/cue',
+    payload: {
+      requestId: 'producer-cue-1',
+      spec: requested,
+      values: { featured: 254 }
+    }
+  });
+
+  assert.equal(cueRes.statusCode, 200);
+  const acknowledgment = cueRes.json();
+  assert.equal(acknowledgment.ok, true);
+  assert.equal(acknowledgment.requestId, 'producer-cue-1');
+  assert.equal(acknowledgment.state.program, null);
+
+  const read = await app.inject('/graphics/event-a/live');
+  assert.equal(read.statusCode, 200);
+  const state = read.json();
+  assert.equal(state.program, null);
+  assert.equal(state.cue.status, 'ready');
+  assert.equal(state.cue.graphic.spec.id, requested.id);
+  assert.equal(state.cue.graphic.spec.selectors.teamKey, 254);
+  assert.equal(state.cue.graphic.spec.bindings, undefined);
+  assert.equal(state.cue.graphic.target.requestId, 'producer-cue-1');
+  assert.equal(stats.queryCount, 0);
+  assert.equal(stats.queryFreshCount, 1);
+});
+
+test('isolated harness: unresolved authoritative cue binding is visible and does not mutate cue or program', async (t) => {
+  const { app } = await createGraphicsBroadcastReliabilityHarness(t);
+  const requested = {
+    ...sampleGraphic('unresolved-cue'),
+    bindings: { teamKey: 'featured' }
+  };
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/graphics/event-a/live/cue',
+    payload: {
+      requestId: 'producer-cue-missing',
+      spec: requested,
+      values: {}
+    }
+  });
+
+  assert.equal(response.statusCode, 400);
+  const acknowledgment = response.json();
+  assert.equal(acknowledgment.ok, false);
+  assert.equal(acknowledgment.error.code, 'INVALID_INPUT');
+  assert.match(acknowledgment.error.message, /Fill in: featured/);
+  assert.equal(acknowledgment.state.cue.status, 'empty');
+  assert.equal(acknowledgment.state.program, null);
+});
+
 test('isolated harness: refresh stages a new program and explicit push-update promotes it', async (t) => {
   const { app, repository } =
     await createGraphicsBroadcastReliabilityHarness(t);
@@ -323,6 +389,7 @@ test('isolated harness: refresh stages a new program and explicit push-update pr
     url: '/graphics/event-a/live/take'
   });
   assert.equal(takeRes.statusCode, 200);
+  const programBeforeRefresh = takeRes.json().state.program;
 
   const refreshRes = await app.inject({
     method: 'POST',
@@ -331,7 +398,7 @@ test('isolated harness: refresh stages a new program and explicit push-update pr
   assert.equal(refreshRes.statusCode, 200);
   const refreshAck = refreshRes.json();
   assert.equal(refreshAck.state.stagedUpdate.status, 'ready');
-  assert.equal(refreshAck.state.program.graphic.spec.id, 'item-0');
+  assert.deepEqual(refreshAck.state.program, programBeforeRefresh);
 
   const pushRes = await app.inject({
     method: 'GET',
@@ -341,4 +408,8 @@ test('isolated harness: refresh stages a new program and explicit push-update pr
   const pushAck = pushRes.json();
   assert.equal(pushAck.state.stagedUpdate.status, 'empty');
   assert.equal(pushAck.state.program.graphic.spec.id, 'item-0');
+  assert.notEqual(
+    pushAck.state.program.graphic.target.targetId,
+    programBeforeRefresh.graphic.target.targetId
+  );
 });

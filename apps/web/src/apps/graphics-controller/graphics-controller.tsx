@@ -8,15 +8,16 @@ import {
 } from '@ant-design/icons';
 import type {
   GraphicSpec,
+  GraphicsTarget,
   TemplateVariable,
   Timeline,
-  VariableValues,
-  VizFrame
+  VariableValues
 } from '@toa-lib/models';
 import {
   AudienceScreens,
   isTemplatedTimeline,
-  timelineBoundVariables
+  timelineBoundVariables,
+  unresolvedBindings
 } from '@toa-lib/models';
 import {
   Alert,
@@ -36,20 +37,24 @@ import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
 import { FC, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { graphicsApi, useTimelines } from 'src/api/use-graphics-data.js';
-import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useStatsCatalogue } from 'src/api/use-stats-data.js';
 import { MoreButton } from 'src/components/buttons/more-button.js';
 import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { eventKeyAtom } from 'src/stores/state/index.js';
-import { liveGraphicStateAtom } from 'src/stores/state/graphics.js';
+import {
+  playbackCueForEventAtom,
+  playbackDeliveryForEventAtom,
+  playbackLoadedForEventAtom,
+  playbackProgramForEventAtom,
+  playbackStagedUpdateForEventAtom
+} from 'src/stores/state/graphics.js';
 import { CueQueueList, type CueQueueRowInfo } from './cue-queue.js';
 import { LiveMonitor } from './live-monitor.js';
 import { QuickStatDrawer } from './quick-stat-drawer.js';
 import { TimelineItemsPanel } from './timeline-items-panel.js';
 import { TimelineList } from './timeline-list.js';
-import { useCue } from './use-cue.js';
 import { useCueQueue } from './use-cue-queue.js';
 import { useTimelinePreflight } from './use-timeline-preflight.js';
 import { useQueueRowRefresh } from './use-queue-row-refresh.js';
@@ -60,7 +65,7 @@ import { VariableFillModal } from './variable-fill-modal.js';
  * Producer control surface for live broadcast stats graphics.
  *
  * Assembles already-built pieces (`TimelineList`, `TimelineItemsPanel`,
- * `QuickStatDrawer`, `useTimelineEditor`, `LiveMonitor`, `useCue`,
+ * `QuickStatDrawer`, `useTimelineEditor`, `LiveMonitor`,
  * `CueQueueList`, `useCueQueue`, `VariableFillModal`) into the layout
  * described in the design brief: an ACTIVE/transport bar on top, then a
  * tabbed working area below it, and the live monitor pinned to the
@@ -71,7 +76,7 @@ import { VariableFillModal } from './variable-fill-modal.js';
  *    timeline the producer has selected there.
  *  - "Live" - the "Timeline Queue" (`CueQueueList`, renamed in the UI) on the
  *    left, and the same item/inspector panel on the right, bound to the
- *    timeline currently cued to the transport (`liveState.timelineId`).
+ *    timeline currently present in the authoritative loaded snapshot.
  *    Edits made here hit the real cued timeline the instant they are saved;
  *    this is deliberate (see the warning banner the tab renders). A queue
  *    row is not a picker - it has no click-to-load - its Quick Play button
@@ -80,15 +85,10 @@ import { VariableFillModal } from './variable-fill-modal.js';
  * never discards in-progress edits, and Save/Revert always act on the tab
  * that is showing.
  *
- * DATA FRESHNESS: this component never fetches stat DATA on its own - every
- * `useCue` call (`cue`/`recalculate`) below is wired directly to a click
- * handler (`handleCueOrRecalculate`, `handleSendToAir`), never to an effect,
- * a selection-change, or a timer. Selecting a timeline, selecting an item
- * for editing, and moving the transport index are all cheap client-side
- * state changes with no network request attached. The cue queue follows the
- * same rule: entries are only ever queried/cued through an explicit
- * "Cue"/"Recalculate"/"Quick Play"/"Push" action - enqueuing or reordering a
- * queue entry never itself triggers a stats query.
+ * DATA FRESHNESS: every playback calculation is an API coordinator command.
+ * This component never calculates a transport frame in the browser and keeps
+ * no local cue/staged lane. Selecting or editing remains client-side; Cue,
+ * Recalculate, Push, Take, and Quick Take are explicit authoritative actions.
  */
 
 /** A single modal instance serves two distinct producer actions - since only
@@ -96,10 +96,17 @@ import { VariableFillModal } from './variable-fill-modal.js';
 type VariableModalState =
   | {
       kind: 'enqueue-timeline';
+      eventKey: string;
       timelineId: string;
       variables: TemplateVariable[];
     }
-  | { kind: 'cue-spec'; spec: GraphicSpec; variables: TemplateVariable[] };
+  | {
+      kind: 'cue-spec';
+      eventKey: string;
+      spec: GraphicSpec;
+      variables: TemplateVariable[];
+      initialValues: VariableValues;
+    };
 
 /** Distinct variable names a spec's selectors are bound to, deduplicated. */
 function boundVariableNames(spec: GraphicSpec): string[] {
@@ -123,6 +130,14 @@ function formatValueSummary(
   return variables
     .map((variable) => `${variable.name}: ${values[variable.name] ?? '—'}`)
     .join(', ');
+}
+
+function formatTargetProvenance(target: GraphicsTarget): string {
+  const source =
+    target.snapshotId === null
+      ? 'ad hoc'
+      : `snapshot ${target.snapshotId}, item ${(target.index ?? 0) + 1}`;
+  return `${source}; request ${target.requestId}`;
 }
 
 // Prev/Go's label changes with transport state ("Prev" / "Animate Out",
@@ -154,8 +169,11 @@ const TransportButton: FC<
 
 export const GraphicsController: FC = () => {
   const eventKey = useAtomValue(eventKeyAtom);
-  const liveState = useAtomValue(liveGraphicStateAtom);
-  const { events } = useSocketWorker();
+  const loaded = useAtomValue(playbackLoadedForEventAtom(eventKey));
+  const authoritativeCue = useAtomValue(playbackCueForEventAtom(eventKey));
+  const program = useAtomValue(playbackProgramForEventAtom(eventKey));
+  const stagedUpdate = useAtomValue(playbackStagedUpdateForEventAtom(eventKey));
+  const playbackDelivery = useAtomValue(playbackDeliveryForEventAtom(eventKey));
   const { showSnackbar, showErrorSnackbar } = useSnackbar();
 
   const { data: timelines } = useTimelines(eventKey);
@@ -176,6 +194,9 @@ export const GraphicsController: FC = () => {
   const [variableModal, setVariableModal] = useState<VariableModalState | null>(
     null
   );
+  const activeEventRef = useRef(eventKey);
+  activeEventRef.current = eventKey;
+  useEffect(() => setVariableModal(null), [eventKey]);
 
   // One buffer for the producer's hand-picked timeline (Editor tab) and a
   // separate one for whatever is cued to the transport (Live tab). They are
@@ -183,19 +204,24 @@ export const GraphicsController: FC = () => {
   // back; if both happen to point at the same timeline, the first save wins
   // and the second gets a 409 (optimistic-concurrency) it surfaces normally.
   const editor = useTimelineEditor(eventKey, selectedTimelineId);
-  const liveEditor = useTimelineEditor(eventKey, liveState.timelineId);
+  const currentLoadedItem = loaded?.items[loaded.index] ?? null;
+  const liveTimelineId = currentLoadedItem?.timelineId ?? null;
+  const liveEditor = useTimelineEditor(eventKey, liveTimelineId);
   const activeEditor = activeTab === 'live' ? liveEditor : editor;
-  const cue = useCue(eventKey);
   const cueQueue = useCueQueue(eventKey);
   const queueRowRefresh = useQueueRowRefresh();
 
-  // The item actually under the transport playhead, straight from
-  // `liveEditor` (bound to `liveState.timelineId`) - true regardless of
-  // which tab is showing or what's selected in the Editor tab.
-  const activeItem =
-    liveState.timelineId !== null
-      ? (liveEditor.items[liveState.index] ?? null)
-      : null;
+  // The item actually under the transport playhead, straight from the loaded
+  // immutable server snapshot - never from a dirty editor buffer.
+  const activeLoadedTimeline = currentLoadedItem
+    ? (loaded?.timelines.find(
+        (timeline) => timeline.timelineId === currentLoadedItem.timelineId
+      ) ?? null)
+    : null;
+  const activeItem = currentLoadedItem
+    ? (activeLoadedTimeline?.items[currentLoadedItem.itemIndex] ??
+      currentLoadedItem.spec)
+    : null;
 
   // The item selected in the LIVE tab - used as Cue/Recalculate's fallback
   // target when nothing is live yet. Deliberately `null` while on the
@@ -212,26 +238,34 @@ export const GraphicsController: FC = () => {
   // transport playhead when a timeline is loaded, else whatever the
   // producer has selected in the Live tab's items list.
   const cueTarget = activeItem ?? activeSelectedItem;
-  const isCuedForTarget =
-    !!cueTarget &&
-    (cue.active?.spec.id === cueTarget.id ||
-      cue.activeUnavailable?.spec.id === cueTarget.id);
+
+  const targetIsCurrentLoadedItem = (target: GraphicsTarget): boolean =>
+    !!loaded &&
+    target.snapshotId === loaded.snapshotId &&
+    target.index === loaded.index;
+  const refreshDestination: 'cue' | 'program' | null =
+    program && targetIsCurrentLoadedItem(program.graphic.target)
+      ? 'program'
+      : authoritativeCue?.status === 'ready' &&
+          targetIsCurrentLoadedItem(authoritativeCue.graphic.target)
+        ? 'cue'
+        : null;
 
   // Walks ahead of the playhead and predicts, for every remaining item of the
   // cued timeline, whether its cue will actually be ready when the transport
   // gets there - so a broken item is visible in the list BEFORE a Go lands on
   // it, rather than arriving as a mid-show `NOT_READY` snackbar.
   //
-  // Fed from `liveState.values` (the server's own record of what resolved this
-  // load - see `LiveGraphicState.values`) rather than the queue entry's, which
+  // Fed from `loaded.values` (the server's own record of what resolved this
+  // load) rather than the queue entry's, which
   // is normally already gone by the time a timeline is on the transport.
   // Re-checks from the playhead onward on every advance, so an item that
   // becomes valid as matches are played stops being flagged.
   const livePreflight = useTimelinePreflight(
     eventKey,
-    liveEditor.items,
-    liveState.values ?? {},
-    liveState.timelineId !== null ? liveState.index : 0
+    loaded?.items.map((item) => item.spec) ?? [],
+    loaded?.values ?? {},
+    loaded?.index ?? 0
   );
 
   // Per-entry display info for the queue list - joins each entry to its
@@ -282,15 +316,6 @@ export const GraphicsController: FC = () => {
     void queueRowRefresh.refreshEntry(eventKey, entry, timeline);
   };
 
-  // While `liveState.armed` is true, the transport has already auto-rolled
-  // onto the next queued entry and is holding it - the next press performs
-  // the take. Named here so both the ACTIVE bar and the queue header can
-  // point at the same entry.
-  const armedEntryInfo =
-    liveState.armed && liveState.queueEntryId
-      ? queueRowInfo[liveState.queueEntryId]
-      : undefined;
-
   // ------------------------------------------------------------------
   // Transport availability. `state.loaded` on the server holds the SAVED
   // items of whatever timeline is on the transport - never the dirty
@@ -310,13 +335,11 @@ export const GraphicsController: FC = () => {
   // last item steps onto "n+1" (animate out AND clear, advancing the
   // Timeline Queue - see `handleGo`/`handleClearAndAdvanceQueue`).
   // ------------------------------------------------------------------
-  const loadedTimeline = liveState.timelineId
-    ? (timelines?.find((t) => t.timelineId === liveState.timelineId) ?? null)
-    : null;
-  const loadedItemCount = loadedTimeline?.items.length ?? 0;
-  const isAtFirstItem = liveState.index <= 0;
+  const loadedTimeline = activeLoadedTimeline;
+  const loadedItemCount = loaded?.items.length ?? 0;
+  const isAtFirstItem = (loaded?.index ?? 0) <= 0;
   const isAtLastItem =
-    loadedItemCount > 0 && liveState.index >= loadedItemCount - 1;
+    loadedItemCount > 0 && (loaded?.index ?? 0) >= loadedItemCount - 1;
 
   // ATEM-style Program/Preview border for the transport box (see the JSX
   // below): RED only while something is genuinely animated in (on air) -
@@ -324,11 +347,16 @@ export const GraphicsController: FC = () => {
   // while a timeline is loaded but not yet taken (the "on deck"/"0" state -
   // e.g. right after the idle-queue effect auto-pulls one in). Neither
   // color once nothing is loaded at all.
-  const transportOnAir = liveState.onAir;
-  const transportOnDeck = !liveState.onAir && liveState.timelineId !== null;
+  const transportOnAir = program !== null;
+  const transportOnDeck = !transportOnAir && loaded !== null;
 
   const noEventReason = !eventKey ? 'No event is loaded.' : undefined;
-  const notLoadedReason = !liveState.timelineId
+  const deliveryReason =
+    playbackDelivery.phase !== 'ready'
+      ? (playbackDelivery.error ??
+        `Authoritative playback state is ${playbackDelivery.phase}.`)
+      : undefined;
+  const notLoadedReason = !loaded
     ? 'Load a timeline to the transport first.'
     : undefined;
 
@@ -339,23 +367,24 @@ export const GraphicsController: FC = () => {
   // animates out) it's a real action.
   const prevDisabledReason =
     noEventReason ??
+    deliveryReason ??
     notLoadedReason ??
-    (isAtFirstItem && !liveState.onAir
+    (isAtFirstItem && !transportOnAir
       ? 'Already animated out - nothing to step back to.'
       : undefined);
-  const goDisabledReason = noEventReason ?? notLoadedReason;
+  const goDisabledReason = noEventReason ?? deliveryReason ?? notLoadedReason;
 
   // Labels track exactly what pressing the button will do (see `handlePrev`/
   // `handleGo`): Prev only ever says "Animate Out" at the boundary where
   // that's literally its effect; Next prioritizes "Animate Out and Clear"
   // (the last-item boundary) over "Animate In" (any other off-air moment)
   // over the plain "Next" step.
-  const prevLabel = isAtFirstItem && liveState.onAir ? 'Animate Out' : 'Prev';
+  const prevLabel = isAtFirstItem && transportOnAir ? 'Animate Out' : 'Prev';
   // Off-air takes priority: `handleGo` always just takes the current cue
   // in that state (see below), even at the last item, so the label must
   // say "Animate In" there too rather than promising a clear+advance that
   // won't happen until this item has actually been taken at least once.
-  const goLabel = !liveState.onAir
+  const goLabel = !transportOnAir
     ? 'Animate In'
     : isAtLastItem
       ? 'Animate Out and Clear'
@@ -363,23 +392,25 @@ export const GraphicsController: FC = () => {
 
   const hideDisabledReason =
     noEventReason ??
-    (!liveState.onAir ? 'Nothing is on air to hide.' : undefined);
+    deliveryReason ??
+    (!transportOnAir ? 'Nothing is on air to hide.' : undefined);
 
   // Unlike Hide, this one is worth pressing even with nothing on air - it
   // also advances the Timeline Queue (see `handleClearAndAdvanceQueue`) -
   // so it's only disabled when there is truly nothing anywhere to act on.
   const clearDisabledReason =
     noEventReason ??
-    (!liveState.onAir &&
-    !liveState.timelineId &&
+    deliveryReason ??
+    (!transportOnAir &&
+    !loaded &&
     cueQueue.entries.length === 0 &&
-    !cue.active &&
-    !cue.activeUnavailable
+    authoritativeCue?.status === 'empty'
       ? 'Nothing to clear.'
       : undefined);
 
   const cueDisabledReason =
     noEventReason ??
+    deliveryReason ??
     (!cueTarget
       ? 'Select an item in the Live tab, or put the transport on one.'
       : undefined);
@@ -388,13 +419,24 @@ export const GraphicsController: FC = () => {
   // on it - `previewSpec` is exactly what every PVW screen is showing (see
   // its doc comment on `LiveGraphicState`), so this disables in lockstep
   // with them rather than guessing from transport state.
+  const programAnchorsLoaded =
+    !!program &&
+    !!loaded &&
+    program.graphic.target.snapshotId === loaded.snapshotId &&
+    program.graphic.target.index !== null;
+  const previewIndex = !loaded
+    ? null
+    : programAnchorsLoaded
+      ? program!.graphic.target.index! + 1
+      : loaded.index;
+  const authoritativePreviewSpec =
+    previewIndex === null ? null : (loaded?.items[previewIndex]?.spec ?? null);
   const replayPreviewDisabledReason =
     noEventReason ??
-    (!liveState.previewSpec ? 'Nothing is in preview to replay.' : undefined);
-
-  const emitPreview = (spec: GraphicSpec, frame: VizFrame) => {
-    events.graphicsPreview({ spec, frame });
-  };
+    deliveryReason ??
+    (!authoritativePreviewSpec
+      ? 'Nothing is in preview to replay.'
+      : undefined);
 
   // Selecting a timeline in the Editor tab is PURELY a client-side choice of
   // what to edit - it must never touch the live transport. This used to also
@@ -407,14 +449,23 @@ export const GraphicsController: FC = () => {
     setSelectedTimelineId(id);
     setSelectedItemId(null);
     setVariableModal(null);
-    cue.reset();
   };
 
   const handleCueOrRecalculate = async () => {
-    if (!cueTarget) return;
+    if (!eventKey || !cueTarget) return;
+    const commandEvent = eventKey;
     try {
-      if (isCuedForTarget) {
-        await cue.recalculate();
+      if (refreshDestination) {
+        const target =
+          refreshDestination === 'program'
+            ? program?.graphic.target
+            : authoritativeCue?.status === 'ready'
+              ? authoritativeCue.graphic.target
+              : undefined;
+        if (!target) return;
+        await graphicsApi.live.refresh(commandEvent, refreshDestination, {
+          target
+        });
         return;
       }
       const bindingNames = boundVariableNames(cueTarget);
@@ -425,7 +476,7 @@ export const GraphicsController: FC = () => {
         // already filled these in once; re-prompting mid-show would be a
         // serious usability failure.
         //
-        // Read from `liveState.values` - the server's own record of what
+        // Read from `loaded.values` - the server's own record of what
         // resolved THIS load (mirrors `LoadedGraphicsSnapshot.values`) -
         // rather than trying to reconstruct it from `cueQueue.entries`:
         // that queue entry is normally already gone by the time this runs
@@ -433,31 +484,48 @@ export const GraphicsController: FC = () => {
         // immediately after loading), so that lookup used to fail here
         // every time and fall through to the modal below despite the
         // values already being known and in effect on air.
-        const queuedValues =
-          cueTarget === activeItem ? (liveState.values ?? undefined) : undefined;
-        if (queuedValues) {
-          const result = await cue.cue(cueTarget, queuedValues);
-          if (result) emitPreview(result.spec, result.frame);
+        const authoritativeValues =
+          cueTarget === activeItem ? (loaded?.values ?? {}) : {};
+        if (unresolvedBindings(cueTarget, authoritativeValues).length === 0) {
+          await graphicsApi.live.cue(
+            commandEvent,
+            cueTarget,
+            authoritativeValues
+          );
           return;
         }
         // No known values for this spec's bindings - prompt for only the
         // variables it actually references.
-        const variables = (liveEditor.timeline?.variables ?? []).filter((v) =>
+        const variables = (activeLoadedTimeline?.variables ?? []).filter((v) =>
           bindingNames.includes(v.name)
         );
-        setVariableModal({ kind: 'cue-spec', spec: cueTarget, variables });
+        setVariableModal({
+          kind: 'cue-spec',
+          eventKey: commandEvent,
+          spec: cueTarget,
+          variables,
+          initialValues: authoritativeValues
+        });
         return;
       }
-      const result = await cue.cue(cueTarget);
-      if (result) emitPreview(result.spec, result.frame);
+      await graphicsApi.live.cue(commandEvent, cueTarget);
     } catch (e) {
-      showErrorSnackbar('Error while querying stat data.', e);
+      if (activeEventRef.current === commandEvent)
+        showErrorSnackbar('Error while cueing or refreshing stat data.', e);
     }
   };
 
-  const handlePush = () => {
-    const result = cue.push();
-    if (result) emitPreview(result.spec, result.frame);
+  const handlePush = async () => {
+    if (!eventKey || stagedUpdate?.status !== 'ready') return;
+    const commandEvent = eventKey;
+    try {
+      await graphicsApi.live.pushUpdate(commandEvent, {
+        target: stagedUpdate.origin
+      });
+    } catch (e) {
+      if (activeEventRef.current === commandEvent)
+        showErrorSnackbar('Error while pushing the staged update.', e);
+    }
   };
 
   // Kicks off a fresh recalculation for whatever just became the CUE and,
@@ -506,15 +574,14 @@ export const GraphicsController: FC = () => {
   // off air) and the Timeline Queue has something waiting, pull it straight
   // into the controller: loaded, but deliberately NOT taken to air. Fires
   // once per idle-then-queued transition - once `pullOnDeckEntry` succeeds,
-  // `liveState.timelineId` becomes non-null and this effect's guard stops
-  // it from firing again (see the broadcast fix in the realtime relay that
-  // makes `liveState` actually reflect this promptly).
+  // `loaded` becomes non-null and this effect's guard stops it from firing
+  // again after the authoritative envelope arrives.
   useEffect(() => {
     if (!eventKey) return;
-    if (liveState.timelineId !== null) return;
+    if (loaded !== null) return;
     if (cueQueue.entries.length === 0) return;
     void pullOnDeckEntry();
-  }, [eventKey, liveState.timelineId, cueQueue.entries.length]);
+  }, [eventKey, loaded, cueQueue.entries.length]);
 
   // Prev/Go replace the old four-button Prev/Go/Take/Next row. There is no
   // longer a separate cue-only step: each press moves the transport (back
@@ -527,7 +594,7 @@ export const GraphicsController: FC = () => {
   // something different.
   //
   // CRITICAL: while off air, both buttons act on the CURRENT index rather
-  // than navigating first. `liveState.index` never itself represents the
+  // than navigating first. `loaded.index` never itself represents the
   // theoretical "0"/"before anything" slot - it always points at a real
   // item, even the very first one - so calling `advance()`/`previous()`
   // unconditionally here would skip straight past item 1 (and its cue,
@@ -545,7 +612,7 @@ export const GraphicsController: FC = () => {
   const handlePrev = async () => {
     if (!eventKey) return;
     try {
-      if (!liveState.onAir) {
+      if (!transportOnAir) {
         if (isAtFirstItem) return; // guarded by prevDisabledReason too
         await graphicsApi.live.take(eventKey);
         return;
@@ -564,7 +631,7 @@ export const GraphicsController: FC = () => {
   const handleGo = async () => {
     if (!eventKey) return;
     try {
-      if (!liveState.onAir) {
+      if (!transportOnAir) {
         await graphicsApi.live.take(eventKey);
         return;
       }
@@ -581,7 +648,7 @@ export const GraphicsController: FC = () => {
 
   // Animate Out (Hide): takes the program off air (its exit animation
   // plays) without touching anything else - the cue, the transport
-  // position, and the local `cue` hook's state are all left alone, so a
+  // position, and the authoritative cue are all left alone, so a
   // subsequent Prev/Go still resumes exactly where the show was. Also what
   // Prev does automatically at item 1 (see `handlePrev`).
   const handleHide = async () => {
@@ -593,9 +660,8 @@ export const GraphicsController: FC = () => {
     }
   };
 
-  // Animate Out and Clear: takes the program off air, resets this tab's
-  // local `cue` hook state (the Cue/Recalculate/Push row above), and
-  // advances the Timeline Queue - loading the On Deck entry if one exists,
+  // Animate Out and Clear: takes the program off air and advances the
+  // Timeline Queue - loading the On Deck entry if one exists,
   // or fully unloading the transport (`live/unload`) if the queue is empty
   // so it goes genuinely idle rather than leaving the just-cleared show
   // sitting there as "loaded". Also what Go does automatically at the last
@@ -604,7 +670,6 @@ export const GraphicsController: FC = () => {
     if (!eventKey) return;
     try {
       await graphicsApi.live.clear(eventKey);
-      cue.reset();
       if (cueQueue.entries.length > 0) {
         await pullOnDeckEntry();
       } else {
@@ -630,33 +695,25 @@ export const GraphicsController: FC = () => {
     }
   };
 
-  const handleQuickStatPreview = async (spec: GraphicSpec) => {
-    if (!eventKey) return;
-    try {
-      const result = await cue.cue(spec);
-      if (result) emitPreview(result.spec, result.frame);
-    } catch (e) {
-      showErrorSnackbar('Error while previewing quick stat.', e);
-    }
-  };
-
   const handleQuickStatCue = async (spec: GraphicSpec) => {
     if (!eventKey) return;
+    const commandEvent = eventKey;
     try {
-      const result = await cue.cue(spec);
-      if (result) emitPreview(result.spec, result.frame);
+      await graphicsApi.live.cue(commandEvent, spec);
     } catch (e) {
-      showErrorSnackbar('Error while cueing quick stat.', e);
+      if (activeEventRef.current === commandEvent)
+        showErrorSnackbar('Error while cueing quick stat.', e);
     }
   };
 
   const handleQuickStatTakeNow = async (spec: GraphicSpec) => {
     if (!eventKey) return;
+    const commandEvent = eventKey;
     try {
-      await graphicsApi.live.quickTake(eventKey, spec);
-      cue.reset();
+      await graphicsApi.live.quickTake(commandEvent, spec);
     } catch (e) {
-      showErrorSnackbar('Error while sending graphic to air.', e);
+      if (activeEventRef.current === commandEvent)
+        showErrorSnackbar('Error while sending graphic to air.', e);
     }
   };
 
@@ -693,9 +750,13 @@ export const GraphicsController: FC = () => {
     // tab save must NEVER call a `live/*` endpoint, even when the timeline
     // being edited there happens to also be the live one right now - the
     // Editor is purely a client-side editing surface.
-    if (activeTab === 'live' && eventKey && liveState.timelineId) {
+    if (activeTab === 'live' && eventKey && liveTimelineId) {
       try {
-        await graphicsApi.live.load(eventKey, liveState.timelineId);
+        await graphicsApi.live.load(
+          eventKey,
+          liveTimelineId,
+          loaded?.values ?? undefined
+        );
         showSnackbar('Timeline saved and reloaded to the transport.');
       } catch (e) {
         showErrorSnackbar(
@@ -727,6 +788,7 @@ export const GraphicsController: FC = () => {
       );
       setVariableModal({
         kind: 'enqueue-timeline',
+        eventKey: eventKey ?? timeline.eventKey,
         timelineId: timeline.timelineId,
         variables
       });
@@ -778,26 +840,45 @@ export const GraphicsController: FC = () => {
     const modal = variableModal;
     setVariableModal(null);
     if (!modal) return;
+    if (activeEventRef.current !== modal.eventKey) return;
     try {
       if (modal.kind === 'enqueue-timeline') {
         await cueQueue.addEntry(modal.timelineId, values);
       } else {
-        const result = await cue.cue(modal.spec, values);
-        if (result) emitPreview(result.spec, result.frame);
+        await graphicsApi.live.cue(modal.eventKey, modal.spec, values);
       }
     } catch (e) {
-      showErrorSnackbar(
-        modal.kind === 'cue-spec'
-          ? 'Error while querying stat data.'
-          : 'Error while adding to the cue queue.',
-        e
-      );
+      if (activeEventRef.current === modal.eventKey)
+        showErrorSnackbar(
+          modal.kind === 'cue-spec'
+            ? 'Error while cueing stat data.'
+            : 'Error while adding to the cue queue.',
+          e
+        );
     }
   };
 
-  const cueBusy = cue.isCueing || cue.isRecalculating;
-  const asOf = cue.active
-    ? dayjs(cue.active.calculatedAsOfUtc).format('HH:mm')
+  const cueBusy =
+    authoritativeCue?.status === 'calculating' ||
+    stagedUpdate?.status === 'calculating';
+  const cueGraphic =
+    authoritativeCue?.status === 'ready' ? authoritativeCue.graphic : null;
+  const cueSpec =
+    authoritativeCue?.status === 'ready'
+      ? authoritativeCue.graphic.spec
+      : authoritativeCue?.status === 'calculating' ||
+          authoritativeCue?.status === 'failed'
+        ? authoritativeCue.spec
+        : null;
+  const displayedCueTarget =
+    authoritativeCue?.status === 'ready'
+      ? authoritativeCue.graphic.target
+      : authoritativeCue?.status === 'calculating' ||
+          authoritativeCue?.status === 'failed'
+        ? authoritativeCue.target
+        : null;
+  const cueAsOf = cueGraphic
+    ? dayjs(cueGraphic.frame.asOfUtc).format('HH:mm')
     : null;
 
   return (
@@ -909,43 +990,82 @@ export const GraphicsController: FC = () => {
               <Space size={8} wrap>
                 <Tag color='red'>ACTIVE</Tag>
                 <Typography.Text strong>
-                  {liveEditor.timeline && activeItem
-                    ? `${liveEditor.timeline.name} > ${
-                        liveState.onAir
-                          ? `item ${liveState.index + 1}/${liveEditor.items.length}`
-                          : `Animated Out (${liveState.index + 1}/${liveEditor.items.length})`
-                      }`
-                    : (cueTarget?.title ?? 'Nothing cued')}
+                  {program?.graphic.spec.title ?? 'Nothing on air'}
                 </Typography.Text>
-                {cue.active?.cache === 'stale' && (
-                  <Tag color='warning'>stale</Tag>
-                )}
-                {cue.active?.refreshQueued && (
-                  <Tag color='processing'>refresh queued</Tag>
-                )}
-                {cue.active?.quality === 'best_effort' && (
+                {program?.graphic.frame.quality === 'best_effort' && (
                   <Tag color='gold'>best effort</Tag>
                 )}
-                {!!cue.active?.warnings.length && (
+                {!!program?.graphic.frame.warnings.length && (
                   <Tag color='orange'>
-                    {cue.active.warnings.length} warning(s)
+                    {program.graphic.frame.warnings.length} warning(s)
                   </Tag>
                 )}
-                {liveState.armed && (
-                  <Tag color='processing'>
-                    ARMED
-                    {armedEntryInfo ? ` - ${armedEntryInfo.timelineName}` : ''}
-                  </Tag>
+                {program && (
+                  <Typography.Text type='secondary'>
+                    as of {dayjs(program.graphic.frame.asOfUtc).format('HH:mm')}
+                    {' · '}revision {program.revision}
+                  </Typography.Text>
                 )}
               </Space>
             </Col>
           </Row>
 
-          {cue.activeUnavailable && (
+          <Space size={8} wrap>
+            <Tag
+              color={
+                authoritativeCue?.status === 'ready'
+                  ? 'success'
+                  : authoritativeCue?.status === 'calculating'
+                    ? 'processing'
+                    : authoritativeCue?.status === 'failed'
+                      ? 'error'
+                      : 'default'
+              }
+            >
+              CUE {authoritativeCue?.status ?? 'empty'}
+            </Tag>
+            <Typography.Text>
+              {cueSpec?.title ?? 'Nothing cued'}
+            </Typography.Text>
+            {displayedCueTarget && (
+              <Typography.Text type='secondary'>
+                {formatTargetProvenance(displayedCueTarget)}
+              </Typography.Text>
+            )}
+            {cueGraphic?.frame.quality === 'best_effort' && (
+              <Tag color='gold'>best effort</Tag>
+            )}
+            {!!cueGraphic?.frame.warnings.length && (
+              <Tag color='orange'>
+                {cueGraphic.frame.warnings.length} warning(s)
+              </Tag>
+            )}
+            {cueAsOf && (
+              <Typography.Text type='secondary'>
+                as of {cueAsOf}
+              </Typography.Text>
+            )}
+          </Space>
+
+          {authoritativeCue?.status === 'failed' && (
             <Alert
-              type='warning'
+              type='error'
               showIcon
-              message={`${cue.activeUnavailable.status.replace('_', ' ')}: ${cue.activeUnavailable.reason}`}
+              message={`${authoritativeCue.error.code}: ${authoritativeCue.error.message}`}
+            />
+          )}
+
+          {stagedUpdate && stagedUpdate.status !== 'empty' && (
+            <Alert
+              type={stagedUpdate.status === 'failed' ? 'error' : 'info'}
+              showIcon
+              message={
+                stagedUpdate.status === 'calculating'
+                  ? `Recalculating ${stagedUpdate.destination} update (${formatTargetProvenance(stagedUpdate.origin)})`
+                  : stagedUpdate.status === 'failed'
+                    ? `${stagedUpdate.error.code}: ${stagedUpdate.error.message}`
+                    : `Fresh ${stagedUpdate.destination} update ready · as of ${dayjs(stagedUpdate.graphic.frame.asOfUtc).format('HH:mm')} · ${formatTargetProvenance(stagedUpdate.origin)}`
+              }
             />
           )}
 
@@ -995,17 +1115,13 @@ export const GraphicsController: FC = () => {
                   <TransportButton
                     icon={<ReloadOutlined />}
                     loading={cueBusy}
-                    reason={cueBusy ? undefined : cueDisabledReason}
+                    reason={cueDisabledReason}
                     onClick={handleCueOrRecalculate}
                   >
-                    Refresh Data
+                    {refreshDestination
+                      ? `Recalculate ${refreshDestination}`
+                      : 'Cue'}
                   </TransportButton>
-                  {cue.active && (
-                    <Typography.Text type='secondary'>
-                      (as of {cue.active.latestPlayedMatch?.name ?? 'match —'},{' '}
-                      {asOf})
-                    </Typography.Text>
-                  )}
                 </Space>
                 {/* Preview-only: replays the entrance on every PVW screen so
                     the transition can be checked before it goes to air.
@@ -1022,11 +1138,9 @@ export const GraphicsController: FC = () => {
               </Space>
             </Col>
             <Col>
-              {(cue.pending || cue.pendingUnavailable) && (
+              {stagedUpdate?.status === 'ready' && (
                 <Space size={8}>
-                  <Tag color='blue'>
-                    {cue.pending ? 'Update ready' : 'Recalculation unavailable'}
-                  </Tag>
+                  <Tag color='blue'>Update ready</Tag>
                   <Button
                     type='primary'
                     icon={<CloudUploadOutlined />}
@@ -1105,14 +1219,6 @@ export const GraphicsController: FC = () => {
                           <Typography.Text strong>
                             Timeline Queue
                           </Typography.Text>
-                          {liveState.armed && (
-                            <Tag color='processing'>
-                              Armed
-                              {armedEntryInfo
-                                ? `: ${armedEntryInfo.timelineName}`
-                                : ''}
-                            </Tag>
-                          )}
                         </Space>
                         {/* Not a picker: clicking a row does nothing.
                             Quick Play takes it to air now; Delete removes it. */}
@@ -1120,7 +1226,7 @@ export const GraphicsController: FC = () => {
                           entries={cueQueue.entries}
                           rowInfo={queueRowInfo}
                           refreshInfo={queueRowRefresh.refreshInfo}
-                          loadedEntryId={liveState.queueEntryId}
+                          loadedEntryId={currentLoadedItem?.entryId ?? null}
                           onReorder={cueQueue.reorder}
                           onRemove={cueQueue.removeEntry}
                           onQuickPlay={handleQuickPlayQueueEntry}
@@ -1158,9 +1264,14 @@ export const GraphicsController: FC = () => {
                           catalogue={catalogue}
                           readiness={livePreflight.readiness}
                           liveIndex={
-                            liveEditor.timeline ? liveState.index : null
+                            liveEditor.timeline
+                              ? (currentLoadedItem?.itemIndex ?? null)
+                              : null
                           }
-                          liveOnAir={liveState.onAir}
+                          liveOnAir={
+                            !!program &&
+                            targetIsCurrentLoadedItem(program.graphic.target)
+                          }
                           selectedItemId={liveSelectedItemId}
                           onSelectItem={setLiveSelectedItemId}
                           header={
@@ -1191,7 +1302,6 @@ export const GraphicsController: FC = () => {
           >
             <QuickStatDrawer
               eventKey={eventKey ?? ''}
-              onPreview={handleQuickStatPreview}
               onCue={handleQuickStatCue}
               onAppendToTimeline={handleAppendToTimeline}
               onTakeNow={handleQuickStatTakeNow}
@@ -1204,8 +1314,13 @@ export const GraphicsController: FC = () => {
 
       <VariableFillModal
         open={variableModal !== null}
-        eventKey={eventKey ?? ''}
+        eventKey={variableModal?.eventKey ?? eventKey ?? ''}
         variables={variableModal?.variables ?? []}
+        initialValues={
+          variableModal?.kind === 'cue-spec'
+            ? variableModal.initialValues
+            : undefined
+        }
         confirmText={
           variableModal?.kind === 'cue-spec' ? 'Cue' : 'Add to queue'
         }

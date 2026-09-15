@@ -28,6 +28,9 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     unstubGlobals: true,
+    // Ant Design + jsdom initialization can exceed Vitest's 5s default on
+    // production Windows workstations even when assertions complete normally.
+    testTimeout: 30_000,
     pool: 'vmThreads',
     fileParallelism: false,
     maxWorkers: 1

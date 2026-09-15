@@ -21,7 +21,7 @@ export interface UseQueueRowRefreshResult {
    * instead of a cold one.
    *
    * Deliberately bypasses the live transport entirely - `state.loaded`/
-   * `cue`/`program` are never touched, exactly like `useCue`'s `cue()`
+   * `cue`/`program` are never touched; this is cache warming only.
    * queries `POST /stats/:eventKey/query` directly. An item whose bindings
    * don't fully resolve against `entry.values` is silently skipped (nothing
    * useful to warm yet - matches `unresolvedBindings`' role everywhere else

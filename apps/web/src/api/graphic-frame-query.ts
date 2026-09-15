@@ -13,8 +13,10 @@ import type { StatCatalogueEntry } from './use-stats-data.js';
  * shared by every browser-side surface that needs to turn a `GraphicSpec`
  * into a render-ready `VizFrame`:
  *
- *  - the producer's graphics controller (`use-cue.ts`), for Cue / Quick Stat
- *    / recalculate;
+ *  - the producer's timeline preflight check (`use-timeline-preflight.ts`),
+ *    which only reports whether a timeline's items would calculate - it
+ *    never feeds the transport (Cue / Quick Stat / recalculate all go
+ *    through the authoritative API playback commands);
  *  - the preview (PVW-bus) audience screen (`use-preview-frame.ts`), which
  *    must calculate the NEXT item itself because the server only ever
  *    prepares the cue lane (GRAPHICS_PLAYBACK_POLICY.navigation:

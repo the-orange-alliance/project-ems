@@ -5,6 +5,7 @@ import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
   describeCueNotReady,
+  graphicSpecZod,
   graphicIdentifierZod,
   graphicRevisionZod,
   graphicsTargetZod,
@@ -12,6 +13,9 @@ import {
   playbackStateEnvelopeZod,
   playbackStateZod,
   preparedGraphicSpecZod,
+  resolveSpec,
+  unresolvedBindings,
+  variableValuesZod,
   type GraphicsError,
   type GraphicsTarget,
   type PlaybackAcknowledgment,
@@ -138,11 +142,19 @@ const targetBody = z
   .strict()
   .nullish();
 const cueBody = z
-  .object({ ...requestFields, spec: preparedGraphicSpecZod })
+  .object({
+    ...requestFields,
+    spec: graphicSpecZod,
+    values: variableValuesZod.optional()
+  })
   .strict();
 /** quick-take is the one command Companion cannot drive body-less: it carries the full graphic spec, so the body is required. */
 const quickTakeBody = z
-  .object({ ...requestFields, spec: preparedGraphicSpecZod })
+  .object({
+    ...requestFields,
+    spec: graphicSpecZod,
+    values: variableValuesZod.optional()
+  })
   .strict();
 
 const errorEnvelopeZod = z.object({
@@ -372,6 +384,48 @@ export default async function graphicsPlaybackController(
       error: { code, message, retryable: false },
       state
     });
+  }
+
+  /**
+   * Resolve an ad-hoc producer spec at the authoritative ingress. Timeline
+   * loads already resolve bindings in PlaybackNavigation; cue/quick-take need
+   * the same guarantee without asking the browser to manufacture a second
+   * prepared-spec contract.
+   */
+  async function resolveCommandSpec(
+    eventKey: string,
+    requestId: string,
+    spec: z.infer<typeof graphicSpecZod>,
+    values: z.infer<typeof variableValuesZod> | undefined
+  ): Promise<
+    | { spec: z.infer<typeof preparedGraphicSpecZod> }
+    | { reject: PlaybackAcknowledgment }
+  > {
+    const missing = unresolvedBindings(spec, values ?? {});
+    if (missing.length > 0) {
+      return {
+        reject: rejectAck(
+          requestId,
+          'INVALID_INPUT',
+          `Fill in: ${missing.join(', ')}`,
+          await coordinator.getState(eventKey)
+        )
+      };
+    }
+    const prepared = preparedGraphicSpecZod.safeParse(
+      resolveSpec(spec, values ?? {})
+    );
+    if (!prepared.success) {
+      return {
+        reject: rejectAck(
+          requestId,
+          'INVALID_INPUT',
+          prepared.error.issues.map((issue) => issue.message).join('; '),
+          await coordinator.getState(eventKey)
+        )
+      };
+    }
+    return { spec: prepared.data };
   }
 
   /**
@@ -690,14 +744,21 @@ export default async function graphicsPlaybackController(
         response: commandResponses
       }
     },
-    (request, reply) => {
+    async (request, reply) => {
       const { eventKey } = request.params;
       const requestId = request.body.requestId ?? newRequestId();
+      const resolved = await resolveCommandSpec(
+        eventKey,
+        requestId,
+        request.body.spec,
+        request.body.values
+      );
+      if ('reject' in resolved) return sendAck(reply, resolved.reject);
       return runCommand(reply, eventKey, {
         type: 'cue',
         requestId,
         expectedRevision: request.body.expectedRevision,
-        spec: request.body.spec
+        spec: resolved.spec
       });
     }
   );
@@ -838,9 +899,16 @@ export default async function graphicsPlaybackController(
         response: commandResponses
       }
     },
-    (request, reply) => {
+    async (request, reply) => {
       const { eventKey } = request.params;
       const requestId = request.body.requestId ?? newRequestId();
+      const resolved = await resolveCommandSpec(
+        eventKey,
+        requestId,
+        request.body.spec,
+        request.body.values
+      );
+      if ('reject' in resolved) return sendAck(reply, resolved.reject);
       return runCommand(
         reply,
         eventKey,
@@ -848,7 +916,7 @@ export default async function graphicsPlaybackController(
           type: 'quick-take',
           requestId,
           expectedRevision: request.body.expectedRevision,
-          spec: request.body.spec
+          spec: resolved.spec
         },
         remapQuickTakeFailure
       );

@@ -105,7 +105,6 @@ export function useSocketWorker() {
     graphicsGo: (v: any) => socket?.emit(GraphicsSocketEvent.GO, v),
     graphicsTake: (v: any) => socket?.emit(GraphicsSocketEvent.TAKE, v),
     graphicsClear: (v: any) => socket?.emit(GraphicsSocketEvent.CLEAR, v),
-    graphicsPreview: (v: any) => socket?.emit(GraphicsSocketEvent.PREVIEW, v),
     graphicsQueueSnapshot: (v: any) =>
       socket?.emit(GraphicsQueueSocketEvent.SNAPSHOT, v)
   };
