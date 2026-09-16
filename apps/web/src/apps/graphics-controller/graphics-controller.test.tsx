@@ -362,8 +362,15 @@ describe('GraphicsController authoritative controls', () => {
       target
     });
 
+    // The push names WHAT the producer is looking at: the staged update's own
+    // destination and origin, plus the revision this render was built from.
+    // Without the destination, an unqualified push would promote whatever is
+    // staged when it lands - including someone else's program update.
     fireEvent.click(screen.getByRole('button', { name: 'Push' }));
-    expect(mocks.pushUpdate).toHaveBeenCalledWith('event-a', { target });
+    expect(mocks.pushUpdate).toHaveBeenCalledWith('event-a', 'program', {
+      target,
+      expectedRevision: 4
+    });
   }, 30_000);
 
   it('shows authoritative failure and ignores a rejected old-event promise', async () => {
@@ -468,6 +475,13 @@ describe('GraphicsController show advance', () => {
     // handles this, so a reorder in flight cannot make the browser consume a
     // position the operator no longer sees.
     expect(mocks.consume).toHaveBeenCalledWith({});
+    // And NOTHING recalculates behind the producer's back afterwards. The
+    // advance's own load already awaited fresh stats for the cue it prepared,
+    // and the follow-up refresh+push this used to fire could promote whatever
+    // was staged when it landed - including another operator's un-pushed
+    // program update, which is an unrequested on-air change.
+    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(mocks.pushUpdate).not.toHaveBeenCalled();
   });
 
   it('still issues exactly one advance under a StrictMode effect replay', async () => {

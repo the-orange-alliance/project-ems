@@ -108,7 +108,18 @@ This section is for a consumer building an **external "simple" controller** for 
 | `POST .../live/quick-take` (POST only) | Prepare-and-air a full graphic spec in one call. Requires a `spec` in the body — no GET alias, since GET can't carry one. |
 | `.../live/quick-cue/:timelineId` | **Load a timeline and decide whether it also goes to air, in one call** — see below. |
 | `.../live/refresh/:destination` where `destination` is `cue` or `program` | Calculate fresh data into a staged update for that destination; cue/program stay unchanged until Push. |
-| `.../live/push-update` | Push a previously staged update live. |
+| `.../live/refresh/:destination/push` | **Recalculate that destination and put that recalculation onto it, in one command.** Use this, not a `refresh` + `push-update` pair, whenever you already know you want the result live — see below. |
+| `.../live/push-update/:destination` | Push a previously staged update live, naming which staged update you mean. |
+| `.../live/push-update` | Push a previously staged **cue** update. Refused when what is staged is a *program* update: putting something on air must be asked for explicitly. |
+
+##### Pushing a staged update, and why the destination is not optional
+
+`refresh` stages into a single slot; `push-update` promotes whatever is in it. So `refresh` followed by `push-update` has a window: if anything else stages an update in between, the push promotes *that* instead. On `program` that is an unrequested on-air change, which this system does not allow.
+
+Two rules follow, and both are enforced by the API:
+
+* **If you already know you want the result live, use `.../live/refresh/:destination/push`.** One request, one durable commit — it stages and promotes together and is structurally incapable of promoting anything but its own result. This is also the better Companion button: one press instead of two.
+* **If you stage now and push later** (the producer workflow: Recalculate, look at it, then Push), name what you meant on the push — the `/:destination` path segment or a `destination` field in the body, plus `expectedRevision`. A mismatch is rejected, naming both what you asked for and what is actually staged; nothing is promoted.
 
 All commands accept an optional `requestId` (for idempotent replay/retry safety) and `expectedRevision` (optimistic concurrency) when sent via POST with a JSON body; the GET aliases auto-generate a `requestId` and skip revision checking, which is fine for a fire-and-forget button.
 

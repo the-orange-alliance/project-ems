@@ -60,7 +60,8 @@ import {
   playbackDeliveryForEventAtom,
   playbackLoadedForEventAtom,
   playbackProgramForEventAtom,
-  playbackStagedUpdateForEventAtom
+  playbackStagedUpdateForEventAtom,
+  playbackStateForEventAtom
 } from 'src/stores/state/graphics.js';
 import {
   describeDraftSync,
@@ -198,6 +199,10 @@ export const GraphicsController: FC = () => {
   const authoritativeCue = useAtomValue(playbackCueForEventAtom(eventKey));
   const program = useAtomValue(playbackProgramForEventAtom(eventKey));
   const stagedUpdate = useAtomValue(playbackStagedUpdateForEventAtom(eventKey));
+  // Read for its `revision` only: every producer command that acts on what the
+  // producer can currently SEE pins that revision, so the server rejects it if
+  // state moved underneath this render rather than applying it to something else.
+  const playbackState = useAtomValue(playbackStateForEventAtom(eventKey));
   const playbackDelivery = useAtomValue(playbackDeliveryForEventAtom(eventKey));
   const { recover: recoverHydration } = usePlaybackHydrationRecovery();
   const [hydrationRetrying, setHydrationRetrying] = useState(false);
@@ -636,39 +641,57 @@ export const GraphicsController: FC = () => {
     }
   };
 
+  // The producer pressing Push means "put THIS update - the one the panel is
+  // showing me - onto the lane it was staged for". So the command names all
+  // three: the staged update's own destination and origin, and the playback
+  // revision this render was built from. If any of them has moved (someone
+  // else staged something, the cue advanced, a take landed), the server
+  // rejects and says so, instead of promoting whatever happens to be staged
+  // by the time the request arrives.
   const handlePush = async () => {
-    if (!eventKey || stagedUpdate?.status !== 'ready') return;
+    if (!eventKey || stagedUpdate?.status !== 'ready' || !playbackState) return;
     const commandEvent = eventKey;
     try {
-      await graphicsApi.live.pushUpdate(commandEvent, {
-        target: stagedUpdate.origin
-      });
+      const ack = await graphicsApi.live.pushUpdate(
+        commandEvent,
+        stagedUpdate.destination,
+        {
+          target: stagedUpdate.origin,
+          expectedRevision: playbackState.revision
+        }
+      );
+      if (ack && !ack.ok && activeEventRef.current === commandEvent)
+        showErrorSnackbar(
+          'The staged update was not pushed.',
+          ack.error.message
+        );
     } catch (e) {
       if (activeEventRef.current === commandEvent)
         showErrorSnackbar('Error while pushing the staged update.', e);
     }
   };
 
-  // Kicks off a fresh recalculation for whatever just became the CUE and,
-  // if it resolves before the operator takes it to air, silently lands it -
-  // `refresh`+`pushUpdate` targeting 'cue' can only ever write `state.cue`,
-  // never `state.program` (see `PlaybackRefresh.ts`'s own contract), so this
-  // can never disturb what's currently on air; it just means the item shows
-  // the newest data whenever it IS eventually animated in. Fire-and-forget:
-  // a lost race (the operator already moved the transport on, or took it
-  // live before this resolved) rejects SUPERSEDED/NOT_READY, which is a
-  // normal, silent outcome here - this is a best-effort background refresh,
-  // never a producer-facing action.
-  const refreshCueSilently = (key: string) => {
-    void (async () => {
-      try {
-        await graphicsApi.live.refresh(key, 'cue');
-        await graphicsApi.live.pushUpdate(key);
-      } catch {
-        // Expected races and transient failures both fall through here.
-      }
-    })();
-  };
+  // NO post-advance cue refresh runs here, deliberately. See
+  // `temp/stats-production/reconcile-rev2/outputs/B-producer-intent-binding.md`.
+  //
+  // There used to be a fire-and-forget `refresh('cue')` + `pushUpdate()` pair
+  // fired after every advance, with every error swallowed. It was both
+  // unnecessary and unsafe:
+  //
+  //  - unnecessary, because `show/advance` performs a `load`, and every load
+  //    already awaits a FRESH stats flight for the cue it prepares
+  //    (`PlaybackNavigation` calls `stats.queryFresh`, never the
+  //    stale-while-revalidate `query`). The cue an advance produces is already
+  //    the newest numbers; recalculating it milliseconds later changed nothing.
+  //  - unsafe, because the unqualified push promoted whatever was staged when
+  //    it landed. If anyone staged a PROGRAM refresh in that window, this
+  //    background path put it on air with no producer pressing Push for it -
+  //    a direct violation of "nothing live changes unless a producer commanded
+  //    that specific change".
+  //
+  // A producer who does want the newest numbers on a lane asks for it: the
+  // Recalculate buttons, or `graphicsApi.live.refreshAndPush`, which is one
+  // atomic command with no window. Nothing recalculates behind their back.
 
   // Advances the show: consumes an entry and puts it on the transport, as ONE
   // atomic server command (`POST /live/show/advance`, see `advanceShow` in
@@ -706,9 +729,6 @@ export const GraphicsController: FC = () => {
         );
         return;
       }
-      // Something new is on the transport: kick off the same best-effort cue
-      // recalculation the old two-call path did.
-      if (result.consumedEntryId !== null) refreshCueSilently(commandEvent);
     } catch (e) {
       if (activeEventRef.current === commandEvent)
         showErrorSnackbar(failureContext, e);

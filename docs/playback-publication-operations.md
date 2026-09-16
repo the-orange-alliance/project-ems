@@ -71,7 +71,8 @@ realtime.
 
 Port 8080 supports state reads plus these mutations: load timeline, load
 rundown, unload, cue, advance, previous, go (path or query index), take, clear,
-quick-take, quick-cue, refresh cue/program, push-update, and atomic show advance. Every command except
+quick-take, quick-cue, refresh cue/program, atomic refresh-and-push cue/program,
+push-update (optionally naming the destination it means), and atomic show advance. Every command except
 cue and quick-take has a body-less Companion GET form; cue and quick-take require
 a complete graphic spec and are POST-only. See the consumer guide and Swagger
 for request schemas.

@@ -144,7 +144,13 @@ test('each playback mutation type publishes the exact committed acknowledgment r
   await committed('go', 'GET', '/graphics/event-a/live/go/1');
   await committed('take', 'GET', '/graphics/event-a/live/take');
   await committed('refresh', 'GET', '/graphics/event-a/live/refresh/program');
-  await committed('push-update', 'GET', '/graphics/event-a/live/push-update');
+  // Airing a staged PROGRAM update is always asked for explicitly - the bare
+  // push-update route may only promote a cue update (see graphics-push-intent.test.ts).
+  await committed(
+    'push-update',
+    'GET',
+    '/graphics/event-a/live/push-update/program'
+  );
   await committed('clear', 'GET', '/graphics/event-a/live/clear');
   await committed('cue', 'POST', '/graphics/event-a/live/cue', {
     requestId: 'publish-cue',
@@ -414,7 +420,7 @@ test('isolated harness: refresh stages a new program and explicit push-update pr
 
   const pushRes = await app.inject({
     method: 'GET',
-    url: '/graphics/event-a/live/push-update'
+    url: '/graphics/event-a/live/push-update/program'
   });
   assert.equal(pushRes.statusCode, 200);
   const pushAck = pushRes.json();

@@ -190,7 +190,7 @@ try {
   checks.push('real worker preparation, load/take publication and event isolation');
   const refreshed = await command('smoke-a', 'refresh/program');
   assert.equal(refreshed.state.stagedUpdate.status, 'ready');
-  const pushed = await command('smoke-a', 'push-update');
+  const pushed = await command('smoke-a', 'push-update/program');
   assert.equal(pushed.state.stagedUpdate.status, 'empty');
   const fresh = await json('/stats/smoke-a/query', 'POST', { stat: definition.slug, refresh: true });
   const cached = await json('/stats/smoke-a/query', 'POST', { stat: definition.slug });

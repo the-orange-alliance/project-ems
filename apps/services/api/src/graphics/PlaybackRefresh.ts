@@ -42,13 +42,22 @@ import { TRANSITION_TIMING_MS } from './PlaybackProgram.js';
  * explicit `push-update`, never as a side effect of `refresh`.
  *
  * The product rule this module exists to enforce: recalculating a graphic
- * NEVER changes what is on air. `refresh` computes into `stagedUpdate` and
- * stops at `ready`; a separate, explicit `push-update` command is required to
- * promote that staged result onto the cue or the program. "Update ready" is
- * reported only after both the recalculation AND `presentationFrameZod`
- * validation have succeeded - even when the freshly computed values are
- * byte-identical to what is already on air. There is no code path in this
- * module that writes `state.program` or `state.cue` from `refresh` alone.
+ * NEVER changes what is on air unless the producer commanded THAT change.
+ * `refresh` computes into `stagedUpdate` and stops at `ready`; a separate,
+ * explicit `push-update` command is required to promote that staged result
+ * onto the cue or the program. "Update ready" is reported only after both the
+ * recalculation AND `presentationFrameZod` validation have succeeded - even
+ * when the freshly computed values are byte-identical to what is already on
+ * air. There is no code path in this module that writes `state.program` or
+ * `state.cue` from a plain `refresh`.
+ *
+ * The ONE exception is `refresh` with `push: true`, where the producer named
+ * the destination AND the promotion in the same request. That promotion
+ * happens inside the same durable commit as the staging, so it can only ever
+ * promote the recalculation that command itself produced. It exists precisely
+ * so no caller has to spell "recalculate then push it" as two requests: that
+ * pair has a window in which a DIFFERENT staged update can be promoted
+ * instead, which is a live-invariant violation, not a race worth tolerating.
  *
  * Every collaborator is injected so this can be driven, and tested, with no
  * Fastify instance and no producer socket connected anywhere - a Bitfocus
@@ -452,14 +461,44 @@ export class PlaybackRefresh {
         this.prepareFrame(response.result, ticket.spec, ctx)
       );
       const preparedAtUtc = this.now();
-      // No afterReady mutation: staging stops at 'ready' and waits for an explicit push-update. This is
-      // the entire enforcement of "DO NOT AUTO LOAD THE DATA" - there is no promotion path from here.
-      return await this.coordinator.completePreparation(ticket, {
-        target: ticket.target,
-        spec: ticket.spec,
-        frame,
-        preparedAtUtc
-      });
+      // Without `command.push` there is NO afterReady mutation: staging stops at 'ready' and waits for an
+      // explicit push-update. That is the entire enforcement of "DO NOT AUTO LOAD THE DATA" - a plain
+      // refresh has no promotion path from here.
+      //
+      // With `command.push`, the caller commanded this destination and this recalculation in this one
+      // request, so the promotion runs inside the SAME durable commit that marks the result ready. The
+      // coordinator's `ticketCurrent` gate (forced to protect the program by the presence of an afterReady
+      // mutation) has already re-verified that THIS ticket's staged update is the current one and that its
+      // origin is still live at its destination - so this can only ever promote the recalculation this
+      // command itself produced. There is no window in which a different staged update could be promoted
+      // instead, which is exactly why a background caller must use this and never a refresh-then-push pair.
+      return await this.coordinator.completePreparation(
+        ticket,
+        {
+          target: ticket.target,
+          spec: ticket.spec,
+          frame,
+          preparedAtUtc
+        },
+        command.push
+          ? (draft, context) => {
+              const staged = draft.stagedUpdate;
+              if (staged.status !== 'ready')
+                throw new PlaybackCoordinatorError({
+                  code: 'SUPERSEDED',
+                  message: `The ${command.destination} update this command calculated is no longer the staged update; nothing was promoted.`,
+                  retryable: false
+                });
+              if (staged.destination !== command.destination)
+                throw new PlaybackCoordinatorError({
+                  code: 'SUPERSEDED',
+                  message: `This command recalculated the ${command.destination}, but a ${staged.destination} update is staged instead; nothing was promoted.`,
+                  retryable: false
+                });
+              this.promote(draft, context, staged);
+            }
+          : undefined
+      );
     } catch (error) {
       // Never let an exception escape without failing the ticket, or stagedUpdate is stuck 'calculating' forever.
       return await this.coordinator.failPreparation(
@@ -477,15 +516,24 @@ export class PlaybackRefresh {
    * enforces `expectedRevision` and requestId replay itself; nothing is
    * duplicated here.
    *
-   * Requires, in order: the staged update is `ready` (else `NOT_READY`); the
+   * PRODUCER INTENT. A push promotes exactly the staged update the caller
+   * formed its intent against, or fails loudly. The caller names that intent
+   * with `target` (the origin it staged against) and `destination` (which
+   * lane it meant); `expectedRevision` pins the exact staged update when the
+   * caller has one in view. All three are validated together against what is
+   * actually staged, and a mismatch is a named rejection that reports both
+   * sides - never a silent promotion of the other thing.
+   *
+   * `destination` is optional ONLY for a producer pressing a bare Push button
+   * with no prior call of their own (the Companion path), where "push what is
+   * staged" IS the intent. See the field's own doc comment in `Graphics.ts`.
+   *
+   * Requires, in order: the staged update is `ready` (else `NOT_READY`); it is
+   * staged for the destination the caller named (else `SUPERSEDED`); the
    * command's `target` matches `stagedUpdate.origin` (else `SUPERSEDED`); and
    * the origin is STILL the live graphic at its destination right now (else
    * `SUPERSEDED` - a `Clear`, or a different `Take`, wins over a stale
-   * push-update). On success the staged graphic is promoted as a DETACHED
-   * copy (`snapshotPreparedGraphic`) and `stagedUpdate` is consumed back to
-   * `empty`. A push onto `program` writes a fixed same-mode-replacement
-   * crossfade transition (the spec and presentation mode never change in a
-   * refresh, only the data); a push onto `cue` writes no transition at all.
+   * push-update).
    */
   pushUpdate(
     eventKey: string,
@@ -503,59 +551,109 @@ export class PlaybackRefresh {
           retryable: false
         });
       }
+      if (
+        command.destination !== undefined &&
+        command.destination !== staged.destination
+      ) {
+        // The whole point of this check: without it, a caller that staged a
+        // CUE refresh and then pushed would promote whatever happened to be
+        // staged by the time the push landed - including another operator's
+        // un-pushed PROGRAM update, putting it on air with nobody having
+        // pressed Push for it. `origin` cannot catch this on its own: `take`
+        // preserves the cue, so after a take both lanes share one target.
+        throw new PlaybackCoordinatorError({
+          code: 'SUPERSEDED',
+          message:
+            `This push was made for the ${command.destination} update of graphic "${command.target.targetId}" ` +
+            `(target revision ${command.target.targetRevision}), but what is staged now is a ` +
+            `${staged.destination} update of graphic "${staged.origin.targetId}" ` +
+            `(target revision ${staged.origin.targetRevision}) at playback revision ${draft.revision}. ` +
+            'Nothing was promoted. Recalculate the update you meant to push and push that one.',
+          retryable: false
+        });
+      }
       if (!sameTarget(command.target, staged.origin)) {
         throw new PlaybackCoordinatorError({
           code: 'SUPERSEDED',
           message:
-            'The staged update no longer matches the requested target; it was staged for a different graphic.',
+            `This push was made for graphic "${command.target.targetId}" (target revision ` +
+            `${command.target.targetRevision}), but the staged ${staged.destination} update is for ` +
+            `graphic "${staged.origin.targetId}" (target revision ${staged.origin.targetRevision}) ` +
+            `at playback revision ${draft.revision}. Nothing was promoted; it was staged for a ` +
+            'different graphic.',
           retryable: false
         });
       }
-      if (staged.destination === 'program') {
-        const actual = draft.program?.graphic.target;
-        if (!actual || !sameTarget(actual, staged.origin)) {
-          throw new PlaybackCoordinatorError({
-            code: 'SUPERSEDED',
-            message:
-              'The program is no longer showing the graphic this update was staged for.',
-            retryable: false
-          });
-        }
-        // Detached deep copy: a later staging mutation must not reach through a shared reference into what is on air.
-        const incoming = snapshotPreparedGraphic(staged.graphic);
-        draft.program = {
-          revision: context.nextRevision,
-          graphic: incoming,
-          takenAtUtc: context.now
-        };
-        // Same spec, same presentation mode, only the data changed: a same-mode replacement is a crossfade.
-        draft.transition = graphicsTransitionZod.parse({
-          revision: context.nextRevision,
-          effectiveAtUtc: context.now,
-          crossfadeMs: TRANSITION_TIMING_MS.crossfade,
-          exitMs: 0,
-          gapMs: TRANSITION_TIMING_MS.gap,
-          enterMs: 0
-        });
-      } else {
-        const actual =
-          draft.cue.status === 'ready' ? draft.cue.graphic.target : undefined;
-        if (!actual || !sameTarget(actual, staged.origin)) {
-          throw new PlaybackCoordinatorError({
-            code: 'SUPERSEDED',
-            message:
-              'The cue is no longer showing the graphic this update was staged for.',
-            retryable: false
-          });
-        }
-        // Detached deep copy, same reasoning as above. Nothing on air changes: no transition is written.
-        draft.cue = {
-          status: 'ready',
-          graphic: snapshotPreparedGraphic(staged.graphic)
-        };
-      }
-      draft.stagedUpdate = { status: 'empty' };
+      this.promote(draft, context, staged);
     });
+  }
+
+  /**
+   * The promotion itself: writes the `ready` staged graphic onto its own
+   * `destination` and consumes the staged slot back to `empty`.
+   *
+   * Shared verbatim by `push-update` and by `refresh`'s atomic
+   * `push` variant, so the two can never drift into promoting differently.
+   * Both callers have already established that `staged` is the update the
+   * caller meant; this only re-checks that the origin is still the live
+   * graphic at that destination (a `Clear` or a different `Take` beats a
+   * stale promotion).
+   *
+   * The staged graphic is promoted as a DETACHED copy
+   * (`snapshotPreparedGraphic`). A push onto `program` writes a fixed
+   * same-mode-replacement crossfade transition (the spec and presentation
+   * mode never change in a refresh, only the data); a push onto `cue` writes
+   * no transition at all.
+   */
+  private promote(
+    draft: PlaybackState,
+    context: { nextRevision: number; now: string },
+    staged: Extract<PlaybackState['stagedUpdate'], { status: 'ready' }>
+  ): void {
+    if (staged.destination === 'program') {
+      const actual = draft.program?.graphic.target;
+      if (!actual || !sameTarget(actual, staged.origin)) {
+        throw new PlaybackCoordinatorError({
+          code: 'SUPERSEDED',
+          message:
+            'The program is no longer showing the graphic this update was staged for.',
+          retryable: false
+        });
+      }
+      // Detached deep copy: a later staging mutation must not reach through a shared reference into what is on air.
+      const incoming = snapshotPreparedGraphic(staged.graphic);
+      draft.program = {
+        revision: context.nextRevision,
+        graphic: incoming,
+        takenAtUtc: context.now
+      };
+      // Same spec, same presentation mode, only the data changed: a same-mode replacement is a crossfade.
+      draft.transition = graphicsTransitionZod.parse({
+        revision: context.nextRevision,
+        effectiveAtUtc: context.now,
+        crossfadeMs: TRANSITION_TIMING_MS.crossfade,
+        exitMs: 0,
+        gapMs: TRANSITION_TIMING_MS.gap,
+        enterMs: 0
+      });
+    } else {
+      const actual =
+        draft.cue.status === 'ready' ? draft.cue.graphic.target : undefined;
+      if (!actual || !sameTarget(actual, staged.origin)) {
+        throw new PlaybackCoordinatorError({
+          code: 'SUPERSEDED',
+          message:
+            'The cue is no longer showing the graphic this update was staged for.',
+          retryable: false
+        });
+      }
+      // Detached deep copy, same reasoning as above. Nothing on air changes: no transition is written.
+      draft.cue = {
+        status: 'ready',
+        graphic: snapshotPreparedGraphic(staged.graphic)
+      };
+    }
+    draft.stagedUpdate = { status: 'empty' };
   }
 
   private async rejected(

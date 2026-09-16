@@ -353,7 +353,8 @@ test('every body-less command works over GET with no payload (the Companion path
   assert.equal(prevAck.state.loaded?.index, 0);
 
   // Stage and push an update body-less: refresh (POST, needs an explicit destination) then a GET push-update
-  // with no target - resolved server-side from state.stagedUpdate.origin.
+  // that NAMES the destination in its path - the target is still resolved server-side from
+  // state.stagedUpdate.origin, but airing an update always has to be asked for explicitly.
   const refresh = await app.inject({
     method: 'POST',
     url: `/graphics/${eventKey}/live/refresh/program`
@@ -364,9 +365,21 @@ test('every body-less command works over GET with no payload (the Companion path
   if (!refreshed.ok) return;
   assert.equal(refreshed.state.stagedUpdate.status, 'ready');
 
-  const pushUpdate = await app.inject({
+  // The UNqualified push is refused while a program update is staged: "push whatever is
+  // staged" is not a producer asking for THIS program change (see graphics-push-intent.test.ts).
+  const unqualified = await app.inject({
     method: 'GET',
     url: `/graphics/${eventKey}/live/push-update`
+  });
+  assert.equal(unqualified.statusCode, 400);
+  const refused = ackOf(unqualified);
+  assert.equal(refused.ok, false);
+  if (refused.ok) return;
+  assert.match(refused.error.message, /push-update\/program/);
+
+  const pushUpdate = await app.inject({
+    method: 'GET',
+    url: `/graphics/${eventKey}/live/push-update/program`
   });
   assert.equal(pushUpdate.statusCode, 200);
   const pushed = ackOf(pushUpdate);

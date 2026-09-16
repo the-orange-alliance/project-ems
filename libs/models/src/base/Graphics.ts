@@ -1138,14 +1138,53 @@ export const playbackCommandZod = z.discriminatedUnion('type', [
       ...commandFields,
       type: z.literal('refresh'),
       destination: z.enum(['cue', 'program']),
-      target: graphicsTargetZod
+      target: graphicsTargetZod,
+      /**
+       * Promotes THIS refresh's own result in the same durable commit that
+       * marks it ready, instead of leaving it staged for a later
+       * `push-update`.
+       *
+       * This exists so a caller that already knows it wants the result on the
+       * destination it just recalculated - an automation, a Companion button,
+       * any headless caller - has no window between staging and promoting in
+       * which a DIFFERENT staged update could take the promotion. The
+       * coordinator's own `ticketCurrent` check still gates it: if anything
+       * superseded this refresh (another refresh, a take, a clear), the
+       * promotion never happens and the whole command is rejected
+       * `SUPERSEDED`. It can therefore only ever promote the exact
+       * recalculation this command produced.
+       *
+       * It is NOT a way to skip producer intent: the producer (or the
+       * automation acting for one) commanded this exact destination in this
+       * exact request.
+       */
+      push: z.boolean().optional()
     })
     .strict(),
   z
     .object({
       ...commandFields,
       type: z.literal('push-update'),
-      target: graphicsTargetZod
+      target: graphicsTargetZod,
+      /**
+       * The destination the caller formed its intent against - `'cue'` or
+       * `'program'`.
+       *
+       * `target` alone does NOT identify a staged update: `take` preserves
+       * the cue (see `PlaybackProgram.take`), so after a take the cue and the
+       * program share one target and a cue refresh and a program refresh
+       * staged against them are indistinguishable by target. Naming the
+       * destination here binds the push to the staged update the caller
+       * actually meant; a mismatch is rejected rather than promoting the
+       * other one.
+       *
+       * Optional only so a producer pressing a bare "Push" button (the
+       * Companion path) can still mean "push whatever is staged right now",
+       * which is a real, explicit, human action. EVERY caller that formed its
+       * intent against a specific refresh must send this, and should send
+       * `expectedRevision` with it.
+       */
+      destination: z.enum(['cue', 'program']).optional()
     })
     .strict()
 ]);

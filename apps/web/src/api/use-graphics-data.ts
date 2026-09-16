@@ -80,6 +80,8 @@ const showKey = (eventKey: string) => ['/graphics', eventKey, 'show'] as const;
 export interface PlaybackCommandOptions {
   requestId?: string;
   target?: GraphicsTarget;
+  /** The playback revision the caller formed this command against. The server rejects the command if state has moved on since. */
+  expectedRevision?: number;
 }
 
 const newPlaybackRequestId = (): string =>
@@ -92,6 +94,9 @@ function commandBody(options: PlaybackCommandOptions = {}) {
     requestId: options.requestId ?? newPlaybackRequestId(),
     ...(options.target
       ? { target: graphicsTargetZod.parse(options.target) }
+      : {}),
+    ...(options.expectedRevision !== undefined
+      ? { expectedRevision: options.expectedRevision }
       : {})
   };
 }
@@ -352,13 +357,45 @@ export const graphicsApi = {
         `/graphics/${eventKey}/live/refresh/${destination}`,
         { body: commandBody(options), schema: playbackAcknowledgmentZod }
       ),
-    /** Promotes the most recently staged `refresh` result onto whichever of `cue`/`program` it was computed for. Rejects SUPERSEDED if that target has since moved on. */
-    pushUpdate: async (
+    /**
+     * Recalculates whatever is currently live at `destination` and puts THAT
+     * recalculation onto it, as one server command.
+     *
+     * Use this - never `refresh` followed by `pushUpdate` - whenever the
+     * caller already knows it wants the result live. The two-call form has a
+     * window in which a staged update from somewhere else is what the push
+     * promotes, which on `program` means an unrequested on-air change; this
+     * command stages and promotes in one durable commit and is structurally
+     * incapable of promoting anything but its own result.
+     */
+    refreshAndPush: async (
       eventKey: string,
+      destination: 'cue' | 'program',
       options?: PlaybackCommandOptions
     ): Promise<PlaybackAcknowledgment | null> =>
       playbackClient.post<PlaybackAcknowledgment>(
-        `/graphics/${eventKey}/live/push-update`,
+        `/graphics/${eventKey}/live/refresh/${destination}/push`,
+        { body: commandBody(options), schema: playbackAcknowledgmentZod }
+      ),
+    /**
+     * Promotes a staged `refresh` result onto the lane it was computed for.
+     *
+     * `destination` names the staged update the caller means, and is REQUIRED
+     * to promote onto `program`: `target` alone cannot distinguish a cue
+     * update from a program update (after a take both lanes share one target),
+     * so an unqualified push could otherwise put someone else's staged program
+     * update on air. Pass `expectedRevision` too - then the push applies to
+     * exactly the state the caller was looking at, or is rejected.
+     *
+     * Rejects SUPERSEDED if what is staged is not what the caller named.
+     */
+    pushUpdate: async (
+      eventKey: string,
+      destination: 'cue' | 'program',
+      options?: PlaybackCommandOptions
+    ): Promise<PlaybackAcknowledgment | null> =>
+      playbackClient.post<PlaybackAcknowledgment>(
+        `/graphics/${eventKey}/live/push-update/${destination}`,
         { body: commandBody(options), schema: playbackAcknowledgmentZod }
       ),
     /**

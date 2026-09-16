@@ -169,6 +169,22 @@ const targetBody = z
   .object({ ...requestFields, target: graphicsTargetZod.optional() })
   .strict()
   .nullish();
+/**
+ * `push-update` additionally accepts the destination the caller formed its
+ * intent against. Any caller that ran its own `refresh` first MUST send it
+ * (with `expectedRevision`): `target` alone cannot tell a cue update from a
+ * program update, because `take` preserves the cue and the two lanes then
+ * share one target. Omitting it means "push whatever is staged", which is
+ * only ever a producer pressing a bare Push button.
+ */
+const pushUpdateBody = z
+  .object({
+    ...requestFields,
+    target: graphicsTargetZod.optional(),
+    destination: z.enum(['cue', 'program']).optional()
+  })
+  .strict()
+  .nullish();
 const cueBody = z
   .object({
     ...requestFields,
@@ -492,7 +508,15 @@ export default async function graphicsPlaybackController(
     eventKey: string,
     requestId: string,
     explicit: GraphicsTarget | undefined,
-    source: 'take-cue' | 'refresh-cue' | 'refresh-program' | 'push-update'
+    source: 'take-cue' | 'refresh-cue' | 'refresh-program' | 'push-update',
+    /**
+     * `push-update` only: the destination the caller formed its intent
+     * against. Given, an unqualified push resolves its target from the staged
+     * update ONLY when that update is for this destination - otherwise it is
+     * rejected here, naming both sides, instead of resolving a target that
+     * would promote the other lane's update. See `pushUpdateBody`.
+     */
+    intendedDestination?: 'cue' | 'program'
   ): Promise<{ target: GraphicsTarget } | { reject: PlaybackAcknowledgment }> {
     if (explicit) return { target: explicit };
     const state = await coordinator.getState(eventKey);
@@ -534,6 +558,45 @@ export default async function graphicsPlaybackController(
           requestId,
           'NOT_READY',
           'No staged update to push.',
+          state
+        )
+      };
+    // An unqualified push cannot name what it meant, so it may only promote a
+    // CUE update - the one lane that is not on air. Promoting to `program`
+    // always requires the caller to say `program`, because "push whatever
+    // happens to be staged" is not a producer asking for THIS program change:
+    // if another operator staged a program refresh in between, an unqualified
+    // push would put it on air with nobody having pressed Push for it. The
+    // qualified route below keeps this fully drivable body-less from
+    // Companion, so nothing is lost headlessly.
+    if (
+      intendedDestination === undefined &&
+      state.stagedUpdate.destination === 'program'
+    )
+      return {
+        reject: rejectAck(
+          requestId,
+          'INVALID_INPUT',
+          `The staged update is a program update of graphic "${state.stagedUpdate.origin.targetId}" ` +
+            `(target revision ${state.stagedUpdate.origin.targetRevision}) at playback revision ` +
+            `${state.revision}. Putting an update on air must be asked for explicitly: push it with ` +
+            'POST/GET /live/push-update/program (or send {"destination":"program"}), or recalculate and ' +
+            'air it in one command with POST/GET /live/refresh/program/push. Nothing was promoted.',
+          state
+        )
+      };
+    if (
+      intendedDestination !== undefined &&
+      state.stagedUpdate.destination !== intendedDestination
+    )
+      return {
+        reject: rejectAck(
+          requestId,
+          'SUPERSEDED',
+          `This push was made for a ${intendedDestination} update, but the staged update is a ` +
+            `${state.stagedUpdate.destination} update of graphic "${state.stagedUpdate.origin.targetId}" ` +
+            `(target revision ${state.stagedUpdate.origin.targetRevision}) at playback revision ` +
+            `${state.revision}. Nothing was promoted. Recalculate the ${intendedDestination} and push that.`,
           state
         )
       };
@@ -1296,10 +1359,20 @@ export default async function graphicsPlaybackController(
     }
   );
 
-  // --- push-update ---
+  // --- refresh + push: ONE command that recalculates a destination and puts
+  // that recalculation - and only that one - onto it, in a single durable
+  // commit (see `PlaybackRefresh.refresh`'s `push` handling).
+  //
+  // This is the command any caller that already knows it wants the result
+  // live must use. Spelling it as `refresh` then `push-update` opens a window
+  // in which a DIFFERENT staged update (another operator's program refresh,
+  // say) is what the push promotes - an unrequested on-air change. There is no
+  // such window here: the promotion happens in the same commit as the staging,
+  // gated by the coordinator's own ticket check, so it is structurally
+  // incapable of promoting anything but this command's own result. ---
   registerBothMethods(
-    '/:eventKey/live/push-update',
-    eventParams,
+    '/:eventKey/live/refresh/:destination/push',
+    refreshParams,
     targetBody,
     async (params, body, reply) => {
       const requestId = body?.requestId ?? newRequestId();
@@ -1308,19 +1381,83 @@ export default async function graphicsPlaybackController(
           params.eventKey,
           requestId,
           body?.target,
-          'push-update'
+          params.destination === 'cue' ? 'refresh-cue' : 'refresh-program'
         );
         if ('reject' in resolved) return sendAck(reply, resolved.reject);
         return runCommand(reply, params.eventKey, {
-          type: 'push-update',
+          type: 'refresh',
           requestId,
           expectedRevision: body?.expectedRevision,
-          target: resolved.target
+          destination: params.destination,
+          target: resolved.target,
+          push: true
         });
       } catch (error) {
         return sendUnexpected(reply, error);
       }
     }
+  );
+
+  // --- push-update ---
+  //
+  // Two registrations, one handler. The `/:destination` form is how a caller
+  // that formed its intent against a specific refresh says so without a body,
+  // so a Companion button can promote a program update explicitly; the bare
+  // form means "push whatever is staged" and, per `resolveTarget`, may only
+  // promote a cue update. A POST body's `destination` says the same thing as
+  // the path segment; when both are present the path segment is what the
+  // route is, so they must not disagree - the body simply defaults to it.
+  const pushUpdateHandler = async (
+    eventKey: string,
+    body: z.infer<typeof pushUpdateBody>,
+    destination: 'cue' | 'program' | undefined,
+    reply: FastifyReply
+  ) => {
+    const requestId = body?.requestId ?? newRequestId();
+    const intended = destination ?? body?.destination;
+    if (destination && body?.destination && body.destination !== destination)
+      return sendAck(
+        reply,
+        rejectAck(
+          requestId,
+          'INVALID_INPUT',
+          `This request asks to push the ${destination} update in its path but the ${body.destination} update in its body. Send one destination.`,
+          await coordinator.getState(eventKey)
+        )
+      );
+    try {
+      const resolved = await resolveTarget(
+        eventKey,
+        requestId,
+        body?.target,
+        'push-update',
+        intended
+      );
+      if ('reject' in resolved) return sendAck(reply, resolved.reject);
+      return runCommand(reply, eventKey, {
+        type: 'push-update',
+        requestId,
+        expectedRevision: body?.expectedRevision,
+        target: resolved.target,
+        destination: intended
+      });
+    } catch (error) {
+      return sendUnexpected(reply, error);
+    }
+  };
+  registerBothMethods(
+    '/:eventKey/live/push-update/:destination',
+    refreshParams,
+    pushUpdateBody,
+    (params, body, reply) =>
+      pushUpdateHandler(params.eventKey, body, params.destination, reply)
+  );
+  registerBothMethods(
+    '/:eventKey/live/push-update',
+    eventParams,
+    pushUpdateBody,
+    (params, body, reply) =>
+      pushUpdateHandler(params.eventKey, body, undefined, reply)
   );
 
   // --- show/advance: the atomic ordered-show operation. See `advanceShow`.
