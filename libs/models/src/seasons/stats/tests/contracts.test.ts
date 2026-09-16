@@ -9,11 +9,8 @@ import {
   catalogueMetadata,
   composeRegistry
 } from '../registry.js';
-import {
-  assertJson,
-  canonicalJson,
-  queryHash
-} from '../util/canonical-json.js';
+import { assertJson, canonicalJson } from '../util/canonical-json.js';
+import { queryHash } from '../util/query-hash.js';
 import { leastSquares } from '../util/matrix-solve.js';
 import { ratings } from '../generic/rating-models.js';
 import {

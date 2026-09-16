@@ -5,11 +5,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve, basename, sep } from 'node:path';
 import { AsyncDatabase } from 'promised-sqlite3';
 import Fastify from 'fastify';
-import {
-  definitions,
-  normalizeQuery,
-  queryHash
-} from '@toa-lib/models/seasons/stats';
+import { definitions, normalizeQuery } from '@toa-lib/models/seasons/stats';
+import { queryHash } from '@toa-lib/models/seasons/stats/query-hash';
 import {
   StatsQueryService,
   getStatsQueryService

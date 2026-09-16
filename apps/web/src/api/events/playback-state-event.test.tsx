@@ -10,6 +10,7 @@ import {
   playbackDeliveryMapAtom,
   playbackEventStoreAtom
 } from '../../stores/state/graphics.js';
+import { usePlaybackHydrationErrorEvent } from './playback-hydration-error-event.js';
 import { usePlaybackStateEvent } from './playback-state-event.js';
 
 const AT = '2026-01-01T00:00:00.000Z';
@@ -92,5 +93,28 @@ describe('playback state socket handler', () => {
     expect(delivery.error).toContain('schemaVersion');
     // A diagnosis writes no state.
     expect(view.store.get(playbackEventStoreAtom)).toEqual({});
+  });
+});
+
+/**
+ * The identity of these handlers is a DEPENDENCY of `ConnectionManager`'s
+ * socket effect. An unstable one re-ran that effect on every render, which
+ * re-emitted `graphics:subscribe`, which made the relay re-read
+ * `/live/state/v1` - a request storm against the API for as long as an event
+ * was open. `useAtomCallback` memoizes on the function it is handed, so the
+ * handler must not be an inline arrow.
+ */
+describe('playback socket handler identity', () => {
+  it('is stable across re-renders', () => {
+    const seen: unknown[] = [];
+    const Harness = () => {
+      seen.push(usePlaybackStateEvent(), usePlaybackHydrationErrorEvent());
+      return null;
+    };
+    const view = renderWithJotai(<Harness />);
+    view.rerender(<Harness />);
+    view.rerender(<Harness />);
+
+    expect(new Set(seen).size).toBe(2);
   });
 });

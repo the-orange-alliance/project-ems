@@ -2,10 +2,10 @@ import { AsyncDatabase } from 'promised-sqlite3';
 import sqlite3 from 'sqlite3';
 import {
   canonicalJson,
-  queryHash,
   type StatsQuery,
   type StatDefinition
 } from '@toa-lib/models/seasons/stats';
+import { queryHash } from '@toa-lib/models/seasons/stats/query-hash';
 import { StatsDatabase } from './StatsDatabase.js';
 import { StatsWorkerPool } from './StatsWorkerPool.js';
 import { readSourceMarker, type StatsWork } from './EventStatsSnapshot.js';

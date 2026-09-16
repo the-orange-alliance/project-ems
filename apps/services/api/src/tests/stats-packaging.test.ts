@@ -3,11 +3,8 @@ import assert from 'node:assert/strict';
 import { resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { existsSync } from 'node:fs';
-import {
-  definitions,
-  normalizeQuery,
-  queryHash
-} from '@toa-lib/models/seasons/stats';
+import { definitions, normalizeQuery } from '@toa-lib/models/seasons/stats';
+import { queryHash } from '@toa-lib/models/seasons/stats/query-hash';
 import { StatsWorkerPool } from '../stats/StatsWorkerPool.js';
 import { eventFixture } from './stats-test-support.js';
 for (const [name, path] of [

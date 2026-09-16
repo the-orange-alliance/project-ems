@@ -1,4 +1,5 @@
 import { playbackHydrationErrorZod } from '@toa-lib/models';
+import type { Getter, Setter } from 'jotai';
 import { useAtomCallback } from 'jotai/utils';
 import { playbackDeliveryMapAtom } from 'src/stores/state/graphics.js';
 
@@ -16,35 +17,43 @@ import { playbackDeliveryMapAtom } from 'src/stores/state/graphics.js';
  * A late failure for an event that has since hydrated (a socket envelope won
  * the race) is dropped: `ready` is the truth, and downgrading it would
  * disable a transport that is genuinely working.
+ *
+ * Module scope, not an inline arrow: see `applyPlaybackStateEvent`.
  */
-export const usePlaybackHydrationErrorEvent = () =>
-  useAtomCallback((get, set, input: unknown) => {
-    const parsed = playbackHydrationErrorZod.safeParse(input);
-    if (!parsed.success) return null;
-    const { eventKey, code, message } = parsed.data;
+const applyPlaybackHydrationErrorEvent = (
+  get: Getter,
+  set: Setter,
+  input: unknown
+) => {
+  const parsed = playbackHydrationErrorZod.safeParse(input);
+  if (!parsed.success) return null;
+  const { eventKey, code, message } = parsed.data;
 
-    const phase = get(playbackDeliveryMapAtom)[eventKey]?.phase;
-    if (phase === 'ready' || phase === 'disconnected') return parsed.data;
-    // A fallback read already in flight owns the phase; let it finish and
-    // report, rather than flapping the producer's banner back and forth.
-    if (phase === 'recovering') {
-      set(playbackDeliveryMapAtom, (previous) => ({
-        ...previous,
-        [eventKey]: {
-          phase: 'recovering',
-          error: code ? `${code}: ${message}` : message
-        }
-      }));
-      return parsed.data;
-    }
-
+  const phase = get(playbackDeliveryMapAtom)[eventKey]?.phase;
+  if (phase === 'ready' || phase === 'disconnected') return parsed.data;
+  // A fallback read already in flight owns the phase; let it finish and
+  // report, rather than flapping the producer's banner back and forth.
+  if (phase === 'recovering') {
     set(playbackDeliveryMapAtom, (previous) => ({
       ...previous,
       [eventKey]: {
-        phase: 'failed',
+        phase: 'recovering',
         error: code ? `${code}: ${message}` : message
       }
     }));
-    // The last complete state, if any, stays exactly as it was.
     return parsed.data;
-  });
+  }
+
+  set(playbackDeliveryMapAtom, (previous) => ({
+    ...previous,
+    [eventKey]: {
+      phase: 'failed',
+      error: code ? `${code}: ${message}` : message
+    }
+  }));
+  // The last complete state, if any, stays exactly as it was.
+  return parsed.data;
+};
+
+export const usePlaybackHydrationErrorEvent = () =>
+  useAtomCallback(applyPlaybackHydrationErrorEvent);

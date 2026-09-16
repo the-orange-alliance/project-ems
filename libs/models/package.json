@@ -39,6 +39,10 @@
       "types": "./src/seasons/stats/index.ts",
       "default": "./build/seasons/stats/index.js"
     },
+    "./seasons/stats/query-hash": {
+      "types": "./src/seasons/stats/util/query-hash.ts",
+      "default": "./build/seasons/stats/util/query-hash.js"
+    },
     "./seasons/stats/presentation": {
       "types": "./src/seasons/stats/presentation/index.ts",
       "default": "./build/seasons/stats/presentation/index.js"

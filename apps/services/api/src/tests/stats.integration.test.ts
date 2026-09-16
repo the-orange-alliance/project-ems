@@ -9,11 +9,11 @@ import { join } from 'node:path';
 import {
   definitions,
   normalizeQuery,
-  queryHash,
   type StatDefinition,
   type StatsQuery,
   canonicalJson
 } from '@toa-lib/models/seasons/stats';
+import { queryHash } from '@toa-lib/models/seasons/stats/query-hash';
 import statsController from '../controllers/Stats.js';
 import {
   StatsWorkerPool,

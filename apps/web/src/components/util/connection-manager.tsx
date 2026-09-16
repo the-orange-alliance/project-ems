@@ -125,10 +125,19 @@ export const ConnectionManager: FC = () => {
         graphicsPreviewReplayProxy,
         eventKey
       );
-      setPlaybackDeliveryMap((previous) => ({
-        ...previous,
-        [eventKey]: { phase: 'hydrating', error: null }
-      }));
+      // Idempotent on purpose: returning a NEW map for a phase that is
+      // already `hydrating` re-renders this component, and this component's
+      // render feeds the dependencies of this very effect. That is a loop
+      // with no exit, so an unchanged phase must write nothing at all.
+      setPlaybackDeliveryMap((previous) =>
+        previous[eventKey]?.phase === 'hydrating' &&
+        previous[eventKey]?.error === null
+          ? previous
+          : {
+              ...previous,
+              [eventKey]: { phase: 'hydrating', error: null }
+            }
+      );
       // Subscribe only after the listener exists so a fast initial replay
       // cannot race ahead of registration.
       worker.emit('graphics:subscribe', { eventKey });

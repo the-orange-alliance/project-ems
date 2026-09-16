@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 export function assertJson(v: unknown, seen = new Set<object>()): void {
   if (
     v === null ||
@@ -45,5 +44,3 @@ export function canonicalJson(v: unknown): string {
         : x;
   return JSON.stringify(sort(v));
 }
-export const queryHash = (v: unknown) =>
-  createHash('sha256').update(canonicalJson(v)).digest('hex');

@@ -5,9 +5,9 @@ import { join } from 'node:path';
 import {
   definitions,
   normalizeQuery,
-  queryHash,
   type AuditRow
 } from '@toa-lib/models/seasons/stats';
+import { queryHash } from '@toa-lib/models/seasons/stats/query-hash';
 import { EventDatabase } from '../db/EventDatabase.js';
 import {
   commitMatchRevision,
