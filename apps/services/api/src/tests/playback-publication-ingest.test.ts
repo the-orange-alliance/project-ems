@@ -2,19 +2,31 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
+import type { Server } from 'socket.io';
 import {
   createEmptyPlaybackState,
   GraphicsSocketEvent,
   playbackStateZod
 } from '@toa-lib/models/base';
 import { createRealtimePlaybackPublisher } from '../graphics/RealtimePlaybackPublisher.js';
-// The reliability harness intentionally tests the already-compiled realtime
-// boundary without pulling its source tree into the API TypeScript rootDir.
-// @ts-expect-error realtime does not emit declarations.
-import * as realtimePlayback from '../../../realtime/build/PlaybackPublication.js';
+// The realtime relay is a declared dependency of this package (see
+// package.json) and is imported through its "exports" entry point, so this
+// resolves to the relay's CURRENT compiled output - `npm test` here builds it
+// first - rather than a stale sibling `build/` reached by relative path.
+import {
+  PlaybackPublicationReceiver,
+  registerPlaybackPublicationEndpoint
+} from 'realtime/PlaybackPublication';
 
-const { PlaybackPublicationReceiver, registerPlaybackPublicationEndpoint } =
-  realtimePlayback;
+/**
+ * Genuinely cross-service: this package's publisher must reach a real relay
+ * ingress and land in the room a subscribed display is listening on.
+ *
+ * The relay-owned half of this boundary - revision ordering, epoch
+ * retirement, `observe` adoption, envelope validation and the bearer-token
+ * check - is asserted in realtime's own `playback-publication.test.ts` and is
+ * deliberately not repeated here.
+ */
 
 function state(eventKey: string, revision: number) {
   return playbackStateZod.parse({
@@ -36,13 +48,13 @@ function fakeSocketServer() {
           }
         };
       }
-    }
+    } as unknown as Server
   };
 }
 
-test('authenticated internal ingestion validates complete state and broadcasts once', async (t) => {
+test('the API publisher authenticates to the real relay ingress and reaches the event audience once', async (t) => {
   const sockets = fakeSocketServer();
-  const receiver = new PlaybackPublicationReceiver(sockets.server as any);
+  const receiver = new PlaybackPublicationReceiver(sockets.server);
   const app = express();
   app.use(express.json());
   registerPlaybackPublicationEndpoint(app, receiver, 'test-publication-token');
@@ -52,32 +64,15 @@ test('authenticated internal ingestion validates complete state and broadcasts o
   const address = server.address() as AddressInfo;
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
-  const unauthorized = await fetch(`${baseUrl}/internal/graphics/playback`, {
-    method: 'POST',
-    headers: {
-      authorization: 'Bearer wrong-token',
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify({})
-  });
-  assert.equal(unauthorized.status, 401);
-
-  const invalid = await fetch(`${baseUrl}/internal/graphics/playback`, {
-    method: 'POST',
-    headers: {
-      authorization: 'Bearer test-publication-token',
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify({ authorityEpoch: 'epoch-a' })
-  });
-  assert.equal(invalid.status, 400);
-
   const publisher = createRealtimePlaybackPublisher({
     baseUrl,
     token: 'test-publication-token',
     authorityEpoch: 'epoch-a',
     timeoutMs: 500
   });
+  // The second publish is the API retrying a revision the relay already has:
+  // the publisher must treat the relay's "duplicate" acknowledgment as
+  // success, and the audience must not see the graphic twice.
   await publisher.publish('event-a', state('event-a', 1));
   await publisher.publish('event-a', state('event-a', 1));
 
@@ -91,87 +86,24 @@ test('authenticated internal ingestion validates complete state and broadcasts o
   assert.equal(authoritative[0].payload.state.revision, 1);
 });
 
-test('realtime dedupe isolates events, drops reordering, and retires prior authority epochs', () => {
+test('a publisher configured with the wrong token never reaches the audience', async (t) => {
   const sockets = fakeSocketServer();
-  const receiver = new PlaybackPublicationReceiver(sockets.server as any);
-  const publish = (
-    authorityEpoch: string,
-    eventKey: string,
-    revision: number
-  ) =>
-    receiver.accept({
-      schemaVersion: 1,
-      authorityEpoch,
-      eventKey,
-      state: state(eventKey, revision)
-    });
+  const receiver = new PlaybackPublicationReceiver(sockets.server);
+  const app = express();
+  app.use(express.json());
+  registerPlaybackPublicationEndpoint(app, receiver, 'test-publication-token');
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise<void>((resolve) => server.once('listening', resolve));
+  t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  const address = server.address() as AddressInfo;
 
-  assert.equal(publish('epoch-a', 'event-a', 2).accepted, true);
-  assert.equal(publish('epoch-a', 'event-a', 1).reason, 'stale');
-  assert.equal(publish('epoch-a', 'event-a', 2).reason, 'duplicate');
-  assert.equal(publish('epoch-a', 'event-b', 1).accepted, true);
-
-  // Even an equal state from a restarted authority is broadcast: epoch change
-  // is the browser's atomic ordering reset boundary.
-  assert.equal(publish('epoch-b', 'event-a', 2).reason, 'broadcast');
-  assert.equal(publish('epoch-a', 'event-a', 99).reason, 'retired-epoch');
-  assert.equal(publish('epoch-b', 'event-a', 3).accepted, true);
-
-  // A genuinely replaced authority may restart its revision stream; epoch is
-  // the reset boundary, and the retired writer can never reclaim the event.
-  assert.equal(publish('epoch-a', 'event-c', 5).accepted, true);
-  assert.equal(publish('epoch-b', 'event-c', 1).accepted, true);
-  assert.equal(publish('epoch-a', 'event-c', 99).reason, 'retired-epoch');
-
-  assert.deepEqual(
-    sockets.emissions
-      .filter((entry) => entry.event === GraphicsSocketEvent.PLAYBACK_STATE_V1)
-      .map((entry) => [entry.room, entry.payload.state.revision]),
-    [
-      ['graphics:event-a', 2],
-      ['graphics:event-b', 1],
-      ['graphics:event-a', 2],
-      ['graphics:event-a', 3],
-      ['graphics:event-c', 5],
-      ['graphics:event-c', 1]
-    ]
-  );
-});
-
-test('API replay observation retires the old publisher before delayed delivery', () => {
-  const sockets = fakeSocketServer();
-  const receiver = new PlaybackPublicationReceiver(sockets.server as any);
-  const publication = (
-    authorityEpoch: string,
-    eventKey: string,
-    revision: number
-  ) => ({
-    schemaVersion: 1,
-    authorityEpoch,
-    eventKey,
-    state: state(eventKey, revision)
+  const publisher = createRealtimePlaybackPublisher({
+    baseUrl: `http://127.0.0.1:${address.port}`,
+    token: 'not-the-configured-token',
+    authorityEpoch: 'epoch-a',
+    timeoutMs: 500
   });
 
-  assert.equal(
-    receiver.accept(publication('epoch-a', 'event-a', 9)).accepted,
-    true
-  );
-  const emissionCount = sockets.emissions.length;
-  assert.equal(
-    receiver.observe(publication('epoch-b', 'event-a', 1)).accepted,
-    true
-  );
-  assert.equal(
-    sockets.emissions.length,
-    emissionCount,
-    'observation never rebroadcasts'
-  );
-  assert.equal(
-    receiver.accept(publication('epoch-a', 'event-a', 99)).reason,
-    'retired-epoch'
-  );
-  assert.equal(
-    receiver.accept(publication('epoch-b', 'event-a', 2)).accepted,
-    true
-  );
+  await assert.rejects(() => publisher.publish('event-a', state('event-a', 1)));
+  assert.equal(sockets.emissions.length, 0);
 });

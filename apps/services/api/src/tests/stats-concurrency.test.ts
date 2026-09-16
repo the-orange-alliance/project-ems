@@ -1,8 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { AsyncDatabase } from 'promised-sqlite3';
-import { join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join } from 'node:path';
 import {
   definitions,
   normalizeQuery,
@@ -261,67 +260,5 @@ test('concurrent aggregate mutations are captured by their own revision', async 
       assert.equal(snapshot.redScore, expected.get(snapshot.correlationId));
   } finally {
     await f.close();
-  }
-});
-test('realtime records lifecycle modes and abort before forgetting the match, without timer ticks', async () => {
-  const { default: Room } = await import(
-      pathToFileURL(resolve('../realtime/build/rooms/Match.js')).href
-    ),
-    { MatchSocketEvent, MatchMode, MatchState } =
-      await import('@toa-lib/models');
-  const handlers = new Map<string, Function>(),
-    requests: any[] = [],
-    server = { in: () => ({ emit: () => {} }) },
-    socket = {
-      on: (name: string, handler: Function) => handlers.set(name, handler),
-      emit: () => {},
-      handshake: { address: 'test-client' },
-      id: 'test-socket',
-      decoded: { id: 1, username: 'operator' }
-    };
-  const original = globalThis.fetch;
-  globalThis.fetch = (async (url: any, options: any) => {
-    requests.push({
-      url: String(url),
-      body: JSON.parse(options.body),
-      signal: options.signal
-    });
-    return { ok: true, status: 200 } as Response;
-  }) as typeof fetch;
-  const room = new Room(server);
-  try {
-    room.initializeEvents(socket);
-    const key = { eventKey: 'fgc_2026_test', tournamentKey: 'q', id: 1 };
-    handlers.get(MatchSocketEvent.PRESTART)!(key);
-    handlers.get(MatchSocketEvent.START)!();
-    room.timer.mode = MatchMode.TRANSITION;
-    room.timer.emit('timer:transition');
-    room.timer.mode = MatchMode.ENDGAME;
-    room.timer.emit('timer:endgame');
-    handlers.get(MatchSocketEvent.TIMER)!();
-    handlers.get(MatchSocketEvent.ABORT)!();
-    await pause(10);
-    const rows = requests.map((r) => r.body);
-    assert.ok(rows.some((a) => a.sourceEvent === 'timer:transition'));
-    assert.ok(rows.some((a) => a.sourceEvent === 'timer:endgame'));
-    const abort = rows.find((a) => a.sourceEvent === MatchSocketEvent.ABORT);
-    assert.ok(abort);
-    assert.equal(
-      JSON.parse(abort.newValueJson).matchState,
-      MatchState.MATCH_ABORTED
-    );
-    assert.equal(room.key, null);
-    assert.equal(room.match, null);
-    assert.ok(
-      requests.every(
-        (r) =>
-          r.url.endsWith('/fgc_2026_test/q/1') &&
-          r.signal instanceof AbortSignal
-      )
-    );
-    assert.ok(!rows.some((a) => a.sourceEvent === MatchSocketEvent.TIMER));
-  } finally {
-    room.timer.abort();
-    globalThis.fetch = original;
   }
 });

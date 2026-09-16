@@ -12,17 +12,15 @@ import graphicsPlaybackController from '../controllers/GraphicsPlayback.js';
 import type { GraphicsRepository } from '../graphics/GraphicsRepository.js';
 import { getPlaybackCoordinator } from '../graphics/PlaybackCoordinatorService.js';
 import type { PlaybackCoordinator } from '../graphics/PlaybackCoordinator.js';
-// Imports the realtime package's ALREADY-COMPILED output, not its .ts source: a source import here would pull
-// realtime's entire src tree into this package's own tsc compilation, corrupting rootDir inference for the
-// WHOLE api build (it would silently nest every emitted path under build/api/src/..., breaking package.json's
-// "main"/"start"/"dist" scripts, the Dockerfile's build sanity check, and scripts/backend_entrypoint.sh, which
-// all assume the untouched build/Server.js layout). Requires `apps/services/realtime` to already be built
-// (`npm run build` there) before this file is compiled - already true for every workflow that runs this suite.
-// Realtime does not emit its own .d.ts files (`declaration` is off in its tsconfig), so this import has no
-// type information available - suppressed rather than typed, matching this harness's existing `{} as any}`
-// tolerance for the same class.
-// @ts-expect-error TS7016: no .d.ts for realtime's compiled output; see the comment above.
-import Graphics from '../../../realtime/build/rooms/Graphics.js';
+// Resolves the realtime package's ALREADY-COMPILED output through its declared dependency entry point, not
+// its .ts source: a source import here would pull realtime's entire src tree into this package's own tsc
+// compilation, corrupting rootDir inference for the WHOLE api build (it would silently nest every emitted
+// path under build/api/src/..., breaking package.json's "main"/"start"/"dist" scripts, the Dockerfile's build
+// sanity check, and scripts/backend_entrypoint.sh, which all assume the untouched build/Server.js layout).
+// Going through "realtime/rooms/Graphics" rather than a relative ../../../realtime/build path means the
+// dependency is declared in package.json, ordered by turbo (api#test/^build) and by this package's own `test`
+// script (which builds realtime first), and typed against realtime's emitted .d.ts instead of suppressed.
+import Graphics from 'realtime/rooms/Graphics';
 import {
   graphicsFixture,
   sampleGraphic as supportSampleGraphic

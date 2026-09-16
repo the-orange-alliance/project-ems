@@ -7,8 +7,9 @@ import {
   seedTimeline
 } from './graphics-broadcast-reliability-harness.js';
 import { nextPlaybackPreviewSpec } from '@toa-lib/models';
-// @ts-expect-error realtime does not emit declarations; the harness exercises its compiled boundary.
-import { PlaybackPublicationReceiver } from '../../../realtime/build/PlaybackPublication.js';
+// Declared dependency entry point - see the harness's comment for why this is realtime's compiled output
+// rather than its source, and why it is no longer a relative reach into a sibling's gitignored build/.
+import { PlaybackPublicationReceiver } from 'realtime/PlaybackPublication';
 
 function publicationAudience() {
   const states: any[] = [];
@@ -24,13 +25,16 @@ function publicationAudience() {
   const receiver = new PlaybackPublicationReceiver(server as any);
   return {
     states,
-    publish: (eventKey: string, state: unknown) =>
+    // Matches the coordinator's `publish` contract: it awaits a void result,
+    // so the relay's acknowledgment is consumed here rather than returned.
+    publish: (eventKey: string, state: unknown): void => {
       receiver.accept({
         schemaVersion: 1,
         authorityEpoch: 'api-test-epoch',
         eventKey,
         state
-      })
+      });
+    }
   };
 }
 
@@ -85,6 +89,8 @@ test('realtime hydration reads the exact API acknowledgment without another broa
   const finalRevision = returned.revision;
   const beforeReplay = audience.states.length;
   const replay = await realtime.getPlaybackEnvelope('event-a', true);
+  // `throwOnError` means a null here is a contract break, not a soft miss.
+  assert.ok(replay, 'authoritative replay must return an envelope');
   assert.deepEqual(replay.state, returned);
   assert.equal(replay.eventKey, 'event-a');
   assert.equal(audience.states.length, beforeReplay);
