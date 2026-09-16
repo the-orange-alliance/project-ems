@@ -20,7 +20,9 @@ import {
 import { join } from "path";
 import {
   PlaybackPublicationReceiver,
+  registerPlaybackPublicationBodyParser,
   registerPlaybackPublicationEndpoint,
+  resolvePlaybackPublicationLimitBytes,
 } from "./PlaybackPublication.js";
 
 // Setup our environment
@@ -35,6 +37,15 @@ const io = new Server(server);
 
 // Config middleware
 app.use(cors({ credentials: true }));
+
+// The authoritative playback envelope routinely exceeds express's 100 KB json()
+// default, so the publication route gets its own, larger, parser - mounted
+// HERE, ahead of the global one, because body-parser skips a request an earlier
+// parser already read. Every other route keeps the 100 KB default.
+const playbackPublicationLimitBytes = resolvePlaybackPublicationLimitBytes();
+if (!isGraphicsDisabled())
+  registerPlaybackPublicationBodyParser(app, playbackPublicationLimitBytes);
+
 app.use(json());
 app.use(parser.urlencoded({ extended: false }));
 
@@ -162,6 +173,7 @@ if (!isGraphicsDisabled()) {
     app,
     playbackReceiver,
     process.env.GRAPHICS_PUBLICATION_TOKEN ?? env.get().jwtSecret,
+    playbackPublicationLimitBytes,
   );
 }
 

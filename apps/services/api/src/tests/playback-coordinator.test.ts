@@ -550,3 +550,179 @@ test('restart recovery: a persisted calculating cue is rewritten to failed, and 
   assert.equal(again.revision, 2);
   assert.equal(again.cue.status, 'failed');
 });
+
+test('publication retries stop at the configured cap and park the event in an inspectable terminal state', async (t) => {
+  const { repository } = await graphicsFixture(t);
+  let attempts = 0;
+  const coordinator = new PlaybackCoordinator({
+    storage: repository,
+    publicationRetryBaseMs: 1,
+    publicationRetryMaxMs: 2,
+    publicationRetryMaxAttempts: 4,
+    publish: async () => {
+      attempts++;
+      throw new Error('relay unavailable');
+    }
+  });
+  const eventKey = 'event-a';
+
+  const ack = await coordinator.mutate(
+    eventKey,
+    { type: 'clear', requestId: 'park-1' },
+    clearMutation
+  );
+  assert.equal(ack.ok, true);
+  if (!ack.ok) return;
+
+  const parked = await new Promise<{ attempts: number; error: string; transient: boolean }>(
+    (resolve, reject) => {
+      const deadline = setTimeout(
+        () => reject(new Error('publication never parked; it is still looping')),
+        2_000
+      );
+      const poll = setInterval(() => {
+        const state = coordinator.publicationParked(eventKey);
+        if (!state) return;
+        clearInterval(poll);
+        clearTimeout(deadline);
+        resolve(state);
+      }, 5);
+    }
+  );
+
+  assert.equal(parked.attempts, 4);
+  assert.ok(parked.transient);
+  assert.ok(parked.error.includes('relay unavailable'));
+
+  const health = coordinator.deliveryHealth(eventKey);
+  assert.equal(health.attempts, 4);
+  // Parked is the absence of a future attempt, and it is visible as such.
+  assert.equal(health.nextRetryAtUtc, null);
+  assert.equal(health.pendingRevision, ack.state.revision);
+  assert.ok(health.error?.includes('after 4 attempts'));
+
+  // Durable acceptance never rolled back.
+  assert.equal((await coordinator.getState(eventKey)).revision, ack.state.revision);
+
+  // No background work continues once parked: nothing new is attempted while
+  // nobody asks for it.
+  const attemptsWhileParked = attempts;
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  assert.equal(attempts, attemptsWhileParked, 'a parked event must stop retrying');
+
+  await coordinator.shutdown();
+});
+
+test('an explicit retry recovers a parked publication without any scheduler', async (t) => {
+  const { repository } = await graphicsFixture(t);
+  let shouldFail = true;
+  const delivered: PlaybackState[] = [];
+  const coordinator = new PlaybackCoordinator({
+    storage: repository,
+    publicationRetryBaseMs: 1,
+    publicationRetryMaxMs: 2,
+    publicationRetryMaxAttempts: 2,
+    publish: async (_eventKey, state) => {
+      if (shouldFail) throw new Error('relay unavailable');
+      delivered.push(state);
+    }
+  });
+  const eventKey = 'event-a';
+
+  const ack = await coordinator.mutate(
+    eventKey,
+    { type: 'clear', requestId: 'park-retry-1' },
+    clearMutation
+  );
+  assert.equal(ack.ok, true);
+  if (!ack.ok) return;
+
+  await new Promise<void>((resolve, reject) => {
+    const deadline = setTimeout(() => reject(new Error('never parked')), 2_000);
+    const poll = setInterval(() => {
+      if (!coordinator.publicationParked(eventKey)) return;
+      clearInterval(poll);
+      clearTimeout(deadline);
+      resolve();
+    }, 5);
+  });
+
+  shouldFail = false;
+  await coordinator.retryPublication(eventKey);
+
+  assert.equal(coordinator.publicationParked(eventKey), null);
+  assert.deepEqual(
+    delivered.map((state) => state.revision),
+    [ack.state.revision]
+  );
+  const health = coordinator.deliveryHealth(eventKey);
+  assert.equal(health.pendingRevision, null);
+  assert.equal(health.error, null);
+  assert.equal(health.attempts, 0);
+
+  await coordinator.shutdown();
+});
+
+test('a structurally undeliverable publication parks immediately instead of backing off', async (t) => {
+  const { repository } = await graphicsFixture(t);
+  let attempts = 0;
+  const coordinator = new PlaybackCoordinator({
+    storage: repository,
+    publicationRetryBaseMs: 1,
+    publicationRetryMaxMs: 2,
+    // A high cap, so that parking here can only be the non-retryable error
+    // doing it and never the attempt budget running out.
+    publicationRetryMaxAttempts: 25,
+    publish: async () => {
+      attempts++;
+      throw Object.assign(
+        new Error(
+          'Playback publication for event "event-a" revision 1 is 9000 bytes, which exceeds the configured realtime ingress limit of 4096 bytes.'
+        ),
+        { retryable: false }
+      );
+    }
+  });
+
+  const ack = await coordinator.mutate(
+    'event-a',
+    { type: 'clear', requestId: 'too-large-1' },
+    clearMutation
+  );
+  assert.equal(ack.ok, true);
+
+  const parked = await new Promise<{ attempts: number; transient: boolean }>(
+    (resolve, reject) => {
+      const deadline = setTimeout(
+        () => reject(new Error('a non-retryable failure never parked')),
+        2_000
+      );
+      const poll = setInterval(() => {
+        const state = coordinator.publicationParked('event-a');
+        if (!state) return;
+        clearInterval(poll);
+        clearTimeout(deadline);
+        resolve(state);
+      }, 5);
+    }
+  );
+
+  // An oversized body is exactly as oversized on the next attempt, so it must
+  // not consume the budget it would otherwise burn 25 timers on.
+  assert.equal(parked.attempts, 1);
+  assert.equal(parked.transient, false);
+  const settled = attempts;
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  assert.equal(attempts, settled, 'a permanently failing body must not be resent');
+  assert.ok(
+    coordinator.deliveryHealth('event-a').error?.includes('exceeds the configured')
+  );
+  assert.ok(
+    coordinator
+      .deliveryHealth('event-a')
+      .error?.includes('not retryable'),
+    'the health report must say this one will never recover on its own'
+  );
+
+  await coordinator.shutdown();
+});

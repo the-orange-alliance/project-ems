@@ -54,8 +54,25 @@ export interface PlaybackCoordinatorOptions {
   onPublicationError?: (eventKey: string, error: unknown) => void;
   publicationRetryBaseMs?: number;
   publicationRetryMaxMs?: number;
+  /**
+   * How many consecutive failed delivery attempts an event gets before it is
+   * parked. Capping backoff alone still leaves a perpetual timer per event,
+   * which this process does not get to spend. Recovery from a parked event is
+   * explicit - see `retryPublication`.
+   */
+  publicationRetryMaxAttempts?: number;
   now?: () => string;
   newId?: () => string;
+}
+
+/** Why an event stopped trying to deliver, and what it was trying to deliver. */
+export interface ParkedPublication {
+  revision: number;
+  attempts: number;
+  error: string;
+  parkedAtUtc: string;
+  /** False for a failure that will fail identically forever, e.g. an oversized envelope. */
+  transient: boolean;
 }
 
 export interface PlaybackDeliveryHealth {
@@ -148,6 +165,8 @@ export class PlaybackCoordinator {
     ReturnType<typeof setTimeout>
   >();
   private readonly nextPublicationRetries = new Map<string, string>();
+  /** Events that stopped retrying. Their pending state is KEPT for an explicit retry. */
+  private readonly parkedPublications = new Map<string, ParkedPublication>();
   private readonly lastDeliveries = new Map<
     string,
     { revision: number; atUtc: string }
@@ -156,6 +175,7 @@ export class PlaybackCoordinator {
   private readonly newId: () => string;
   private readonly publicationRetryBaseMs: number;
   private readonly publicationRetryMaxMs: number;
+  private readonly publicationRetryMaxAttempts: number;
   private closing = false;
 
   constructor(private readonly options: PlaybackCoordinatorOptions) {
@@ -168,6 +188,13 @@ export class PlaybackCoordinator {
     this.publicationRetryMaxMs = Math.max(
       this.publicationRetryBaseMs,
       options.publicationRetryMaxMs ?? 10_000
+    );
+    // 8 attempts against the default 250ms/10s backoff is ~36 seconds of
+    // trying: long enough to ride out a realtime restart unattended, short
+    // enough that a genuine outage stops burning timers inside a minute.
+    this.publicationRetryMaxAttempts = Math.max(
+      1,
+      options.publicationRetryMaxAttempts ?? 8
     );
   }
 
@@ -241,14 +268,54 @@ export class PlaybackCoordinator {
     const pending = this.pendingPublications.get(state.eventKey);
     if (!pending || state.revision >= pending.revision)
       this.pendingPublications.set(state.eventKey, clone(state));
+    // A new producer command is itself an explicit action, so it clears a park
+    // and buys a fresh attempt budget for the newer state.
+    this.unpark(state.eventKey);
     // Network delivery must not hold the state-mutation lock or delay Clear.
-    void this.retryPublication(state.eventKey).catch(() => {});
+    void this.drainPublication(state.eventKey).catch(() => {});
+  }
+
+  private unpark(eventKey: string): void {
+    this.parkedPublications.delete(eventKey);
+    this.publicationAttempts.delete(eventKey);
+  }
+
+  /** True for an error that will fail identically on every future attempt. */
+  private permanent(error: unknown): boolean {
+    return (
+      !!error &&
+      typeof error === 'object' &&
+      'retryable' in error &&
+      (error as { retryable?: unknown }).retryable === false
+    );
+  }
+
+  private park(eventKey: string, error: unknown, transient: boolean): void {
+    const pending = this.pendingPublications.get(eventKey);
+    const attempts = this.publicationAttempts.get(eventKey) ?? 1;
+    const timer = this.publicationRetryTimers.get(eventKey);
+    if (timer) clearTimeout(timer);
+    this.publicationRetryTimers.delete(eventKey);
+    this.nextPublicationRetries.delete(eventKey);
+    this.parkedPublications.set(eventKey, {
+      revision: pending?.revision ?? -1,
+      attempts,
+      error: error instanceof Error ? error.message : String(error),
+      parkedAtUtc: this.now(),
+      transient
+    });
+  }
+
+  /** The event's terminal delivery state, or null while delivery is still live. */
+  publicationParked(eventKey: string): ParkedPublication | null {
+    return this.parkedPublications.get(eventKey) ?? null;
   }
 
   private schedulePublicationRetry(eventKey: string): void {
     if (
       this.closing ||
       this.publicationRetryTimers.has(eventKey) ||
+      this.parkedPublications.has(eventKey) ||
       !this.pendingPublications.has(eventKey)
     )
       return;
@@ -264,23 +331,53 @@ export class PlaybackCoordinator {
     const timer = setTimeout(() => {
       this.publicationRetryTimers.delete(eventKey);
       this.nextPublicationRetries.delete(eventKey);
-      void this.retryPublication(eventKey).catch(() => {});
+      void this.drainPublication(eventKey).catch(() => {});
     }, delayMs);
     timer.unref?.();
     this.publicationRetryTimers.set(eventKey, timer);
   }
 
-  /** Retries the latest pending snapshot. Failed delivery never rolls back durable acceptance. */
+  /**
+   * The explicit, operator-driven recovery command: clears any park, resets the
+   * attempt budget and tries the latest pending snapshot again. This is the
+   * ONLY thing that restarts a parked event - deliberately, so recovery stays
+   * action-triggered rather than a background scheduler.
+   *
+   * Failed delivery never rolls back durable acceptance.
+   */
   retryPublication(eventKey: string): Promise<void> {
+    this.unpark(eventKey);
+    const inFlight = this.publicationFlights.get(eventKey);
+    // Joining an attempt that is already failing is not a retry. Wait for it,
+    // then give the now-unparked event a genuinely fresh attempt - otherwise
+    // "retry" silently returns the old failure and nothing is re-sent.
+    if (!inFlight) return this.drainPublication(eventKey);
+    const again = () =>
+      this.pendingPublications.has(eventKey)
+        ? this.drainPublication(eventKey)
+        : Promise.resolve();
+    return inFlight.then(again, (error: unknown) => {
+      if (!this.pendingPublications.has(eventKey)) throw error;
+      return again();
+    });
+  }
+
+  /** Delivery drain used by commits and scheduled retries; respects a park. */
+  private drainPublication(eventKey: string): Promise<void> {
     const existing = this.publicationFlights.get(eventKey);
     if (existing) return existing;
     const flight = Promise.resolve()
       .then(async () => {
-        while (this.options.publish && this.pendingPublications.has(eventKey)) {
+        while (
+          this.options.publish &&
+          this.pendingPublications.has(eventKey) &&
+          !this.parkedPublications.has(eventKey)
+        ) {
           const state = this.pendingPublications.get(eventKey)!;
           try {
             await this.options.publish(eventKey, clone(state));
             this.publicationErrors.delete(eventKey);
+            this.parkedPublications.delete(eventKey);
             this.publicationAttempts.delete(eventKey);
             this.nextPublicationRetries.delete(eventKey);
             const retryTimer = this.publicationRetryTimers.get(eventKey);
@@ -297,16 +394,17 @@ export class PlaybackCoordinator {
               this.pendingPublications.delete(eventKey);
           } catch (error) {
             this.publicationErrors.set(eventKey, error);
-            this.publicationAttempts.set(
-              eventKey,
-              (this.publicationAttempts.get(eventKey) ?? 0) + 1
-            );
+            const attempts = (this.publicationAttempts.get(eventKey) ?? 0) + 1;
+            this.publicationAttempts.set(eventKey, attempts);
             try {
               this.options.onPublicationError?.(eventKey, error);
             } catch {
               /* Logging cannot affect durability. */
             }
-            this.schedulePublicationRetry(eventKey);
+            const permanent = this.permanent(error);
+            if (permanent || attempts >= this.publicationRetryMaxAttempts)
+              this.park(eventKey, error, !permanent);
+            else this.schedulePublicationRetry(eventKey);
             throw error;
           }
         }
@@ -318,6 +416,7 @@ export class PlaybackCoordinator {
 
   deliveryHealth(eventKey: string): PlaybackDeliveryHealth {
     const lastDelivery = this.lastDeliveries.get(eventKey);
+    const parked = this.parkedPublications.get(eventKey);
     return {
       configured: !!this.options.publish,
       pendingRevision: this.pendingPublications.get(eventKey)?.revision ?? null,
@@ -325,9 +424,14 @@ export class PlaybackCoordinator {
       nextRetryAtUtc: this.nextPublicationRetries.get(eventKey) ?? null,
       lastDeliveredRevision: lastDelivery?.revision ?? null,
       lastDeliveredAtUtc: lastDelivery?.atUtc ?? null,
-      error: this.publicationErrors.has(eventKey)
-        ? String(this.publicationErrors.get(eventKey))
-        : null
+      error: parked
+        ? `Playback delivery for ${eventKey} revision ${parked.revision} was PARKED at ` +
+          `${parked.parkedAtUtc} after ${parked.attempts} attempts and will not retry on its ` +
+          `own${parked.transient ? '' : ' (the failure is not retryable)'}. Last error: ` +
+          `${parked.error} Recover with an explicit publication retry for this event.`
+        : this.publicationErrors.has(eventKey)
+          ? String(this.publicationErrors.get(eventKey))
+          : null
     };
   }
 
@@ -338,9 +442,11 @@ export class PlaybackCoordinator {
     this.publicationRetryTimers.clear();
     this.nextPublicationRetries.clear();
 
+    // Parked events are deliberately NOT revived here: a shutdown is not an
+    // operator asking for a retry.
     const drain = Promise.allSettled(
       [...this.pendingPublications.keys()].map((eventKey) =>
-        this.retryPublication(eventKey)
+        this.drainPublication(eventKey)
       )
     ).then(() => undefined);
     let timeout: ReturnType<typeof setTimeout> | undefined;

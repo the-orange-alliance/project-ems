@@ -9,8 +9,11 @@ import {
 } from "@toa-lib/models";
 import type { Server } from "socket.io";
 import {
+  DEFAULT_PLAYBACK_PUBLICATION_LIMIT_BYTES,
   PlaybackPublicationReceiver,
+  registerPlaybackPublicationBodyParser,
   registerPlaybackPublicationEndpoint,
+  resolvePlaybackPublicationLimitBytes,
 } from "../PlaybackPublication.js";
 
 /**
@@ -60,6 +63,70 @@ function publication(
     authorityEpoch,
     eventKey,
     state: state(eventKey, revision),
+  };
+}
+
+/**
+ * A realistic production envelope, not a synthetic blob: one loaded timeline
+ * snapshot of `itemCount` stat tiles, carried both as the timeline's own items
+ * and as the snapshot's resolved items, exactly as a real `load` commits it.
+ * 300 tiles is an ordinary large show package and serialises past 100 KB.
+ */
+function loadedState(eventKey: string, revision: number, itemCount: number) {
+  const at = "2026-01-01T00:00:00.000Z";
+  const specs = Array.from({ length: itemCount }, (_unused, index) => ({
+    id: `spec-${index}`,
+    title: `Alliance scoring leaders segment ${index}`,
+    subtitle: "Qualification match production package",
+    stat: "alliance-scoring-leaders",
+    selectors: {},
+    filters: {},
+    params: { note: `padding-${index}`.padEnd(220, "x") },
+    kind: "stat-tile" as const,
+    mode: "fullscreen" as const,
+    options: {},
+  }));
+  return playbackStateZod.parse({
+    ...createEmptyPlaybackState(eventKey, at),
+    revision,
+    lastCommandId: `revision-${revision}`,
+    loaded: {
+      snapshotId: "snapshot-1",
+      source: { kind: "timeline", timelineId: "timeline-1", revision: 1 },
+      timelines: [
+        {
+          schemaVersion: 2,
+          revision: 1,
+          timelineId: "timeline-1",
+          eventKey,
+          name: "Production package",
+          items: specs,
+          updatedAtUtc: at,
+        },
+      ],
+      items: specs.map((spec, itemIndex) => ({
+        timelineId: "timeline-1",
+        timelineRevision: 1,
+        itemIndex,
+        spec,
+      })),
+      index: 0,
+      loadedAtUtc: at,
+    },
+  });
+}
+
+function largePublication(
+  authorityEpoch: string,
+  eventKey: string,
+  revision: number,
+  itemCount: number,
+) {
+  return {
+    schemaVersion: 1,
+    authorityEpoch,
+    eventKey,
+    state: loadedState(eventKey, revision, itemCount),
   };
 }
 
@@ -131,12 +198,27 @@ test("API replay observation retires the old publisher before delayed delivery",
   );
 });
 
-async function ingressFixture(t: import("node:test").TestContext) {
+/**
+ * Mirrors `Server.ts` middleware order exactly - scoped publication parser
+ * first, global 100 KB `json()` second. A fixture that used only
+ * `express.json()` could not see the ingress limit at all, which is how the
+ * 100 KB default reached production unnoticed.
+ */
+async function ingressFixture(
+  t: import("node:test").TestContext,
+  limitBytes: number = resolvePlaybackPublicationLimitBytes(),
+) {
   const sockets = fakeSocketServer();
   const receiver = new PlaybackPublicationReceiver(sockets.server);
   const app = express();
+  registerPlaybackPublicationBodyParser(app, limitBytes);
   app.use(express.json());
-  registerPlaybackPublicationEndpoint(app, receiver, PUBLICATION_TOKEN);
+  registerPlaybackPublicationEndpoint(
+    app,
+    receiver,
+    PUBLICATION_TOKEN,
+    limitBytes,
+  );
   const server = app.listen(0, "127.0.0.1");
   await new Promise<void>((resolve) => server.once("listening", resolve));
   t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
@@ -257,6 +339,7 @@ test("ingress with an empty configured token refuses everything, including an em
   const sockets = fakeSocketServer();
   const receiver = new PlaybackPublicationReceiver(sockets.server);
   const app = express();
+  registerPlaybackPublicationBodyParser(app);
   app.use(express.json());
   // An unset PLAYBACK_PUBLICATION_TOKEN must fail closed rather than make the
   // ingress world-writable by matching the empty string against itself.
@@ -281,4 +364,112 @@ test("ingress with an empty configured token refuses everything, including an em
     assert.equal(response.status, 401);
   }
   assert.equal(sockets.emissions.length, 0);
+});
+
+test("a hydration observation never suppresses the genuine broadcast of that revision", () => {
+  const sockets = fakeSocketServer();
+  const receiver = new PlaybackPublicationReceiver(sockets.server);
+
+  // The real ordering in production: the API commits rev2 and publishes it
+  // asynchronously, while a client hydrating over HTTP reads rev2 first and
+  // the relay observes it. The delayed publication is the ONLY thing that
+  // reaches sockets already in the room, so it must still broadcast.
+  assert.equal(receiver.accept(publication("epoch-a", "event-a", 1)).accepted, true);
+  const observed = receiver.observe(publication("epoch-a", "event-a", 2));
+  assert.equal(observed.reason, "observed");
+  assert.equal(
+    receiver.accept(publication("epoch-a", "event-a", 2)).reason,
+    "broadcast",
+  );
+
+  // A repeated hydration read of an already-broadcast revision is still inert,
+  // and genuine redelivery of it is still deduped.
+  receiver.observe(publication("epoch-a", "event-a", 2));
+  assert.equal(
+    receiver.accept(publication("epoch-a", "event-a", 2)).reason,
+    "duplicate",
+  );
+  assert.equal(
+    receiver.accept(publication("epoch-a", "event-a", 1)).reason,
+    "stale",
+  );
+
+  assert.deepEqual(
+    sockets.emissions
+      .filter((entry) => entry.event === GraphicsSocketEvent.PLAYBACK_STATE_V1)
+      .map((entry) => entry.payload.state.revision),
+    [1, 2],
+  );
+});
+
+test("ingress accepts an ordinary production envelope larger than the 100 KB parser default", async (t) => {
+  const { sockets, post } = await ingressFixture(t);
+  const body = largePublication("epoch-a", "event-a", 1, 300);
+  const bytes = Buffer.byteLength(JSON.stringify(body));
+  assert.ok(
+    bytes > 100 * 1024,
+    `fixture envelope must exceed the old default; got ${bytes} bytes`,
+  );
+
+  const response = await post(body, `Bearer ${PUBLICATION_TOKEN}`);
+  const payload = await response.text();
+  assert.equal(response.status, 202, payload);
+  assert.equal(JSON.parse(payload).reason, "broadcast");
+  assert.equal(
+    sockets.emissions.filter(
+      (entry) => entry.event === GraphicsSocketEvent.PLAYBACK_STATE_V1,
+    ).length,
+    1,
+  );
+});
+
+test("an envelope past the configured limit is refused with a named, actionable error", async (t) => {
+  // A deliberately tiny limit so the assertion is about the refusal contract,
+  // not about building a 4 MiB fixture.
+  const limitBytes = 4096;
+  const { sockets, post } = await ingressFixture(t, limitBytes);
+  const body = largePublication("epoch-a", "event-a", 7, 300);
+
+  const response = await post(body, `Bearer ${PUBLICATION_TOKEN}`);
+  assert.equal(response.status, 413);
+  const payload = await response.json();
+  assert.equal(payload.code, "PUBLICATION_TOO_LARGE");
+  assert.equal(payload.limitBytes, limitBytes);
+  assert.equal(payload.retryable, false);
+  assert.ok(
+    payload.message.includes("GRAPHICS_PUBLICATION_MAX_BYTES"),
+    "the operator must be told which knob to turn",
+  );
+  assert.ok(
+    !payload.message.includes("<html"),
+    "never relay the parser's HTML stack trace",
+  );
+  assert.equal(sockets.emissions.length, 0);
+});
+
+test("the ingress limit is configurable and defaults far above a real envelope", () => {
+  assert.equal(
+    resolvePlaybackPublicationLimitBytes({}),
+    DEFAULT_PLAYBACK_PUBLICATION_LIMIT_BYTES,
+  );
+  assert.equal(
+    resolvePlaybackPublicationLimitBytes({
+      GRAPHICS_PUBLICATION_MAX_BYTES: "123456",
+    }),
+    123456,
+  );
+  assert.throws(
+    () =>
+      resolvePlaybackPublicationLimitBytes({
+        GRAPHICS_PUBLICATION_MAX_BYTES: "lots",
+      }),
+    /must be a positive integer byte count/,
+  );
+  assert.ok(
+    DEFAULT_PLAYBACK_PUBLICATION_LIMIT_BYTES >
+      Buffer.byteLength(
+        JSON.stringify(largePublication("epoch-a", "event-a", 1, 300)),
+      ) *
+        10,
+  );
 });
