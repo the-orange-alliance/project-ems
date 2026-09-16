@@ -185,8 +185,13 @@ export interface PlaybackNavigationRepository {
 
 export interface PlaybackNavigationStats {
   catalogue(eventKey: string): Promise<{ slug: string; catalogueId: string }[]>;
-  /** Authoritative cue preparation must await a newly calculated result. */
-  queryFresh(
+  /**
+   * Authoritative cue preparation must await a completed calculation, which
+   * may be a genuinely fresh cached one (e.g. warmed while the item sat On
+   * Deck). It must never accept a stale value and must not force a recompute
+   * of a fresh entry. See `StatsQueryService.queryReady`.
+   */
+  queryReady(
     eventKey: string,
     input: unknown
   ): Promise<{ result: StatResult; calculatedAsOfUtc: string }>;
@@ -793,7 +798,7 @@ export class PlaybackNavigation {
           retryable: false
         });
       }
-      const response = await this.stats.queryFresh(eventKey, {
+      const response = await this.stats.queryReady(eventKey, {
         stat: item.spec.stat,
         selectors: item.spec.selectors,
         filters: item.spec.filters,

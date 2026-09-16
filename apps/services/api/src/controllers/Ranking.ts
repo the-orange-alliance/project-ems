@@ -14,6 +14,7 @@ import {
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { getDB } from '../db/EventDatabase.js';
+import { bumpRankingsRevision } from '../stats/SourceRevisions.js';
 import { z } from 'zod';
 import {
   SeasonFunctionsMissing,
@@ -141,6 +142,7 @@ async function rankingController(fastify: FastifyInstance) {
         const eventKey = request.body[0].eventKey;
         const db = await getDB(eventKey);
         await db.insertValue('ranking', request.body);
+        bumpRankingsRevision();
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
@@ -176,6 +178,7 @@ async function rankingController(fastify: FastifyInstance) {
         }));
         const db = await getDB(teams[0].eventKey);
         await db.insertValue('ranking', rankings);
+        bumpRankingsRevision();
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
@@ -249,6 +252,7 @@ async function rankingController(fastify: FastifyInstance) {
               `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
             );
             await db.insertValue('ranking', rankings);
+            bumpRankingsRevision();
             reply.send(rankings);
           } else {
             reply.send([]);
@@ -263,6 +267,7 @@ async function rankingController(fastify: FastifyInstance) {
             `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
           );
           await db.insertValue('ranking', rankings);
+          bumpRankingsRevision();
           reply.send(rankings);
         }
       } catch (e) {
@@ -291,6 +296,7 @@ async function rankingController(fastify: FastifyInstance) {
           'ranking',
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
         );
+        bumpRankingsRevision();
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));

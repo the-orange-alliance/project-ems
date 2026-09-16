@@ -43,6 +43,10 @@ class CountingStats {
   async query(): Promise<{ result: StatResult; calculatedAsOfUtc: string }> {
     throw new Error('the authoritative playback path must never use query()');
   }
+  /** This fake has no cache, so a cue's ready query is always a calculation; counted with queryFresh. */
+  async queryReady() {
+    return this.queryFresh();
+  }
   async queryFresh(): Promise<{
     result: StatResult;
     calculatedAsOfUtc: string;

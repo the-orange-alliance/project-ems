@@ -158,6 +158,23 @@ export class StatsQueryService {
     return cache.queryFresh(query, definition, seasonKey);
   }
 
+  /**
+   * For authoritative cue preparation. Never stale, never a forced recompute:
+   * a genuinely fresh cached entry (e.g. warmed while On Deck) is returned with
+   * no worker run; a missing entry or one whose source marker or calculator
+   * version moved blocks on a real calculation.
+   */
+  async queryReady(
+    eventKey: string,
+    input: unknown
+  ): Promise<StatsQueryResponse> {
+    const { cache, query, definition, seasonKey } = await this.prepare(
+      eventKey,
+      input
+    );
+    return cache.queryReady(query, definition, seasonKey);
+  }
+
   close(): Promise<void> {
     this.closing ??= (async () => {
       // Closing the pool bounds shutdown and rejects queued work; drain cache writes afterward.

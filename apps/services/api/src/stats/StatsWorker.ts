@@ -45,3 +45,5 @@ parentPort.on(
     }
   }
 );
+// Imports resolved and the handler is installed: this worker can run work.
+parentPort.postMessage({ ready: true });

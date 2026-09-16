@@ -1,12 +1,15 @@
 import { AsyncDatabase } from 'promised-sqlite3';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve, basename, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { CalculatorContext } from '@toa-lib/models/seasons/stats';
-export async function eventFixture() {
-  const root = await mkdtemp(join(tmpdir(), 'ems-stats-')),
-    module = await import(
+/** `appData: true` lays the databases out as `<base>/ems/*` so `APPDATA=<base>` points `getDB()` (and the real controllers) at them. */
+export async function eventFixture({ appData = false } = {}) {
+  const base = await mkdtemp(join(tmpdir(), 'ems-stats-')),
+    root = appData ? join(base, 'ems') : base;
+  if (appData) await mkdir(root);
+  const module = await import(
       pathToFileURL(
         resolve('../../../libs/models/build/seasons/stats/tests/fixture.js')
       ).href
@@ -65,6 +68,7 @@ export async function eventFixture() {
     await insert('match_detail_history', row);
   for (const row of ctx.actions) await insert('match_action_event', row);
   return {
+    base,
     root,
     ctx,
     db,
@@ -74,11 +78,11 @@ export async function eventFixture() {
       await db.close();
       await global.close();
       if (
-        !resolve(root).startsWith(resolve(tmpdir()) + sep) ||
-        !basename(root).startsWith('ems-stats-')
+        !resolve(base).startsWith(resolve(tmpdir()) + sep) ||
+        !basename(base).startsWith('ems-stats-')
       )
         throw new Error('Unsafe test cleanup path');
-      await rm(root, {
+      await rm(base, {
         recursive: true,
         force: true,
         maxRetries: 10,

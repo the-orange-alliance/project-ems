@@ -1,8 +1,14 @@
-import test from 'node:test';
+import test, { type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { AsyncDatabase } from 'promised-sqlite3';
+import { definitions } from '@toa-lib/models/seasons/stats';
 import {
   createEmptyPlaybackState,
   playbackStateZod,
+  snapshotPreparedGraphic,
   preparedGraphicZod,
   presentationFrameZod,
   type GraphicSpec,
@@ -25,6 +31,11 @@ import {
   type PlaybackNavigationRepository,
   type PlaybackNavigationStats
 } from '../graphics/PlaybackNavigation.js';
+import { PlaybackRefresh } from '../graphics/PlaybackRefresh.js';
+import { StatsQueryService } from '../stats/StatsQueryService.js';
+import { StatsWorkerPool } from '../stats/StatsWorkerPool.js';
+import { bumpRankingsRevision } from '../stats/SourceRevisions.js';
+import type { StatsWork } from '../stats/EventStatsSnapshot.js';
 
 /**
  * Every test in this file drives `PlaybackNavigation` by direct function
@@ -158,7 +169,7 @@ class FakeStats implements PlaybackNavigationStats {
   async catalogue(): Promise<{ slug: string; catalogueId: string }[]> {
     return this.catalogueEntries;
   }
-  async queryFresh(
+  async queryReady(
     eventKey: string,
     input: unknown
   ): Promise<{ result: StatResult; calculatedAsOfUtc: string }> {
@@ -809,4 +820,225 @@ test('advance: with nothing loaded returns NOT_READY and leaves state unchanged 
 
   const after = await coordinator.getState('event-a');
   assert.deepEqual(after, before);
+});
+
+/* -------------------------------------------------------------------- */
+/* cue preparation against the real stats cache                          */
+/* -------------------------------------------------------------------- */
+
+/**
+ * A real `StatsQueryService` (real `StatsCache`, real `stat_cache`, real
+ * worker pool running the controlled worker) behind `PlaybackNavigation`, so
+ * "did the cue run a worker job?" is observed on the pool itself rather than
+ * inferred from a fake's call count or from latency.
+ */
+async function realStatsSetup(t: TestContext) {
+  const root = await mkdtemp(join(tmpdir(), 'ems-nav-stats-'));
+  const global = await AsyncDatabase.open(join(root, 'global.db'));
+  await global.exec(
+    'CREATE TABLE event(eventKey TEXT PRIMARY KEY, seasonKey TEXT)'
+  );
+  await global.run('INSERT INTO event VALUES (?, ?)', ['event-a', 'fgc_2026']);
+  await global.close();
+  // Empty tournaments give null SQL markers, matching the controlled worker.
+  const source = await AsyncDatabase.open(join(root, 'event-a.db'));
+  await source.exec(
+    'CREATE TABLE tournament(eventKey TEXT, tournamentKey TEXT)'
+  );
+  await source.close();
+  const pool = new StatsWorkerPool({
+    entry: new URL('./controlled-stats-worker.js', import.meta.url),
+    timeoutMs: 20000
+  });
+  const service = new StatsQueryService({ databaseRoot: root, pool });
+  const workerRuns: StatsWork[] = [];
+  const enqueue = pool.enqueue.bind(pool);
+  pool.enqueue = (work, origin, waits) => {
+    workerRuns.push(work);
+    return enqueue(work, origin, waits);
+  };
+  const joins: string[] = [];
+  const joinFlight = pool.join.bind(pool);
+  pool.join = (hash, waits) => {
+    joins.push(hash);
+    return joinFlight(hash, waits);
+  };
+  const storage = new MemoryStorage();
+  const coordinator = new PlaybackCoordinator({ storage });
+  const repository = new FakeRepository();
+  let counter = 0;
+  const now = () => new Date('2026-01-01T00:00:00.000Z').toISOString();
+  const nav = new PlaybackNavigation({
+    coordinator,
+    repository,
+    stats: service,
+    loadEntities: async () => ({}),
+    prepareFrame: fakePrepareFrame,
+    now,
+    newId: () => `id-${++counter}`
+  });
+  t.after(async () => {
+    await service.close();
+    await rm(root, { recursive: true, force: true, maxRetries: 10 });
+  });
+  const stat = definitions.find((d) => d.catalogueId === 'B21')!.slug;
+  /** The same body the On Deck warm posts for an item. */
+  const warm = (s: GraphicSpec) =>
+    service.query('event-a', {
+      stat: s.stat,
+      selectors: s.selectors,
+      filters: s.filters,
+      params: s.params,
+      refresh: true
+    });
+  const idle = () =>
+    pool.inspect().running.length === 0 && pool.inspect().queued.length === 0;
+  return {
+    nav,
+    coordinator,
+    repository,
+    service,
+    workerRuns,
+    joins,
+    stat,
+    warm,
+    idle,
+    now
+  };
+}
+
+test('cue (real stats cache): advancing onto an item warmed while On Deck resolves ready with NO worker run', async (t) => {
+  const { nav, repository, workerRuns, joins, stat, warm, idle } =
+    await realStatsSetup(t);
+  const onAir = spec('a1', { stat, filters: { tournamentKeys: ['q'] } });
+  const onDeck = spec('b1', { stat, filters: { tournamentKeys: ['r'] } });
+  repository.timelines.set('t1', timeline('t1', [onAir, onDeck]));
+
+  const loadAck = await nav.load('event-a', {
+    type: 'load',
+    requestId: 'load1',
+    timelineId: 't1'
+  });
+  assert.equal(loadAck.ok, true);
+  assert.equal(workerRuns.length, 1, 'cold first cue calculates once');
+
+  const warmed = await warm(onDeck);
+  assert.equal(warmed.result.status, 'ok');
+  assert.equal(workerRuns.length, 2, 'the On Deck warm ran one job');
+  assert.ok(idle());
+
+  const advAck = await nav.advance('event-a', {
+    type: 'advance',
+    requestId: 'adv1'
+  });
+  assert.equal(advAck.ok, true);
+  if (!advAck.ok) return;
+  assert.equal(advAck.state.cue.status, 'ready');
+  if (advAck.state.cue.status === 'ready')
+    assert.equal(advAck.state.cue.graphic.spec.id, 'b1');
+  assert.equal(workerRuns.length, 2, 'the warmed cue enqueued no worker job');
+  assert.deepEqual(joins, [], 'nor joined one');
+  assert.ok(idle());
+
+  // go back onto the first item: fresh since the load computed it, so no run either.
+  const goAck = await nav.go('event-a', {
+    type: 'go',
+    requestId: 'go1',
+    index: 0
+  });
+  assert.equal(goAck.ok, true);
+  if (goAck.ok) assert.equal(goAck.state.cue.status, 'ready');
+  assert.equal(workerRuns.length, 2);
+});
+
+test('cue (real stats cache): an absent entry blocks on a real calculation; a moved source marker recomputes instead of serving the stale entry', async (t) => {
+  const { nav, repository, workerRuns, stat, warm } = await realStatsSetup(t);
+  const first = spec('a1', { stat, filters: { tournamentKeys: ['q'] } });
+  const cold = spec('b1', { stat, filters: { tournamentKeys: ['r'] } });
+  repository.timelines.set('t1', timeline('t1', [first, cold]));
+  await warm(first);
+  const loadAck = await nav.load('event-a', {
+    type: 'load',
+    requestId: 'load1',
+    timelineId: 't1'
+  });
+  assert.equal(loadAck.ok, true);
+  if (loadAck.ok) assert.equal(loadAck.state.cue.status, 'ready');
+  assert.equal(workerRuns.length, 1, 'warmed load ran nothing new');
+
+  const advAck = await nav.advance('event-a', {
+    type: 'advance',
+    requestId: 'adv1'
+  });
+  assert.equal(advAck.ok, true);
+  if (advAck.ok) assert.equal(advAck.state.cue.status, 'ready');
+  assert.equal(workerRuns.length, 2, 'absent entry: the cue calculated');
+  assert.deepEqual(workerRuns[1].query.filters.tournamentKeys, ['r']);
+
+  // Rankings changed through the API since the first item was cached.
+  bumpRankingsRevision();
+  const goAck = await nav.go('event-a', {
+    type: 'go',
+    requestId: 'go1',
+    index: 0
+  });
+  assert.equal(goAck.ok, true);
+  if (goAck.ok) assert.equal(goAck.state.cue.status, 'ready');
+  assert.equal(workerRuns.length, 3, 'moved marker: the cue recalculated');
+  assert.deepEqual(workerRuns[2].query.filters.tournamentKeys, ['q']);
+});
+
+test('refresh (real stats cache): the explicit recalculate still runs a worker job even when the entry is fresh', async (t) => {
+  const { nav, coordinator, repository, service, workerRuns, stat, now } =
+    await realStatsSetup(t);
+  repository.timelines.set('t1', timeline('t1', [spec('a1', { stat })]));
+  const loadAck = await nav.load('event-a', {
+    type: 'load',
+    requestId: 'load1',
+    timelineId: 't1'
+  });
+  assert.equal(loadAck.ok, true);
+  if (!loadAck.ok || loadAck.state.cue.status !== 'ready') return;
+  assert.equal(workerRuns.length, 1);
+  const take = await coordinator.mutate(
+    'event-a',
+    {
+      type: 'take',
+      requestId: 'take1',
+      target: loadAck.state.cue.graphic.target
+    },
+    (draft, context) => {
+      if (draft.cue.status !== 'ready') throw new Error('cue not ready');
+      draft.program = {
+        revision: context.nextRevision,
+        graphic: snapshotPreparedGraphic(draft.cue.graphic),
+        takenAtUtc: context.now
+      };
+    }
+  );
+  assert.equal(take.ok, true);
+  if (!take.ok || !take.state.program) return;
+  assert.equal(
+    (await service.query('event-a', { stat })).cache,
+    'fresh',
+    'precondition: the entry is fresh'
+  );
+  assert.equal(workerRuns.length, 1);
+
+  const refresh = new PlaybackRefresh({
+    coordinator,
+    stats: service,
+    loadEntities: async () => ({}),
+    prepareFrame: fakePrepareFrame,
+    now
+  });
+  const ack = await refresh.refresh('event-a', {
+    type: 'refresh',
+    requestId: 'r1',
+    destination: 'program',
+    target: take.state.program.graphic.target
+  });
+  assert.equal(ack.ok, true, JSON.stringify(ack));
+  if (ack.ok) assert.equal(ack.state.stagedUpdate.status, 'ready');
+  assert.equal(workerRuns.length, 2, 'refresh forced a real calculation');
 });

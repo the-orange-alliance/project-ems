@@ -126,7 +126,10 @@ export const queryBody = querySchema
 export const markerSchema = z.object({
   latestMatchUpdatedAtUtc: z.string().nullable(),
   latestHistoryId: z.number().nullable(),
-  latestActionEventId: z.number().nullable()
+  latestActionEventId: z.number().nullable(),
+  /** In-memory tokens folded in by `StatsCache` (see `SourceRevisions.ts`); a worker never sets them. */
+  rankingsRevision: z.string().optional(),
+  alliancesRevision: z.string().optional()
 });
 export const latestMatchSchema = z.object({
   eventKey: z.string(),
@@ -170,7 +173,19 @@ export const queueSchema = z.object({
   capacity: z.number().int().nonnegative(),
   workerCount: z.number().int().positive(),
   running: z.array(queueJobSchema),
-  queued: z.array(queueJobSchema)
+  queued: z.array(queueJobSchema),
+  spawnedWorkers: z.number().int().nonnegative(),
+  degraded: z
+    .object({
+      entry: z.string(),
+      error: z.string(),
+      consecutiveStartFailures: z.number().int().positive(),
+      parkedAtUtc: z.iso.datetime()
+    })
+    .nullable()
+    .describe(
+      'Set when workers repeatedly failed to start and the pool stopped respawning; cleared by POST /stats/queue/recover.'
+    )
 });
 export const reorderSchema = z
   .object({

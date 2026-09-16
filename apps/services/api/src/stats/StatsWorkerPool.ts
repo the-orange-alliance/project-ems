@@ -3,7 +3,7 @@ import { assertJson } from '@toa-lib/models/seasons/stats';
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { type StatsWork } from './EventStatsSnapshot.js';
 import { workerResultSchema, type WorkerResult } from './StatsSchemas.js';
 export class StatsServiceError extends Error {
@@ -20,7 +20,9 @@ interface Job {
   origin: Origin;
   work: StatsWork;
   enqueuedAtUtc: string;
+  enqueuedAtMs: number;
   startedAtUtc?: string;
+  startedAtMs?: number;
   waitingRequestCount: number;
   resolve: (r: WorkerResult) => void;
   reject: (e: Error) => void;
@@ -31,7 +33,27 @@ interface Slot {
   worker: Worker;
   job?: Job;
   replacing: boolean;
+  /** Set by the worker's `ready` message (or its first job reply): its entry imported and it can run work. */
+  ready: boolean;
+  /** Consecutive start failures of the slots this one replaces; 0 after any worker that started. */
+  startFailures: number;
 }
+export interface DegradedPool {
+  entry: string;
+  error: string;
+  consecutiveStartFailures: number;
+  parkedAtUtc: string;
+}
+/**
+ * A worker that dies before reporting ready is a start failure (bad entry,
+ * broken packaged import, crash in worker startup): it is respawned after
+ * 250 ms, 500 ms, 1 s, 2 s and the pool parks as degraded on the 5th
+ * consecutive failure (~4 s of retries). A broken entry is deterministic, so
+ * retrying longer only burns CPU and logs; a transient failure gets a few
+ * seconds. A parked pool stays parked until `recover()` (POST /stats/queue/recover).
+ */
+const START_FAILURE_CAP = 5;
+const RESPAWN_BASE_MS = 250;
 export function workerEntry() {
   if (process.env.STATS_WORKER_ENTRY)
     return pathToFileURL(process.env.STATS_WORKER_ENTRY);
@@ -46,8 +68,18 @@ export function workerEntry() {
   }
   throw new Error('Statistics worker entry was not packaged');
 }
+/**
+ * Timeout contract: `STATS_TIMEOUT_MS` is an END-TO-END deadline per job,
+ * measured from enqueue and covering queue wait plus execution. Expiry is
+ * reported as one of two distinct errors: starvation (the job never reached a
+ * started worker - add workers or reduce queued work) or execution timeout
+ * (the job was running; the worker is terminated - investigate the stat).
+ */
 export class StatsWorkerPool {
   private slots: Slot[] = [];
+  private respawns = new Set<NodeJS.Timeout>();
+  private spawnedWorkers = 0;
+  private degraded: DegradedPool | null = null;
   private queued: Job[] = [];
   private flights = new Map<string, Job>();
   private version = 0;
@@ -84,7 +116,7 @@ export class StatsWorkerPool {
       throw new Error('Invalid statistics worker configuration');
     for (let i = 0; i < this.workerCount; i++) this.spawn();
   }
-  private spawn() {
+  private spawn(startFailures = 0) {
     let { entry } = this;
     if (entry.pathname.endsWith('.ts')) {
       const moduleName = ['tsx', 'esm', 'api'].join('/');
@@ -109,19 +141,26 @@ export class StatsWorkerPool {
         (i === 0 || args[i - 1] !== '--input-type')
     );
     const worker = new Worker(entry, { execArgv }),
-      slot: Slot = { worker, replacing: false };
+      slot: Slot = { worker, replacing: false, ready: false, startFailures };
     this.slots.push(slot);
+    this.spawnedWorkers++;
     worker.on(
       'message',
       (message: {
+        ready?: true;
         jobId: string;
         ok: boolean;
         payload?: unknown;
         error?: string;
         statusCode?: number;
       }) => {
+        if (message.ready) {
+          slot.ready = true;
+          return;
+        }
         if (!slot.job || message.jobId !== slot.job.jobId || slot.replacing)
           return;
+        slot.ready = true;
         const { job } = slot;
         if (message.ok) {
           try {
@@ -160,7 +199,12 @@ export class StatsWorkerPool {
       if (!slot.replacing && !this.closing)
         this.replace(
           slot,
-          new StatsServiceError(503, 'Statistics worker exited (' + code + ')')
+          new StatsServiceError(
+            503,
+            slot.ready
+              ? 'Statistics worker exited (' + code + ')'
+              : 'Statistics worker exited (' + code + ') before it started'
+          )
         );
     });
   }
@@ -183,14 +227,80 @@ export class StatsWorkerPool {
   private replace(slot: Slot, error: Error) {
     if (slot.replacing) return;
     slot.replacing = true;
-    if (slot.job) this.finish(slot, slot.job, error);
+    const { job } = slot;
+    if (job && slot.ready) this.finish(slot, job, error);
+    else if (job) {
+      // The worker never started, so the job never ran: requeue it, do not fail it.
+      slot.job = undefined;
+      job.startedAtUtc = job.startedAtMs = undefined;
+      this.queued.unshift(job);
+      this.version++;
+    }
     void slot.worker.terminate().finally(() => {
       this.slots = this.slots.filter((s) => s !== slot);
-      if (!this.closing) {
+      if (this.closing || this.degraded) return;
+      if (slot.ready) {
         this.spawn();
         this.dispatch();
+        return;
       }
+      const failures = slot.startFailures + 1;
+      if (failures >= START_FAILURE_CAP) return this.park(error, failures);
+      // Bounded retry of a failed start, not background work: at most
+      // START_FAILURE_CAP - 1 timers per failure streak, then the pool parks.
+      const timer = setTimeout(
+        () => {
+          this.respawns.delete(timer);
+          if (this.closing || this.degraded) return;
+          this.spawn(failures);
+          this.dispatch();
+        },
+        RESPAWN_BASE_MS * 2 ** (failures - 1)
+      );
+      this.respawns.add(timer);
     });
+  }
+  private entryName() {
+    return this.entry.protocol === 'file:'
+      ? fileURLToPath(this.entry)
+      : this.entry.href;
+  }
+  private park(error: Error, failures: number) {
+    for (const timer of this.respawns) clearTimeout(timer);
+    this.respawns.clear();
+    this.degraded = {
+      entry: this.entryName(),
+      error: error.message,
+      consecutiveStartFailures: failures,
+      parkedAtUtc: new Date().toISOString()
+    };
+    this.version++;
+    const rejection = this.degradedError();
+    for (const job of [...this.queued]) this.finish(undefined, job, rejection);
+  }
+  private degradedError() {
+    const d = this.degraded!;
+    return new StatsServiceError(
+      503,
+      'Statistics worker pool is degraded: worker entry ' +
+        d.entry +
+        ' failed to start ' +
+        d.consecutiveStartFailures +
+        ' consecutive times (last error: ' +
+        d.error +
+        '); respawning stopped at ' +
+        d.parkedAtUtc +
+        ' and statistics work is refused. Fix the worker entry, then POST /stats/queue/recover.'
+    );
+  }
+  /** Explicitly leaves the degraded state and starts missing workers again. A no-op for a healthy pool. */
+  recover() {
+    if (this.degraded && !this.closing) {
+      this.degraded = null;
+      this.version++;
+      for (let i = this.slots.length; i < this.workerCount; i++) this.spawn();
+    }
+    return this.inspect();
   }
   private dispatch() {
     for (const slot of this.slots) {
@@ -199,6 +309,7 @@ export class StatsWorkerPool {
       if (!job) break;
       slot.job = job;
       job.startedAtUtc = new Date().toISOString();
+      job.startedAtMs = Date.now();
       this.version++;
       try {
         slot.worker.postMessage({ jobId: job.jobId, work: job.work });
@@ -219,6 +330,7 @@ export class StatsWorkerPool {
       return Promise.reject(
         new StatsServiceError(503, 'Statistics pool is shutting down')
       );
+    if (this.degraded) return Promise.reject(this.degradedError());
     const existing = this.flights.get(work.queryHash);
     if (existing) {
       if (waits) existing.waitingRequestCount++;
@@ -241,25 +353,72 @@ export class StatsWorkerPool {
       origin,
       work,
       enqueuedAtUtc: new Date().toISOString(),
+      enqueuedAtMs: Date.now(),
       waitingRequestCount: waits ? 1 : 0,
       resolve,
       reject,
       promise,
-      timer: setTimeout(() => {
-        const slot = this.slots.find((s) => s.job === job);
-        const error = new StatsServiceError(
-          504,
-          'Statistics calculation timed out'
-        );
-        if (slot) this.replace(slot, error);
-        else this.finish(undefined, job, error);
-      }, this.timeoutMs)
+      timer: setTimeout(() => this.expire(job), this.timeoutMs)
     };
     this.flights.set(work.queryHash, job);
     this.queued.push(job);
     this.version++;
     this.dispatch();
     return promise;
+  }
+  private expire(job: Job) {
+    const now = Date.now(),
+      slot = this.slots.find((s) => s.job === job),
+      what = job.work.query.stat + ' for event ' + job.work.query.eventKey,
+      deadline =
+        'the ' +
+        this.timeoutMs +
+        ' ms end-to-end deadline (STATS_TIMEOUT_MS, which includes queue wait)';
+    if (slot?.ready && job.startedAtMs !== undefined) {
+      this.replace(
+        slot,
+        new StatsServiceError(
+          504,
+          'Statistics calculation timed out: ' +
+            what +
+            ' ran ' +
+            (now - job.startedAtMs) +
+            ' ms on a worker after ' +
+            (job.startedAtMs - job.enqueuedAtMs) +
+            ' ms of queue wait, exceeding ' +
+            deadline +
+            '; the worker was terminated.'
+        )
+      );
+      return;
+    }
+    const position = this.queued.indexOf(job),
+      started = this.slots.filter((s) => s.ready && !s.replacing).length,
+      busy = this.slots.filter((s) => s.ready && s.job).length;
+    this.finish(
+      slot,
+      job,
+      new StatsServiceError(
+        504,
+        'Statistics job starved: ' +
+          what +
+          ' never reached a worker - it waited ' +
+          (now - job.enqueuedAtMs) +
+          ' ms in the queue (' +
+          (position >= 0 ? 'position ' + position + ', ' : '') +
+          'queue depth ' +
+          this.queued.length +
+          '; ' +
+          busy +
+          ' of ' +
+          started +
+          ' started worker(s) busy, ' +
+          this.workerCount +
+          ' configured) and exceeded ' +
+          deadline +
+          '. Add workers (STATS_WORKERS) or reduce queued work.'
+      )
+    );
   }
   join(hash: string, waits = true) {
     const job = this.flights.get(hash);
@@ -290,7 +449,9 @@ export class StatsWorkerPool {
       running: this.slots.flatMap((s) =>
         s.job ? [safe(s.job, 'running', null)] : []
       ),
-      queued: this.queued.map((j, i) => safe(j, 'queued', i))
+      queued: this.queued.map((j, i) => safe(j, 'queued', i)),
+      spawnedWorkers: this.spawnedWorkers,
+      degraded: this.degraded
     };
   }
   reorder(expectedQueueVersion: number, orderedJobIds: string[]) {
@@ -315,6 +476,8 @@ export class StatsWorkerPool {
   async close(graceMs = 5000) {
     if (this.closing) return;
     this.closing = true;
+    for (const timer of this.respawns) clearTimeout(timer);
+    this.respawns.clear();
     let timeout: NodeJS.Timeout | undefined;
     await Promise.race([
       Promise.allSettled([...this.flights.values()].map((j) => j.promise)),

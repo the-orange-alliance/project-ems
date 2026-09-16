@@ -27,6 +27,11 @@ export default async function statsController(
     { schema: { tags: ['Stats'], response: { 200: queueSchema } } },
     async () => pool.inspect()
   );
+  app.post(
+    '/queue/recover',
+    { schema: { tags: ['Stats'], response: { 200: queueSchema } } },
+    async () => pool.recover()
+  );
   app.put(
     '/queue/order',
     {

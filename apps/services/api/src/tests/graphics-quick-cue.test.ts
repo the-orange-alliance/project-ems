@@ -71,6 +71,10 @@ class FakeStats {
       calculatedAsOfUtc: NOW
     };
   }
+  /** This fake has no cache, so a cue's ready query is always a calculation, same as queryFresh. */
+  async queryReady() {
+    return this.query();
+  }
   async queryFresh() {
     return this.query();
   }

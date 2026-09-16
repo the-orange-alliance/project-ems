@@ -73,6 +73,11 @@ class FakeStats {
     return this.queryImpl(eventKey, input);
   }
 
+  /** This fake has no cache, so a cue's ready query is always a calculation; counted with queryFresh. */
+  async queryReady(eventKey: string, input: unknown) {
+    return this.queryFresh(eventKey, input);
+  }
+
   async queryFresh(eventKey: string, input: unknown) {
     this.queryFreshCount++;
     return this.queryImpl(eventKey, input);

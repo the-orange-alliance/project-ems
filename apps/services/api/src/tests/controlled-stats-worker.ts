@@ -40,3 +40,4 @@ parentPort!.on('message', ({ jobId, work }) => {
     }
   });
 });
+parentPort!.postMessage({ ready: true });
