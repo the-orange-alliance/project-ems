@@ -1,14 +1,18 @@
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useState } from 'react';
 import {
   Button,
+  ConfigProvider,
   Empty,
   InputNumber,
+  Segmented,
   Select,
   Space,
   Typography,
+  message,
   theme
 } from 'antd';
 import {
+  CopyOutlined,
   DeleteOutlined,
   HolderOutlined,
   PlusOutlined
@@ -271,6 +275,7 @@ export const PrepFieldSequenceEditor: FC<PrepFieldSequenceEditorProps> = ({
   onChange
 }) => {
   const { token } = theme.useToken();
+  const [showJson, setShowJson] = useState(false);
   const totalDuration = FGC26FCS.prepFieldSequenceDuration(value);
   // Conservative headroom: raising any single duration by X raises the total
   // by at most X (parallel branches may raise it less), so capping each input
@@ -300,12 +305,66 @@ export const PrepFieldSequenceEditor: FC<PrepFieldSequenceEditorProps> = ({
 
   return (
     <Space direction='vertical' style={{ width: '100%' }}>
-      {value.length === 0 && (
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        {/* The app theme inverts colorTextSecondary, which Segmented derives
+            its unselected label color from - pin it to the normal text color
+            so the unselected option stays readable. */}
+        <ConfigProvider
+          theme={{
+            components: {
+              Segmented: {
+                itemColor: token.colorText,
+                itemHoverColor: token.colorText
+              }
+            }
+          }}
+        >
+          <Segmented
+            value={showJson ? 'JSON' : 'Editor'}
+            onChange={(mode) => setShowJson(mode === 'JSON')}
+            options={['Editor', 'JSON']}
+          />
+        </ConfigProvider>
+      </div>
+      {showJson && (
+        <div style={{ position: 'relative' }}>
+          <pre
+            style={{
+              background: token.colorFillQuaternary,
+              borderRadius: token.borderRadiusLG,
+              padding: '8px 12px',
+              margin: 0,
+              overflowX: 'auto',
+              fontSize: 12
+            }}
+          >
+            {JSON.stringify(value, null, 2)}
+          </pre>
+          <Button
+            type='text'
+            icon={<CopyOutlined />}
+            style={{ position: 'absolute', top: 4, right: 4 }}
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(
+                  JSON.stringify(value, null, 2)
+                );
+                message.success('Copied to clipboard');
+              } catch {
+                message.error('Copy failed');
+              }
+            }}
+          />
+        </div>
+      )}
+      {!showJson && value.length === 0 && (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description='No steps - the robot will do nothing on "Prepare Field". Add a step below.'
         />
       )}
+      {!showJson && (
+        <>
       <SortableList
         ids={topIds}
         onMove={(from, to) => onChange(arrayMove(value, from, to))}
@@ -544,6 +603,8 @@ export const PrepFieldSequenceEditor: FC<PrepFieldSequenceEditorProps> = ({
           Parallel group
         </Button>
       </Space>
+        </>
+      )}
       <Typography.Text type='secondary'>
         Nominal sequence duration: {totalDuration.toFixed(1)}s (limit{' '}
         {FGC26FCS.PREP_FIELD_MAX_TOTAL_DURATION}s)
