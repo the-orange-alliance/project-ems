@@ -94,7 +94,6 @@ vi.mock('src/api/use-graphics-data.js', () => ({
       take: vi.fn(),
       quickTake: vi.fn(),
       clear: mocks.clear,
-      unload: vi.fn(),
       load: mocks.load,
       advance: vi.fn(),
       previous: vi.fn(),

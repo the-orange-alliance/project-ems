@@ -273,20 +273,6 @@ export const graphicsApi = {
       );
       return state;
     },
-    /**
-     * Durably empties the transport back to nothing-loaded (the mirror of
-     * `clear`, but for `loaded` rather than `program`) - used when clearing
-     * the air with nothing queued to take its place, so a later idle-queue
-     * check sees a genuine "nothing loaded" rather than the just-cleared
-     * show lingering as `state.loaded`.
-     */
-    unload: async (eventKey: string): Promise<PlaybackAcknowledgment | null> => {
-      const state = await playbackClient.post<PlaybackAcknowledgment>(
-        `/graphics/${eventKey}/live/unload`,
-        { body: commandBody(), schema: playbackAcknowledgmentZod }
-      );
-      return state;
-    },
     advance: async (eventKey: string): Promise<PlaybackAcknowledgment | null> => {
       const state = await playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/advance`,
@@ -297,16 +283,6 @@ export const graphicsApi = {
     previous: async (eventKey: string): Promise<PlaybackAcknowledgment | null> => {
       const state = await playbackClient.post<PlaybackAcknowledgment>(
         `/graphics/${eventKey}/live/previous`,
-        { body: commandBody(), schema: playbackAcknowledgmentZod }
-      );
-      return state;
-    },
-    go: async (
-      eventKey: string,
-      index: number
-    ): Promise<PlaybackAcknowledgment | null> => {
-      const state = await playbackClient.post<PlaybackAcknowledgment>(
-        `/graphics/${eventKey}/live/go/${index}`,
         { body: commandBody(), schema: playbackAcknowledgmentZod }
       );
       return state;
