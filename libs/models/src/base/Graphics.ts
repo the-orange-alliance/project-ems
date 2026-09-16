@@ -423,9 +423,54 @@ export const timelineZod = z
 export enum GraphicsSocketEvent {
   /** Schema-versioned, event-scoped authoritative playback envelope. */
   PLAYBACK_STATE_V1 = 'graphics:playback-state:v1',
+  /**
+   * The relay could not read the authoritative envelope for a subscribe -
+   * see `playbackHydrationErrorZod`. Sent ONLY to the socket that asked.
+   */
+  PLAYBACK_HYDRATION_ERROR_V1 = 'graphics:playback-hydration-error:v1',
   /** Asks preview (PVW) screens to re-run their entrance animation - see `graphicsPreviewReplayZod`. */
   PREVIEW_REPLAY = 'graphics:preview-replay'
 }
+
+/**
+ * Why a subscribing client is NOT getting an authoritative envelope.
+ *
+ * Replay is the client's only hydration path, and its failure used to be
+ * silent: the relay logged a warning, emitted nothing, and the browser sat
+ * in `hydrating` with every transport control disabled until someone
+ * reloaded the page. This carries the relay's own reason back to the one
+ * socket that asked, so the operator is told which of the three genuinely
+ * different failures happened - the API is unreachable, the API rejected
+ * the read, or the API answered with something that is not a valid
+ * envelope - rather than being left to infer it from silence.
+ *
+ * Deliberately NOT a state message: it carries no `PlaybackState`, bumps no
+ * revision, has no authority epoch, and must never influence envelope
+ * ordering. It is a diagnosis, and it is never broadcast to a room - an
+ * audience screen must not learn about it (PGM stays fail-closed and
+ * renders nothing).
+ *
+ * `retryable` distinguishes "the authority may come back on its own"
+ * (unreachable/5xx) from a rejection that will answer the same way until
+ * something changes; clients use it to decide whether to keep retrying.
+ */
+export interface PlaybackHydrationError {
+  eventKey: string;
+  /** Upstream code when the API named one (`UNAVAILABLE`, `NOT_READY`, ...). */
+  code?: string;
+  /** The upstream reason, verbatim - never a generic substitute. */
+  message: string;
+  retryable: boolean;
+}
+
+export const playbackHydrationErrorZod = z
+  .object({
+    eventKey: z.string().min(1),
+    code: z.string().min(1).optional(),
+    message: z.string().min(1),
+    retryable: z.boolean()
+  })
+  .strict();
 
 /**
  * A request for every preview (PVW) screen on an event to replay its

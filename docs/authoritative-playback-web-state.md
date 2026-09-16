@@ -34,7 +34,20 @@ permits a durable state with a lower revision to replace browser state.
   higher.
 - Disconnect marks delivery disconnected but preserves the last complete state.
   Reconnect marks it hydrating and asks the authority for a full replay. A valid
-  replay marks it ready; invalid envelopes retain state and expose an error.
+  replay marks it ready; an invalid envelope retains state and exposes an error,
+  and is a failed hydration for a client that never hydrated.
+- Hydration failure is a state, not silence. A relay that cannot read the
+  authority emits `graphics:playback-hydration-error:v1` to the subscribing
+  socket only, carrying the upstream reason; a subscribe that produces nothing
+  at all within `HYDRATION_TIMEOUT_MS` is called failed by the client itself.
+  Delivery then moves to `failed`, and to `recovering` while a bounded,
+  backed-off fallback read of `GET /graphics/:eventKey/live/state/v1` runs
+  (`HYDRATION_RECOVERY_BACKOFF_MS`, single-flight per event key). That fallback
+  is a read of the same authority: its response goes through
+  `applyPlaybackEnvelope` exactly like a socket delivery, so it can never
+  overwrite a newer envelope, revive a retired epoch, or write another event.
+  The producer is the only surface that shows the failure and the manual retry;
+  PGM/PVW stay fail-closed and render nothing.
 - Realtime restart does not define ordering. Realtime fetches the envelope from
   the API authority for every subscribe/replay, so an empty relay cache cannot
   freeze or fabricate browser state.

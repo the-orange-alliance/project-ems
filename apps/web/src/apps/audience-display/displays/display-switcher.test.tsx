@@ -4,7 +4,10 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithJotai } from '../../../test/render-with-jotai.js';
 import { eventKeyAtom } from '../../../stores/state/event.js';
-import { playbackEventStoreAtom } from '../../../stores/state/graphics.js';
+import {
+  playbackDeliveryMapAtom,
+  playbackEventStoreAtom
+} from '../../../stores/state/graphics.js';
 import { DisplaySwitcher } from './display-switcher.js';
 
 const mocks = vi.hoisted(() => ({ pin: 'stats' }));
@@ -64,6 +67,29 @@ describe('DisplaySwitcher authoritative event pinning', () => {
     );
 
     expect(screen.getByTestId('program-spec')).toHaveTextContent('program-b');
+  });
+
+  it('renders nothing on PGM when hydration failed - no spinner, no error, no placeholder', () => {
+    mocks.pin = AudienceScreens.STATS;
+    renderWithJotai(
+      <DisplaySwitcher id={Displays.BLANK} eventKey='event-b' />,
+      (store) => {
+        store.set(eventKeyAtom, 'event-b');
+        // A named, operator-visible failure on the producer must stay
+        // invisible here: PGM is fail-closed and reads only the envelope.
+        store.set(playbackDeliveryMapAtom, {
+          'event-b': {
+            phase: 'failed',
+            error: 'HTTP_502: The graphics API is not reachable.'
+          }
+        });
+      }
+    );
+
+    expect(screen.getByTestId('program-spec')).toHaveTextContent('none');
+    expect(screen.queryByText(/not reachable/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Retry hydration/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('renders PVW from the route event snapshot and retains its program anchor after scrubbing', () => {

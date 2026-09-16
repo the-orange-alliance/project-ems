@@ -14,9 +14,11 @@ import {
   playbackEventStoreAtom
 } from '../../stores/state/graphics.js';
 import { renderWithJotai } from '../../test/render-with-jotai.js';
+import { resetPlaybackHydrationRecovery } from 'src/api/playback-hydration-recovery.js';
 import { GraphicsController } from './graphics-controller.js';
 
 const mocks = vi.hoisted(() => ({
+  authoritativeState: vi.fn(),
   cue: vi.fn(),
   refresh: vi.fn(),
   pushUpdate: vi.fn(),
@@ -85,6 +87,7 @@ const timeline: VersionedTimeline = {
 vi.mock('src/api/use-graphics-data.js', () => ({
   graphicsApi: {
     live: {
+      authoritativeState: mocks.authoritativeState,
       cue: mocks.cue,
       refresh: mocks.refresh,
       pushUpdate: mocks.pushUpdate,
@@ -791,5 +794,109 @@ describe('GraphicsController live draft vs loaded running order', () => {
     // Nothing is loaded for the new event, so there is no position to claim.
     expect(mocks.panelProps.current?.liveIndex).toBeNull();
     expect(screen.getByText(/Nothing loaded/)).toBeInTheDocument();
+  });
+});
+
+/**
+ * A failed hydration used to present as "Authoritative playback state is
+ * hydrating." on every disabled transport control - a diagnosis with no
+ * action attached, and no way out but a page reload.
+ */
+describe('GraphicsController hydration failure', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.entries.current = [];
+    mocks.timelines.current = [timeline];
+    resetLiveDraft();
+    resetPlaybackHydrationRecovery();
+  });
+
+  function renderFailed(
+    delivery: { phase: string; error: string | null } = {
+      phase: 'failed',
+      error: 'HTTP_502: The graphics API is not reachable.'
+    }
+  ) {
+    return renderWithJotai(<GraphicsController />, (store) => {
+      store.set(eventKeyAtom, 'event-a');
+      store.set(playbackEventStoreAtom, {
+        'event-a': { envelope: envelope(), retiredAuthorityEpochs: [] }
+      });
+      store.set(playbackDeliveryMapAtom, {
+        'event-a': delivery as never
+      });
+    });
+  }
+
+  it('disables the transport with the upstream reason and an action to take', () => {
+    renderFailed();
+
+    const go = screen.getByRole('button', { name: /Animate In/ });
+    expect(go).toBeDisabled();
+    // The alarm names the real cause rather than "hydrating".
+    expect(
+      screen.getByText('HTTP_502: The graphics API is not reachable.')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Retry hydration/ })
+    ).toBeEnabled();
+  });
+
+  it('issues exactly one recovery attempt when Retry is pressed twice quickly', async () => {
+    // Held open so both presses land while the first read is still in
+    // flight, then released so nothing is left pending after the test.
+    let settle: (value: PlaybackStateEnvelope) => void = () => {};
+    mocks.authoritativeState.mockReturnValue(
+      new Promise<PlaybackStateEnvelope>((resolve) => {
+        settle = resolve;
+      })
+    );
+    renderFailed();
+    const retry = screen.getByRole('button', { name: /Retry hydration/ });
+
+    await act(async () => {
+      fireEvent.click(retry);
+      fireEvent.click(retry);
+    });
+
+    await waitFor(() =>
+      expect(mocks.authoritativeState).toHaveBeenCalledTimes(1)
+    );
+    // The second press joined the first attempt rather than starting another.
+    await act(async () => {});
+    expect(mocks.authoritativeState).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      settle(envelope());
+    });
+  });
+
+  it('re-enables the transport once a retry recovers authoritative state', async () => {
+    const recovered = envelope();
+    recovered.state.revision = 9;
+    mocks.authoritativeState.mockResolvedValue(recovered);
+    renderFailed();
+    expect(screen.getByRole('button', { name: /Animate In/ })).toBeDisabled();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Retry hydration/ }));
+    });
+
+    await waitFor(
+      () =>
+        expect(
+          screen.queryByRole('button', { name: /Retry hydration/ })
+        ).not.toBeInTheDocument(),
+      { timeout: 5000 }
+    );
+    expect(screen.getByRole('button', { name: /Animate In/ })).toBeEnabled();
+  });
+
+  it('keeps the alarm and the transport gate while a recovery is running', () => {
+    renderFailed({ phase: 'recovering', error: 'unreachable' });
+
+    expect(screen.getByRole('button', { name: /Animate In/ })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /Retry hydration/ })
+    ).toBeInTheDocument();
   });
 });

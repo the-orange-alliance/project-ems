@@ -37,7 +37,16 @@ import {
 } from 'antd';
 import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
-import { FC, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  FC,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
+import { usePlaybackHydrationRecovery } from 'src/api/playback-hydration-recovery.js';
 import { graphicsApi, useTimelines } from 'src/api/use-graphics-data.js';
 import { useStatsCatalogue } from 'src/api/use-stats-data.js';
 import { MoreButton } from 'src/components/buttons/more-button.js';
@@ -46,6 +55,7 @@ import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { eventKeyAtom } from 'src/stores/state/index.js';
 import {
+  isPlaybackHydrationBroken,
   playbackCueForEventAtom,
   playbackDeliveryForEventAtom,
   playbackLoadedForEventAtom,
@@ -189,6 +199,8 @@ export const GraphicsController: FC = () => {
   const program = useAtomValue(playbackProgramForEventAtom(eventKey));
   const stagedUpdate = useAtomValue(playbackStagedUpdateForEventAtom(eventKey));
   const playbackDelivery = useAtomValue(playbackDeliveryForEventAtom(eventKey));
+  const { recover: recoverHydration } = usePlaybackHydrationRecovery();
+  const [hydrationRetrying, setHydrationRetrying] = useState(false);
   const { showSnackbar, showErrorSnackbar } = useSnackbar();
 
   const { data: timelines } = useTimelines(eventKey);
@@ -416,11 +428,38 @@ export const GraphicsController: FC = () => {
   const transportOnDeck = !transportOnAir && loaded !== null;
 
   const noEventReason = !eventKey ? 'No event is loaded.' : undefined;
+
+  // A failed hydration is the one delivery problem the producer can act on,
+  // so it must not read like the transient ones. Saying "Authoritative
+  // playback state is hydrating." forever - which is what a failed replay
+  // used to produce - is a diagnosis with no action attached; these reasons
+  // name the real upstream cause and point at the Retry control below.
+  const hydrationBroken = isPlaybackHydrationBroken(playbackDelivery.phase);
   const deliveryReason =
-    playbackDelivery.phase !== 'ready'
-      ? (playbackDelivery.error ??
-        `Authoritative playback state is ${playbackDelivery.phase}.`)
-      : undefined;
+    playbackDelivery.phase === 'ready'
+      ? undefined
+      : hydrationBroken
+        ? `${
+            playbackDelivery.error ??
+            'Authoritative playback state could not be read.'
+          }${
+            playbackDelivery.phase === 'recovering'
+              ? ' Retrying…'
+              : ' Press "Retry hydration" to try again.'
+          }`
+        : (playbackDelivery.error ??
+          `Authoritative playback state is ${playbackDelivery.phase}.`);
+
+  /**
+   * Manual recovery. Single-flight and idempotent: `recover` coalesces on the
+   * event key, so a double press (or a press landing on top of the automatic
+   * attempts) joins the running recovery rather than issuing a second read.
+   */
+  const handleRetryHydration = useCallback(() => {
+    if (!eventKey) return;
+    setHydrationRetrying(true);
+    void recoverHydration(eventKey).finally(() => setHydrationRetrying(false));
+  }, [eventKey, recoverHydration]);
   const notLoadedReason = !loaded
     ? 'Load a timeline to the transport first.'
     : undefined;
@@ -1221,6 +1260,33 @@ export const GraphicsController: FC = () => {
               </Tooltip>
             )}
           </Space>
+
+          {/* The alarm and its action. Producer-only: PGM/PVW never learn
+              that hydration failed - a missing envelope renders nothing
+              there, exactly as before (fail-closed). */}
+          {hydrationBroken && (
+            <Alert
+              type='error'
+              showIcon
+              message='Authoritative playback state is not available'
+              description={
+                playbackDelivery.error ??
+                'Authoritative playback state could not be read.'
+              }
+              action={
+                <Button
+                  size='small'
+                  icon={<ReloadOutlined />}
+                  loading={
+                    hydrationRetrying || playbackDelivery.phase === 'recovering'
+                  }
+                  onClick={handleRetryHydration}
+                >
+                  Retry hydration
+                </Button>
+              }
+            />
+          )}
 
           {authoritativeCue?.status === 'failed' && (
             <Alert

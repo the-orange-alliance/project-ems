@@ -57,5 +57,40 @@ describe('playback state socket handler', () => {
     expect(view.store.get(playbackDeliveryMapAtom)['event-a'].error).toContain(
       'schemaVersion'
     );
+    // 'event-a' had already hydrated, so it keeps a working transport and
+    // merely exposes the error.
+    expect(view.store.get(playbackDeliveryMapAtom)['event-a'].phase).toBe(
+      'ready'
+    );
+  });
+
+  it('treats an invalid first envelope as a failed hydration, not a permanent hydrating', async () => {
+    let receive: ReturnType<typeof usePlaybackStateEvent> | undefined;
+    const Harness = () => {
+      receive = usePlaybackStateEvent();
+      useAtomValue(playbackEventStoreAtom);
+      return null;
+    };
+    const view = renderWithJotai(<Harness />, (store) => {
+      store.set(playbackDeliveryMapAtom, {
+        'event-a': { phase: 'hydrating', error: null }
+      });
+    });
+
+    await act(async () => {
+      await receive?.({
+        ...createPlaybackStateEnvelope('epoch-a', {
+          ...createEmptyPlaybackState('event-a', AT),
+          revision: 1
+        }),
+        schemaVersion: 99
+      });
+    });
+
+    const delivery = view.store.get(playbackDeliveryMapAtom)['event-a'];
+    expect(delivery.phase).toBe('failed');
+    expect(delivery.error).toContain('schemaVersion');
+    // A diagnosis writes no state.
+    expect(view.store.get(playbackEventStoreAtom)).toEqual({});
   });
 });

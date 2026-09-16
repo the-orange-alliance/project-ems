@@ -25,12 +25,36 @@ export interface PlaybackEventRecord {
   retiredAuthorityEpochs: readonly string[];
 }
 
-export type PlaybackDeliveryPhase = 'disconnected' | 'hydrating' | 'ready';
+/**
+ * How authoritative playback state is reaching this browser for one event.
+ *
+ * `hydrating` used to double as "hydration failed" - a failed replay left it
+ * there forever, which is exactly what wedged the producer: every transport
+ * control is gated on `ready`, so an operator was told the state was
+ * "hydrating" and given nothing to press. `failed` and `recovering` split
+ * that apart, so a failure is nameable, visible, and actionable.
+ *
+ * - `disconnected`: no socket. The last complete state is preserved.
+ * - `hydrating`: subscribed, waiting for the first replay. Transient.
+ * - `failed`: hydration will not complete on its own. `error` carries the
+ *   upstream reason (see `PlaybackHydrationError`), never a generic string.
+ * - `recovering`: a bounded fallback read of the authoritative API state is
+ *   in flight. Still not `ready` - the transport stays disabled - but the
+ *   producer is told something is being done about it.
+ * - `ready`: a valid envelope is in hand.
+ */
+export type PlaybackDeliveryPhase =
+  'disconnected' | 'hydrating' | 'failed' | 'recovering' | 'ready';
 
 export interface PlaybackDeliveryState {
   phase: PlaybackDeliveryPhase;
   error: string | null;
 }
+
+/** The phases a producer must be offered a recovery action from. */
+export const isPlaybackHydrationBroken = (
+  phase: PlaybackDeliveryPhase
+): boolean => phase === 'failed' || phase === 'recovering';
 
 export const playbackEventStoreAtom = atom<Record<string, PlaybackEventRecord>>(
   {}

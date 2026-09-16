@@ -23,7 +23,17 @@ export const usePlaybackStateEvent = () =>
         set(playbackDeliveryMapAtom, (previous) => ({
           ...previous,
           [eventKey]: {
-            phase: previous[eventKey]?.phase ?? 'hydrating',
+            // An invalid envelope arriving while this client has never
+            // hydrated IS a failed hydration - leaving it in `hydrating`
+            // is the limbo that wedged the producer. A client that already
+            // holds valid state keeps `ready` and merely exposes the error:
+            // what is on air is still authoritative and still controllable.
+            phase:
+              previous[eventKey]?.phase === 'ready'
+                ? 'ready'
+                : previous[eventKey]?.phase === 'disconnected'
+                  ? 'disconnected'
+                  : 'failed',
             error: decision.error ?? 'Invalid playback state envelope'
           }
         }));

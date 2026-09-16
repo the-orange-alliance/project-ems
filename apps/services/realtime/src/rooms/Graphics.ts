@@ -1,6 +1,7 @@
 import {
   GraphicsSocketEvent,
   type GraphicsPreviewReplay,
+  type PlaybackHydrationError,
   playbackStateEnvelopeZod,
   type PlaybackStateEnvelope,
 } from "@toa-lib/models";
@@ -237,11 +238,63 @@ export default class Graphics extends Room {
     }
   }
 
+  /**
+   * Hydrates one subscribing socket, and - this is the part that matters -
+   * tells it when hydration FAILED.
+   *
+   * Replay is the client's only hydration path, so swallowing a failed read
+   * (as this did: `getPlaybackEnvelope` with `throwOnError = false` logged a
+   * warning and returned `null`) wedged the producer in `hydrating` with
+   * every transport control disabled and no way out but a page reload. The
+   * read is therefore made in throwing mode so the three genuinely different
+   * failures - unreachable API, a rejected read, an invalid envelope - keep
+   * their own reasons, and each is relayed verbatim to the ONE socket that
+   * asked.
+   *
+   * Never broadcast: this is addressed to the subscriber, and an audience
+   * screen must not learn about it (PGM stays fail-closed, see
+   * `PlaybackHydrationError`).
+   */
   private async replayState(socket: Socket, eventKey: string): Promise<void> {
-    const envelope = await this.getPlaybackEnvelope(eventKey);
-    if (envelope) {
-      socket.emit(GraphicsSocketEvent.PLAYBACK_STATE_V1, envelope);
+    try {
+      const envelope = await this.getPlaybackEnvelope(eventKey, true);
+      if (envelope) {
+        socket.emit(GraphicsSocketEvent.PLAYBACK_STATE_V1, envelope);
+        return;
+      }
+      // Defensive: the throwing mode has no success path that yields null.
+      this.emitHydrationError(socket, {
+        eventKey,
+        code: "UNAVAILABLE",
+        message: "Authoritative playback state is unavailable.",
+        retryable: true,
+      });
+    } catch (error) {
+      const relayError = error instanceof RelayError ? error : null;
+      const message = relayError
+        ? relayError.message
+        : error instanceof Error
+          ? error.message
+          : String(error);
+      logger.warn(
+        `graphics authoritative replay failed for ${eventKey}: ${message}`,
+      );
+      this.emitHydrationError(socket, {
+        eventKey,
+        // `RelayError` carries the HTTP status, and the upstream CODE/message
+        // is already folded into its message by `describePlaybackError`.
+        code: relayError ? `HTTP_${relayError.status}` : undefined,
+        message,
+        retryable: relayError ? relayError.retryable : true,
+      });
     }
+  }
+
+  private emitHydrationError(
+    socket: Socket,
+    payload: PlaybackHydrationError,
+  ): void {
+    socket.emit(GraphicsSocketEvent.PLAYBACK_HYDRATION_ERROR_V1, payload);
   }
 
   /**
