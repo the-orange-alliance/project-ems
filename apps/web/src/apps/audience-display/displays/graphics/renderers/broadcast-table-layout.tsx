@@ -5,7 +5,7 @@ import {
   computePageCount,
   resolvePageDwellMs,
   resolveRowsPerPage,
-  useAutoPageIndex
+  useTimedPageIndex
 } from './presentation-format.js';
 
 export const TABLE_PAGE_FOOTER_HEIGHT = 24;
@@ -39,10 +39,18 @@ export function fitRowsPerPage(
   );
 }
 
+/**
+ * Overflowing rows page only when `spec.autoPage` is explicitly true AND an
+ * authoritative origin (`program.takenAtUtc`) is supplied. Otherwise the
+ * table holds page 1 and nothing is scheduled: no on-air change without a
+ * producer command.
+ */
 export function useBroadcastTablePage(
   spec: GraphicSpec,
   rowCount: number,
-  ranking = false
+  ranking = false,
+  pagingOriginMs: number | null = null,
+  clock?: () => number
 ) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
@@ -60,21 +68,37 @@ export function useBroadcastTablePage(
   }, []);
   const rowsPerPage = fitRowsPerPage(spec.mode, height, ranking);
   const pageCount = computePageCount(rowCount, rowsPerPage);
-  const activePage = useAutoPageIndex(
+  const autoPage = spec.autoPage === true;
+  const activePage = useTimedPageIndex(
     pageCount,
-    resolvePageDwellMs(spec.holdMs)
+    resolvePageDwellMs(spec.holdMs),
+    autoPage ? pagingOriginMs : null,
+    clock
   );
-  return { rootRef, rowsPerPage, pageCount, activePage };
+  return { rootRef, rowsPerPage, pageCount, activePage, autoPage };
 }
 
 /** A bounded passive indicator also exposes page position to assistive technology. */
 export function BroadcastPageIndicator({
   pageCount,
-  activePage
+  activePage,
+  autoPage,
+  rowsPerPage,
+  rowCount
 }: {
   pageCount: number;
   activePage: number;
+  autoPage: boolean;
+  rowsPerPage: number;
+  rowCount: number;
 }) {
+  // Without auto-paging an overflowing table never moves, so say rows are withheld rather than implying more pages will come.
+  const label =
+    pageCount <= 1
+      ? null
+      : autoPage
+        ? `Page ${activePage + 1} of ${pageCount}`
+        : `Showing ${rowsPerPage} of ${rowCount}`;
   return (
     <div
       role='status'
@@ -89,7 +113,7 @@ export function BroadcastPageIndicator({
         color: palette.textSecondary
       }}
     >
-      {pageCount > 1 ? `Page ${activePage + 1} of ${pageCount}` : null}
+      {label}
     </div>
   );
 }

@@ -28,6 +28,8 @@ import {
 export interface RendererProps {
   frame: VizFrame;
   spec: GraphicSpec;
+  /** Authoritative program take time (epoch ms) that timed table paging derives from; null for PVW/editor. */
+  pagingOriginMs?: number | null;
   onRenderError?: (error: Error, spec: GraphicSpec, frame: VizFrame) => void;
 }
 
@@ -91,7 +93,11 @@ class GraphicErrorBoundary extends Component<
   }
 }
 
-function renderGraphic({ frame, spec }: RendererProps): ReactNode {
+function renderGraphic({
+  frame,
+  spec,
+  pagingOriginMs = null
+}: RendererProps): ReactNode {
   // An unsupported kind/mode combination must produce a controlled, visible
   // error card — never a silently mangled layout. Checked against the
   // broadcast rulebook (`SUPPORTED_GRAPHIC_MODES`) before anything below
@@ -112,18 +118,28 @@ function renderGraphic({ frame, spec }: RendererProps): ReactNode {
     case 'histogram':
       return <HistogramChart frame={frame} spec={spec} />;
     case 'ranking-table':
-      return <RankingTable frame={frame} spec={spec} />;
+      return (
+        <RankingTable
+          frame={frame}
+          spec={spec}
+          pagingOriginMs={pagingOriginMs}
+        />
+      );
     case 'heatmap':
       return <HeatmapChart frame={frame} spec={spec} />;
     case 'geo-map':
       return <GeoMap frame={frame} spec={spec} />;
     case 'table':
-      return <DataTable frame={frame} spec={spec} />;
+      return (
+        <DataTable frame={frame} spec={spec} pagingOriginMs={pagingOriginMs} />
+      );
     default:
       // Unknown or future `kind` — never render nothing and never throw.
       // Fall back to the universal table renderer, which already knows how
       // to derive a sane table from `frame.series` alone.
-      return <DataTable frame={frame} spec={spec} />;
+      return (
+        <DataTable frame={frame} spec={spec} pagingOriginMs={pagingOriginMs} />
+      );
   }
 }
 

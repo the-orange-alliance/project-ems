@@ -46,11 +46,11 @@ import {
  * migrated — the legacy path has no authoritative rank, so rank there is
  * still the row's on-screen position, exactly as before.
  *
- * An audience member cannot scroll a broadcast graphic: rows beyond one
- * page's capacity are paged through non-interactively, cycling on a timer
- * derived from `spec.holdMs` (the shared playback/composition contract's
- * own timing field — see `presentation-format.ts`) rather than an
- * independent random interval.
+ * An audience member cannot scroll a broadcast graphic. Rows beyond one
+ * page's capacity page only when the producer opted in with `spec.autoPage`,
+ * on a page index derived from the program's authoritative take time (see
+ * `useTimedPageIndex`); otherwise the first page holds and the footer states
+ * how many rows are shown.
  *
  * `null` cells mean explicitly missing data and always render as an
  * em-dash in `palette.nullNeutral` — never coerced to zero.
@@ -72,6 +72,8 @@ import {
 interface RendererProps {
   frame: VizFrame;
   spec: GraphicSpec;
+  /** Authoritative program take time (epoch ms); null/absent means no timed paging. */
+  pagingOriginMs?: number | null;
 }
 
 interface DisplayColumn {
@@ -214,14 +216,15 @@ function buildDisplayData(
     : buildFromLegacySeries(frame, precision);
 }
 
-export default function RankingTable({ frame, spec }: RendererProps) {
+export default function RankingTable({
+  frame,
+  spec,
+  pagingOriginMs = null
+}: RendererProps) {
   const { rows } = buildDisplayData(frame, spec);
 
-  const { rootRef, rowsPerPage, pageCount, activePage } = useBroadcastTablePage(
-    spec,
-    rows.length,
-    true
-  );
+  const { rootRef, rowsPerPage, pageCount, activePage, autoPage } =
+    useBroadcastTablePage(spec, rows.length, true, pagingOriginMs);
   const visibleRows = paginate(rows, rowsPerPage, activePage);
 
   const rootStyle: CSSProperties = {
@@ -377,7 +380,13 @@ export default function RankingTable({ frame, spec }: RendererProps) {
           );
         })}
       </div>
-      <BroadcastPageIndicator pageCount={pageCount} activePage={activePage} />
+      <BroadcastPageIndicator
+        pageCount={pageCount}
+        activePage={activePage}
+        autoPage={autoPage}
+        rowsPerPage={rowsPerPage}
+        rowCount={rows.length}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type {
   GraphicSpec,
   MeasureFormat,
@@ -240,24 +240,16 @@ export function paginate<T>(
 }
 
 /* ------------------------------------------------------------------ */
-/* Page dwell time — sourced from the shared composition/playback      */
-/* contract (`GraphicSpec.holdMs`), never an independent random timer  */
+/* Timed paging — explicit opt-in, derived from an authoritative origin */
 /* ------------------------------------------------------------------ */
 
 /** Floor/ceiling so a producer-configured `holdMs` of e.g. 0 or 12 hours
  * can't leave a table frozen on one page or flickering unreadably fast. */
 export const MIN_PAGE_DWELL_MS = 3000;
 export const MAX_PAGE_DWELL_MS = 20000;
+/** Dwell for a spec that opted into `autoPage` without setting `holdMs`; the inspector shows this value. */
 export const DEFAULT_PAGE_DWELL_MS = 8000;
 
-/**
- * Every paging renderer derives its page-rotation cadence from
- * `spec.holdMs` — the one timing field the playback/composition contract
- * (`GraphicSpec`, see `libs/models/src/base/Graphics.ts`) already threads
- * through the producer UI and the transition engine — instead of each
- * renderer rolling its own `Math.random()`-seeded interval. This keeps
- * in-table paging deterministic and reproducible.
- */
 export function resolvePageDwellMs(holdMs: number | undefined): number {
   if (typeof holdMs !== 'number' || !Number.isFinite(holdMs) || holdMs <= 0) {
     return DEFAULT_PAGE_DWELL_MS;
@@ -266,30 +258,49 @@ export function resolvePageDwellMs(holdMs: number | undefined): number {
 }
 
 /**
- * Thin React wrapper around `wrapPageIndex`: advances one page every
- * `dwellMs` on a plain `setInterval`, non-interactively (nothing here
- * responds to input — an audience member cannot scroll a broadcast
- * graphic). All paging state funnels through this one hook so every
- * consumer shares identical, deterministic timing/state semantics.
+ * The visible page is a pure function of wall clock and the program's
+ * authoritative `takenAtUtc`, never of when this display mounted — so every
+ * display, including one that joined or reloaded mid-show, shows the same
+ * page at the same instant. A clock behind the origin holds page 1.
  */
-export function useAutoPageIndex(pageCount: number, dwellMs: number): number {
-  const [pageIndex, setPageIndex] = useState(0);
-  const pageCountRef = useRef(pageCount);
-  pageCountRef.current = pageCount;
+export function pageIndexAt(
+  nowMs: number,
+  originMs: number,
+  dwellMs: number,
+  pageCount: number
+): number {
+  if (pageCount <= 1 || dwellMs <= 0) return 0;
+  const elapsed = Math.max(0, nowMs - originMs);
+  return wrapPageIndex(Math.floor(elapsed / dwellMs), pageCount);
+}
 
+/**
+ * Returns the page `pageIndexAt` gives for now and wakes once at the next
+ * page boundary to re-render. It never counts pages locally, so a missed or
+ * late wake cannot drift a display. `originMs === null` (no authoritative
+ * program, e.g. PVW) or `pageCount <= 1` schedules nothing and stays on page 1.
+ */
+export function useTimedPageIndex(
+  pageCount: number,
+  dwellMs: number,
+  originMs: number | null,
+  clock: () => number = Date.now
+): number {
+  const [, wake] = useState(0);
+  const active = originMs !== null && pageCount > 1 && dwellMs > 0;
+  const nowMs = clock();
+  const page = active ? pageIndexAt(nowMs, originMs, dwellMs, pageCount) : 0;
+  const nextBoundaryMs = active
+    ? originMs +
+      (Math.floor(Math.max(0, nowMs - originMs) / dwellMs) + 1) * dwellMs
+    : null;
   useEffect(() => {
-    setPageIndex((current) => wrapPageIndex(current, Math.max(1, pageCount)));
-  }, [pageCount]);
-
-  useEffect(() => {
-    if (pageCount <= 1) return undefined;
-    const id = window.setInterval(() => {
-      setPageIndex((current) =>
-        wrapPageIndex(current + 1, pageCountRef.current)
-      );
-    }, dwellMs);
-    return () => window.clearInterval(id);
-  }, [pageCount, dwellMs]);
-
-  return wrapPageIndex(pageIndex, Math.max(1, pageCount));
+    if (nextBoundaryMs === null) return undefined;
+    const timer = setTimeout(
+      () => wake((value) => value + 1),
+      Math.max(0, nextBoundaryMs - clock())
+    );
+    return () => clearTimeout(timer);
+  }, [nextBoundaryMs, clock]);
+  return page;
 }

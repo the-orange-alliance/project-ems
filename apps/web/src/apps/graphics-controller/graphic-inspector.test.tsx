@@ -10,7 +10,7 @@ import { GraphicInspector } from './graphic-inspector.js';
 
 vi.mock('@toa-lib/models/seasons/stats/presentation', () => ({
   presentationFor: () => ({
-    allowedKinds: ['stat-tile', 'bar'],
+    allowedKinds: ['stat-tile', 'bar', 'table'],
     defaultKind: 'stat-tile',
     higherIsBetter: true,
     precision: 1,
@@ -89,5 +89,41 @@ describe('GraphicInspector', () => {
     expect(screen.getByText('Fullscreen')).toBeInTheDocument();
     await user.click(screen.getAllByRole('combobox')[1]);
     expect(screen.queryByRole('option', { name: 'Lower Third' })).toBeNull();
+  });
+
+  it('makes table auto-paging an explicit, default-off producer choice', async () => {
+    const changes = vi.fn();
+    const Harness = () => {
+      const [spec, setSpec] = useState<GraphicSpec>({
+        ...initialSpec,
+        kind: 'table',
+        mode: 'fullscreen',
+        holdMs: 5000
+      });
+      return (
+        <GraphicInspector
+          spec={spec}
+          catalogueEntry={catalogueEntry}
+          onChange={(next) => {
+            changes(next);
+            setSpec(next);
+          }}
+        />
+      );
+    };
+    renderWithJotai(<Harness />, (store) => store.set(eventKeyAtom, 'event'));
+    const toggle = screen.getByRole('switch', {
+      name: 'Auto-page overflowing rows'
+    });
+    // A hold duration alone does not opt in.
+    expect(toggle).not.toBeChecked();
+    expect(screen.getByLabelText('Page dwell (ms)')).toBeDisabled();
+    expect(screen.queryByText('Hold (ms)')).toBeNull();
+
+    await userEvent.setup().click(toggle);
+    expect(changes).toHaveBeenLastCalledWith(
+      expect.objectContaining({ autoPage: true, holdMs: 5000 })
+    );
+    expect(screen.getByLabelText('Page dwell (ms)')).toBeEnabled();
   });
 });

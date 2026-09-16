@@ -50,6 +50,8 @@ import {
 interface RendererProps {
   frame: VizFrame;
   spec: GraphicSpec;
+  /** Authoritative program take time (epoch ms); null/absent means no timed paging. */
+  pagingOriginMs?: number | null;
 }
 
 interface Column {
@@ -73,7 +75,11 @@ function renderCell(
     : formatLegacyCell(value, precision);
 }
 
-export default function DataTable({ frame, spec }: RendererProps) {
+export default function DataTable({
+  frame,
+  spec,
+  pagingOriginMs = null
+}: RendererProps) {
   const precision = resolveLegacyPrecision(spec);
 
   const rootStyle: CSSProperties = {
@@ -192,10 +198,8 @@ export default function DataTable({ frame, spec }: RendererProps) {
     return group === 'red' ? 0 : group === 'blue' ? 1 : 2;
   };
   rows = [...rows].sort((a, b) => groupOrder(a) - groupOrder(b));
-  const { rootRef, rowsPerPage, pageCount, activePage } = useBroadcastTablePage(
-    spec,
-    rows.length
-  );
+  const { rootRef, rowsPerPage, pageCount, activePage, autoPage } =
+    useBroadcastTablePage(spec, rows.length, false, pagingOriginMs);
   const visibleRows = paginate(rows, rowsPerPage, activePage);
 
   return (
@@ -307,7 +311,13 @@ export default function DataTable({ frame, spec }: RendererProps) {
           </table>
         )}
       </div>
-      <BroadcastPageIndicator pageCount={pageCount} activePage={activePage} />
+      <BroadcastPageIndicator
+        pageCount={pageCount}
+        activePage={activePage}
+        autoPage={autoPage}
+        rowsPerPage={rowsPerPage}
+        rowCount={rows.length}
+      />
     </div>
   );
 }

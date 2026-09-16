@@ -343,7 +343,14 @@ export interface GraphicSpec {
     precision?: number;
     showTeamNames?: boolean;
   };
+  /** Page dwell for an auto-paging table, in ms. Governs nothing unless `autoPage` is true. */
   holdMs?: number;
+  /**
+   * Explicit producer opt-in to timed table paging; absent/false means an
+   * overflowing table stays on its first page. Pages derive from the
+   * program's authoritative `takenAtUtc`, so every display agrees.
+   */
+  autoPage?: boolean;
 }
 
 export const graphicSpecZod = z
@@ -373,7 +380,8 @@ export const graphicSpecZod = z
       precision: z.number().int().min(0).max(12).optional(),
       showTeamNames: z.boolean().optional()
     }),
-    holdMs: z.number().int().min(0).max(86400000).optional()
+    holdMs: z.number().int().min(0).max(86400000).optional(),
+    autoPage: z.boolean().optional()
   })
   .strict();
 

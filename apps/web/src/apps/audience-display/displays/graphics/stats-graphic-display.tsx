@@ -58,6 +58,7 @@ export const StatsGraphicDisplay: FC<StatsGraphicDisplayProps> = ({
         key={layer.key}
         spec={layer.spec}
         frame={layer.frame}
+        pagingOriginMs={layer.pagingOriginMs}
         onRenderError={(error, failedSpec, failedFrame) => {
           setFailedKey(layer.key);
           onRenderError?.(error, failedSpec, failedFrame);

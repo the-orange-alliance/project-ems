@@ -54,6 +54,8 @@ export interface TransitionAuthority {
   revision: number;
   programRevision: number | null;
   transition: GraphicsTransition | null;
+  /** `program.takenAtUtc` as epoch ms: the shared origin timed table paging derives from. */
+  programTakenAtMs?: number | null;
 }
 export function programTransitionAuthority(
   envelope: PlaybackStateEnvelope | null
@@ -63,9 +65,16 @@ export function programTransitionAuthority(
         authorityEpoch: `${envelope.eventKey}:${envelope.authorityEpoch}`,
         revision: envelope.state.revision,
         programRevision: envelope.state.program?.revision ?? null,
-        transition: envelope.state.transition
+        transition: envelope.state.transition,
+        programTakenAtMs: parseUtcMs(envelope.state.program?.takenAtUtc)
       }
     : undefined;
+}
+
+function parseUtcMs(value: string | undefined): number | null {
+  if (value === undefined) return null;
+  const ms = Date.parse(value);
+  return Number.isFinite(ms) ? ms : null;
 }
 
 interface CommitIdentity {
@@ -79,6 +88,8 @@ interface CommitIdentity {
   preview?: boolean;
   replayNonce?: number;
   replayFrom?: GraphicSnapshot | null;
+  /** Changes only with `programRevision`, which `renderIdentity` already keys on. */
+  pagingOriginMs?: number | null;
 }
 export type TransitionCommit = CommitIdentity &
   ({ spec: null; frame: null } | { spec: GraphicSpec; frame: VizFrame });
@@ -122,6 +133,7 @@ export function createTransitionCommit(
       content
     ]),
     transition: authority?.transition,
+    pagingOriginMs: authority?.programTakenAtMs ?? null,
     preview,
     replayNonce,
     replayFrom
@@ -377,6 +389,8 @@ export interface ContentLayer extends GraphicSnapshot {
   role: 'enter' | 'exit';
   revision: number;
   key: string;
+  /** Carried per layer so an exiting graphic keeps its own page during a transition. */
+  pagingOriginMs: number | null;
 }
 export interface Motion {
   kind: 'enter' | 'exit' | 'crossfade';
@@ -409,6 +423,7 @@ function visual(
       role,
       revision: c.revision,
       key: renderKey(c),
+      pagingOriginMs: c.pagingOriginMs ?? null,
       spec: c.spec,
       frame: c.frame
     })),

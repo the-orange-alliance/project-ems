@@ -44,7 +44,8 @@ function spec(
     kind,
     mode,
     options: {},
-    holdMs: 3000
+    holdMs: 3000,
+    autoPage: true
   };
 }
 function frame(kind: GraphicKind, count: number): VizFrame {
@@ -80,6 +81,7 @@ describe.each(['table', 'ranking-table'] as const)(
         `renders every row once per cycle in ${mode}, count %i`,
         (count) => {
           vi.useFakeTimers();
+          const origin = Date.now();
           const source = frame(kind, count);
           const before = JSON.stringify(source);
           const graphic = spec(kind, mode);
@@ -88,7 +90,7 @@ describe.each(['table', 'ranking-table'] as const)(
             mode === 'fullscreen' ? FullscreenPayload : DrawerPayload;
           const { container, rerender } = render(
             <Payload title={graphic.title} subtitle={graphic.subtitle}>
-              <Renderer frame={source} spec={graphic} />
+              <Renderer frame={source} spec={graphic} pagingOriginMs={origin} />
             </Payload>
           );
           expect(screen.getAllByText(graphic.title)).toHaveLength(1);
@@ -108,7 +110,11 @@ describe.each(['table', 'ranking-table'] as const)(
             act(() => vi.advanceTimersByTime(1500));
             rerender(
               <Payload title={graphic.title} subtitle={graphic.subtitle}>
-                <Renderer frame={{ ...source }} spec={{ ...graphic }} />
+                <Renderer
+                  frame={{ ...source }}
+                  spec={{ ...graphic }}
+                  pagingOriginMs={origin}
+                />
               </Payload>
             );
             expect(
@@ -162,7 +168,11 @@ it.each(['table', 'ranking-table'] as const)(
     const graphic = spec(kind);
     const Renderer = kind === 'table' ? DataTable : RankingTable;
     const { unmount } = render(
-      <Renderer spec={graphic} frame={frame(kind, 13)} />
+      <Renderer
+        spec={graphic}
+        frame={frame(kind, 13)}
+        pagingOriginMs={Date.now()}
+      />
     );
     const firstCapacity = fitRowsPerPage(
       graphic.mode,
@@ -324,6 +334,7 @@ it('preserves semantic column IDs that resemble bridge metadata and clusters bef
 
 it('cycles legacy series and columnar tables without losing null/zero/boolean/text', () => {
   vi.useFakeTimers();
+  const origin = Date.now();
   const source = {
     ...frame('table', 0),
     data: undefined,
@@ -339,7 +350,7 @@ it('cycles legacy series and columnar tables without losing null/zero/boolean/te
     ]
   };
   const { rerender } = render(
-    <DataTable frame={source} spec={spec('table')} />
+    <DataTable frame={source} spec={spec('table')} pagingOriginMs={origin} />
   );
   for (const text of ['0.0', '—', 'No', '0012'])
     expect(screen.getByText(text)).toBeInTheDocument();
@@ -359,6 +370,7 @@ it('cycles legacy series and columnar tables without losing null/zero/boolean/te
         ]
       }}
       spec={spec('table')}
+      pagingOriginMs={origin}
     />
   );
   act(() => vi.advanceTimersByTime(3000));

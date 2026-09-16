@@ -27,6 +27,11 @@ import type { StatCatalogueEntry } from '../../api/use-stats-data.js';
 import { eventKeyAtom } from 'src/stores/state/index.js';
 import { MatchSelect } from './match-select.js';
 import { SchemaForm } from './schema-form.js';
+import {
+  DEFAULT_PAGE_DWELL_MS,
+  MAX_PAGE_DWELL_MS,
+  MIN_PAGE_DWELL_MS
+} from '../audience-display/displays/graphics/renderers/presentation-format.js';
 
 export interface GraphicInspectorProps {
   spec: GraphicSpec;
@@ -790,19 +795,6 @@ export const GraphicInspector: FC<GraphicInspectorProps> = ({
           />
         </Field>
 
-        <Field label='Hold (ms)'>
-          <InputNumber
-            style={{ width: '100%' }}
-            min={0}
-            step={100}
-            precision={0}
-            value={spec.holdMs}
-            onChange={(value) =>
-              patch({ holdMs: typeof value === 'number' ? value : undefined })
-            }
-          />
-        </Field>
-
         <Field label='Show Team Names'>
           <Switch
             checked={spec.options.showTeamNames ?? false}
@@ -810,6 +802,46 @@ export const GraphicInspector: FC<GraphicInspectorProps> = ({
           />
         </Field>
       </Row>
+
+      {(spec.kind === 'table' || spec.kind === 'ranking-table') && (
+        <>
+          <Row minChildWidth={150}>
+            <Field label='Auto-page overflowing rows'>
+              <Switch
+                aria-label='Auto-page overflowing rows'
+                checked={spec.autoPage === true}
+                onChange={(checked) =>
+                  patch({ autoPage: checked ? true : undefined })
+                }
+              />
+            </Field>
+
+            <Field label='Page dwell (ms)'>
+              <InputNumber
+                aria-label='Page dwell (ms)'
+                style={{ width: '100%' }}
+                min={MIN_PAGE_DWELL_MS}
+                max={MAX_PAGE_DWELL_MS}
+                step={500}
+                precision={0}
+                disabled={spec.autoPage !== true}
+                placeholder={`${DEFAULT_PAGE_DWELL_MS}`}
+                value={spec.holdMs}
+                onChange={(value) =>
+                  patch({
+                    holdMs: typeof value === 'number' ? value : undefined
+                  })
+                }
+              />
+            </Field>
+          </Row>
+          <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+            {spec.autoPage === true
+              ? 'On air, pages advance on every display in step, counted from the moment this graphic is taken.'
+              : 'Off: rows that do not fit stay hidden and the footer reads "Showing N of M". Check preview before taking.'}
+          </Typography.Text>
+        </>
+      )}
 
       <Divider style={{ margin: 0 }} />
       <Typography.Text type='secondary' style={{ fontSize: 12 }}>
