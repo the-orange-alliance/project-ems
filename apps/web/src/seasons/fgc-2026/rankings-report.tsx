@@ -59,7 +59,7 @@ export const RankingsReport: FC<
           Download CSV
         </Button>
       </div>
-      <Report name='Competing Teams'>
+      <Report name='Rankings'>
         <UpgradedTable
           data={dataSorted}
           headers={headers}

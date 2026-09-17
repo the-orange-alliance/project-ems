@@ -3,12 +3,14 @@ import routes from './app-routes.js';
 import './utils.less';
 import { useSnackbar } from './hooks/use-snackbar.js';
 import { FC, ReactNode, Suspense, useMemo } from 'react';
+import { Alert } from 'antd';
 import SyncEffects from './components/sync-effects/sync-effects.js';
 import PrimaryAppbar from './components/appbars/primary.js';
 import { ConnectionManager } from './components/util/connection-manager.js';
 import { PageLoader } from './components/loading/index.js';
 import ErrorFallback from './components/errors/error-boundary.js';
 import { ErrorBoundary } from 'react-error-boundary';
+import { useSocketWorker } from './api/use-socket-worker.js';
 
 const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {
   return (
@@ -21,6 +23,7 @@ const RouteWrapper: FC<{ children?: ReactNode }> = ({ children }) => {
 
 export function AppContainer() {
   const { AppSnackbar } = useSnackbar();
+  const { connected, initialized } = useSocketWorker();
 
   const buildType = import.meta.env.VITE_BUILD_TYPE;
 
@@ -36,6 +39,21 @@ export function AppContainer() {
     <>
       <AppSnackbar />
       <ConnectionManager />
+      {initialized && !connected && (
+        <Alert
+          type='warning'
+          banner
+          showIcon
+          title='Reconnecting to the realtime service…'
+          style={{
+            position: 'fixed',
+            top: 40,
+            left: 0,
+            right: 0,
+            zIndex: 1000
+          }}
+        />
+      )}
       <ErrorBoundary fallbackRender={(props) => <ErrorFallback {...props} />}>
         <Routes>
           {filteredRoutes.map((route) => (

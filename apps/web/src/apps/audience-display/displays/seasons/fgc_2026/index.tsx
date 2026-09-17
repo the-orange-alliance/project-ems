@@ -24,8 +24,8 @@ export const RegionalBreakdownFGC26: ResultsBreakdown<IgnitingInnovation.MatchDe
       resultCalc: (match, alliance) => {
         if (!match.details) return 'x0.00';
         return alliance === 'red'
-          ? `x${match.details.redClimbMultiplier.toFixed(2)}`
-          : `x${match.details.blueClimbMultiplier.toFixed(2)}`;
+          ? `x${(match.details.redClimbMultiplier ?? 0).toFixed(2)}`
+          : `x${(match.details.blueClimbMultiplier ?? 0).toFixed(2)}`;
       }
     },
     {

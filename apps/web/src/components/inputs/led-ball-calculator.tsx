@@ -42,7 +42,7 @@ export const LedBallCalculator: FC<Props> = ({
 }) => {
   return (
     <Card size='small' style={{ width: '100%' }}>
-      <Space direction='vertical' align='center' style={{ width: '100%' }}>
+      <Space orientation='vertical' align='center' style={{ width: '100%' }}>
         <Typography.Title
           level={5}
           style={{
@@ -56,8 +56,8 @@ export const LedBallCalculator: FC<Props> = ({
         <Typography.Text type='secondary'>
           1 LED = {ratio} ball{ratio === 1 ? '' : 's'}
         </Typography.Text>
-        <Space direction='vertical' align='center' size='middle'>
-          <Space direction='vertical' align='center'>
+        <Space orientation='vertical' align='center' size='middle'>
+          <Space orientation='vertical' align='center'>
             <Typography.Text>LED Count</Typography.Text>
             <NumberInput
               value={ledCount}
@@ -69,7 +69,7 @@ export const LedBallCalculator: FC<Props> = ({
               onDecrement={onLedChange}
             />
           </Space>
-          <Space direction='vertical' align='center'>
+          <Space orientation='vertical' align='center'>
             <Typography.Text>Ball Count</Typography.Text>
             <NumberInput
               value={ballCount}

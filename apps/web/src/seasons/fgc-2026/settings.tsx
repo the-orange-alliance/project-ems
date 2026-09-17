@@ -1,5 +1,6 @@
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Button,
   Card,
   Col,
   Form,
@@ -15,6 +16,7 @@ import { FGC26FCS } from '@toa-lib/models';
 import { fcsApi, useFcsData } from 'src/api/use-fcs-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
+import { PrepFieldSequenceEditor } from './prep-field-sequence-editor.js';
 
 const { Option } = Select;
 
@@ -116,6 +118,23 @@ export const Settings: FC = () => {
     });
   };
 
+  const applySequence = (sequence: FGC26FCS.PrepFieldStep[]) => {
+    setLocalData((prev) => {
+      const newData: FGC26FCS.SettingsType = {
+        ...(prev ?? FGC26FCS.DEFAULT_SETTINGS),
+        prepFieldSequence: sequence
+      };
+      if (selectedField) {
+        debouncedSave(selectedField, newData);
+      }
+      return newData;
+    });
+  };
+
+  const handleSequenceReset = () => {
+    applySequence(FGC26FCS.DEFAULT_SETTINGS.prepFieldSequence);
+  };
+
   const fieldOptions =
     tournament?.fields?.map((field) => ({
       value: field,
@@ -124,17 +143,38 @@ export const Settings: FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Space direction='vertical' style={{ width: '100%' }}>
+      <Space orientation='vertical' style={{ width: '100%' }}>
         <Card>
           <Typography.Title level={5}>
             Igniting Innovation Field Settings
           </Typography.Title>
-          <Typography.Text type='secondary'>
-            Field hardware for the 2026 season has not been designed yet, so
-            there are no LED/motor calibration constants to configure here yet.
-            The WILDFIRE LED-to-ball conversion ratio below is used by the
-            referee scoring screens even without physical field hardware.
-          </Typography.Text>
+          <Space direction='vertical' style={{ width: '100%' }}>
+            {selectedField && localData && (
+              <Card
+                title='Prep Field Sequence'
+                size='small'
+                extra={
+                  <Button onClick={handleSequenceReset}>
+                    Reset to default
+                  </Button>
+                }
+              >
+                <Space direction='vertical' style={{ width: '100%' }}>
+                  <Typography.Text type='secondary'>
+                    Steps the field robot runs on &quot;Prepare Field&quot;, in
+                    order from top to bottom. A motor step runs the door or the
+                    blowers at a power for a duration (seconds), then stops
+                    them. A parallel group runs its branches at the same time.
+                    Changes save automatically.
+                  </Typography.Text>
+                  <PrepFieldSequenceEditor
+                    value={localData.prepFieldSequence}
+                    onChange={applySequence}
+                  />
+                </Space>
+              </Card>
+            )}
+          </Space>
         </Card>
 
         <Form layout='vertical'>

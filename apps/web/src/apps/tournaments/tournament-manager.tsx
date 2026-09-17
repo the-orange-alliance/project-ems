@@ -2,11 +2,15 @@ import { Typography } from 'antd';
 import { Tournament, defaultTournament, tournamentZod } from '@toa-lib/models';
 import { FC, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { mutate } from 'swr';
+import { useModal } from '@ebay/nice-modal-react';
 import { tournamentsApi } from 'src/api/use-tournament-data.js';
 import { MoreButton } from 'src/components/buttons/more-button.js';
+import { TournamentRemovalDialog } from 'src/components/dialogs/tournament-removal-dialog.js';
 import { TournamentTable } from 'src/components/tables/tournament-table.js';
 import { TwoColumnHeader } from 'src/components/util/two-column-header.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { useElevatedAction } from 'src/hooks/use-elevated-action.js';
 import { PaperLayout } from 'src/layouts/paper-layout.js';
 import { getDifferences } from 'src/stores/array-utils.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
@@ -28,6 +32,8 @@ export const TournamentManager: FC = () => {
 
   const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const navigate = useNavigate();
+  const removeModal = useModal(TournamentRemovalDialog);
+  const { requireElevation } = useElevatedAction();
 
   const remoteUrl = useAtomValue(remoteApiUrlAtom);
 
@@ -91,6 +97,44 @@ export const TournamentManager: FC = () => {
     );
   };
 
+  const handleDelete = async (tournament: Tournament) => {
+    if (!event) return;
+    const confirmed = await removeModal.show({ tournament });
+    if (!confirmed) return;
+
+    // Check if this tournament has never been saved to the database.
+    const isStagedOnly = !state.remote.tournaments.some(
+      (t) => t.tournamentKey === tournament.tournamentKey
+    );
+
+    // For staged-only, just drop it locally, no password needed.
+    if (isStagedOnly) {
+      setModifiedTournaments((prev) =>
+        prev.filter((t) => t.tournamentKey !== tournament.tournamentKey)
+      );
+      return;
+    }
+
+    // A persisted tournament goes through the API and requires the password.
+    if (!(await requireElevation())) return;
+
+    try {
+      await tournamentsApi.delete.tournament(
+        event.eventKey,
+        tournament.tournamentKey
+      );
+      setModifiedTournaments((prev) =>
+        prev.filter((t) => t.tournamentKey !== tournament.tournamentKey)
+      );
+      await mutate(['/tournament', event.eventKey]);
+      showSnackbar(
+        `Deleted tournament ${tournament.name || tournament.tournamentKey}`
+      );
+    } catch (e) {
+      showErrorSnackbar('Error while deleting tournament.', e);
+    }
+  };
+
   const handleDownload = async () => {
     try {
       if (!event?.eventKey) return;
@@ -143,6 +187,7 @@ export const TournamentManager: FC = () => {
             event={event}
             tournaments={tournaments}
             onEdit={handleEdit}
+            onDelete={handleDelete}
             loading={loading}
           />
         )}

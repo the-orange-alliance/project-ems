@@ -17,7 +17,7 @@ import { ScoreContainer } from '../fgc_default/components/production-score-conta
 export const MatchProduction2026: FC<DisplayProps> = ({
   match: genericMatch
 }) => {
-  const matchParts = genericMatch.name.split(' ');
+  const matchParts = (genericMatch.name ?? '').split(' ');
   const matchNumber = matchParts[matchParts.length - 1];
   const field = genericMatch.fieldNumber;
   const { connected } = useSocketWorker();
@@ -43,10 +43,11 @@ export const MatchProduction2026: FC<DisplayProps> = ({
   const matchState = useAtomValue(matchStateAtom);
   const matchStatus = useAtomValue(matchStatusAtom);
 
+  const matchStateString = matchStateStrings[matchState] ?? 'Unknown';
   const matchString =
-    matchStateStrings[matchState].toLowerCase() === matchStatus.toLowerCase()
-      ? matchStateStrings[matchState]
-      : `${matchStateStrings[matchState]} \n (${matchStatus})`;
+    matchStateString.toLowerCase() === matchStatus.toLowerCase()
+      ? matchStateString
+      : `${matchStateString} \n (${matchStatus})`;
 
   // Endgame is signalled the same way the rest of the app learns it: the ENDGAME
   // socket event sets matchStatusAtom to 'ENDGAME' (see useMatchStateEvents).
@@ -75,19 +76,15 @@ export const MatchProduction2026: FC<DisplayProps> = ({
       </Row>
       <Row>
         <ScoreContainer
-          number={
-            details ? details.wildfireInRedSuppressionUnit.toString() : ''
-          }
+          number={details?.wildfireInRedSuppressionUnit?.toString() ?? ''}
           label={'Red Suppression Points'}
         />
         <ScoreContainer
-          number={
-            details ? details.wildfireInBlueSuppressionUnit.toString() : ''
-          }
+          number={details?.wildfireInBlueSuppressionUnit?.toString() ?? ''}
           label={'Blue Suppression Points'}
         />
         <ScoreContainer
-          number={details ? details.wildfireInExtinguisher.toString() : ''}
+          number={details?.wildfireInExtinguisher?.toString() ?? ''}
           label={'Extinguisher Points'}
         />
         <ScoreContainer

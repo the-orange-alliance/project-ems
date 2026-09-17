@@ -24,7 +24,8 @@
       "dependsOn": [
         "@toa-lib/models#build",
         "@toa-lib/client#build",
-        "@toa-lib/server#build"
+        "@toa-lib/server#build",
+        "realtime#build"
       ]
     },
     "realtime#build": {
