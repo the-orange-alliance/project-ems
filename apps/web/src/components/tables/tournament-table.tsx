@@ -8,13 +8,15 @@ interface Props {
   tournaments: Tournament[];
   loading?: boolean;
   onEdit?: (tournament: Tournament) => void;
+  onDelete?: (tournament: Tournament) => void;
 }
 
 export const TournamentTable: FC<Props> = ({
   event,
   tournaments,
   loading,
-  onEdit
+  onEdit,
+  onDelete
 }) => {
   return (
     <Skeleton loading={loading} active={loading}>
@@ -43,6 +45,7 @@ export const TournamentTable: FC<Props> = ({
           ];
         }}
         onModify={onEdit}
+        onDelete={onDelete}
       />
     </Skeleton>
   );

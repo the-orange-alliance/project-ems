@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import { Button, Divider, Typography, Space } from 'antd';
+import { KeyOutlined } from '@ant-design/icons';
 import { rankingsApi } from 'src/api/use-ranking-data.js';
 import { resultsSyncApi } from 'src/api/use-results-sync.js';
 import { eventsApi } from 'src/api/use-event-data.js';
@@ -12,6 +13,8 @@ import { isPlayoffsTournament, Tournament } from '@toa-lib/models';
 import { useTeamsForEvent } from 'src/api/use-team-data.js';
 import { useTournamentsForEvent } from 'src/api/use-tournament-data.js';
 import { useSyncConfig } from 'src/hooks/use-sync-config.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { useElevatedAction } from 'src/hooks/use-elevated-action.js';
 
 export const AdminApp: FC = () => {
   const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
@@ -19,61 +22,83 @@ export const AdminApp: FC = () => {
   const { data: teams } = useTeamsForEvent(eventKey);
   const { data: tournaments } = useTournamentsForEvent(eventKey);
   const { apiKey, platform } = useSyncConfig();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
+  const { requireElevation } = useElevatedAction();
+
+  // Every Admin action is fire-and-forget with no visible result otherwise.
+  // Wrap each one so it always reports success or the error.
+  const CANCELLED = Symbol('cancelled');
+  const run = (label: string, action: () => Promise<unknown>) => async () => {
+    if (!(await requireElevation())) return;
+    try {
+      const result = await action();
+      if (result !== CANCELLED) showSnackbar(`${label} completed.`);
+    } catch (e) {
+      showErrorSnackbar(`${label} failed.`, e);
+    }
+  };
 
   const handleTournamentChange = (tournament: Tournament | null) => {
     if (!tournament) return;
     setTournamentKey(tournament.tournamentKey);
   };
 
-  const syncMatches = async (): Promise<void> => {
-    if (!eventKey || !tournamentKey) return;
+  const syncMatches = run('Sync Matches', async () => {
+    if (!eventKey || !tournamentKey)
+      throw new Error('Select a tournament first.');
     await resultsSyncApi.create.matches(
       eventKey,
       tournamentKey,
       platform,
       apiKey
     );
-  };
+  });
 
-  const syncRankings = async (): Promise<void> => {
-    if (!eventKey || !tournamentKey) return;
+  const syncRankings = run('Sync Rankings', async () => {
+    if (!eventKey || !tournamentKey)
+      throw new Error('Select a tournament first.');
     await resultsSyncApi.create.rankings(
       eventKey,
       tournamentKey,
       platform,
       apiKey
     );
-  };
+  });
 
-  const syncAlliances = async (): Promise<void> => {
-    if (!eventKey || !tournamentKey) return;
+  const syncAlliances = run('Sync Alliances', async () => {
+    if (!eventKey || !tournamentKey)
+      throw new Error('Select a tournament first.');
     await resultsSyncApi.create.alliances(
       eventKey,
       tournamentKey,
       platform,
       apiKey
     );
-  };
+  });
 
-  const handlePurge = async (): Promise<void> => {
-    try {
-      await eventsApi.setup.delete.purgeAll();
-    } catch (e) {
-      console.log(e);
+  const handlePurge = run('Purge Event Data', async () => {
+    if (
+      !window.confirm(
+        'Permanently wipe ALL data for this event (teams, tournaments, schedules, matches, rankings)? This cannot be undone.'
+      )
+    ) {
+      return CANCELLED;
     }
-  };
+    await eventsApi.setup.delete.purgeAll();
+  });
 
-  const handleRankingsCreate = async () => {
-    if (!tournamentKey || !teams) return;
+  const handleRankingsCreate = run('Create Rankings', async () => {
+    if (!tournamentKey || !teams) throw new Error('Select a tournament first.');
     await rankingsApi.create.rankingsForTournament(tournamentKey, teams);
-  };
+  });
 
-  const handleRankings = async () => {
-    if (!tournamentKey || !tournaments) return;
+  const handleRankings = run('Re-Calculate Rankings', async () => {
+    if (!tournamentKey || !tournaments)
+      throw new Error('Select a tournament first.');
     const tournament = tournaments.find(
       (t) => t.tournamentKey === tournamentKey
     );
-    if (!tournament) return;
+    if (!tournament) throw new Error('Select a tournament first.');
     // FGC2024 SPECIFIC
     if (isPlayoffsTournament(tournament)) {
       await rankingsApi.create.recalculate(
@@ -87,12 +112,20 @@ export const AdminApp: FC = () => {
         tournament.tournamentKey
       );
     }
-  };
+  });
 
-  const handleRankingsDelete = async () => {
-    if (!tournamentKey || !eventKey) return;
+  const handleRankingsDelete = run('Delete Rankings', async () => {
+    if (!tournamentKey || !eventKey)
+      throw new Error('Select a tournament first.');
+    if (
+      !window.confirm(
+        `Delete all rankings for ${tournamentKey}? "Re-Calculate Rankings" can rebuild them from match results.`
+      )
+    ) {
+      return CANCELLED;
+    }
     await rankingsApi.delete.rankings(eventKey, tournamentKey);
-  };
+  });
 
   return (
     <PaperLayout
@@ -111,25 +144,25 @@ export const AdminApp: FC = () => {
     >
       <Divider />
       <Space direction='vertical' size='large' style={{ padding: 16 }}>
-        <Button type='primary' danger onClick={syncMatches}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={syncMatches}>
           Sync Matches
         </Button>
-        <Button type='primary' danger onClick={syncRankings}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={syncRankings}>
           Sync Rankings
         </Button>
-        <Button type='primary' danger onClick={syncAlliances}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={syncAlliances}>
           Sync Alliances
         </Button>
-        <Button type='primary' danger onClick={handleRankingsCreate}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={handleRankingsCreate}>
           Create Rankings
         </Button>
-        <Button type='primary' danger onClick={handleRankings}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={handleRankings}>
           Re-Calculate Rankings
         </Button>
-        <Button type='primary' danger onClick={handleRankingsDelete}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={handleRankingsDelete}>
           Delete Rankings
         </Button>
-        <Button type='primary' danger onClick={handlePurge}>
+        <Button type='primary' danger icon={<KeyOutlined />} onClick={handlePurge}>
           Purge Event Data
         </Button>
       </Space>
