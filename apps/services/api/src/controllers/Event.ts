@@ -83,7 +83,34 @@ async function eventController(fastify: FastifyInstance) {
       },
       async (request, reply) => {
         try {
+          const { eventKey, seasonKey, eventName } = request.body;
+          if (
+            !eventKey ||
+            !eventKey.trim() ||
+            !seasonKey ||
+            !seasonKey.trim() ||
+            !eventName ||
+            !eventName.trim()
+          ) {
+            reply.code(400).send({
+              code: 400,
+              message:
+                'eventKey, seasonKey and eventName are required to create an event.'
+            });
+            return;
+          }
           const db = await getDB('global');
+          const existing = await db.selectAllWhere(
+            'event',
+            `eventKey = "${eventKey}"`
+          );
+          if (existing.length > 0) {
+            reply.code(409).send({
+              code: 409,
+              message: `An event with key "${eventKey}" already exists.`
+            });
+            return;
+          }
           await db.insertValue('event', [request.body]);
           reply.status(200).send({});
         } catch (e) {
@@ -136,9 +163,17 @@ async function eventController(fastify: FastifyInstance) {
       async (request, reply) => {
         try {
           const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
+          const seasonKey = getSeasonKeyFromEventKey(eventKey);
+          if (!seasonKey?.trim()) {
+            reply.code(400).send({
+              code: 400,
+              message: `Cannot set up event "${eventKey}": it has no season prefix (expected "<season>-<region>-").`
+            });
+            return;
+          }
           const db = await getDB(eventKey);
           await db.createEventBase();
-          await db.createEventGameSpecifics(getSeasonKeyFromEventKey(eventKey));
+          await db.createEventGameSpecifics(seasonKey);
           reply.status(200).send({});
         } catch (e) {
           reply.code(500).send(InternalServerError(e));

@@ -63,16 +63,18 @@ export const GenericInternalServerError: ApiError = {
   message: 'Internal server error.'
 };
 
-export const InternalServerError = (message?: unknown): ApiError => {
+export const InternalServerError = (detail?: unknown): ApiError => {
   logger.error(
-    `Internal server error: ${message}\n${message instanceof Error ? message.stack : ''}`
+    `Internal server error: ${detail}\n${detail instanceof Error ? detail.stack : ''}`
   );
 
-  return ({
+  // The raw error is logged above but never returned to the client — echoing it
+  // leaks stack traces, SQL text and absolute filesystem paths into the UI.
+  return {
     code: 500,
-    message: `Internal server error. ${message ?? ''}`
-  });
-}
+    message: 'Internal server error.'
+  };
+};
 
 type ApiErrors = typeof InvalidQueryError | typeof EmptyBodyError | typeof BodyNotValidError | typeof UnauthorizedError | typeof AuthenticationError | typeof AuthenticationNotLocalError | typeof AuthenticationInvalidError | typeof DataNotFoundError | typeof InvalidDataError | typeof RouteNotFound | typeof SeasonFunctionsMissing | typeof GenericInternalServerError;
 
