@@ -3,6 +3,7 @@ import {
   GraphicSpec,
   GraphicsTarget,
   PlaybackAcknowledgment,
+  PlaybackDeliveryHealth,
   PlaybackStateEnvelope,
   PRODUCER_SHOW_RUNDOWN_ID,
   Rundown,
@@ -12,6 +13,7 @@ import {
   graphicSpecZod,
   graphicsTargetZod,
   playbackAcknowledgmentZod,
+  playbackDeliveryHealthZod,
   playbackStateEnvelopeZod,
   rundownZod,
   showAdvanceResultZod,
@@ -23,6 +25,7 @@ import useSWR, { mutate, SWRResponse } from 'swr';
 import { localClient } from './http-clients.js';
 import { EMSApiErrorSchema } from './http-errors.js';
 import { requireCollection } from './load-state.js';
+import { recordPlaybackDelivery } from './playback-delivery.js';
 
 // Realtime owns only off-air preview replay; all playback reads/mutations use API.
 const realtimeClient = new HttpClient({
@@ -82,6 +85,20 @@ export interface PlaybackCommandOptions {
   target?: GraphicsTarget;
   /** The playback revision the caller formed this command against. The server rejects the command if state has moved on since. */
   expectedRevision?: number;
+}
+
+/**
+ * Every playback command goes through here so its acknowledgment's `delivery`
+ * reaches the producer's delivery indicator - that is how delivery failures
+ * surface without anything polling.
+ */
+async function postAck(
+  url: string,
+  options: { body: unknown; schema: typeof playbackAcknowledgmentZod }
+): Promise<PlaybackAcknowledgment | null> {
+  const ack = await playbackClient.post<PlaybackAcknowledgment>(url, options);
+  recordPlaybackDelivery(ack?.delivery);
+  return ack;
 }
 
 const newPlaybackRequestId = (): string =>
@@ -238,7 +255,10 @@ export const graphicsApi = {
         `/graphics/${eventKey}/live/show/advance`,
         { body: options, schema: showAdvanceResultZod }
       );
-      if (result) applyProducerShow(eventKey, result.show);
+      if (result) {
+        recordPlaybackDelivery(result.acknowledgment.delivery);
+        applyProducerShow(eventKey, result.show);
+      }
       return result;
     }
   },
@@ -268,7 +288,7 @@ export const graphicsApi = {
       timelineId: string,
       values?: Record<string, number>
     ): Promise<PlaybackAcknowledgment | null> => {
-      const state = await playbackClient.post<PlaybackAcknowledgment>(
+      const state = await postAck(
         `/graphics/${eventKey}/live/load/${timelineId}`,
         {
           body:
@@ -279,14 +299,14 @@ export const graphicsApi = {
       return state;
     },
     advance: async (eventKey: string): Promise<PlaybackAcknowledgment | null> => {
-      const state = await playbackClient.post<PlaybackAcknowledgment>(
+      const state = await postAck(
         `/graphics/${eventKey}/live/advance`,
         { body: commandBody(), schema: playbackAcknowledgmentZod }
       );
       return state;
     },
     previous: async (eventKey: string): Promise<PlaybackAcknowledgment | null> => {
-      const state = await playbackClient.post<PlaybackAcknowledgment>(
+      const state = await postAck(
         `/graphics/${eventKey}/live/previous`,
         { body: commandBody(), schema: playbackAcknowledgmentZod }
       );
@@ -296,7 +316,7 @@ export const graphicsApi = {
       eventKey: string,
       options?: PlaybackCommandOptions
     ): Promise<PlaybackAcknowledgment | null> =>
-      playbackClient.post<PlaybackAcknowledgment>(
+      postAck(
         `/graphics/${eventKey}/live/take`,
         { body: commandBody(options), schema: playbackAcknowledgmentZod }
       ),
@@ -307,7 +327,7 @@ export const graphicsApi = {
       values: Record<string, number> = {},
       options?: PlaybackCommandOptions
     ): Promise<PlaybackAcknowledgment | null> =>
-      playbackClient.post<PlaybackAcknowledgment>(
+      postAck(
         `/graphics/${eventKey}/live/cue`,
         {
           body: {
@@ -325,7 +345,7 @@ export const graphicsApi = {
       values: Record<string, number> = {},
       options?: PlaybackCommandOptions
     ): Promise<PlaybackAcknowledgment | null> =>
-      playbackClient.post<PlaybackAcknowledgment>(
+      postAck(
         `/graphics/${eventKey}/live/quick-take`,
         {
           body: {
@@ -337,7 +357,7 @@ export const graphicsApi = {
         }
       ),
     clear: async (eventKey: string): Promise<PlaybackAcknowledgment | null> => {
-      const state = await playbackClient.post<PlaybackAcknowledgment>(
+      const state = await postAck(
         `/graphics/${eventKey}/live/clear`,
         { body: commandBody(), schema: playbackAcknowledgmentZod }
       );
@@ -353,7 +373,7 @@ export const graphicsApi = {
       destination: 'cue' | 'program',
       options?: PlaybackCommandOptions
     ): Promise<PlaybackAcknowledgment | null> =>
-      playbackClient.post<PlaybackAcknowledgment>(
+      postAck(
         `/graphics/${eventKey}/live/refresh/${destination}`,
         { body: commandBody(options), schema: playbackAcknowledgmentZod }
       ),
@@ -373,7 +393,7 @@ export const graphicsApi = {
       destination: 'cue' | 'program',
       options?: PlaybackCommandOptions
     ): Promise<PlaybackAcknowledgment | null> =>
-      playbackClient.post<PlaybackAcknowledgment>(
+      postAck(
         `/graphics/${eventKey}/live/refresh/${destination}/push`,
         { body: commandBody(options), schema: playbackAcknowledgmentZod }
       ),
@@ -394,10 +414,38 @@ export const graphicsApi = {
       destination: 'cue' | 'program',
       options?: PlaybackCommandOptions
     ): Promise<PlaybackAcknowledgment | null> =>
-      playbackClient.post<PlaybackAcknowledgment>(
+      postAck(
         `/graphics/${eventKey}/live/push-update/${destination}`,
         { body: commandBody(options), schema: playbackAcknowledgmentZod }
       ),
+    /**
+     * Explicit, operator-triggered read of delivery health (the same object
+     * each command acknowledgment carries). One request per call; never polled.
+     */
+    publicationHealth: async (
+      eventKey: string
+    ): Promise<PlaybackDeliveryHealth | null> => {
+      const health = await playbackClient.get<PlaybackDeliveryHealth>(
+        `/graphics/${eventKey}/live/publication-health`,
+        { schema: playbackDeliveryHealthZod }
+      );
+      recordPlaybackDelivery(health);
+      return health;
+    },
+    /**
+     * Re-sends the latest committed playback state now, clearing a parked
+     * publication. Answers with delivery health after that attempt.
+     */
+    retryPublication: async (
+      eventKey: string
+    ): Promise<PlaybackDeliveryHealth | null> => {
+      const health = await playbackClient.post<PlaybackDeliveryHealth>(
+        `/graphics/${eventKey}/live/publication-retry`,
+        { schema: playbackDeliveryHealthZod }
+      );
+      recordPlaybackDelivery(health);
+      return health;
+    },
     /**
      * Asks every preview (PVW) screen on this event to replay its entrance
      * animation.

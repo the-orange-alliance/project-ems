@@ -95,7 +95,8 @@ This section is for a consumer building an **external "simple" controller** for 
 | Route | Purpose |
 |---|---|
 | `GET /graphics/:eventKey/live` | Read the current `PlaybackState` (loaded item, cue, program, staged update). Plain read, not a command. |
-| `GET /graphics/:eventKey/live/publication-health` | Inspect delivery configuration, pending revision, retry/error details, and the last delivered revision. |
+| `GET /graphics/:eventKey/live/publication-health` | Delivery health: `status` (`in-flight`/`failing`/`parked`/`delivered`/...), pending and last delivered revision, and `failure` (reason, revision, attempts, message, action). Every command acknowledgment carries the same object as `delivery`. |
+| `POST\|GET /graphics/:eventKey/live/publication-retry` | Explicitly re-send the latest committed state (clears a parked publication); answers with delivery health after the attempt. |
 | `.../live/load/:timelineId` | Load a timeline onto the cue slot, reset to its first item. Optional body: `values` (template variable bindings). |
 | `.../live/load-rundown/:rundownId` | Load a rundown: its entries' timelines flattened into one ordered item list, each item resolved against its own entry's `values`. Rejected (naming the entry) if any entry references a timeline that no longer exists. |
 | `.../live/unload` | Durably clear the loaded timeline/rundown back to nothing. |

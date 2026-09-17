@@ -11,6 +11,7 @@ import {
   graphicsTargetZod,
   playbackAcknowledgmentZod,
   playbackCommandZod,
+  playbackDeliveryHealthZod,
   playbackStateEnvelopeZod,
   playbackStateZod,
   showAdvanceResultZod,
@@ -251,17 +252,10 @@ const envelopeResponses = {
   500: errorEnvelopeZod,
   503: errorEnvelopeZod
 };
-const publicationHealthZod = z
-  .object({
-    configured: z.boolean(),
-    pendingRevision: graphicRevisionZod.nullable(),
-    attempts: z.number().int().nonnegative(),
-    nextRetryAtUtc: z.string().nullable(),
-    lastDeliveredRevision: graphicRevisionZod.nullable(),
-    lastDeliveredAtUtc: z.string().nullable(),
-    error: z.string().nullable()
-  })
-  .strict();
+const publicationHealthResponses = {
+  200: playbackDeliveryHealthZod,
+  400: errorEnvelopeZod
+};
 
 /** GRAPHICS_PLAYBACK_POLICY has no `restore` step to run here: PlaybackCoordinator.getState/current lazily loads the persisted PlaybackState from GraphicsRepository.loadPlayback on first touch per event, so "the last program is restored exactly" already holds with no eager warm-up (see this task's report). */
 const STATUS_BY_CODE: Record<GraphicsError['code'], number> = {
@@ -386,8 +380,27 @@ export default async function graphicsPlaybackController(
     return owner.handle(eventKey, command);
   }
 
-  function sendAck(reply: FastifyReply, ack: PlaybackAcknowledgment) {
-    return reply.code(ack.ok ? 200 : STATUS_BY_CODE[ack.error.code]).send(ack);
+  /**
+   * Every acknowledgment leaves with the event's delivery health attached, so
+   * the caller learns whether playback is reaching realtime as a consequence
+   * of the command itself - no polling. Attached here rather than in the
+   * coordinator because acknowledgments are persisted for replay, and a
+   * replayed answer must report delivery as it is now.
+   */
+  function withDelivery(
+    eventKey: string,
+    ack: PlaybackAcknowledgment
+  ): PlaybackAcknowledgment {
+    return { ...ack, delivery: coordinator.deliveryHealth(eventKey) };
+  }
+  function sendAck(
+    reply: FastifyReply,
+    eventKey: string,
+    ack: PlaybackAcknowledgment
+  ) {
+    return reply
+      .code(ack.ok ? 200 : STATUS_BY_CODE[ack.error.code])
+      .send(withDelivery(eventKey, ack));
   }
   function sendUnexpected(reply: FastifyReply, error: unknown) {
     const known = error instanceof GraphicsRepositoryError;
@@ -408,7 +421,7 @@ export default async function graphicsPlaybackController(
   ) {
     try {
       const ack = await dispatch(eventKey, command);
-      return sendAck(reply, transform ? transform(ack) : ack);
+      return sendAck(reply, eventKey, transform ? transform(ack) : ack);
     } catch (error) {
       return sendUnexpected(reply, error);
     }
@@ -648,7 +661,7 @@ export default async function graphicsPlaybackController(
           type: 'clear',
           requestId: newRequestId()
         });
-        if (!clearAck.ok) return sendAck(reply, clearAck);
+        if (!clearAck.ok) return sendAck(reply, eventKey, clearAck);
       }
 
       const loadAck = await dispatch(eventKey, {
@@ -658,11 +671,11 @@ export default async function graphicsPlaybackController(
         timelineId,
         values
       });
-      if (!loadAck.ok) return sendAck(reply, loadAck);
+      if (!loadAck.ok) return sendAck(reply, eventKey, loadAck);
 
       const shouldTake =
         forceActive === 'in' || (forceActive === undefined && !hadProgram);
-      if (!shouldTake) return sendAck(reply, loadAck);
+      if (!shouldTake) return sendAck(reply, eventKey, loadAck);
 
       // Mirrors `remapQuickTakeFailure`'s reasoning: a failed cue is a normal, durable `load` outcome
       // (e.g. an unfilled template binding), but quick-cue is ABOUT to take it live, so that failure
@@ -673,6 +686,7 @@ export default async function graphicsPlaybackController(
         const { code, message } = describeCueNotReady(cue);
         return sendAck(
           reply,
+          eventKey,
           rejectAck(
             requestId,
             code,
@@ -687,7 +701,7 @@ export default async function graphicsPlaybackController(
         requestId: newRequestId(),
         target: cue.graphic.target
       });
-      return sendAck(reply, takeAck);
+      return sendAck(reply, eventKey, takeAck);
     } catch (error) {
       return sendUnexpected(reply, error);
     }
@@ -752,7 +766,7 @@ export default async function graphicsPlaybackController(
           showAdvanceResultZod.parse({
             outcome,
             consumedEntryId,
-            acknowledgment,
+            acknowledgment: withDelivery(eventKey, acknowledgment),
             show: show ?? (await repository.loadProducerShow(eventKey))
           })
         );
@@ -926,18 +940,56 @@ export default async function graphicsPlaybackController(
 
   const app = fastify.withTypeProvider<ZodTypeProvider>();
 
-  /** Operational delivery status; a pending revision or error is alertable. */
+  /**
+   * Delivery health on demand: the same object every command acknowledgment
+   * carries as `delivery`. For an explicit operator check or out-of-band
+   * inspection - nothing in the product polls it.
+   */
   app.get(
     '/:eventKey/live/publication-health',
     {
       schema: {
         tags: ['Graphics'],
         params: eventParams,
-        response: { 200: publicationHealthZod }
+        response: publicationHealthResponses
       }
     },
     (request) => coordinator.deliveryHealth(request.params.eventKey)
   );
+
+  /**
+   * The explicit recovery for a parked (or still-failing) publication: clears
+   * the park, resets the attempt budget and re-sends the latest committed
+   * state now. Answers with delivery health AFTER that attempt, so success or
+   * the renewed failure's reason is in the response. Changes nothing on air
+   * beyond delivering state the producer already committed. GET alias for
+   * Companion, like the other commands.
+   */
+  const retryPublication = async (eventKey: string) => {
+    try {
+      await coordinator.retryPublication(eventKey);
+    } catch (error) {
+      // Not swallowed: the coordinator recorded this failure and the health
+      // returned below carries its reason, message and action.
+      fastify.log.warn(
+        `Explicit playback publication retry for ${eventKey} failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+    return coordinator.deliveryHealth(eventKey);
+  };
+  for (const method of ['POST', 'GET'] as const)
+    app.route({
+      method,
+      url: '/:eventKey/live/publication-retry',
+      schema: {
+        tags: ['Graphics'],
+        params: eventParams,
+        response: publicationHealthResponses
+      },
+      handler: (request) => retryPublication(request.params.eventKey)
+    });
 
   /**
    * Fastify refuses a `body` schema on a GET route outright (`FST_ERR_ROUTE_BODY_VALIDATION_SCHEMA_NOT_SUPPORTED`),
@@ -1094,7 +1146,7 @@ export default async function graphicsPlaybackController(
         request.body.spec,
         request.body.values
       );
-      if ('reject' in resolved) return sendAck(reply, resolved.reject);
+      if ('reject' in resolved) return sendAck(reply, eventKey, resolved.reject);
       return runCommand(reply, eventKey, {
         type: 'cue',
         requestId,
@@ -1214,7 +1266,7 @@ export default async function graphicsPlaybackController(
           body?.target,
           'take-cue'
         );
-        if ('reject' in resolved) return sendAck(reply, resolved.reject);
+        if ('reject' in resolved) return sendAck(reply, params.eventKey, resolved.reject);
         return runCommand(reply, params.eventKey, {
           type: 'take',
           requestId,
@@ -1249,7 +1301,7 @@ export default async function graphicsPlaybackController(
         request.body.spec,
         request.body.values
       );
-      if ('reject' in resolved) return sendAck(reply, resolved.reject);
+      if ('reject' in resolved) return sendAck(reply, eventKey, resolved.reject);
       return runCommand(
         reply,
         eventKey,
@@ -1345,7 +1397,7 @@ export default async function graphicsPlaybackController(
           body?.target,
           params.destination === 'cue' ? 'refresh-cue' : 'refresh-program'
         );
-        if ('reject' in resolved) return sendAck(reply, resolved.reject);
+        if ('reject' in resolved) return sendAck(reply, params.eventKey, resolved.reject);
         return runCommand(reply, params.eventKey, {
           type: 'refresh',
           requestId,
@@ -1383,7 +1435,7 @@ export default async function graphicsPlaybackController(
           body?.target,
           params.destination === 'cue' ? 'refresh-cue' : 'refresh-program'
         );
-        if ('reject' in resolved) return sendAck(reply, resolved.reject);
+        if ('reject' in resolved) return sendAck(reply, params.eventKey, resolved.reject);
         return runCommand(reply, params.eventKey, {
           type: 'refresh',
           requestId,
@@ -1418,6 +1470,7 @@ export default async function graphicsPlaybackController(
     if (destination && body?.destination && body.destination !== destination)
       return sendAck(
         reply,
+        eventKey,
         rejectAck(
           requestId,
           'INVALID_INPUT',
@@ -1433,7 +1486,7 @@ export default async function graphicsPlaybackController(
         'push-update',
         intended
       );
-      if ('reject' in resolved) return sendAck(reply, resolved.reject);
+      if ('reject' in resolved) return sendAck(reply, eventKey, resolved.reject);
       return runCommand(reply, eventKey, {
         type: 'push-update',
         requestId,

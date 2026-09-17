@@ -12,8 +12,11 @@ import {
   type GraphicSpec,
   type GraphicsError,
   type GraphicsTarget,
+  playbackDeliveryFailureReasonZod,
   type PlaybackAcknowledgment,
   type PlaybackCommand,
+  type PlaybackDeliveryFailureReason,
+  type PlaybackDeliveryHealth,
   type PlaybackState,
   type RundownEntryRef,
   type PreparedGraphic
@@ -70,19 +73,63 @@ export interface ParkedPublication {
   revision: number;
   attempts: number;
   error: string;
+  reason: PlaybackDeliveryFailureReason;
   parkedAtUtc: string;
   /** False for a failure that will fail identically forever, e.g. an oversized envelope. */
   transient: boolean;
 }
 
-export interface PlaybackDeliveryHealth {
-  configured: boolean;
-  pendingRevision: number | null;
-  attempts: number;
-  nextRetryAtUtc: string | null;
-  lastDeliveredRevision: number | null;
-  lastDeliveredAtUtc: string | null;
-  error: string | null;
+export type { PlaybackDeliveryHealth };
+
+/** The publisher names its failures (see `PlaybackPublicationError`); anything else is generic. */
+function failureReason(error: unknown): PlaybackDeliveryFailureReason {
+  const reason =
+    error && typeof error === 'object' && 'reason' in error
+      ? playbackDeliveryFailureReasonZod.safeParse(error.reason)
+      : null;
+  return reason?.success ? reason.data : 'publish-failed';
+}
+
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
+/** What an operator does about a delivery failure. Kept next to the reasons it explains. */
+function deliveryAction(
+  reason: PlaybackDeliveryFailureReason,
+  parked: boolean,
+  nextRetryAtUtc: string | null
+): string {
+  const retry = parked
+    ? ' Then press Retry delivery (POST /graphics/:eventKey/live/publication-retry).'
+    : nextRetryAtUtc
+      ? ` Delivery retries automatically at ${nextRetryAtUtc}; press Retry delivery to try now.`
+      : ' Then press Retry delivery.';
+  switch (reason) {
+    case 'too-large':
+      return (
+        'The show package is too large for the realtime ingress. Raise GRAPHICS_PUBLICATION_MAX_BYTES ' +
+        'to the same value on BOTH the API and realtime services and restart them, or load a smaller ' +
+        `show package.${retry}`
+      );
+    case 'realtime-unreachable':
+      return (
+        'The API cannot reach the realtime service. Check that realtime is running and that ' +
+        `GRAPHICS_REALTIME_BASE_URL on the API points at it.${retry}`
+      );
+    case 'realtime-rejected':
+      return (
+        'Realtime refused the publication. Check the realtime service log for this event and revision, ' +
+        `and that GRAPHICS_PUBLICATION_TOKEN matches on both services.${retry}`
+      );
+    case 'retired-epoch':
+      return (
+        'Displays now follow another API process for this event, so this API cannot update them and ' +
+        'retrying here cannot help. Send commands to the API that is publishing, or restart the API ' +
+        'and realtime services together so a single API owns publication.'
+      );
+    case 'publish-failed':
+      return `Check the API log for this event and revision.${retry}`;
+  }
 }
 
 export class PlaybackCoordinatorError extends Error {
@@ -158,7 +205,11 @@ export class PlaybackCoordinator {
   private readonly programEpochs = new Map<string, number>();
   private readonly pendingPublications = new Map<string, PlaybackState>();
   private readonly publicationFlights = new Map<string, Promise<void>>();
-  private readonly publicationErrors = new Map<string, unknown>();
+  /** The last failed attempt per event, and the revision it was delivering. */
+  private readonly publicationErrors = new Map<
+    string,
+    { error: unknown; revision: number }
+  >();
   private readonly publicationAttempts = new Map<string, number>();
   private readonly publicationRetryTimers = new Map<
     string,
@@ -300,7 +351,8 @@ export class PlaybackCoordinator {
     this.parkedPublications.set(eventKey, {
       revision: pending?.revision ?? -1,
       attempts,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage(error),
+      reason: failureReason(error),
       parkedAtUtc: this.now(),
       transient
     });
@@ -393,7 +445,10 @@ export class PlaybackCoordinator {
             )
               this.pendingPublications.delete(eventKey);
           } catch (error) {
-            this.publicationErrors.set(eventKey, error);
+            this.publicationErrors.set(eventKey, {
+              error,
+              revision: state.revision
+            });
             const attempts = (this.publicationAttempts.get(eventKey) ?? 0) + 1;
             this.publicationAttempts.set(eventKey, attempts);
             try {
@@ -414,14 +469,66 @@ export class PlaybackCoordinator {
     return flight;
   }
 
+  /**
+   * Delivery as of this instant. Publication is not awaited by `commit`, so
+   * immediately after a command this is usually `in-flight` for the revision
+   * that command just wrote - see `playbackDeliveryHealthZod`.
+   */
   deliveryHealth(eventKey: string): PlaybackDeliveryHealth {
     const lastDelivery = this.lastDeliveries.get(eventKey);
     const parked = this.parkedPublications.get(eventKey);
+    const failed = this.publicationErrors.get(eventKey);
+    const pendingRevision =
+      this.pendingPublications.get(eventKey)?.revision ?? null;
+    const nextRetryAtUtc = this.nextPublicationRetries.get(eventKey) ?? null;
+    const attempts = this.publicationAttempts.get(eventKey) ?? 0;
+
+    const failure = parked
+      ? {
+          reason: parked.reason,
+          revision: Math.max(0, parked.revision),
+          attempts: parked.attempts,
+          retryable: parked.transient,
+          parkedAtUtc: parked.parkedAtUtc,
+          message: parked.error,
+          action: deliveryAction(parked.reason, true, null)
+        }
+      : failed
+        ? {
+            reason: failureReason(failed.error),
+            revision: failed.revision,
+            // A new command resets the budget; the failure still happened.
+            attempts: Math.max(1, attempts),
+            retryable: !this.permanent(failed.error),
+            parkedAtUtc: null,
+            message: errorMessage(failed.error),
+            action: deliveryAction(
+              failureReason(failed.error),
+              false,
+              nextRetryAtUtc
+            )
+          }
+        : null;
+
+    const status = !this.options.publish
+      ? 'unconfigured'
+      : parked
+        ? 'parked'
+        : failure && pendingRevision !== null
+          ? 'failing'
+          : pendingRevision !== null
+            ? 'in-flight'
+            : lastDelivery
+              ? 'delivered'
+              : 'idle';
+
     return {
+      eventKey,
+      status,
       configured: !!this.options.publish,
-      pendingRevision: this.pendingPublications.get(eventKey)?.revision ?? null,
-      attempts: this.publicationAttempts.get(eventKey) ?? 0,
-      nextRetryAtUtc: this.nextPublicationRetries.get(eventKey) ?? null,
+      pendingRevision,
+      attempts,
+      nextRetryAtUtc,
       lastDeliveredRevision: lastDelivery?.revision ?? null,
       lastDeliveredAtUtc: lastDelivery?.atUtc ?? null,
       error: parked
@@ -429,9 +536,11 @@ export class PlaybackCoordinator {
           `${parked.parkedAtUtc} after ${parked.attempts} attempts and will not retry on its ` +
           `own${parked.transient ? '' : ' (the failure is not retryable)'}. Last error: ` +
           `${parked.error} Recover with an explicit publication retry for this event.`
-        : this.publicationErrors.has(eventKey)
-          ? String(this.publicationErrors.get(eventKey))
-          : null
+        : failed
+          ? `Playback delivery for ${eventKey} revision ${failed.revision} failed ` +
+            `(attempt ${Math.max(1, attempts)}): ${errorMessage(failed.error)}`
+          : null,
+      failure
     };
   }
 

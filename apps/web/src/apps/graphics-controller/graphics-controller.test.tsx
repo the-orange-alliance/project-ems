@@ -161,6 +161,9 @@ vi.mock('./use-timeline-preflight.js', () => ({
 }));
 vi.mock('./rundown-list.js', () => ({ RundownList: () => null }));
 vi.mock('./live-monitor.js', () => ({ LiveMonitor: () => null }));
+vi.mock('./publication-delivery-status.js', () => ({
+  PublicationDeliveryStatus: () => null
+}));
 vi.mock('./quick-stat-drawer.js', () => ({ QuickStatDrawer: () => null }));
 // Records what the panel was handed and renders only its `header`, which is
 // where the Live tab's out-of-sync banner, the authoritative running order and

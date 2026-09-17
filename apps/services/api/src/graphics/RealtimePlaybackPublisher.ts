@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   createPlaybackStateEnvelope,
+  type PlaybackDeliveryFailureReason,
   type PlaybackState
 } from '@toa-lib/models/base';
 
@@ -32,14 +33,25 @@ export function resolvePublicationBodyBytes(
 }
 
 /**
- * A publication that cannot physically fit through the relay ingress.
- *
- * `retryable = false` is load-bearing: `PlaybackCoordinator` parks a
- * non-retryable delivery failure immediately instead of backing off against a
- * body that will be exactly as oversized on every future attempt.
+ * A publication that did not reach realtime, with the reason named so
+ * `PlaybackCoordinator` can report it to the producer. `retryable = false`
+ * is load-bearing: the coordinator parks a non-retryable failure immediately
+ * instead of backing off against something that will fail the same way.
  */
-export class PlaybackPublicationTooLargeError extends Error {
-  readonly retryable = false;
+export class PlaybackPublicationError extends Error {
+  constructor(
+    message: string,
+    readonly reason: PlaybackDeliveryFailureReason,
+    readonly retryable: boolean,
+    options?: { cause?: unknown }
+  ) {
+    super(message, options);
+    this.name = 'PlaybackPublicationError';
+  }
+}
+
+/** A publication that cannot physically fit through the relay ingress. */
+export class PlaybackPublicationTooLargeError extends PlaybackPublicationError {
   constructor(
     message: string,
     readonly eventKey: string,
@@ -47,7 +59,7 @@ export class PlaybackPublicationTooLargeError extends Error {
     readonly bytes: number,
     readonly limitBytes: number
   ) {
-    super(message);
+    super(message, 'too-large', false);
     this.name = 'PlaybackPublicationTooLargeError';
   }
 }
@@ -105,9 +117,10 @@ export function createRealtimePlaybackPublisher(
           bytes,
           maxBodyBytes
         );
-      const response = await fetchImpl(
-        `${baseUrl}/internal/graphics/playback`,
-        {
+      const url = `${baseUrl}/internal/graphics/playback`;
+      let response: Response;
+      try {
+        response = await fetchImpl(url, {
           method: 'POST',
           headers: {
             accept: 'application/json',
@@ -116,8 +129,22 @@ export function createRealtimePlaybackPublisher(
           },
           body,
           signal: AbortSignal.timeout(timeoutMs)
-        }
-      );
+        });
+      } catch (error) {
+        const cause =
+          error instanceof Error && error.cause instanceof Error
+            ? `${error.message}: ${error.cause.message}`
+            : error instanceof Error
+              ? `${error.name}: ${error.message}`
+              : String(error);
+        throw new PlaybackPublicationError(
+          `Realtime at ${url} could not be reached for playback publication of event "${eventKey}" ` +
+            `revision ${state.revision} (${cause}; timeout ${timeoutMs} ms). No display was updated.`,
+          'realtime-unreachable',
+          true,
+          { cause: error }
+        );
+      }
       if (!response.ok) {
         const detail = await response.text().catch(() => '');
         // A 413 that reaches here means the two services disagree about the
@@ -133,11 +160,38 @@ export function createRealtimePlaybackPublisher(
             bytes,
             maxBodyBytes
           );
-        throw new Error(
-          `Realtime playback publication failed for event "${eventKey}" revision ${state.revision} ` +
-            `(HTTP ${response.status}, ${bytes} bytes)${detail ? `: ${detail}` : ''}`
+        throw new PlaybackPublicationError(
+          `Realtime refused playback publication for event "${eventKey}" revision ${state.revision} ` +
+            `(HTTP ${response.status}, ${bytes} bytes)${detail ? `: ${detail}` : ''}. No display was updated.`,
+          'realtime-rejected',
+          // Auth and body errors fail identically until someone changes config.
+          response.status >= 500 || response.status === 408 || response.status === 429
         );
       }
+      // 200 with accepted:false is how the relay says "not broadcast". Only a
+      // retired epoch means displays did not get this state: duplicate/stale
+      // mean the room already holds this revision or a newer one.
+      const text = await response.text().catch(() => '');
+      let result: { accepted?: unknown; reason?: unknown } | null = null;
+      try {
+        result = text ? JSON.parse(text) : null;
+      } catch {
+        // A non-JSON 2xx is a relay we do not recognise; name it rather than guess.
+        throw new PlaybackPublicationError(
+          `Realtime answered playback publication for event "${eventKey}" revision ${state.revision} ` +
+            `with HTTP ${response.status} and an unreadable body: ${text.slice(0, 200)}`,
+          'realtime-rejected',
+          true
+        );
+      }
+      if (result?.accepted === false && result.reason === 'retired-epoch')
+        throw new PlaybackPublicationError(
+          `Realtime ignored playback publication for event "${eventKey}" revision ${state.revision}: ` +
+            `this API's authority epoch ${authorityEpoch} was retired because another API process ` +
+            `published or was read for this event. No display was updated.`,
+          'retired-epoch',
+          false
+        );
     }
   };
 }

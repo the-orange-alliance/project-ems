@@ -99,6 +99,9 @@ test('getPlaybackCoordinator with no publish configured never attempts delivery,
   );
   assert.equal(ack.ok, true);
   assert.deepEqual(coordinator.deliveryHealth('event-b'), {
+    eventKey: 'event-b',
+    status: 'unconfigured',
+    failure: null,
     configured: false,
     pendingRevision: null,
     attempts: 0,

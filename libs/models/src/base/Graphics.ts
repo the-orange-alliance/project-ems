@@ -1197,13 +1197,102 @@ export const playbackCommandZod = z.discriminatedUnion('type', [
     .strict()
 ]);
 export type PlaybackCommand = z.infer<typeof playbackCommandZod>;
+
+/**
+ * Why a playback publication did not reach realtime.
+ *
+ * - `too-large`: the envelope exceeds the ingress limit. Fails identically forever.
+ * - `realtime-unreachable`: the API could not connect to realtime, or timed out.
+ * - `realtime-rejected`: realtime answered with an error status.
+ * - `retired-epoch`: realtime has adopted another API process as the writer
+ *   for this event and ignores this one. Retrying here cannot help.
+ * - `publish-failed`: anything else; the message carries the detail.
+ */
+export const playbackDeliveryFailureReasonZod = z.enum([
+  'too-large',
+  'realtime-unreachable',
+  'realtime-rejected',
+  'retired-epoch',
+  'publish-failed'
+]);
+export type PlaybackDeliveryFailureReason = z.infer<
+  typeof playbackDeliveryFailureReasonZod
+>;
+
+/**
+ * Whether committed playback state reached realtime (and so the displays).
+ *
+ * Returned by `GET /graphics/:eventKey/live/publication-health`,
+ * `POST|GET /graphics/:eventKey/live/publication-retry`, and attached as
+ * `delivery` to every playback command acknowledgment.
+ *
+ * Publication runs AFTER the durable commit and is not awaited, so the
+ * acknowledgment for revision N reports delivery as of that instant:
+ * - `in-flight`: `pendingRevision` is being sent and nothing has failed yet.
+ *   Resolved by the next command's acknowledgment or an explicit health read.
+ * - `failing`: the last attempt failed; an automatic retry is scheduled or a
+ *   newer revision is being attempted. `failure` says why.
+ * - `parked`: delivery stopped and will not resume without an explicit
+ *   publication retry (or a new command). `failure` says why.
+ * - `delivered`: nothing is pending; `lastDeliveredRevision` reached realtime.
+ * - `idle`: nothing has been published by this API process yet.
+ * - `unconfigured`: this API has no realtime publisher; no display is updated.
+ */
+export const playbackDeliveryStatusZod = z.enum([
+  'unconfigured',
+  'idle',
+  'in-flight',
+  'failing',
+  'parked',
+  'delivered'
+]);
+export type PlaybackDeliveryStatus = z.infer<typeof playbackDeliveryStatusZod>;
+
+export const playbackDeliveryHealthZod = z
+  .object({
+    eventKey: graphicIdentifierZod,
+    status: playbackDeliveryStatusZod,
+    configured: z.boolean(),
+    pendingRevision: graphicRevisionZod.nullable(),
+    attempts: z.number().int().nonnegative(),
+    nextRetryAtUtc: z.string().nullable(),
+    lastDeliveredRevision: graphicRevisionZod.nullable(),
+    lastDeliveredAtUtc: z.string().nullable(),
+    /** One-line summary of `failure`, or null. */
+    error: z.string().nullable(),
+    failure: z
+      .object({
+        reason: playbackDeliveryFailureReasonZod,
+        /** The revision whose delivery failed. */
+        revision: graphicRevisionZod,
+        attempts: z.number().int().nonnegative(),
+        /** False when retrying the same envelope will fail the same way. */
+        retryable: z.boolean(),
+        parkedAtUtc: z.string().nullable(),
+        /** The underlying error, naming event, revision and cause. */
+        message: z.string(),
+        /** What the operator should do about it. */
+        action: z.string()
+      })
+      .strict()
+      .nullable()
+  })
+  .strict();
+export type PlaybackDeliveryHealth = z.infer<typeof playbackDeliveryHealthZod>;
+
 export const playbackAcknowledgmentZod = z.discriminatedUnion('ok', [
   z
     .object({
       ok: z.literal(true),
       requestId: graphicIdentifierZod,
       state: playbackStateZod,
-      replayed: z.boolean()
+      replayed: z.boolean(),
+      /**
+       * Delivery health at the instant this answer was sent - see
+       * `playbackDeliveryHealthZod`. Attached by the HTTP surface, never
+       * persisted: a replayed acknowledgment reports delivery as it is now.
+       */
+      delivery: playbackDeliveryHealthZod.optional()
     })
     .strict(),
   z
@@ -1211,7 +1300,8 @@ export const playbackAcknowledgmentZod = z.discriminatedUnion('ok', [
       ok: z.literal(false),
       requestId: graphicIdentifierZod,
       error: graphicsErrorZod,
-      state: playbackStateZod.optional()
+      state: playbackStateZod.optional(),
+      delivery: playbackDeliveryHealthZod.optional()
     })
     .strict()
 ]);

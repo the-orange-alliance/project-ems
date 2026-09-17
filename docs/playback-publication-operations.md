@@ -54,11 +54,24 @@ retries with exponential backoff capped by the configured maximum. Healthy
 delivery drains each queued revision in order; during an outage, superseded
 intermediate snapshots may be coalesced to the newest durable revision.
 
-Inspect `GET /graphics/:eventKey/live/publication-health` on port 8080. Alert
-when `configured` is false, `pendingRevision` remains non-null, `attempts`
-continues rising, or `error` is non-null. `nextRetryAtUtc` indicates automatic
-recovery timing; `lastDeliveredRevision` can be compared with the current live
-state revision. Normal shutdown cancels retry timers and performs one final
+Every playback command acknowledgment carries `delivery`: the event's delivery
+health at the instant the answer was sent. Because publication is not awaited,
+the ack for revision N normally reports `status: "in-flight"` with
+`pendingRevision: N`; the next command's ack, or an explicit read, resolves it.
+The same object is returned by `GET /graphics/:eventKey/live/publication-health`
+(port 8080). `status` is one of `unconfigured`, `idle`, `in-flight`, `failing`,
+`parked`, `delivered`. When `failing` or `parked`, `failure` names the
+`revision`, `attempts`, `retryable`, a `reason` (`too-large`,
+`realtime-unreachable`, `realtime-rejected`, `retired-epoch`,
+`publish-failed`), the underlying `message`, and the operator `action`.
+
+A parked event does not retry on its own. `POST` (or `GET`, for Companion)
+`/graphics/:eventKey/live/publication-retry` clears the park, re-sends the
+latest committed state now and answers with delivery health after that
+attempt. `retired-epoch` means realtime follows another API process for the
+event; retrying on this API cannot help. The producer UI shows the same
+information persistently with Check delivery / Retry delivery buttons; nothing
+polls either endpoint. Normal shutdown cancels retry timers and performs one final
 drain bounded by `GRAPHICS_PUBLICATION_SHUTDOWN_MS`.
 
 Realtime deduplicates independently per event and authority epoch. Equal or

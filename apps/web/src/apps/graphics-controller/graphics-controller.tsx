@@ -70,6 +70,7 @@ import {
 import { LoadedRunningOrderList } from './loaded-running-order.js';
 import { RundownList, type RundownRowInfo } from './rundown-list.js';
 import { LiveMonitor } from './live-monitor.js';
+import { PublicationDeliveryStatus } from './publication-delivery-status.js';
 import { QuickStatDrawer } from './quick-stat-drawer.js';
 import { TimelineItemsPanel } from './timeline-items-panel.js';
 import { TimelineList } from './timeline-list.js';
@@ -1307,6 +1308,11 @@ export const GraphicsController: FC = () => {
               }
             />
           )}
+
+          {/* Whether committed state actually reached the displays. Fed by
+              command acknowledgments and explicit checks only - see the
+              component. Persistent while delivery is failing or parked. */}
+          <PublicationDeliveryStatus eventKey={eventKey} />
 
           {authoritativeCue?.status === 'failed' && (
             <Alert
