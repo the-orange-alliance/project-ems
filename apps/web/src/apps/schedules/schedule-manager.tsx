@@ -53,7 +53,7 @@ export const ScheduleManager: FC = () => {
   };
   useUpdateAppbar(
     {
-      title: event ? `${event.eventName} | Tournament Manager` : undefined,
+      title: event ? `${event.eventName} | Schedule Manager` : undefined,
       titleLink: event ? `/${event.eventKey}` : undefined
     },
     [event]
@@ -65,6 +65,13 @@ export const ScheduleManager: FC = () => {
 
   const handleParamsDownload = async () => {
     if (!event || !tournamentKey) return;
+    if (!remoteUrl?.trim()) {
+      showErrorSnackbar(
+        'Cannot download schedule parameters.',
+        new Error('Set a Remote API URL in Settings → Global first.')
+      );
+      return;
+    }
     try {
       remoteClient.setBaseUrl(normalizeRemoteApiHost(remoteUrl));
       const scheduleParams = await remoteClient.get<ScheduleParams>(
@@ -73,7 +80,7 @@ export const ScheduleManager: FC = () => {
       if (!scheduleParams) throw new Error('Schedule params not found.');
       onScheduleParamsChange(scheduleParams);
     } catch (e) {
-      showErrorSnackbar('Error while downloading teams.', e);
+      showErrorSnackbar('Error while downloading schedule parameters.', e);
     }
   };
 
