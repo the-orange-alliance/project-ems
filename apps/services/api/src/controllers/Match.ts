@@ -12,7 +12,7 @@ import {
   RESULT_RED_WIN,
   RESULT_TIE
 } from '@toa-lib/models';
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import {
@@ -30,7 +30,7 @@ import {
   getArgFromQualityStr
 } from '@toa-lib/server';
 import logger from '../util/Logger.js';
-import { getDB, __dirname } from '../db/EventDatabase.js';
+import { EventDatabase, getDB, __dirname } from '../db/EventDatabase.js';
 import {
   EventKeyParams,
   EventTournamentKeyParams,
@@ -50,6 +50,175 @@ import {
 
 const MatchArraySchema = z.array(matchWithDetailsZod);
 const MatchParticipantArraySchema = z.array(matchParticipantZod);
+
+const MatchActionEventBodySchema = z.object({
+  sourceEvent: z.string(),
+  fieldPath: z.string().optional(),
+  oldValueJson: z.string().optional(),
+  newValueJson: z.string().optional(),
+  deltaNumber: z.number().optional(),
+  actorId: z.string().optional(),
+  actorName: z.string().optional(),
+  clientId: z.string().optional(),
+  socketId: z.string().optional(),
+  correlationId: z.string().optional(),
+  occurredAtUtc: z.string().optional(),
+  persisted: z.number().int().min(0).max(1).optional()
+});
+
+const MatchHistoryQuerySchema = z.object({
+  startRevision: z.coerce.number().int().positive().optional(),
+  endRevision: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(500).default(200),
+  includeActions: z.coerce.boolean().default(true)
+});
+
+const MatchPatchBodySchema = matchWithDetailsZod.extend({
+  redScore: z.number().nullable().optional(),
+  blueScore: z.number().nullable().optional(),
+  redMinPen: z.number().nullable().optional(),
+  redMajPen: z.number().nullable().optional(),
+  blueMinPen: z.number().nullable().optional(),
+  blueMajPen: z.number().nullable().optional()
+});
+
+type MatchAuditActionType =
+  'MATCH_PATCH' | 'MATCH_DETAILS_PATCH' | 'MATCH_PARTICIPANTS_PATCH';
+
+type MatchAuditContext = {
+  actionType: MatchAuditActionType;
+  source: 'api';
+  actorId?: string;
+  actorName?: string;
+  clientId?: string;
+  socketId?: string;
+  correlationId?: string;
+};
+
+const getHeaderValue = (
+  request: FastifyRequest,
+  header: string
+): string | undefined => {
+  const value = request.headers[header.toLowerCase()];
+  if (Array.isArray(value)) return value[0];
+  return typeof value === 'string' ? value : undefined;
+};
+
+const makeAuditContext = (
+  request: FastifyRequest,
+  actionType: MatchAuditActionType
+): MatchAuditContext => ({
+  actionType,
+  source: 'api',
+  actorId:
+    getHeaderValue(request, 'x-actor-id') ??
+    getHeaderValue(request, 'x-user-id'),
+  actorName:
+    getHeaderValue(request, 'x-actor-name') ??
+    getHeaderValue(request, 'x-user-name') ??
+    getHeaderValue(request, 'x-username'),
+  clientId: getHeaderValue(request, 'x-client-id'),
+  socketId: getHeaderValue(request, 'x-socket-id'),
+  correlationId: getHeaderValue(request, 'x-correlation-id')
+});
+
+const insertHistoryRecord = async (
+  db: EventDatabase,
+  table: 'match_history_base' | 'match_detail_history',
+  value: Record<string, unknown>
+) => {
+  const entries = Object.entries(value);
+  const columns = entries.map(([k]) => `"${k}"`).join(', ');
+  const placeholders = entries.map(() => '?').join(', ');
+  await db.db.all(
+    `INSERT INTO "${table}" (${columns}) VALUES (${placeholders});`,
+    entries.map(([, v]) => (typeof v === 'undefined' ? null : v))
+  );
+};
+
+const isRevisionConflictError = (error: unknown): boolean => {
+  const message = String((error as { message?: unknown })?.message ?? error);
+  return (
+    message.includes('SQLITE_CONSTRAINT: UNIQUE constraint failed') &&
+    message.includes('match_history_base.eventKey') &&
+    message.includes('match_history_base.revision')
+  );
+};
+
+const writeMatchRevisionSnapshot = async (
+  db: EventDatabase,
+  eventKey: string,
+  tournamentKey: string,
+  id: string,
+  audit: MatchAuditContext
+) => {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      const revisionRows = (await db.db.all(
+        'SELECT COALESCE(MAX("revision"), 0) + 1 AS "nextRevision" FROM "match_history_base" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
+        [eventKey, tournamentKey, Number(id)]
+      )) as { nextRevision: number }[];
+      const revision = Number(revisionRows[0]?.nextRevision ?? 1);
+      const occurredAtUtc = nowUtc();
+
+      const matchRows = (await db.db.all(
+        'SELECT * FROM "match" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
+        [eventKey, tournamentKey, Number(id)]
+      )) as Record<string, unknown>[];
+
+      if (matchRows.length === 0) {
+        return;
+      }
+
+      const detailRows = (await db.db.all(
+        'SELECT * FROM "match_detail" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
+        [eventKey, tournamentKey, Number(id)]
+      )) as Record<string, unknown>[];
+
+      const auditColumns = {
+        revision,
+        actionType: audit.actionType,
+        source: audit.source,
+        actorId: audit.actorId,
+        actorName: audit.actorName,
+        clientId: audit.clientId,
+        socketId: audit.socketId,
+        correlationId: audit.correlationId,
+        occurredAtUtc
+      };
+
+      await insertHistoryRecord(db, 'match_history_base', {
+        ...matchRows[0],
+        ...auditColumns
+      });
+
+      await insertHistoryRecord(db, 'match_detail_history', {
+        ...(detailRows[0] ?? {
+          eventKey,
+          tournamentKey,
+          id: Number(id)
+        }),
+        ...auditColumns
+      });
+
+      if (audit.correlationId) {
+        await db.db.all(
+          'UPDATE "match_action_event" SET "revision" = ?, "persisted" = 1 WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ? AND "correlationId" = ? AND "persisted" = 0;',
+          [revision, eventKey, tournamentKey, Number(id), audit.correlationId]
+        );
+      }
+
+      return;
+    } catch (e) {
+      if (attempt < 4 && isRevisionConflictError(e)) {
+        continue;
+      }
+      throw e;
+    }
+  }
+
+  throw new Error('Unable to write match history snapshot after retries');
+};
 
 const MatchScoreSchema = z.object({
   redScore: z.number(),
@@ -332,6 +501,155 @@ async function matchController(fastify: FastifyInstance) {
     }
   );
 
+  // Get immutable history for one match.
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    '/history/:eventKey/:tournamentKey/:id',
+    {
+      schema: {
+        params: EventTournamentIdParams,
+        querystring: MatchHistoryQuerySchema,
+        response: errorableSchema(z.any()),
+        tags: ['Matches']
+      }
+    },
+    async (request, reply) => {
+      try {
+        const { eventKey, tournamentKey, id } = request.params as z.infer<
+          typeof EventTournamentIdParams
+        >;
+        const { startRevision, endRevision, limit, includeActions } =
+          request.query as z.infer<typeof MatchHistoryQuerySchema>;
+        const db = await getDB(eventKey);
+
+        const revFilters: string[] = [];
+        const revParams: (string | number)[] = [
+          eventKey,
+          tournamentKey,
+          Number(id)
+        ];
+        if (typeof startRevision === 'number') {
+          revFilters.push('AND "revision" >= ?');
+          revParams.push(startRevision);
+        }
+        if (typeof endRevision === 'number') {
+          revFilters.push('AND "revision" <= ?');
+          revParams.push(endRevision);
+        }
+        revParams.push(limit);
+
+        const base = await db.db.all(
+          `SELECT * FROM "match_history_base" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ? ${revFilters.join(
+            ' '
+          )} ORDER BY "revision" ASC LIMIT ?;`,
+          revParams
+        );
+        const details = await db.db.all(
+          `SELECT * FROM "match_detail_history" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ? ${revFilters.join(
+            ' '
+          )} ORDER BY "revision" ASC LIMIT ?;`,
+          revParams
+        );
+
+        let actions: any[] = [];
+        if (includeActions) {
+          const actionFilters: string[] = [];
+          const actionParams: (string | number)[] = [
+            eventKey,
+            tournamentKey,
+            Number(id)
+          ];
+          if (typeof startRevision === 'number') {
+            actionFilters.push('AND ("revision" IS NULL OR "revision" >= ?)');
+            actionParams.push(startRevision);
+          }
+          if (typeof endRevision === 'number') {
+            actionFilters.push('AND ("revision" IS NULL OR "revision" <= ?)');
+            actionParams.push(endRevision);
+          }
+          actionParams.push(limit);
+          actions = await db.db.all(
+            `SELECT * FROM "match_action_event" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ? ${actionFilters.join(
+              ' '
+            )} ORDER BY "occurredAtUtc" ASC, "actionEventId" ASC LIMIT ?;`,
+            actionParams
+          );
+        }
+
+        reply.send({
+          key: { eventKey, tournamentKey, id: Number(id) },
+          history: { base, details },
+          actions
+        });
+      } catch (e) {
+        reply.code(500).send(InternalServerError(e));
+      }
+    }
+  );
+
+  // Record a fine-grained user action from realtime/socket flow.
+  fastify.withTypeProvider<ZodTypeProvider>().post(
+    '/action-event/:eventKey/:tournamentKey/:id',
+    {
+      schema: {
+        params: EventTournamentIdParams,
+        body: MatchActionEventBodySchema,
+        response: errorableSchema(EmptySchema),
+        tags: ['Matches']
+      }
+    },
+    async (request, reply) => {
+      try {
+        const { eventKey, tournamentKey, id } = request.params as z.infer<
+          typeof EventTournamentIdParams
+        >;
+        const body = request.body as z.infer<typeof MatchActionEventBodySchema>;
+        const db = await getDB(eventKey);
+
+        const actorId =
+          body.actorId ??
+          getHeaderValue(request, 'x-actor-id') ??
+          getHeaderValue(request, 'x-user-id');
+        const actorName =
+          body.actorName ??
+          getHeaderValue(request, 'x-actor-name') ??
+          getHeaderValue(request, 'x-user-name') ??
+          getHeaderValue(request, 'x-username');
+        const clientId =
+          body.clientId ?? getHeaderValue(request, 'x-client-id');
+        const socketId =
+          body.socketId ?? getHeaderValue(request, 'x-socket-id');
+        const correlationId =
+          body.correlationId ?? getHeaderValue(request, 'x-correlation-id');
+
+        await db.db.all(
+          'INSERT INTO "match_action_event" ("eventKey", "tournamentKey", "id", "revision", "sourceEvent", "fieldPath", "oldValueJson", "newValueJson", "deltaNumber", "actorId", "actorName", "clientId", "socketId", "correlationId", "occurredAtUtc", "persisted") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
+          [
+            eventKey,
+            tournamentKey,
+            Number(id),
+            null,
+            body.sourceEvent,
+            body.fieldPath ?? null,
+            body.oldValueJson ?? null,
+            body.newValueJson ?? null,
+            typeof body.deltaNumber === 'number' ? body.deltaNumber : null,
+            actorId ?? null,
+            actorName ?? null,
+            clientId ?? null,
+            socketId ?? null,
+            correlationId ?? null,
+            body.occurredAtUtc ?? nowUtc(),
+            body.persisted ?? 0
+          ]
+        );
+
+        reply.status(200).send({});
+      } catch (e) {
+        reply.code(500).send(InternalServerError(e));
+      }
+    }
+  );
+
   // Insert matches
   fastify.withTypeProvider<ZodTypeProvider>().post(
     '/:eventKey',
@@ -379,7 +697,7 @@ async function matchController(fastify: FastifyInstance) {
     {
       schema: {
         params: EventTournamentIdParams,
-        body: matchWithDetailsZod,
+        body: MatchPatchBodySchema,
         response: errorableSchema(EmptySchema),
         tags: ['Matches']
       }
@@ -390,7 +708,7 @@ async function matchController(fastify: FastifyInstance) {
           typeof EventTournamentIdParams
         >;
         const db = await getDB(eventKey);
-        const match = request.body as z.infer<typeof matchWithDetailsZod>;
+        const match = request.body as z.infer<typeof MatchPatchBodySchema>;
         if (match.details) delete match.details;
         if (match.participants) delete match.participants;
         // Server-owned, like cycleTime below: clients echo back whatever they
@@ -413,6 +731,19 @@ async function matchController(fastify: FastifyInstance) {
           if (cycleTime !== null) match.cycleTime = cycleTime;
         }
 
+        if (match.redScore == null)
+          match.redScore = Number(stored?.redScore ?? 0);
+        if (match.blueScore == null)
+          match.blueScore = Number(stored?.blueScore ?? 0);
+        if (match.redMinPen == null)
+          match.redMinPen = Number(stored?.redMinPen ?? 0);
+        if (match.redMajPen == null)
+          match.redMajPen = Number(stored?.redMajPen ?? 0);
+        if (match.blueMinPen == null)
+          match.blueMinPen = Number(stored?.blueMinPen ?? 0);
+        if (match.blueMajPen == null)
+          match.blueMajPen = Number(stored?.blueMajPen ?? 0);
+
         if (match.active === 1) {
           // Those matches really did change, so they get a new timestamp too.
           await db.updateWhere(
@@ -423,10 +754,20 @@ async function matchController(fastify: FastifyInstance) {
         }
 
         match.updatedAtUtc = nowUtc();
+        const sanitizedMatch = Object.fromEntries(
+          Object.entries(match).filter(([, value]) => value !== null)
+        ) as Record<string, unknown>;
         await db.updateWhere(
           'match',
-          match,
+          sanitizedMatch,
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
+        );
+        await writeMatchRevisionSnapshot(
+          db,
+          eventKey,
+          tournamentKey,
+          id,
+          makeAuditContext(request, 'MATCH_PATCH')
         );
         reply.status(200).send({});
       } catch (e) {
@@ -465,12 +806,22 @@ async function matchController(fastify: FastifyInstance) {
           return;
         }
         const data = funcs?.detailsToJson ? funcs.detailsToJson(body) : body;
+        const sanitizedData = Object.fromEntries(
+          Object.entries(data).filter(([, value]) => value !== null)
+        );
         await db.updateWhere(
           'match_detail',
-          data,
+          sanitizedData,
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
         );
         await touchMatch(db, eventKey, tournamentKey, id);
+        await writeMatchRevisionSnapshot(
+          db,
+          eventKey,
+          tournamentKey,
+          id,
+          makeAuditContext(request, 'MATCH_DETAILS_PATCH')
+        );
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
@@ -506,6 +857,13 @@ async function matchController(fastify: FastifyInstance) {
           );
         }
         await touchMatch(db, eventKey, tournamentKey, id);
+        await writeMatchRevisionSnapshot(
+          db,
+          eventKey,
+          tournamentKey,
+          id,
+          makeAuditContext(request, 'MATCH_PARTICIPANTS_PATCH')
+        );
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));

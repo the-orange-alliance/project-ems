@@ -167,9 +167,9 @@ export class EventDatabase {
   }
 
   private async columnNames(table: string): Promise<string[]> {
-    const columns = (await this.db.all(
-      `PRAGMA table_info("${table}");`
-    )) as { name: string }[];
+    const columns = (await this.db.all(`PRAGMA table_info("${table}");`)) as {
+      name: string;
+    }[];
     return columns.map((c) => c.name);
   }
 
