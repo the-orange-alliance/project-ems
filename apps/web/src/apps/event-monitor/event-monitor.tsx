@@ -270,9 +270,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
           </Dropdown>
         }
       >
-        <Space direction='vertical' style={{ width: '100%' }}>
+        <Space orientation='vertical' style={{ width: '100%' }}>
           <Space
-            direction='horizontal'
+            orientation='horizontal'
             style={{ width: '100%', justifyContent: 'space-between' }}
           >
             <Text>{getMatchStatus()}</Text>
@@ -318,7 +318,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
         footer={null}
         width={800}
       >
-        <Space direction='vertical' style={{ width: '100%' }}>
+        <Space orientation='vertical' style={{ width: '100%' }}>
           <Space>
             {connected ? (
               <CheckCircleOutlined style={{ color: '#52c41a' }} />
@@ -378,7 +378,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
           </Flex>
 
           <Divider />
-          <Space direction='vertical' style={{ width: '100%' }}>
+          <Space orientation='vertical' style={{ width: '100%' }}>
             <Button type='primary' href={`${webUrl}`} target='_blank' block>
               Open
             </Button>
@@ -681,7 +681,7 @@ export const EventMonitor: FC = () => {
 
   return (
     <DefaultLayout title='Event Monitor'>
-      <Space direction='vertical' style={{ width: '100%', marginBottom: 24 }}>
+      <Space orientation='vertical' style={{ width: '100%', marginBottom: 24 }}>
         <Card title='Add Monitor' size='small'>
           <Space.Compact style={{ width: '100%' }}>
             <Input

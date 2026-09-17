@@ -8,7 +8,7 @@ const ErrorFallback: (props: FallbackProps) => ReactNode = ({
 }) => {
   return (
     <Space
-      direction='vertical'
+      orientation='vertical'
       style={{
         display: 'flex',
         justifyContent: 'center',
