@@ -8,27 +8,22 @@ interface Props {
   tournaments: Tournament[];
   loading?: boolean;
   onEdit?: (tournament: Tournament) => void;
+  onDelete?: (tournament: Tournament) => void;
 }
 
 export const TournamentTable: FC<Props> = ({
   event,
   tournaments,
   loading,
-  onEdit
+  onEdit,
+  onDelete
 }) => {
   return (
     <Skeleton loading={loading} active={loading}>
       <UpgradedTable
         rowKey='tournamentKey'
         data={tournaments}
-        headers={[
-          'Event',
-          'Tournament ID',
-          'Type',
-          'Name',
-          'Tournament',
-          'Fields'
-        ]}
+        headers={['Event', 'Tournament ID', 'Name', 'Type', 'Level', 'Fields']}
         renderRow={(t) => {
           if (!event) return [];
           const { eventName } = event;
@@ -43,6 +38,7 @@ export const TournamentTable: FC<Props> = ({
           ];
         }}
         onModify={onEdit}
+        onDelete={onDelete}
       />
     </Skeleton>
   );

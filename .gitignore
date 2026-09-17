@@ -11,6 +11,7 @@ bin/*
 dist/
 .turbo
 out/
+temp/
 
 # generated at build/dev time by apps/web/scripts/generate-flag-data.mjs
 apps/web/public/flags/base64/

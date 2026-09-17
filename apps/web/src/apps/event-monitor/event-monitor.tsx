@@ -30,11 +30,13 @@ import {
   Match,
   Team,
   Displays,
-  FGC25FCS
+  FGC25FCS,
+  getSeasonKeyFromEventKey
 } from '@toa-lib/models';
 import { io, Socket } from 'socket.io-client';
 import { useEventState } from '../../stores/hooks/use-event-state.js';
 import { useAtomValue } from 'jotai';
+import { eventKeyAtom } from '../../stores/state/event.js';
 import { darkModeAtom } from '../../stores/state/ui.js';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 
@@ -77,6 +79,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
   );
   const [fcsStatus, setFcsStatus] = useState<FGC25FCS.FcsStatus | null>(null);
   const seasonComponents = useSeasonComponents();
+  const eventKey = useAtomValue(eventKeyAtom);
+  const isRopeDropSeason =
+    getSeasonKeyFromEventKey(eventKey ?? '') === 'fgc_2025';
 
   const handleRefresh = () => {
     console.log('Refresh but idk how to');
@@ -359,13 +364,16 @@ const MonitorCard: FC<MonitorCardProps> = ({
               >
                 Awards Mode
               </Button>
-              <Button
-                type='primary'
-                block
-                onClick={() => socket?.emit('fcs:ropeDrop')}
-              >
-                Force Rope Drop (2025)
-              </Button>
+              {/* Rope Drop is a 2025 (Eco Equilibrium) mechanic */}
+              {isRopeDropSeason && (
+                <Button
+                  type='primary'
+                  block
+                  onClick={() => socket?.emit('fcs:ropeDrop')}
+                >
+                  Force Rope Drop
+                </Button>
+              )}
             </Flex>
           </Flex>
 
@@ -568,6 +576,7 @@ export const EventMonitor: FC = () => {
 
   const [monitors, setMonitors] = useState<Monitor[]>([]);
   const [inputValue, setInputValue] = useState('');
+  const [inputError, setInputError] = useState('');
   const screens = useBreakpoint();
 
   // Load monitors from localStorage on component mount
@@ -621,9 +630,25 @@ export const EventMonitor: FC = () => {
     }
   }, [monitors]);
 
+  // Monitors address realtime services by LAN IPv4 (see the default list), so
+  // require a valid IPv4 — anything else (e.g. "not-an-ip") is a typo.
+  const isValidIpv4 = (value: string): boolean =>
+    /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(
+      value
+    );
+
   const handleAddMonitor = () => {
     const trimmedValue = inputValue.trim();
     if (!trimmedValue) return;
+
+    if (!isValidIpv4(trimmedValue)) {
+      setInputError('Enter a valid IPv4 address (e.g. 192.168.80.111).');
+      return;
+    }
+    if (monitors.some((m) => m.address === trimmedValue)) {
+      setInputError('That monitor is already in the list.');
+      return;
+    }
 
     // Generate next field number
     const nextField =
@@ -637,6 +662,7 @@ export const EventMonitor: FC = () => {
 
     setMonitors((prev) => [...prev, newMonitor]);
     setInputValue('');
+    setInputError('');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -661,7 +687,11 @@ export const EventMonitor: FC = () => {
             <Input
               placeholder='Enter IP address (e.g., 192.168.80.111)'
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              status={inputError ? 'error' : undefined}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                if (inputError) setInputError('');
+              }}
               onKeyPress={handleKeyPress}
             />
             <Button
@@ -672,6 +702,11 @@ export const EventMonitor: FC = () => {
               Add
             </Button>
           </Space.Compact>
+          {inputError && (
+            <Text type='danger' style={{ display: 'block', marginTop: 4 }}>
+              {inputError}
+            </Text>
+          )}
         </Card>
 
         <Text type='secondary'>

@@ -144,6 +144,11 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
             teams={teams}
           />
         );
+      case AudienceScreens.RANKINGS:
+        // No season display implements a standalone rankings board yet, so this
+        // pin is explicitly unsupported rather than silently falling through to
+        // the results screen.
+        return <>Not Implemented</>;
     }
   }
   const afterMatchBeforeScore =

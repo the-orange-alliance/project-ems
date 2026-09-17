@@ -12,11 +12,18 @@ const FormField: FC<{
   value: string | number;
   type?: string;
   disabled?: boolean;
+  required?: boolean;
+  error?: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-}> = ({ name, label, value, type, disabled, onChange }) => {
+}> = ({ name, label, value, type, disabled, required, error, onChange }) => {
   return (
     <Col xs={24} sm={12} md={8}>
-      <Form.Item label={label}>
+      <Form.Item
+        label={label}
+        required={required}
+        validateStatus={error ? 'error' : undefined}
+        help={error}
+      >
         <Input
           name={name}
           value={value}
@@ -44,18 +51,38 @@ export const EventForm: FC<Props> = ({
   returnTo
 }) => {
   const [event, setEvent] = useState({ ...(initialEvent ?? defaultEvent) });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (initialEvent) setEvent(initialEvent);
   }, [initialEvent]);
 
+  const validate = (): boolean => {
+    const next: Record<string, string> = {};
+    if (!event.eventName?.trim()) next.eventName = 'Event Name is required.';
+    if (!event.seasonKey?.trim()) next.seasonKey = 'Season is required.';
+    if (!event.eventKey?.trim()) next.eventKey = 'Event Key is required.';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleSubmit = () => {
     if (!event) return;
+    if (!validate()) return;
     onSubmit?.(event);
   };
 
+  const clearError = (name: string) =>
+    setErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { type, name, value } = e.target;
+    clearError(name);
     setEvent((prev) => ({
       ...prev,
       [name]: type === 'number' ? parseInt(value) : value
@@ -64,6 +91,8 @@ export const EventForm: FC<Props> = ({
 
   const handleSeasonChange = (seasonKey: string) => {
     if (!event) return;
+    clearError('seasonKey');
+    clearError('eventKey');
     setEvent({
       ...event,
       seasonKey,
@@ -90,9 +119,16 @@ export const EventForm: FC<Props> = ({
           value={event.eventName}
           onChange={handleChange}
           disabled={loading}
+          required
+          error={errors.eventName}
         />
         <Col xs={24} sm={12} md={8}>
-          <Form.Item label='Season'>
+          <Form.Item
+            label='Season'
+            required
+            validateStatus={errors.seasonKey ? 'error' : undefined}
+            help={errors.seasonKey}
+          >
             <SeasonDropdown
               value={event.seasonKey}
               onChange={handleSeasonChange}
@@ -113,6 +149,8 @@ export const EventForm: FC<Props> = ({
           value={event.eventKey}
           onChange={handleChange}
           disabled={!!initialEvent || loading}
+          required
+          error={errors.eventKey}
         />
         <FormField
           name='divisionName'
