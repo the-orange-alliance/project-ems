@@ -23,14 +23,7 @@ export const TournamentTable: FC<Props> = ({
       <UpgradedTable
         rowKey='tournamentKey'
         data={tournaments}
-        headers={[
-          'Event',
-          'Tournament ID',
-          'Type',
-          'Name',
-          'Tournament',
-          'Fields'
-        ]}
+        headers={['Event', 'Tournament ID', 'Name', 'Type', 'Level', 'Fields']}
         renderRow={(t) => {
           if (!event) return [];
           const { eventName } = event;
