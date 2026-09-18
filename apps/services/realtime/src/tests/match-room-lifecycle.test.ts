@@ -15,11 +15,12 @@ import Match from "../rooms/Match.js";
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** `timer`, `key` and `match` are private; the assertions below are about the observable lifecycle they encode. */
+/** `timer`, `key`, `match` and `state` are private; the assertions below are about the observable lifecycle they encode. */
 type MatchInternals = {
   timer: { mode: MatchMode; emit(event: string): void; abort(): void };
   key: unknown;
   match: unknown;
+  state: MatchState;
 };
 
 test("realtime records lifecycle modes and abort before forgetting the match, without timer ticks", async () => {
@@ -75,6 +76,47 @@ test("realtime records lifecycle modes and abort before forgetting the match, wi
       ),
     );
     assert.ok(!rows.some((a) => a.sourceEvent === MatchSocketEvent.TIMER));
+  } finally {
+    internals.timer.abort();
+    globalThis.fetch = original;
+  }
+});
+
+test("post-match score edits keep the match complete so reconnecting clients still receive END", async () => {
+  const handlers = new Map<string, Function>(),
+    server = { in: () => ({ emit: () => {} }) } as unknown as Server,
+    socket = {
+      on: (name: string, handler: Function) => handlers.set(name, handler),
+      emit: () => {},
+      handshake: { address: "test-client" },
+      id: "test-socket",
+      decoded: { id: 1, username: "operator" },
+    } as unknown as Socket;
+  const original = globalThis.fetch;
+  globalThis.fetch = (async () =>
+    ({ ok: true, status: 200 }) as Response) as typeof fetch;
+  const room = new Match(server);
+  const internals = room as unknown as MatchInternals;
+  try {
+    room.initializeEvents(socket);
+    const key = { eventKey: "fgc_2026_test", tournamentKey: "q", id: 1 };
+    handlers.get(MatchSocketEvent.PRESTART)!(key);
+    handlers.get(MatchSocketEvent.START)!();
+    internals.timer.emit("timer:end");
+    assert.equal(internals.state, MatchState.MATCH_COMPLETE);
+
+    // A referee edit during result review must not advance the server state;
+    // RESULTS_READY is the scorekeeper's "field cleared" step, not the relay's.
+    handlers.get(MatchSocketEvent.UPDATE)!({ ...key, details: {} });
+    assert.equal(internals.state, MatchState.MATCH_COMPLETE);
+
+    const replayed: string[] = [];
+    room.initializeEvents({
+      on: () => {},
+      emit: (event: string) => replayed.push(event),
+    } as unknown as Socket);
+    assert.ok(replayed.includes(MatchSocketEvent.END));
+    await pause(10);
   } finally {
     internals.timer.abort();
     globalThis.fetch = original;

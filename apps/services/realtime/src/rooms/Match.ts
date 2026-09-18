@@ -469,12 +469,6 @@ export default class Match extends Room {
     partiallyUpdatedMatch: MatchObj<any>,
   ): void {
     this.match = { ...partiallyUpdatedMatch };
-    if (
-      this.state === MatchState.MATCH_COMPLETE &&
-      partiallyUpdatedMatch.details
-    ) {
-      this.transition(MatchState.RESULTS_READY, MatchSocketEvent.UPDATE);
-    }
     const seasonKey = getSeasonKeyFromEventKey(partiallyUpdatedMatch.eventKey);
     const functions = getFunctionsBySeasonKey(seasonKey);
     if (
