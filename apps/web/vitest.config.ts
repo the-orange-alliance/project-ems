@@ -31,7 +31,11 @@ export default defineConfig({
     // Ant Design + jsdom initialization can exceed Vitest's 5s default on
     // production Windows workstations even when assertions complete normally.
     testTimeout: 30_000,
-    pool: 'vmThreads',
+    // Not vmThreads: it shares source-module state between test files in the
+    // same worker, so module-scoped singletons (the background query
+    // scheduler, single-flight recovery maps) leak across files and tests
+    // fail depending on file order.
+    pool: 'forks',
     fileParallelism: false,
     maxWorkers: 1
   }
