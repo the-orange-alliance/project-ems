@@ -74,12 +74,6 @@ export function ballCountToLedCount(ballCount: number, ratio: number): number {
   return Math.ceil(clampCount(ballCount) / clampRatio(ratio));
 }
 
-const finiteOrZero = (value: unknown): number => {
-  const numeric =
-    typeof value === 'number' ? value : Number(value ?? Number.NaN);
-  return Number.isFinite(numeric) ? numeric : 0;
-};
-
 /**
  * Score Table
  */
@@ -90,14 +84,14 @@ export const ScoreTable = {
   // Sum of the BraceState values of the three ROBOTS + 1 (Table 3-4)
   ClimbMultiplierRed: (details: MatchDetails) =>
     1 +
-    finiteOrZero(details.redRobotOneBraceState) +
-    finiteOrZero(details.redRobotTwoBraceState) +
-    finiteOrZero(details.redRobotThreeBraceState),
+    details.redRobotOneBraceState +
+    details.redRobotTwoBraceState +
+    details.redRobotThreeBraceState,
   ClimbMultiplierBlue: (details: MatchDetails) =>
-    1 +
-    finiteOrZero(details.blueRobotOneBraceState) +
-    finiteOrZero(details.blueRobotTwoBraceState) +
-    finiteOrZero(details.blueRobotThreeBraceState),
+    1 + 
+    details.blueRobotOneBraceState +
+    details.blueRobotTwoBraceState +
+    details.blueRobotThreeBraceState,
   // 25 points per red ROBOT with a PARTNER CLIMB flag set (Table 3-5).
   PartnerClimbRed: (details: MatchDetails) =>
     ((details.redRobotOnePartnerClimb ? 1 : 0) +
@@ -120,7 +114,10 @@ export const ScoreTable = {
       details.blueRobotOneBraceState,
       details.blueRobotTwoBraceState,
       details.blueRobotThreeBraceState
-    ].reduce((count, state) => count + (state >= BraceState.Zone3 ? 1 : 0), 0);
+    ].reduce(
+      (count, state) => count + (state >= BraceState.Zone3 ? 1 : 0),
+      0
+    );
 
     if (zone3Count >= 6) return CoopertitionBonus.Six;
     if (zone3Count === 5) return CoopertitionBonus.Five;
@@ -430,7 +427,7 @@ function calculateRankings(
       // Red Alliance
       if (participant.station < 20) {
         ranking.wins = ranking.wins + (redWin ? 1 : 0);
-        ranking.losses = ranking.losses + (blueWin ? 1 : 0);
+        ranking.losses = ranking.losses + (redWin ? 0 : 1);
 
         if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.redScore]);
@@ -452,7 +449,7 @@ function calculateRankings(
       // Blue Alliance
       if (participant.station >= 20) {
         ranking.wins = ranking.wins + (blueWin ? 1 : 0);
-        ranking.losses = ranking.losses + (redWin ? 1 : 0);
+        ranking.losses = ranking.losses + (blueWin ? 0 : 1);
 
         if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
@@ -498,16 +495,11 @@ function calculateRankings(
 
     const qualifiedScores = scores.filter((s) => s >= 0);
 
-    // Red-card sentinels are excluded from both the sum and denominator.
-    // Drop one lowest eligible score only when at least two eligible scores exist.
-    const lowestScore = qualifiedScores.length
-      ? Math.min(...qualifiedScores)
-      : 0;
-    const index = qualifiedScores.findIndex((score) => score === lowestScore);
-    const newScores =
-      qualifiedScores.length > 1
-        ? qualifiedScores.filter((_, i) => i !== index)
-        : qualifiedScores;
+    const lowestScore = ranking.played > 0 ? Math.min(...qualifiedScores) : 0;
+    const index = scores.findIndex((s) => s === lowestScore);
+    const newScores = (
+      scores.length > 1 ? scores.filter((_, i) => i !== index) : scores
+    ).map((score) => (score >= 0 ? score : 0));
     if (newScores.length > 0) {
       ranking.rankingScore = Number(
         (
@@ -653,11 +645,9 @@ export function calculateScore(
   // values shared equally by both REGIONAL ALLIANCES.
 
   const redSuppressionUnitPoints =
-    details.wildfireInRedSuppressionUnit *
-    ScoreTable.WildfireContainedSuppression;
+    details.wildfireInRedSuppressionUnit * ScoreTable.WildfireContainedSuppression;
   const blueSuppressionUnitPoints =
-    details.wildfireInBlueSuppressionUnit *
-    ScoreTable.WildfireContainedSuppression;
+    details.wildfireInBlueSuppressionUnit * ScoreTable.WildfireContainedSuppression;
 
   const redClimbMultiplier = ScoreTable.ClimbMultiplierRed(details);
   const blueClimbMultiplier = ScoreTable.ClimbMultiplierBlue(details);

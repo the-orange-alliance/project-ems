@@ -183,7 +183,9 @@ test('lifecycle replay respects abort and restart clock anchors', () => {
   assert.equal(clockAt(ctx, m, '2026-09-01T12:01:00.000Z')!.timeLeft, 140);
 });
 
-test('official season rankings exclude red-card denominator and keep ties out of losses', () => {
+// Game manual Table 4-1 / M21: a RED CARD scores 0 for the team and may not be
+// the dropped lowest match; a WHITE CARD scores 0 and may be dropped.
+test('official season rankings count red cards as undroppable zeros', () => {
   const ctx = fixture(),
     template = ctx.matches[0];
   const matches = [100, 200, 300].map((score, i) => ({
@@ -204,14 +206,18 @@ test('official season rankings exclude red-card denominator and keep ties out of
     matches as any,
     []
   );
-  assert.equal(ranking.rankingScore, 300);
+  // [100, RED, 300]: the red card is a 0 that cannot be dropped, so the
+  // lowest eligible match (100) is dropped -> avg(0, 300).
+  assert.equal(ranking.rankingScore, 150);
   assert.equal(ranking.ties, 1);
-  assert.equal(ranking.losses, 0);
+  assert.equal(ranking.losses, 1);
+  // [100, RED, WHITE]: the white card's 0 is the lowest droppable match ->
+  // avg(100, 0).
   matches[2].participants[0].cardStatus = 3;
   assert.equal(
     IgnitingInnovationSeason.functions!.calculateRankings(matches as any, [])[0]
       .rankingScore,
-    100
+    50
   );
 });
 
