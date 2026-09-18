@@ -135,11 +135,16 @@ export class StatsWorkerPool {
       );
     }
     // Eval/stdin launch flags describe the parent's entry, not this file worker.
-    const execArgv = process.execArgv.filter(
+    // Only pass an explicit execArgv when something must be stripped: Node
+    // rejects process-wide flags (e.g. --v8-pool-size, --secure-heap, which
+    // `node --test` children receive) in an explicit list, but inherits them.
+    const filtered = process.execArgv.filter(
       (arg, i, args) =>
         !arg.startsWith('--input-type') &&
         (i === 0 || args[i - 1] !== '--input-type')
     );
+    const execArgv =
+      filtered.length === process.execArgv.length ? undefined : filtered;
     const worker = new Worker(entry, { execArgv }),
       slot: Slot = { worker, replacing: false, ready: false, startFailures };
     this.slots.push(slot);
