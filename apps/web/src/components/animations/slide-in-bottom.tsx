@@ -40,11 +40,13 @@ const SlideInBottom: React.FC<AnimationProps> = ({
   return (
     <div
       style={{
-        transform: `translateY(${localIn ? '0' : '100vh'})`,
+        // 100% of the immediate parent, NOT `100vw`/`vh` - see the matching
+        // comment in `slide-in-right.tsx`.
+        transform: `translateY(${localIn ? '0' : '100%'})`,
         transition: `transform ${duration ?? 0.3}s ease-in-out`,
         overflow: 'hidden',
-        height: '100vh',
-        width: '100vw'
+        height: '100%',
+        width: '100%'
       }}
     >
       {children}

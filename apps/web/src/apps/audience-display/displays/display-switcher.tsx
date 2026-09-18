@@ -4,7 +4,8 @@ import {
   AudienceScreens,
   Displays,
   LayoutMode,
-  MatchState
+  MatchState,
+  nextPlaybackPreviewSpec
 } from '@toa-lib/models';
 import { getDisplays } from './displays.js';
 import { FadeInOut, SlideInBottom } from 'src/components/animations/index.js';
@@ -15,6 +16,12 @@ import { matchAtom, matchOccurringRanksAtom } from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
+import {
+  playbackEnvelopeForEventAtom
+} from 'src/stores/state/graphics.js';
+import { StatsGraphicDisplay } from './graphics/stats-graphic-display.js';
+import { programTransitionAuthority } from './graphics/transition-machine.js';
+import { StatsGraphicPreviewDisplay } from './graphics/stats-graphic-preview-display.js';
 
 /**
  * Classic audience display that handles all scenarios.
@@ -24,11 +31,13 @@ export interface DisplayModeProps {
   id: Displays;
   eventKey: string | null;
 }
-export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
+export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
   const match = useAtomValue(matchAtom);
   const ranks = useAtomValue(matchOccurringRanksAtom);
   const [audDispChroma, setAudDisplayChroma] = useAtom(displayChromaKeyAtom);
   const matchState = useAtomValue(matchStateAtom);
+  const playbackEnvelope = useAtomValue(playbackEnvelopeForEventAtom(eventKey));
+  const authoritativeProgram = playbackEnvelope?.state.program;
   const [searchParams] = useSearchParams();
 
   const {
@@ -64,6 +73,35 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id }) => {
   // the one loaded from the url.
   const { data: event } = useEvent(match?.eventKey);
   const displays = getDisplays(event?.seasonKey || '');
+
+  // The stats graphics screen is keyed off the explicit event this audience
+  // route is bound to, not whatever match state happens to be selected in the
+  // global store. This leaves the on-air audience fully event-scoped and lets
+  // the shared transition engine finish a Clear exit even after the server has
+  // already flipped `onAir` back to false.
+  if (pin === AudienceScreens.STATS) {
+    return (
+      <StatsGraphicDisplay
+        key={eventKey}
+        authority={programTransitionAuthority(playbackEnvelope)}
+        spec={authoritativeProgram?.graphic.spec ?? null}
+        frame={authoritativeProgram?.graphic.frame ?? null}
+      />
+    );
+  }
+
+  // PVW calculates the next loaded spec off-air, anchored to the program snapshot.
+  if (pin === AudienceScreens.STATS_PREVIEW) {
+    return (
+      <StatsGraphicPreviewDisplay
+        eventKey={eventKey}
+        spec={nextPlaybackPreviewSpec(playbackEnvelope?.state ?? null)}
+        programSpec={authoritativeProgram?.graphic.spec ?? null}
+        programFrame={authoritativeProgram?.graphic.frame ?? null}
+      />
+    );
+  }
+
   // TODO - Have better error handling here.
   if (!match || !event || !ranks || !displays) return null;
 

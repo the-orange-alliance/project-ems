@@ -2,34 +2,99 @@ import { getAppData, environment as env } from '@toa-lib/server';
 import { AsyncDatabase } from 'promised-sqlite3';
 import { sep, join, dirname } from 'path';
 import { mkdir, readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { ApiDatabaseError } from '@toa-lib/models';
 import { fileURLToPath } from 'url';
+import { migrateGraphicsDatabase } from '../graphics/GraphicsSchema.js';
 
 const __filename = fileURLToPath(import.meta.url);
-export let __dirname = dirname(__filename);
+/** Immutable location of this module, used to find files that ship beside it. */
+const moduleDir = dirname(__filename);
+/**
+ * Kept as a mutable export for historical callers (e.g. the MatchMaker binary
+ * lookup in controllers/Match.ts) that expect `initGlobal()` to point it at
+ * `APP_ROOT` in production. SQL-file resolution no longer depends on it — see
+ * `resolveSqlDir()`.
+ */
+export let __dirname = moduleDir;
 
-const eventMap: Map<string, EventDatabase> = new Map();
+/**
+ * The api ships a `sql/` directory next to its source. Where that directory
+ * sits relative to this module depends on how the service was started:
+ *
+ *  - compiled, run normally:  `build/db/EventDatabase.js` -> `../../sql`
+ *  - compiled to a flat dir:  `build/EventDatabase.js`    -> `../sql`
+ *  - run from source (tsx):   `src/db/EventDatabase.ts`   -> `../../sql`
+ *  - APP_ROOT override (Docker): `<APP_ROOT>/sql`
+ *  - started from the package dir or repo root: relative to `process.cwd()`
+ *
+ * The previous implementation chose between `<dir>/sql` and `<dir>/../../sql`
+ * purely from `NODE_ENV`, so a dev process that merely had `APP_ROOT` set (a
+ * leftover value in a local `.env` is enough) resolved two levels above the app
+ * root and crashed on the very first query. Probe every plausible location and
+ * keep the first that actually contains the schema; cache it so the filesystem
+ * is only touched once.
+ */
+let cachedSqlDir: string | undefined;
+function resolveSqlDir(): string {
+  if (cachedSqlDir) return cachedSqlDir;
 
-export async function getDB(name: string): Promise<EventDatabase> {
-  if (eventMap.has(name)) {
-    /* @ts-ignore */
-    return eventMap.get(name);
-  } else {
-    eventMap.set(name, new EventDatabase(name));
-    await eventMap.get(name)?.initDatabase();
-    /* @ts-ignore */
-    return eventMap.get(name);
+  const { appRoot } = env.get();
+  const candidates = [
+    appRoot ? join(appRoot, 'sql') : undefined,
+    join(moduleDir, '../../sql'),
+    join(moduleDir, '../sql'),
+    join(moduleDir, 'sql'),
+    join(process.cwd(), 'sql'),
+    join(process.cwd(), 'apps', 'services', 'api', 'sql')
+  ].filter((candidate): candidate is string => Boolean(candidate));
+
+  const found = candidates.find((dir) =>
+    existsSync(join(dir, 'create_global.sql'))
+  );
+
+  if (!found) {
+    throw new Error(
+      `Unable to locate the api sql/ directory. Looked in:\n  ${candidates.join(
+        '\n  '
+      )}`
+    );
   }
+
+  cachedSqlDir = found;
+  return found;
+}
+
+const eventMap = new Map<string, Promise<EventDatabase>>();
+export async function getDB(name: string): Promise<EventDatabase> {
+  let pending = eventMap.get(name);
+  if (!pending) {
+    const database = new EventDatabase(name);
+    pending = database
+      .initDatabase()
+      .then(() => database)
+      .catch((error) => {
+        eventMap.delete(name);
+        throw error;
+      });
+    eventMap.set(name, pending);
+  }
+  return pending;
 }
 
 export async function initGlobal(): Promise<void> {
-  const appRoot = env.get().appRoot;
-  if (appRoot) {
+  const { appRoot } = env.get();
+  if (appRoot && existsSync(appRoot)) {
     __dirname = appRoot;
+  } else if (appRoot) {
+    // A stale APP_ROOT (e.g. left in a local .env by a previous test run) would
+    // otherwise redirect every file lookup to a directory that doesn't exist.
+    console.warn(
+      `[EventDatabase] APP_ROOT is set to "${appRoot}" but that path does not exist; ignoring it and resolving files relative to the running module.`
+    );
   }
 
   const globalDb = await getDB('global');
-  await globalDb.initDatabase();
   const query = await globalDb.getQueryFromFile('create_global.sql');
   await globalDb.db.exec(query);
 }
@@ -38,16 +103,25 @@ export class EventDatabase {
   public db!: AsyncDatabase;
   private name: string;
 
-  constructor(name: string) {
+  constructor(
+    name: string,
+    private readonly databasePath?: string
+  ) {
     this.name = name;
   }
 
   public async initDatabase(): Promise<void> {
     // Make sure our appdata path is created
     try {
-      await mkdir(getAppData('ems'), { recursive: true });
+      await mkdir(
+        this.databasePath ? dirname(this.databasePath) : getAppData('ems'),
+        { recursive: true }
+      );
       this.db = await AsyncDatabase.open(
-        getAppData('ems') + sep + this.name + '.db'
+        this.databasePath ?? getAppData('ems') + sep + this.name + '.db'
+      );
+      await this.db.exec(
+        'PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA busy_timeout = 5000;'
       );
       await this.runMigrations();
     } catch (e) {
@@ -93,6 +167,7 @@ export class EventDatabase {
       'updatedAtUtc',
       new Date().toISOString()
     );
+    if (this.name !== 'global') await migrateGraphicsDatabase(this.db);
   }
 
   /**
@@ -139,6 +214,24 @@ export class EventDatabase {
   }
 
   /**
+   * Creates `table` using `createStatement` if it does not already exist.
+   * `createStatement` must itself be a `CREATE TABLE IF NOT EXISTS` so this is
+   * safe to run against a brand new database too (where `createEventBase()`
+   * will go on to run the same statement from create_event.sql as a no-op).
+   */
+  private async createTableIfMissing(
+    table: string,
+    createStatement: string
+  ): Promise<void> {
+    try {
+      if (await this.tableExists(table)) return;
+      await this.db.exec(createStatement);
+    } catch (e) {
+      throw new ApiDatabaseError(table, e);
+    }
+  }
+
+  /**
    * Gives `column` a value on rows that don't have one yet.
    *
    * Idempotent by construction: it only touches nulls, so a second run matches
@@ -167,9 +260,9 @@ export class EventDatabase {
   }
 
   private async columnNames(table: string): Promise<string[]> {
-    const columns = (await this.db.all(
-      `PRAGMA table_info("${table}");`
-    )) as { name: string }[];
+    const columns = (await this.db.all(`PRAGMA table_info("${table}");`)) as {
+      name: string;
+    }[];
     return columns.map((c) => c.name);
   }
 
@@ -179,6 +272,33 @@ export class EventDatabase {
       [table]
     );
     return rows.length > 0;
+  }
+
+  private revisionTail: Promise<unknown> = Promise.resolve();
+  /** Serialize revision jobs, then execute each transaction in one native SQLite call. */
+  public withRevisionConnection<T>(
+    work: (db: AsyncDatabase) => Promise<T>
+  ): Promise<T> {
+    const pending = this.revisionTail
+      .catch(() => {})
+      .then(async () => {
+        const connection = await AsyncDatabase.open(
+          this.databasePath ?? getAppData('ems') + sep + this.name + '.db'
+        );
+        try {
+          await connection.exec(
+            'PRAGMA busy_timeout = 5000; PRAGMA synchronous = NORMAL;'
+          );
+          return await work(connection);
+        } catch (error) {
+          await connection.exec('ROLLBACK').catch(() => {});
+          throw error;
+        } finally {
+          await connection.close();
+        }
+      });
+    this.revisionTail = pending;
+    return pending;
   }
 
   public async setupUsers(): Promise<void> {
@@ -369,18 +489,12 @@ export class EventDatabase {
    * @returns Promise<string> of the file's contents as an sql-safe string.
    */
   public async getQueryFromFile(filePath: string): Promise<string> {
-    try {
-      const isProd = process.env.NODE_ENV === 'production';
-      const path = isProd ? `${__dirname}/sql` : join(__dirname, '../../sql');
-      const data = await readFile(join(path, sep, filePath));
-      return data
-        .toString()
-        .replace(/\n/g, '')
-        .replace(/\t/g, '')
-        .replace(/\r/g, '');
-    } catch (e) {
-      throw e;
-    }
+    const data = await readFile(join(resolveSqlDir(), filePath));
+    return data
+      .toString()
+      .replace(/\n/g, '')
+      .replace(/\t/g, '')
+      .replace(/\r/g, '');
   }
 
   private getUpdateString(value: Record<string, unknown>): string {

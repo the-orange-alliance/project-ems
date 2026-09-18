@@ -13,6 +13,7 @@ Pin any display so that it will ONLY EVER show that display
 - `match-production` - custom screen for production widgets
 - `results-full`
 - `results-stream`
+- `stats-graphics` - stats/graphics overlay only. Renders fully transparent when there is nothing on air (no placeholder, no spinner, no background) — intended to be opened as its own transparent browser source and layered over the match display in a broadcast switcher, rather than used as a standalone full display.
 
 ## OR build a custom flow
 `?layout=xyz`

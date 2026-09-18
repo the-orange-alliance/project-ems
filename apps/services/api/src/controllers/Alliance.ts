@@ -2,6 +2,7 @@ import { allianceMemberZod } from '@toa-lib/models';
 import { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { getDB } from '../db/EventDatabase.js';
+import { bumpAlliancesRevision } from '../stats/SourceRevisions.js';
 import { z } from 'zod';
 import {
   DataNotFoundError,
@@ -123,6 +124,7 @@ async function allianceController(fastify: FastifyInstance) {
         const { eventKey } = request.params as z.infer<typeof EventKeyParams>;
         const db = await getDB(eventKey);
         await db.insertValue('alliance', request.body);
+        bumpAlliancesRevision();
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
@@ -152,6 +154,7 @@ async function allianceController(fastify: FastifyInstance) {
           request.body,
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND teamKey = "${teamKey}"`
         );
+        bumpAlliancesRevision();
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
@@ -179,6 +182,7 @@ async function allianceController(fastify: FastifyInstance) {
           'alliance',
           `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}"`
         );
+        bumpAlliancesRevision();
         reply.status(200).send({});
       } catch (e) {
         reply.code(500).send(InternalServerError(e));

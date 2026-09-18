@@ -10,7 +10,14 @@ export const customfgcTheme = (darkMode: boolean): ThemeConfig => ({
     // colorBgBase: '#ffffff',
     colorTextBase: darkMode ? '#ffffff' : '#000000',
     colorText: darkMode ? '#ffffff' : '#000000',
-    colorTextSecondary: darkMode ? '#000000' : '#ffffff'
+    // antd derives `colorTextLabel` (Segmented item text, form labels, etc.)
+    // and every `<Typography.Text type="secondary">` from this. It must stay a
+    // muted version of the *foreground*, not the background - a black value in
+    // dark mode makes all of that text unreadable. The green appbar that used
+    // to borrow this token for its contrasting text now sets its own colour.
+    colorTextSecondary: darkMode
+      ? 'rgba(255, 255, 255, 0.65)'
+      : 'rgba(0, 0, 0, 0.65)'
   },
   components: {
     Skeleton: {
