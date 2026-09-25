@@ -18,6 +18,19 @@ export enum SocketEvents {}
  */
 export type ExtinguisherVisibility = 'red' | 'blue' | 'both';
 
+/**
+ * LED color for each goal's scored WILDFIRE, as 6-digit hex without '#' (e.g. 'ff0000').
+ * The field robot lights this many LEDs per goal from the match's LED counts.
+ */
+export interface GoalScoreColors {
+  /** Red SUPPRESSION UNIT */
+  red: string;
+  /** EXTINGUISHER (global alliance) */
+  center: string;
+  /** Blue SUPPRESSION UNIT */
+  blue: string;
+}
+
 export type PrepFieldMotor = 'door' | 'blowers';
 
 export type PrepFieldBranchStep =
@@ -45,6 +58,8 @@ export interface SettingsType {
   extinguisherVisibility: ExtinguisherVisibility;
   /** Sequence the field robot runs on "prepare field" (trap door + leaf blowers). */
   prepFieldSequence: PrepFieldStep[];
+  /** Scored LED color for each goal on this field. */
+  goalScoreColors: GoalScoreColors;
 }
 
 export const DEFAULT_SETTINGS: SettingsType = {
@@ -59,7 +74,13 @@ export const DEFAULT_SETTINGS: SettingsType = {
     { type: 'motor', motor: 'blowers', power: 0.1, duration: 1.0 },
     { type: 'wait', duration: 1.0 },
     { type: 'motor', motor: 'blowers', power: 0.1, duration: 1.0 }
-  ]
+  ],
+  // Mirrors the robot's hardcoded fallback colors.
+  goalScoreColors: {
+    red: 'ff0000',
+    center: 'ffffff',
+    blue: '0000ff'
+  }
 };
 
 /** Nominal duration of a valid sequence in seconds (parallel = longest branch). */

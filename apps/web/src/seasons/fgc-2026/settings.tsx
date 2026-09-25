@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   Col,
+  ColorPicker,
   Form,
   InputNumber,
   Row,
@@ -19,6 +20,15 @@ import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { PrepFieldSequenceEditor } from './prep-field-sequence-editor.js';
 
 const { Option } = Select;
+
+const GOAL_COLOR_FIELDS: {
+  goal: keyof FGC26FCS.GoalScoreColors;
+  label: string;
+}[] = [
+  { goal: 'red', label: 'Red SUPPRESSION UNIT' },
+  { goal: 'center', label: 'EXTINGUISHER' },
+  { goal: 'blue', label: 'Blue SUPPRESSION UNIT' }
+];
 
 export const Settings: FC = () => {
   const tournament = useCurrentTournament();
@@ -43,7 +53,15 @@ export const Settings: FC = () => {
       // The shared FCS settings endpoint returns the previous season's default shape
       // when a field has never been configured, so merge onto our own defaults rather
       // than trusting the raw payload's shape.
-      setLocalData({ ...FGC26FCS.DEFAULT_SETTINGS, ...fcsData });
+      setLocalData({
+        ...FGC26FCS.DEFAULT_SETTINGS,
+        ...fcsData,
+        // Merge per goal so a partially stored color set keeps the defaults for the rest
+        goalScoreColors: {
+          ...FGC26FCS.DEFAULT_SETTINGS.goalScoreColors,
+          ...fcsData.goalScoreColors
+        }
+      });
     }
   }, [fcsData]);
 
@@ -110,6 +128,23 @@ export const Settings: FC = () => {
       const newData: FGC26FCS.SettingsType = {
         ...(prev ?? FGC26FCS.DEFAULT_SETTINGS),
         extinguisherVisibility
+      };
+      if (selectedField) {
+        debouncedSave(selectedField, newData);
+      }
+      return newData;
+    });
+  };
+
+  const handleGoalScoreColorChange = (
+    goal: keyof FGC26FCS.GoalScoreColors,
+    hex: string
+  ) => {
+    setLocalData((prev) => {
+      const base = prev ?? FGC26FCS.DEFAULT_SETTINGS;
+      const newData: FGC26FCS.SettingsType = {
+        ...base,
+        goalScoreColors: { ...base.goalScoreColors, [goal]: hex }
       };
       if (selectedField) {
         debouncedSave(selectedField, newData);
@@ -214,6 +249,32 @@ export const Settings: FC = () => {
                   />
                 </Form.Item>
               </Col>
+            </Row>
+          </Card>
+        )}
+
+        {selectedField && localData && (
+          <Card title='Goal LED Colors' size='small'>
+            <Row>
+              {GOAL_COLOR_FIELDS.map(({ goal, label }) => (
+                <Col span={12} key={goal}>
+                  <Form.Item
+                    label={label}
+                    labelCol={{ span: 12 }}
+                    wrapperCol={{ span: 12 }}
+                    tooltip='Color of the lit (scored) LEDs on this goal.'
+                  >
+                    <ColorPicker
+                      value={`#${localData.goalScoreColors[goal]}`}
+                      onChange={(color) =>
+                        handleGoalScoreColorChange(goal, color.toHex())
+                      }
+                      disabledAlpha
+                      showText
+                    />
+                  </Form.Item>
+                </Col>
+              ))}
             </Row>
           </Card>
         )}
