@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
   Card,
@@ -22,13 +22,57 @@ import { PrepFieldSequenceEditor } from './prep-field-sequence-editor.js';
 const { Option } = Select;
 
 const GOAL_COLOR_FIELDS: {
-  goal: keyof FGC26FCS.GoalScoreColors;
+  goal: keyof FGC26FCS.GoalColors;
   label: string;
 }[] = [
   { goal: 'red', label: 'Red SUPPRESSION UNIT' },
   { goal: 'center', label: 'EXTINGUISHER' },
   { goal: 'blue', label: 'Blue SUPPRESSION UNIT' }
 ];
+
+/** 'score' is goalScoreColors; the rest are goalStateColors entries. */
+type GoalColorRow = 'score' | FGC26FCS.GoalLedState;
+
+const GOAL_COLOR_ROWS: { row: GoalColorRow; label: string; hint: string }[] = [
+  {
+    row: 'score',
+    label: 'Score',
+    hint: 'Lit (scored) LEDs during a match.'
+  },
+  {
+    row: 'prepareField',
+    label: 'Prepare Field',
+    hint: 'Whole goal, from prepare field until the match starts.'
+  },
+  {
+    row: 'matchEnd',
+    label: 'Match End',
+    hint: 'Whole goal, from the end of the match until all clear or the next prepare field.'
+  },
+  {
+    row: 'allClear',
+    label: 'All Clear',
+    hint: 'Whole goal, from all clear until the next prepare field or match start.'
+  }
+];
+
+const getGoalColors = (
+  data: FGC26FCS.SettingsType,
+  row: GoalColorRow
+): FGC26FCS.GoalColors =>
+  row === 'score' ? data.goalScoreColors : data.goalStateColors[row];
+
+/** Merge each state per goal so a partially stored color set keeps defaults for the rest. */
+const mergeGoalStateColors = (
+  stored?: Partial<Record<FGC26FCS.GoalLedState, Partial<FGC26FCS.GoalColors>>>
+): FGC26FCS.SettingsType['goalStateColors'] => {
+  const defaults = FGC26FCS.DEFAULT_SETTINGS.goalStateColors;
+  return {
+    prepareField: { ...defaults.prepareField, ...stored?.prepareField },
+    matchEnd: { ...defaults.matchEnd, ...stored?.matchEnd },
+    allClear: { ...defaults.allClear, ...stored?.allClear }
+  };
+};
 
 export const Settings: FC = () => {
   const tournament = useCurrentTournament();
@@ -60,7 +104,8 @@ export const Settings: FC = () => {
         goalScoreColors: {
           ...FGC26FCS.DEFAULT_SETTINGS.goalScoreColors,
           ...fcsData.goalScoreColors
-        }
+        },
+        goalStateColors: mergeGoalStateColors(fcsData.goalStateColors)
       });
     }
   }, [fcsData]);
@@ -136,16 +181,21 @@ export const Settings: FC = () => {
     });
   };
 
-  const handleGoalScoreColorChange = (
-    goal: keyof FGC26FCS.GoalScoreColors,
+  const handleGoalColorChange = (
+    row: GoalColorRow,
+    goal: keyof FGC26FCS.GoalColors,
     hex: string
   ) => {
     setLocalData((prev) => {
       const base = prev ?? FGC26FCS.DEFAULT_SETTINGS;
-      const newData: FGC26FCS.SettingsType = {
-        ...base,
-        goalScoreColors: { ...base.goalScoreColors, [goal]: hex }
-      };
+      const colors = { ...getGoalColors(base, row), [goal]: hex };
+      const newData: FGC26FCS.SettingsType =
+        row === 'score'
+          ? { ...base, goalScoreColors: colors }
+          : {
+              ...base,
+              goalStateColors: { ...base.goalStateColors, [row]: colors }
+            };
       if (selectedField) {
         debouncedSave(selectedField, newData);
       }
@@ -255,25 +305,37 @@ export const Settings: FC = () => {
 
         {selectedField && localData && (
           <Card title='Goal LED Colors' size='small'>
-            <Row>
+            <Row gutter={[16, 12]} align='middle'>
+              <Col span={6} />
               {GOAL_COLOR_FIELDS.map(({ goal, label }) => (
-                <Col span={12} key={goal}>
-                  <Form.Item
-                    label={label}
-                    labelCol={{ span: 12 }}
-                    wrapperCol={{ span: 12 }}
-                    tooltip='Color of the lit (scored) LEDs on this goal.'
-                  >
-                    <ColorPicker
-                      value={`#${localData.goalScoreColors[goal]}`}
-                      onChange={(color) =>
-                        handleGoalScoreColorChange(goal, color.toHex())
-                      }
-                      disabledAlpha
-                      showText
-                    />
-                  </Form.Item>
+                <Col span={6} key={goal}>
+                  <Typography.Text strong>{label}</Typography.Text>
                 </Col>
+              ))}
+              {GOAL_COLOR_ROWS.map(({ row, label, hint }) => (
+                <Fragment key={row}>
+                  <Col span={6}>
+                    <Typography.Text>{label}</Typography.Text>
+                    <Typography.Text
+                      type='secondary'
+                      style={{ display: 'block', fontSize: 12 }}
+                    >
+                      {hint}
+                    </Typography.Text>
+                  </Col>
+                  {GOAL_COLOR_FIELDS.map(({ goal }) => (
+                    <Col span={6} key={goal}>
+                      <ColorPicker
+                        value={`#${getGoalColors(localData, row)[goal]}`}
+                        onChange={(color) =>
+                          handleGoalColorChange(row, goal, color.toHex())
+                        }
+                        disabledAlpha
+                        showText
+                      />
+                    </Col>
+                  ))}
+                </Fragment>
               ))}
             </Row>
           </Card>

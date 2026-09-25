@@ -18,11 +18,8 @@ export enum SocketEvents {}
  */
 export type ExtinguisherVisibility = 'red' | 'blue' | 'both';
 
-/**
- * LED color for each goal's scored WILDFIRE, as 6-digit hex without '#' (e.g. 'ff0000').
- * The field robot lights this many LEDs per goal from the match's LED counts.
- */
-export interface GoalScoreColors {
+/** One LED color per goal, as 6-digit hex without '#' (e.g. 'ff0000'). */
+export interface GoalColors {
   /** Red SUPPRESSION UNIT */
   red: string;
   /** EXTINGUISHER (global alliance) */
@@ -30,6 +27,14 @@ export interface GoalScoreColors {
   /** Blue SUPPRESSION UNIT */
   blue: string;
 }
+
+/**
+ * Match states where the field robot lights each goal's whole strip in a solid color instead of
+ * its score. Each holds until the next state: prepare field until the match starts, match end
+ * until all clear (or the next prepare field), and all clear until the next prepare field or
+ * match start. Prestart does not change the goal LEDs.
+ */
+export type GoalLedState = 'prepareField' | 'matchEnd' | 'allClear';
 
 export type PrepFieldMotor = 'door' | 'blowers';
 
@@ -58,8 +63,10 @@ export interface SettingsType {
   extinguisherVisibility: ExtinguisherVisibility;
   /** Sequence the field robot runs on "prepare field" (trap door + leaf blowers). */
   prepFieldSequence: PrepFieldStep[];
-  /** Scored LED color for each goal on this field. */
-  goalScoreColors: GoalScoreColors;
+  /** Color of the lit (scored) LEDs on each goal during a match. */
+  goalScoreColors: GoalColors;
+  /** Solid color for each goal in each non-scoring match state. */
+  goalStateColors: Record<GoalLedState, GoalColors>;
 }
 
 export const DEFAULT_SETTINGS: SettingsType = {
@@ -80,6 +87,11 @@ export const DEFAULT_SETTINGS: SettingsType = {
     red: 'ff0000',
     center: 'ffffff',
     blue: '0000ff'
+  },
+  goalStateColors: {
+    prepareField: { red: 'ffff00', center: 'ffff00', blue: 'ffff00' },
+    matchEnd: { red: 'ff00ff', center: 'ff00ff', blue: 'ff00ff' },
+    allClear: { red: '00ff00', center: '00ff00', blue: '00ff00' }
   }
 };
 
