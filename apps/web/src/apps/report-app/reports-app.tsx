@@ -48,7 +48,7 @@ export const Reports: FC = () => {
         {report ? (
           <ReportView onReturn={handleReturn}>{report}</ReportView>
         ) : (
-          <Space direction='vertical' size='large' style={{ width: '100%' }}>
+          <Space orientation='vertical' size='large' style={{ width: '100%' }}>
             <Typography.Title level={4}>
               {tournament?.name} Reports
             </Typography.Title>

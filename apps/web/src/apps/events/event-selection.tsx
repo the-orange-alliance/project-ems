@@ -21,6 +21,13 @@ export const EventSelection: FC = () => {
   const { showSnackbar, showErrorSnackbar } = useSnackbar();
 
   const handleDownload = async () => {
+    if (!remoteUrl?.trim()) {
+      showErrorSnackbar(
+        'Cannot download events.',
+        new Error('Set a Remote API URL in Settings → Global first.')
+      );
+      return;
+    }
     try {
       remoteClient.setBaseUrl(normalizeRemoteApiHost(remoteUrl));
       const events =
@@ -56,7 +63,7 @@ export const EventSelection: FC = () => {
                 { key: '1', label: <a onClick={createEvent}>Create Event</a> },
                 {
                   key: '2',
-                  label: <a onClick={handleDownload}>Download Evets</a>
+                  label: <a onClick={handleDownload}>Download Events</a>
                 }
               ]}
             />

@@ -30,6 +30,16 @@ export const tournamentsApi = {
         }
       );
     }
+  },
+  delete: {
+    tournament: async (
+      eventKey: string,
+      tournamentKey: string
+    ): Promise<void> => {
+      await localClient.delete<void>(
+        `/tournament/${eventKey}/${tournamentKey}`
+      );
+    }
   }
 };
 

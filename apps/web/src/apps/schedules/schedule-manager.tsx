@@ -37,23 +37,33 @@ export const ScheduleManager: FC = () => {
   const { data: scheduleParams, mutate: refetchScheduleParams } =
     useScheduleParamsForTournament(event?.eventKey, tournamentKey);
 
+  const currentTournament = tournaments.find(
+    (t) => t.tournamentKey === tournamentKey
+  );
+
+  // Until the first Parameters save, the API hands back defaultScheduleParams
+  // (type: 'Test'), so the Participants/Parameters tabs render the qualification
+  // UI even for a playoff tournament. The tournament's own type is authoritative
+  // (and is what a save writes back anyway), so overlay it here.
+  const effectiveScheduleParams =
+    scheduleParams && currentTournament
+      ? { ...scheduleParams, type: currentTournament.tournamentType }
+      : scheduleParams;
+
   const scheduleMatches = matches.filter(
     (m) => tournamentKey && m.tournamentKey === tournamentKey
   );
 
   const onScheduleParamsChange = (schedule: ScheduleParams) => {
-    const tournament = tournaments.find(
-      (t) => t.tournamentKey === tournamentKey
-    );
-    if (!tournament) return;
-    schedule.type = tournament.tournamentType;
+    if (!currentTournament) return;
+    schedule.type = currentTournament.tournamentType;
     scheduleApi.update.params(schedule).then(() => {
       return refetchScheduleParams();
     });
   };
   useUpdateAppbar(
     {
-      title: event ? `${event.eventName} | Tournament Manager` : undefined,
+      title: event ? `${event.eventName} | Schedule Manager` : undefined,
       titleLink: event ? `/${event.eventKey}` : undefined
     },
     [event]
@@ -65,6 +75,13 @@ export const ScheduleManager: FC = () => {
 
   const handleParamsDownload = async () => {
     if (!event || !tournamentKey) return;
+    if (!remoteUrl?.trim()) {
+      showErrorSnackbar(
+        'Cannot download schedule parameters.',
+        new Error('Set a Remote API URL in Settings → Global first.')
+      );
+      return;
+    }
     try {
       remoteClient.setBaseUrl(normalizeRemoteApiHost(remoteUrl));
       const scheduleParams = await remoteClient.get<ScheduleParams>(
@@ -73,7 +90,7 @@ export const ScheduleManager: FC = () => {
       if (!scheduleParams) throw new Error('Schedule params not found.');
       onScheduleParamsChange(scheduleParams);
     } catch (e) {
-      showErrorSnackbar('Error while downloading teams.', e);
+      showErrorSnackbar('Error while downloading schedule parameters.', e);
     }
   };
 
@@ -110,7 +127,7 @@ export const ScheduleManager: FC = () => {
       <Suspense fallback={<PageLoader />}>
         <ScheduleTabs
           tournamentKey={tournamentKey}
-          eventSchedule={scheduleParams}
+          eventSchedule={effectiveScheduleParams}
           onEventScheduleChange={onScheduleParamsChange}
           savedMatches={scheduleMatches}
           hasMatches={scheduleMatches.length > 0}

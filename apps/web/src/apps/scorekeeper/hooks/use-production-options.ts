@@ -1,10 +1,10 @@
-import { WebhookEvent } from '@toa-lib/models';
+import { WebhookEvent, getSeasonKeyFromEventKey } from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 import type { MenuProps } from 'antd';
 import { webhooksApi } from 'src/api/use-webhook-data.js';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
-import { matchAtom } from 'src/stores/state/event.js';
+import { eventKeyAtom, matchAtom } from 'src/stores/state/event.js';
 import { pairedFieldAtom } from 'src/stores/state/ui.js';
 
 export interface ActionItem {
@@ -15,7 +15,9 @@ export interface ActionItem {
 }
 
 /** Renders a shared `ActionItem[]` as antd `Dropdown`/`Menu` items. */
-export const toMenuItems = (items: ActionItem[]): NonNullable<MenuProps['items']> =>
+export const toMenuItems = (
+  items: ActionItem[]
+): NonNullable<MenuProps['items']> =>
   items.map(({ key, label, disabled, onClick }) => ({
     key,
     label,
@@ -40,19 +42,22 @@ export const useProductionOptionsItems = (): ActionItem[] => {
       key: 'production_active',
       label: 'Force Field Active',
       disabled: !pairedField || !match,
-      onClick: () => webhooksApi.create.emit(WebhookEvent.PRODUCTION_ACTIVE, match)
+      onClick: () =>
+        webhooksApi.create.emit(WebhookEvent.PRODUCTION_ACTIVE, match)
     },
     {
       key: 'force_lights_match',
       label: 'Force Match Lighting',
       disabled: !match,
-      onClick: () => webhooksApi.create.emit(WebhookEvent.FORCE_LIGHTS_MATCH, match)
+      onClick: () =>
+        webhooksApi.create.emit(WebhookEvent.FORCE_LIGHTS_MATCH, match)
     },
     {
       key: 'force_lights_standby',
       label: 'Force Standby Lighting',
       disabled: !match,
-      onClick: () => webhooksApi.create.emit(WebhookEvent.FORCE_LIGHTS_STANDBY, match)
+      onClick: () =>
+        webhooksApi.create.emit(WebhookEvent.FORCE_LIGHTS_STANDBY, match)
     }
   ];
 };
@@ -65,6 +70,8 @@ export const useProductionOptionsItems = (): ActionItem[] => {
 export const useFieldControlOptionsItems = (): ActionItem[] => {
   const fieldControl = useSeasonFieldControl();
   const { worker } = useSocketWorker();
+  const eventKey = useAtomValue(eventKeyAtom);
+  const seasonKey = getSeasonKeyFromEventKey(eventKey ?? '');
   return [
     {
       key: 'force_field_green',
@@ -81,10 +88,16 @@ export const useFieldControlOptionsItems = (): ActionItem[] => {
       label: 'Awards Mode',
       onClick: () => fieldControl?.awardsMode?.()
     },
-    {
-      key: 'force_rope_drop',
-      label: 'Force Rope Drop (2025)',
-      onClick: () => worker?.emit('fcs:ropeDrop')
-    }
+    // Rope Drop is an Eco Equilibrium (2025) field mechanic; only offer it for
+    // that season.
+    ...(seasonKey === 'fgc_2025'
+      ? [
+          {
+            key: 'force_rope_drop',
+            label: 'Force Rope Drop',
+            onClick: () => worker?.emit('fcs:ropeDrop')
+          }
+        ]
+      : [])
   ];
 };

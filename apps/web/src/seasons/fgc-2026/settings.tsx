@@ -1,7 +1,9 @@
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Button,
   Card,
   Col,
+  ColorPicker,
   Form,
   InputNumber,
   Row,
@@ -15,8 +17,62 @@ import { FGC26FCS } from '@toa-lib/models';
 import { fcsApi, useFcsData } from 'src/api/use-fcs-data.js';
 import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
+import { PrepFieldSequenceEditor } from './prep-field-sequence-editor.js';
 
 const { Option } = Select;
+
+const GOAL_COLOR_FIELDS: {
+  goal: keyof FGC26FCS.GoalColors;
+  label: string;
+}[] = [
+  { goal: 'red', label: 'Red SUPPRESSION UNIT' },
+  { goal: 'center', label: 'EXTINGUISHER' },
+  { goal: 'blue', label: 'Blue SUPPRESSION UNIT' }
+];
+
+/** 'score' is goalScoreColors; the rest are goalStateColors entries. */
+type GoalColorRow = 'score' | FGC26FCS.GoalLedState;
+
+const GOAL_COLOR_ROWS: { row: GoalColorRow; label: string; hint: string }[] = [
+  {
+    row: 'score',
+    label: 'Score',
+    hint: 'Lit (scored) LEDs during a match.'
+  },
+  {
+    row: 'prepareField',
+    label: 'Prepare Field',
+    hint: 'Whole goal, from prepare field until the match starts.'
+  },
+  {
+    row: 'matchEnd',
+    label: 'Match End',
+    hint: 'Whole goal, from the end of the match until all clear or the next prepare field.'
+  },
+  {
+    row: 'allClear',
+    label: 'All Clear',
+    hint: 'Whole goal, from all clear until the next prepare field or match start.'
+  }
+];
+
+const getGoalColors = (
+  data: FGC26FCS.SettingsType,
+  row: GoalColorRow
+): FGC26FCS.GoalColors =>
+  row === 'score' ? data.goalScoreColors : data.goalStateColors[row];
+
+/** Merge each state per goal so a partially stored color set keeps defaults for the rest. */
+const mergeGoalStateColors = (
+  stored?: Partial<Record<FGC26FCS.GoalLedState, Partial<FGC26FCS.GoalColors>>>
+): FGC26FCS.SettingsType['goalStateColors'] => {
+  const defaults = FGC26FCS.DEFAULT_SETTINGS.goalStateColors;
+  return {
+    prepareField: { ...defaults.prepareField, ...stored?.prepareField },
+    matchEnd: { ...defaults.matchEnd, ...stored?.matchEnd },
+    allClear: { ...defaults.allClear, ...stored?.allClear }
+  };
+};
 
 export const Settings: FC = () => {
   const tournament = useCurrentTournament();
@@ -41,7 +97,16 @@ export const Settings: FC = () => {
       // The shared FCS settings endpoint returns the previous season's default shape
       // when a field has never been configured, so merge onto our own defaults rather
       // than trusting the raw payload's shape.
-      setLocalData({ ...FGC26FCS.DEFAULT_SETTINGS, ...fcsData });
+      setLocalData({
+        ...FGC26FCS.DEFAULT_SETTINGS,
+        ...fcsData,
+        // Merge per goal so a partially stored color set keeps the defaults for the rest
+        goalScoreColors: {
+          ...FGC26FCS.DEFAULT_SETTINGS.goalScoreColors,
+          ...fcsData.goalScoreColors
+        },
+        goalStateColors: mergeGoalStateColors(fcsData.goalStateColors)
+      });
     }
   }, [fcsData]);
 
@@ -116,6 +181,45 @@ export const Settings: FC = () => {
     });
   };
 
+  const handleGoalColorChange = (
+    row: GoalColorRow,
+    goal: keyof FGC26FCS.GoalColors,
+    hex: string
+  ) => {
+    setLocalData((prev) => {
+      const base = prev ?? FGC26FCS.DEFAULT_SETTINGS;
+      const colors = { ...getGoalColors(base, row), [goal]: hex };
+      const newData: FGC26FCS.SettingsType =
+        row === 'score'
+          ? { ...base, goalScoreColors: colors }
+          : {
+              ...base,
+              goalStateColors: { ...base.goalStateColors, [row]: colors }
+            };
+      if (selectedField) {
+        debouncedSave(selectedField, newData);
+      }
+      return newData;
+    });
+  };
+
+  const applySequence = (sequence: FGC26FCS.PrepFieldStep[]) => {
+    setLocalData((prev) => {
+      const newData: FGC26FCS.SettingsType = {
+        ...(prev ?? FGC26FCS.DEFAULT_SETTINGS),
+        prepFieldSequence: sequence
+      };
+      if (selectedField) {
+        debouncedSave(selectedField, newData);
+      }
+      return newData;
+    });
+  };
+
+  const handleSequenceReset = () => {
+    applySequence(FGC26FCS.DEFAULT_SETTINGS.prepFieldSequence);
+  };
+
   const fieldOptions =
     tournament?.fields?.map((field) => ({
       value: field,
@@ -124,17 +228,38 @@ export const Settings: FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Space direction='vertical' style={{ width: '100%' }}>
+      <Space orientation='vertical' style={{ width: '100%' }}>
         <Card>
           <Typography.Title level={5}>
             Igniting Innovation Field Settings
           </Typography.Title>
-          <Typography.Text type='secondary'>
-            Field hardware for the 2026 season has not been designed yet, so
-            there are no LED/motor calibration constants to configure here yet.
-            The WILDFIRE LED-to-ball conversion ratio below is used by the
-            referee scoring screens even without physical field hardware.
-          </Typography.Text>
+          <Space direction='vertical' style={{ width: '100%' }}>
+            {selectedField && localData && (
+              <Card
+                title='Prep Field Sequence'
+                size='small'
+                extra={
+                  <Button onClick={handleSequenceReset}>
+                    Reset to default
+                  </Button>
+                }
+              >
+                <Space direction='vertical' style={{ width: '100%' }}>
+                  <Typography.Text type='secondary'>
+                    Steps the field robot runs on &quot;Prepare Field&quot;, in
+                    order from top to bottom. A motor step runs the door or the
+                    blowers at a power for a duration (seconds), then stops
+                    them. A parallel group runs its branches at the same time.
+                    Changes save automatically.
+                  </Typography.Text>
+                  <PrepFieldSequenceEditor
+                    value={localData.prepFieldSequence}
+                    onChange={applySequence}
+                  />
+                </Space>
+              </Card>
+            )}
+          </Space>
         </Card>
 
         <Form layout='vertical'>
@@ -174,6 +299,44 @@ export const Settings: FC = () => {
                   />
                 </Form.Item>
               </Col>
+            </Row>
+          </Card>
+        )}
+
+        {selectedField && localData && (
+          <Card title='Goal LED Colors' size='small'>
+            <Row gutter={[16, 12]} align='middle'>
+              <Col span={6} />
+              {GOAL_COLOR_FIELDS.map(({ goal, label }) => (
+                <Col span={6} key={goal}>
+                  <Typography.Text strong>{label}</Typography.Text>
+                </Col>
+              ))}
+              {GOAL_COLOR_ROWS.map(({ row, label, hint }) => (
+                <Fragment key={row}>
+                  <Col span={6}>
+                    <Typography.Text>{label}</Typography.Text>
+                    <Typography.Text
+                      type='secondary'
+                      style={{ display: 'block', fontSize: 12 }}
+                    >
+                      {hint}
+                    </Typography.Text>
+                  </Col>
+                  {GOAL_COLOR_FIELDS.map(({ goal }) => (
+                    <Col span={6} key={goal}>
+                      <ColorPicker
+                        value={`#${getGoalColors(localData, row)[goal]}`}
+                        onChange={(color) =>
+                          handleGoalColorChange(row, goal, color.toHex())
+                        }
+                        disabledAlpha
+                        showText
+                      />
+                    </Col>
+                  ))}
+                </Fragment>
+              ))}
             </Row>
           </Card>
         )}
