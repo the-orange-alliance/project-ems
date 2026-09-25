@@ -13,8 +13,16 @@ export const RedScoreBreakdown: FC<
 
   const doUpdate = (key: any, value: any) => {
     if (handleUpdates) {
+      // Most fields are prefixed with the alliance (e.g. `redRobotOneBraceState`),
+      // but the wildfire-in-suppression-unit fields put the alliance in the
+      // middle (`wildfireInRedSuppressionUnit`) - special-case it so the input
+      // actually writes to a field `calculateScore` reads.
+      const fullKey =
+        key === 'WildfireInSuppressionUnit'
+          ? 'wildfireInRedSuppressionUnit'
+          : `red${key}`;
       // @ts-expect-error this works, despite what TS says!
-      handleUpdates(`red${key}`, value);
+      handleUpdates(fullKey, value);
     }
   };
 
@@ -56,8 +64,13 @@ export const BlueScoreBreakdown: FC<
 
   const doUpdate = (key: any, value: any) => {
     if (handleUpdates) {
+      // See the matching comment in RedScoreBreakdown's doUpdate above.
+      const fullKey =
+        key === 'WildfireInSuppressionUnit'
+          ? 'wildfireInBlueSuppressionUnit'
+          : `blue${key}`;
       // @ts-expect-error this works! despite what ts says
-      handleUpdates(`blue${key}`, value);
+      handleUpdates(fullKey, value);
     }
   };
 
