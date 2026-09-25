@@ -1,6 +1,6 @@
 {
   "name": "api",
-  "version": "26.0.10",
+  "version": "26.0.11",
   "description": "Realtime service for EMS.",
   "main": "build/Server.js",
   "type": "module",
