@@ -37,6 +37,9 @@ export async function initGlobal(): Promise<void> {
 export class EventDatabase {
   public db!: AsyncDatabase;
   private name: string;
+  // Tail of the queue that serializes `transaction()` callers. All requests
+  // share this one connection, so two overlapping BEGINs would collide.
+  private txQueue: Promise<unknown> = Promise.resolve();
 
   constructor(name: string) {
     this.name = name;
@@ -49,6 +52,12 @@ export class EventDatabase {
       this.db = await AsyncDatabase.open(
         getAppData('ems') + sep + this.name + '.db'
       );
+      // WAL lets readers proceed while a write is in flight, and NORMAL sync
+      // only fsyncs at checkpoints instead of on every commit - together they
+      // make the per-action history writes during a match far cheaper.
+      await this.db.exec('PRAGMA journal_mode = WAL;');
+      await this.db.exec('PRAGMA synchronous = NORMAL;');
+      await this.db.exec('PRAGMA busy_timeout = 5000;');
       await this.runMigrations();
     } catch (e) {
       throw e;
@@ -93,6 +102,69 @@ export class EventDatabase {
       'updatedAtUtc',
       new Date().toISOString()
     );
+    // correlationId-only index was pure write amplification on the busiest
+    // table; the only correlationId lookup is covered by the widened
+    // `_persisted` index below.
+    await this.db.exec(
+      'DROP INDEX IF EXISTS "idx_match_action_event_correlation";'
+    );
+    await this.recreateIndexIfColumnsDiffer(
+      'match_action_event',
+      'idx_match_action_event_persisted',
+      ['eventKey', 'tournamentKey', 'id', 'persisted', 'correlationId']
+    );
+  }
+
+  /**
+   * Runs `fn` inside a `BEGIN IMMEDIATE` / `COMMIT`, rolling back if it throws.
+   *
+   * Callers are serialized through {@link txQueue} because every request shares
+   * this one connection. Statements issued outside `transaction()` while one
+   * is open still land inside it; keep `fn` short.
+   */
+  public transaction<T>(fn: () => Promise<T>): Promise<T> {
+    const run = async (): Promise<T> => {
+      await this.db.exec('BEGIN IMMEDIATE;');
+      try {
+        const result = await fn();
+        await this.db.exec('COMMIT;');
+        return result;
+      } catch (e) {
+        await this.db.exec('ROLLBACK;').catch(() => undefined);
+        throw e;
+      }
+    };
+    const next = this.txQueue.then(run, run);
+    this.txQueue = next.catch(() => undefined);
+    return next;
+  }
+
+  /**
+   * (Re)creates `index` on `table` with exactly `columns`, unless it already
+   * has that definition. No-op when the table doesn't exist yet.
+   */
+  private async recreateIndexIfColumnsDiffer(
+    table: string,
+    index: string,
+    columns: string[]
+  ): Promise<void> {
+    try {
+      if (!(await this.tableExists(table))) return;
+      const current = (
+        (await this.db.all(`PRAGMA index_info("${index}");`)) as {
+          name: string;
+        }[]
+      ).map((c) => c.name);
+      if (current.join(',') === columns.join(',')) return;
+      await this.db.exec(`DROP INDEX IF EXISTS "${index}";`);
+      await this.db.exec(
+        `CREATE INDEX "${index}" ON "${table}" (${columns
+          .map((c) => `"${c}"`)
+          .join(', ')});`
+      );
+    } catch (e) {
+      throw new ApiDatabaseError(table, e);
+    }
   }
 
   /**

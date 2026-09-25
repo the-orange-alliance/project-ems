@@ -154,60 +154,63 @@ const writeMatchRevisionSnapshot = async (
 ) => {
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
-      const revisionRows = (await db.db.all(
-        'SELECT COALESCE(MAX("revision"), 0) + 1 AS "nextRevision" FROM "match_history_base" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
-        [eventKey, tournamentKey, Number(id)]
-      )) as { nextRevision: number }[];
-      const revision = Number(revisionRows[0]?.nextRevision ?? 1);
-      const occurredAtUtc = nowUtc();
+      // One transaction: the revision number, both history rows and the
+      // action-event link commit together (one fsync), or not at all.
+      await db.transaction(async () => {
+        const revisionRows = (await db.db.all(
+          'SELECT COALESCE(MAX("revision"), 0) + 1 AS "nextRevision" FROM "match_history_base" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
+          [eventKey, tournamentKey, Number(id)]
+        )) as { nextRevision: number }[];
+        const revision = Number(revisionRows[0]?.nextRevision ?? 1);
+        const occurredAtUtc = nowUtc();
 
-      const matchRows = (await db.db.all(
-        'SELECT * FROM "match" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
-        [eventKey, tournamentKey, Number(id)]
-      )) as Record<string, unknown>[];
+        const matchRows = (await db.db.all(
+          'SELECT * FROM "match" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
+          [eventKey, tournamentKey, Number(id)]
+        )) as Record<string, unknown>[];
 
-      if (matchRows.length === 0) {
-        return;
-      }
+        if (matchRows.length === 0) {
+          return;
+        }
 
-      const detailRows = (await db.db.all(
-        'SELECT * FROM "match_detail" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
-        [eventKey, tournamentKey, Number(id)]
-      )) as Record<string, unknown>[];
+        const detailRows = (await db.db.all(
+          'SELECT * FROM "match_detail" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
+          [eventKey, tournamentKey, Number(id)]
+        )) as Record<string, unknown>[];
 
-      const auditColumns = {
-        revision,
-        actionType: audit.actionType,
-        source: audit.source,
-        actorId: audit.actorId,
-        actorName: audit.actorName,
-        clientId: audit.clientId,
-        socketId: audit.socketId,
-        correlationId: audit.correlationId,
-        occurredAtUtc
-      };
+        const auditColumns = {
+          revision,
+          actionType: audit.actionType,
+          source: audit.source,
+          actorId: audit.actorId,
+          actorName: audit.actorName,
+          clientId: audit.clientId,
+          socketId: audit.socketId,
+          correlationId: audit.correlationId,
+          occurredAtUtc
+        };
 
-      await insertHistoryRecord(db, 'match_history_base', {
-        ...matchRows[0],
-        ...auditColumns
+        await insertHistoryRecord(db, 'match_history_base', {
+          ...matchRows[0],
+          ...auditColumns
+        });
+
+        await insertHistoryRecord(db, 'match_detail_history', {
+          ...(detailRows[0] ?? {
+            eventKey,
+            tournamentKey,
+            id: Number(id)
+          }),
+          ...auditColumns
+        });
+
+        if (audit.correlationId) {
+          await db.db.all(
+            'UPDATE "match_action_event" SET "revision" = ?, "persisted" = 1 WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ? AND "correlationId" = ? AND "persisted" = 0;',
+            [revision, eventKey, tournamentKey, Number(id), audit.correlationId]
+          );
+        }
       });
-
-      await insertHistoryRecord(db, 'match_detail_history', {
-        ...(detailRows[0] ?? {
-          eventKey,
-          tournamentKey,
-          id: Number(id)
-        }),
-        ...auditColumns
-      });
-
-      if (audit.correlationId) {
-        await db.db.all(
-          'UPDATE "match_action_event" SET "revision" = ?, "persisted" = 1 WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ? AND "correlationId" = ? AND "persisted" = 0;',
-          [revision, eventKey, tournamentKey, Number(id), audit.correlationId]
-        );
-      }
-
       return;
     } catch (e) {
       if (attempt < 4 && isRevisionConflictError(e)) {

@@ -235,5 +235,4 @@ CREATE TABLE IF NOT EXISTS "match_action_event" (
 );
 
 CREATE INDEX IF NOT EXISTS "idx_match_action_event_lookup" ON "match_action_event" ("eventKey", "tournamentKey", "id", "occurredAtUtc");
-CREATE INDEX IF NOT EXISTS "idx_match_action_event_correlation" ON "match_action_event" ("correlationId");
-CREATE INDEX IF NOT EXISTS "idx_match_action_event_persisted" ON "match_action_event" ("eventKey", "tournamentKey", "id", "persisted");
+CREATE INDEX IF NOT EXISTS "idx_match_action_event_persisted" ON "match_action_event" ("eventKey", "tournamentKey", "id", "persisted", "correlationId");
