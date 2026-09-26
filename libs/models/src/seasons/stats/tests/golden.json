@@ -86,7 +86,7 @@
       {
         "teamKey": 1,
         "value": {
-          "climb": 0.2900200640093867,
+          "climb": 0.2900200640093866,
           "partner": 0.4989967995306667,
           "suppression": 45.715699600878935
         }
@@ -94,7 +94,7 @@
       {
         "teamKey": 2,
         "value": {
-          "climb": 0.29527860219306673,
+          "climb": 0.2952786021930666,
           "partner": 0.2360698903466667,
           "suppression": 45.475488350805335
         }
@@ -102,7 +102,7 @@
       {
         "teamKey": 3,
         "value": {
-          "climb": 0.3007771507677867,
+          "climb": 0.3007771507677866,
           "partner": -0.03885753838933335,
           "suppression": 47.063192233710936
         }
@@ -110,7 +110,7 @@
       {
         "teamKey": 4,
         "value": {
-          "climb": 0.30484920567978674,
+          "climb": 0.30484920567978663,
           "partner": -0.24246028398933323,
           "suppression": 46.92390537547093
         }
@@ -118,7 +118,7 @@
       {
         "teamKey": 5,
         "value": {
-          "climb": 0.1284841276535467,
+          "climb": 0.12848412765354664,
           "partner": 8.575793617322667,
           "suppression": 33.01709576855893
         }
@@ -126,7 +126,7 @@
       {
         "teamKey": 6,
         "value": {
-          "climb": 0.1433132693239467,
+          "climb": 0.14331326932394664,
           "partner": 7.834336533802666,
           "suppression": 33.66800131300693
         }
@@ -134,7 +134,7 @@
       {
         "teamKey": 7,
         "value": {
-          "climb": 0.13805473114026673,
+          "climb": 0.13805473114026665,
           "partner": 8.097263442986666,
           "suppression": 32.93569636616533
         }
@@ -142,7 +142,7 @@
       {
         "teamKey": 8,
         "value": {
-          "climb": 0.13255618256554672,
+          "climb": 0.13255618256554666,
           "partner": 8.372190871722667,
           "suppression": 33.549126677998935
         }
@@ -452,7 +452,7 @@
       {
         "matchId": 3,
         "tournamentKey": "q",
-        "value": [217.18800000000005, 192.61200000000002]
+        "value": [217.18800000000002, 192.61200000000002]
       },
       {
         "matchId": 4,
@@ -462,22 +462,22 @@
       {
         "matchId": 1,
         "tournamentKey": "r",
-        "value": [236.8061848, 187.55399120000004]
+        "value": [236.8061848, 187.5539912]
       },
       {
         "matchId": 2,
         "tournamentKey": "r",
-        "value": [244.04032227200003, 189.878658368]
+        "value": [244.040322272, 189.878658368]
       },
       {
         "matchId": 3,
         "tournamentKey": "r",
-        "value": [251.47157009408002, 192.48585751552]
+        "value": [251.47157009408, 192.48585751551997]
       },
       {
         "matchId": 4,
         "tournamentKey": "r",
-        "value": [259.0621442138112, 195.3542118883328]
+        "value": [259.0621442138112, 195.35421188833277]
       },
       {
         "matchId": 1,
@@ -487,7 +487,7 @@
       {
         "matchId": 2,
         "tournamentKey": "p",
-        "value": [277.7968536334382, 200.4532109350944]
+        "value": [277.7968536334382, 200.45321093509438]
       },
       {
         "matchId": 3,
@@ -497,7 +497,7 @@
       {
         "matchId": 4,
         "tournamentKey": "p",
-        "value": [292.4683963622684, 209.26121757324404]
+        "value": [292.4683963622683, 209.26121757324398]
       },
       {
         "matchId": 1,
@@ -507,7 +507,7 @@
       {
         "matchId": 2,
         "tournamentKey": "f",
-        "value": [310.8967582867565, 216.35750941914662]
+        "value": [310.8967582867565, 216.3575094191466]
       }
     ],
     "quality": "best_effort",
@@ -1046,15 +1046,15 @@
       },
       {
         "teamKey": 6,
-        "value": -0.13562813311162358
+        "value": -0.13562813311159516
       },
       {
         "teamKey": 7,
-        "value": -7.262720531892882
+        "value": -7.262720531892825
       },
       {
         "teamKey": 8,
-        "value": -0.6696988872752456
+        "value": -0.6696988872752172
       }
     ],
     "quality": "complete",
@@ -1229,11 +1229,11 @@
         },
         {
           "teamKey": 2,
-          "value": 75.99999999999994
+          "value": 75.99999999999991
         },
         {
           "teamKey": 3,
-          "value": 83.59999999999998
+          "value": 83.59999999999995
         },
         {
           "teamKey": 4,
@@ -1241,11 +1241,11 @@
         },
         {
           "teamKey": 5,
-          "value": 39.66666666666666
+          "value": 39.66666666666665
         },
         {
           "teamKey": 6,
-          "value": 43.866666666666724
+          "value": 43.86666666666671
         },
         {
           "teamKey": 7,
@@ -1253,7 +1253,7 @@
         },
         {
           "teamKey": 8,
-          "value": 43.866666666666646
+          "value": 43.86666666666663
         }
       ]
     },
@@ -1746,35 +1746,35 @@
       "teams": [
         {
           "teamKey": 1,
-          "value": 0.29999999999999993
-        },
-        {
-          "teamKey": 2,
           "value": 0.2999999999999998
         },
         {
+          "teamKey": 2,
+          "value": 0.29999999999999966
+        },
+        {
           "teamKey": 3,
-          "value": 0.3
+          "value": 0.29999999999999993
         },
         {
           "teamKey": 4,
-          "value": 0.3
+          "value": 0.2999999999999999
         },
         {
           "teamKey": 5,
-          "value": 0.13333333333333344
+          "value": 0.13333333333333333
         },
         {
           "teamKey": 6,
-          "value": 0.13333333333333353
+          "value": 0.13333333333333347
         },
         {
           "teamKey": 7,
-          "value": 0.13333333333333341
+          "value": 0.1333333333333333
         },
         {
           "teamKey": 8,
-          "value": 0.13333333333333325
+          "value": 0.13333333333333316
         }
       ]
     },
@@ -3734,85 +3734,85 @@
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "q",
-        "value": 3.8000000000000003
+        "value": 3.8
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "q",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "q",
-        "value": 3.8000000000000003
+        "value": 3.8
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "q",
-        "value": 3.8000000000000003
+        "value": 3.8
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "r",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "r",
-        "value": 3.8000000000000003
+        "value": 3.8
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "r",
-        "value": 3.8000000000000003
+        "value": 3.8
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "r",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "p",
-        "value": 3.8000000000000003
+        "value": 3.8
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "p",
-        "value": 3.8000000000000003
+        "value": 3.8
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "p",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "p",
-        "value": 3.8000000000000003
+        "value": 3.8
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "f",
-        "value": 3.8000000000000003
+        "value": 3.8
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "f",
-        "value": 1.9000000000000001
+        "value": 1.9
       }
     ],
     "quality": "best_effort",
@@ -5244,7 +5244,7 @@
     "warnings": []
   },
   "C10": {
-    "data": 1.9000000000000001,
+    "data": 1.9,
     "quality": "complete",
     "status": "ok",
     "warnings": []
@@ -6369,85 +6369,85 @@
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "q",
-        "value": 90.00000000000001
+        "value": 89.99999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "q",
-        "value": 93.60000000000001
+        "value": 93.6
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "q",
-        "value": 97.20000000000002
+        "value": 97.19999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "q",
-        "value": 100.80000000000001
+        "value": 100.79999999999998
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "r",
-        "value": 104.40000000000002
+        "value": 104.39999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "r",
-        "value": 108.00000000000001
+        "value": 107.99999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "r",
-        "value": 111.60000000000002
+        "value": 111.6
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "r",
-        "value": 115.20000000000002
+        "value": 115.19999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "p",
-        "value": 118.80000000000001
+        "value": 118.79999999999998
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "p",
-        "value": 122.40000000000002
+        "value": 122.39999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "p",
-        "value": 126.00000000000001
+        "value": 125.99999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "p",
-        "value": 129.60000000000002
+        "value": 129.6
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "f",
-        "value": 133.20000000000002
+        "value": 133.2
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "f",
-        "value": 136.8
+        "value": 136.79999999999998
       }
     ],
     "quality": "complete",
@@ -6460,85 +6460,85 @@
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "q",
-        "value": 90.00000000000001
+        "value": 89.99999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "q",
-        "value": 93.60000000000001
+        "value": 93.6
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "q",
-        "value": 97.20000000000002
+        "value": 97.19999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "q",
-        "value": 100.80000000000001
+        "value": 100.79999999999998
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "r",
-        "value": 104.40000000000002
+        "value": 104.39999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "r",
-        "value": 108.00000000000001
+        "value": 107.99999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "r",
-        "value": 111.60000000000002
+        "value": 111.6
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "r",
-        "value": 115.20000000000002
+        "value": 115.19999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "p",
-        "value": 118.80000000000001
+        "value": 118.79999999999998
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "p",
-        "value": 122.40000000000002
+        "value": 122.39999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "p",
-        "value": 126.00000000000001
+        "value": 125.99999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "p",
-        "value": 129.60000000000002
+        "value": 129.6
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "f",
-        "value": 133.20000000000002
+        "value": 133.2
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "f",
-        "value": 136.8
+        "value": 136.79999999999998
       }
     ],
     "quality": "complete",
@@ -8351,85 +8351,85 @@
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "q",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "q",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "q",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "q",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "r",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "r",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "r",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "r",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "p",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "p",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "p",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "p",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "f",
-        "value": 1.9000000000000001
+        "value": 1.9
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "f",
-        "value": 1.9000000000000001
+        "value": 1.9
       }
     ],
     "quality": "complete",
@@ -9093,85 +9093,85 @@
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "q",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "q",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "q",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "q",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "r",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "r",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "r",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "r",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "p",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "p",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "p",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "p",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "f",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "f",
-        "value": 1.0000000000000002
+        "value": 0.9999999999999999
       }
     ],
     "quality": "complete",
@@ -11848,7 +11848,7 @@
           "extinguisher": 41,
           "fouls": 0,
           "partner": 0,
-          "suppression": 197.60000000000002
+          "suppression": 197.6
         }
       },
       {
@@ -11860,7 +11860,7 @@
           "extinguisher": 42,
           "fouls": 0,
           "partner": 0,
-          "suppression": 205.20000000000002
+          "suppression": 205.2
         }
       },
       {
@@ -11872,7 +11872,7 @@
           "extinguisher": 43,
           "fouls": 0,
           "partner": 0,
-          "suppression": 212.8
+          "suppression": 212.79999999999998
         }
       },
       {
@@ -11884,7 +11884,7 @@
           "extinguisher": 44,
           "fouls": 0,
           "partner": 0,
-          "suppression": 220.4
+          "suppression": 220.39999999999998
         }
       },
       {
@@ -11896,7 +11896,7 @@
           "extinguisher": 45,
           "fouls": 0,
           "partner": 0,
-          "suppression": 228.00000000000003
+          "suppression": 228
         }
       },
       {
@@ -11908,7 +11908,7 @@
           "extinguisher": 46,
           "fouls": 0,
           "partner": 0,
-          "suppression": 235.60000000000002
+          "suppression": 235.6
         }
       },
       {
@@ -11920,7 +11920,7 @@
           "extinguisher": 47,
           "fouls": 0,
           "partner": 0,
-          "suppression": 243.20000000000002
+          "suppression": 243.2
         }
       },
       {
@@ -11932,7 +11932,7 @@
           "extinguisher": 48,
           "fouls": 0,
           "partner": 0,
-          "suppression": 250.8
+          "suppression": 250.79999999999998
         }
       },
       {
@@ -11944,7 +11944,7 @@
           "extinguisher": 49,
           "fouls": 0,
           "partner": 0,
-          "suppression": 258.40000000000003
+          "suppression": 258.4
         }
       },
       {
@@ -11968,7 +11968,7 @@
           "extinguisher": 51,
           "fouls": 0,
           "partner": 0,
-          "suppression": 273.6
+          "suppression": 273.59999999999997
         }
       },
       {
@@ -11980,7 +11980,7 @@
           "extinguisher": 52,
           "fouls": 0,
           "partner": 0,
-          "suppression": 281.20000000000005
+          "suppression": 281.2
         }
       },
       {
@@ -12439,19 +12439,19 @@
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "q",
-        "value": 0.39999999999997726
+        "value": 0.4000000000000057
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "q",
-        "value": 0.7999999999999545
+        "value": 0.8000000000000114
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "q",
-        "value": 0.19999999999998863
+        "value": 0.20000000000004547
       },
       {
         "eventKey": "event-with-authoritative-season",
@@ -12475,19 +12475,19 @@
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "r",
-        "value": 0.7999999999999545
+        "value": 0.8000000000000114
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "p",
-        "value": 0.19999999999998863
+        "value": 0.20000000000004547
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "p",
-        "value": 0.5999999999999659
+        "value": 0.6000000000000227
       },
       {
         "eventKey": "event-with-authoritative-season",
@@ -12499,13 +12499,13 @@
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "p",
-        "value": 0.39999999999997726
+        "value": 0.4000000000000341
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "f",
-        "value": 0.7999999999999545
+        "value": 0.8000000000000114
       },
       {
         "eventKey": "event-with-authoritative-season",
@@ -12541,7 +12541,7 @@
           "extinguisher": 0.1646586345381526,
           "fouls": 0,
           "partner": 0,
-          "suppression": 0.7935742971887552
+          "suppression": 0.793574297188755
         }
       },
       {
@@ -12553,7 +12553,7 @@
           "extinguisher": 0.16279069767441862,
           "fouls": 0,
           "partner": 0,
-          "suppression": 0.7953488372093024
+          "suppression": 0.7953488372093023
         }
       },
       {
@@ -12565,7 +12565,7 @@
           "extinguisher": 0.16165413533834586,
           "fouls": 0,
           "partner": 0,
-          "suppression": 0.8
+          "suppression": 0.7999999999999999
         }
       },
       {
@@ -12577,7 +12577,7 @@
           "extinguisher": 0.16,
           "fouls": 0,
           "partner": 0,
-          "suppression": 0.8014545454545455
+          "suppression": 0.8014545454545454
         }
       },
       {
@@ -12589,7 +12589,7 @@
           "extinguisher": 0.15901060070671377,
           "fouls": 0,
           "partner": 0,
-          "suppression": 0.8056537102473499
+          "suppression": 0.8056537102473498
         }
       },
       {
@@ -12601,7 +12601,7 @@
           "extinguisher": 0.15753424657534246,
           "fouls": 0,
           "partner": 0,
-          "suppression": 0.8068493150684932
+          "suppression": 0.8068493150684931
         }
       },
       {
@@ -12613,7 +12613,7 @@
           "extinguisher": 0.15614617940199335,
           "fouls": 0,
           "partner": 0,
-          "suppression": 0.8079734219269104
+          "suppression": 0.8079734219269102
         }
       },
       {
@@ -12625,7 +12625,7 @@
           "extinguisher": 0.1553398058252427,
           "fouls": 0,
           "partner": 0,
-          "suppression": 0.8116504854368932
+          "suppression": 0.8116504854368931
         }
       },
       {
@@ -12637,7 +12637,7 @@
           "extinguisher": 0.1540880503144654,
           "fouls": 0,
           "partner": 0,
-          "suppression": 0.8125786163522014
+          "suppression": 0.8125786163522012
         }
       },
       {
@@ -12661,7 +12661,7 @@
           "extinguisher": 0.15223880597014924,
           "fouls": 0,
           "partner": 0,
-          "suppression": 0.8167164179104478
+          "suppression": 0.8167164179104477
         }
       },
       {
@@ -12673,7 +12673,7 @@
           "extinguisher": 0.1511627906976744,
           "fouls": 0,
           "partner": 0,
-          "suppression": 0.8174418604651165
+          "suppression": 0.8174418604651162
         }
       },
       {
@@ -12790,85 +12790,85 @@
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "q",
-        "value": 90.00000000000001
+        "value": 89.99999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "q",
-        "value": 93.60000000000001
+        "value": 93.6
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "q",
-        "value": 97.20000000000002
+        "value": 97.19999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "q",
-        "value": 100.80000000000001
+        "value": 100.79999999999998
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "r",
-        "value": 104.40000000000002
+        "value": 104.39999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "r",
-        "value": 108.00000000000001
+        "value": 107.99999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "r",
-        "value": 111.60000000000002
+        "value": 111.6
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "r",
-        "value": 115.20000000000002
+        "value": 115.19999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "p",
-        "value": 118.80000000000001
+        "value": 118.79999999999998
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "p",
-        "value": 122.40000000000002
+        "value": 122.39999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 3,
         "tournamentKey": "p",
-        "value": 126.00000000000001
+        "value": 125.99999999999999
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 4,
         "tournamentKey": "p",
-        "value": 129.60000000000002
+        "value": 129.6
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 1,
         "tournamentKey": "f",
-        "value": 133.20000000000002
+        "value": 133.2
       },
       {
         "eventKey": "event-with-authoritative-season",
         "matchId": 2,
         "tournamentKey": "f",
-        "value": 136.8
+        "value": 136.79999999999998
       }
     ],
     "quality": "complete",
@@ -17823,7 +17823,7 @@
           "margin": 67,
           "partner": -25,
           "rounding": 0,
-          "suppressionMultiplier": 91.99999999999999
+          "suppressionMultiplier": 92
         }
       },
       {
@@ -17831,11 +17831,11 @@
         "matchId": 2,
         "tournamentKey": "q",
         "value": {
-          "fouls": -12.430000000000001,
+          "fouls": -12.43,
           "margin": 58,
           "partner": -25,
-          "rounding": 0.029999999999972715,
-          "suppressionMultiplier": 95.40000000000002
+          "rounding": 0.030000000000001137,
+          "suppressionMultiplier": 95.4
         }
       },
       {
@@ -17846,8 +17846,8 @@
           "fouls": 0,
           "margin": 74,
           "partner": -25,
-          "rounding": 0.1999999999999602,
-          "suppressionMultiplier": 98.80000000000001
+          "rounding": 0.19999999999998863,
+          "suppressionMultiplier": 98.8
         }
       },
       {
@@ -17855,11 +17855,11 @@
         "matchId": 4,
         "tournamentKey": "q",
         "value": {
-          "fouls": -13.290000000000001,
+          "fouls": -13.29,
           "margin": 64,
           "partner": -25,
-          "rounding": 0.09000000000000341,
-          "suppressionMultiplier": 102.2
+          "rounding": 0.09000000000003183,
+          "suppressionMultiplier": 102.19999999999999
         }
       },
       {
@@ -17871,7 +17871,7 @@
           "margin": 81,
           "partner": -25,
           "rounding": 0.4000000000000341,
-          "suppressionMultiplier": 105.6
+          "suppressionMultiplier": 105.59999999999998
         }
       },
       {
@@ -17894,7 +17894,7 @@
           "fouls": 0,
           "margin": 87,
           "partner": -25,
-          "rounding": -0.4000000000000057,
+          "rounding": -0.4000000000000341,
           "suppressionMultiplier": 112.4
         }
       },
@@ -17903,11 +17903,11 @@
         "matchId": 4,
         "tournamentKey": "r",
         "value": {
-          "fouls": -15.010000000000003,
+          "fouls": -15.01,
           "margin": 76,
           "partner": -25,
-          "rounding": 0.20999999999995111,
-          "suppressionMultiplier": 115.80000000000001
+          "rounding": 0.20999999999997954,
+          "suppressionMultiplier": 115.8
         }
       },
       {
@@ -17918,7 +17918,7 @@
           "fouls": 0,
           "margin": 94,
           "partner": -25,
-          "rounding": -0.19999999999998863,
+          "rounding": -0.1999999999999602,
           "suppressionMultiplier": 119.19999999999999
         }
       },
@@ -17927,11 +17927,11 @@
         "matchId": 2,
         "tournamentKey": "p",
         "value": {
-          "fouls": -15.870000000000003,
+          "fouls": -15.87,
           "margin": 82,
           "partner": -25,
-          "rounding": 0.2699999999999818,
-          "suppressionMultiplier": 122.60000000000002
+          "rounding": 0.27000000000001023,
+          "suppressionMultiplier": 122.6
         }
       },
       {
@@ -17954,8 +17954,8 @@
           "fouls": -16.73,
           "margin": 88,
           "partner": -25,
-          "rounding": 0.3299999999999841,
-          "suppressionMultiplier": 129.4
+          "rounding": 0.3300000000000125,
+          "suppressionMultiplier": 129.39999999999998
         }
       },
       {
@@ -17966,8 +17966,8 @@
           "fouls": 0,
           "margin": 108,
           "partner": -25,
-          "rounding": 0.1999999999999602,
-          "suppressionMultiplier": 132.80000000000004
+          "rounding": 0.19999999999998863,
+          "suppressionMultiplier": 132.8
         }
       },
       {
@@ -17979,7 +17979,7 @@
           "margin": 93,
           "partner": -25,
           "rounding": -0.6100000000000136,
-          "suppressionMultiplier": 136.2
+          "suppressionMultiplier": 136.20000000000002
         }
       }
     ],
@@ -18118,7 +18118,7 @@
         "matchId": 1,
         "tournamentKey": "q",
         "value": {
-          "points": 91.99999999999999,
+          "points": 92,
           "term": "suppressionMultiplier"
         }
       },
@@ -18127,7 +18127,7 @@
         "matchId": 2,
         "tournamentKey": "q",
         "value": {
-          "points": 95.40000000000002,
+          "points": 95.4,
           "term": "suppressionMultiplier"
         }
       },
@@ -18136,7 +18136,7 @@
         "matchId": 3,
         "tournamentKey": "q",
         "value": {
-          "points": 98.80000000000001,
+          "points": 98.8,
           "term": "suppressionMultiplier"
         }
       },
@@ -18145,7 +18145,7 @@
         "matchId": 4,
         "tournamentKey": "q",
         "value": {
-          "points": 102.2,
+          "points": 102.19999999999999,
           "term": "suppressionMultiplier"
         }
       },
@@ -18154,7 +18154,7 @@
         "matchId": 1,
         "tournamentKey": "r",
         "value": {
-          "points": 105.6,
+          "points": 105.59999999999998,
           "term": "suppressionMultiplier"
         }
       },
@@ -18181,7 +18181,7 @@
         "matchId": 4,
         "tournamentKey": "r",
         "value": {
-          "points": 115.80000000000001,
+          "points": 115.8,
           "term": "suppressionMultiplier"
         }
       },
@@ -18199,7 +18199,7 @@
         "matchId": 2,
         "tournamentKey": "p",
         "value": {
-          "points": 122.60000000000002,
+          "points": 122.6,
           "term": "suppressionMultiplier"
         }
       },
@@ -18217,7 +18217,7 @@
         "matchId": 4,
         "tournamentKey": "p",
         "value": {
-          "points": 129.4,
+          "points": 129.39999999999998,
           "term": "suppressionMultiplier"
         }
       },
@@ -18226,7 +18226,7 @@
         "matchId": 1,
         "tournamentKey": "f",
         "value": {
-          "points": 132.80000000000004,
+          "points": 132.8,
           "term": "suppressionMultiplier"
         }
       },
@@ -18235,7 +18235,7 @@
         "matchId": 2,
         "tournamentKey": "f",
         "value": {
-          "points": 136.2,
+          "points": 136.20000000000002,
           "term": "suppressionMultiplier"
         }
       }
@@ -46462,14 +46462,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46487,14 +46487,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46512,14 +46512,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46537,14 +46537,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46562,14 +46562,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46587,14 +46587,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46612,14 +46612,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46637,14 +46637,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46662,14 +46662,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46687,14 +46687,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46712,14 +46712,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46737,14 +46737,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46762,14 +46762,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
@@ -46787,14 +46787,14 @@
             "seconds": -25
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 2,
             "seconds": 155
           },
           {
-            "blue": 1.4000000000000001,
-            "red": 1.9000000000000001,
+            "blue": 1.4,
+            "red": 1.9,
             "revision": 3,
             "seconds": 160
           }
