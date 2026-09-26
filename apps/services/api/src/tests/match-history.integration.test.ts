@@ -167,7 +167,46 @@ test('match history revisions are monotonic and immutable', async () => {
   assert.equal(firstSnapshot.redScore, 5);
   assert.equal(lastSnapshot.redScore, 5);
 
+  // Concurrent writes share one connection; snapshot transactions must
+  // serialize instead of colliding or skipping/duplicating revisions.
+  const concurrent = await Promise.all(
+    Array.from({ length: 5 }, (_, i) =>
+      app.inject({
+        method: 'PATCH',
+        url: `/match/details/${eventKey}/${tournamentKey}/${id}`,
+        payload: { eventKey, tournamentKey, id, coopertition: i }
+      })
+    )
+  );
+  for (const res of concurrent) assert.equal(res.statusCode, 200);
+
+  const afterConcurrent = (
+    await app.inject({
+      method: 'GET',
+      url: `/match/history/${eventKey}/${tournamentKey}/${id}?includeActions=false`
+    })
+  ).json() as { history: { base: { revision: number }[] } };
+  const allRevisions = afterConcurrent.history.base.map((r) => r.revision);
+  assert.equal(allRevisions.length, revisions.length + 5);
+  allRevisions.forEach((rev, i) => assert.equal(rev, i + 1));
+
+  const [journal] = (await db.db.all('PRAGMA journal_mode;')) as {
+    journal_mode: string;
+  }[];
+  assert.equal(journal.journal_mode, 'wal');
+
+  const indexes = (
+    (await db.db.all('PRAGMA index_list("match_action_event");')) as {
+      name: string;
+    }[]
+  ).map((i) => i.name);
+  assert.ok(!indexes.includes('idx_match_action_event_correlation'));
+  assert.ok(indexes.includes('idx_match_action_event_persisted'));
+
   await app.close();
   await db.db.close();
-  await rm(`${getAppData('ems')}${sep}${eventKey}.db`, { force: true });
+  const dbPath = `${getAppData('ems')}${sep}${eventKey}.db`;
+  for (const suffix of ['', '-wal', '-shm']) {
+    await rm(dbPath + suffix, { force: true });
+  }
 });

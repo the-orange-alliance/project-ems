@@ -120,6 +120,9 @@ export class EventDatabase {
       this.db = await AsyncDatabase.open(
         this.databasePath ?? getAppData('ems') + sep + this.name + '.db'
       );
+      // WAL lets readers proceed while a write is in flight, and NORMAL sync
+      // only fsyncs at checkpoints instead of on every commit - together they
+      // make the per-action history writes during a match far cheaper.
       await this.db.exec(
         'PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA busy_timeout = 5000;'
       );
@@ -167,7 +170,53 @@ export class EventDatabase {
       'updatedAtUtc',
       new Date().toISOString()
     );
+    // Revision snapshots link action events by `actionEventId` watermark, not
+    // correlationId, so the correlationId-only index is pure write
+    // amplification on the busiest table. Databases created before the
+    // watermark change also carry the older lookup/persisted index shapes,
+    // which `CREATE INDEX IF NOT EXISTS` would never replace.
+    await this.db.exec(
+      'DROP INDEX IF EXISTS "idx_match_action_event_correlation";'
+    );
+    await this.recreateIndexIfColumnsDiffer(
+      'match_action_event',
+      'idx_match_action_event_lookup',
+      ['eventKey', 'tournamentKey', 'actionEventId']
+    );
+    await this.recreateIndexIfColumnsDiffer(
+      'match_action_event',
+      'idx_match_action_event_persisted',
+      ['eventKey', 'tournamentKey', 'id', 'persisted', 'actionEventId']
+    );
     if (this.name !== 'global') await migrateGraphicsDatabase(this.db);
+  }
+
+  /**
+   * (Re)creates `index` on `table` with exactly `columns`, unless it already
+   * has that definition. No-op when the table doesn't exist yet.
+   */
+  private async recreateIndexIfColumnsDiffer(
+    table: string,
+    index: string,
+    columns: string[]
+  ): Promise<void> {
+    try {
+      if (!(await this.tableExists(table))) return;
+      const current = (
+        (await this.db.all(`PRAGMA index_info("${index}");`)) as {
+          name: string;
+        }[]
+      ).map((c) => c.name);
+      if (current.join(',') === columns.join(',')) return;
+      await this.db.exec(`DROP INDEX IF EXISTS "${index}";`);
+      await this.db.exec(
+        `CREATE INDEX "${index}" ON "${table}" (${columns
+          .map((c) => `"${c}"`)
+          .join(', ')});`
+      );
+    } catch (e) {
+      throw new ApiDatabaseError(table, e);
+    }
   }
 
   /**

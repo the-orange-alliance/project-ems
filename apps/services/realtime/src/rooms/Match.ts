@@ -33,6 +33,17 @@ type ActionEventLog = {
   socket?: Socket;
 };
 
+type QueuedActionEvent = {
+  url: string;
+  label: string;
+  body: string;
+};
+
+// Per-match cap on action events waiting to reach the API. If the API stalls,
+// the oldest entries are dropped rather than letting memory grow unbounded.
+const MAX_PENDING_ACTION_EVENTS = 200;
+const ACTION_EVENT_TIMEOUT_MS = 2000;
+
 export default class Match extends Room {
   private key: MatchKey | null;
   private match: MatchObj<any> | null;
@@ -40,6 +51,12 @@ export default class Match extends Room {
   private state: MatchState;
   private displayID: number;
   private readonly auditApiBaseUrl: string;
+  // Keyed by match; each queue is drained by a single sender, so at most one
+  // request per match is in flight at a time.
+  private readonly actionEventQueues: Map<string, QueuedActionEvent[]> =
+    new Map();
+  // Events dropped per match since its queue last drained, reported once.
+  private readonly droppedActionEvents: Map<string, number> = new Map();
   private bonuses: Map<
     BonusPeriodConfig,
     { matchAtStartState: MatchObj<any>; timeout: any }
@@ -411,7 +428,7 @@ export default class Match extends Room {
     return this.key;
   }
 
-  private async logActionEvent(log: ActionEventLog): Promise<void> {
+  private logActionEvent(log: ActionEventLog): void {
     const key = this.getAuditKey();
     if (!key) return;
 
@@ -437,31 +454,64 @@ export default class Match extends Room {
       persisted: 0,
     };
 
-    try {
-      const response = await fetch(
-        `${this.auditApiBaseUrl}/match/action-event/${encodeURIComponent(
-          key.eventKey,
-        )}/${encodeURIComponent(key.tournamentKey)}/${key.id}`,
-        {
+    const matchLabel = `${key.eventKey}-${key.tournamentKey}-${key.id}`;
+    this.enqueueActionEvent(matchLabel, {
+      url: `${this.auditApiBaseUrl}/match/action-event/${encodeURIComponent(
+        key.eventKey,
+      )}/${encodeURIComponent(key.tournamentKey)}/${key.id}`,
+      label: `${log.sourceEvent} for ${matchLabel}`,
+      body: JSON.stringify(payload),
+    });
+  }
+
+  private enqueueActionEvent(matchLabel: string, event: QueuedActionEvent) {
+    const queue = this.actionEventQueues.get(matchLabel);
+    if (queue) {
+      if (queue.length >= MAX_PENDING_ACTION_EVENTS) {
+        queue.shift();
+        const dropped = (this.droppedActionEvents.get(matchLabel) ?? 0) + 1;
+        this.droppedActionEvents.set(matchLabel, dropped);
+        if (dropped === 1) {
+          logger.warn(
+            `action event queue full for ${matchLabel}; dropping oldest events`,
+          );
+        }
+      }
+      queue.push(event);
+      return;
+    }
+    // No queue means no sender is running for this match - start one.
+    this.actionEventQueues.set(matchLabel, [event]);
+    void this.drainActionEvents(matchLabel);
+  }
+
+  private async drainActionEvents(matchLabel: string): Promise<void> {
+    const queue = this.actionEventQueues.get(matchLabel);
+    while (queue && queue.length > 0) {
+      const event = queue.shift()!;
+      try {
+        const response = await fetch(event.url, {
           method: "POST",
-          signal: AbortSignal.timeout(2000),
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(payload),
-        },
-      );
-      if (!response.ok) {
-        logger.warn(
-          `failed to log action event ${log.sourceEvent} (${response.status}) for ${key.eventKey}-${key.tournamentKey}-${key.id}`,
-        );
+          body: event.body,
+          signal: AbortSignal.timeout(ACTION_EVENT_TIMEOUT_MS),
+        });
+        if (!response.ok) {
+          logger.warn(
+            `failed to log action event ${event.label} (${response.status})`,
+          );
+        }
+      } catch (e) {
+        logger.warn(`failed to log action event ${event.label}: ${String(e)}`);
       }
-    } catch (e) {
-      logger.warn(
-        `failed to log action event ${log.sourceEvent} for ${key.eventKey}-${key.tournamentKey}-${key.id}: ${String(
-          e,
-        )}`,
-      );
+    }
+    this.actionEventQueues.delete(matchLabel);
+    const dropped = this.droppedActionEvents.get(matchLabel);
+    if (dropped) {
+      this.droppedActionEvents.delete(matchLabel);
+      logger.warn(`dropped ${dropped} action events for ${matchLabel}`);
     }
   }
 
