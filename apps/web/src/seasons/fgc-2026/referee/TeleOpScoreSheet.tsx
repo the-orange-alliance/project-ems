@@ -182,6 +182,11 @@ const TeleScoreSheet: FC<Props> = ({
     }
   };
 
+  // At most 2 of an alliance's 3 ROBOTS can be PARTNER CLIMB (one must be the
+  // supporting base) - counted from details so partial participant lists still work.
+  const allianceStations = alliance === 'blue' ? [21, 22, 23] : [11, 12, 13];
+  const partnerClimbCount = allianceStations.filter(getPartnerClimb).length;
+
   const updatePartnerClimb = (station: number, value: boolean) => {
     switch (station) {
       case 11:
@@ -254,6 +259,8 @@ const TeleScoreSheet: FC<Props> = ({
         const updateClimb = (value: boolean) => {
           updatePartnerClimb(p.station, value);
         };
+        const partnerClimbLocked =
+          !getPartnerClimb(p.station) && partnerClimbCount >= 2;
         return (
           <Col key={`${p.teamKey}-Brace`} xs={24} sm={8}>
             <StateToggle
@@ -274,10 +281,16 @@ const TeleScoreSheet: FC<Props> = ({
               fullWidth
             />
             <StateToggle
-              title={<span>{identifiers[p.teamKey]}&nbsp;PARTNER CLIMB</span>}
+              title={
+                <span>
+                  {identifiers[p.teamKey]}&nbsp;PARTNER CLIMB
+                  {partnerClimbLocked && ' (max 2)'}
+                </span>
+              }
               states={[false, true]}
               stateLabels={['No', 'Yes']}
               value={getPartnerClimb(p.station)}
+              disabled={partnerClimbLocked}
               onChange={updateClimb}
               fullWidth
             />
