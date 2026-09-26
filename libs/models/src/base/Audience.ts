@@ -22,7 +22,10 @@ export enum AudienceScreens {
   MATCH_PRODUCTION = 'match-production',
   RESULTS = 'results-full',
   RESULTS_STREAM = 'results-stream',
-  RANKINGS = 'rankings'
+  RANKINGS = 'rankings',
+  STATS = 'stats-graphics',
+  /** Shows the best-effort next-item preview, never authoritative cue/program state - the "PVW bus" to `STATS`'s "PGM bus". */
+  STATS_PREVIEW = 'stats-graphics-preview'
 }
 
 export enum LayoutMode {
@@ -30,5 +33,5 @@ export enum LayoutMode {
   STREAM = 's',
   FULL = 'f',
   RESULTS = 'r',
-  MIN = 'm',
+  MIN = 'm'
 }

@@ -1,14 +1,19 @@
 {
   "name": "api",
-  "version": "26.0.13",
+  "version": "26.0.22",
   "description": "Realtime service for EMS.",
   "main": "build/Server.js",
   "type": "module",
   "scripts": {
     "start": "tsc -p . && node build/Server.js",
     "build": "tsc -p .",
-    "dist": "ncc build build/Server.js -e sqlite3 -o dist",
-    "test:history": "tsx --test src/tests/match-history.integration.test.ts"
+    "dist": "npm run dist:index && npm run dist:worker",
+    "test:history": "tsx --test src/tests/match-history.integration.test.ts",
+    "dist:index": "ncc build build/Server.js -e sqlite3 -o dist",
+    "dist:worker": "ncc build build/stats/StatsWorker.js -e sqlite3 -o dist/stats-worker",
+    "test": "npm run build:realtime-dep && npm run build && node --test build/tests/*.test.js",
+    "build:realtime-dep": "npm --prefix ../realtime run build",
+    "check-types": "tsc --noEmit"
   },
   "author": "Kyle Flynn",
   "license": "ISC",
@@ -29,6 +34,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
     "prettier": "^3.9.5",
+    "realtime": "1.0.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {

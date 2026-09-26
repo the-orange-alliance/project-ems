@@ -24,7 +24,8 @@
       "dependsOn": [
         "@toa-lib/models#build",
         "@toa-lib/client#build",
-        "@toa-lib/server#build"
+        "@toa-lib/server#build",
+        "realtime#build"
       ]
     },
     "realtime#build": {
@@ -36,6 +37,20 @@
     },
     "project-ems#build": {
       "dependsOn": ["@toa-lib/models#build", "@toa-lib/client#build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "env": ["BUILD_TYPE", "API_URL"],
+      "inputs": ["$TURBO_DEFAULT$", "apps/web/.env.local", ".env"]
+    },
+    "dist:worker": {
+      "dependsOn": ["build"],
+      "outputs": ["dist/stats-worker/**", "dist/worker/**"]
+    },
+    "api#test": {
+      "dependsOn": ["^build", "realtime#build", "dist:worker"],
+      "outputs": []
     },
     "check-types": {
       "dependsOn": ["^check-types", "^build"]

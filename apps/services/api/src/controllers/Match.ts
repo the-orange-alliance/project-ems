@@ -44,8 +44,7 @@ import {
   nowUtc,
   participantsSinceClause,
   sinceClause,
-  SinceQuery,
-  touchMatch
+  SinceQuery
 } from '../util/MatchTimestamps.js';
 
 const MatchArraySchema = z.array(matchWithDetailsZod);
@@ -83,7 +82,10 @@ const MatchPatchBodySchema = matchWithDetailsZod.extend({
 });
 
 type MatchAuditActionType =
-  'MATCH_PATCH' | 'MATCH_DETAILS_PATCH' | 'MATCH_PARTICIPANTS_PATCH';
+  | 'MATCH_PATCH'
+  | 'MATCH_DETAILS_PATCH'
+  | 'MATCH_PARTICIPANTS_PATCH'
+  | 'MATCH_RECALCULATE';
 
 type MatchAuditContext = {
   actionType: MatchAuditActionType;
@@ -93,6 +95,47 @@ type MatchAuditContext = {
   clientId?: string;
   socketId?: string;
   correlationId?: string;
+};
+
+type MatchRevisionUpdate = {
+  table: 'match' | 'match_detail' | 'match_participant';
+  values: Record<string, unknown>;
+  where: Record<string, unknown>;
+};
+
+const sqliteLiteral = (value: unknown): string => {
+  if (value == null) return 'NULL';
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) throw new Error('Invalid numeric SQL value');
+    return String(value);
+  }
+  if (typeof value === 'boolean') return value ? '1' : '0';
+  return "'" + String(value).replace(/'/g, "''") + "'";
+};
+
+const sqliteIdentifier = (value: string): string =>
+  `"${value.replace(/"/g, '""')}"`;
+
+const updateStatement = ({
+  table,
+  values,
+  where
+}: MatchRevisionUpdate): string => {
+  const assignments = Object.entries(values)
+    .filter(([, value]) => value !== undefined)
+    .map(
+      ([column, value]) =>
+        `${sqliteIdentifier(column)} = ${sqliteLiteral(value)}`
+    );
+  if (assignments.length === 0) return '';
+  const predicate = Object.entries(where)
+    .map(
+      ([column, value]) =>
+        `${sqliteIdentifier(column)} = ${sqliteLiteral(value)}`
+    )
+    .join(' AND ');
+  if (!predicate) throw new Error('Refusing an unscoped match revision update');
+  return `UPDATE ${sqliteIdentifier(table)} SET ${assignments.join(',')} WHERE ${predicate};`;
 };
 
 const getHeaderValue = (
@@ -122,106 +165,53 @@ const makeAuditContext = (
   correlationId: getHeaderValue(request, 'x-correlation-id')
 });
 
-const insertHistoryRecord = async (
+export const commitMatchRevision = async (
   db: EventDatabase,
-  table: 'match_history_base' | 'match_detail_history',
-  value: Record<string, unknown>
-) => {
-  const entries = Object.entries(value);
-  const columns = entries.map(([k]) => `"${k}"`).join(', ');
-  const placeholders = entries.map(() => '?').join(', ');
-  await db.db.all(
-    `INSERT INTO "${table}" (${columns}) VALUES (${placeholders});`,
-    entries.map(([, v]) => (typeof v === 'undefined' ? null : v))
-  );
-};
+  eventKey: string,
+  tournamentKey: string,
+  id: string,
+  audit: MatchAuditContext,
+  updates: readonly MatchRevisionUpdate[] = []
+) =>
+  db.withRevisionConnection(async (connection) => {
+    const key = `"eventKey" = ${sqliteLiteral(eventKey)} AND "tournamentKey" = ${sqliteLiteral(tournamentKey)} AND "id" = ${sqliteLiteral(Number(id))}`;
+    const envelope = { ...audit, occurredAtUtc: nowUtc() };
+    const auditColumns = Object.keys(envelope).map((k) => `"${k}"`);
+    const auditValues = Object.values(envelope).map(sqliteLiteral);
+    const snapshot = async (source: string, target: string) => {
+      const columns = await connection.all<{ name: string }>(
+        `PRAGMA table_info("${source}")`
+      );
+      const names = columns.map((c) => `"${c.name}"`).join(',');
+      return `INSERT INTO "${target}" (${names},revision,${auditColumns.join(',')}) SELECT ${names},(SELECT revision FROM snapshot_envelope),${auditValues.join(',')} FROM "${source}" WHERE ${key};`;
+    };
+    const base = await snapshot('match', 'match_history_base');
+    const detail = await snapshot('match_detail', 'match_detail_history');
+    const mutationSql = updates.map(updateStatement).join('\n');
+    // One native exec keeps BEGIN/reads/writes/COMMIT together. Awaiting individual
+    // statements while holding the lock can starve libuv behind waiting writers.
+    await connection.exec(`BEGIN IMMEDIATE;
+    ${mutationSql}
+    CREATE TEMP TABLE snapshot_envelope (revision INTEGER, watermark INTEGER, hasDetails INTEGER CHECK(hasDetails = 1), hasBase INTEGER CHECK(hasBase = 1));
+    INSERT INTO snapshot_envelope SELECT
+      (SELECT COALESCE(MAX(revision),0)+1 FROM match_history_base WHERE ${key}),
+      (SELECT COALESCE(MAX(actionEventId),0) FROM match_action_event WHERE ${key}),
+      (SELECT COUNT(*) FROM match_detail WHERE ${key}),
+      (SELECT COUNT(*) FROM match WHERE ${key});
+    ${base}
+    ${detail}
+    UPDATE match_action_event SET revision=(SELECT revision FROM snapshot_envelope),persisted=1
+      WHERE ${key} AND persisted=0 AND actionEventId <= (SELECT watermark FROM snapshot_envelope);
+    COMMIT;`);
+  });
 
-const isRevisionConflictError = (error: unknown): boolean => {
-  const message = String((error as { message?: unknown })?.message ?? error);
-  return (
-    message.includes('SQLITE_CONSTRAINT: UNIQUE constraint failed') &&
-    message.includes('match_history_base.eventKey') &&
-    message.includes('match_history_base.revision')
-  );
-};
-
-const writeMatchRevisionSnapshot = async (
+export const writeMatchRevisionSnapshot = async (
   db: EventDatabase,
   eventKey: string,
   tournamentKey: string,
   id: string,
   audit: MatchAuditContext
-) => {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    try {
-      // One transaction: the revision number, both history rows and the
-      // action-event link commit together (one fsync), or not at all.
-      await db.transaction(async () => {
-        const revisionRows = (await db.db.all(
-          'SELECT COALESCE(MAX("revision"), 0) + 1 AS "nextRevision" FROM "match_history_base" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
-          [eventKey, tournamentKey, Number(id)]
-        )) as { nextRevision: number }[];
-        const revision = Number(revisionRows[0]?.nextRevision ?? 1);
-        const occurredAtUtc = nowUtc();
-
-        const matchRows = (await db.db.all(
-          'SELECT * FROM "match" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
-          [eventKey, tournamentKey, Number(id)]
-        )) as Record<string, unknown>[];
-
-        if (matchRows.length === 0) {
-          return;
-        }
-
-        const detailRows = (await db.db.all(
-          'SELECT * FROM "match_detail" WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ?;',
-          [eventKey, tournamentKey, Number(id)]
-        )) as Record<string, unknown>[];
-
-        const auditColumns = {
-          revision,
-          actionType: audit.actionType,
-          source: audit.source,
-          actorId: audit.actorId,
-          actorName: audit.actorName,
-          clientId: audit.clientId,
-          socketId: audit.socketId,
-          correlationId: audit.correlationId,
-          occurredAtUtc
-        };
-
-        await insertHistoryRecord(db, 'match_history_base', {
-          ...matchRows[0],
-          ...auditColumns
-        });
-
-        await insertHistoryRecord(db, 'match_detail_history', {
-          ...(detailRows[0] ?? {
-            eventKey,
-            tournamentKey,
-            id: Number(id)
-          }),
-          ...auditColumns
-        });
-
-        if (audit.correlationId) {
-          await db.db.all(
-            'UPDATE "match_action_event" SET "revision" = ?, "persisted" = 1 WHERE "eventKey" = ? AND "tournamentKey" = ? AND "id" = ? AND "correlationId" = ? AND "persisted" = 0;',
-            [revision, eventKey, tournamentKey, Number(id), audit.correlationId]
-          );
-        }
-      });
-      return;
-    } catch (e) {
-      if (attempt < 4 && isRevisionConflictError(e)) {
-        continue;
-      }
-      throw e;
-    }
-  }
-
-  throw new Error('Unable to write match history snapshot after retries');
-};
+) => commitMatchRevision(db, eventKey, tournamentKey, id, audit);
 
 const MatchScoreSchema = z.object({
   redScore: z.number(),
@@ -720,7 +710,7 @@ async function matchController(fastify: FastifyInstance) {
 
         // Cycle time is derived, never client-supplied, so that every client
         // agrees on it. Recomputed only on the patch that first records this
-        // match's actual start — later patches (commit, score edits) resend the
+        // match's actual start â€” later patches (commit, score edits) resend the
         // same actualStartTime and must not disturb the stored value.
         const [stored] = await db.selectAllWhere(
           'match',
@@ -747,30 +737,31 @@ async function matchController(fastify: FastifyInstance) {
         if (match.blueMajPen == null)
           match.blueMajPen = Number(stored?.blueMajPen ?? 0);
 
-        if (match.active === 1) {
-          // Those matches really did change, so they get a new timestamp too.
-          await db.updateWhere(
-            'match',
-            { active: 0, updatedAtUtc: nowUtc() },
-            'active = 1 AND fieldNumber = ' + match.fieldNumber
-          );
-        }
-
         match.updatedAtUtc = nowUtc();
         const sanitizedMatch = Object.fromEntries(
           Object.entries(match).filter(([, value]) => value !== null)
         ) as Record<string, unknown>;
-        await db.updateWhere(
-          'match',
-          sanitizedMatch,
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
-        );
-        await writeMatchRevisionSnapshot(
+        const updates: MatchRevisionUpdate[] = [];
+        if (match.active === 1) {
+          // Those matches really did change, so they get a new timestamp too.
+          updates.push({
+            table: 'match',
+            values: { active: 0, updatedAtUtc: nowUtc() },
+            where: { active: 1, fieldNumber: match.fieldNumber }
+          });
+        }
+        updates.push({
+          table: 'match',
+          values: sanitizedMatch,
+          where: { eventKey, tournamentKey, id: Number(id) }
+        });
+        await commitMatchRevision(
           db,
           eventKey,
           tournamentKey,
           id,
-          makeAuditContext(request, 'MATCH_PATCH')
+          makeAuditContext(request, 'MATCH_PATCH'),
+          updates
         );
         reply.status(200).send({});
       } catch (e) {
@@ -812,18 +803,24 @@ async function matchController(fastify: FastifyInstance) {
         const sanitizedData = Object.fromEntries(
           Object.entries(data).filter(([, value]) => value !== null)
         );
-        await db.updateWhere(
-          'match_detail',
-          sanitizedData,
-          `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id}`
-        );
-        await touchMatch(db, eventKey, tournamentKey, id);
-        await writeMatchRevisionSnapshot(
+        await commitMatchRevision(
           db,
           eventKey,
           tournamentKey,
           id,
-          makeAuditContext(request, 'MATCH_DETAILS_PATCH')
+          makeAuditContext(request, 'MATCH_DETAILS_PATCH'),
+          [
+            {
+              table: 'match_detail',
+              values: sanitizedData,
+              where: { eventKey, tournamentKey, id: Number(id) }
+            },
+            {
+              table: 'match',
+              values: { updatedAtUtc: nowUtc() },
+              where: { eventKey, tournamentKey, id: Number(id) }
+            }
+          ]
         );
         reply.status(200).send({});
       } catch (e) {
@@ -850,22 +847,28 @@ async function matchController(fastify: FastifyInstance) {
         >;
         const db = await getDB(eventKey);
         const participants = request.body;
+        const updates: MatchRevisionUpdate[] = [];
         for (const participant of participants) {
           if (participant.team) delete participant.team;
           const { station } = participant;
-          await db.updateWhere(
-            'match_participant',
-            participant,
-            `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${id} AND station = ${station}`
-          );
+          updates.push({
+            table: 'match_participant',
+            values: participant,
+            where: { eventKey, tournamentKey, id: Number(id), station }
+          });
         }
-        await touchMatch(db, eventKey, tournamentKey, id);
-        await writeMatchRevisionSnapshot(
+        updates.push({
+          table: 'match',
+          values: { updatedAtUtc: nowUtc() },
+          where: { eventKey, tournamentKey, id: Number(id) }
+        });
+        await commitMatchRevision(
           db,
           eventKey,
           tournamentKey,
           id,
-          makeAuditContext(request, 'MATCH_PARTICIPANTS_PATCH')
+          makeAuditContext(request, 'MATCH_PARTICIPANTS_PATCH'),
+          updates
         );
         reply.status(200).send({});
       } catch (e) {
@@ -960,7 +963,7 @@ async function matchController(fastify: FastifyInstance) {
             continue;
           }
           // Parse the row the same way GET /all does before handing it to
-          // season code — the raw row is not the season's detail shape.
+          // season code â€” the raw row is not the season's detail shape.
           const detail = funcs?.detailsFromJson
             ? (funcs.detailsFromJson(stored) ?? stored)
             : stored;
@@ -990,11 +993,6 @@ async function matchController(fastify: FastifyInstance) {
           const detailUpdate = funcs?.detailsToJson
             ? funcs.detailsToJson(newDetails)
             : newDetails;
-          await db.updateWhere(
-            'match_detail',
-            detailUpdate,
-            `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${m.id}`
-          );
 
           const scoreChanged =
             redScore !== m.redScore || blueScore !== m.blueScore;
@@ -1009,14 +1007,32 @@ async function matchController(fastify: FastifyInstance) {
             detailUpdate as Record<string, unknown>
           ).some(([key, value]) => stored[key] !== value);
           if (scoreChanged || resultChanged || detailsChanged) {
-            await touchMatch(db, eventKey, tournamentKey, m.id);
+            await commitMatchRevision(
+              db,
+              eventKey,
+              tournamentKey,
+              String(m.id),
+              makeAuditContext(request, 'MATCH_RECALCULATE'),
+              [
+                {
+                  table: 'match_detail',
+                  values: detailUpdate as Record<string, unknown>,
+                  where: { eventKey, tournamentKey, id: m.id }
+                },
+                {
+                  table: 'match',
+                  values: {
+                    updatedAtUtc: nowUtc(),
+                    ...(scoreChanged || resultChanged
+                      ? { redScore, blueScore, result }
+                      : {})
+                  },
+                  where: { eventKey, tournamentKey, id: m.id }
+                }
+              ]
+            );
           }
           if (scoreChanged || resultChanged) {
-            await db.updateWhere(
-              'match',
-              { redScore, blueScore, result },
-              `eventKey = "${eventKey}" AND tournamentKey = "${tournamentKey}" AND id = ${m.id}`
-            );
             const change = {
               id: m.id,
               name: m.name,

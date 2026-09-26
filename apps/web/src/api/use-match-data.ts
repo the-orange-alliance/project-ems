@@ -10,6 +10,7 @@ import {
 } from '@toa-lib/models';
 import useSWR, { SWRResponse } from 'swr';
 import { localClient } from './http-clients.js';
+import { requireCollection } from './load-state.js';
 
 export interface MatchHistorySnapshotRow extends Record<string, unknown> {
   eventKey: string;
@@ -82,7 +83,7 @@ export const matchApi = {
     },
     event: async (eventKey: string): Promise<Match<any>[]> => {
       const payload = await localClient.get<unknown[]>(`/match/${eventKey}`);
-      return matchZod.array().parse(payload ?? []);
+      return matchZod.array().parse(requireCollection(payload, 'matches'));
     },
     tournament: async (
       eventKey: string,

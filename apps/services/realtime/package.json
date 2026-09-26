@@ -4,10 +4,31 @@
   "description": "Realtime service for EMS.",
   "main": "build/Server.js",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./build/Server.d.ts",
+      "default": "./build/Server.js"
+    },
+    "./PlaybackPublication": {
+      "types": "./build/PlaybackPublication.d.ts",
+      "default": "./build/PlaybackPublication.js"
+    },
+    "./rooms/Graphics": {
+      "types": "./build/rooms/Graphics.d.ts",
+      "default": "./build/rooms/Graphics.js"
+    },
+    "./rooms/Match": {
+      "types": "./build/rooms/Match.d.ts",
+      "default": "./build/rooms/Match.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "start": "tsc -p . && node build/Server.js",
     "dev": "set SERVICE_PORT=8081 && npm run start",
     "build": "tsc -p .",
+    "test": "npm run build && node --test build/tests/*.test.js",
+    "check-types": "tsc --noEmit",
     "dist": "npm run dist:index && npm run dist:worker",
     "dist:index": "ncc build build/Server.js -o dist",
     "dist:worker": "ncc build build/util/WLEDWorker/worker.js -o dist/worker"

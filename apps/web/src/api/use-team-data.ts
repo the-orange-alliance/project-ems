@@ -1,6 +1,7 @@
 import { ApiResponseError, Team, teamZod } from '@toa-lib/models';
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
 import { localClient } from './http-clients.js';
+import { requireCollection } from './load-state.js';
 
 export const teamsApi = {
   get: {
@@ -12,7 +13,7 @@ export const teamsApi = {
       const payload = await localClient.get<unknown[]>(
         `/teams/${eventKey}${averageScore ? '?averageScore=true' : ''}`
       );
-      return teamZod.array().parse(payload ?? []);
+      return teamZod.array().parse(requireCollection(payload, 'teams'));
     }
   },
   create: {

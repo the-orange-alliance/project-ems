@@ -23,6 +23,9 @@ import rankingController from './controllers/Ranking.js';
 import allianceController from './controllers/Alliance.js';
 import tournamentController from './controllers/Tournament.js';
 import frcFmsController from './controllers/FrcFms.js';
+import statsController from './controllers/Stats.js';
+import graphicsController from './controllers/Graphics.js';
+import graphicsPlaybackController from './controllers/GraphicsPlayback.js';
 import heartbeatController from './controllers/Heartbeat.js';
 import resultsController from './controllers/Results.js';
 import socketClientsController from './controllers/SocketClients.js';
@@ -41,15 +44,38 @@ import { join } from 'path';
 import webhooksController from './controllers/Webhooks.js';
 import seasonSpecificController from './controllers/SeasonSpecific.js';
 import { throttledUploadDatabase, initS3Client } from './util/S3Backup.js';
+import { getPlaybackCoordinator } from './graphics/PlaybackCoordinatorService.js';
+import { createRealtimePlaybackPublisher } from './graphics/RealtimePlaybackPublisher.js';
 
 // Setup our environment
 const workingDir = process.env.WORKDIR ?? '../';
 const path = join(workingDir, '/api/.env');
 env.loadAndSetDefaults(process.env, path);
 
-// App setup - if any of these fail the server should exit.
+// App setup - if any of these fail the server should exit, but a cold start can
+// race a filesystem that isn't settled yet (WAL lock from a prior process, a
+// slow network appdata mount), so give transient failures a few chances before
+// giving up. Every step in initGlobal() is idempotent, so a retry is safe.
+async function initGlobalWithRetry(attempts = 3, delayMs = 500): Promise<void> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await initGlobal();
+      return;
+    } catch (e) {
+      if (attempt >= attempts) throw e;
+      logger.warn(
+        `initGlobal failed (attempt ${attempt}/${attempts}), retrying in ${delayMs}ms: ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      delayMs *= 2;
+    }
+  }
+}
+
 try {
-  await initGlobal();
+  await initGlobalWithRetry();
 } catch (e) {
   logger.error(e);
   process.exit(1);
@@ -66,6 +92,32 @@ try {
 const fastify = Fastify({
   logger:
     env.get().nodeEnv === 'production' ? { level: 'warn' } : { level: 'info' }
+});
+
+// Configure the process-wide coordinator before registering any encapsulated
+// controller. The first lookup owns the singleton's immutable publication
+// options, so doing this here prevents plugin order from caching an
+// unconfigured coordinator.
+const realtimePublisher = createRealtimePlaybackPublisher({
+  baseUrl: process.env.GRAPHICS_REALTIME_BASE_URL,
+  token: process.env.GRAPHICS_PUBLICATION_TOKEN ?? env.get().jwtSecret,
+  timeoutMs: Number(process.env.GRAPHICS_PUBLICATION_TIMEOUT_MS) || undefined
+});
+getPlaybackCoordinator(fastify, {
+  publish: realtimePublisher.publish,
+  authorityEpoch: realtimePublisher.authorityEpoch,
+  publicationRetryBaseMs:
+    Number(process.env.GRAPHICS_PUBLICATION_RETRY_BASE_MS) || undefined,
+  publicationRetryMaxMs:
+    Number(process.env.GRAPHICS_PUBLICATION_RETRY_MAX_MS) || undefined,
+  shutdownTimeoutMs:
+    Number(process.env.GRAPHICS_PUBLICATION_SHUTDOWN_MS) || undefined,
+  onPublicationError: (eventKey, error) =>
+    logger.warn(
+      `Playback publication pending for ${eventKey}: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    )
 });
 
 // Register Error handler for all routes
@@ -106,6 +158,11 @@ await fastify.register(fastifySwagger, {
       { name: 'Alliances', description: 'Alliance related endpoints' },
       { name: 'Tournaments', description: 'Tournament related endpoints' },
       { name: 'FrcFms', description: 'FRC FMS related endpoints' },
+      { name: 'Stats', description: 'Production statistics and worker queue' },
+      {
+        name: 'Graphics',
+        description: 'Producer-authored graphics timeline endpoints'
+      },
       { name: 'Heartbeat', description: 'Heartbeat/health-check endpoint' },
       { name: 'Results', description: 'Results related endpoints' },
       {
@@ -148,6 +205,9 @@ await fastify.register(authController, { prefix: '/auth' });
 await fastify.register(eventController, { prefix: '/event' });
 await fastify.register(fcsController, { prefix: '/fcs' });
 await fastify.register(frcFmsController, { prefix: '/frc/fms' });
+await fastify.register(statsController, { prefix: '/stats' });
+await fastify.register(graphicsController, { prefix: '/graphics' });
+await fastify.register(graphicsPlaybackController, { prefix: '/graphics' });
 await fastify.register(heartbeatController, { prefix: '/heartbeat' });
 await fastify.register(matchController, { prefix: '/match' });
 await fastify.register(rankingController, { prefix: '/ranking' });
@@ -168,7 +228,7 @@ fastify.addHook('onResponse', (request, reply, done) => {
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
     const { eventKey } = (request.params as { eventKey?: string }) ?? {};
 
-    if (eventKey) {
+    if (eventKey && !request.routeOptions.url?.startsWith('/stats/')) {
       throttledUploadDatabase(eventKey);
     }
   }
@@ -208,3 +268,11 @@ fastify.listen(
     );
   }
 );
+
+// Graceful shutdown: triggers each registered service's onClose hook
+// (including the playback coordinator's) instead of dropping the process.
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+  process.once(signal, () => {
+    void fastify.close();
+  });
+}

@@ -1,0 +1,306 @@
+import { useEffect, useState } from 'react';
+import type {
+  GraphicSpec,
+  MeasureFormat,
+  PresentationMode,
+  VizFrame
+} from '@toa-lib/models';
+import {
+  formatSemanticCell,
+  type SemanticCell
+} from '@toa-lib/models/seasons/stats/presentation';
+
+/**
+ * Pure, framework-free formatting/paging helpers shared by the scalar
+ * (`stat-tile`), `ranking-table`, and generic `table` renderers.
+ *
+ * Broadcast numeric text follows model `formatSemanticCell`: fixed decimal
+ * precision, decimal point, no digit grouping, and toFixed rounding. This
+ * locale-independent contract is identical on PGM and PVW machines.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Legacy (v1 `frame.series` / `frame.columns` + `frame.rows`) numbers */
+/* ------------------------------------------------------------------ */
+
+/** Legacy-only: v1 frames carry no per-measure format, just a spec-level hint. */
+export function resolveLegacyPrecision(spec: GraphicSpec): number {
+  const precision = spec.options?.precision;
+  return typeof precision === 'number' && Number.isFinite(precision)
+    ? Math.min(12, Math.max(0, Math.floor(precision)))
+    : 1;
+}
+
+export function formatLegacyNumber(value: number, precision: number): string {
+  return formatSemanticCell(value, { style: 'number', scale: 1, precision });
+}
+
+/* ------------------------------------------------------------------ */
+/* Typed (v2 `frame.data`) semantic cells                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Formats one typed semantic cell honoring its measure's precision, unit,
+ * and percentage scaling. `null` is "no observation was made" and renders
+ * as an em-dash; DOM renderers can also color it with the neutral palette.
+ * A measured `0` remains a number and uses the measure's format.
+ *
+ * Booleans get a broadcast-friendly Yes/No instead of the generic
+ * `formatSemanticCell` stringification; every other type (number, text)
+ * defers to `formatSemanticCell` so precision/unit/percent-scale stay a
+ * single source of truth with the season semantic layer.
+ */
+export function formatTypedCell(
+  value: SemanticCell,
+  format: MeasureFormat
+): string {
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  return formatSemanticCell(value, format);
+}
+
+/** Legacy cells still preserve boolean/text/null types; only numbers use precision. */
+export function formatLegacyCell(value: unknown, precision: number): string {
+  if (value === null || value === undefined) return '—';
+  if (typeof value === 'number') return formatLegacyNumber(value, precision);
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'string') return value;
+  return JSON.stringify(value) ?? '—';
+}
+
+/** Bridge chart values remain in storage units: apply scale only to display text. */
+export function resolveChartFormat(
+  frame: VizFrame,
+  spec: GraphicSpec,
+  seriesIndex = 0
+): MeasureFormat {
+  const { data } = frame;
+  if (
+    data?.kind === 'bar' ||
+    data?.kind === 'grouped-bar' ||
+    data?.kind === 'line'
+  ) {
+    const format = data.series[seriesIndex]?.measure.format;
+    if (format) return format;
+  }
+  if (
+    data?.kind === 'histogram' ||
+    data?.kind === 'heatmap' ||
+    data?.kind === 'geo-map'
+  ) {
+    return data.measure.format;
+  }
+  return { style: 'number', scale: 1, precision: resolveLegacyPrecision(spec) };
+}
+
+/** A mixed-measure axis has no single unit/scale; its ticks show raw storage numbers. */
+export function resolveChartAxisFormat(
+  frame: VizFrame,
+  spec: GraphicSpec
+): MeasureFormat {
+  const first = resolveChartFormat(frame, spec);
+  const { data } = frame;
+  if (
+    data?.kind === 'bar' ||
+    data?.kind === 'grouped-bar' ||
+    data?.kind === 'line'
+  ) {
+    const sameFormat = data.series.every(
+      ({ measure: { format } }) =>
+        format.style === first.style &&
+        format.scale === first.scale &&
+        format.precision === first.precision &&
+        format.unit === first.unit
+    );
+    if (!sameFormat)
+      return {
+        style: 'number',
+        scale: 1,
+        precision: resolveLegacyPrecision(spec)
+      };
+  }
+  return first;
+}
+
+/** Missing plotted observations retain gaps; labels use the shared missing-value text. */
+export function formatChartValue(
+  value: number | null | undefined,
+  format: MeasureFormat
+): string {
+  return formatTypedCell(value ?? null, format);
+}
+
+/* ------------------------------------------------------------------ */
+/* Alliance grouping (`teamsInMatchId`, Phase 2 - modular, opt-in)     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * `bar`/`grouped-bar`'s legacy per-point bridge: `group` (Phase 2's
+ * `teamsInMatchId` alliance coloring/grouping - see `applyAllianceGroups` in
+ * `@toa-lib/models`'s `semantic-helpers.ts`) rides along in `point.meta.group`
+ * rather than a typed field, since `VizFrame.series[].points[].meta` is the
+ * only per-point extensibility slot the legacy bridge shape has. Returns
+ * `undefined` whenever `applyAllianceGroups` never ran for this graphic (a
+ * plain `teamKey` selection or an event-wide "all teams" leaderboard) - a
+ * renderer must treat that as "no alliance grouping applies here", never
+ * default it to either color.
+ */
+export function legacyPointAllianceGroup(
+  meta: unknown
+): 'red' | 'blue' | undefined {
+  if (!meta || typeof meta !== 'object') return undefined;
+  const { group } = meta as Record<string, unknown>;
+  return group === 'red' || group === 'blue' ? group : undefined;
+}
+
+/** `table`/`ranking-table`'s legacy row bridge: `group` rides along as the top-level `__group` key (see `legacyBridge`) - same absence contract as `legacyPointAllianceGroup`. */
+export function legacyRowAllianceGroup(
+  row: Record<string, unknown>
+): 'red' | 'blue' | undefined {
+  const group = row.__group;
+  return group === 'red' || group === 'blue' ? group : undefined;
+}
+
+/* ------------------------------------------------------------------ */
+/* Authoritative rank / identity                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Resolves the on-screen rank for one row. A v2 `ranking-table` row's
+ * `rank` is authoritative and source-derived (it can be 7 and 8 for a
+ * filtered result that starts mid-leaderboard) and must always win over the
+ * row's position in whatever (possibly filtered/paginated) array is being
+ * rendered. `positionIndex` is used only as a defensive fallback for a
+ * malformed/legacy row that genuinely carries no rank.
+ */
+export function resolveRowRank(
+  row: { rank?: number },
+  positionIndex: number
+): number {
+  return typeof row.rank === 'number' ? row.rank : positionIndex + 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Non-interactive paging                                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * An audience member cannot scroll a broadcast graphic, so a table that
+ * exceeds its visible capacity pages through its rows automatically
+ * instead of overflowing or relying on CSS scroll. Row-per-page defaults
+ * are keyed by presentation mode (a `lower-third` band has far less
+ * vertical room than `fullscreen`) rather than guessed per renderer.
+ */
+export const DEFAULT_ROWS_PER_PAGE_BY_MODE: Readonly<
+  Record<PresentationMode, number>
+> = {
+  fullscreen: 10,
+  'drawer-left': 8,
+  'drawer-right': 8,
+  'lower-third': 3
+};
+
+export function resolveRowsPerPage(
+  mode: PresentationMode,
+  overridesByMode: Partial<Record<PresentationMode, number>> = {}
+): number {
+  const override = overridesByMode[mode];
+  if (
+    typeof override === 'number' &&
+    Number.isFinite(override) &&
+    override > 0
+  ) {
+    return Math.max(1, Math.floor(override));
+  }
+  return DEFAULT_ROWS_PER_PAGE_BY_MODE[mode] ?? 8;
+}
+
+export function computePageCount(itemCount: number, pageSize: number): number {
+  if (itemCount <= 0) return 0;
+  if (pageSize <= 0) return 1;
+  return Math.max(1, Math.ceil(itemCount / pageSize));
+}
+
+/** Always returns a value in `[0, pageCount)` — wraps rather than clamps, so
+ * a page index simply keeps cycling instead of getting stuck at the end. */
+export function wrapPageIndex(pageIndex: number, pageCount: number): number {
+  if (pageCount <= 0) return 0;
+  return ((pageIndex % pageCount) + pageCount) % pageCount;
+}
+
+export function paginate<T>(
+  items: readonly T[],
+  pageSize: number,
+  pageIndex: number
+): T[] {
+  if (pageSize <= 0 || items.length <= pageSize) return items.slice();
+  const pageCount = computePageCount(items.length, pageSize);
+  const page = wrapPageIndex(pageIndex, pageCount);
+  const start = page * pageSize;
+  return items.slice(start, start + pageSize);
+}
+
+/* ------------------------------------------------------------------ */
+/* Timed paging — explicit opt-in, derived from an authoritative origin */
+/* ------------------------------------------------------------------ */
+
+/** Floor/ceiling so a producer-configured `holdMs` of e.g. 0 or 12 hours
+ * can't leave a table frozen on one page or flickering unreadably fast. */
+export const MIN_PAGE_DWELL_MS = 3000;
+export const MAX_PAGE_DWELL_MS = 20000;
+/** Dwell for a spec that opted into `autoPage` without setting `holdMs`; the inspector shows this value. */
+export const DEFAULT_PAGE_DWELL_MS = 8000;
+
+export function resolvePageDwellMs(holdMs: number | undefined): number {
+  if (typeof holdMs !== 'number' || !Number.isFinite(holdMs) || holdMs <= 0) {
+    return DEFAULT_PAGE_DWELL_MS;
+  }
+  return Math.min(MAX_PAGE_DWELL_MS, Math.max(MIN_PAGE_DWELL_MS, holdMs));
+}
+
+/**
+ * The visible page is a pure function of wall clock and the program's
+ * authoritative `takenAtUtc`, never of when this display mounted — so every
+ * display, including one that joined or reloaded mid-show, shows the same
+ * page at the same instant. A clock behind the origin holds page 1.
+ */
+export function pageIndexAt(
+  nowMs: number,
+  originMs: number,
+  dwellMs: number,
+  pageCount: number
+): number {
+  if (pageCount <= 1 || dwellMs <= 0) return 0;
+  const elapsed = Math.max(0, nowMs - originMs);
+  return wrapPageIndex(Math.floor(elapsed / dwellMs), pageCount);
+}
+
+/**
+ * Returns the page `pageIndexAt` gives for now and wakes once at the next
+ * page boundary to re-render. It never counts pages locally, so a missed or
+ * late wake cannot drift a display. `originMs === null` (no authoritative
+ * program, e.g. PVW) or `pageCount <= 1` schedules nothing and stays on page 1.
+ */
+export function useTimedPageIndex(
+  pageCount: number,
+  dwellMs: number,
+  originMs: number | null,
+  clock: () => number = Date.now
+): number {
+  const [, wake] = useState(0);
+  const active = originMs !== null && pageCount > 1 && dwellMs > 0;
+  const nowMs = clock();
+  const page = active ? pageIndexAt(nowMs, originMs, dwellMs, pageCount) : 0;
+  const nextBoundaryMs = active
+    ? originMs +
+      (Math.floor(Math.max(0, nowMs - originMs) / dwellMs) + 1) * dwellMs
+    : null;
+  useEffect(() => {
+    if (nextBoundaryMs === null) return undefined;
+    const timer = setTimeout(
+      () => wake((value) => value + 1),
+      Math.max(0, nextBoundaryMs - clock())
+    );
+    return () => clearTimeout(timer);
+  }, [nextBoundaryMs, clock]);
+  return page;
+}

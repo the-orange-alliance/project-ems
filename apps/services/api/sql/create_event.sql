@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS "match_history_base" (
 );
 
 CREATE INDEX IF NOT EXISTS "idx_match_history_base_lookup" ON "match_history_base" ("eventKey", "tournamentKey", "id", "revision");
-CREATE INDEX IF NOT EXISTS "idx_match_history_base_time" ON "match_history_base" ("eventKey", "tournamentKey", "id", "occurredAtUtc");
+CREATE INDEX IF NOT EXISTS "idx_match_history_base_latest" ON "match_history_base" ("eventKey", "tournamentKey", "historyId");
 CREATE INDEX IF NOT EXISTS "idx_match_history_base_correlation" ON "match_history_base" ("correlationId");
 
 CREATE TABLE IF NOT EXISTS "match_detail_history" (
@@ -234,5 +234,50 @@ CREATE TABLE IF NOT EXISTS "match_action_event" (
     FOREIGN KEY (id) REFERENCES "match"(id)
 );
 
-CREATE INDEX IF NOT EXISTS "idx_match_action_event_lookup" ON "match_action_event" ("eventKey", "tournamentKey", "id", "occurredAtUtc");
-CREATE INDEX IF NOT EXISTS "idx_match_action_event_persisted" ON "match_action_event" ("eventKey", "tournamentKey", "id", "persisted", "correlationId");
+CREATE INDEX IF NOT EXISTS "idx_match_action_event_lookup" ON "match_action_event" ("eventKey", "tournamentKey", "actionEventId");
+CREATE INDEX IF NOT EXISTS "idx_match_action_event_persisted" ON "match_action_event" ("eventKey", "tournamentKey", "id", "persisted", "actionEventId");
+
+CREATE INDEX IF NOT EXISTS "idx_match_latest_update" ON "match" ("eventKey", "tournamentKey", "updatedAtUtc");
+
+CREATE TABLE IF NOT EXISTS "graphics_timeline" (
+    "timelineId"   VARCHAR(64) NOT NULL,
+    "eventKey"     VARCHAR(25) NOT NULL,
+    "name"         VARCHAR(255) NOT NULL,
+    "description"  TEXT,
+    "data"         TEXT NOT NULL,
+    "sortOrder"    INT NOT NULL DEFAULT 0,
+    "updatedAtUtc" VARCHAR(32),
+    "schemaVersion" INTEGER NOT NULL DEFAULT 1,
+    "revision" INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (eventKey, timelineId)
+);
+
+-- REMOVED: "graphics_queue". Fresh event databases no longer create it;
+-- "graphics_rundown" below owns ordered show entries, their per-entry template
+-- values, and a revision the old table never had. Event databases created
+-- before this change keep their existing rows: the queue is folded into that
+-- event's "producer-show" rundown exactly once (marker
+-- "graphics-queue-to-producer-show-v1" in "graphics_migration") and the
+-- original rows are then left untouched so the pre-migration order stays
+-- recoverable. Nothing writes to the old table any more.
+
+-- The durable ordered show. "data" is a Rundown document (schemaVersion 2);
+-- the producer's own show is rundownId "producer-show".
+CREATE TABLE IF NOT EXISTS "graphics_rundown" (
+    "eventKey" TEXT NOT NULL, "rundownId" TEXT NOT NULL,
+    "data" TEXT NOT NULL, "revision" INTEGER NOT NULL,
+    PRIMARY KEY (eventKey, rundownId)
+);
+CREATE TABLE IF NOT EXISTS "graphics_playback" (
+    "eventKey" TEXT PRIMARY KEY, "data" TEXT NOT NULL, "revision" INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS "graphics_command" (
+    "eventKey" TEXT NOT NULL, "requestId" TEXT NOT NULL,
+    "fingerprint" TEXT NOT NULL, "acknowledgment" TEXT NOT NULL,
+    PRIMARY KEY (eventKey, requestId)
+);
+-- One row per applied data migration; its presence is what keeps a restart
+-- from re-running the migration and duplicating what it already imported.
+CREATE TABLE IF NOT EXISTS "graphics_migration" (
+    "name" TEXT PRIMARY KEY, "appliedAtUtc" TEXT NOT NULL, "detail" TEXT
+);

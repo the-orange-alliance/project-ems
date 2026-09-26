@@ -6,8 +6,24 @@ import parser from "body-parser";
 import jwt from "jsonwebtoken";
 import { environment as env, getIPv4 } from "@toa-lib/server";
 import logger from "./util/Logger.js";
-import { assignRooms, initRooms, leaveRooms } from "./rooms/Rooms.js";
+import {
+  assignRooms,
+  getGraphicsRoom,
+  initRooms,
+  isGraphicsDisabled,
+  leaveRooms,
+} from "./rooms/Rooms.js";
+import { RelayError } from "./rooms/Graphics.js";
+import {
+  playbackStateEnvelopeZod,
+} from "@toa-lib/models";
 import { join } from "path";
+import {
+  PlaybackPublicationReceiver,
+  registerPlaybackPublicationBodyParser,
+  registerPlaybackPublicationEndpoint,
+  resolvePlaybackPublicationLimitBytes,
+} from "./PlaybackPublication.js";
 
 // Setup our environment
 const workingDir = process.env.WORKDIR ?? "../";
@@ -21,6 +37,15 @@ const io = new Server(server);
 
 // Config middleware
 app.use(cors({ credentials: true }));
+
+// The authoritative playback envelope routinely exceeds express's 100 KB json()
+// default, so the publication route gets its own, larger, parser - mounted
+// HERE, ahead of the global one, because body-parser skips a request an earlier
+// parser already read. Every other route keeps the 100 KB default.
+const playbackPublicationLimitBytes = resolvePlaybackPublicationLimitBytes();
+if (!isGraphicsDisabled())
+  registerPlaybackPublicationBodyParser(app, playbackPublicationLimitBytes);
+
 app.use(json());
 app.use(parser.urlencoded({ extended: false }));
 
@@ -138,6 +163,95 @@ io.on("connection", (socket) => {
 });
 
 initRooms(io);
+
+if (!isGraphicsDisabled()) {
+  const playbackReceiver = new PlaybackPublicationReceiver(io);
+  getGraphicsRoom()?.setPlaybackEnvelopeObserver((envelope) => {
+    playbackReceiver.observe(envelope);
+  });
+  registerPlaybackPublicationEndpoint(
+    app,
+    playbackReceiver,
+    process.env.GRAPHICS_PUBLICATION_TOKEN ?? env.get().jwtSecret,
+    playbackPublicationLimitBytes,
+  );
+}
+
+// Graphics serves authoritative reads and off-air preview replay only.
+if (!isGraphicsDisabled()) {
+  /** Lossless, versioned read; identical to publication/socket delivery. */
+  app.get("/graphics/:eventKey/live/state/v1", async (req, res) => {
+    const room = getGraphicsRoom();
+    if (!room) {
+      res.status(503).json({
+        error: "UNAVAILABLE",
+        code: "UNAVAILABLE",
+        message: "Graphics relay is unavailable",
+        retryable: true,
+      });
+      return;
+    }
+    try {
+      const envelope = await room.getPlaybackEnvelope(
+        req.params.eventKey,
+        true,
+      );
+      if (!envelope) {
+        res.status(503).json({
+          error: "UNAVAILABLE",
+          code: "UNAVAILABLE",
+          message: "Authoritative playback state is unavailable",
+          retryable: true,
+        });
+        return;
+      }
+      res.status(200).json(playbackStateEnvelopeZod.parse(envelope));
+    } catch (error) {
+      const status = error instanceof RelayError ? error.status : 503;
+      res.status(status).json({
+        error: "UPSTREAM_ERROR",
+        code: "UPSTREAM_ERROR",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Graphics relay request failed",
+        retryable: status >= 500,
+      });
+    }
+  });
+
+  /**
+   * Asks every preview (PVW) screen on this event to replay its entrance
+   * animation. Purely presentational: nothing durable changes and the program
+   * bus is never touched (see `GraphicsPreviewReplay` in the models package).
+   *
+   * There is no durable command to forward, so realtime broadcasts it directly
+   * and answers with the payload it sent. GET is registered alongside POST for
+   * the same reason the API's own playback routes do it: a Bitfocus Companion
+   * button's simplest configuration is a body-less GET.
+   */
+  function replayPreview(
+    req: express.Request<{ eventKey: string }>,
+    res: express.Response,
+  ): void {
+    const room = getGraphicsRoom();
+    if (!room) {
+      res.status(503).json({
+        error: "UNAVAILABLE",
+        code: "UNAVAILABLE",
+        message: "Graphics relay is unavailable",
+        retryable: true,
+      });
+      return;
+    }
+    const payload = room.emitPreviewReplay(req.params.eventKey);
+    res.status(200).json({ ok: true, ...payload });
+  }
+
+  app.post("/graphics/:eventKey/preview/replay", replayPreview);
+  app.get("/graphics/:eventKey/preview/replay", replayPreview);
+
+} // isGraphicsDisabled
 
 // Network variables
 const host = getIPv4();
