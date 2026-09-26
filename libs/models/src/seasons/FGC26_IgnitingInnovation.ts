@@ -623,8 +623,12 @@ export function calculatePlayoffsRankings(
 export function calculateRankingPoints(details: MatchDetails): MatchDetails {
   const copy = { ...details };
   copy.coopertition = ScoreTable.Coopertition(copy);
-  copy.redClimbMultiplier = ScoreTable.ClimbMultiplierRed(copy);
-  copy.blueClimbMultiplier = ScoreTable.ClimbMultiplierBlue(copy);
+  // Rounded to 2dp for display only (strips float artifacts like 1.1500000000000001);
+  // calculateScore reads ScoreTable directly, so scoring is unaffected.
+  copy.redClimbMultiplier =
+    Math.round(ScoreTable.ClimbMultiplierRed(copy) * 100) / 100;
+  copy.blueClimbMultiplier =
+    Math.round(ScoreTable.ClimbMultiplierBlue(copy) * 100) / 100;
   copy.redPartnerClimbPoints = ScoreTable.PartnerClimbRed(copy);
   copy.bluePartnerClimbPoints = ScoreTable.PartnerClimbBlue(copy);
   return copy;

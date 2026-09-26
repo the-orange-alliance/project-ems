@@ -13,8 +13,16 @@ export const RedScoreBreakdown: FC<
 
   const doUpdate = (key: any, value: any) => {
     if (handleUpdates) {
+      // Most fields are prefixed with the alliance (e.g. `redRobotOneBraceState`),
+      // but the wildfire-in-suppression-unit fields put the alliance in the
+      // middle (`wildfireInRedSuppressionUnit`) - special-case it so the input
+      // actually writes to a field `calculateScore` reads.
+      const fullKey =
+        key === 'WildfireInSuppressionUnit'
+          ? 'wildfireInRedSuppressionUnit'
+          : `red${key}`;
       // @ts-expect-error this works, despite what TS says!
-      handleUpdates(`red${key}`, value);
+      handleUpdates(fullKey, value);
     }
   };
 
@@ -56,8 +64,13 @@ export const BlueScoreBreakdown: FC<
 
   const doUpdate = (key: any, value: any) => {
     if (handleUpdates) {
+      // See the matching comment in RedScoreBreakdown's doUpdate above.
+      const fullKey =
+        key === 'WildfireInSuppressionUnit'
+          ? 'wildfireInBlueSuppressionUnit'
+          : `blue${key}`;
       // @ts-expect-error this works! despite what ts says
-      handleUpdates(`blue${key}`, value);
+      handleUpdates(fullKey, value);
     }
   };
 
@@ -155,6 +168,9 @@ const FGC26ScoreBreakdown: FC<Props> = (data) => {
       partnerClimb: data.robot3PartnerClimb
     }
   ];
+  // PARTNER CLIMB is one ROBOT on the BRACE supporting 1-2 others, so at most
+  // 2 of the 3 can be flagged. Lock the remaining "No" toggle(s) once 2 are set.
+  const partnerClimbCount = robots.filter((r) => r.partnerClimb).length;
 
   return (
     <Row
@@ -190,28 +206,37 @@ const FGC26ScoreBreakdown: FC<Props> = (data) => {
         />
       </Col>
 
-      {robots.map((robot) => (
-        <Col xs={24} sm={12} md={8} key={robot.key}>
-          <StateToggle
-            title={<span>{robot.label} BRACE</span>}
-            states={braceStates}
-            stateLabels={braceStateLabels}
-            value={robot.braceState ?? 0}
-            disabled={data.disabled}
-            fullWidth
-            {...onChangeProps(`${robot.key}BraceState`, true)}
-          />
-          <StateToggle
-            title={<span>{robot.label} PARTNER CLIMB</span>}
-            states={[false, true]}
-            stateLabels={['No', 'Yes']}
-            value={robot.partnerClimb ?? false}
-            disabled={data.disabled}
-            fullWidth
-            {...onChangeProps(`${robot.key}PartnerClimb`, true)}
-          />
-        </Col>
-      ))}
+      {robots.map((robot) => {
+        const partnerClimbLocked =
+          !robot.partnerClimb && partnerClimbCount >= 2;
+        return (
+          <Col xs={24} sm={12} md={8} key={robot.key}>
+            <StateToggle
+              title={<span>{robot.label} BRACE</span>}
+              states={braceStates}
+              stateLabels={braceStateLabels}
+              value={robot.braceState ?? 0}
+              disabled={data.disabled}
+              fullWidth
+              {...onChangeProps(`${robot.key}BraceState`, true)}
+            />
+            <StateToggle
+              title={
+                <span>
+                  {robot.label} PARTNER CLIMB
+                  {partnerClimbLocked && ' (max 2)'}
+                </span>
+              }
+              states={[false, true]}
+              stateLabels={['No', 'Yes']}
+              value={robot.partnerClimb ?? false}
+              disabled={data.disabled || partnerClimbLocked}
+              fullWidth
+              {...onChangeProps(`${robot.key}PartnerClimb`, true)}
+            />
+          </Col>
+        );
+      })}
 
       <Col xs={24} sm={12} md={8}>
         <Typography.Text>
