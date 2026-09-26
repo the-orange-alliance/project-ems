@@ -134,7 +134,15 @@ const EventMonitor = lazy(() =>
   }))
 );
 
+// Score Calculator Routes
+const ScoreCalculator = lazy(() =>
+  import('./apps/score-calculator/index.js').then((m) => ({
+    default: m.ScoreCalculator
+  }))
+);
+
 import {
+  CalculatorOutlined,
   CalendarOutlined,
   CodeOutlined,
   CompassOutlined,
@@ -369,6 +377,13 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: EventMonitor,
     image: THE_BOY
+  },
+  {
+    name: 'Score Calculator',
+    path: '/:eventKey/score-calculator',
+    group: 0,
+    element: ScoreCalculator,
+    icon: <CalculatorOutlined />
   }
 ];
 
