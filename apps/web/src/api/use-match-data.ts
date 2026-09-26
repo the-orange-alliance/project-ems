@@ -11,6 +11,49 @@ import {
 import useSWR, { SWRResponse } from 'swr';
 import { localClient } from './http-clients.js';
 
+export interface MatchHistorySnapshotRow extends Record<string, unknown> {
+  eventKey: string;
+  tournamentKey: string;
+  id: number;
+  revision: number;
+  actionType: string;
+  source: string;
+  occurredAtUtc: string;
+}
+
+export interface MatchActionEventRow extends Record<string, unknown> {
+  actionEventId: number;
+  eventKey: string;
+  tournamentKey: string;
+  id: number;
+  revision: number | null;
+  sourceEvent: string;
+  fieldPath: string | null;
+  oldValueJson: string | null;
+  newValueJson: string | null;
+  deltaNumber: number | null;
+  actorId: string | null;
+  actorName: string | null;
+  clientId: string | null;
+  socketId: string | null;
+  correlationId: string | null;
+  occurredAtUtc: string;
+  persisted: number;
+}
+
+export interface MatchHistoryResponse {
+  key: {
+    eventKey: string;
+    tournamentKey: string;
+    id: number;
+  };
+  history: {
+    base: MatchHistorySnapshotRow[];
+    details: MatchHistorySnapshotRow[];
+  };
+  actions: MatchActionEventRow[];
+}
+
 export const matchApi = {
   get: {
     schedule: async (
@@ -57,6 +100,41 @@ export const matchApi = {
         `/match/participants/${eventKey}`
       );
       return matchParticipantZod.array().parse(payload ?? []);
+    },
+    history: async (
+      eventKey: string,
+      tournamentKey: string,
+      id: number,
+      options?: {
+        includeActions?: boolean;
+        limit?: number;
+        startRevision?: number;
+        endRevision?: number;
+      }
+    ): Promise<MatchHistoryResponse> => {
+      const params = new URLSearchParams();
+      if (options?.includeActions !== undefined) {
+        params.set('includeActions', String(options.includeActions));
+      }
+      if (typeof options?.limit === 'number') {
+        params.set('limit', String(options.limit));
+      }
+      if (typeof options?.startRevision === 'number') {
+        params.set('startRevision', String(options.startRevision));
+      }
+      if (typeof options?.endRevision === 'number') {
+        params.set('endRevision', String(options.endRevision));
+      }
+      const query = params.size > 0 ? `?${params.toString()}` : '';
+      const payload = await localClient.get<MatchHistoryResponse>(
+        `/match/history/${eventKey}/${tournamentKey}/${id}${query}`
+      );
+      if (!payload) {
+        throw new Error(
+          `Match history not found: ${eventKey}/${tournamentKey}/${String(id)}`
+        );
+      }
+      return payload;
     }
   },
   create: {
@@ -184,5 +262,42 @@ export const useMatchParticipantsForEvent = (
   >(
     eventKey ? (['/match/participants', eventKey] as const) : null,
     ([, eKey]) => matchApi.get.participantsForEvent(eKey),
+    { revalidateOnFocus: false }
+  );
+
+export const useMatchHistory = (
+  key?: MatchKey | null,
+  options?: {
+    includeActions?: boolean;
+    limit?: number;
+    startRevision?: number;
+    endRevision?: number;
+  }
+): SWRResponse<MatchHistoryResponse, ApiResponseError> =>
+  useSWR<
+    MatchHistoryResponse,
+    ApiResponseError,
+    | readonly [string, string, string, number, number, number, number, number]
+    | null
+  >(
+    key
+      ? ([
+          '/match/history',
+          key.eventKey,
+          key.tournamentKey,
+          key.id,
+          options?.includeActions === false ? 0 : 1,
+          options?.limit ?? 200,
+          options?.startRevision ?? 0,
+          options?.endRevision ?? 0
+        ] as const)
+      : null,
+    ([, eventKey, tournamentKey, id, includeActions, limit, start, end]) =>
+      matchApi.get.history(eventKey, tournamentKey, id, {
+        includeActions: includeActions === 1,
+        limit,
+        startRevision: start > 0 ? start : undefined,
+        endRevision: end > 0 ? end : undefined
+      }),
     { revalidateOnFocus: false }
   );

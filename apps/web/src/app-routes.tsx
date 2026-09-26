@@ -65,6 +65,12 @@ const ScorekeeperApp = lazy(() =>
   }))
 );
 
+const MatchHistoryViewer = lazy(() =>
+  import('./apps/match-history/index.js').then((m) => ({
+    default: m.MatchHistoryViewer
+  }))
+);
+
 // Admin Routes
 const AdminApp = lazy(() =>
   import('./apps/admin-app/index.js').then((m) => ({ default: m.AdminApp }))
@@ -136,6 +142,7 @@ import {
   FlagOutlined,
   FormOutlined,
   FundProjectionScreenOutlined,
+  HistoryOutlined,
   PrinterOutlined,
   RobotOutlined,
   SettingOutlined,
@@ -253,6 +260,15 @@ const AppRoutes: AppRoute[] = [
     element: RefereeApp,
     eventOrder: 6,
     icon: <FlagOutlined />
+  },
+  {
+    name: 'Match History',
+    path: '/:eventKey/match-history',
+    group: 0,
+    element: MatchHistoryViewer,
+    eventOrder: 7,
+    icon: <HistoryOutlined />,
+    online: true
   },
   {
     name: 'Red Referee Page',
