@@ -177,6 +177,11 @@ export interface AppRoute {
   eventOrder?: number; // Order to show in the event flow list
   eventListRenderer?: LazyExoticComponent<FC>; // Custom renderer for event list, can show data like team count, tournament count, etc.
   hideAppbar?: boolean; // Whether to hide the appbar for this route, optional
+  // Whether to suppress the route-level Suspense spinner while this route's
+  // lazy chunk loads. For anything composited into a broadcast (the audience
+  // display is a chroma-keyed browser source) a spinner is not a courtesy -
+  // it goes on the wall and into the stream.
+  hideLoader?: boolean;
   online?: boolean; // Whether the route appears as online, optional
 }
 
@@ -333,6 +338,7 @@ const AppRoutes: AppRoute[] = [
     group: 0,
     element: AudienceDisplay,
     hideAppbar: true,
+    hideLoader: true,
     icon: (
       <FundProjectionScreenOutlined
         style={{ fontSize: '100px', marginBottom: '50px' }}
