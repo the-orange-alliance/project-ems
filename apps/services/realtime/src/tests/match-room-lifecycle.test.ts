@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { Server, Socket } from "socket.io";
-import { MatchSocketEvent, MatchMode, MatchState } from "@toa-lib/models";
+import {
+  Displays,
+  MatchSocketEvent,
+  MatchMode,
+  MatchState,
+} from "@toa-lib/models";
 import Match from "../rooms/Match.js";
 
 /**
@@ -120,5 +125,80 @@ test("post-match score edits keep the match complete so reconnecting clients sti
   } finally {
     internals.timer.abort();
     globalThis.fetch = original;
+  }
+});
+
+/**
+ * The DISPLAY broadcast on match start.
+ *
+ * START used to set `displayID = 2` WITHOUT emitting, so only a client that
+ * connected afterwards ever learned it (via `initializeEvents`) - every screen
+ * already on the wall stayed on the preview. The emit is guarded so it cannot
+ * override a display the operator deliberately chose.
+ */
+function displayHarness() {
+  const handlers = new Map<string, Function>(),
+    emitted: [string, unknown][] = [],
+    server = {
+      in: () => ({
+        emit: (name: string, payload: unknown) => emitted.push([name, payload]),
+      }),
+    } as unknown as Server,
+    socket = {
+      on: (name: string, handler: Function) => handlers.set(name, handler),
+      emit: () => {},
+      handshake: { address: "test-client" },
+      id: "test-socket",
+      decoded: { id: 1, username: "operator" },
+    } as unknown as Socket;
+  const room = new Match(server);
+  room.initializeEvents(socket);
+  return { room, handlers, emitted };
+}
+
+const DISPLAY_KEY = { eventKey: "fgc_2026_test", tournamentKey: "q", id: 1 };
+const displaysOf = (emitted: [string, unknown][]) =>
+  emitted.filter(([name]) => name === MatchSocketEvent.DISPLAY).map(([, id]) => id);
+
+test("starting a match broadcasts the match display exactly once", async () => {
+  const { room, handlers, emitted } = displayHarness();
+  const internals = room as unknown as MatchInternals;
+  try {
+    handlers.get(MatchSocketEvent.PRESTART)!(DISPLAY_KEY);
+    handlers.get(MatchSocketEvent.START)!();
+    assert.deepEqual(displaysOf(emitted), [Displays.MATCH_PREVIEW, Displays.MATCH_START]);
+    assert.equal((room as unknown as { displayID: number }).displayID, Displays.MATCH_START);
+  } finally {
+    internals.timer.abort();
+  }
+});
+
+test("starting a match leaves an operator-chosen display alone", async () => {
+  const { room, handlers, emitted } = displayHarness();
+  const internals = room as unknown as MatchInternals;
+  try {
+    handlers.get(MatchSocketEvent.PRESTART)!(DISPLAY_KEY);
+    handlers.get(MatchSocketEvent.DISPLAY)!(Displays.BLANK);
+    const before = displaysOf(emitted).length;
+    handlers.get(MatchSocketEvent.START)!();
+    // No further DISPLAY, and the operator's choice survives.
+    assert.equal(displaysOf(emitted).length, before);
+    assert.equal((room as unknown as { displayID: number }).displayID, Displays.BLANK);
+  } finally {
+    internals.timer.abort();
+  }
+});
+
+test("starting without a prestart display does not force the match screen", async () => {
+  const { room, handlers, emitted } = displayHarness();
+  const internals = room as unknown as MatchInternals;
+  try {
+    // displayID is SPONSOR (0) on a fresh room - never prestarted.
+    assert.equal((room as unknown as { displayID: number }).displayID, Displays.SPONSOR);
+    handlers.get(MatchSocketEvent.START)!();
+    assert.deepEqual(displaysOf(emitted), []);
+    assert.equal((room as unknown as { displayID: number }).displayID, Displays.SPONSOR);
+  } finally {
+    internals.timer.abort();
   }
 });

@@ -63,7 +63,7 @@ export function AppContainer() {
               element={
                 <RouteWrapper>
                   {!route.hideAppbar && <PrimaryAppbar />}
-                  <Suspense fallback={<PageLoader />}>
+                  <Suspense fallback={route.hideLoader ? null : <PageLoader />}>
                     <route.element />
                   </Suspense>
                 </RouteWrapper>
@@ -76,7 +76,7 @@ export function AppContainer() {
                   element={
                     <RouteWrapper>
                       {!route.hideAppbar && <PrimaryAppbar />}
-                      <Suspense fallback={<PageLoader />}>
+                      <Suspense fallback={route.hideLoader ? null : <PageLoader />}>
                         <route.element />
                       </Suspense>
                     </RouteWrapper>

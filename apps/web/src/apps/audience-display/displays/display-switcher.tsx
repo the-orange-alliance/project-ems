@@ -8,6 +8,7 @@ import {
   nextPlaybackPreviewSpec
 } from '@toa-lib/models';
 import { getDisplays } from './displays.js';
+import { parseLayout } from './layout-mode.js';
 import { FadeInOut, SlideInBottom } from 'src/components/animations/index.js';
 import AbsolouteLocator from 'src/components/util/absoloute-locator.js';
 import { useSearchParams } from 'react-router-dom';
@@ -56,9 +57,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
   const pin = searchParams.get('pin');
 
   // Change which version of the display to use
-  const layout =
-    searchParams.get('layout')?.toLowerCase() ??
-    `${LayoutMode.FULL}${LayoutMode.STREAM}${LayoutMode.FULL}`;
+  const layout = parseLayout(searchParams.get('layout'));
 
   // Chroma
   const chroma = searchParams.get('chroma');
@@ -193,6 +192,13 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
     matchState > MatchState.MATCH_IN_PROGRESS &&
     matchState < MatchState.RESULTS_POSTED;
 
+  // MOUNTS the full preview screen. The `layout[1]` arm is deliberate: for a
+  // full in-match layout the preview screen doubles as the post-match holding
+  // screen (`afterMatchBeforeScore`), so it has to exist even when slot 0 is
+  // not `FULL`. Whether it is actually VISIBLE during the preview phase is
+  // decided by the `in` prop below, which is where slot 0 is checked - that
+  // split is what makes `?layout=ofs` hide the preview without also losing
+  // the post-match fallback for every `fs*` layout.
   const showPreviewFull =
     layout[0] === LayoutMode.FULL || layout[1] === LayoutMode.FULL;
 
@@ -219,11 +225,13 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
 
       {/* Displays.MATCH_PREVIEW */}
       {showPreviewFull && (
-        <AbsolouteLocator top={0} left={0}>
+        <AbsolouteLocator fill>
           <FadeInOut
             in={
               // if we are showing the preview full and we are not showing the results
-              (id === Displays.MATCH_PREVIEW && !forceHidePreview) ||
+              (id === Displays.MATCH_PREVIEW &&
+                layout[0] === LayoutMode.FULL &&
+                !forceHidePreview) ||
               afterMatchBeforeScore
             }
             duration={0.5}
@@ -238,7 +246,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
         </AbsolouteLocator>
       )}
       {layout[0] === LayoutMode.STREAM && (
-        <AbsolouteLocator bottom={0} left={0}>
+        <AbsolouteLocator fill>
           <SlideInBottom
             in={id === Displays.MATCH_PREVIEW && !forceHidePreview}
             duration={1.25}
@@ -256,7 +264,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
 
       {/* Displays.MATCH_START */}
       {layout[1] === LayoutMode.FULL && (
-        <AbsolouteLocator top={0} left={0}>
+        <AbsolouteLocator fill>
           <FadeInOut
             in={id === Displays.MATCH_START && !afterMatchBeforeScore}
             duration={0.5}
@@ -271,7 +279,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
         </AbsolouteLocator>
       )}
       {layout[1] === LayoutMode.STREAM && (
-        <AbsolouteLocator bottom={0} left={0}>
+        <AbsolouteLocator fill>
           <SlideInBottom
             in={id === Displays.MATCH_START && !afterMatchBeforeScore}
             duration={1.25}
@@ -287,7 +295,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
         </AbsolouteLocator>
       )}
       {layout[1] === LayoutMode.MIN && (
-        <AbsolouteLocator bottom={0} left={0}>
+        <AbsolouteLocator fill>
           <SlideInBottom
             in={id === Displays.MATCH_START && !afterMatchBeforeScore}
             duration={1.25}
@@ -309,7 +317,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
 
       {/* Displays.MATCH_RESULTS */}
       {layout[2] === LayoutMode.FULL && (
-        <AbsolouteLocator top={0} left={0}>
+        <AbsolouteLocator fill>
           <FadeInOut
             in={id === Displays.MATCH_RESULTS || showFullResultsDuringPreview}
           >
@@ -323,7 +331,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
         </AbsolouteLocator>
       )}
       {layout[2] === LayoutMode.STREAM && (
-        <AbsolouteLocator top={0} left={0}>
+        <AbsolouteLocator fill>
           <SlideInBottom
             in={id === Displays.MATCH_RESULTS || showStreamResultsDuringPreview}
             duration={1.25}

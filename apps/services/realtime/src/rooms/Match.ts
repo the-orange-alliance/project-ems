@@ -144,8 +144,8 @@ export default class Match extends Room {
       this.match = null;
       this.timer.reset();
       this.emitToAll(MatchSocketEvent.PRESTART, key);
-      this.emitToAll(MatchSocketEvent.DISPLAY, 1);
-      this.displayID = 1;
+      this.emitToAll(MatchSocketEvent.DISPLAY, Displays.MATCH_PREVIEW);
+      this.displayID = Displays.MATCH_PREVIEW;
       this.transition(
         MatchState.PRESTART_COMPLETE,
         MatchSocketEvent.PRESTART,
@@ -196,7 +196,22 @@ export default class Match extends Room {
       this.timer.once("timer:transition", () =>
         this.transition(this.state, "timer:transition", socket),
       );
-      this.displayID = 2;
+      // Advance the audience to the match screen, and BROADCAST it. Setting
+      // `displayID` alone (what this used to do) only changed what a client
+      // connecting later replays from `initializeEvents` - every client
+      // already connected stayed on the preview, disagreeing with both the
+      // server and any screen that reconnected mid-match.
+      //
+      // Guarded, not unconditional: the normal flow already sent MATCH_START
+      // from the scorekeeper's "Set Displays" (see `canSetDisplays`), so this
+      // is a no-op there. It exists for a start with no Set Displays - an
+      // operator who skipped it, an API-driven start, a start after an abort.
+      // Anything else the operator deliberately chose (BLANK, SPONSOR,
+      // RANKINGS) is left strictly alone.
+      if (this.displayID === Displays.MATCH_PREVIEW) {
+        this.displayID = Displays.MATCH_START;
+        this.emitToAll(MatchSocketEvent.DISPLAY, Displays.MATCH_START);
+      }
 
       // Get season key frome event key
       const seasonKey = getSeasonKeyFromEventKey(
