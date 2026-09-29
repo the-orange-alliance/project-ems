@@ -12,18 +12,35 @@ interface GlobalObjectivesProps {
   match: Match<any>; // Replace 'any' with the actual type of match if available
 }
 
-const GlobalObjectives: React.FC<GlobalObjectivesProps> = ({ match }) => {
-  // try to get breakdown sheet
-  let breakdown: ResultsBreakdown<any>[] = [];
-
+// Season lookup for the global breakdown sheet. Adding a year means adding a
+// single case here.
+const getGlobalBreakdown = (match: Match<any>): ResultsBreakdown<any>[] => {
   switch (match.eventKey.split('-')[0]?.replace('FGC_', '')) {
     case '2025':
-      breakdown = GlobalBreakdownFGC25;
-      break;
+      return GlobalBreakdownFGC25;
     case '2026':
-      breakdown = GlobalBreakdownFGC26;
-      break;
+      return GlobalBreakdownFGC26;
+    default:
+      return [];
   }
+};
+
+/**
+ * Lower-third arrangement for the global objective tiles.
+ * - 'grid'    : two tiles per row (quadrant block) - for seasons with many goals.
+ * - 'stacked' : one full-mid-width tile per row - for seasons with few goals.
+ */
+type GlobalObjectivesStreamLayout = 'grid' | 'stacked';
+
+/** At or below this many global goals, a 2-up grid looks sparse - stack instead. */
+const STACKED_LAYOUT_MAX_ITEMS = 2;
+
+const resolveStreamLayout = (count: number): GlobalObjectivesStreamLayout =>
+  count <= STACKED_LAYOUT_MAX_ITEMS ? 'stacked' : 'grid';
+
+const GlobalObjectives: React.FC<GlobalObjectivesProps> = ({ match }) => {
+  // try to get breakdown sheet
+  const breakdown = getGlobalBreakdown(match);
 
   return (
     <div style={{ width: '100%', textAlign: 'center', marginBottom: '0.5rem' }}>
@@ -71,16 +88,8 @@ export const GlobalObjectivesStream: React.FC<GlobalObjectivesProps> = ({
   match
 }) => {
   // try to get breakdown sheet
-  let breakdown: ResultsBreakdown<any>[] = [];
-
-  switch (match.eventKey.split('-')[0]?.replace('FGC_', '')) {
-    case '2025':
-      breakdown = GlobalBreakdownFGC25;
-      break;
-    case '2026':
-      breakdown = GlobalBreakdownFGC26;
-      break;
-  }
+  const breakdown = getGlobalBreakdown(match);
+  const layout = resolveStreamLayout(breakdown.length);
 
   return (
     <div
@@ -95,7 +104,7 @@ export const GlobalObjectivesStream: React.FC<GlobalObjectivesProps> = ({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
+          gridTemplateColumns: layout === 'stacked' ? '1fr' : 'repeat(2, 1fr)',
           gap: '0.5rem'
         }}
       >
