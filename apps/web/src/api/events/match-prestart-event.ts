@@ -26,6 +26,7 @@ export const usePrestartEvent = () => {
     const { eventKey, id, tournamentKey } = key;
     // New match cycle — the previous match's post-commit fetch is done with.
     setPostCommitRanksFetch(null);
+    console.log('HANDLING PRESTART EVENT');
     try {
       const payload = await withRetry(() =>
         localClient.get<unknown>(

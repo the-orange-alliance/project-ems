@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useState, useMemo } from 'react';
 import { Row, Col, Typography } from 'antd';
 import {
   Alliance,
@@ -19,7 +19,7 @@ import { matchStateAtom } from 'src/stores/state/match.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { ForceConfirm } from './confirm-force-dialog.js';
 import { useModal } from '@ebay/nice-modal-react';
-import * as Comlink from 'comlink';
+import { useSocketSubscriptions } from 'src/api/use-socket-subscriptions.js';
 
 interface Props {
   alliance: Alliance;
@@ -46,30 +46,32 @@ const TeleScoreSheet: FC<Props> = ({
   const identifiers = useTeamIdentifiers();
   const matchState = useAtomValue(matchStateAtom);
   const postMatch = matchState > MatchState.MATCH_IN_PROGRESS;
-  const { worker } = useSocketWorker();
+  const { worker, connected } = useSocketWorker();
   const [ecosystemState, setEcosystemState] = useState<number>(0);
   const forceModal = useModal(ForceConfirm);
 
-  useEffect(() => {
-    const updateEcosystemState = (s: EcoEquilibriumFCS.EcosystemUpdate) => {
-      if (
-        (alliance === 'red' &&
-          s.ecosystem === EcoEquilibriumFCS.Ecosystem.RedSide) ||
-        (alliance === 'blue' &&
-          s.ecosystem === EcoEquilibriumFCS.Ecosystem.BlueSide)
-      ) {
-        setEcosystemState(s.position);
+  const updateEcosystemState = (s: EcoEquilibriumFCS.EcosystemUpdate) => {
+    if (
+      (alliance === 'red' &&
+        s.ecosystem === EcoEquilibriumFCS.Ecosystem.RedSide) ||
+      (alliance === 'blue' &&
+        s.ecosystem === EcoEquilibriumFCS.Ecosystem.BlueSide)
+    ) {
+      setEcosystemState(s.position);
+    }
+  };
+
+  const subscriptions = useMemo(
+    () => [
+      {
+        key: EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
+        callback: updateEcosystemState
       }
-    };
-    const ecosystemProxy = Comlink.proxy(updateEcosystemState);
-    worker?.on(EcoEquilibriumFCS.SocketEvents.EcosystemUpdate, ecosystemProxy);
-    return () => {
-      worker?.off(
-        EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
-        ecosystemProxy
-      );
-    };
-  }, []);
+    ],
+    [updateEcosystemState]
+  );
+
+  useSocketSubscriptions(worker, connected, subscriptions);
 
   if (!match || !match.details) return null;
 

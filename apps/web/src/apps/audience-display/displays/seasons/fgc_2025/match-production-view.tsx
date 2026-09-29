@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 import { DisplayProps } from '../../displays.js';
 import { Row } from 'antd';
 import {
@@ -10,8 +10,8 @@ import {
 import { useAtomValue } from 'jotai';
 import { matchStateAtom, matchStatusAtom } from 'src/stores/state/match.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
-import * as Comlink from 'comlink';
 import { ScoreContainer } from '../fgc_default/components/production-score-container.js';
+import { useSocketSubscriptions } from 'src/api/use-socket-subscriptions.js';
 
 export const MatchProduction2025: FC<DisplayProps> = ({
   match: genericMatch
@@ -75,35 +75,25 @@ export const MatchProduction2025: FC<DisplayProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (!worker) return;
-    const ecosystemProxy = Comlink.proxy(updateEcosystem);
-    const accelerationProxy = Comlink.proxy(updateAcceleration);
-    const dispenserProxy = Comlink.proxy(updateDispenser);
-    worker.on(EcoEquilibriumFCS.SocketEvents.EcosystemUpdate, ecosystemProxy);
-    worker.on(
-      EcoEquilibriumFCS.SocketEvents.AccelerationUpdate,
-      accelerationProxy
-    );
-    worker.on(
-      EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
-      dispenserProxy
-    );
-    return () => {
-      worker.off(
-        EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
-        ecosystemProxy
-      );
-      worker.off(
-        EcoEquilibriumFCS.SocketEvents.AccelerationUpdate,
-        accelerationProxy
-      );
-      worker.off(
-        EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
-        dispenserProxy
-      );
-    };
-  }, [worker]);
+  const subscriptions = useMemo(
+    () => [
+      {
+        key: EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
+        callback: updateEcosystem
+      },
+      {
+        key: EcoEquilibriumFCS.SocketEvents.AccelerationUpdate,
+        callback: updateAcceleration
+      },
+      {
+        key: EcoEquilibriumFCS.SocketEvents.BiodiversityDispensedUpdate,
+        callback: updateDispenser
+      }
+    ],
+    [updateEcosystem, updateAcceleration, updateDispenser]
+  );
+
+  useSocketSubscriptions(worker, connected, subscriptions);
 
   const getRemainingFromLevel = (level: number) => {
     const math = 4 - level;

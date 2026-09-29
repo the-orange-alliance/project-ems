@@ -1,7 +1,15 @@
 ﻿import { useModal } from '@ebay/nice-modal-react';
-import { Space, Typography } from 'antd';
+import { Input, Space, Typography } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import { Team, defaultTeam, teamZod } from '@toa-lib/models';
-import { ChangeEvent, FC, Suspense, useEffect } from 'react';
+import {
+  ChangeEvent,
+  FC,
+  Suspense,
+  useDeferredValue,
+  useEffect,
+  useState
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resultsSyncApi } from 'src/api/use-results-sync.js';
 import { teamsApi } from 'src/api/use-team-data.js';
@@ -39,6 +47,21 @@ export const TeamManager: FC = () => {
   const removeModal = useModal(TeamRemovalDialog);
 
   const remoteUrl = useAtomValue(remoteApiUrlAtom);
+  const [teamSearch, setTeamSearch] = useState('');
+  const deferredTeamSearch = useDeferredValue(teamSearch);
+  const normalizedTeamSearch = deferredTeamSearch.trim().toLowerCase();
+  const filteredTeams = normalizedTeamSearch
+    ? teams.filter((team) =>
+        [
+          team.teamKey,
+          team.teamNumber,
+          team.teamNameShort,
+          team.teamNameLong
+        ].some((value) =>
+          String(value).toLowerCase().includes(normalizedTeamSearch)
+        )
+      )
+    : teams;
 
   // Team Manager stages every add/edit/delete locally; nothing is persisted
   // until "Save Teams". Warn before a reload/close/external navigation would
@@ -241,16 +264,29 @@ export const TeamManager: FC = () => {
             <Shortcut disableRender action={handleAdd} shortcut='alt + a' />
             <Shortcut disableRender action={handleAddTest} shortcut='alt + t' />
             <Space>
-              <Typography.Text>{teams.length} Teams</Typography.Text>
+              <Typography.Text>
+                {normalizedTeamSearch
+                  ? `${filteredTeams.length} of ${teams.length} Teams`
+                  : `${teams.length} Teams`}
+              </Typography.Text>
               {hasUnsavedChanges && (
                 <Typography.Text type='warning' strong>
                   • Unsaved changes — choose “Save Teams” to persist
                 </Typography.Text>
               )}
             </Space>
+            <Input
+              aria-label='Search teams'
+              placeholder='Search by team number or name'
+              prefix={<SearchOutlined />}
+              allowClear
+              value={teamSearch}
+              onChange={(e) => setTeamSearch(e.target.value)}
+              style={{ width: '100%', maxWidth: 420 }}
+            />
             <TeamsTable
               event={event}
-              teams={teams}
+              teams={filteredTeams}
               onEdit={handleEdit}
               onDelete={handleDelete}
               loading={loading}

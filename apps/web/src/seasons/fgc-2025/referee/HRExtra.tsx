@@ -1,4 +1,5 @@
 import { useModal } from '@ebay/nice-modal-react';
+import { useSocketSubscriptions } from 'src/api/use-socket-subscriptions.js';
 import {
   EcoEquilibrium,
   EcoEquilibriumFCS,
@@ -9,39 +10,38 @@ import {
 } from '@toa-lib/models';
 import { Row, Col, Typography, Card } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { NumberInput } from 'src/components/inputs/number-input.js';
 import { StateToggle } from 'src/components/inputs/state-toggle.js';
 import { matchAtom } from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
 import { ForceConfirm } from './confirm-force-dialog.js';
-import * as Comlink from 'comlink';
 
 const HeadRefereeExtra: React.FC = () => {
-  const { worker } = useSocketWorker();
+  const { worker, connected } = useSocketWorker();
   const [match, setMatch] = useAtom(matchAtom);
   const matchState = useAtomValue(matchStateAtom);
   const [ecosystemState, setEcosystemState] = useState<number>(0);
   const forceModal = useModal(ForceConfirm);
 
-  useEffect(() => {
-    const updateEcosystemState = (s: EcoEquilibriumFCS.EcosystemUpdate) => {
-      if (s.ecosystem === EcoEquilibriumFCS.Ecosystem.Center) {
-        setEcosystemState(s.position);
+  const updateEcosystemState = (s: EcoEquilibriumFCS.EcosystemUpdate) => {
+    if (s.ecosystem === EcoEquilibriumFCS.Ecosystem.Center) {
+      setEcosystemState(s.position);
+    }
+  };
+
+  const subscriptions = useMemo(
+    () => [
+      {
+        key: EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
+        callback: updateEcosystemState
       }
-    };
+    ],
+    [updateEcosystemState]
+  );
 
-    const ecosystemProxy = Comlink.proxy(updateEcosystemState);
-
-    worker?.on(EcoEquilibriumFCS.SocketEvents.EcosystemUpdate, ecosystemProxy);
-    return () => {
-      worker?.off(
-        EcoEquilibriumFCS.SocketEvents.EcosystemUpdate,
-        ecosystemProxy
-      );
-    };
-  }, []);
+  useSocketSubscriptions(worker, connected, subscriptions);
 
   const forceEcosystem = async (newState: number) => {
     if (await forceModal.show({ level: (newState + 1).toString() })) {

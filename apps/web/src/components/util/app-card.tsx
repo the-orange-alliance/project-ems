@@ -48,17 +48,19 @@ export const AppCard: FC<AppCardProps> = ({
           padding: 16
         }}
       >
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            backgroundImage: `url(${!icon ? (imgSrc ? imgSrc : darkMode ? firstLogoDarkMode : firstLogo) : ''})`,
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            marginBottom: 16
-          }}
-        />
+        {!icon && (
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              backgroundImage: `url(${!icon ? (imgSrc ? imgSrc : darkMode ? firstLogoDarkMode : firstLogo) : ''})`,
+              backgroundSize: 'contain',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              marginBottom: 16
+            }}
+          />
+        )}
         {icon ? icon : null}
         <Typography.Text style={{ textAlign: 'center', width: '100%' }}>
           {title}
