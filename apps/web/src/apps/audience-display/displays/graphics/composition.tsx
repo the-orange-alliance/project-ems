@@ -68,8 +68,10 @@ export interface StageProps {
  * Measures the host via `ResizeObserver` so it stays correct across
  * responsive layout changes and window resizes without any consumer having
  * to pass a size in. A host that never resolves a real box (for example, an
- * ancestor that is `position: absolute` with no explicit size — that
- * pattern exists in this app, see `AbsolouteLocator`) reports `0x0`
+ * ancestor that is `position: absolute` with no explicit size — see
+ * `AbsolouteLocator`, whose `fill` prop is now how callers opt out of that;
+ * the eight audience-display call sites did not, and collapsed to 0x0 until
+ * they did) reports `0x0`
  * `ResizeObserver` entries; those are ignored rather than collapsing the
  * stage to nothing, and the stage falls back to (and tracks resizes of) the
  * window itself, matching how a full-bleed broadcast browser source is

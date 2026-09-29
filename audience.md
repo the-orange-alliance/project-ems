@@ -27,11 +27,22 @@ Build a custom flow.  `xyz` represents a 3-character string, where each characte
 - `o` = off (hides the step entirely)
 - `s` = stream (uses stream view)
 - `f` = full (uses full-screen view)
-- `m` = min (only avaliable for in-match screen)
+- `m` = min (only avaliable for in-match screen, i.e. position `y`)
+- `r` = results (only avaliable for the preview screen, i.e. position `x`) — replaces the
+  preview step with the previous match's results, rendered in whatever style position `z`
+  selects. Useful for keeping results on the wall right through the next match's preview.
 
 #### Ex.
 - `?layout=fff` will show the "Full" screen display for preview, match, and results
 - `?layout=sos` will use the stream overlay for preview, show nothing for match, and stream overlay for results
+- `?layout=sms` will use the stream overlay for preview, the minimal score bug in-match, and the stream overlay for results
+- `?layout=rsf` will show full results in place of the preview, then the stream overlay in-match
+
+#### Invalid values
+A `layout` that isn't exactly three characters from the list above — including a bare
+`?layout=` with no value — falls back to the default `fsf` rather than rendering a blank
+screen. A character that's valid but not supported in that position (`m` in `x` or `z`,
+`r` in `y` or `z`) shows nothing for that step, the same as `o`.
 
 
 #### Other Notes:

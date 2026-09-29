@@ -5,15 +5,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { StatsGraphicDisplay } from './stats-graphic-display.js';
 import type { RendererProps } from './renderers/index.js';
 
-vi.mock('src/components/animations/index.js', () => {
-  const Wrapper = ({ children }: PropsWithChildren) => <div>{children}</div>;
-  return {
-    FadeInOut: Wrapper,
-    SlideInBottom: Wrapper,
-    SlideInLeft: Wrapper,
-    SlideInRight: Wrapper
-  };
-});
+// NOTE: deliberately no mock for `src/components/animations/index.js`. This
+// display moved to `TransitionContainer`/`ContentCrossfade` and no longer
+// imports those wrappers, so a mock here would be inert - and would silently
+// stub them back in if anyone reintroduced the dependency.
 vi.mock('./containers/fullscreen.js', () => ({
   FullscreenShell: ({ children }: PropsWithChildren) => (
     <div>Shell{children}</div>
