@@ -1,7 +1,9 @@
 import {
   AllianceMember,
+  getDetailsZodBySeasonKey,
   getFunctionsBySeasonKey,
   getSeasonKeyFromEventKey,
+  matchObjectZod,
   Match as MatchObj,
   MatchKey,
   MatchSocketEvent,
@@ -87,7 +89,17 @@ export default class Match extends Room {
     );
   }
 
-  public initializeEvents(socket: Socket): void {
+  /**
+   * Replay everything a client needs to render the current match: the display, the
+   * match itself, and whichever lifecycle events it has already missed.
+   *
+   * Split out of `initializeEvents` so it can also answer `MatchSocketEvent.SYNC`.
+   * Joining a room happens on connect, before a client has had a chance to register
+   * its listeners, so the replay that goes out then can land on nobody - a screen
+   * opened mid-match then showed the database's zero score until the next referee
+   * input. A client asks for this again once its listeners are up.
+   */
+  private replayState(socket: Socket): void {
     // Emit the last known display
     socket.emit(MatchSocketEvent.DISPLAY, this.displayID);
 
@@ -132,6 +144,13 @@ export default class Match extends Room {
       socket.emit(MatchSocketEvent.END);
       socket.emit(MatchSocketEvent.COMMIT, this.key);
     }
+  }
+
+  public initializeEvents(socket: Socket): void {
+    this.replayState(socket);
+
+    // Answer a client that has just finished registering its listeners.
+    socket.on(MatchSocketEvent.SYNC, () => this.replayState(socket));
 
     // Event listener to remove soon
     socket.on(MatchSocketEvent.ALLIANCE, (newAlliance: AllianceMember[]) => {
@@ -247,6 +266,15 @@ export default class Match extends Room {
     socket.on(MatchSocketEvent.MATCH_UPDATE_ITEM, (itemUpdate: ItemUpdate) => {
       const { match } = this;
       if (match) {
+        if (
+          !this.isValidFieldWrite(
+            matchObjectZod.shape,
+            MatchSocketEvent.MATCH_UPDATE_ITEM,
+            itemUpdate.key,
+            itemUpdate.value,
+          )
+        )
+          return;
         // `itemUpdate.key` is an arbitrary string field path (e.g. from a
         // dynamic form field), not a keyof `Match<any>` - `Match` itself has
         // no index signature, so this dynamic read/write is cast through
@@ -351,9 +379,72 @@ export default class Match extends Room {
     );
   }
 
+  /**
+   * Whether a single `key`/`value` pair may be written to an object described by
+   * `shape`. The key must be a field the shape declares, and the value must satisfy
+   * that field's own schema.
+   *
+   * This is deliberately per-field and non-repairing: a rejected pair is dropped and
+   * logged, and everything else about the match is left exactly as it was. It exists
+   * so a client that sends a field the season doesn't have, or a `null` from a
+   * cleared number input, can never be written into the object the scoring code
+   * reads - a single `undefined` there turns every score into NaN, which serializes
+   * to `null` over the socket and renders blank for the rest of the match.
+   */
+  private isValidFieldWrite(
+    shape: Record<string, { safeParse(value: unknown): { success: boolean } }>,
+    sourceEvent: string,
+    key: string,
+    value: unknown,
+  ): boolean {
+    // JSON.stringify renders both NaN and null as "null", and undefined as
+    // nothing at all - exactly the three values worth telling apart here.
+    const describe = (v: unknown) =>
+      typeof v === "number" && Number.isNaN(v)
+        ? "NaN"
+        : v === undefined
+          ? "undefined"
+          : JSON.stringify(v);
+
+    const field = shape[key];
+    if (!field) {
+      logger.warn(
+        `${sourceEvent}: ignoring unknown field '${key}' (value ${describe(value)})`,
+      );
+      return false;
+    }
+    if (!field.safeParse(value).success) {
+      logger.warn(
+        `${sourceEvent}: ignoring invalid value for '${key}': ${describe(value)}`,
+      );
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * The season's details shape, or `null` when this season publishes no schema -
+   * in which case callers skip validation rather than reject every write.
+   */
+  private detailsShape(): Record<string, any> | null {
+    const seasonKey = getSeasonKeyFromEventKey(this.match?.eventKey ?? "");
+    return getDetailsZodBySeasonKey(seasonKey)?.shape ?? null;
+  }
+
   onMatchUpdateDetailsItem = (itemUpdate: ItemUpdate, socket?: Socket) => {
     const matchDetails = this.match?.details;
     if (matchDetails) {
+      const shape = this.detailsShape();
+      if (
+        shape &&
+        !this.isValidFieldWrite(
+          shape,
+          MatchSocketEvent.MATCH_UPDATE_DETAILS_ITEM,
+          itemUpdate.key,
+          itemUpdate.value,
+        )
+      )
+        return;
       const keys = itemUpdate.key.split(".");
       const target = keys
         .slice(0, -1)
@@ -383,7 +474,19 @@ export default class Match extends Room {
     if (matchDetails) {
       try {
         const oldValue = matchDetails[numberAdjustment.key];
-        matchDetails[numberAdjustment.key] += numberAdjustment.adjustment;
+        const newValue = oldValue + numberAdjustment.adjustment;
+        const shape = this.detailsShape();
+        if (
+          shape &&
+          !this.isValidFieldWrite(
+            shape,
+            MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
+            numberAdjustment.key,
+            newValue,
+          )
+        )
+          return;
+        matchDetails[numberAdjustment.key] = newValue;
         void this.logActionEvent({
           sourceEvent: MatchSocketEvent.MATCH_ADJUST_DETAILS_NUMBER,
           fieldPath: `details.${numberAdjustment.key}`,

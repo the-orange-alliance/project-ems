@@ -109,6 +109,12 @@ export const ConnectionManager: FC = () => {
     worker.on(MatchSocketEvent.DISPLAY, displayProxy);
     worker.on(MatchSocketEvent.COMMIT, commitProxy);
     worker.on(MatchSocketEvent.PRESTART, prestartProxy);
+    // Ask only now that the listeners above exist. The socket joins its rooms the
+    // moment it connects, and the relay replays the match right then - several ticks
+    // before this effect runs - so that first replay reaches nobody. Without this a
+    // screen opened mid-match sat on the database's zero score until the next
+    // referee input. Same reason graphics subscribes after its listener, below.
+    worker.emit(MatchSocketEvent.SYNC);
     if (eventKey) {
       worker.on(
         GraphicsSocketEvent.PLAYBACK_STATE_V1,

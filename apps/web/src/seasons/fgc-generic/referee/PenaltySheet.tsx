@@ -18,8 +18,12 @@ const PenaltySheet = <DetailsType extends MatchDetailBase>({
 }: Props<DetailsType>) => {
   const match = useAtomValue(matchAtom);
 
-  const handleFoulChange = (minPen: number) => {
+  const handleMinorFoulChange = (minPen: number) => {
     onMatchItemUpdate(alliance === 'red' ? 'redMinPen' : 'blueMinPen', minPen);
+  };
+
+  const handleMajorFoulChange = (majPen: number) => {
+    onMatchItemUpdate(alliance === 'red' ? 'redMajPen' : 'blueMajPen', majPen);
   };
 
   return (
@@ -38,7 +42,7 @@ const PenaltySheet = <DetailsType extends MatchDetailBase>({
           value={
             (alliance === 'red' ? match?.redMinPen : match?.blueMinPen) || 0
           }
-          onChange={handleFoulChange}
+          onChange={handleMinorFoulChange}
         />
       </Col>
       <Col
@@ -55,7 +59,7 @@ const PenaltySheet = <DetailsType extends MatchDetailBase>({
           value={
             (alliance === 'red' ? match?.redMajPen : match?.blueMajPen) || 0
           }
-          onChange={handleFoulChange}
+          onChange={handleMajorFoulChange}
         />
       </Col>
     </Row>
