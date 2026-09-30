@@ -1,3 +1,4 @@
+import z from 'zod';
 import { AllianceMember } from '../base/Alliance.js';
 import { Match, MatchDetailBase } from '../base/Match.js';
 import { Ranking } from '../base/Ranking.js';
@@ -19,6 +20,13 @@ export interface Season<T extends MatchDetailBase, J extends Ranking> {
   program: string;
   defaultMatchDetails: T;
   functions?: SeasonFunctions<T, J>;
+  /**
+   * The season's match-details schema, published so callers can validate a single
+   * detail field on its own — the realtime relay checks each incoming key/value
+   * pair against `.shape[key]` before writing it. Seasons that predate this simply
+   * don't publish one, and those callers skip validation rather than reject.
+   */
+  detailsZod?: z.ZodObject<any>;
 }
 
 export const Seasons: Season<any, any>[] = [
@@ -59,6 +67,12 @@ export function getDefaultMatchDetailsBySeasonKey<T extends MatchDetailBase>(
   seasonKey: string
 ): T | undefined {
   return Seasons.find((s) => s.key === seasonKey)?.defaultMatchDetails;
+}
+
+export function getDetailsZodBySeasonKey(
+  seasonKey: string
+): z.ZodObject<any> | undefined {
+  return Seasons.find((s) => s.key === seasonKey)?.detailsZod;
 }
 
 export function getSeasonKeyFromEventKey(eventKey: string): string {

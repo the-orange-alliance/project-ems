@@ -170,6 +170,7 @@ export const ConnectionManager: FC = () => {
         }));
       return;
     }
+    worker.emit(MatchSocketEvent.SYNC);
   }, [worker, connected, eventKey, setPlaybackDeliveryMap]);
 
   // Backstop for a relay that answers the subscribe with nothing at all. A
