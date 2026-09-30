@@ -61,6 +61,16 @@ export enum MatchSocketEvent {
 
   TIMER = 'match:timer',
 
+  /**
+   * Client -> relay: "replay whatever match state you hold". The relay already
+   * replays on room join, but the socket joins its rooms the instant it connects,
+   * which is several ticks before a client has registered its listeners - so that
+   * replay reaches nobody. A screen opened mid-match was left showing whatever the
+   * database had (a zero score) until the next referee input. Answered with the
+   * same DISPLAY/UPDATE/state events as a join.
+   */
+  SYNC = 'match:sync',
+
   BONUS_START = 'match:bonusStart',
   BONUS_END = 'match:bonusEnd'
 }
@@ -134,7 +144,13 @@ export type Match<T extends MatchDetailBase> = {
   details?: T;
 };
 
-export const matchZod: z.ZodSchema<Match<MatchDetailBase>> = z.object({
+/**
+ * The match object, as a `ZodObject` so callers can reach `.shape` (the realtime
+ * relay validates one field at a time against it) and `.extend` it.
+ * `matchZod` below is this same schema, annotated with the hand-written `Match`
+ * type so the two cannot drift apart.
+ */
+export const matchObjectZod = z.object({
   eventKey: z.string(),
   tournamentKey: z.string(),
   id: z.number(),
@@ -155,12 +171,21 @@ export const matchZod: z.ZodSchema<Match<MatchDetailBase>> = z.object({
   uploaded: z.number(),
   updatedAtUtc: z.string().optional(),
   participants: z.array(matchParticipantZod).optional(),
-  details: matchKeyZod.optional()
+  // LOOSE on purpose. `details` carries the season's scoring fields, which differ
+  // per season and are unknown here. A strict object strips every key it doesn't
+  // declare, so parsing a match reduced `details` to just the match key and left
+  // the season scoring code multiplying `undefined` — every score came out NaN,
+  // which serializes to `null` over the socket and renders blank.
+  details: matchKeyZod.loose().optional()
 });
 
-// @ts-expect-error It's an object, who cares?
-export const matchWithDetailsZod = matchZod.extend({
-  details: z.union([matchKeyZod, z.any()]).optional()
+export const matchZod: z.ZodSchema<Match<MatchDetailBase>> = matchObjectZod;
+
+// Same as `matchObjectZod` but with `details` fully unconstrained, for the API's
+// request bodies and response schemas: the season shape is validated by the
+// season's own schema (`detailsFromJson`), not here.
+export const matchWithDetailsZod = matchObjectZod.extend({
+  details: z.any().optional()
 });
 
 export type MatchMakerParams = z.infer<typeof matchMakerParamsZod>;

@@ -75,6 +75,20 @@ export function ballCountToLedCount(ballCount: number, ratio: number): number {
 }
 
 /**
+ * A boolean detail field as it round-trips through storage.
+ *
+ * SQLite has no boolean type, so these columns are declared `INT NOT NULL DEFAULT 0`
+ * (see `sql/seasons/fgc_2026.sql`) and read back as 0/1. A plain `z.boolean()` rejects
+ * that, which made `detailsFromJson` fail on every real row and silently fall through
+ * to the unparsed row at each call site — defaults and all.
+ */
+const storedBoolean = () =>
+  z.preprocess(
+    (value) => (typeof value === 'number' ? value !== 0 : value),
+    z.boolean()
+  );
+
+/**
  * Score Table
  */
 export const ScoreTable = {
@@ -88,7 +102,7 @@ export const ScoreTable = {
     details.redRobotTwoBraceState +
     details.redRobotThreeBraceState,
   ClimbMultiplierBlue: (details: MatchDetails) =>
-    1 + 
+    1 +
     details.blueRobotOneBraceState +
     details.blueRobotTwoBraceState +
     details.blueRobotThreeBraceState,
@@ -114,10 +128,7 @@ export const ScoreTable = {
       details.blueRobotOneBraceState,
       details.blueRobotTwoBraceState,
       details.blueRobotThreeBraceState
-    ].reduce(
-      (count, state) => count + (state >= BraceState.Zone3 ? 1 : 0),
-      0
-    );
+    ].reduce((count, state) => count + (state >= BraceState.Zone3 ? 1 : 0), 0);
 
     if (zone3Count >= 6) return CoopertitionBonus.Six;
     if (zone3Count === 5) return CoopertitionBonus.Five;
@@ -224,38 +235,32 @@ export const FGC26MatchDetailsZod = matchKeyZod.extend({
     .describe('BRACE CLIMB state for the blue robot three (station 23).'),
 
   // Red robot PARTNER CLIMB flags
-  redRobotOnePartnerClimb: z
-    .boolean()
+  redRobotOnePartnerClimb: storedBoolean()
     .default(false)
     .describe(
       'Whether red robot one (station 11) was fully supported by another red ROBOT (PARTNER CLIMB).'
     ),
-  redRobotTwoPartnerClimb: z
-    .boolean()
+  redRobotTwoPartnerClimb: storedBoolean()
     .default(false)
     .describe(
       'Whether red robot two (station 12) was fully supported by another red ROBOT (PARTNER CLIMB).'
     ),
-  redRobotThreePartnerClimb: z
-    .boolean()
+  redRobotThreePartnerClimb: storedBoolean()
     .default(false)
     .describe(
       'Whether red robot three (station 13) was fully supported by another red ROBOT (PARTNER CLIMB).'
     ),
-  blueRobotOnePartnerClimb: z
-    .boolean()
+  blueRobotOnePartnerClimb: storedBoolean()
     .default(false)
     .describe(
       'Whether blue robot one (station 21) was fully supported by another blue ROBOT (PARTNER CLIMB).'
     ),
-  blueRobotTwoPartnerClimb: z
-    .boolean()
+  blueRobotTwoPartnerClimb: storedBoolean()
     .default(false)
     .describe(
       'Whether blue robot two (station 22) was fully supported by another blue ROBOT (PARTNER CLIMB).'
     ),
-  blueRobotThreePartnerClimb: z
-    .boolean()
+  blueRobotThreePartnerClimb: storedBoolean()
     .default(false)
     .describe(
       'Whether blue robot three (station 23) was fully supported by another blue ROBOT (PARTNER CLIMB).'
@@ -355,7 +360,8 @@ export const IgnitingInnovationSeason: Season<MatchDetails, SeasonRanking> = {
   program: 'fgc',
   name: 'Igniting Innovation',
   defaultMatchDetails,
-  functions
+  functions,
+  detailsZod: FGC26MatchDetailsZod
 };
 
 function detailsToJson(details: MatchDetails): any {
@@ -649,9 +655,11 @@ export function calculateScore(
   // values shared equally by both REGIONAL ALLIANCES.
 
   const redSuppressionUnitPoints =
-    details.wildfireInRedSuppressionUnit * ScoreTable.WildfireContainedSuppression;
+    details.wildfireInRedSuppressionUnit *
+    ScoreTable.WildfireContainedSuppression;
   const blueSuppressionUnitPoints =
-    details.wildfireInBlueSuppressionUnit * ScoreTable.WildfireContainedSuppression;
+    details.wildfireInBlueSuppressionUnit *
+    ScoreTable.WildfireContainedSuppression;
 
   const redClimbMultiplier = ScoreTable.ClimbMultiplierRed(details);
   const blueClimbMultiplier = ScoreTable.ClimbMultiplierBlue(details);

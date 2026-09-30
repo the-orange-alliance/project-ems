@@ -284,7 +284,8 @@ export const EcoEquilibriumSeason: Season<MatchDetails, SeasonRanking> = {
   program: 'fgc',
   name: 'Eco Equilibrium',
   defaultMatchDetails,
-  functions
+  functions,
+  detailsZod: FGC25MatchDetailsZod
 };
 
 function detailsToJson(details: MatchDetails): any {
