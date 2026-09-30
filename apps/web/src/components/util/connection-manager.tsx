@@ -3,10 +3,10 @@ import {
   MatchKey,
   MatchSocketEvent
 } from '@toa-lib/models';
-import { FC, useEffect, useMemo, useRef } from 'react';
+import { FC, useCallback, useEffect, useRef } from 'react';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
+import { useSocketSubscriptions } from 'src/api/use-socket-subscriptions.js';
 import * as Events from 'src/api/events/index.js';
-import { proxy } from 'comlink';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { eventKeyAtom } from 'src/stores/state/event.js';
 import {
@@ -34,10 +34,13 @@ export const ConnectionManager: FC = () => {
   const setPlaybackDeliveryMap = useSetAtom(playbackDeliveryMapAtom);
   const playbackDelivery = useAtomValue(playbackDeliveryForEventAtom(eventKey));
   const { recover } = usePlaybackHydrationRecovery();
+
   /** The event whose current hydration failure has already been auto-recovered. */
   const autoRecoveredFor = useRef<string | null>(null);
+
   /** Aborts an in-flight recovery when this subscription ends. */
   const recoveryAbort = useRef<AbortController | null>(null);
+
   const handleDisplay = Events.useDisplayEvent();
   const handleCommit = Events.useCommitEvent();
   const handleUpdate = Events.useMatchUpdateEvent();
@@ -45,6 +48,7 @@ export const ConnectionManager: FC = () => {
   const handlePlaybackState = Events.usePlaybackStateEvent();
   const handlePlaybackHydrationError = Events.usePlaybackHydrationErrorEvent();
   const handleGraphicsPreviewReplay = Events.useGraphicsPreviewReplayEvent();
+
   const {
     handleMatchAbort,
     handleMatchEnd,
@@ -54,40 +58,106 @@ export const ConnectionManager: FC = () => {
     handleMatchTeleop
   } = Events.useMatchStateEvents();
 
-  const handlePrestartEvents = (key: MatchKey) => {
-    handlePrestart(key);
-    handleMatchPrestart();
-  };
+  const handlePrestartEvents = useCallback(
+    (key: MatchKey) => {
+      handlePrestart(key);
+      handleMatchPrestart();
+    },
+    [handlePrestart, handleMatchPrestart]
+  );
 
-  const abortProxy = useMemo(() => proxy(handleMatchAbort), [handleMatchAbort]);
-  const endProxy = useMemo(() => proxy(handleMatchEnd), [handleMatchEnd]);
-  const endgameProxy = useMemo(
-    () => proxy(handleMatchEndgame),
-    [handleMatchEndgame]
-  );
-  const teleopProxy = useMemo(
-    () => proxy(handleMatchTeleop),
-    [handleMatchTeleop]
-  );
-  const prestartProxy = useMemo(
-    () => proxy(handlePrestartEvents),
-    [handleMatchPrestart]
-  );
-  const startProxy = useMemo(() => proxy(handleMatchStart), [handleMatchStart]);
-  const updateProxy = useMemo(() => proxy(handleUpdate), [handleUpdate]);
-  const displayProxy = useMemo(() => proxy(handleDisplay), [handleDisplay]);
-  const commitProxy = useMemo(() => proxy(handleCommit), [handleCommit]);
-  const playbackStateProxy = useMemo(
-    () => proxy(handlePlaybackState),
-    [handlePlaybackState]
-  );
-  const playbackHydrationErrorProxy = useMemo(
-    () => proxy(handlePlaybackHydrationError),
-    [handlePlaybackHydrationError]
-  );
-  const graphicsPreviewReplayProxy = useMemo(
-    () => proxy(handleGraphicsPreviewReplay),
-    [handleGraphicsPreviewReplay]
+  const subscriptions = [
+    {
+      key: MatchSocketEvent.ABORT,
+      callback: handleMatchAbort
+    },
+    {
+      key: MatchSocketEvent.END,
+      callback: handleMatchEnd
+    },
+    {
+      key: MatchSocketEvent.ENDGAME,
+      callback: handleMatchEndgame
+    },
+    {
+      key: MatchSocketEvent.TELEOPERATED,
+      callback: handleMatchTeleop
+    },
+    {
+      key: MatchSocketEvent.START,
+      callback: handleMatchStart
+    },
+    {
+      key: MatchSocketEvent.UPDATE,
+      callback: handleUpdate
+    },
+    {
+      key: MatchSocketEvent.DISPLAY,
+      callback: handleDisplay
+    },
+    {
+      key: MatchSocketEvent.COMMIT,
+      callback: handleCommit
+    },
+    {
+      key: MatchSocketEvent.PRESTART,
+      callback: handlePrestartEvents
+    },
+    ...(eventKey
+      ? [
+          {
+            key: GraphicsSocketEvent.PLAYBACK_STATE_V1,
+            callback: handlePlaybackState,
+            messageKey: eventKey
+          },
+          {
+            key: GraphicsSocketEvent.PLAYBACK_HYDRATION_ERROR_V1,
+            callback: handlePlaybackHydrationError,
+            messageKey: eventKey
+          },
+          {
+            key: GraphicsSocketEvent.PREVIEW_REPLAY,
+            callback: handleGraphicsPreviewReplay,
+            messageKey: eventKey
+          }
+        ]
+      : [])
+  ];
+
+  const handleSubscriptionsReady = useCallback(async () => {
+    if (!eventKey) return;
+
+    // Idempotent on purpose: returning a NEW map for a phase that is
+    // already `hydrating` re-renders this component, and this component's
+    // render feeds the dependencies of this very effect. That is a loop
+    // with no exit, so an unchanged phase must write nothing at all.
+    setPlaybackDeliveryMap((previous) =>
+      previous[eventKey]?.phase === 'hydrating' &&
+      previous[eventKey]?.error === null
+        ? previous
+        : {
+            ...previous,
+            [eventKey]: { phase: 'hydrating', error: null }
+          }
+    );
+
+    // Subscribe only after the listener exists so a fast initial replay
+    // cannot race ahead of registration.
+    await worker?.emit('graphics:subscribe', { eventKey });
+  }, [worker, eventKey, setPlaybackDeliveryMap]);
+
+  const handleSubscriptionsDispose = useCallback(async () => {
+    if (eventKey) {
+      await worker?.emit('graphics:unsubscribe', { eventKey });
+    }
+  }, [worker, eventKey]);
+
+  useSocketSubscriptions(
+    worker,
+    connected,
+    subscriptions,
+    handleSubscriptionsReady,
+    handleSubscriptionsDispose
   );
 
   useEffect(() => {
@@ -100,91 +170,18 @@ export const ConnectionManager: FC = () => {
         }));
       return;
     }
-    worker.on(MatchSocketEvent.ABORT, abortProxy);
-    worker.on(MatchSocketEvent.END, endProxy);
-    worker.on(MatchSocketEvent.ENDGAME, endgameProxy);
-    worker.on(MatchSocketEvent.TELEOPERATED, teleopProxy);
-    worker.on(MatchSocketEvent.START, startProxy);
-    worker.on(MatchSocketEvent.UPDATE, updateProxy);
-    worker.on(MatchSocketEvent.DISPLAY, displayProxy);
-    worker.on(MatchSocketEvent.COMMIT, commitProxy);
-    worker.on(MatchSocketEvent.PRESTART, prestartProxy);
-    // Ask only now that the listeners above exist. The socket joins its rooms the
-    // moment it connects, and the relay replays the match right then - several ticks
-    // before this effect runs - so that first replay reaches nobody. Without this a
-    // screen opened mid-match sat on the database's zero score until the next
-    // referee input. Same reason graphics subscribes after its listener, below.
-    worker.emit(MatchSocketEvent.SYNC);
-    if (eventKey) {
-      worker.on(
-        GraphicsSocketEvent.PLAYBACK_STATE_V1,
-        playbackStateProxy,
-        eventKey
-      );
-      worker.on(
-        GraphicsSocketEvent.PLAYBACK_HYDRATION_ERROR_V1,
-        playbackHydrationErrorProxy,
-        eventKey
-      );
-      worker.on(
-        GraphicsSocketEvent.PREVIEW_REPLAY,
-        graphicsPreviewReplayProxy,
-        eventKey
-      );
-      // Idempotent on purpose: returning a NEW map for a phase that is
-      // already `hydrating` re-renders this component, and this component's
-      // render feeds the dependencies of this very effect. That is a loop
-      // with no exit, so an unchanged phase must write nothing at all.
+    // Mark hydrating synchronously with the connect, rather than waiting on
+    // the subscription's own async `on()` chain to land: a render in
+    // between would otherwise see no entry at all for this event.
+    if (eventKey)
       setPlaybackDeliveryMap((previous) =>
         previous[eventKey]?.phase === 'hydrating' &&
         previous[eventKey]?.error === null
           ? previous
-          : {
-              ...previous,
-              [eventKey]: { phase: 'hydrating', error: null }
-            }
+          : { ...previous, [eventKey]: { phase: 'hydrating', error: null } }
       );
-      // Subscribe only after the listener exists so a fast initial replay
-      // cannot race ahead of registration.
-      worker.emit('graphics:subscribe', { eventKey });
-    }
-    return () => {
-      worker.off(MatchSocketEvent.ABORT, abortProxy);
-      worker.off(MatchSocketEvent.END, endProxy);
-      worker.off(MatchSocketEvent.ENDGAME, endgameProxy);
-      worker.off(MatchSocketEvent.TELEOPERATED, teleopProxy);
-      worker.off(MatchSocketEvent.START, startProxy);
-      worker.off(MatchSocketEvent.UPDATE, updateProxy);
-      worker.off(MatchSocketEvent.DISPLAY, displayProxy);
-      worker.off(MatchSocketEvent.COMMIT, commitProxy);
-      worker.off(MatchSocketEvent.PRESTART, prestartProxy);
-      if (eventKey) {
-        worker.emit('graphics:unsubscribe', { eventKey });
-        worker.off(
-          GraphicsSocketEvent.PLAYBACK_STATE_V1,
-          playbackStateProxy,
-          eventKey
-        );
-        worker.off(
-          GraphicsSocketEvent.PLAYBACK_HYDRATION_ERROR_V1,
-          playbackHydrationErrorProxy,
-          eventKey
-        );
-        worker.off(
-          GraphicsSocketEvent.PREVIEW_REPLAY,
-          graphicsPreviewReplayProxy,
-          eventKey
-        );
-      }
-    };
-  }, [
-    worker,
-    connected,
-    eventKey,
-    setPlaybackDeliveryMap,
-    playbackStateProxy,
-    playbackHydrationErrorProxy
-  ]);
+    worker.emit(MatchSocketEvent.SYNC);
+  }, [worker, connected, eventKey, setPlaybackDeliveryMap]);
 
   // Backstop for a relay that answers the subscribe with nothing at all. A
   // hydration that never completes is a failure, not a permanent "hydrating"
@@ -194,16 +191,21 @@ export const ConnectionManager: FC = () => {
   useEffect(() => {
     if (!worker || !connected || !eventKey) return;
     if (playbackDelivery.phase !== 'hydrating') return;
+
     const timer = setTimeout(() => {
       setPlaybackDeliveryMap((previous) =>
         previous[eventKey]?.phase === 'hydrating'
           ? {
               ...previous,
-              [eventKey]: { phase: 'failed', error: HYDRATION_TIMEOUT_REASON }
+              [eventKey]: {
+                phase: 'failed',
+                error: HYDRATION_TIMEOUT_REASON
+              }
             }
           : previous
       );
     }, HYDRATION_TIMEOUT_MS);
+
     return () => clearTimeout(timer);
   }, [
     worker,
@@ -222,6 +224,7 @@ export const ConnectionManager: FC = () => {
   useEffect(() => {
     const controller = new AbortController();
     recoveryAbort.current = controller;
+
     return () => {
       controller.abort();
       recoveryAbort.current = null;
@@ -240,13 +243,20 @@ export const ConnectionManager: FC = () => {
         playbackDelivery.phase !== 'recovering'
       )
         autoRecoveredFor.current = null;
+
       return;
     }
+
     if (autoRecoveredFor.current === eventKey) return;
+
     const controller = recoveryAbort.current;
     if (!controller) return;
+
     autoRecoveredFor.current = eventKey;
-    void recover(eventKey, { signal: controller.signal });
+
+    void recover(eventKey, {
+      signal: controller.signal
+    });
   }, [eventKey, playbackDelivery.phase, recover]);
 
   return null;

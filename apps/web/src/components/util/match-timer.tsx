@@ -8,7 +8,7 @@ import {
 } from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 import { Duration } from 'luxon';
-import { FC, useEffect, useMemo } from 'react';
+import { FC, useMemo } from 'react';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useMatchTimerWorker } from 'src/api/use-timer-worker.js';
 import {
@@ -21,7 +21,7 @@ import {
   MATCH_END
 } from 'src/apps/audience-display/audio/index.js';
 import { matchAtom } from 'src/stores/state/event.js';
-import * as Comlink from 'comlink';
+import { useSocketSubscriptions } from 'src/api/use-socket-subscriptions.js';
 
 const startAudio = initAudio(MATCH_START);
 const transitionAudio = initAudio(MATCH_TRANSITION);
@@ -68,42 +68,41 @@ export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
     if (audio && payload.allowAudio) endgameAudio.play();
   };
 
-  const prestartProxy = useMemo(() => Comlink.proxy(onPrestart), [onPrestart]);
-  const startProxy = useMemo(() => Comlink.proxy(onStart), [onStart]);
-  const abortProxy = useMemo(() => Comlink.proxy(onAbort), [onAbort]);
-  const transitionProxy = useMemo(
-    () => Comlink.proxy(onTransition),
-    [onTransition]
-  );
-  const teleProxy = useMemo(() => Comlink.proxy(onTele), [onTele]);
-  const endProxy = useMemo(() => Comlink.proxy(onEnd), [onEnd]);
-  const endgameProxy = useMemo(() => Comlink.proxy(onEndgame), [onEndgame]);
-
-  useEffect(() => {
-    if (connected) {
-      worker?.on(MatchSocketEvent.PRESTART, prestartProxy);
-      worker?.on(MatchSocketEvent.START, startProxy);
-      worker?.on(MatchSocketEvent.ABORT, abortProxy);
-
-      worker?.on('timer:transition', transitionProxy);
-      worker?.on('timer:tele', teleProxy);
-      worker?.on('timer:endgame', endProxy);
-      worker?.on('timer:end', endgameProxy);
-    }
-
-    return () => {
-      if (connected) {
-        worker?.off(MatchSocketEvent.PRESTART, prestartProxy);
-        worker?.off(MatchSocketEvent.START, startProxy);
-        worker?.off(MatchSocketEvent.ABORT, abortProxy);
-
-        worker?.off('timer:transition', transitionProxy);
-        worker?.off('timer:tele', teleProxy);
-        worker?.off('timer:endgame', endgameProxy);
-        worker?.off('timer:end', endProxy);
+  const subscriptions = useMemo(
+    () => [
+      {
+        key: MatchSocketEvent.PRESTART,
+        callback: onPrestart
+      },
+      {
+        key: MatchSocketEvent.START,
+        callback: onStart
+      },
+      {
+        key: MatchSocketEvent.ABORT,
+        callback: onAbort
+      },
+      {
+        key: 'timer:transition',
+        callback: onTransition
+      },
+      {
+        key: 'timer:tele',
+        callback: onTele
+      },
+      {
+        key: 'timer:endgame',
+        callback: onEndgame
+      },
+      {
+        key: 'timer:end',
+        callback: onEnd
       }
-    };
-  }, [connected, worker]);
+    ],
+    [onPrestart, onStart, onAbort, onTransition, onTele, onEndgame, onEnd]
+  );
+
+  useSocketSubscriptions(worker, connected, subscriptions);
 
   const timeDuration = Duration.fromObject({
     seconds: mode === 'timeLeft' ? timeLeft : 0 // modeTime is not available from the worker

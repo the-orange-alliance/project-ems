@@ -233,7 +233,7 @@ export const Settings: FC = () => {
           <Typography.Title level={5}>
             Igniting Innovation Field Settings
           </Typography.Title>
-          <Space direction='vertical' style={{ width: '100%' }}>
+          <Space orientation='vertical' style={{ width: '100%' }}>
             {selectedField && localData && (
               <Card
                 title='Prep Field Sequence'
@@ -244,7 +244,7 @@ export const Settings: FC = () => {
                   </Button>
                 }
               >
-                <Space direction='vertical' style={{ width: '100%' }}>
+                <Space orientation='vertical' style={{ width: '100%' }}>
                   <Typography.Text type='secondary'>
                     Steps the field robot runs on &quot;Prepare Field&quot;, in
                     order from top to bottom. A motor step runs the door or the

@@ -1,9 +1,9 @@
 import { MatchSocketEvent, WebhookEvent } from '@toa-lib/models';
 import { useAtomCallback } from 'jotai/utils';
-import { useCallback, useEffect, useMemo } from 'react';
-import { proxy } from 'comlink';
+import { useCallback, useMemo } from 'react';
 import { webhooksApi } from 'src/api/use-webhook-data.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
+import { useSocketSubscriptions } from 'src/api/use-socket-subscriptions.js';
 import { matchAtom } from 'src/stores/state/event.js';
 
 /**
@@ -38,22 +38,19 @@ export const useMatchLifecycleWebhooks = () => {
     }, [])
   );
 
-  const endgameProxy = useMemo(
-    () => proxy(() => emitForCurrentMatch(WebhookEvent.MATCH_ENDGAME)),
-    [emitForCurrentMatch]
-  );
-  const endProxy = useMemo(
-    () => proxy(() => emitForCurrentMatch(WebhookEvent.MATCH_ENDED)),
+  const subscriptions = useMemo(
+    () => [
+      {
+        key: MatchSocketEvent.ENDGAME,
+        callback: () => emitForCurrentMatch(WebhookEvent.MATCH_ENDGAME)
+      },
+      {
+        key: MatchSocketEvent.END,
+        callback: () => emitForCurrentMatch(WebhookEvent.MATCH_ENDED)
+      }
+    ],
     [emitForCurrentMatch]
   );
 
-  useEffect(() => {
-    if (!worker || !connected) return;
-    worker.on(MatchSocketEvent.ENDGAME, endgameProxy);
-    worker.on(MatchSocketEvent.END, endProxy);
-    return () => {
-      worker.off(MatchSocketEvent.ENDGAME, endgameProxy);
-      worker.off(MatchSocketEvent.END, endProxy);
-    };
-  }, [worker, connected, endgameProxy, endProxy]);
+  useSocketSubscriptions(worker, connected, subscriptions);
 };
