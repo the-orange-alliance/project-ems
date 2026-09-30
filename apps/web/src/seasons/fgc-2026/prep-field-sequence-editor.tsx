@@ -111,7 +111,12 @@ const SortableList: FC<SortableListProps> = ({
     >
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <div
-          style={{ display: 'flex', flexDirection: 'column', gap, width: '100%' }}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap,
+            width: '100%'
+          }}
         >
           {children}
         </div>
@@ -152,7 +157,10 @@ const SortableItem: FC<SortableItemProps> = ({ id, children }) => {
       <Button
         type='text'
         icon={<HolderOutlined />}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none' }}
+        style={{
+          cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none'
+        }}
         {...attributes}
         {...listeners}
       />
@@ -289,8 +297,7 @@ export const PrepFieldSequenceEditor: FC<PrepFieldSequenceEditorProps> = ({
     );
   const canAddStep =
     value.length < FGC26FCS.PREP_FIELD_MAX_STEPS &&
-    totalDuration + NEW_STEP_DURATION <=
-      FGC26FCS.PREP_FIELD_MAX_TOTAL_DURATION;
+    totalDuration + NEW_STEP_DURATION <= FGC26FCS.PREP_FIELD_MAX_TOTAL_DURATION;
 
   const updateBranch = (
     step: Extract<Step, { type: 'parallel' }>,
@@ -304,7 +311,7 @@ export const PrepFieldSequenceEditor: FC<PrepFieldSequenceEditorProps> = ({
   const topIds = value.map((_, i) => `step-${i}`);
 
   return (
-    <Space direction='vertical' style={{ width: '100%' }}>
+    <Space orientation='vertical' style={{ width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         {/* The app theme inverts colorTextSecondary, which Segmented derives
             its unselected label color from - pin it to the normal text color
@@ -365,106 +372,110 @@ export const PrepFieldSequenceEditor: FC<PrepFieldSequenceEditorProps> = ({
       )}
       {!showJson && (
         <>
-      <SortableList
-        ids={topIds}
-        onMove={(from, to) => onChange(arrayMove(value, from, to))}
-      >
-        {value.map((step, i) => {
-            const remove = () => onChange(removeAt(value, i));
+          <SortableList
+            ids={topIds}
+            onMove={(from, to) => onChange(arrayMove(value, from, to))}
+          >
+            {value.map((step, i) => {
+              const remove = () => onChange(removeAt(value, i));
 
-            if (step.type !== 'parallel') {
+              if (step.type !== 'parallel') {
+                return (
+                  <SortableItem key={topIds[i]} id={topIds[i]}>
+                    <LeafStepRow
+                      step={step}
+                      durationMax={durationMaxFor(step.duration)}
+                      onChange={(next) => onChange(replaceAt(value, i, next))}
+                      onDelete={remove}
+                    />
+                  </SortableItem>
+                );
+              }
+
               return (
                 <SortableItem key={topIds[i]} id={topIds[i]}>
-                  <LeafStepRow
-                    step={step}
-                    durationMax={durationMaxFor(step.duration)}
-                    onChange={(next) => onChange(replaceAt(value, i, next))}
-                    onDelete={remove}
-                  />
-                </SortableItem>
-              );
-            }
-
-            return (
-              <SortableItem key={topIds[i]} id={topIds[i]}>
-                <div
-                  style={{
-                    background: token.colorFillQuaternary,
-                    borderRadius: token.borderRadiusLG,
-                    padding: '8px 12px'
-                  }}
-                >
-                  <Space direction='vertical' style={{ width: '100%' }} size={4}>
-                    <Space>
-                      <Typography.Text strong>
-                        Run at the same time
-                      </Typography.Text>
-                      <Button
-                        type='text'
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={remove}
-                      />
-                    </Space>
-                    {step.branches.map((branch, b) => {
-                      const branchIds = branch.map(
-                        (_, j) => `step-${i}-branch-${b}-item-${j}`
-                      );
-                      return (
-                        <div
-                          key={b}
-                          style={{
-                            marginLeft: 4,
-                            paddingLeft: 12,
-                            borderLeft: `2px solid ${token.colorBorderSecondary}`
-                          }}
-                        >
-                          <Space
-                            direction='vertical'
-                            style={{ width: '100%' }}
-                            size={4}
+                  <div
+                    style={{
+                      background: token.colorFillQuaternary,
+                      borderRadius: token.borderRadiusLG,
+                      padding: '8px 12px'
+                    }}
+                  >
+                    <Space
+                      orientation='vertical'
+                      style={{ width: '100%' }}
+                      size={4}
+                    >
+                      <Space>
+                        <Typography.Text strong>
+                          Run at the same time
+                        </Typography.Text>
+                        <Button
+                          type='text'
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={remove}
+                        />
+                      </Space>
+                      {step.branches.map((branch, b) => {
+                        const branchIds = branch.map(
+                          (_, j) => `step-${i}-branch-${b}-item-${j}`
+                        );
+                        return (
+                          <div
+                            key={b}
+                            style={{
+                              marginLeft: 4,
+                              paddingLeft: 12,
+                              borderLeft: `2px solid ${token.colorBorderSecondary}`
+                            }}
                           >
-                            <Space>
-                              <Typography.Text type='secondary'>
-                                Branch {b + 1}
-                              </Typography.Text>
-                              <Button
-                                type='text'
-                                size='small'
-                                danger
-                                // A parallel group always keeps at least one
-                                // branch; delete the whole group instead.
-                                disabled={step.branches.length === 1}
-                                onClick={() =>
+                            <Space
+                              direction='vertical'
+                              style={{ width: '100%' }}
+                              size={4}
+                            >
+                              <Space>
+                                <Typography.Text type='secondary'>
+                                  Branch {b + 1}
+                                </Typography.Text>
+                                <Button
+                                  type='text'
+                                  size='small'
+                                  danger
+                                  // A parallel group always keeps at least one
+                                  // branch; delete the whole group instead.
+                                  disabled={step.branches.length === 1}
+                                  onClick={() =>
+                                    onChange(
+                                      replaceAt(value, i, {
+                                        ...step,
+                                        branches: removeAt(step.branches, b)
+                                      })
+                                    )
+                                  }
+                                >
+                                  Remove branch
+                                </Button>
+                              </Space>
+                              <SortableList
+                                ids={branchIds}
+                                gap={4}
+                                onMove={(from, to) =>
                                   onChange(
-                                    replaceAt(value, i, {
-                                      ...step,
-                                      branches: removeAt(step.branches, b)
-                                    })
+                                    replaceAt(
+                                      value,
+                                      i,
+                                      updateBranch(
+                                        step,
+                                        b,
+                                        arrayMove(branch, from, to)
+                                      )
+                                    )
                                   )
                                 }
                               >
-                                Remove branch
-                              </Button>
-                            </Space>
-                            <SortableList
-                              ids={branchIds}
-                              gap={4}
-                              onMove={(from, to) =>
-                                onChange(
-                                  replaceAt(
-                                    value,
-                                    i,
-                                    updateBranch(
-                                      step,
-                                      b,
-                                      arrayMove(branch, from, to)
-                                    )
-                                  )
-                                )
-                              }
-                            >
-                              {branch.map((branchStep, j) => (
+                                {branch.map((branchStep, j) => (
                                   <SortableItem
                                     key={branchIds[j]}
                                     id={branchIds[j]}
@@ -508,101 +519,101 @@ export const PrepFieldSequenceEditor: FC<PrepFieldSequenceEditorProps> = ({
                                     />
                                   </SortableItem>
                                 ))}
-                            </SortableList>
-                            <Space wrap size={0}>
-                              <Button
-                                type='text'
-                                size='small'
-                                icon={<PlusOutlined />}
-                                disabled={!canAddStep}
-                                onClick={() =>
-                                  onChange(
-                                    replaceAt(
-                                      value,
-                                      i,
-                                      updateBranch(step, b, [
-                                        ...branch,
-                                        newMotorStep()
-                                      ])
+                              </SortableList>
+                              <Space wrap size={0}>
+                                <Button
+                                  type='text'
+                                  size='small'
+                                  icon={<PlusOutlined />}
+                                  disabled={!canAddStep}
+                                  onClick={() =>
+                                    onChange(
+                                      replaceAt(
+                                        value,
+                                        i,
+                                        updateBranch(step, b, [
+                                          ...branch,
+                                          newMotorStep()
+                                        ])
+                                      )
                                     )
-                                  )
-                                }
-                              >
-                                Motor
-                              </Button>
-                              <Button
-                                type='text'
-                                size='small'
-                                icon={<PlusOutlined />}
-                                disabled={!canAddStep}
-                                onClick={() =>
-                                  onChange(
-                                    replaceAt(
-                                      value,
-                                      i,
-                                      updateBranch(step, b, [
-                                        ...branch,
-                                        newWaitStep()
-                                      ])
+                                  }
+                                >
+                                  Motor
+                                </Button>
+                                <Button
+                                  type='text'
+                                  size='small'
+                                  icon={<PlusOutlined />}
+                                  disabled={!canAddStep}
+                                  onClick={() =>
+                                    onChange(
+                                      replaceAt(
+                                        value,
+                                        i,
+                                        updateBranch(step, b, [
+                                          ...branch,
+                                          newWaitStep()
+                                        ])
+                                      )
                                     )
-                                  )
-                                }
-                              >
-                                Wait
-                              </Button>
+                                  }
+                                >
+                                  Wait
+                                </Button>
+                              </Space>
                             </Space>
-                          </Space>
-                        </div>
-                      );
-                    })}
-                    <Button
-                      type='text'
-                      size='small'
-                      icon={<PlusOutlined />}
-                      disabled={
-                        step.branches.length >=
-                          FGC26FCS.PREP_FIELD_MAX_BRANCHES || !canAddStep
-                      }
-                      onClick={() =>
-                        onChange(
-                          replaceAt(value, i, {
-                            ...step,
-                            branches: [...step.branches, [newMotorStep()]]
-                          })
-                        )
-                      }
-                    >
-                      Add branch
-                    </Button>
-                  </Space>
-                </div>
-              </SortableItem>
-            );
-          })}
-      </SortableList>
-      <Space wrap>
-        <Button
-          icon={<PlusOutlined />}
-          disabled={!canAddStep}
-          onClick={() => onChange([...value, newMotorStep()])}
-        >
-          Motor step
-        </Button>
-        <Button
-          icon={<PlusOutlined />}
-          disabled={!canAddStep}
-          onClick={() => onChange([...value, newWaitStep()])}
-        >
-          Wait step
-        </Button>
-        <Button
-          icon={<PlusOutlined />}
-          disabled={!canAddStep}
-          onClick={() => onChange([...value, newParallelStep()])}
-        >
-          Parallel group
-        </Button>
-      </Space>
+                          </div>
+                        );
+                      })}
+                      <Button
+                        type='text'
+                        size='small'
+                        icon={<PlusOutlined />}
+                        disabled={
+                          step.branches.length >=
+                            FGC26FCS.PREP_FIELD_MAX_BRANCHES || !canAddStep
+                        }
+                        onClick={() =>
+                          onChange(
+                            replaceAt(value, i, {
+                              ...step,
+                              branches: [...step.branches, [newMotorStep()]]
+                            })
+                          )
+                        }
+                      >
+                        Add branch
+                      </Button>
+                    </Space>
+                  </div>
+                </SortableItem>
+              );
+            })}
+          </SortableList>
+          <Space wrap>
+            <Button
+              icon={<PlusOutlined />}
+              disabled={!canAddStep}
+              onClick={() => onChange([...value, newMotorStep()])}
+            >
+              Motor step
+            </Button>
+            <Button
+              icon={<PlusOutlined />}
+              disabled={!canAddStep}
+              onClick={() => onChange([...value, newWaitStep()])}
+            >
+              Wait step
+            </Button>
+            <Button
+              icon={<PlusOutlined />}
+              disabled={!canAddStep}
+              onClick={() => onChange([...value, newParallelStep()])}
+            >
+              Parallel group
+            </Button>
+          </Space>
         </>
       )}
       <Typography.Text type='secondary'>

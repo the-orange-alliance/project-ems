@@ -244,7 +244,7 @@ export const MatchHistoryViewer: FC = () => {
       }
       showSettings
     >
-      <Space direction='vertical' style={{ width: '100%' }} size={16}>
+      <Space orientation='vertical' style={{ width: '100%' }} size={16}>
         <Card>
           <Row gutter={[12, 12]}>
             <Col xs={24} md={8}>
@@ -353,7 +353,7 @@ export const MatchHistoryViewer: FC = () => {
                               dataSource={item.diffs.slice(0, 20)}
                               renderItem={(diff) => (
                                 <List.Item>
-                                  <Space direction='vertical' size={0}>
+                                  <Space orientation='vertical' size={0}>
                                     <Typography.Text strong>
                                       {diff.key}
                                     </Typography.Text>
@@ -387,7 +387,7 @@ export const MatchHistoryViewer: FC = () => {
                     dataSource={actions}
                     renderItem={(action: MatchActionEventRow) => (
                       <List.Item>
-                        <Space direction='vertical' size={2}>
+                        <Space orientation='vertical' size={2}>
                           <Space>
                             <Tag color='purple'>
                               {action.revision === null

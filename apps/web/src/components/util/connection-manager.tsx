@@ -170,6 +170,16 @@ export const ConnectionManager: FC = () => {
         }));
       return;
     }
+    // Mark hydrating synchronously with the connect, rather than waiting on
+    // the subscription's own async `on()` chain to land: a render in
+    // between would otherwise see no entry at all for this event.
+    if (eventKey)
+      setPlaybackDeliveryMap((previous) =>
+        previous[eventKey]?.phase === 'hydrating' &&
+        previous[eventKey]?.error === null
+          ? previous
+          : { ...previous, [eventKey]: { phase: 'hydrating', error: null } }
+      );
     worker.emit(MatchSocketEvent.SYNC);
   }, [worker, connected, eventKey, setPlaybackDeliveryMap]);
 

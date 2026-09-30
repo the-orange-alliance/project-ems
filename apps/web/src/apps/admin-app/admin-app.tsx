@@ -143,26 +143,61 @@ export const AdminApp: FC = () => {
       }
     >
       <Divider />
-      <Space direction='vertical' size='large' style={{ padding: 16 }}>
-        <Button type='primary' danger icon={<KeyOutlined />} onClick={syncMatches}>
+      <Space orientation='vertical' size='large' style={{ padding: 16 }}>
+        <Button
+          type='primary'
+          danger
+          icon={<KeyOutlined />}
+          onClick={syncMatches}
+        >
           Sync Matches
         </Button>
-        <Button type='primary' danger icon={<KeyOutlined />} onClick={syncRankings}>
+        <Button
+          type='primary'
+          danger
+          icon={<KeyOutlined />}
+          onClick={syncRankings}
+        >
           Sync Rankings
         </Button>
-        <Button type='primary' danger icon={<KeyOutlined />} onClick={syncAlliances}>
+        <Button
+          type='primary'
+          danger
+          icon={<KeyOutlined />}
+          onClick={syncAlliances}
+        >
           Sync Alliances
         </Button>
-        <Button type='primary' danger icon={<KeyOutlined />} onClick={handleRankingsCreate}>
+        <Button
+          type='primary'
+          danger
+          icon={<KeyOutlined />}
+          onClick={handleRankingsCreate}
+        >
           Create Rankings
         </Button>
-        <Button type='primary' danger icon={<KeyOutlined />} onClick={handleRankings}>
+        <Button
+          type='primary'
+          danger
+          icon={<KeyOutlined />}
+          onClick={handleRankings}
+        >
           Re-Calculate Rankings
         </Button>
-        <Button type='primary' danger icon={<KeyOutlined />} onClick={handleRankingsDelete}>
+        <Button
+          type='primary'
+          danger
+          icon={<KeyOutlined />}
+          onClick={handleRankingsDelete}
+        >
           Delete Rankings
         </Button>
-        <Button type='primary' danger icon={<KeyOutlined />} onClick={handlePurge}>
+        <Button
+          type='primary'
+          danger
+          icon={<KeyOutlined />}
+          onClick={handlePurge}
+        >
           Purge Event Data
         </Button>
       </Space>
