@@ -169,6 +169,11 @@ describe('ConnectionManager hydration recovery', () => {
     const view = renderWithJotai(<ConnectionManager />, (store) => {
       store.set(eventKeyAtom, 'event-a');
     });
+    // The ready callback fires only after the async subscription setup
+    // resolves, so its microtasks must be flushed before the phase read.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
     expect(view.store.get(playbackDeliveryMapAtom)['event-a'].phase).toBe(
       'hydrating'
     );
@@ -226,6 +231,13 @@ describe('ConnectionManager hydration recovery', () => {
     hoisted.useSocketWorker.mockReturnValue({ worker, connected: true });
     const view = renderWithJotai(<ConnectionManager />, (store) => {
       store.set(eventKeyAtom, 'event-a');
+    });
+
+    // The ready callback fires only after the async subscription setup
+    // resolves, so its microtasks must be flushed before the backstop timer
+    // can be observed.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
     });
 
     // Drive it into recovery: backstop fires, the first read rejects, and the
