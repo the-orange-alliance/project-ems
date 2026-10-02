@@ -140,6 +140,7 @@ export const AllianceSheetStream: React.FC<AllianceSheetProps> = ({
             key={index}
             team={team}
             noRankChange={isPlayoffs}
+            hideRanks={isPlayoffs}
           />
         ))}
       </Space>

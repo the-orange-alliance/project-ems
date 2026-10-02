@@ -448,8 +448,10 @@ function calculateRankings(
 
       // Blue Alliance
       if (participant.station >= 20) {
-        ranking.wins = ranking.wins + (blueWin ? 1 : 0);
-        ranking.losses = ranking.losses + (blueWin ? 0 : 1);
+        if (!isTie) {
+          ranking.wins = ranking.wins + (blueWin ? 1 : 0);
+          ranking.losses = ranking.losses + (blueWin ? 0 : 1);
+        }
 
         if (participant.cardStatus <= CardStatus.YELLOW_CARD) {
           scoresMap.set(participant.teamKey, [...scores, match.blueScore]);
