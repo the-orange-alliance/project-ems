@@ -71,17 +71,13 @@ function fanoutEvent(event: string, data: any) {
   const listeners = eventBus.eventListeners.get(event);
   if (!listeners) return;
 
-  for (const [listenerKey, set] of listeners.entries()) {
+  for (const [listenerKey, listener] of listeners.entries()) {
     if (listenerKey !== '__all__' && listenerKey !== messageKey) {
       continue;
     }
 
-    for (const cb of Array.from(set)) {
-      try {
-        safeCall(event, cb, data);
-      } catch (err) {
-        console.error(`[worker] listener failed for ${event}`, err);
-      }
+    for (const cb of Array.from(listener.values())) {
+      safeCall(event, cb, data);
     }
   }
 }

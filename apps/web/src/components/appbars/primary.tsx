@@ -91,8 +91,10 @@ const PrimaryAppbar: FC = () => {
             `Event Management System${import.meta.env.VITE_BUILD_TYPE === 'production' ? ' - online' : ''}`}
         </Typography.Title>
       )}
-      <ConnectionChip />
-      <VersionChip />
+      <div style={{ gap: '8px', display: 'flex', alignItems: 'center' }}>
+        <ConnectionChip />
+        <VersionChip />
+      </div>
       {user ? (
         <>
           {/* <Button type='link'>Docs</Button> */}

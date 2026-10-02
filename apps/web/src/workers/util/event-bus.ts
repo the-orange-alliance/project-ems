@@ -1,63 +1,116 @@
 type AnyCb<T = any> = (v: T) => void;
 
 export interface EventBus {
-  once: (key: string, callback: AnyCb, messageKey?: string) => void;
-  on: (key: string, callback: AnyCb, messageKey?: string) => void;
-  off: (key: string, callback: AnyCb, messageKey?: string) => void;
-  eventListeners: Map<string, Map<string, Set<AnyCb<any>>>>;
+  once: (key: string, callback: AnyCb, messageKey?: string) => string;
+  on: (key: string, callback: AnyCb, messageKey?: string) => string;
+  off: (key: string, listenerId: string, messageKey?: string) => void;
+
+  eventListeners: Map<string, Map<string, Map<string, AnyCb<any>>>>;
+
   lastEventPayload: Map<string, Map<string, any>>;
 }
 
 const EMPTY_MESSAGE_KEY = '__all__';
-const eventListeners = new Map<string, Map<string, Set<AnyCb<any>>>>();
+
+const eventListeners = new Map<string, Map<string, Map<string, AnyCb<any>>>>();
+
 const lastEventPayload = new Map<string, Map<string, any>>();
 
-function getListenersForKey(key: string, messageKey?: string) {
+let nextListenerId = 0;
+
+function createListenerId(): string {
+  return `${++nextListenerId}`;
+}
+
+function getListenersForKey(
+  key: string,
+  messageKey?: string
+): Map<string, AnyCb<any>> {
   const byMessage =
-    eventListeners.get(key) ?? new Map<string, Set<AnyCb<any>>>();
+    eventListeners.get(key) ?? new Map<string, Map<string, AnyCb<any>>>();
+
   eventListeners.set(key, byMessage);
+
   const storeKey = messageKey ?? EMPTY_MESSAGE_KEY;
-  const listeners = byMessage.get(storeKey) ?? new Set<AnyCb<any>>();
+
+  const listeners = byMessage.get(storeKey) ?? new Map<string, AnyCb<any>>();
+
   byMessage.set(storeKey, listeners);
+
   return listeners;
+}
+
+function replayLastEvent(key: string, callback: AnyCb, messageKey?: string) {
+  const payloads = lastEventPayload.get(key);
+
+  if (!payloads) {
+    return;
+  }
+
+  if (messageKey) {
+    const payload = payloads.get(messageKey);
+
+    if (payload !== undefined) {
+      callback(payload);
+    }
+
+    return;
+  }
+
+  for (const payload of payloads.values()) {
+    callback(payload);
+  }
 }
 
 export const eventBus: EventBus = {
   on(key, callback, messageKey) {
     const listeners = getListenersForKey(key, messageKey);
-    listeners.add(callback);
+    const listenerId = createListenerId();
 
-    const payloads = lastEventPayload.get(key);
-    if (!payloads) return;
+    listeners.set(listenerId, callback);
 
-    if (messageKey) {
-      const payload = payloads.get(messageKey);
-      if (payload !== undefined) {
-        callback(payload);
-      }
+    replayLastEvent(key, callback, messageKey);
+
+    return listenerId;
+  },
+
+  once(key, callback, messageKey) {
+    const listeners = getListenersForKey(key, messageKey);
+    const listenerId = createListenerId();
+
+    const wrapper = (data: any) => {
+      callback(data);
+      this.off(key, listenerId, messageKey);
+    };
+
+    listeners.set(listenerId, wrapper);
+
+    replayLastEvent(key, wrapper, messageKey);
+
+    return listenerId;
+  },
+
+  off(key, listenerId, messageKey) {
+    const storeKey = messageKey ?? EMPTY_MESSAGE_KEY;
+
+    const byMessage = eventListeners.get(key);
+    const listeners = byMessage?.get(storeKey);
+
+    if (!listeners) {
       return;
     }
 
-    for (const payload of payloads.values()) {
-      callback(payload);
+    listeners.delete(listenerId);
+
+    if (listeners.size === 0) {
+      byMessage?.delete(storeKey);
+    }
+
+    if (byMessage?.size === 0) {
+      eventListeners.delete(key);
     }
   },
-  once(key, callback, messageKey) {
-    const wrapper = (data: any) => {
-      callback(data);
-      this.off(key, wrapper, messageKey);
-    };
-    this.on(key, wrapper, messageKey);
-  },
-  off(key, callback, messageKey) {
-    const listeners = eventListeners
-      .get(key)
-      ?.get(messageKey ?? EMPTY_MESSAGE_KEY);
-    listeners?.delete(callback);
-    if (listeners?.size === 0) {
-      eventListeners.get(key)?.delete(messageKey ?? EMPTY_MESSAGE_KEY);
-    }
-  },
+
   eventListeners,
   lastEventPayload
 };

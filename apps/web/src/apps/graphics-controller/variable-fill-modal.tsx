@@ -125,7 +125,7 @@ export const VariableFillModal: FC<VariableFillModalProps> = ({
       okButtonProps={{ disabled: !allFilled }}
       destroyOnHidden
     >
-      <Space direction='vertical' style={{ width: '100%' }} size='middle'>
+      <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
         {!allFilled && (
           <Typography.Text type='secondary'>
             {unfilledCount} of {variables.length} variable

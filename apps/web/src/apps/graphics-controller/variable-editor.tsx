@@ -97,7 +97,7 @@ const VariableForm: FC<VariableFormProps> = ({
   };
 
   return (
-    <Space direction='vertical' style={{ width: 240 }}>
+    <Space orientation='vertical' style={{ width: 240 }}>
       <Input
         autoFocus
         placeholder='e.g. redTeam'

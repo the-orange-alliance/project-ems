@@ -81,8 +81,12 @@ export const PublicationDeliveryStatus: FC<{ eventKey: string | null }> = ({
   if (!view && !requestError) return null;
 
   const actions = (
-    <Space direction='vertical'>
-      <Button size='small' loading={busy === 'check'} onClick={() => run('check')}>
+    <Space orientation='vertical'>
+      <Button
+        size='small'
+        loading={busy === 'check'}
+        onClick={() => run('check')}
+      >
         Check delivery
       </Button>
       {view?.retry && (
@@ -105,7 +109,9 @@ export const PublicationDeliveryStatus: FC<{ eventKey: string | null }> = ({
       message={view?.message ?? 'Delivery health unavailable'}
       description={
         <>
-          {view?.details.map((line) => <div key={line}>{line}</div>)}
+          {view?.details.map((line) => (
+            <div key={line}>{line}</div>
+          ))}
           {requestError && <div>{requestError}</div>}
         </>
       }

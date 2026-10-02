@@ -7,7 +7,7 @@ import { useCurrentEvent } from '@api/use-event-data.js';
 import { useUpdateAppbar } from 'src/hooks/use-update-appbar.js';
 
 const ColAppCard = (props: AppCardProps) => (
-  <Col xs={10} md={6} lg={4}>
+  <Col xs={10} md={6} lg={4} xl={3}>
     <AppCard {...props} />
   </Col>
 );
