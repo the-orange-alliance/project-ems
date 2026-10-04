@@ -148,6 +148,18 @@ const ScoreCalculator = lazy(() =>
   }))
 );
 
+// Remote Client Setup Routes
+const RemoteSetup = lazy(() =>
+  import('./apps/remote-setup/index.js').then((m) => ({
+    default: m.RemoteSetup
+  }))
+);
+const Configurator = lazy(() =>
+  import('./apps/remote-setup/index.js').then((m) => ({
+    default: m.Configurator
+  }))
+);
+
 import {
   CalculatorOutlined,
   CalendarOutlined,
@@ -160,6 +172,7 @@ import {
   HistoryOutlined,
   PlaySquareOutlined,
   PrinterOutlined,
+  QrcodeOutlined,
   RobotOutlined,
   SettingOutlined,
   TeamOutlined
@@ -371,6 +384,23 @@ const AppRoutes: AppRoute[] = [
     icon: (
       <SettingOutlined style={{ fontSize: '100px', marginBottom: '50px' }} />
     )
+  },
+  {
+    name: 'Remote Client Setup',
+    path: '/:eventKey/remote-setup',
+    group: 0,
+    element: RemoteSetup,
+    icon: <QrcodeOutlined style={{ fontSize: '100px', marginBottom: '50px' }} />
+  },
+  {
+    // Target of the Remote Client Setup QR code; must stay in sync with
+    // CONFIGURATOR_PATH in apps/remote-setup/remote-config-params.ts.
+    name: 'Remote Configurator',
+    path: '/:eventKey/configurator',
+    group: 0,
+    element: Configurator,
+    hidden: true,
+    hideAppbar: true
   },
   {
     name: 'Settings', // point to same spot. centralized settings!

@@ -12,6 +12,7 @@ import { darkModeAtom } from './stores/state/ui.js';
 import { App as AntApp, ConfigProvider } from 'antd';
 import 'antd/dist/reset.css';
 import { localClient, remoteClient } from './api/http-clients.js';
+import { normalizeRemoteApiHost } from './util/remote-api-host.js';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Error while trying to find document root.');
@@ -25,7 +26,9 @@ const leaderApiHost =
 const remoteApiHost = getFromLocalStorage('remoteApiHost', false);
 
 if (leaderApiHost) {
-  localClient.setBaseUrl(leaderApiHost);
+  // Stored as a bare `host:port`; without a scheme fetch() would treat it as
+  // a relative path and hit this page's own origin.
+  localClient.setBaseUrl(normalizeRemoteApiHost(leaderApiHost));
 
   localStorage.setItem('leaderApiEnabled', 'true');
   localStorage.setItem('leaderApiHost', `"${leaderApiHost}"`);
