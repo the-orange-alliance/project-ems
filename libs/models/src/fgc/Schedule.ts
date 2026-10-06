@@ -135,19 +135,19 @@ export namespace FGC2026 {
           fieldNumber = 1;
           break;
         case 1:
-          fieldNumber = 3;
+          fieldNumber = 4;
           break;
         case 2:
-          fieldNumber = 5;
+          fieldNumber = 3;
           break;
         case 3:
           fieldNumber = 2;
           break;
         case 4:
-          fieldNumber = 4;
+          fieldNumber = 5;
           break;
         default:
-          fieldNumber = 5;
+          fieldNumber = 3;
       }
       newMatches.push({ ...match, fieldNumber });
     }
