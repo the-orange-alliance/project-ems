@@ -3,19 +3,25 @@ import { Tag, Tooltip } from 'antd';
 import { FC } from 'react';
 import { getFromLocalStorage } from 'src/stores/local-storage.js';
 
-export const MetadataChips: FC = () => {
+export const MetadataChips: FC<{ iconOnly?: boolean }> = ({ iconOnly }) => {
   const isFollowerMode = getFromLocalStorage('leaderApiEnabled', false);
   const leaderApiHost = getFromLocalStorage('leaderApiHost', false);
   return (
     <>
       {isFollowerMode && (
-        <Tooltip title={leaderApiHost}>
+        <Tooltip
+          title={iconOnly ? `Follower: ${leaderApiHost}` : leaderApiHost}
+        >
           <Tag
             icon={<UsergroupAddOutlined />}
             color='purple'
-            style={{ fontSize: 'large', padding: '8px' }}
+            style={{
+              fontSize: 'large',
+              padding: '8px',
+              ...(iconOnly && { marginInlineEnd: 0 })
+            }}
           >
-            Follower
+            {!iconOnly && 'Follower'}
           </Tag>
         </Tooltip>
       )}

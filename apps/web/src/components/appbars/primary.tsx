@@ -2,9 +2,18 @@ import { FC, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LoginButton } from 'src/components/buttons/login-button.js';
 import emsAvatar from '@assets/favicon.ico';
-import { Layout, Avatar, Typography, Button, Dropdown, theme } from 'antd';
+import {
+  Layout,
+  Avatar,
+  Typography,
+  Button,
+  Dropdown,
+  Grid,
+  theme
+} from 'antd';
 import {
   SettingOutlined,
+  ToolOutlined,
   FullscreenOutlined,
   FullscreenExitOutlined,
   ReloadOutlined
@@ -24,6 +33,9 @@ const { Header } = Layout;
 
 const PrimaryAppbar: FC = () => {
   const { token } = theme.useToken();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+  const isCompact = !screens.lg;
   const [fullscreen, setFullscreen] = useState(false);
   const { title, titleLink, showFullscreen } = useAtomValue(appbarConfigAtom);
   const user = true; // useAtomValue(userAtom);
@@ -57,45 +69,62 @@ const PrimaryAppbar: FC = () => {
     setFullscreen(false);
   };
 
+  const buttonSize = isMobile ? 'middle' : 'large';
+  const buttonMargin = isMobile ? '4px' : '8px';
+  const titleText =
+    title ||
+    `Event Management System${import.meta.env.VITE_BUILD_TYPE === 'production' ? ' - online' : ''}`;
+  const titleNode = (
+    <Typography.Title
+      level={isMobile ? 5 : 3}
+      ellipsis={{ tooltip: titleText }}
+      style={{ color: headerFg, margin: 0 }}
+    >
+      {titleText}
+    </Typography.Title>
+  );
+
   return (
     <Header
       style={{
         display: 'flex',
         alignItems: 'center',
-        padding: '10px 16px',
+        padding: isMobile ? '10px 8px' : '10px 16px',
+        gap: isMobile ? '4px' : 0,
         background: token.colorPrimary,
         color: headerFg
       }}
     >
-      <Link to='/' style={{ display: 'flex', alignItems: 'center' }}>
+      <Link
+        to='/'
+        style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}
+      >
         <Avatar
           src={emsAvatar}
           alt='Event Management System Logo'
-          style={{ marginRight: '8px' }}
-          size='large'
+          style={{ marginRight: isMobile ? 0 : '8px' }}
+          size={isMobile ? 'default' : 'large'}
           shape='square'
         />
       </Link>
       {titleLink ? (
-        <Link to={titleLink} style={{ flexGrow: 1 }}>
-          <Typography.Title level={3} style={{ color: headerFg, margin: 0 }}>
-            {title ||
-              `Event Management System${import.meta.env.VITE_BUILD_TYPE === 'production' ? ' - online' : ''}`}
-          </Typography.Title>
+        <Link to={titleLink} style={{ flex: '1 1 0', minWidth: 0 }}>
+          {titleNode}
         </Link>
       ) : (
-        <Typography.Title
-          level={3}
-          style={{ flexGrow: 1, margin: 0, color: headerFg }}
-        >
-          {title ||
-            `Event Management System${import.meta.env.VITE_BUILD_TYPE === 'production' ? ' - online' : ''}`}
-        </Typography.Title>
+        <div style={{ flex: '1 1 0', minWidth: 0 }}>{titleNode}</div>
       )}
-      <div style={{ gap: '8px', display: 'flex', alignItems: 'center' }}>
-        <ConnectionChip />
-        <VersionChip />
-        <MetadataChips />
+      <div
+        style={{
+          gap: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          flexShrink: 0
+        }}
+      >
+        <ConnectionChip iconOnly={isCompact} />
+        <VersionChip iconOnly={isCompact} />
+        <MetadataChips iconOnly={isCompact} />
       </div>
       {user ? (
         <>
@@ -107,8 +136,13 @@ const PrimaryAppbar: FC = () => {
               menu={{ items: toMenuItems(productionOptionsItems) }}
               trigger={['click']}
             >
-              <Button style={{ marginLeft: '8px' }} size='large'>
-                Production Options
+              <Button
+                icon={isCompact ? <ToolOutlined /> : undefined}
+                aria-label='Production Options'
+                style={{ marginLeft: buttonMargin, flexShrink: 0 }}
+                size={buttonSize}
+              >
+                {!isCompact && 'Production Options'}
               </Button>
             </Dropdown>
           )}
@@ -117,22 +151,24 @@ const PrimaryAppbar: FC = () => {
           {!showFullscreen && (
             <Button
               icon={<SettingOutlined />}
-              style={{ marginLeft: '8px' }}
+              aria-label='Settings'
+              style={{ marginLeft: buttonMargin, flexShrink: 0 }}
               onClick={navSettings}
-              size='large'
+              size={buttonSize}
             >
-              Settings
+              {!isCompact && 'Settings'}
             </Button>
           )}
 
           {showFullscreen && (
             <Button
               icon={<ReloadOutlined />}
-              style={{ marginLeft: '8px' }}
+              aria-label='Refresh'
+              style={{ marginLeft: buttonMargin, flexShrink: 0 }}
               onClick={() => location.reload()}
-              size='large'
+              size={buttonSize}
             >
-              Refresh
+              {!isCompact && 'Refresh'}
             </Button>
           )}
 
@@ -142,11 +178,12 @@ const PrimaryAppbar: FC = () => {
               icon={
                 fullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />
               }
-              style={{ marginLeft: '8px' }}
+              aria-label='Fullscreen'
+              style={{ marginLeft: buttonMargin, flexShrink: 0 }}
               onClick={fullscreen ? exitFullscreen : requestFullscreen}
-              size='large'
+              size={buttonSize}
             >
-              Fullscreen
+              {!isCompact && 'Fullscreen'}
             </Button>
           )}
         </>
