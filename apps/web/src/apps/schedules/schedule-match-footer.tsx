@@ -1,7 +1,8 @@
 import {
   ClockCircleOutlined,
   CloudUploadOutlined,
-  DownloadOutlined
+  DownloadOutlined,
+  FileTextOutlined
 } from '@ant-design/icons';
 import { Match, Tournament } from '@toa-lib/models';
 import { Button, Space } from 'antd';
@@ -18,6 +19,7 @@ interface Props {
   onClick: () => void;
   onReassignTimes: () => void;
   onDownload: (matches: Match<any>[]) => void;
+  onDownloadJson: () => void;
 }
 
 export const ScheduleMatchFooter: FC<Props> = ({
@@ -25,7 +27,8 @@ export const ScheduleMatchFooter: FC<Props> = ({
   disabled,
   onClick,
   onReassignTimes,
-  onDownload
+  onDownload,
+  onDownloadJson
 }) => {
   const remoteUrl = useAtomValue(remoteApiUrlAtom);
   const { showErrorSnackbar } = useSnackbar();
@@ -60,6 +63,14 @@ export const ScheduleMatchFooter: FC<Props> = ({
         onClick={handleDownload}
       >
         Download
+      </Button>
+      <Button
+        color='default'
+        variant='outlined'
+        icon={<FileTextOutlined />}
+        onClick={onDownloadJson}
+      >
+        Download as JSON
       </Button>
       <Button
         color='blue'

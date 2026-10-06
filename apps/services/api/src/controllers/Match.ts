@@ -316,7 +316,22 @@ async function matchController(fastify: FastifyInstance) {
           'match',
           `eventKey = "${eventKey}"${sinceClause(since)}`
         );
-        reply.send(data);
+
+        // Nothing changed - skip the participants query rather than pulling the
+        // whole tournament's worth of rows to reconcile against an empty list.
+        if (data.length === 0) {
+          reply.send([]);
+          return;
+        }
+        // Fetch participants for the matches actually being returned. Ids come
+        // back from SQLite as numbers, but they are going into concatenated
+        // SQL, so coerce rather than trusting that.
+        const ids = data.map((match) => Number(match.id)).join(', ');
+        const participants = await db.selectAllWhere(
+          'match_participant',
+          `eventKey = "${eventKey}" AND id IN (${ids})`
+        );
+        reply.send(reconcileMatchParticipants(data, participants));
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
       }

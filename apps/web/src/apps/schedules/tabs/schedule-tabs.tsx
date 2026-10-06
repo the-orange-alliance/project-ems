@@ -6,6 +6,7 @@ import { ScheduleParticipants } from './schedule-participants.js';
 import { ScheduleParams as EventScheduleParams } from './schedule-params.js';
 import { ScheduleMatches } from './schedule-matches.js';
 import { MatchEditor } from './match-editor.js';
+import { ScheduleStats } from './schedule-stats.js';
 
 interface Props {
   tournamentKey: string | null;
@@ -73,10 +74,23 @@ export const ScheduleTabs: FC<Props> = ({
     },
     {
       key: '3',
-      label: 'Match Editor',
+      label: 'Schedule Stats',
       disabled: !eventSchedule,
       children: (
         <TabPanel value={parseInt(value)} index={3}>
+          <ScheduleStats
+            eventSchedule={eventSchedule}
+            savedMatches={savedMatches}
+          />
+        </TabPanel>
+      )
+    },
+    {
+      key: '4',
+      label: 'Match Editor',
+      disabled: !eventSchedule,
+      children: (
+        <TabPanel value={parseInt(value)} index={4}>
           <MatchEditor
             eventSchedule={eventSchedule}
             onEventScheduleChange={onEventScheduleChange}

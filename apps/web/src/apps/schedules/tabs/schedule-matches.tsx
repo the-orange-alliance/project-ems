@@ -25,6 +25,8 @@ import { resultsSyncApi } from 'src/api/use-results-sync.js';
 import { FixedMatches } from '../match-gen/fixed-matches.js';
 import { useAtom } from 'jotai';
 import { matchesAtom } from 'src/stores/state/event.js';
+import { downloadJson } from 'src/util/download-json.js';
+import { useScheduleMatches } from '../util/use-schedule-matches.js';
 
 interface Props {
   eventSchedule?: ScheduleParams;
@@ -49,10 +51,10 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
   const hasMatchesWithScores = savedMatches
     ? savedMatches.some((m) => m.result && m.result > RESULT_NOT_PLAYED)
     : false;
-  const matchesToDisplay =
-    savedMatches && savedMatches.length
-      ? savedMatches
-      : matches.filter((m) => m.tournamentKey === eventSchedule?.tournamentKey);
+  const matchesToDisplay = useScheduleMatches(
+    eventSchedule?.tournamentKey,
+    savedMatches
+  );
 
   const saveSchedule = async () => {
     setLoading(true);
@@ -110,6 +112,15 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
     }
   };
 
+  const handleDownloadJson = () => {
+    if (!eventSchedule) return;
+    const { eventKey, tournamentKey } = eventSchedule;
+    downloadJson(
+      { eventKey, tournamentKey, matches: matchesToDisplay },
+      `${eventKey}-${tournamentKey}-schedule.json`
+    );
+  };
+
   const handleReassignTimes = async () => {
     setLoading(true);
     try {
@@ -155,6 +166,7 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
             onClick={saveSchedule}
             onReassignTimes={handleReassignTimes}
             onDownload={handleCreateMatches}
+            onDownloadJson={handleDownloadJson}
           />
         </>
       )}
