@@ -35,12 +35,17 @@ if (leaderApiHost) {
   console.warn(`[EMS]: Leader API host set to ${leaderApiHost}`);
 }
 
-if (remoteApiHost || import.meta.env.VITE_API_URL) {
-  const host = remoteApiHost ? remoteApiHost : import.meta.env.VITE_API_URL;
+if (remoteApiHost) {
+  const host = remoteApiHost;
   remoteClient.setBaseUrl(host);
 
   localStorage.setItem('remoteApiHost', `"${host}"`);
   console.warn(`[EMS]: Remote API host set to ${host}`);
+}
+
+if (import.meta.env.VITE_API_URL) {
+  localClient.setBaseUrl(import.meta.env.VITE_API_URL);
+  console.warn(`[EMS]: Local api url set to ${import.meta.env.VITE_API_URL}`);
 }
 
 SocketOptions.host = window.location.hostname;

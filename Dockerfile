@@ -17,7 +17,12 @@ COPY scripts ./scripts
 RUN npm ci
 
 ARG GIT_SHA
-ENV VITE_GIT_SHA=$GIT_SHA
+ARG VITE_BUILD_TYPE
+ARG VITE_API_URL
+
+ENV GIT_SHA=$GIT_SHA
+ENV VITE_BUILD_TYPE=$VITE_BUILD_TYPE
+ENV VITE_API_URL=$VITE_API_URL
 
 # Build only what we need (api, realtime, web)
 RUN npx turbo run build --filter=api --filter=realtime --filter=ems-web

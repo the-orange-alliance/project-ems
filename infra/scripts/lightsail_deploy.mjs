@@ -9,11 +9,13 @@ const run = (command) => {
 };
 
 const service = "project-ems";
-const profile = "kfly-root";
+const profile = "default";
 const region = "us-east-1";
 
 run("docker build --target backend -t ems-backend:dev .");
-run("docker build --target web -t ems-web:dev .");
+run(
+  'docker build --target web --build-arg VITE_API_URL="https://project-ems-backend.y690brx6b6bgr.us-east-1.cs.amazonlightsail.com" -t ems-web:dev .',
+);
 
 run(
   `aws lightsail push-container-image --profile ${profile} --region ${region} --service-name ${service}-backend --label backend-dev --image ems-backend:dev`,

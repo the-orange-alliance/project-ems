@@ -39,6 +39,11 @@ export enum CoopertitionBonus {
   Six = 40
 }
 
+export enum CoopertitionKnockdownBonus {
+  None = 0,
+  Bonus = 10
+}
+
 /**
  * LED <-> ball conversion helpers ("conversion calculator")
  *
@@ -134,6 +139,14 @@ export const ScoreTable = {
     if (zone3Count === 5) return CoopertitionBonus.Five;
     if (zone3Count === 4) return CoopertitionBonus.Four;
     return CoopertitionBonus.None;
+  },
+  CoopertitionKnockdownBonus: (details: MatchDetails) => {
+    const hasBonus =
+      details.wildfireInExtinguisher > details.wildfireInRedSuppressionUnit &&
+      details.wildfireInExtinguisher > details.wildfireInBlueSuppressionUnit;
+    return hasBonus
+      ? CoopertitionKnockdownBonus.Bonus
+      : CoopertitionKnockdownBonus.None;
   },
   MajorFoul: 0.1, // Needs to be applied to other alliance to be calculated properly
   MinorFoul: 0.05 // Needs to be applied to other alliance to be calculated properly
@@ -273,6 +286,12 @@ export const FGC26MatchDetailsZod = matchKeyZod.extend({
     .describe(
       'COOPERTITION BONUS points. This is a calculated value based on the BRACE states of all six ROBOTS.'
     ),
+  coopertitionKnockdownBonus: z
+    .nativeEnum(CoopertitionKnockdownBonus)
+    .default(CoopertitionKnockdownBonus.None)
+    .describe(
+      'COOPERTITION KNOCKDOWN BONUS points. This is a calculated value based on the WILDFIRE counts in the EXTINGUISHER and both SUPPRESSION UNITS.'
+    ),
   redClimbMultiplier: z
     .number()
     .min(0)
@@ -330,6 +349,7 @@ export const defaultMatchDetails: MatchDetails = {
   blueRobotTwoPartnerClimb: false,
   blueRobotThreePartnerClimb: false,
   coopertition: CoopertitionBonus.None,
+  coopertitionKnockdownBonus: CoopertitionKnockdownBonus.None,
   redClimbMultiplier: 0,
   blueClimbMultiplier: 0,
   redPartnerClimbPoints: 0,
@@ -631,6 +651,7 @@ export function calculatePlayoffsRankings(
 export function calculateRankingPoints(details: MatchDetails): MatchDetails {
   const copy = { ...details };
   copy.coopertition = ScoreTable.Coopertition(copy);
+  copy.coopertitionKnockdownBonus = ScoreTable.CoopertitionKnockdownBonus(copy);
   // Rounded to 2dp for display only (strips float artifacts like 1.1500000000000001);
   // calculateScore reads ScoreTable directly, so scoring is unaffected.
   copy.redClimbMultiplier =
@@ -671,7 +692,9 @@ export function calculateScore(
 
   const extinguisherPoints =
     details.wildfireInExtinguisher * ScoreTable.WildfireContainedExtinguisher;
-  const coopertitionPoints = ScoreTable.Coopertition(details);
+  const coopertitionPoints =
+    ScoreTable.Coopertition(details) +
+    ScoreTable.CoopertitionKnockdownBonus(details);
 
   const redScore =
     redSuppressionUnitPoints * redClimbMultiplier +
