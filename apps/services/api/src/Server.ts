@@ -31,6 +31,7 @@ import networkController from './controllers/Network.js';
 import resultsController from './controllers/Results.js';
 import socketClientsController from './controllers/SocketClients.js';
 import fcsController from './controllers/FCS.js';
+import syncController from './controllers/Sync.js';
 import logger from './util/Logger.js';
 import { initGlobal } from './db/EventDatabase.js';
 import {
@@ -39,6 +40,7 @@ import {
   serializerCompiler,
   validatorCompiler
 } from 'fastify-type-provider-zod';
+import multipart from '@fastify/multipart';
 import './util/GlobalSchema.js';
 import { handleErrors, handleNotFound } from './middleware/ErrorHandler.js';
 import { join } from 'path';
@@ -93,6 +95,12 @@ try {
 const fastify = Fastify({
   logger:
     env.get().nodeEnv === 'production' ? { level: 'warn' } : { level: 'info' }
+});
+
+fastify.register(multipart, {
+  limits: {
+    fileSize: 200 * 1024 * 1024 // 200MB limit (adjust if needed)
+  }
 });
 
 // Configure the process-wide coordinator before registering any encapsulated
@@ -183,7 +191,8 @@ await fastify.register(fastifySwagger, {
       { name: 'Sockets', description: 'Socket client related endpoints' },
       { name: 'FCS', description: 'FCS settings related endpoints' },
       { name: 'Webhooks', description: 'Webhook related endpoints' },
-      { name: 'Season Specific', description: 'Season specific endpoints' }
+      { name: 'Season Specific', description: 'Season specific endpoints' },
+      { name: 'Sync', description: 'Sync related endpoints' }
     ]
   },
   transform: jsonSchemaTransform,
@@ -224,6 +233,7 @@ await fastify.register(teamController, { prefix: '/teams' });
 await fastify.register(tournamentController, { prefix: '/tournament' });
 await fastify.register(webhooksController, { prefix: '/webhooks' });
 await fastify.register(seasonSpecificController, { prefix: '/seasonSpecific' });
+await fastify.register(syncController, { prefix: '/sync' });
 
 // 🧩 Global hook: triggers after any mutating request
 fastify.addHook('onResponse', (request, reply, done) => {
