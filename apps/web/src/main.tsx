@@ -9,7 +9,7 @@ import { AppContainer } from './App.js';
 import { useCurrentEvent } from './api/use-event-data.js';
 import { createStore, Provider, useAtomValue } from 'jotai';
 import { darkModeAtom } from './stores/state/ui.js';
-import { App as AntApp, ConfigProvider } from 'antd';
+import { App as AntApp, ConfigProvider, theme } from 'antd';
 import 'antd/dist/reset.css';
 import { localClient, remoteClient } from './api/http-clients.js';
 import { normalizeRemoteApiHost } from './util/remote-api-host.js';
@@ -51,6 +51,14 @@ if (import.meta.env.VITE_API_URL) {
 SocketOptions.host = window.location.hostname;
 SocketOptions.port = 8081;
 
+// Rendered before route content so ChromaLayout's later `body` rule still wins.
+function ThemedBody({ darkMode }: { darkMode: boolean }) {
+  const { token } = theme.useToken();
+  return (
+    <style>{`html { color-scheme: ${darkMode ? 'dark' : 'light'}; } body { background: ${token.colorBgLayout}; }`}</style>
+  );
+}
+
 function Main() {
   const darkMode = useAtomValue(darkModeAtom);
   const eventKey = useCurrentEvent().data?.eventKey;
@@ -60,6 +68,7 @@ function Main() {
       theme={useMemo(() => customfgcTheme(darkMode), [darkMode, eventKey])}
     >
       <AntApp component={false}>
+        <ThemedBody darkMode={darkMode} />
         <ModalProvider>
           <AppContainer />
         </ModalProvider>

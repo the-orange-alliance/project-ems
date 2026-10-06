@@ -32,7 +32,7 @@ export const DefaultLayout: FC<Props> = ({
         display: 'flex',
         justifyContent: 'center',
         paddingTop: '40px',
-        height: 'calc(100% - 40px - 16px)'
+        minHeight: 'calc(100% - 40px - 16px)'
       }}
     >
       <Content
