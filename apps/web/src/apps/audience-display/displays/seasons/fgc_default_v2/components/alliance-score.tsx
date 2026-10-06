@@ -43,76 +43,69 @@ const AllianceScore: React.FC<AllianceScoreProps> = ({
   const scoreCardStyle = {
     backgroundColor: `${allianceColor === 'red' ? '#991b1bca' : '#1e3a8aca'}`,
     borderRadius: '0.75rem',
-    padding: '1rem',
+    padding: '0.75rem 1.25rem',
     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
     width: '100%',
-    marginBottom: '1rem',
+    marginBottom: '0.75rem',
     border: `4px solid ${borderColor}`,
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center'
   };
 
+  // Breakdown items plus penalties, laid out two per row so seasons with
+  // several regional goals don't push the team list off the bottom of a 1080p
+  // screen.
+  const subScores = [
+    ...breakdown.map((item) => ({
+      title: item.title,
+      value: item.resultCalc(match, allianceColor),
+      color: 'white'
+    })),
+    {
+      title: `${
+        penaltyAlliance.charAt(0).toUpperCase() + penaltyAlliance.slice(1)
+      } Alliance Penalties`,
+      value: penaltyPoints,
+      color: '#d1d5db'
+    }
+  ];
+
   const leftSide = (
     <div
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.25rem',
-        textAlign: 'left'
+        display: 'grid',
+        gridTemplateColumns: subScores.length > 1 ? 'repeat(2, auto)' : 'auto',
+        columnGap: '1.5rem',
+        rowGap: '0.5rem',
+        textAlign: allianceColor === 'red' ? 'left' : 'right'
       }}
     >
-      <div>
-        {breakdown.map((item) => (
-          <React.Fragment key={item.title}>
-            <Typography.Text
-              style={{
-                fontSize: '1.2rem',
-                fontWeight: 'bold',
-                color: '#cbd5e1'
-              }}
-            >
-              {item.title}
-            </Typography.Text>
-            <Typography.Title
-              level={3}
-              style={{
-                color: 'white',
-                fontWeight: 'bold',
-                margin: 0,
-                fontSize: '2.4rem',
-                textAlign: allianceColor === 'red' ? 'left' : 'right'
-              }}
-            >
-              {item.resultCalc(match, allianceColor)}
-            </Typography.Title>
-          </React.Fragment>
-        ))}
-      </div>
-      <div>
-        <Typography.Text
-          style={{
-            fontSize: '1.2rem',
-            fontWeight: 'bold',
-            color: '#cbd5e1'
-          }}
-        >
-          {penaltyAlliance.charAt(0).toUpperCase() + penaltyAlliance.slice(1)}{' '}
-          Alliance Penalties
-        </Typography.Text>
-        <Typography.Title
-          level={3}
-          style={{
-            color: '#d1d5db',
-            fontWeight: 'bold',
-            margin: 0,
-            fontSize: '2.4rem',
-            textAlign: allianceColor === 'red' ? 'left' : 'right'
-          }}
-        >
-          {penaltyPoints}
-        </Typography.Title>
-      </div>
+      {subScores.map((item) => (
+        <div key={item.title}>
+          <Typography.Text
+            style={{
+              fontSize: '1.2rem',
+              fontWeight: 'bold',
+              color: '#cbd5e1'
+            }}
+          >
+            {item.title}
+          </Typography.Text>
+          <Typography.Title
+            level={3}
+            style={{
+              color: item.color,
+              fontWeight: 'bold',
+              margin: 0,
+              fontSize: '2.4rem',
+              lineHeight: 1.1
+            }}
+          >
+            {item.value}
+          </Typography.Title>
+        </div>
+      ))}
     </div>
   );
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Row, Col } from 'antd';
+import { Typography } from 'antd';
 import GlobalObjectiveItem, {
   GlobalObjectiveItemStream
 } from './global-objective-item.js';
@@ -42,6 +42,13 @@ const resolveStreamLayout = (count: number): GlobalObjectivesStreamLayout =>
 const isFullRowTile = (index: number, count: number): boolean =>
   count % 2 === 1 && index === count - 1;
 
+/**
+ * Full-screen results: up to three goals fit on one row, which keeps vertical
+ * room free for the alliance team lists (4 teams each in playoffs).
+ */
+const resolveFullColumns = (count: number): number =>
+  count <= 3 ? Math.max(count, 1) : 2;
+
 const GlobalObjectives: React.FC<GlobalObjectivesProps> = ({ match }) => {
   // try to get breakdown sheet
   const breakdown = getGlobalBreakdown(match);
@@ -65,26 +72,28 @@ const GlobalObjectives: React.FC<GlobalObjectivesProps> = ({ match }) => {
         style={{
           backgroundColor: '#10522c7a',
           borderRadius: '1.5rem',
-          padding: '1rem',
+          padding: '0.75rem',
           boxShadow:
             '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
           border: '2px solid #48bb78'
         }}
       >
-        <Row gutter={[16, 16]}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${resolveFullColumns(breakdown.length)}, 1fr)`,
+            gap: '0.75rem'
+          }}
+        >
           {breakdown.map((item, index) => (
-            <Col
+            <GlobalObjectiveItem
               key={index}
-              span={isFullRowTile(index, breakdown.length) ? 24 : 12}
-            >
-              <GlobalObjectiveItem
-                title={item.title}
-                value={item.resultCalc(match, 'red')}
-                color='#10522c'
-              />
-            </Col>
+              title={item.title}
+              value={item.resultCalc(match, 'red')}
+              color='#10522c'
+            />
           ))}
-        </Row>
+        </div>
       </div>
     </div>
   );
