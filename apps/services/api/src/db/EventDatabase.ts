@@ -483,11 +483,27 @@ export class EventDatabase {
     values: Record<keyof NonNullable<T>, unknown>[]
   ) {
     try {
-      const columns = this.getColumns(values);
-      const query = `INSERT INTO ${table} (${Array.from(
-        columns
-      ).toString()}) VALUES ${this.getValuesString(columns, values)};`;
-      return await this.db.all(query);
+      const columns = Array.from(this.getColumns(values));
+      if (values.length === 0 || columns.length === 0) return [];
+      // Bind values as parameters so strings containing quotes (e.g. "Côte d'Ivoire") are safe.
+      // Chunk rows to stay under SQLite's bound-variable limit.
+      const rowsPerQuery = Math.max(1, Math.floor(32000 / columns.length));
+      const rowPlaceholder = `(${columns.map(() => '?').join(',')})`;
+      const results: any[] = [];
+      for (let i = 0; i < values.length; i += rowsPerQuery) {
+        const chunk = values.slice(i, i + rowsPerQuery) as Record<
+          string,
+          unknown
+        >[];
+        const query = `INSERT INTO ${table} (${columns
+          .map((c) => `"${c}"`)
+          .join(',')}) VALUES ${chunk.map(() => rowPlaceholder).join(',')};`;
+        const params = chunk.flatMap((obj) =>
+          columns.map((col) => this.toParam(obj[col]))
+        );
+        results.push(...(await this.db.all(query, params)));
+      }
+      return results;
     } catch (e) {
       throw new ApiDatabaseError(table, e);
     }
@@ -499,9 +515,14 @@ export class EventDatabase {
     where: string
   ) {
     try {
-      const update = this.getUpdateString(value);
+      const valuesObj = value as Record<string, unknown>;
+      const columns = Object.keys(valuesObj);
+      const update = columns.map((col) => `"${col}" = ?`).join(', ');
       const query = `UPDATE ${table} SET ${update} WHERE ${where};`;
-      return await this.db.all(query);
+      return await this.db.all(
+        query,
+        columns.map((col) => this.toParam(valuesObj[col]))
+      );
     } catch (e) {
       throw new ApiDatabaseError(table, e);
     }
@@ -546,40 +567,11 @@ export class EventDatabase {
       .replace(/\r/g, '');
   }
 
-  private getUpdateString(value: Record<string, unknown>): string {
-    return (
-      Object.keys(value)
-        // Prevent mapping all values to strings inside of SQL, if it's a string, wrap in quotes, if not, don't use quotes
-        .map(
-          (key: string) =>
-            `"${key}" = ${
-              typeof value[key] === 'string' ? `"${value[key]}"` : value[key]
-            }`
-        )
-        .toString()
-    );
-  }
-
-  private getValuesString(
-    columns: Set<string>,
-    values: Record<string, unknown>[]
-  ): string {
-    return values
-      .map((obj: Record<string, unknown>) => {
-        const valuesStr = Array.from(columns)
-          .map((col) => {
-            if (typeof obj[col] === 'undefined') {
-              return 'null';
-            } else if (typeof obj[col] === 'string') {
-              return `'${obj[col]}'`;
-            } else {
-              return obj[col];
-            }
-          })
-          .toString();
-        return `(${valuesStr})`;
-      })
-      .toString();
+  private toParam(value: unknown): unknown {
+    if (typeof value === 'undefined') return null;
+    if (typeof value === 'number' && !Number.isFinite(value)) return null;
+    if (typeof value === 'boolean') return value ? 1 : 0;
+    return value;
   }
 
   private getColumns(values: Record<string, unknown>[]): Set<string> {
