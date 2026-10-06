@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import { Row, Col } from 'antd';
 import {
   Alliance,
@@ -59,9 +59,16 @@ const TeleScoreSheet: FC<Props> = ({
   const { data: teams } = useTeamsForEvent(match?.eventKey ?? '');
   const identifiers = useTeamIdentifiers();
 
-  const { data: fcsData } = useFcsData<Partial<FGC26FCS.SettingsType>>(
-    match?.fieldNumber ?? ''
-  );
+  const { data: fcsData, mutate: mutateFcsData } = useFcsData<
+    Partial<FGC26FCS.SettingsType>
+  >(match?.fieldNumber ?? '');
+
+  // Settings are fetched once and never revalidated on their own, so refetch whenever
+  // a new match is loaded to pick up changes (e.g. EXTINGUISHER visibility).
+  useEffect(() => {
+    if (match?.fieldNumber) mutateFcsData();
+  }, [match?.eventKey, match?.tournamentKey, match?.id, match?.fieldNumber]);
+
   const ratio =
     fcsData?.wildfireBallsPerLed ??
     FGC26FCS.DEFAULT_SETTINGS.wildfireBallsPerLed;
