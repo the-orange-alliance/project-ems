@@ -57,6 +57,11 @@ export const MatchProduction2026: FC<DisplayProps> = ({
     calc: (d: IgnitingInnovation.MatchDetails) => number
   ) => (details && isEndgame ? `x${calc(details).toFixed(2)}` : '');
 
+  const hasKnockdownBonus =
+    !!details &&
+    IgnitingInnovation.ScoreTable.CoopertitionKnockdownBonus(details) ===
+      IgnitingInnovation.CoopertitionKnockdownBonus.Bonus;
+
   return (
     <>
       <Row>
@@ -86,6 +91,7 @@ export const MatchProduction2026: FC<DisplayProps> = ({
         <ScoreContainer
           number={details?.wildfireInExtinguisher?.toString() ?? ''}
           label={'Extinguisher Points'}
+          color={hasKnockdownBonus ? 'green' : 'red'}
         />
         <ScoreContainer
           number={

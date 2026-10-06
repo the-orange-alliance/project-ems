@@ -4,11 +4,12 @@ import { matchZod } from './Match.js';
 /**
  * Events a webhook can be subscribed to. Every payload is `{ payload: Match }`.
  *
- * The first group is emitted directly. The `SCORES_POSTED_*` variants are
- * **subscription-side filters**, not separate emits: only `SCORES_POSTED` is
- * ever emitted, and `EmitWebhooks` decides the winner and delivers to whichever
- * of the coloured subscriptions matches. Subscribing to `SCORES_POSTED` itself
- * receives every posted result regardless of outcome.
+ * The first group is emitted directly. The `COMMITTED_*` and `SCORES_POSTED_*`
+ * variants are
+ * **subscription-side filters**, not separate emits: only `COMMITTED` or
+ * `SCORES_POSTED` is emitted, and `EmitWebhooks` compares the scores and delivers
+ * to whichever outcome subscription matches. Subscribing to the base event
+ * receives every result regardless of outcome.
  *
  * `PRODUCTION_ACTIVE`, `FORCE_LIGHTS_MATCH`, and `FORCE_LIGHTS_STANDBY` are the
  * production/broadcast control group (issue #262): manual or field-linking
@@ -27,6 +28,11 @@ export enum WebhookEvent {
   COMMITTED = 'COMMITTED',
   SCORES_POSTED = 'SCORES_POSTED',
 
+  // Filters on COMMITTED; see above. Never emitted on their own.
+  COMMITTED_RED = 'COMMITTED_RED',
+  COMMITTED_BLUE = 'COMMITTED_BLUE',
+  COMMITTED_TIED = 'COMMITTED_TIED',
+
   // Filters on SCORES_POSTED — see above. Never emitted on their own.
   SCORES_POSTED_RED = 'SCORES_POSTED_RED',
   SCORES_POSTED_BLUE = 'SCORES_POSTED_BLUE',
@@ -36,7 +42,7 @@ export enum WebhookEvent {
   PRODUCTION_ACTIVE = 'PRODUCTION_ACTIVE',
   FORCE_LIGHTS_MATCH = 'FORCE_LIGHTS_MATCH',
   FORCE_LIGHTS_STANDBY = 'FORCE_LIGHTS_STANDBY'
-};
+}
 
 export const SendWebhookSchema = z.object({
   event: z.nativeEnum(WebhookEvent),

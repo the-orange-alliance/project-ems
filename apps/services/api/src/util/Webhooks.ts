@@ -4,6 +4,20 @@ import { getDB } from '../db/EventDatabase.js';
 
 const AbortController = globalThis.AbortController;
 
+// Outcome variants are subscription filters; deliveries carry the base event.
+const OUTCOME_SUBSCRIPTIONS = {
+  [WebhookEvent.COMMITTED]: {
+    RED: WebhookEvent.COMMITTED_RED,
+    BLUE: WebhookEvent.COMMITTED_BLUE,
+    TIED: WebhookEvent.COMMITTED_TIED
+  },
+  [WebhookEvent.SCORES_POSTED]: {
+    RED: WebhookEvent.SCORES_POSTED_RED,
+    BLUE: WebhookEvent.SCORES_POSTED_BLUE,
+    TIED: WebhookEvent.SCORES_POSTED_TIED
+  }
+};
+
 /**
  * Match fields that are owned by the database rather than by the client that
  * triggered the webhook. These get overlaid onto the payload before it goes
@@ -154,11 +168,23 @@ export const EmitWebhooks = async (
   const payload = await withPersistedFields(match);
 
   const db = await getDB('global');
-  const andClause =
+  const outcomeSubscriptions =
+    webhookEvent === WebhookEvent.COMMITTED ||
     webhookEvent === WebhookEvent.SCORES_POSTED
-      ? `AND subscribedEvent IN ('${WebhookEvent.SCORES_POSTED}', '${WebhookEvent.SCORES_POSTED_RED}', '${WebhookEvent.SCORES_POSTED_BLUE}', '${WebhookEvent.SCORES_POSTED_TIED}')`
-      : '';
-  const initialClause = webhookEvent === WebhookEvent.SCORES_POSTED ? '' : `subscribedEvent = '${webhookEvent}' AND `;
+      ? OUTCOME_SUBSCRIPTIONS[webhookEvent]
+      : undefined;
+  const subscriptions = outcomeSubscriptions
+    ? [webhookEvent, ...Object.values(outcomeSubscriptions)]
+    : [webhookEvent];
+  const subscriptionClause = `subscribedEvent IN (${subscriptions
+    .map((event) => `'${event}'`)
+    .join(', ')})`;
+  const winner =
+    payload.redScore > payload.blueScore
+      ? 'RED'
+      : payload.blueScore > payload.redScore
+        ? 'BLUE'
+        : 'TIED';
   // A webhook with no `field` set is subscribed to every field. If we can't
   // determine which field this match is on, those all-field subscribers should
   // still fire — interpolating a non-numeric fieldNumber straight into the SQL
@@ -168,36 +194,17 @@ export const EmitWebhooks = async (
     : 'field IS NULL';
   const webhooks = (await db.selectAllWhere(
     'webhooks',
-    `${initialClause} enabled = 1 AND ${fieldClause} ${andClause}`
+    `${subscriptionClause} AND enabled = 1 AND ${fieldClause}`
   )) as WebhookDb[];
   for (const webhook of webhooks) {
     if (webhook) {
-      let winner: 'RED' | 'BLUE' | 'TIED' | null = null;
-      // Calculate the winner
-      if (webhookEvent === WebhookEvent.SCORES_POSTED) {
-        if (payload.redScore > payload.blueScore) {
-          winner = 'RED';
-        } else if (payload.blueScore > payload.redScore) {
-          winner = 'BLUE';
-        } else {
-          winner = 'TIED';
-        }
-      }
-      // Determine if we should trigger based on winner
-      const triggerIfWinner =
-        (webhook.subscribedEvent === WebhookEvent.SCORES_POSTED_RED &&
-          winner === 'RED') ||
-        (webhook.subscribedEvent === WebhookEvent.SCORES_POSTED_BLUE &&
-          winner === 'BLUE') ||
-        (webhook.subscribedEvent === WebhookEvent.SCORES_POSTED_TIED &&
-          winner === 'TIED');
-      // for non scores posted events, always trigger
-      const notScoresPosted = webhookEvent !== WebhookEvent.SCORES_POSTED;
-      // for generic SCORES_POSTED event, always trigger
-      const isScoresPostedGeneric = webhook.subscribedEvent === WebhookEvent.SCORES_POSTED;
+      // Generic subscribers receive every outcome; variants receive only theirs.
+      const shouldTrigger =
+        !outcomeSubscriptions ||
+        webhook.subscribedEvent === webhookEvent ||
+        webhook.subscribedEvent === outcomeSubscriptions[winner];
 
-      // Send the webhook
-      if (triggerIfWinner || notScoresPosted || isScoresPostedGeneric) {
+      if (shouldTrigger) {
         try {
           const controller = new AbortController();
           const timeout = setTimeout(() => {
