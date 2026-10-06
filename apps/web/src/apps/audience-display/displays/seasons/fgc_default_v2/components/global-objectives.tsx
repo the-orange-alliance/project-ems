@@ -38,6 +38,10 @@ const STACKED_LAYOUT_MAX_ITEMS = 2;
 const resolveStreamLayout = (count: number): GlobalObjectivesStreamLayout =>
   count <= STACKED_LAYOUT_MAX_ITEMS ? 'stacked' : 'grid';
 
+/** In a 2-up grid with an odd count, the last tile spans the full row. */
+const isFullRowTile = (index: number, count: number): boolean =>
+  count % 2 === 1 && index === count - 1;
+
 const GlobalObjectives: React.FC<GlobalObjectivesProps> = ({ match }) => {
   // try to get breakdown sheet
   const breakdown = getGlobalBreakdown(match);
@@ -69,7 +73,10 @@ const GlobalObjectives: React.FC<GlobalObjectivesProps> = ({ match }) => {
       >
         <Row gutter={[16, 16]}>
           {breakdown.map((item, index) => (
-            <Col key={index} span={12}>
+            <Col
+              key={index}
+              span={isFullRowTile(index, breakdown.length) ? 24 : 12}
+            >
               <GlobalObjectiveItem
                 title={item.title}
                 value={item.resultCalc(match, 'red')}
@@ -109,12 +116,21 @@ export const GlobalObjectivesStream: React.FC<GlobalObjectivesProps> = ({
         }}
       >
         {breakdown.map((item, index) => (
-          <GlobalObjectiveItemStream
+          <div
             key={index}
-            title={item.title}
-            value={item.resultCalc(match, 'red')}
-            color='#10522c'
-          />
+            style={{
+              gridColumn:
+                layout === 'grid' && isFullRowTile(index, breakdown.length)
+                  ? '1 / -1'
+                  : undefined
+            }}
+          >
+            <GlobalObjectiveItemStream
+              title={item.title}
+              value={item.resultCalc(match, 'red')}
+              color='#10522c'
+            />
+          </div>
         ))}
       </div>
     </div>

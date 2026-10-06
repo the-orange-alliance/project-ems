@@ -54,6 +54,21 @@ export const GlobalBreakdownFGC26: ResultsBreakdown<IgnitingInnovation.MatchDeta
     },
     {
       icon: <FireOutlined style={{ fontSize: 'inherit' }} />,
+      title: 'Knockdown Bonus',
+      color: '#000000',
+      resultCalc: (match) => {
+        if (!match.details)
+          return `None (+${IgnitingInnovation.CoopertitionKnockdownBonus.None})`;
+        switch (match.details.coopertitionKnockdownBonus) {
+          case IgnitingInnovation.CoopertitionKnockdownBonus.Bonus:
+            return `Achieved (+${IgnitingInnovation.CoopertitionKnockdownBonus.Bonus})`;
+          default:
+            return `None (+${IgnitingInnovation.CoopertitionKnockdownBonus.None})`;
+        }
+      }
+    },
+    {
+      icon: <FireOutlined style={{ fontSize: 'inherit' }} />,
       title: 'Coopertition Bonus',
       color: '#000000',
       resultCalc: (match) => {

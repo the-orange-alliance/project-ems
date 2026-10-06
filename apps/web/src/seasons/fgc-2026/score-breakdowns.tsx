@@ -355,6 +355,26 @@ export const CombinedBreakdown: FC<
             title={undefined}
           />
         </Col>
+        <Col xs={12}>
+          <Typography.Text>Knockdown Bonus (Calculated)</Typography.Text>
+          <StateToggle
+            states={[
+              IgnitingInnovation.CoopertitionKnockdownBonus.None,
+              IgnitingInnovation.CoopertitionKnockdownBonus.Bonus
+            ]}
+            stateLabels={[
+              'None (+0)',
+              `Knockdown (+${IgnitingInnovation.CoopertitionKnockdownBonus.Bonus})`
+            ]}
+            value={
+              match?.details?.coopertitionKnockdownBonus ??
+              IgnitingInnovation.CoopertitionKnockdownBonus.None
+            }
+            disabled
+            fullWidth
+            title={undefined}
+          />
+        </Col>
       </Row>
     </>
   );
