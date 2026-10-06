@@ -10,8 +10,9 @@ export const ScoreContainer: FC<{
   wide?: boolean;
   medium?: boolean;
   bg?: string;
+  color?: string;
   smallFont?: boolean;
-}> = ({ number, label, medium, wide, bg, smallFont }) => {
+}> = ({ number, label, medium, wide, bg, color, smallFont }) => {
   return (
     <div>
       <div
@@ -31,6 +32,8 @@ export const ScoreContainer: FC<{
           justifyContent: 'center',
           fontFamily: 'Tomarik Brush',
           backgroundColor: bg ? bg : undefined,
+          color: color ? color : undefined,
+          transition: 'color 0.5s ease',
           paddingBottom: '30px'
         }}
       >
