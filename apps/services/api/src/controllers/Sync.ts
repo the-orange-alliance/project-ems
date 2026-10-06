@@ -5,7 +5,7 @@ import { ZipArchive } from 'archiver';
 import extract from 'extract-zip';
 import { pipeline } from 'stream/promises';
 import { getAppData } from '@toa-lib/server';
-import { closeDB, getDB } from '../db/EventDatabase.js';
+import { closeDB, getDB, __dirname } from '../db/EventDatabase.js';
 
 async function syncController(fastify: FastifyInstance) {
   fastify.get(
