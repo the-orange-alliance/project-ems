@@ -56,7 +56,7 @@ export const MatchPreview: FC<DisplayProps> = ({ match, ranks }) => {
         <LogoContainer>
           <Logo src={FGC_LOGO} />
         </LogoContainer>
-        <MatchTitle match={match} />
+        <MatchTitle match={match} fontSize='3.6vh' />
         <AlliancePreview
           alliance='red'
           participants={match.participants ?? []}

@@ -14,6 +14,30 @@ export type RemoteConfigKey = (typeof REMOTE_CONFIG_KEYS)[number];
 
 export const CONFIGURATOR_PATH = 'configurator';
 
+/** Query param naming the page (relative to the event) to land on after configuring. */
+export const REDIRECT_PARAM = 'redirect';
+
+/**
+ * Resolves where the configurator should send the browser once settings are
+ * stored: `/<eventKey>/<redirect>`, keeping any query string or hash in the
+ * redirect value. Falls back to the event home when there is no redirect, or
+ * when the redirect would leave this origin or the event.
+ */
+export const resolveConfiguratorRedirect = (
+  eventKey: string,
+  params: URLSearchParams
+) => {
+  const home = `/${eventKey}`;
+  const redirect = params.get(REDIRECT_PARAM)?.trim().replace(/^\/+/, '');
+  if (!redirect) return home;
+  const { origin } = window.location;
+  const target = new URL(`${home}/${redirect}`, origin);
+  if (target.origin !== origin || !target.pathname.startsWith(`${home}/`)) {
+    return home;
+  }
+  return `${target.pathname}${target.search}${target.hash}`;
+};
+
 /**
  * Writes the forwarded keys found in `params` into this browser's
  * localStorage, using the JSON encoding `atomWithStorage` reads back.
