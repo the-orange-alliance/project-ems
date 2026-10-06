@@ -1,4 +1,4 @@
-import { FC, useRef } from 'react';
+import { FC, useRef, useState } from 'react';
 import { SyncPlatform, TeamKeys, TeamKeysLables } from '@toa-lib/models';
 import { socketApi } from 'src/api/use-socket-data.js';
 import { localClient, remoteClient } from 'src/api/http-clients.js';
@@ -29,7 +29,7 @@ import FileRow from 'src/components/settings/file-row.js';
 
 const GlobalSettings: FC = () => {
   const defaultLocalBaseUrl = `${window.location.protocol}//${window.location.hostname}:8080`;
-  const { showErrorSnackbar } = useSnackbar();
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
   const [darkMode, setDarkMode] = useAtom(darkModeSettingAtom);
   const [teamIdentifier, setTeamIdentifier] = useAtom(teamIdentifierAtom);
   const [followerMode, setFollowerMode] = useAtom(isFollowerAtom);
@@ -39,6 +39,9 @@ const GlobalSettings: FC = () => {
   const [remoteUrl, setRemoteUrl] = useAtom(remoteApiUrlAtom);
   const timeoutRef1 = useRef<any>(null);
   const timeoutRef = useRef<any>(null);
+
+  const [exportDownloading, setExportDownloading] = useState(false);
+  const [importUploading, setImportUploading] = useState(false);
 
   const startAudio = initAudio(MATCH_START);
 
@@ -92,18 +95,42 @@ const GlobalSettings: FC = () => {
 
   const handleExportDownload = async () => {
     try {
-      await syncApi.export();
-    } catch (e) {
-      showErrorSnackbar('Error while downloading export data from remote.', e);
+      setExportDownloading(true);
+      const blob = await syncApi.export();
+
+      if (!blob) {
+        throw new Error('Export failed: No data received from server.');
+      }
+
+      // Trigger browser file download
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `ems-backup-${new Date().toISOString()}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err: any) {
+      showErrorSnackbar(
+        'Error while downloading export data from remote.',
+        err
+      );
+    } finally {
+      setExportDownloading(false);
     }
   };
 
   const handleImportUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     try {
+      setImportUploading(true);
       await syncApi.import(files[0]);
+      showSnackbar('Import successful. Please refresh the web page.');
     } catch (e) {
       showErrorSnackbar('Error while uploading import data to remote.', e);
+    } finally {
+      setImportUploading(false);
     }
   };
 
@@ -181,11 +208,13 @@ const GlobalSettings: FC = () => {
         title='Remote API Export'
         buttonText='Download'
         onClick={handleExportDownload}
+        loading={exportDownloading}
       />
       <FileRow
         title='Restore from Backup'
         buttonText='Upload'
         onFilesSelected={handleImportUpload}
+        loading={importUploading}
       />
     </Space>
   );

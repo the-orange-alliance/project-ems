@@ -76,6 +76,48 @@ export class HttpClient<TError = unknown> {
     }
   }
 
+  private buildHeaders(
+    body: unknown,
+    customHeaders?: HeadersInit,
+    defaultHeaders?: HeadersInit
+  ): Headers {
+    const headers = new Headers();
+
+    const combinedDefaults = { ...defaultHeaders, ...customHeaders };
+    Object.entries(combinedDefaults).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        headers.set(key, String(value));
+      }
+    });
+
+    if (!headers.has('Content-Type')) {
+      if (body instanceof FormData) {
+        // MUST leave unset so fetch automatically injects multipart/form-data; boundary=...
+      } else if (body instanceof Blob || body instanceof ArrayBuffer) {
+        headers.set('Content-Type', 'application/octet-stream');
+      } else if (typeof body === 'object' && body !== null) {
+        headers.set('Content-Type', 'application/json');
+      } else if (typeof body === 'string') {
+        headers.set('Content-Type', 'text/plain');
+      }
+    }
+
+    return headers;
+  }
+
+  private serializeBody(body: unknown): BodyInit | undefined {
+    if (body === undefined || body === null) return undefined;
+    if (
+      body instanceof FormData ||
+      body instanceof Blob ||
+      body instanceof ArrayBuffer ||
+      typeof body === 'string'
+    ) {
+      return body;
+    }
+    return JSON.stringify(body);
+  }
+
   public async request<T = unknown>(
     endpoint: string,
     options: RequestOptions<T> = {}
@@ -93,14 +135,13 @@ export class HttpClient<TError = unknown> {
       ? await this.config.getDefaultHeaders()
       : {};
 
+    const requestHeaders = this.buildHeaders(body, headers, defaultHeaders);
+    const requestBody = this.serializeBody(body);
+
     const response = await fetch(url.toString(), {
       method,
-      headers: new Headers({
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
-        ...defaultHeaders,
-        ...headers
-      }),
-      body: body ? JSON.stringify(body) : undefined
+      headers: requestHeaders,
+      body: requestBody
     });
 
     if (!response.ok) {

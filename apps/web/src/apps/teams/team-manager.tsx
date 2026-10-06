@@ -56,7 +56,9 @@ export const TeamManager: FC = () => {
           team.teamKey,
           team.teamNumber,
           team.teamNameShort,
-          team.teamNameLong
+          team.teamNameLong,
+          team.country,
+          team.countryCode
         ].some((value) =>
           String(value).toLowerCase().includes(normalizedTeamSearch)
         )

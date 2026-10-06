@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
-import { Tag } from 'antd';
+import { Tag, Tooltip } from 'antd';
 import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
@@ -9,10 +9,16 @@ import {
 // import { useAtomValue } from 'jotai';
 // import { userAtom } from 'src/stores/state/ui.js';
 
-export const ConnectionChip: FC = () => {
+export const ConnectionChip: FC<{ iconOnly?: boolean }> = ({ iconOnly }) => {
   const { connected } = useSocketWorker();
   const user = true; //  useAtomValue(userAtom);
-  return (
+  const label =
+    connected && user
+      ? 'Connected'
+      : !user
+        ? 'Please Login'
+        : 'Socket Not Connected';
+  const chip = (
     <Tag
       icon={
         connected && user ? (
@@ -28,14 +34,12 @@ export const ConnectionChip: FC = () => {
       }
       style={{
         fontSize: 'large',
-        padding: '8px'
+        padding: '8px',
+        ...(iconOnly && { marginInlineEnd: 0 })
       }}
     >
-      {connected && user
-        ? 'Connected'
-        : !user
-          ? 'Please Login'
-          : 'Socket Not Connected'}
+      {!iconOnly && label}
     </Tag>
   );
+  return iconOnly ? <Tooltip title={label}>{chip}</Tooltip> : chip;
 };

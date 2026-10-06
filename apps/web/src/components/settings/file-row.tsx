@@ -11,6 +11,7 @@ interface FileRowProps {
   multiple?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  loading?: boolean;
   /** Called with the FileList or null when selection changes */
   onFilesSelected?: (files: FileList | null) => void;
 }
@@ -22,6 +23,7 @@ const FileRow: React.FC<FileRowProps> = ({
   multiple = false,
   disabled = false,
   placeholder = 'No file selected',
+  loading,
   onFilesSelected
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -61,7 +63,7 @@ const FileRow: React.FC<FileRowProps> = ({
             multiple={multiple}
             onChange={onChange}
           />
-          <Button onClick={openPicker} disabled={disabled}>
+          <Button onClick={openPicker} disabled={disabled} loading={loading}>
             {buttonText}
           </Button>
           <Text

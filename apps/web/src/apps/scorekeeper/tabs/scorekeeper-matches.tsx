@@ -26,7 +26,7 @@ export const ScorekeeperMatches: FC<Props> = ({
   onMatchSelect
 }) => {
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <TournamentDropdown
         tournaments={tournaments}
         value={tournamentKey}
@@ -41,6 +41,6 @@ export const ScorekeeperMatches: FC<Props> = ({
         onSelect={onMatchSelect}
         disabled={disabled}
       />
-    </>
+    </div>
   );
 };
