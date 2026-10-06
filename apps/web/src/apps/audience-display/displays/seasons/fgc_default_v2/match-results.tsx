@@ -25,22 +25,26 @@ export const MatchResults: FC<DisplayProps> = ({ match, teams }) => {
       <DisplayHeader title={`Results | ${match.name}`} />
       <div
         style={{
-          padding: '0rem 15rem'
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          // `safe` keeps overflow below the header instead of spilling over it
+          justifyContent: 'safe center',
+          padding: '0rem 6rem'
         }}
       >
         <GlobalObjectives match={match} />
         <div
           style={{
-            flex: 1,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
             width: '100%',
-            marginTop: '1rem'
+            marginTop: '0.5rem'
           }}
         >
-          <Row gutter={[16, 16]} style={{ width: '100%', height: '100%' }}>
+          <Row gutter={[24, 16]} style={{ width: '100%' }}>
             <Col span={12} style={{ display: 'flex' }}>
               <AllianceSheet match={match} teams={teams} allianceColor='red' />
             </Col>

@@ -92,7 +92,7 @@ const AllianceSheet: React.FC<AllianceSheetProps> = ({
         allianceColor={allianceColor}
         isWinning={win}
       />
-      <div style={{ marginTop: 24, width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <AllianceTeams
           teams={allianceTeams ?? []}
           large
