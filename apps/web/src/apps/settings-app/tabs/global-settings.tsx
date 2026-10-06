@@ -23,11 +23,13 @@ import {
   MATCH_START
 } from 'src/apps/audience-display/audio/index.js';
 import { normalizeRemoteApiHost } from 'src/util/remote-api-host.js';
-// import { useGitHubDownload } from '../util/use-github-download.js';
+import { syncApi } from 'src/api/sync-api.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import FileRow from 'src/components/settings/file-row.js';
 
 const GlobalSettings: FC = () => {
   const defaultLocalBaseUrl = `${window.location.protocol}//${window.location.hostname}:8080`;
-
+  const { showErrorSnackbar } = useSnackbar();
   const [darkMode, setDarkMode] = useAtom(darkModeSettingAtom);
   const [teamIdentifier, setTeamIdentifier] = useAtom(teamIdentifierAtom);
   const [followerMode, setFollowerMode] = useAtom(isFollowerAtom);
@@ -35,7 +37,6 @@ const GlobalSettings: FC = () => {
   const [syncPlatform, setSyncPlatform] = useAtom(syncPlatformAtom);
   const [syncApiKey, setSyncApiKey] = useAtom(syncApiKeyAtom);
   const [remoteUrl, setRemoteUrl] = useAtom(remoteApiUrlAtom);
-  // const downloadRelease = useGitHubDownload();
   const timeoutRef1 = useRef<any>(null);
   const timeoutRef = useRef<any>(null);
 
@@ -87,19 +88,24 @@ const GlobalSettings: FC = () => {
     }, 1000);
   };
 
-  // const download = async () => {
-  //   try {
-  //     const releaseUrl = await downloadRelease();
-  //     const link = document.createElement('a');
-  //     link.download = 'ems-latest';
-  //     link.href = releaseUrl;
-  //     link.click();
-  //   } catch (e) {
-  //     console.error(e);
-  //   }
-  // };
-
   const handleClear = () => localStorage.clear();
+
+  const handleExportDownload = async () => {
+    try {
+      await syncApi.export();
+    } catch (e) {
+      showErrorSnackbar('Error while downloading export data from remote.', e);
+    }
+  };
+
+  const handleImportUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    try {
+      await syncApi.import(files[0]);
+    } catch (e) {
+      showErrorSnackbar('Error while uploading import data to remote.', e);
+    }
+  };
 
   return (
     <Space orientation='vertical' style={{ width: '100%' }}>
@@ -155,11 +161,6 @@ const GlobalSettings: FC = () => {
         color='danger'
         onClick={handleClear}
       />
-      {/* <ButtonRow
-        title='Check For Updates'
-        buttonText='Check Now'
-        onClick={download}
-      /> */}
       <ButtonRow
         title='Test Audio'
         buttonText='Play'
@@ -175,6 +176,16 @@ const GlobalSettings: FC = () => {
             nextValue ? normalizeRemoteApiHost(nextValue) : defaultLocalBaseUrl
           );
         }}
+      />
+      <ButtonRow
+        title='Remote API Export'
+        buttonText='Download'
+        onClick={handleExportDownload}
+      />
+      <FileRow
+        title='Restore from Backup'
+        buttonText='Upload'
+        onFilesSelected={handleImportUpload}
       />
     </Space>
   );

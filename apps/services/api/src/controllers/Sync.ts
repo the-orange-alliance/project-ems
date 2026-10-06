@@ -5,9 +5,9 @@ import { ZipArchive } from 'archiver';
 import extract from 'extract-zip';
 import { pipeline } from 'stream/promises';
 import { getAppData } from '@toa-lib/server';
+import { closeDB, getDB } from '../db/EventDatabase.js';
 
 async function syncController(fastify: FastifyInstance) {
-  // 1. Export Endpoint (Download %APPDATA%/ems as zip)
   fastify.get(
     '/export',
     async (request: FastifyRequest, reply: FastifyReply) => {
@@ -21,7 +21,6 @@ async function syncController(fastify: FastifyInstance) {
 
       const archive = new ZipArchive({ zlib: { level: 9 } });
 
-      // Set download headers
       reply
         .header('Content-Type', 'application/zip')
         .header(
@@ -37,7 +36,6 @@ async function syncController(fastify: FastifyInstance) {
     }
   );
 
-  // 2. Import Endpoint (Upload zip & extract to %APPDATA%/ems)
   fastify.post(
     '/import',
     async (request: FastifyRequest, reply: FastifyReply) => {
@@ -55,25 +53,24 @@ async function syncController(fastify: FastifyInstance) {
         // Stream the uploaded file to disk temporarily
         await pipeline(data.file, fs.createWriteStream(tempZipPath));
 
-        // 1. TODO: Destroy active DB connection pool if running
-        // await dbConnection.destroy();
+        const global = await getDB('global');
+        const events = await global.selectAll('events');
 
-        // 2. Clear current APPDATA/ems directory
+        await closeDB('global');
+        for (const event of events) {
+          await closeDB(event.id);
+        }
+
         if (fs.existsSync(targetDir)) {
           fs.rmSync(targetDir, { recursive: true, force: true });
         }
         fs.mkdirSync(targetDir, { recursive: true });
 
-        // 3. Extract the uploaded archive into APPDATA/ems
         await extract(tempZipPath, { dir: targetDir });
 
-        // 4. Remove temp file
         if (fs.existsSync(tempZipPath)) {
           fs.unlinkSync(tempZipPath);
         }
-
-        // 5. TODO: Re-initialize DB connection pool
-        // await dbConnection.initialize();
 
         return reply.status(200).send({
           success: true,
