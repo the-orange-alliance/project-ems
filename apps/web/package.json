@@ -1,7 +1,7 @@
 {
   "name": "ems-web",
   "private": true,
-  "version": "0.0.0",
+  "version": "26.0.1",
   "type": "module",
   "scripts": {
     "dev": "node scripts/generate-flag-data.mjs && vite --host",

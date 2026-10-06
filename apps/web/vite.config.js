@@ -2,8 +2,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+import { version } from './package.json';
 
 export default defineConfig({
+  define: {
+    'import.meta.env.APP_VERSION': JSON.stringify(version)
+  },
   plugins: [
     react(),
     {

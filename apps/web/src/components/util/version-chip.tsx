@@ -3,15 +3,15 @@ import { Tag, Tooltip } from 'antd';
 import { FC } from 'react';
 
 export const VersionChip: FC<{ iconOnly?: boolean }> = ({ iconOnly }) => {
-  const gitSha = import.meta.env.VITE_GIT_SHA ?? 'LOCAL';
+  const appVersion = import.meta.env.APP_VERSION ?? 'LOCAL';
   const chip = (
     <Tag
       icon={<CodeOutlined />}
       color='gold'
       style={{ fontSize: 'large', padding: '8px', marginInlineEnd: 0 }}
     >
-      {!iconOnly && gitSha}
+      {!iconOnly && `v${appVersion}`}
     </Tag>
   );
-  return iconOnly ? <Tooltip title={gitSha}>{chip}</Tooltip> : chip;
+  return iconOnly ? <Tooltip title={appVersion}>{chip}</Tooltip> : chip;
 };
