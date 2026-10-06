@@ -12,6 +12,7 @@ interface BooleanRowProps {
   variant?: ButtonVariantType;
   color?: ButtonColorType;
   disabled?: boolean;
+  loading?: boolean;
   onClick?: MouseEventHandler;
 }
 
@@ -19,6 +20,7 @@ const BooleanRow: React.FC<BooleanRowProps> = ({
   title,
   buttonText,
   disabled,
+  loading,
   onClick,
   variant,
   color
@@ -33,6 +35,7 @@ const BooleanRow: React.FC<BooleanRowProps> = ({
           color={color}
           danger={color === 'danger'}
           disabled={disabled}
+          loading={loading}
         >
           {buttonText}
         </Button>
