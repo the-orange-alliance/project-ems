@@ -12,7 +12,6 @@ import {
 export const ConnectionChip: FC = () => {
   const { connected } = useSocketWorker();
   const user = true; //  useAtomValue(userAtom);
-
   return (
     <Tag
       icon={
