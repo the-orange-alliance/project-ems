@@ -18,6 +18,7 @@ import {
   toMenuItems,
   useProductionOptionsItems
 } from 'src/apps/scorekeeper/hooks/use-production-options.js';
+import { MetadataChips } from '../util/metadata-chips.js';
 
 const { Header } = Layout;
 
@@ -94,6 +95,7 @@ const PrimaryAppbar: FC = () => {
       <div style={{ gap: '8px', display: 'flex', alignItems: 'center' }}>
         <ConnectionChip />
         <VersionChip />
+        <MetadataChips />
       </div>
       {user ? (
         <>
