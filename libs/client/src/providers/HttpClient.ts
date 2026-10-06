@@ -1,7 +1,7 @@
 import { ZodType } from 'zod';
 import { HttpError } from '../types/HttpError.js';
 
-type ResponseType = 'json' | 'blob' | 'arrayBuffer' | 'text';
+type ResponseType = 'json' | 'blob' | 'arrayBuffer' | 'text' | 'zip';
 
 /**
  * HTTP client request options.
@@ -62,6 +62,8 @@ export class HttpClient<TError = unknown> {
           return await response.arrayBuffer();
         case 'text':
           return await response.text();
+        case 'zip':
+          return await response.blob();
         default:
           return await response.json();
       }

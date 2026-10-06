@@ -82,6 +82,15 @@ export async function getDB(name: string): Promise<EventDatabase> {
   return pending;
 }
 
+export async function closeDB(name: string): Promise<void> {
+  const pending = eventMap.get(name);
+  if (pending) {
+    const db = await pending;
+    await db.db.close();
+    eventMap.delete(name);
+  }
+}
+
 export async function initGlobal(): Promise<void> {
   const { appRoot } = env.get();
   if (appRoot && existsSync(appRoot)) {
