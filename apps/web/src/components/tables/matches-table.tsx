@@ -28,7 +28,8 @@ export const MatchTable: FC<Props> = ({ matches, teams }) => {
         const participants = e.participants
           ? e.participants?.map((p) => {
               const team = teams?.find((t) => t.teamKey === p.teamKey);
-              return team ? identifiers[p.teamKey] : p.teamKey;
+              const displayName = team ? identifiers[p.teamKey] : p.teamKey;
+              return displayName.toString().concat(p.surrogate ? '*' : '');
             })
           : [];
         return [

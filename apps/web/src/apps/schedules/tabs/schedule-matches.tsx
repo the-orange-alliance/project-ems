@@ -27,6 +27,7 @@ import { useAtom } from 'jotai';
 import { matchesAtom } from 'src/stores/state/event.js';
 import { downloadJson } from 'src/util/download-json.js';
 import { useScheduleMatches } from '../util/use-schedule-matches.js';
+import { parseScheduleImport } from '../util/parse-schedule-import.js';
 
 interface Props {
   eventSchedule?: ScheduleParams;
@@ -112,6 +113,26 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
     }
   };
 
+  // Imported matches stay local until posted, so the API cache is left untouched.
+  const handleImportMatches = (json: string) => {
+    if (!eventSchedule || !scheduleItems) return;
+    try {
+      const { eventKey, tournamentKey } = eventSchedule;
+      const imported = parseScheduleImport(json, {
+        eventKey,
+        tournamentKey,
+        scheduleItems,
+        teamKeys: new Set(teams?.map((t) => t.teamKey))
+      });
+      setMatches((prev) =>
+        prev.filter((m) => m.tournamentKey !== tournamentKey).concat(imported)
+      );
+      showSnackbar(`Imported ${imported.length} matches.`);
+    } catch (e) {
+      showErrorSnackbar('Error while importing schedule.', e);
+    }
+  };
+
   const handleDownloadJson = () => {
     if (!eventSchedule) return;
     const { eventKey, tournamentKey } = eventSchedule;
@@ -157,16 +178,21 @@ export const ScheduleMatches: FC<Props> = ({ eventSchedule, savedMatches }) => {
         tournament={tournament}
         onCreateMatches={handleCreateMatches}
       />
-      {eventSchedule && matchesToDisplay.length > 0 && (
+      {eventSchedule && (
         <>
-          <MatchTable matches={matchesToDisplay} teams={teams} />
+          {matchesToDisplay.length > 0 && (
+            <MatchTable matches={matchesToDisplay} teams={teams} />
+          )}
           <ScheduleMatchFooter
             tournament={tournament}
             disabled={loading || hasMatchesWithScores}
+            hasMatches={matchesToDisplay.length > 0}
+            saved={!!savedMatches?.length}
             onClick={saveSchedule}
             onReassignTimes={handleReassignTimes}
             onDownload={handleCreateMatches}
             onDownloadJson={handleDownloadJson}
+            onImport={handleImportMatches}
           />
         </>
       )}
