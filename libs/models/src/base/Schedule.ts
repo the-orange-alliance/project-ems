@@ -73,10 +73,11 @@ export const DATE_FORMAT_MIN_SHORT = 'ddd, MMMM Do YYYY, h:mm a';
 export interface DayBreak {
   id: number; // Break number in the day
   name: string; // Name of the break
-  startTime: string; // Start time of the break as a Moment ISO string
-  endTime: string; // End time of the break as a Moment ISO string
+  // When the break should start, as an ISO string. It begins at the first gap
+  // between matches on or after this time, so a match is never cut short.
+  startTime: string;
+  endTime: string; // startTime + duration, as an ISO string
   duration: number; // Duration of the break in minutes as a number
-  afterMatch: number; // Number after match in the day, not the entire schedule.
 }
 
 export const defaultBreak: DayBreak = {
@@ -84,16 +85,15 @@ export const defaultBreak: DayBreak = {
   name: 'Break',
   startTime: DateTime.now().toISO() ?? '',
   endTime: DateTime.now().toISO() ?? '',
-  duration: 30,
-  afterMatch: 1
+  duration: 30
 };
 
 export interface Day {
   id: number; // Number of day in the schedule starting from 0
-  startTime: string; // Start time of the day from match 0 as a Moment ISO string
-  endTime: string; // End time of the day after the last match  as a Moment ISO string
-  scheduledMatches: number; // Number of matches to play in this day
-  breaks: DayBreak[]; // Amount of breaks in this day
+  startTime: string; // When the first match can start, as an ISO string
+  endTime: string; // When the last match must be finished by, as an ISO string
+  scheduledMatches: number; // Matches that fit in the day, worked out from the window
+  breaks: DayBreak[]; // Breaks in this day
 }
 
 export const defaultDay: Day = {
@@ -166,153 +166,6 @@ export const defaultScheduleParams: ScheduleParams = {
   }
 };
 
-export function generateScheduleItems(
-  schedule: ScheduleParams
-): ScheduleItem[] {
-  const scheduleItems: ScheduleItem[] = [];
-  let totalMatches = 0;
-  for (const day of schedule.days) {
-    const matchBreaks: number[] = day.breaks.map(
-      (dayBreak) => dayBreak.afterMatch
-    );
-    let breakPadding = 0;
-    let dayMatches = 0;
-    for (let i = 0; i < day.scheduledMatches; i++) {
-      const item: ScheduleItem = { ...defaultScheduleItem };
-      const breakIndex = matchBreaks.indexOf(dayMatches + 1);
-      item.type = schedule.type;
-      let matchIndex = dayMatches;
-      if (schedule.matchConcurrency > 1) {
-        matchIndex = dayMatches - schedule.matchConcurrency + 1;
-      }
-
-      item.eventKey = schedule.eventKey;
-      item.tournamentKey = schedule.tournamentKey;
-      item.id = scheduleItems.length;
-      item.day = day.id;
-      item.name = schedule.type + ' Match ' + (totalMatches + 1);
-      item.duration = schedule.cycleTime;
-      item.startTime =
-        DateTime.fromISO(day.startTime)
-          .plus({
-            minutes:
-              Math.ceil(matchIndex / schedule.matchConcurrency) *
-                schedule.cycleTime +
-              breakPadding
-          })
-          .toISO() ?? '';
-      item.isMatch = true;
-      item.tournamentKey = schedule.tournamentKey;
-      scheduleItems.push(item);
-      dayMatches++;
-      totalMatches++;
-      if (breakIndex !== -1) {
-        const breakItem: ScheduleItem = { ...defaultScheduleItem };
-        breakItem.eventKey = schedule.eventKey;
-        breakItem.tournamentKey = schedule.tournamentKey;
-        breakItem.id = scheduleItems.length;
-        breakItem.day = day.id;
-        breakItem.duration = day.breaks[breakIndex].duration;
-        breakItem.name = day.breaks[breakIndex].name;
-        breakItem.startTime = day.breaks[breakIndex].startTime;
-        breakItem.isMatch = false;
-        item.tournamentKey = schedule.tournamentKey;
-        scheduleItems.push(breakItem);
-        breakPadding += day.breaks[breakIndex].duration;
-      }
-    }
-  }
-  return scheduleItems;
-}
-
-interface ScheduleValidator {
-  maxTotalMatches: number;
-  remainingMatches: number;
-  validationMessage: string;
-  valid: boolean;
-}
-
-export function getScheduleValidation(
-  schedule: ScheduleParams | null | undefined
-): ScheduleValidator {
-  if (!schedule) {
-    return {
-      maxTotalMatches: 0,
-      remainingMatches: 0,
-      valid: false,
-      validationMessage: 'No schedule provided.'
-    };
-  }
-
-  const maxTotalMatches = calculateTotalMatches(schedule);
-
-  if (schedule.days.length <= 0)
-    return {
-      maxTotalMatches,
-      remainingMatches: 0,
-      valid: false,
-      validationMessage: 'More than 1 day of competition must be scheduled.'
-    };
-
-  const remainingMatches =
-    maxTotalMatches -
-    schedule.days
-      .map((d) => d.scheduledMatches)
-      .reduce((prev, curr) => prev + curr);
-  let participantsSelected = true;
-  let allMatchesScheduled = true;
-  let daysAreAfterEachOther = true;
-  let daysHaveAtLeastOneMatch = true;
-  let previousDayStart = DateTime.fromISO(schedule.days[0].startTime).minus({
-    days: 1
-  });
-  let validationMessage = '';
-  for (const day of schedule.days) {
-    if (DateTime.fromISO(day.startTime).day) {
-    }
-    if (
-      !(
-        DateTime.fromISO(day.startTime).startOf('day') >
-        previousDayStart.startOf('day')
-      )
-    ) {
-      daysAreAfterEachOther = false;
-    }
-    if (day.scheduledMatches <= 0) {
-      daysHaveAtLeastOneMatch = false;
-    }
-    previousDayStart = DateTime.fromISO(day.startTime);
-  }
-  allMatchesScheduled = remainingMatches === 0;
-  if (!allMatchesScheduled) {
-    const matchesLeft = Math.abs(remainingMatches);
-    if (remainingMatches < 0) {
-      validationMessage = `Too many matches are scheduled. You need to remove ${matchesLeft} matches from the schedule.`;
-    } else {
-      validationMessage = `Not all of the matches are scheduled. You need to schedule ${matchesLeft} more matches.`;
-    }
-  } else if (!daysAreAfterEachOther) {
-    validationMessage =
-      'Not all of the scheduled day start times are after each other.';
-  } else if (!daysHaveAtLeastOneMatch) {
-    validationMessage = 'Not all scheduled days contain at least 1 match.';
-  } else {
-    validationMessage = '';
-  }
-  if (schedule.teamKeys.length <= 0) {
-    validationMessage = 'There are not enough teams for this schedule.';
-    participantsSelected = false;
-  }
-
-  const valid =
-    participantsSelected &&
-    allMatchesScheduled &&
-    daysAreAfterEachOther &&
-    daysHaveAtLeastOneMatch;
-
-  return { maxTotalMatches, remainingMatches, valid, validationMessage };
-}
-
 export function calculateTotalMatches(schedule: ScheduleParams): number {
   const {
     type,
@@ -322,24 +175,11 @@ export function calculateTotalMatches(schedule: ScheduleParams): number {
   } = schedule;
   const teamsParticipating = teamKeys.length;
   switch (type) {
-    case 'Practice':
-      return Math.ceil(
-        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
-      );
-    case 'Qualification':
-      return Math.ceil(
-        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
-      );
-    case 'Ranking':
-      return Math.ceil(
-        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
-      );
     case 'Round Robin':
     case 'Eliminations':
       if (!allianceCount) return 0;
-      // Round up: an odd alliance count gives a half-match per round, and the
-      // per-day "scheduled matches" inputs are whole numbers, so a fractional
-      // target can never be satisfied and Generate Schedule stays blocked.
+      // Round up: an odd alliance count gives a half-match per round, and
+      // matches come in whole numbers.
       return Math.ceil((allianceCount / 2) * rounds);
     // if (rounds) {
     //   return (playoffsOptions.allianceCount / 2) * playoffsOptions.rounds;
@@ -351,10 +191,13 @@ export function calculateTotalMatches(schedule: ScheduleParams): number {
     // }
     case 'Finals':
       return seriesType ?? 3; // Default to Bo3
-    default:
-      return Math.ceil(
-        (teamsParticipating * matchesPerTeam) / (teamsPerAlliance * 2)
-      );
+    default: {
+      // Zero teams per alliance would divide by zero (Infinity / NaN matches).
+      const teamsPerMatch = teamsPerAlliance * 2;
+      return teamsPerMatch > 0
+        ? Math.ceil((teamsParticipating * matchesPerTeam) / teamsPerMatch)
+        : 0;
+    }
   }
 }
 
