@@ -33,8 +33,7 @@ export const ScoreContainer: FC<{
           fontFamily: 'Mekton',
           backgroundColor: bg ? bg : undefined,
           color: color ? color : undefined,
-          transition: 'color 0.5s ease',
-          paddingBottom: '30px'
+          transition: 'color 0.5s ease'
         }}
       >
         {number}
