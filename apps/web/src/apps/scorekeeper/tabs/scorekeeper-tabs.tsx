@@ -38,7 +38,7 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
     state: {
       local: { teams, tournaments }
     }
-  } = useEventState({ teams: true, tournaments: true });
+  } = useEventState({ matches: true, teams: true, tournaments: true });
   const { data: tournamentMatches } = useMatchesForTournament(
     eventKey,
     tournamentKey
@@ -59,6 +59,9 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
 
   const handleChange = (key: string) => setValue(Number(key));
   const handleTournamentChange = (key: string) => {
+    // Discard any in-flight match load so it can't re-select a match here.
+    requestedMatchId.current = null;
+    setLoadingMatch(false);
     setTournamentKey(key);
     setMatchId(null);
     setState(MatchState.MATCH_NOT_SELECTED);
