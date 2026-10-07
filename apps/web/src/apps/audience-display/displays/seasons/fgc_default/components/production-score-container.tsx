@@ -30,11 +30,10 @@ export const ScoreContainer: FC<{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontFamily: 'Tomarik Brush',
+          fontFamily: 'Mekton',
           backgroundColor: bg ? bg : undefined,
           color: color ? color : undefined,
-          transition: 'color 0.5s ease',
-          paddingBottom: '30px'
+          transition: 'color 0.5s ease'
         }}
       >
         {number}

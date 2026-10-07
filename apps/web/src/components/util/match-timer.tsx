@@ -36,7 +36,7 @@ interface Props {
 }
 
 export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
-  const { timeLeft, start, abort, reset } = useMatchTimerWorker();
+  const { timeLeft, start, stop, abort, reset } = useMatchTimerWorker();
   const currentMatch = useAtomValue(matchAtom);
   const { connected, worker } = useSocketWorker();
 
@@ -50,22 +50,36 @@ export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
     if (currentMatch) determineTimerConfig(currentMatch.eventKey);
     start();
   };
-  const onTransition = (payload: TimerEventPayload) => {
-    if (audio && payload.allowAudio) transitionAudio.play();
+  /**
+   * Phase sounds are driven by the relay's match lifecycle events, not by the
+   * local timer worker - the worker is only a display clock, and its events
+   * never cross the socket. Subscribing to `timer:*` here meant the endgame and
+   * match-end sounds never fired at all on the audience display.
+   *
+   * The relay forwards the timer's `allowAudio` payload with each phase event,
+   * and audio requires it to be explicitly true: the state replay a client gets
+   * when it joins mid-match sends the same events with no payload, which must
+   * not sound a horn on every reconnect.
+   */
+  const allowsAudio = (payload?: TimerEventPayload) =>
+    !!audio && payload?.allowAudio === true;
+
+  const onTransition = (payload?: TimerEventPayload) => {
+    if (allowsAudio(payload)) transitionAudio.play();
   };
-  const onTele = (payload: TimerEventPayload) => {
-    if (audio && payload.allowAudio) teleAudio.play();
+  const onTele = (payload?: TimerEventPayload) => {
+    if (allowsAudio(payload)) teleAudio.play();
   };
   const onAbort = () => {
     if (audio) abortAudio.play();
     abort();
   };
-  const onEnd = (payload: TimerEventPayload) => {
-    if (audio && payload.allowAudio) endAudio.play();
+  const onEnd = (payload?: TimerEventPayload) => {
+    if (allowsAudio(payload)) endAudio.play();
     stop();
   };
-  const onEndgame = (payload: TimerEventPayload) => {
-    if (audio && payload.allowAudio) endgameAudio.play();
+  const onEndgame = (payload?: TimerEventPayload) => {
+    if (allowsAudio(payload)) endgameAudio.play();
   };
 
   const subscriptions = useMemo(
@@ -83,19 +97,19 @@ export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
         callback: onAbort
       },
       {
-        key: 'timer:transition',
+        key: MatchSocketEvent.TRANSITION,
         callback: onTransition
       },
       {
-        key: 'timer:tele',
+        key: MatchSocketEvent.TELEOPERATED,
         callback: onTele
       },
       {
-        key: 'timer:endgame',
+        key: MatchSocketEvent.ENDGAME,
         callback: onEndgame
       },
       {
-        key: 'timer:end',
+        key: MatchSocketEvent.END,
         callback: onEnd
       }
     ],
