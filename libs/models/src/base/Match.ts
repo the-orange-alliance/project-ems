@@ -54,6 +54,7 @@ export enum MatchSocketEvent {
   PRESTART = 'match:prestart',
   START = 'match:start',
   AUTONOMOUS = 'match:auto',
+  TRANSITION = 'match:transition',
   TELEOPERATED = 'match:tele',
   ENDGAME = 'match:endgame',
   END = 'match:end',

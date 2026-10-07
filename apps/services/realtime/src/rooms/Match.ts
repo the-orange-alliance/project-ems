@@ -9,6 +9,7 @@ import {
   MatchSocketEvent,
   MatchState,
   MatchTimer,
+  TimerEventPayload,
   ItemUpdate,
   CardStatusUpdate,
   NumberAdjustment,
@@ -185,23 +186,29 @@ export default class Match extends Room {
         this.transition(MatchState.MATCH_IN_PROGRESS, "timer:start", socket);
         logger.info("match in progress");
       });
-      this.timer.once("timer:auto", () => {
+      // The timer's own payload (`allowAudio`) rides along with each phase
+      // event. Clients can't recompute it - it marks a phase the timer reached
+      // normally, as opposed to one it skipped into while catching up - and the
+      // audience display uses it to decide whether to play the phase's sound.
+      // Replays in `replayState` deliberately carry no payload, so a screen
+      // reconnecting mid-match stays silent.
+      this.timer.once("timer:auto", (payload: TimerEventPayload) => {
         this.transition(this.state, "timer:auto", socket);
-        this.emitToAll(MatchSocketEvent.AUTONOMOUS);
+        this.emitToAll(MatchSocketEvent.AUTONOMOUS, payload);
         logger.info("match auto");
       });
-      this.timer.once("timer:tele", () => {
+      this.timer.once("timer:tele", (payload: TimerEventPayload) => {
         this.transition(this.state, "timer:tele", socket);
-        this.emitToAll(MatchSocketEvent.TELEOPERATED);
+        this.emitToAll(MatchSocketEvent.TELEOPERATED, payload);
         logger.info("match tele");
       });
-      this.timer.once("timer:endgame", () => {
+      this.timer.once("timer:endgame", (payload: TimerEventPayload) => {
         this.transition(this.state, "timer:endgame", socket);
-        this.emitToAll(MatchSocketEvent.ENDGAME);
+        this.emitToAll(MatchSocketEvent.ENDGAME, payload);
         logger.info("match endgame");
       });
-      this.timer.once("timer:end", () => {
-        this.emitToAll(MatchSocketEvent.END);
+      this.timer.once("timer:end", (payload: TimerEventPayload) => {
+        this.emitToAll(MatchSocketEvent.END, payload);
         this.timer.removeListeners();
         this.transition(MatchState.MATCH_COMPLETE, "timer:end", socket);
         logger.info("match completed");
@@ -212,9 +219,10 @@ export default class Match extends Room {
         // The abort handler records the anchor before clearing the key.
         logger.info("match aborted");
       });
-      this.timer.once("timer:transition", () =>
-        this.transition(this.state, "timer:transition", socket),
-      );
+      this.timer.once("timer:transition", (payload: TimerEventPayload) => {
+        this.transition(this.state, "timer:transition", socket);
+        this.emitToAll(MatchSocketEvent.TRANSITION, payload);
+      });
       // Advance the audience to the match screen, and BROADCAST it. Setting
       // `displayID` alone (what this used to do) only changed what a client
       // connecting later replays from `initializeEvents` - every client
