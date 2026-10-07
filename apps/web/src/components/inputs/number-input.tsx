@@ -1,4 +1,4 @@
-import { FC, ChangeEvent } from 'react';
+import { FC, ChangeEvent, useState } from 'react';
 import { Button, Input, Space } from 'antd';
 
 interface Props {
@@ -26,8 +26,12 @@ export const NumberInput: FC<Props> = ({
   // a number for, or NaN from an earlier bad write. Stepping off that would send
   // NaN onward, so the arithmetic below always works from a real number.
   const current = Number.isFinite(value) ? value : min;
+  // What the referee is typing, held locally so the box can be emptied or hold a
+  // partial entry mid-edit. `null` means not editing: the box shows `current`.
+  const [draft, setDraft] = useState<string | null>(null);
 
   const handleTypedChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setDraft(event.target.value);
     const typed = parseInt(event.target.value, 10);
     // An emptied box parses to NaN. Reporting that upward wrote NaN into the match
     // details, which reaches clients as `null` and blanks the score - so an
@@ -35,7 +39,10 @@ export const NumberInput: FC<Props> = ({
     if (!Number.isFinite(typed)) return;
     onChange(typed, true);
   };
+  // Leaving the box drops the draft, so an empty box snaps back to the last good value.
+  const endEdit = () => setDraft(null);
   const increment = () => {
+    endEdit();
     if (max !== undefined && current >= max) return;
     let newValue = current + 1;
     if (max !== undefined && newValue > max) newValue = max;
@@ -43,6 +50,7 @@ export const NumberInput: FC<Props> = ({
     onChange(newValue, false);
   };
   const decrement = () => {
+    endEdit();
     if (current <= min) return;
     let newValue = current - 1;
     if (newValue < min) newValue = min;
@@ -61,7 +69,9 @@ export const NumberInput: FC<Props> = ({
       </Button>
       <Input
         onChange={handleTypedChange}
-        value={current}
+        onBlur={endEdit}
+        onPressEnter={(e) => e.currentTarget.blur()}
+        value={draft ?? current}
         type='number'
         disabled={disabled || textFieldDisabled}
         style={{ height: '5rem', fontSize: '2rem', textAlign: 'center' }}
