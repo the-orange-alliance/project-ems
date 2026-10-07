@@ -9,6 +9,7 @@ import { AppContainer } from './App.js';
 import { useCurrentEvent } from './api/use-event-data.js';
 import { createStore, Provider, useAtomValue } from 'jotai';
 import { darkModeAtom } from './stores/state/ui.js';
+import { chromaLayoutActiveAtom } from './stores/state/audience-display.js';
 import { App as AntApp, ConfigProvider, theme } from 'antd';
 import 'antd/dist/reset.css';
 import { localClient, remoteClient } from './api/http-clients.js';
@@ -51,9 +52,11 @@ if (import.meta.env.VITE_API_URL) {
 SocketOptions.host = window.location.hostname;
 SocketOptions.port = 8081;
 
-// Rendered before route content so ChromaLayout's later `body` rule still wins.
+// Skipped while ChromaLayout is mounted so the audience display stays transparent.
 function ThemedBody({ darkMode }: { darkMode: boolean }) {
   const { token } = theme.useToken();
+  const chromaLayoutActive = useAtomValue(chromaLayoutActiveAtom);
+  if (chromaLayoutActive) return null;
   return (
     <style>{`html { color-scheme: ${darkMode ? 'dark' : 'light'}; } body { background: ${token.colorBgLayout}; }`}</style>
   );
