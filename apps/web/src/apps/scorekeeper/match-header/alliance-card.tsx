@@ -9,7 +9,7 @@ import { FC, Fragment } from 'react';
 import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team.js';
 import { FGCParticipantCardStatus } from './participant-card-status.js';
 import CheckboxStatus from './checkbox-status.js';
-import { ALLIANCES, allianceTint } from './alliances.js';
+import { useAlliancePalette } from './alliances.js';
 
 // Station | Team | Card | No Show | DQ
 const GRID_COLUMNS = '16px minmax(0, 1fr) 112px 56px 32px';
@@ -29,8 +29,7 @@ export const AllianceCard: FC<Props> = ({
   participants,
   handleChange
 }) => {
-  const { title, color } = ALLIANCES[alliance];
-  const tint = allianceTint(alliance);
+  const palette = useAlliancePalette(alliance);
   const allianceParticipants = (participants ?? []).filter((p) =>
     alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
   );
@@ -51,17 +50,18 @@ export const AllianceCard: FC<Props> = ({
     <Card
       style={{
         height: '100%',
-        borderTop: `4px solid ${color}`,
-        // A tint layered over the card background reads well in both themes.
-        backgroundImage: `linear-gradient(${tint}, ${tint})`
+        border: `1px solid ${palette.border}`,
+        borderTop: `4px solid ${palette.accent}`,
+        // Layered over the card background so the wash adapts to either theme.
+        backgroundImage: `linear-gradient(${palette.surface}, ${palette.surface})`
       }}
       styles={{ body: { padding: 12 } }}
     >
       <Typography.Text
         strong
-        style={{ color, display: 'block', marginBottom: 8 }}
+        style={{ color: palette.text, display: 'block', marginBottom: 8 }}
       >
-        {title}
+        {palette.title}
       </Typography.Text>
       <div
         style={{
@@ -122,7 +122,10 @@ const HeaderCell: FC<{ label?: string; align?: 'left' | 'center' }> = ({
   label,
   align = 'center'
 }) => (
-  <Typography.Text type='secondary' style={{ fontSize: 12, textAlign: align }}>
+  <Typography.Text
+    type='secondary'
+    style={{ fontSize: 12, fontWeight: 500, textAlign: align }}
+  >
     {label}
   </Typography.Text>
 );

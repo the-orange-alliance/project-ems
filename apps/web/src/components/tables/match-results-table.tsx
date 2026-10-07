@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { ComponentProps, FC } from 'react';
 import { UpgradedTable } from './upgraded-table.js';
 import { Match, RESULT_NOT_PLAYED, Team } from '@toa-lib/models';
 import { useTeamIdentifierRecord } from 'src/hooks/use-team-identifier.js';
@@ -10,6 +10,7 @@ interface Props {
   teams: Team[];
   colored?: boolean;
   disabled?: boolean;
+  scroll?: ComponentProps<typeof UpgradedTable>['scroll'];
   selected?: (match: Match<any>) => boolean;
   onSelect?: (id: number) => void;
 }
@@ -19,6 +20,7 @@ export const MatchResultsTable: FC<Props> = ({
   teams,
   colored,
   disabled,
+  scroll,
   selected,
   onSelect
 }) => {
@@ -48,6 +50,7 @@ export const MatchResultsTable: FC<Props> = ({
       selected={selected}
       onSelect={disabled ? undefined : handleSelect}
       disable={disabled}
+      scroll={scroll}
       renderRow={(e) => {
         const participants = e.participants
           ? e.participants?.map((p) => {

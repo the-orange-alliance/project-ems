@@ -7,34 +7,38 @@ import { useAtomValue } from 'jotai';
 import { matchStatusAtom } from 'src/stores/state/match.js';
 import { isAudioEnabledForScorekeeper } from 'src/stores/state/ui.js';
 import { matchAtom } from 'src/stores/state/index.js';
-import { ALLIANCES, allianceTint } from './alliances.js';
+import { useAlliancePalette } from './alliances.js';
 
 const ScoreTile: FC<{ alliance: Alliance; score?: number }> = ({
   alliance,
   score
-}) => (
-  <Flex
-    flex={1}
-    vertical
-    align='center'
-    style={{
-      padding: '2px 0',
-      borderTop: `3px solid ${ALLIANCES[alliance].color}`,
-      background: allianceTint(alliance, '26')
-    }}
-  >
-    <Typography.Text
+}) => {
+  const palette = useAlliancePalette(alliance);
+  return (
+    <Flex
+      flex={1}
+      vertical
+      align='center'
       style={{
-        fontSize: 28,
-        fontWeight: 700,
-        lineHeight: 1.2,
-        fontVariantNumeric: 'tabular-nums'
+        padding: '2px 0',
+        border: `1px solid ${palette.border}`,
+        borderTop: `3px solid ${palette.accent}`,
+        background: palette.tile
       }}
     >
-      {score ?? '--'}
-    </Typography.Text>
-  </Flex>
-);
+      <Typography.Text
+        style={{
+          fontSize: 28,
+          fontWeight: 700,
+          lineHeight: 1.2,
+          fontVariantNumeric: 'tabular-nums'
+        }}
+      >
+        {score ?? '--'}
+      </Typography.Text>
+    </Flex>
+  );
+};
 
 export const MatchInfo: FC = () => {
   const matchState = useAtomValue(matchStatusAtom);

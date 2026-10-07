@@ -14,6 +14,8 @@ interface Props<T> {
   widths?: number[];
   virtual?: boolean;
   disable?: boolean;
+  /** Fixed body height (`y`) keeps the header in view and scrolls rows inside the table. */
+  scroll?: { x?: number | string; y?: number | string };
   /** Columns that can be sorted. Only string and number cells are compared. */
   sortable?: ColumnSelection;
   /** Overrides the default cell comparison for the column with the header. */
@@ -48,6 +50,7 @@ export const UpgradedTable = <T,>({
   widths,
   virtual,
   disable,
+  scroll,
   sortable,
   columnSorters,
   filterable,
@@ -135,7 +138,8 @@ export const UpgradedTable = <T,>({
       virtual={virtual}
       scroll={{
         y: virtual ? window.innerHeight - 280 : undefined,
-        x: virtual ? 800 : undefined
+        x: virtual ? 800 : undefined,
+        ...scroll
       }}
     />
   );

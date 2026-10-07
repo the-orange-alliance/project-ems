@@ -4,6 +4,10 @@ import { FC } from 'react';
 import TournamentDropdown from 'src/components/dropdowns/tournament-dropdown.js';
 import { MatchResultsTable } from 'src/components/tables/match-results-table.js';
 
+// Viewport height minus the header, controls and tab chrome above the table, so
+// the rows scroll in place instead of the page; never shorter than ~5 rows.
+const TABLE_BODY_HEIGHT = 'max(240px, calc(100vh - 580px))';
+
 interface Props {
   matches?: Match<any>[];
   teams?: Team[];
@@ -39,6 +43,7 @@ export const ScorekeeperMatches: FC<Props> = ({
         selected={selected}
         onSelect={onMatchSelect}
         disabled={disabled}
+        scroll={{ y: TABLE_BODY_HEIGHT }}
       />
     </Flex>
   );
