@@ -28,20 +28,27 @@ export const initS3Client = () => {
 async function uploadDatabase(eventKey: string) {
   if (!s3 || !bucket) return;
   const path = getAppData('ems') + sep + eventKey + '.db';
-  const fileBuffer = await fs.readFile(path);
-  const ts = new Date().toISOString().replace(/[:.]/g, '-'); // e.g. 2025-10-27T20-18-05-123Z
-  const key = `backups/${eventKey}-${ts}.sqlite`;
+  try {
+    const fileBuffer = await fs.readFile(path);
+    const ts = new Date().toISOString().replace(/[:.]/g, '-'); // e.g. 2025-10-27T20-18-05-123Z
+    const key = `backups/${eventKey}-${ts}.sqlite`;
 
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: fileBuffer,
-      ContentType: 'application/x-sqlite3'
-    })
-  );
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: fileBuffer,
+        ContentType: 'application/x-sqlite3'
+      })
+    );
 
-  logger.info(`[Backup] Uploaded database to s3://${bucket}/${key}`);
+    logger.info(`[Backup] Uploaded database to s3://${bucket}/${key}`);
+  } catch (e) {
+    logger.error(
+      `[Backup] Failed to upload database for event ${eventKey}:`,
+      e
+    );
+  }
 }
 
 /**
