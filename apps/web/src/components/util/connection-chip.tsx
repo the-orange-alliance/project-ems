@@ -1,37 +1,18 @@
 import { FC } from 'react';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
-import { Tag, Tooltip } from 'antd';
+import { Button, Space, Tag, Tooltip } from 'antd';
 import {
   CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  WarningOutlined
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
-// import { useAtomValue } from 'jotai';
-// import { userAtom } from 'src/stores/state/ui.js';
 
 export const ConnectionChip: FC<{ iconOnly?: boolean }> = ({ iconOnly }) => {
-  const { connected } = useSocketWorker();
-  const user = true; //  useAtomValue(userAtom);
-  const label =
-    connected && user
-      ? 'Connected'
-      : !user
-        ? 'Please Login'
-        : 'Socket Not Connected';
+  const { connected, worker, init } = useSocketWorker();
+  const label = connected ? 'Connected' : 'Not Connected';
   const chip = (
     <Tag
-      icon={
-        connected && user ? (
-          <CheckCircleOutlined />
-        ) : connected && !user ? (
-          <WarningOutlined />
-        ) : (
-          <ExclamationCircleOutlined />
-        )
-      }
-      color={
-        user && connected ? 'success' : connected && !user ? 'warning' : 'error'
-      }
+      icon={connected ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
+      color={connected ? 'success' : 'error'}
       style={{
         fontSize: 'large',
         padding: '8px',
@@ -41,5 +22,24 @@ export const ConnectionChip: FC<{ iconOnly?: boolean }> = ({ iconOnly }) => {
       {!iconOnly && label}
     </Tag>
   );
-  return iconOnly ? <Tooltip title={label}>{chip}</Tooltip> : chip;
+  const handleRefreshConnection = async () => {
+    if (worker) {
+      await worker.destroy();
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await init();
+    }
+  };
+  return (
+    <Tooltip
+      title={
+        <Space orientation='vertical'>
+          <Button type='primary' onClick={handleRefreshConnection}>
+            Refresh Connection
+          </Button>
+        </Space>
+      }
+    >
+      {chip}
+    </Tooltip>
+  );
 };

@@ -15,7 +15,7 @@ export const MatchMakerQualityDropdown: FC<Props> = ({ quality, onChange }) => {
     <Form.Item
       label='Match Maker Quality'
       labelCol={{ span: 24 }}
-      style={{ minWidth: 180 }}
+      style={{ minWidth: 240, marginBottom: 0 }}
     >
       <Select value={quality} onChange={handleChange}>
         <Select.Option value='fair'>Fair</Select.Option>

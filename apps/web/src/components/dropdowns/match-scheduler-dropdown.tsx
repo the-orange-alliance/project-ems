@@ -34,7 +34,7 @@ export const MatchSchedulerDropdown: FC<Props> = ({
       value={resolvePlayoffStructureKey(value)}
       onChange={onChange}
       disabled={disabled}
-      style={{ minWidth: 200 }}
+      style={{ minWidth: 280 }}
       placeholder='Match Scheduler'
       options={options}
     />

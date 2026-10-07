@@ -1,4 +1,4 @@
-import { Button, Row, Col, Alert } from 'antd';
+import { Alert, Button, Flex } from 'antd';
 import {
   ScheduleParams,
   ScheduleItem,
@@ -71,25 +71,20 @@ export const FixedMatches: FC<Props> = ({
           description='Go to Schedule Participants, use "Auto Assign" (or build the alliances manually), then Save Alliances before generating matches.'
         />
       )}
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={12} md={20}>
-          <MatchSchedulerDropdown
-            onChange={setGen}
-            value={resolvePlayoffStructureKey(gen)}
-            tournamentType={eventSchedule?.type}
-          />
-        </Col>
-        <Col xs={24} sm={12} md={4} style={{ marginTop: 14 }}>
-          <Button
-            type='primary'
-            onClick={createMatches}
-            disabled={!hasAlliances || !scheduleItems}
-            style={{ width: '100%' }}
-          >
-            Create Match Schedule
-          </Button>
-        </Col>
-      </Row>
+      <Flex align='center' gap='middle' wrap style={{ marginBottom: 24 }}>
+        <MatchSchedulerDropdown
+          onChange={setGen}
+          value={resolvePlayoffStructureKey(gen)}
+          tournamentType={eventSchedule?.type}
+        />
+        <Button
+          type='primary'
+          onClick={createMatches}
+          disabled={!hasAlliances || !scheduleItems}
+        >
+          Create Match Schedule
+        </Button>
+      </Flex>
     </>
   );
 };

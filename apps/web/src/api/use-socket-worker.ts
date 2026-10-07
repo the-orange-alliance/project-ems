@@ -19,6 +19,31 @@ export function useSocketWorker() {
   const registeredRef = useRef(false);
   const socket = remoteRef.current;
 
+  const proxyConnected = Comlink.proxy((v: boolean) => setConnected(v));
+  const proxyReady = Comlink.proxy((v: boolean) => setReady(v));
+
+  const init = async () => {
+    // Register this client immediately to cancel any pending shutdowns
+    // in the worker (important for React 18 StrictMode double-mount).
+    void remoteRef.current?.registerClient().then(() => {
+      registeredRef.current = true;
+      console.debug('[useSocketWorker] registered client');
+    });
+    await remoteRef.current?.subscribeConnected(proxyConnected);
+    await remoteRef.current?.subscribeReady(proxyReady);
+    await remoteRef.current?.initialize('', {
+      host: SocketOptions.host,
+      port: SocketOptions.port
+    });
+    const [c, r] = await Promise.all([
+      remoteRef.current?.getConnected(),
+      remoteRef.current?.getReady()
+    ]);
+    setConnected(c ?? false);
+    setReady(r ?? false);
+    setInitialized(true);
+  };
+
   useEffect(() => {
     if (!workerRef.current) {
       const worker = new SharedSocketWorker({
@@ -32,31 +57,6 @@ export function useSocketWorker() {
       workerRef.current = worker;
       const remote = Comlink.wrap<SocketService>(worker.port);
       remoteRef.current = remote;
-
-      const proxyConnected = Comlink.proxy((v: boolean) => setConnected(v));
-      const proxyReady = Comlink.proxy((v: boolean) => setReady(v));
-
-      const init = async () => {
-        // Register this client immediately to cancel any pending shutdowns
-        // in the worker (important for React 18 StrictMode double-mount).
-        void remoteRef.current?.registerClient().then(() => {
-          registeredRef.current = true;
-          console.debug('[useSocketWorker] registered client');
-        });
-        await remoteRef.current?.subscribeConnected(proxyConnected);
-        await remoteRef.current?.subscribeReady(proxyReady);
-        await remoteRef.current?.initialize('', {
-          host: SocketOptions.host,
-          port: SocketOptions.port
-        });
-        const [c, r] = await Promise.all([
-          remoteRef.current?.getConnected(),
-          remoteRef.current?.getReady()
-        ]);
-        setConnected(c ?? false);
-        setReady(r ?? false);
-        setInitialized(true);
-      };
 
       void init();
 
@@ -104,6 +104,7 @@ export function useSocketWorker() {
     events,
     connected,
     ready,
-    initialized
+    initialized,
+    init
   };
 }

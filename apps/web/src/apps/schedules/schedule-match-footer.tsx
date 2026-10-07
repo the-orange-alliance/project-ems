@@ -6,7 +6,7 @@ import {
   UploadOutlined
 } from '@ant-design/icons';
 import { Match, Tournament } from '@toa-lib/models';
-import { Button, Divider, Flex, Tooltip } from 'antd';
+import { Button, Flex, Tooltip } from 'antd';
 import { useAtomValue } from 'jotai';
 import { ChangeEvent, FC, useRef } from 'react';
 import { remoteClient } from 'src/api/http-clients.js';
@@ -75,7 +75,7 @@ export const ScheduleMatchFooter: FC<Props> = ({
       align='center'
       justify='space-between'
       gap='small'
-      style={{ padding: '1em 0', marginTop: '2em' }}
+      style={{ paddingTop: hasMatches ? 24 : 0 }}
     >
       <Flex wrap align='center' gap='small'>
         <Tooltip
@@ -100,7 +100,6 @@ export const ScheduleMatchFooter: FC<Props> = ({
           accept='.json,application/json'
           onChange={handleImport}
         />
-        <Divider orientation='vertical' />
         <Button
           icon={<DownloadOutlined />}
           disabled={disabled}
@@ -108,34 +107,34 @@ export const ScheduleMatchFooter: FC<Props> = ({
         >
           Download
         </Button>
-        <Button
-          icon={<FileTextOutlined />}
-          disabled={!hasMatches}
-          onClick={onDownloadJson}
-        >
-          Download as JSON
-        </Button>
+        {hasMatches && (
+          <Button icon={<FileTextOutlined />} onClick={onDownloadJson}>
+            Download as JSON
+          </Button>
+        )}
       </Flex>
-      <Flex wrap align='center' gap='small'>
-        <Button
-          color='blue'
-          variant='outlined'
-          icon={<ClockCircleOutlined />}
-          disabled={disabled || !hasMatches}
-          onClick={onReassignTimes}
-        >
-          Update Match Times
-        </Button>
-        <Button
-          color='green'
-          variant='solid'
-          icon={<CloudUploadOutlined />}
-          disabled={disabled || !hasMatches}
-          onClick={onClick}
-        >
-          Post Schedule
-        </Button>
-      </Flex>
+      {hasMatches && (
+        <Flex wrap align='center' gap='small'>
+          <Button
+            color='blue'
+            variant='outlined'
+            icon={<ClockCircleOutlined />}
+            disabled={disabled}
+            onClick={onReassignTimes}
+          >
+            Update Match Times
+          </Button>
+          <Button
+            color='green'
+            variant='solid'
+            icon={<CloudUploadOutlined />}
+            disabled={disabled}
+            onClick={onClick}
+          >
+            Post Schedule
+          </Button>
+        </Flex>
+      )}
     </Flex>
   );
 };
