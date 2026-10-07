@@ -1,7 +1,10 @@
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useLayoutEffect } from 'react';
 import { Typography } from 'antd';
-import { useAtomValue } from 'jotai';
-import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
+import { useAtomValue, useSetAtom } from 'jotai';
+import {
+  chromaLayoutActiveAtom,
+  displayChromaKeyAtom
+} from 'src/stores/state/audience-display.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 
 interface Props {
@@ -10,7 +13,13 @@ interface Props {
 
 export const ChromaLayout: FC<Props> = ({ children }) => {
   const chromaKey = useAtomValue(displayChromaKeyAtom);
+  const setChromaLayoutActive = useSetAtom(chromaLayoutActiveAtom);
   const { connected } = useSocketWorker();
+
+  useLayoutEffect(() => {
+    setChromaLayoutActive(true);
+    return () => setChromaLayoutActive(false);
+  }, [setChromaLayoutActive]);
   return (
     <div>
       {!connected && (
