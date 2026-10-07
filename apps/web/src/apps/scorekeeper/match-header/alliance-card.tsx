@@ -1,14 +1,18 @@
-import { Card, Row, Col, Typography } from 'antd';
+import { Card, Typography } from 'antd';
 import {
   Alliance,
   BLUE_STATION,
   MatchParticipant,
   Team
 } from '@toa-lib/models';
-import { FC } from 'react';
+import { FC, Fragment } from 'react';
 import { AutocompleteTeam } from 'src/components/dropdowns/autocomplete-team.js';
 import { FGCParticipantCardStatus } from './participant-card-status.js';
 import CheckboxStatus from './checkbox-status.js';
+import { ALLIANCES, allianceTint } from './alliances.js';
+
+// Station | Team | Card | No Show | DQ
+const GRID_COLUMNS = '16px minmax(0, 1fr) 112px 56px 32px';
 
 interface Props {
   teams?: Team[];
@@ -25,130 +29,100 @@ export const AllianceCard: FC<Props> = ({
   participants,
   handleChange
 }) => {
-  const allianceParticipants = participants
-    ? participants.filter((p) =>
-        alliance === 'red'
-          ? p.station < BLUE_STATION
-          : p.station >= BLUE_STATION
+  const { title, color } = ALLIANCES[alliance];
+  const tint = allianceTint(alliance);
+  const allianceParticipants = (participants ?? []).filter((p) =>
+    alliance === 'red' ? p.station < BLUE_STATION : p.station >= BLUE_STATION
+  );
+
+  const updateParticipant = (
+    station: number,
+    changes: Partial<MatchParticipant>
+  ) => {
+    if (!participants || !handleChange) return;
+    handleChange(
+      participants.map((p) =>
+        p.station === station ? { ...p, ...changes } : p
       )
-    : [];
-  const changeParticipant = (station: number, teamKey: number) => {
-    if (!participants || !handleChange) return;
-    const newParticipants = participants.map((p) =>
-      p.station === station ? { ...p, teamKey } : p
     );
-    handleChange(newParticipants);
-  };
-  const changeCardStatus = (station: number, cardStatus: number) => {
-    if (!participants || !handleChange) return;
-    const newParticipants = participants.map((p) =>
-      p.station === station ? { ...p, cardStatus } : p
-    );
-    handleChange(newParticipants);
-  };
-  const changeNoShow = (station: number, noShow: boolean) => {
-    if (!participants || !handleChange) return;
-    const newParticipants = participants.map((p) =>
-      p.station === station ? { ...p, noShow: Number(noShow) } : p
-    );
-    handleChange(newParticipants);
-  };
-  const changeDisqualified = (station: number, disqualified: boolean) => {
-    if (!participants || !handleChange) return;
-    const newParticipants = participants.map((p) =>
-      p.station === station ? { ...p, disqualified: Number(disqualified) } : p
-    );
-    handleChange(newParticipants);
   };
 
   return (
     <Card
-      className={alliance === 'red' ? 'red-bg-imp' : 'blue-bg-imp'}
-      style={{ paddingBottom: 8, minHeight: '100%' }}
+      style={{
+        height: '100%',
+        borderTop: `4px solid ${color}`,
+        // A tint layered over the card background reads well in both themes.
+        backgroundImage: `linear-gradient(${tint}, ${tint})`
+      }}
+      styles={{ body: { padding: 12 } }}
     >
-      <Row style={{ marginBottom: 8 }}>
-        <Col md={4} style={{ paddingTop: 4 }}>
-          <Typography.Text
-            style={{ width: '100%', display: 'block', textAlign: 'center' }}
-          >
-            Team
-          </Typography.Text>
-        </Col>
-        <Col md={4} style={{ paddingTop: 4 }}>
-          <Typography.Text
-            style={{ width: '100%', display: 'block', textAlign: 'center' }}
-          >
-            Card Status
-          </Typography.Text>
-        </Col>
-        <Col md={2} style={{ paddingTop: 4 }}>
-          <Typography.Text
-            style={{ width: '100%', display: 'block', textAlign: 'center' }}
-          >
-            No Show
-          </Typography.Text>
-        </Col>
-        <Col md={2} style={{ paddingTop: 4 }}>
-          <Typography.Text
-            style={{ width: '100%', display: 'block', textAlign: 'center' }}
-          >
-            DQ
-          </Typography.Text>
-        </Col>
-      </Row>
-      {allianceParticipants.map((p) => {
-        const handleTeamChange = (team: Team | null) => {
-          if (!team) return;
-          changeParticipant(p.station, team.teamKey);
-        };
-        const handleCardChange = (status: number) => {
-          changeCardStatus(p.station, status);
-        };
-        const handleNoShowChange = (value: boolean) => {
-          changeNoShow(p.station, value);
-        };
-        const handleDisqualifiedChange = (value: boolean) => {
-          changeDisqualified(p.station, value);
-        };
-        return (
-          <Row
-            key={`${p.teamKey}-${p.station}`}
-            gutter={8}
-            style={{ padding: '4px 12px' }}
-            align='middle'
-          >
-            <Col md={4}>
-              <AutocompleteTeam
-                teams={teams}
-                teamKey={p.teamKey}
-                disabled={disabled}
-                onChange={handleTeamChange}
-              />
-            </Col>
-            <Col md={4}>
-              <FGCParticipantCardStatus
-                cardStatus={p.cardStatus}
-                disabled={disabled}
-                onChange={handleCardChange}
-              />
-            </Col>
-            <Col md={2}>
-              <CheckboxStatus
-                value={Boolean(p.noShow)}
-                disabled={disabled}
-                onChange={handleNoShowChange}
-              />
-            </Col>
-            <Col md={2}>
-              <CheckboxStatus
-                value={Boolean(p.disqualified)}
-                disabled={disabled}
-                onChange={handleDisqualifiedChange}
-              />
-            </Col>
-          </Row>
-        );
-      })}
+      <Typography.Text
+        strong
+        style={{ color, display: 'block', marginBottom: 8 }}
+      >
+        {title}
+      </Typography.Text>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: GRID_COLUMNS,
+          alignItems: 'center',
+          columnGap: 8,
+          rowGap: 6
+        }}
+      >
+        <HeaderCell />
+        <HeaderCell label='Team' align='left' />
+        <HeaderCell label='Card' />
+        <HeaderCell label='No Show' />
+        <HeaderCell label='DQ' />
+        {allianceParticipants.map((p) => (
+          <Fragment key={p.station}>
+            <Typography.Text type='secondary'>{p.station % 10}</Typography.Text>
+            <AutocompleteTeam
+              teams={teams}
+              teamKey={p.teamKey}
+              disabled={disabled}
+              onChange={(team) =>
+                team && updateParticipant(p.station, { teamKey: team.teamKey })
+              }
+            />
+            <FGCParticipantCardStatus
+              cardStatus={p.cardStatus}
+              disabled={disabled}
+              onChange={(cardStatus) =>
+                updateParticipant(p.station, { cardStatus })
+              }
+            />
+            <CheckboxStatus
+              value={Boolean(p.noShow)}
+              disabled={disabled}
+              onChange={(noShow) =>
+                updateParticipant(p.station, { noShow: Number(noShow) })
+              }
+            />
+            <CheckboxStatus
+              value={Boolean(p.disqualified)}
+              disabled={disabled}
+              onChange={(disqualified) =>
+                updateParticipant(p.station, {
+                  disqualified: Number(disqualified)
+                })
+              }
+            />
+          </Fragment>
+        ))}
+      </div>
     </Card>
   );
 };
+
+const HeaderCell: FC<{ label?: string; align?: 'left' | 'center' }> = ({
+  label,
+  align = 'center'
+}) => (
+  <Typography.Text type='secondary' style={{ fontSize: 12, textAlign: align }}>
+    {label}
+  </Typography.Text>
+);

@@ -6,6 +6,7 @@ import {
 } from '../hooks/use-commit-scores.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { Button } from 'antd';
+import { CheckCircleOutlined, SaveOutlined } from '@ant-design/icons';
 
 export const CommitScoresButton: FC = () => {
   const [loading, setLoading] = useState(false);
@@ -32,22 +33,26 @@ export const CommitScoresButton: FC = () => {
   };
   return canCommitScores ? (
     <Button
-      type='primary'
+      color='green'
+      variant='solid'
+      size='large'
       block
+      icon={<SaveOutlined />}
       onClick={sendCommitScores}
       disabled={!canCommitScores || loading}
       loading={loading}
-      style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
     >
       Commit Scores
     </Button>
   ) : (
     <Button
-      type='primary'
+      color='green'
+      variant='solid'
+      size='large'
       block
+      icon={<CheckCircleOutlined />}
       onClick={sendResetField}
       disabled={!canResetField}
-      style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
     >
       All Clear
     </Button>

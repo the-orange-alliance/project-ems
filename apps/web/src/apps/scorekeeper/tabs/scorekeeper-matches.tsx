@@ -1,4 +1,4 @@
-import { Divider } from 'antd';
+import { Flex } from 'antd';
 import { Match, Team, Tournament } from '@toa-lib/models';
 import { FC } from 'react';
 import TournamentDropdown from 'src/components/dropdowns/tournament-dropdown.js';
@@ -26,13 +26,12 @@ export const ScorekeeperMatches: FC<Props> = ({
   onMatchSelect
 }) => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Flex vertical gap={12}>
       <TournamentDropdown
         tournaments={tournaments}
         value={tournamentKey}
         onChange={onTournamentChange}
       />
-      <Divider />
       <MatchResultsTable
         colored
         matches={matches ?? []}
@@ -41,6 +40,6 @@ export const ScorekeeperMatches: FC<Props> = ({
         onSelect={onMatchSelect}
         disabled={disabled}
       />
-    </div>
+    </Flex>
   );
 };

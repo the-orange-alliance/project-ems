@@ -1,4 +1,5 @@
 import { Button } from 'antd';
+import { CloudUploadOutlined } from '@ant-design/icons';
 import { FC } from 'react';
 import { useMatchControl } from '../hooks/use-match-control.js';
 import { usePostResultsCallback } from '../hooks/use-post-results.js';
@@ -8,11 +9,13 @@ export const PostResultsButton: FC = () => {
   const postResults = usePostResultsCallback();
   return (
     <Button
-      type='primary'
+      color='green'
+      variant='solid'
+      size='large'
       block
+      icon={<CloudUploadOutlined />}
       onClick={postResults}
       disabled={!canPostResults}
-      style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
     >
       Post Results
     </Button>

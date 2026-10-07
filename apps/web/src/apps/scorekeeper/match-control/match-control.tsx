@@ -7,27 +7,22 @@ import { StartMatchButton } from './start-match-button.js';
 import { CommitScoresButton } from './commit-scores-button.js';
 import { PostResultsButton } from './post-results-button.js';
 
-export const MatchControl: FC = () => {
-  return (
-    <Row gutter={[24, 24]} style={{ width: '100%' }}>
-      <Col xs={24} sm={12} md={8} lg={4}>
-        <PrestartButton />
+// In match-flow order.
+const STEPS = [
+  PrestartButton,
+  DisplaysButton,
+  FieldPrepButton,
+  StartMatchButton,
+  CommitScoresButton,
+  PostResultsButton
+];
+
+export const MatchControl: FC = () => (
+  <Row gutter={[8, 8]}>
+    {STEPS.map((Step, i) => (
+      <Col key={i} xs={12} md={8} xl={4}>
+        <Step />
       </Col>
-      <Col xs={24} sm={12} md={8} lg={4}>
-        <DisplaysButton />
-      </Col>
-      <Col xs={24} sm={12} md={8} lg={4}>
-        <FieldPrepButton />
-      </Col>
-      <Col xs={24} sm={12} md={8} lg={4}>
-        <StartMatchButton />
-      </Col>
-      <Col xs={24} sm={12} md={8} lg={4}>
-        <CommitScoresButton />
-      </Col>
-      <Col xs={24} sm={12} md={8} lg={4}>
-        <PostResultsButton />
-      </Col>
-    </Row>
-  );
-};
+    ))}
+  </Row>
+);

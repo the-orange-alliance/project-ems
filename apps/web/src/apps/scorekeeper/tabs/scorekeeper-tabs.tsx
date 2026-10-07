@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { Tabs, Divider, Card } from 'antd';
+import { Tabs, Card } from 'antd';
 import { TabPanel } from 'src/components/util/tab-panel.js';
 import { ScorekeeperMatches } from './scorekeeper-matches.js';
 import { useMatchControl } from '../hooks/use-match-control.js';
@@ -58,18 +58,16 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
   };
 
   return (
-    <Card style={{ width: '100%' }} styles={{ body: { padding: 0 } }}>
+    <Card style={{ width: '100%' }} styles={{ body: { padding: '0 16px' } }}>
       <Tabs
         activeKey={String(value)}
-        size='large'
-        style={{ marginLeft: 8, marginRight: 8 }}
         onChange={handleChange}
         items={[
           {
             key: '0',
             label: 'Schedule',
             children: (
-              <TabPanel value={value} index={0}>
+              <TabPanel value={value} index={0} noPadding>
                 <ScorekeeperMatches
                   matches={tournamentMatches?.filter((m) =>
                     activeFields.includes(m.fieldNumber)
@@ -89,7 +87,7 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
             key: '1',
             label: 'Score Details',
             children: (
-              <TabPanel value={value} index={1}>
+              <TabPanel value={value} index={1} noPadding>
                 <ScorekeeperDetails />
               </TabPanel>
             )
@@ -98,14 +96,13 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
             key: '2',
             label: 'Options',
             children: (
-              <TabPanel value={value} index={2}>
+              <TabPanel value={value} index={2} noPadding>
                 <ScorekeeperOptions />
               </TabPanel>
             )
           }
         ]}
       />
-      <Divider style={{ margin: 0 }} />
     </Card>
   );
 };

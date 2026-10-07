@@ -3,6 +3,7 @@ import { useMatchControl } from '../hooks/use-match-control.js';
 import { usePrepareFieldCallback } from '../hooks/use-prepare-field.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { Button } from 'antd';
+import { ToolOutlined } from '@ant-design/icons';
 
 export const FieldPrepButton: FC = () => {
   const [loading, setLoading] = useState(false);
@@ -21,12 +22,14 @@ export const FieldPrepButton: FC = () => {
   };
   return (
     <Button
-      type='primary'
+      color='orange'
+      variant='solid'
+      size='large'
       block
+      icon={<ToolOutlined />}
       onClick={sendPrepareField}
       disabled={!canPrepField || loading}
       loading={loading}
-      style={{ backgroundColor: '#faad14', borderColor: '#faad14' }}
     >
       Prep Field
     </Button>

@@ -6,6 +6,7 @@ import {
 } from '../hooks/use-start-match.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { Button } from 'antd';
+import { PlayCircleOutlined, StopOutlined } from '@ant-design/icons';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 
 export const StartMatchButton: FC = () => {
@@ -36,7 +37,9 @@ export const StartMatchButton: FC = () => {
     <Button
       type='primary'
       danger
+      size='large'
       block
+      icon={<PlayCircleOutlined />}
       onClick={sendStartMatch}
       disabled={!canStartMatch || loading || !connected}
       loading={loading}
@@ -47,7 +50,9 @@ export const StartMatchButton: FC = () => {
     <Button
       type='primary'
       danger
+      size='large'
       block
+      icon={<StopOutlined />}
       onClick={sendAbortMatch}
       disabled={!canAbortMatch}
     >

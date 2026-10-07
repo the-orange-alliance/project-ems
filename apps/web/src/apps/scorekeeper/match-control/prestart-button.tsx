@@ -1,4 +1,5 @@
 import { Button } from 'antd';
+import { CloseCircleOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { FC, useState } from 'react';
 import { useMatchControl } from '../hooks/use-match-control.js';
 import {
@@ -47,12 +48,14 @@ export const PrestartButton: FC = () => {
     <>
       {canPrestart ? (
         <Button
-          type='primary'
+          color='orange'
+          variant='solid'
+          size='large'
           block
+          icon={<ThunderboltOutlined />}
           onClick={sendPrestart}
           disabled={!canPrestart || loading}
           loading={loading}
-          style={{ backgroundColor: '#faad14', borderColor: '#faad14' }}
         >
           Prestart
         </Button>
@@ -60,7 +63,9 @@ export const PrestartButton: FC = () => {
         <Button
           type='primary'
           danger
+          size='large'
           block
+          icon={<CloseCircleOutlined />}
           onClick={sendCancelPrestart}
           disabled={!canCancelPrestart}
         >

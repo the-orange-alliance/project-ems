@@ -1,4 +1,5 @@
 import { Button } from 'antd';
+import { DesktopOutlined } from '@ant-design/icons';
 import { FC, useState } from 'react';
 import { useMatchControl } from '../hooks/use-match-control.js';
 import { usePairedFieldGate } from '../hooks/use-paired-field-check.js';
@@ -27,20 +28,16 @@ export const DisplaysButton: FC = () => {
     setLoading(true);
     try {
       events.display(Displays.MATCH_START);
-      webhooksApi.create.emit(WebhookEvent.DISPLAYS_SET, match); // "match preview is set" — always happens
+      webhooksApi.create.emit(WebhookEvent.DISPLAYS_SET, match);
 
       if (pairedField && match) {
         const shouldBlock = await checkPairedFieldGate(match);
         if (shouldBlock) {
           const setActive = await pairedFieldDialog.show();
-          if (!setActive) return; // Back Out: bail before going active below
+          if (!setActive) return;
         }
       }
-      // Reached when: no paired field is set (current behavior, unchanged,
-      // plus this webhook); a paired field is set but nothing to block on
-      // (partner's previous match already played, or this is the first
-      // match on that field); or a paired field blocked and the operator
-      // picked "Set Field as Active".
+      // Only go active once the paired field (if any) is clear or overridden.
       webhooksApi.create.emit(WebhookEvent.PRODUCTION_ACTIVE, match);
       setState(MatchState.AUDIENCE_READY);
     } catch (e) {
@@ -52,12 +49,14 @@ export const DisplaysButton: FC = () => {
   };
   return (
     <Button
-      type='primary'
+      color='blue'
+      variant='solid'
+      size='large'
       block
+      icon={<DesktopOutlined />}
       onClick={updateDisplays}
       disabled={!canSetDisplays || loading}
       loading={loading}
-      style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
     >
       Set Displays
     </Button>

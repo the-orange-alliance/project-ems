@@ -20,8 +20,8 @@ export const MatchHeader: FC<Props> = ({ teams }) => {
     setMatch({ ...match, participants });
   };
   return (
-    <Row gutter={8} style={{ marginTop: 16, width: '100%' }}>
-      <Col xs={24} sm={12} md={10}>
+    <Row gutter={[8, 8]}>
+      <Col xs={24} md={12} xl={10}>
         <AllianceCard
           teams={teams}
           participants={match?.participants}
@@ -30,10 +30,11 @@ export const MatchHeader: FC<Props> = ({ teams }) => {
           handleChange={handleParticipantChange}
         />
       </Col>
-      <Col xs={24} sm={12} md={4} style={{ paddingTop: 0 }}>
+      {/* Sits between the alliances on wide screens, above them otherwise. */}
+      <Col xs={{ span: 24, order: -1 }} xl={{ span: 4, order: 0 }}>
         <MatchInfo />
       </Col>
-      <Col xs={24} sm={12} md={10}>
+      <Col xs={24} md={12} xl={10}>
         <AllianceCard
           teams={teams}
           participants={match?.participants}

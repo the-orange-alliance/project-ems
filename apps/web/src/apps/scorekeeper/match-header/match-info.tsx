@@ -1,15 +1,40 @@
-import { Card, Typography, Tag } from 'antd';
+import { Badge, Card, Flex, Typography } from 'antd';
 import { FC } from 'react';
-import {
-  ExclamationCircleOutlined,
-  CheckCircleOutlined
-} from '@ant-design/icons';
+import { Alliance } from '@toa-lib/models';
 import { MatchTimer } from 'src/components/util/match-timer.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useAtomValue } from 'jotai';
 import { matchStatusAtom } from 'src/stores/state/match.js';
 import { isAudioEnabledForScorekeeper } from 'src/stores/state/ui.js';
 import { matchAtom } from 'src/stores/state/index.js';
+import { ALLIANCES, allianceTint } from './alliances.js';
+
+const ScoreTile: FC<{ alliance: Alliance; score?: number }> = ({
+  alliance,
+  score
+}) => (
+  <Flex
+    flex={1}
+    vertical
+    align='center'
+    style={{
+      padding: '2px 0',
+      borderTop: `3px solid ${ALLIANCES[alliance].color}`,
+      background: allianceTint(alliance, '26')
+    }}
+  >
+    <Typography.Text
+      style={{
+        fontSize: 28,
+        fontWeight: 700,
+        lineHeight: 1.2,
+        fontVariantNumeric: 'tabular-nums'
+      }}
+    >
+      {score ?? '--'}
+    </Typography.Text>
+  </Flex>
+);
 
 export const MatchInfo: FC = () => {
   const matchState = useAtomValue(matchStatusAtom);
@@ -18,43 +43,44 @@ export const MatchInfo: FC = () => {
   const { connected } = useSocketWorker();
   return (
     <Card
-      style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 16
+      style={{ height: '100%' }}
+      styles={{
+        body: {
+          height: '100%',
+          padding: 12,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 4,
+          textAlign: 'center'
+        }
       }}
     >
-      <Typography.Title style={{ textAlign: 'center' }} level={4}>
+      <Typography.Text strong>
         {match ? match.name : 'No Match Selected'}
-      </Typography.Title>
-      <Typography.Title
-        level={3}
-        style={{ textAlign: 'center', marginBottom: 8 }}
-      >
-        <MatchTimer audio={audioEnabled} />
-      </Typography.Title>
-      <Typography.Text
-        style={{ display: 'block', textAlign: 'center', marginBottom: 8 }}
-      >
-        {matchState}
       </Typography.Text>
-      <Tag
-        icon={
-          connected ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />
-        }
-        color={connected ? 'success' : 'error'}
+      <Typography.Text
         style={{
-          alignSelf: 'center',
-          marginTop: 8,
-          width: '100%',
-          textAlign: 'center'
+          fontSize: 40,
+          fontWeight: 600,
+          lineHeight: 1.1,
+          fontVariantNumeric: 'tabular-nums'
         }}
       >
-        {connected ? 'Connected' : 'Not Connected'}
-      </Tag>
+        <MatchTimer audio={audioEnabled} />
+      </Typography.Text>
+      <Typography.Text type='secondary' style={{ fontSize: 12 }}>
+        {matchState}
+      </Typography.Text>
+      <Flex gap={8} style={{ width: '100%', margin: '4px 0' }}>
+        <ScoreTile alliance='red' score={match?.redScore} />
+        <ScoreTile alliance='blue' score={match?.blueScore} />
+      </Flex>
+      <Badge
+        status={connected ? 'success' : 'error'}
+        text={connected ? 'Connected' : 'Not Connected'}
+      />
     </Card>
   );
 };
