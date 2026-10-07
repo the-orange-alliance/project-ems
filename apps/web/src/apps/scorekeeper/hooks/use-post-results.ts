@@ -48,35 +48,36 @@ export const usePostResultsCallback = () => {
           throw new Error('Attempted to psot results when there is no match.');
         }
 
-        // Sync match online
-        const { success: successMatch } = await resultsSyncApi.create.match(
-          match.eventKey,
-          match.tournamentKey,
-          match.id,
-          platform,
-          apiKey
-        );
-
-        const { success: successRankings } =
-          await resultsSyncApi.create.rankings(
+        // The three syncs are independent requests, so run them together.
+        const isPlayoffsOrAbove =
+          !!tournament && tournament.tournamentLevel > QUALIFICATION_LEVEL;
+        const [
+          { success: successMatch },
+          { success: successRankings },
+          { success: successAlliances }
+        ] = await Promise.all([
+          resultsSyncApi.create.match(
+            match.eventKey,
+            match.tournamentKey,
+            match.id,
+            platform,
+            apiKey
+          ),
+          resultsSyncApi.create.rankings(
             match.eventKey,
             match.tournamentKey,
             platform,
             apiKey
-          );
-
-        let successAlliances = true;
-
-        if (tournament && tournament.tournamentLevel > QUALIFICATION_LEVEL) {
-          successAlliances = (
-            await resultsSyncApi.create.alliances(
-              match.eventKey,
-              match.tournamentKey,
-              platform,
-              apiKey
-            )
-          ).success;
-        }
+          ),
+          isPlayoffsOrAbove
+            ? resultsSyncApi.create.alliances(
+                match.eventKey,
+                match.tournamentKey,
+                platform,
+                apiKey
+              )
+            : { success: true }
+        ]);
 
         if (matches) {
           // Update local match array with posted = 1 if all were successful

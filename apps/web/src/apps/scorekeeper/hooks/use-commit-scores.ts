@@ -100,34 +100,36 @@ export const useCommitScoresCallback = () => {
           throw new Error('Failed to commit scores for match.', { cause: e });
         }
 
-        try {
-          if (isPlayoffsTournament(tournament)) {
-            await rankingsApi.create.recalculate(eventKey, tournamentKey, true);
-          } else {
-            await rankingsApi.create.recalculate(eventKey, tournamentKey);
+        // Rankings and carried cards both depend only on the committed match,
+        // so run them together. A carried card is advisory display state that
+        // can be set by hand, so its failure is logged rather than rethrown;
+        // it only runs once the match itself is committed, so a failed commit
+        // never leaves a team carrying a card for a match that was not recorded.
+        const recalculateRankings = async () => {
+          try {
+            await rankingsApi.create.recalculate(
+              eventKey,
+              tournamentKey,
+              isPlayoffsTournament(tournament)
+            );
+          } catch (e) {
+            throw new Error('Failed to calculate rankings.', { cause: e });
           }
-        } catch (e) {
-          // Rankings recalc failed
-          throw new Error('Failed to calculate rankings.', { cause: e });
-        }
-
-        // Carry any yellow cards from this match forward for the rest of the
-        // phase. Only after the match itself has been committed, so a failed
-        // commit never leaves a team carrying a card for a match that was not
-        // recorded. Not rethrown: the scores are already saved, and a carried
-        // card is advisory display state that can be set by hand.
-        try {
-          await teamsApi.create.carriedCards(
-            eventKey,
-            tournamentKey,
-            (pending.participants ?? []).map((p) => ({
-              teamKey: p.teamKey,
-              cardStatus: p.cardStatus
-            }))
-          );
-        } catch (e) {
-          console.error('Failed to carry cards forward for match', e);
-        }
+        };
+        const carryCardsForward = () =>
+          teamsApi.create
+            .carriedCards(
+              eventKey,
+              tournamentKey,
+              (pending.participants ?? []).map((p) => ({
+                teamKey: p.teamKey,
+                cardStatus: p.cardStatus
+              }))
+            )
+            .catch((e) =>
+              console.error('Failed to carry cards forward for match', e)
+            );
+        await Promise.all([recalculateRankings(), carryCardsForward()]);
 
         fieldControl?.commitScoresForField?.();
         events.commit({ eventKey, tournamentKey, id });

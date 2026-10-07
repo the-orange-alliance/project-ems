@@ -1,9 +1,9 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Tabs, Card } from 'antd';
 import { TabPanel } from 'src/components/util/tab-panel.js';
 import { ScorekeeperMatches } from './scorekeeper-matches.js';
 import { useMatchControl } from '../hooks/use-match-control.js';
-import { MatchState } from '@toa-lib/models';
+import { Match, MatchState } from '@toa-lib/models';
 import { ScorekeeperDetails } from './scorekeeper-details.js';
 import { useActiveFieldNumbers } from 'src/components/sync-effects/sync-fields.js';
 import { ScorekeeperOptions } from './scorekeeper-options.js';
@@ -15,6 +15,7 @@ import {
 } from 'src/stores/state/event.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { matchApi, useMatchesForTournament } from 'src/api/use-match-data.js';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
 
 interface Props {
   eventKey?: string;
@@ -25,9 +26,14 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
   const [tournamentKey, setTournamentKey] = useAtom(tournamentKeyAtom);
   const [matchId, setMatchId] = useAtom(matchIdAtom);
   const [value, setValue] = useState(0);
+  const [loadingMatch, setLoadingMatch] = useState(false);
+  const requestedMatchId = useRef<number | null>(null);
   const setMatchOccurring = useSetAtom(matchAtom);
   const [activeFields] = useActiveFieldNumbers();
+  const { showErrorSnackbar } = useSnackbar();
 
+  // The event's full match list isn't needed here; only the selected match is
+  // kept in state, which keeps every match lookup cheap.
   const {
     state: {
       local: { teams, tournaments }
@@ -37,6 +43,15 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
     eventKey,
     tournamentKey
   );
+  const fieldMatches = useMemo(
+    () =>
+      tournamentMatches?.filter((m) => activeFields.includes(m.fieldNumber)),
+    [tournamentMatches, activeFields]
+  );
+  const isSelected = useCallback(
+    (match: Match<any>) => match.id === matchId,
+    [matchId]
+  );
 
   useEffect(() => {
     setValue(0);
@@ -44,17 +59,29 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
 
   const handleChange = (key: string) => setValue(Number(key));
   const handleTournamentChange = (key: string) => {
+    // Discard any in-flight match load so it can't re-select a match here.
+    requestedMatchId.current = null;
+    setLoadingMatch(false);
     setTournamentKey(key);
     setMatchId(null);
     setState(MatchState.MATCH_NOT_SELECTED);
   };
   const handleMatchChange = (id: number) => {
-    if (!tournamentMatches || !tournamentKey || !eventKey) return null;
+    if (!tournamentMatches || !tournamentKey || !eventKey) return;
+    requestedMatchId.current = id;
+    // Show the schedule's copy right away; the full match (details) replaces it.
     setMatchOccurring(tournamentMatches.find((m) => m.id === id) ?? null);
-    void matchApi.get.all(eventKey, tournamentKey, id).then((fullMatch) => {
-      setMatchOccurring(fullMatch);
-    });
     setState(MatchState.PRESTART_READY);
+    setLoadingMatch(true);
+    matchApi.get
+      .all(eventKey, tournamentKey, id)
+      .then((fullMatch) => {
+        if (requestedMatchId.current === id) setMatchOccurring(fullMatch);
+      })
+      .catch((e) => showErrorSnackbar('Error while loading match.', e))
+      .finally(() => {
+        if (requestedMatchId.current === id) setLoadingMatch(false);
+      });
   };
 
   return (
@@ -69,13 +96,12 @@ export const ScorekeeperTabs: FC<Props> = ({ eventKey }) => {
             children: (
               <TabPanel value={value} index={0} noPadding>
                 <ScorekeeperMatches
-                  matches={tournamentMatches?.filter((m) =>
-                    activeFields.includes(m.fieldNumber)
-                  )}
+                  matches={fieldMatches}
                   teams={teams}
                   tournaments={tournaments}
                   tournamentKey={tournamentKey}
-                  selected={(match) => match.id === matchId}
+                  loading={loadingMatch}
+                  selected={isSelected}
                   onTournamentChange={handleTournamentChange}
                   onMatchSelect={handleMatchChange}
                   disabled={!canPrestart && matchId !== null}

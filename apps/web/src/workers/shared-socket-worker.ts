@@ -117,7 +117,8 @@ function ensureSocket(token: string, props: SocketProperties) {
   });
 
   socket.onAny((event: string, data: any) => {
-    console.log('[worker] socket event:', event, data);
+    // Logging every payload retains it in the console for the whole event.
+    if (import.meta.env.DEV) console.log('[worker] socket event:', event, data);
     fanoutEvent(event, data);
   });
 }
