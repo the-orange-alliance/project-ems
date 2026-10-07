@@ -142,7 +142,7 @@ export const useMatchControl = (): MatchControlState => {
         canResetField: true,
         canCommitScores: true,
         canPostResults: false,
-        canEditDetails: false,
+        canEditDetails: true,
         setState
       };
     case MatchState.RESULTS_COMMITTED:
