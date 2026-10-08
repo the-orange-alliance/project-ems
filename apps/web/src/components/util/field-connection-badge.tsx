@@ -15,9 +15,11 @@ const fieldName = (client: FcsFieldClient) =>
  * `minimal` keeps the color but shortens the label to just "Field".
  */
 export const FieldConnectionBadge: FC<{
-  status: FcsConnectionStatus;
+  /** null when the realtime server doesn't report fields; renders nothing */
+  status: FcsConnectionStatus | null;
   minimal?: boolean;
 }> = ({ status, minimal }) => {
+  if (!status) return null;
   const { connected, fields } = status;
   if (!connected) {
     return minimal ? (

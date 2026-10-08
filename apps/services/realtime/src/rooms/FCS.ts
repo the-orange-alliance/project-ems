@@ -137,7 +137,12 @@ export default class FCS extends Room {
     // status, or all fields if no field number is given
     socket.on("fcs:clearStatus", (data?: { field?: number }): void => {
       logger.info("fcs:clearStatus", data);
-      socket.to("fcs").emit("fcs:clearStatus", data);
+      // Relay with no args when none were given, as older EMS did
+      if (data === undefined) {
+        socket.to("fcs").emit("fcs:clearStatus");
+      } else {
+        socket.to("fcs").emit("fcs:clearStatus", data);
+      }
     });
 
     // Season-Specific

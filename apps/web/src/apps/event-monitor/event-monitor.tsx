@@ -42,6 +42,7 @@ import { eventKeyAtom } from '../../stores/state/event.js';
 import { darkModeAtom } from '../../stores/state/ui.js';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 import { FieldConnectionBadge } from 'src/components/util/field-connection-badge.js';
+import { ErrorBoundary } from 'react-error-boundary';
 
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -86,8 +87,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
     Displays.BLANK
   );
   const [fcsStatus, setFcsStatus] = useState<FGC25FCS.FcsStatus | null>(null);
+  // null until this EMS sends fcs:connection; older realtime servers never do
   const [fieldConnection, setFieldConnection] =
-    useState<FcsConnectionStatus>(FIELD_DISCONNECTED);
+    useState<FcsConnectionStatus | null>(null);
   const seasonComponents = useSeasonComponents();
   const eventKey = useAtomValue(eventKeyAtom);
   const isRopeDropSeason =
@@ -138,11 +140,11 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const handleConnect = () => setConnected(true);
   const handleDisconnect = () => {
     setConnected(false);
-    setFieldConnection(FIELD_DISCONNECTED);
+    setFieldConnection((prev) => (prev ? FIELD_DISCONNECTED : null));
   };
 
   const handleFieldConnection = (status: FcsConnectionStatus) => {
-    setFieldConnection(status ?? FIELD_DISCONNECTED);
+    setFieldConnection(status?.fields ? status : FIELD_DISCONNECTED);
   };
 
   const handleDisplay = (display: Displays) => {
@@ -324,7 +326,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
             {fcsStatus &&
             seasonComponents &&
             seasonComponents.FieldMonitorExtraMinimal ? (
-              <seasonComponents.FieldMonitorExtraMinimal {...fcsStatus} />
+              <ErrorBoundary fallback={null} resetKeys={[fcsStatus]}>
+                <seasonComponents.FieldMonitorExtraMinimal {...fcsStatus} />
+              </ErrorBoundary>
             ) : null}
           </Flex>
         </Space>
@@ -369,7 +373,9 @@ const MonitorCard: FC<MonitorCardProps> = ({
             {fcsStatus &&
             seasonComponents &&
             seasonComponents.FieldMonitorExtra ? (
-              <seasonComponents.FieldMonitorExtra {...fcsStatus} />
+              <ErrorBoundary fallback={null} resetKeys={[fcsStatus]}>
+                <seasonComponents.FieldMonitorExtra {...fcsStatus} />
+              </ErrorBoundary>
             ) : null}
           </Flex>
 

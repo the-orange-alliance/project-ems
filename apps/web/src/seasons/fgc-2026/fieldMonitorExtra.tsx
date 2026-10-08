@@ -13,12 +13,17 @@ export const getWledStatus = (
 ): StatusType =>
   !connected ? 'error' : stickyDisconnect ? 'warning' : 'success';
 
+/** False for fields that send no WLED state, or another season's format */
+export const isWledReported = (
+  wled?: Partial<FGC26FCS.WledFcsStatus>
+): wled is FGC26FCS.WledFcsStatus => typeof wled?.goalConnected === 'boolean';
+
 export const FieldMonitorExtra: FC<FGC26FCS.FcsStatus> = ({ wled }) => {
   return (
     <Flex vertical flex={1}>
       <Divider>Field Status</Divider>
       <Card size='small' style={{ width: '100%' }}>
-        {wled ? (
+        {isWledReported(wled) ? (
           <Flex vertical gap='0.5rem'>
             <Typography.Text>WLED</Typography.Text>
             <Flex>
