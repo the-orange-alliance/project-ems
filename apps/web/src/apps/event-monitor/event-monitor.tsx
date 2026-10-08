@@ -60,6 +60,42 @@ interface Monitor {
   realtimePort: number;
 }
 
+interface FieldStatusSectionProps {
+  /** null when this EMS doesn't report field connection */
+  connection: FcsConnectionStatus | null;
+  fcsStatus: FGC25FCS.FcsStatus | null;
+  /** Season-specific status details, e.g. WLED tags */
+  Extra?: FC<any>;
+}
+
+/**
+ * Field connection plus any season-specific status. Hidden only when this EMS
+ * reports neither, i.e. an older realtime server with a field that doesn't
+ * send status.
+ */
+const FieldStatusSection: FC<FieldStatusSectionProps> = ({
+  connection,
+  fcsStatus,
+  Extra
+}) => {
+  if (!connection && !fcsStatus) return null;
+  // A status packet that doesn't match the season's format only hides the
+  // details; it resets on the next packet
+  const extra =
+    fcsStatus && Extra ? (
+      <ErrorBoundary fallback={null} resetKeys={[fcsStatus]}>
+        <Extra {...fcsStatus} />
+      </ErrorBoundary>
+    ) : null;
+  return (
+    <Flex vertical flex={1} gap='0.5rem'>
+      <Divider style={{ margin: '4px 0' }}>Field Status</Divider>
+      <FieldConnectionBadge status={connection} />
+      {extra}
+    </Flex>
+  );
+};
+
 interface MonitorCardProps {
   field: number;
   address: string;
@@ -288,7 +324,6 @@ const MonitorCard: FC<MonitorCardProps> = ({
         }
         extra={
           <Flex align='center' gap={4}>
-            <FieldConnectionBadge status={fieldConnection} minimal />
             <Dropdown
               menu={{ items: menuItems }}
               placement='bottomRight'
@@ -324,15 +359,11 @@ const MonitorCard: FC<MonitorCardProps> = ({
               {getFieldDelay()}
             </Text>
           </Flex>
-          <Flex>
-            {fcsStatus &&
-            seasonComponents &&
-            seasonComponents.FieldMonitorExtraMinimal ? (
-              <ErrorBoundary fallback={null} resetKeys={[fcsStatus]}>
-                <seasonComponents.FieldMonitorExtraMinimal {...fcsStatus} />
-              </ErrorBoundary>
-            ) : null}
-          </Flex>
+          <FieldStatusSection
+            connection={fieldConnection}
+            fcsStatus={fcsStatus}
+            Extra={seasonComponents?.FieldMonitorExtraMinimal}
+          />
         </Space>
       </Card>
       <Modal
@@ -366,20 +397,15 @@ const MonitorCard: FC<MonitorCardProps> = ({
               )}
               <Text>{getMatchStatus()}</Text>
             </Space>
-            <FieldConnectionBadge status={fieldConnection} />
           </Flex>
 
           <MatchDetails key={field} match={match} teams={teams} expanded />
 
-          <Flex>
-            {fcsStatus &&
-            seasonComponents &&
-            seasonComponents.FieldMonitorExtra ? (
-              <ErrorBoundary fallback={null} resetKeys={[fcsStatus]}>
-                <seasonComponents.FieldMonitorExtra {...fcsStatus} />
-              </ErrorBoundary>
-            ) : null}
-          </Flex>
+          <FieldStatusSection
+            connection={fieldConnection}
+            fcsStatus={fcsStatus}
+            Extra={seasonComponents?.FieldMonitorExtra}
+          />
 
           <Divider>Field Control</Divider>
           <Flex vertical gap='0.25rem'>
