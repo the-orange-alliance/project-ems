@@ -1,12 +1,11 @@
 import { FGC25FCS } from '@toa-lib/models';
-import { Divider, Flex, Typography } from 'antd';
+import { Flex, Typography } from 'antd';
 import { FC } from 'react';
 import { StatusTag } from './fieldMonitorExtra.js';
 
 export const FieldMonitorExtraMinimal: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
   return fcsStatus ? (
     <Flex flex={1} vertical gap='0.5rem'>
-      <Divider>Field Status</Divider>
       <Flex justify='space-between'>
         <StatusTag
           status={
