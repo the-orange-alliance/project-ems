@@ -1,6 +1,6 @@
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { FGC25FCS } from '@toa-lib/models';
-import { Card, Divider, Flex, Tag, Typography } from 'antd';
+import { Card, Flex, Tag, Typography } from 'antd';
 import { FC } from 'react';
 
 export type StatusType = 'success' | 'error' | 'warning';
@@ -128,7 +128,6 @@ const AcceleratorCard: FC<AcceleratorCardProps> = ({ name, status }) => {
 export const FieldMonitorExtra: FC<FGC25FCS.FcsStatus> = (fcsStatus) => {
   return fcsStatus ? (
     <Flex vertical flex={1}>
-      <Divider>Field Status</Divider>
       <Card size='small' style={{ width: '100%' }}>
         <Flex vertical flex={1} gap='1rem'>
           {/* WLED */}

@@ -43,8 +43,7 @@ export type PrepFieldBranchStep =
   | { type: 'wait'; duration: number };
 
 export type PrepFieldStep =
-  | PrepFieldBranchStep
-  | { type: 'parallel'; branches: PrepFieldBranchStep[][] };
+  PrepFieldBranchStep | { type: 'parallel'; branches: PrepFieldBranchStep[][] };
 
 // Mirrored from FCS
 export const PREP_FIELD_MAX_STEPS = 100;
@@ -110,5 +109,13 @@ export const prepFieldSequenceDuration = (steps: PrepFieldStep[]): number =>
     0
   );
 
-// TODO: define real field status telemetry once field hardware is designed.
-export type FcsStatus = Record<string, never>;
+export interface WledFcsStatus {
+  goalConnected: boolean;
+  goalStickyDisconnect: boolean;
+}
+
+// TODO: add the rest of the field status telemetry once field hardware is designed.
+export interface FcsStatus {
+  field?: number;
+  wled?: WledFcsStatus;
+}
