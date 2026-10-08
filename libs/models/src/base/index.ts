@@ -10,6 +10,7 @@ export * from '../types.js';
 export * from './Schedule.js';
 export * from './PlayoffStructure.js';
 export * from './Match.js';
+export * from './MatchHighScore.js';
 export * from './MatchTimer.js';
 export * from './FieldControl.js';
 export * from './Ranking.js';

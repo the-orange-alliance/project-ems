@@ -4,6 +4,9 @@ import { DisplayProps } from '../../displays.js';
 import { AllianceSheetStream } from './components/alliance-sheet.js';
 import L3Header from './components/l3-header.js';
 import { useAllianceMember } from 'src/api/use-alliance-data.js';
+import { useMatchHighScore } from 'src/api/use-match-data.js';
+import { HighScoreBadge } from './components/high-score-banner.js';
+import { showsHighScore } from './components/high-score-slot.js';
 
 export const MatchResultsStream: FC<DisplayProps> = ({ match, teams }) => {
   const redAllianceNum = useAllianceMember(
@@ -25,7 +28,8 @@ export const MatchResultsStream: FC<DisplayProps> = ({ match, teams }) => {
     ? `Blue (${blueAllianceNum.allianceNameLong})`
     : 'Blue';
 
-  console.log(blueAllianceNum, redAllianceNum);
+  const { data: highScore } = useMatchHighScore(match);
+  const highScoreBadge = showsHighScore(highScore) ? <HighScoreBadge /> : null;
 
   return (
     <div
@@ -51,6 +55,16 @@ export const MatchResultsStream: FC<DisplayProps> = ({ match, teams }) => {
         title={`Results | ${match?.name || ''}`}
         leftText={redHeader}
         rightText={blueHeader}
+        leftBadge={
+          showsHighScore(highScore) && highScore.alliance === 'red'
+            ? highScoreBadge
+            : undefined
+        }
+        rightBadge={
+          showsHighScore(highScore) && highScore.alliance === 'blue'
+            ? highScoreBadge
+            : undefined
+        }
       />
 
       {/* Main Content Sections */}

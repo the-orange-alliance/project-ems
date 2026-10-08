@@ -5,9 +5,13 @@ import { DisplayProps } from '../../displays.js';
 import FGC_BG from './assets/global-bg.png';
 import { FC } from 'react';
 import DisplayHeader from './components/display-header.js';
+import { useMatchHighScore } from 'src/api/use-match-data.js';
+import { highScoreSlotFor } from './components/high-score-slot.js';
 import { ScaleToFit } from './components/scale-to-fit.js';
 
 export const MatchResults: FC<DisplayProps> = ({ match, teams }) => {
+  const { data: highScore } = useMatchHighScore(match);
+
   return (
     <ScaleToFit>
       <div
@@ -52,6 +56,7 @@ export const MatchResults: FC<DisplayProps> = ({ match, teams }) => {
                   match={match}
                   teams={teams}
                   allianceColor='red'
+                  highScoreSlot={highScoreSlotFor(highScore, 'red')}
                 />
               </Col>
               <Col span={12} style={{ display: 'flex' }}>
@@ -59,6 +64,7 @@ export const MatchResults: FC<DisplayProps> = ({ match, teams }) => {
                   match={match}
                   teams={teams}
                   allianceColor='blue'
+                  highScoreSlot={highScoreSlotFor(highScore, 'blue')}
                 />
               </Col>
             </Row>

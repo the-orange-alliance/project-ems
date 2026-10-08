@@ -5,7 +5,9 @@ import {
   MatchKey,
   MatchParticipant,
   ApiResponseError,
+  MatchHighScore,
   matchZod,
+  matchHighScoreZod,
   matchParticipantZod
 } from '@toa-lib/models';
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
@@ -101,6 +103,16 @@ export const matchApi = {
         `/match/participants/${eventKey}`
       );
       return matchParticipantZod.array().parse(payload ?? []);
+    },
+    highScore: async ({
+      eventKey,
+      tournamentKey,
+      id
+    }: MatchKey): Promise<MatchHighScore> => {
+      const payload = await localClient.get<unknown>(
+        `/match/high-score/${eventKey}/${tournamentKey}/${String(id)}`
+      );
+      return matchHighScoreZod.parse(payload);
     },
     history: async (
       eventKey: string,
@@ -301,5 +313,38 @@ export const useMatchHistory = (
         startRevision: start > 0 ? start : undefined,
         endRevision: end > 0 ? end : undefined
       }),
+    { revalidateOnFocus: false }
+  );
+
+/**
+ * Whether the given match set the high score for its phase.
+ *
+ * Keyed on the match triple plus `updatedAtUtc`, so a referee's score revision
+ * re-asks the question rather than leaving a stale verdict on screen.
+ *
+ * Deliberately a plain SWR read rather than a commit-time atom like
+ * `ensurePostCommitRanks`: an audience tab that reloads mid-results (which
+ * `use-heartbeat-reload` makes routine) re-derives this on mount, where a
+ * commit-event-driven atom would come back empty and silently drop the banner.
+ */
+export const useMatchHighScore = (
+  match: Match<any> | null | undefined
+): SWRResponse<MatchHighScore, ApiResponseError> =>
+  useSWR<
+    MatchHighScore,
+    ApiResponseError,
+    readonly [string, string, string, number, string] | null
+  >(
+    match
+      ? ([
+          '/match/high-score',
+          match.eventKey,
+          match.tournamentKey,
+          match.id,
+          match.updatedAtUtc ?? ''
+        ] as const)
+      : null,
+    ([, eventKey, tournamentKey, id]) =>
+      matchApi.get.highScore({ eventKey, tournamentKey, id }),
     { revalidateOnFocus: false }
   );
