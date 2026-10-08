@@ -1,8 +1,18 @@
 type AnyCb<T = any> = (v: T) => void;
 
 export interface EventBus {
-  once: (key: string, callback: AnyCb, messageKey?: string) => string;
-  on: (key: string, callback: AnyCb, messageKey?: string) => string;
+  once: (
+    key: string,
+    callback: AnyCb,
+    messageKey?: string,
+    replay?: boolean
+  ) => string;
+  on: (
+    key: string,
+    callback: AnyCb,
+    messageKey?: string,
+    replay?: boolean
+  ) => string;
   off: (key: string, listenerId: string, messageKey?: string) => void;
 
   eventListeners: Map<string, Map<string, Map<string, AnyCb<any>>>>;
@@ -42,7 +52,10 @@ function getListenersForKey(
 
 function replayLastEvent(key: string, callback: AnyCb, messageKey?: string) {
   const payloads = lastEventPayload.get(key);
-
+  console.log(
+    `Replaying last event for key: ${key}, messageKey: ${messageKey}`,
+    payloads
+  );
   if (!payloads) {
     return;
   }
@@ -63,29 +76,33 @@ function replayLastEvent(key: string, callback: AnyCb, messageKey?: string) {
 }
 
 export const eventBus: EventBus = {
-  on(key, callback, messageKey) {
+  on(key, callback, messageKey, replay) {
     const listeners = getListenersForKey(key, messageKey);
     const listenerId = createListenerId();
 
     listeners.set(listenerId, callback);
 
-    replayLastEvent(key, callback, messageKey);
+    if (replay) {
+      replayLastEvent(key, callback, messageKey);
+    }
 
     return listenerId;
   },
 
-  once(key, callback, messageKey) {
+  once(key, callback, messageKey, replay) {
     const listeners = getListenersForKey(key, messageKey);
     const listenerId = createListenerId();
 
     const wrapper = (data: any) => {
       callback(data);
-      this.off(key, listenerId, messageKey);
+      eventBus.off(key, listenerId, messageKey);
     };
 
     listeners.set(listenerId, wrapper);
 
-    replayLastEvent(key, wrapper, messageKey);
+    if (replay) {
+      replayLastEvent(key, wrapper, messageKey);
+    }
 
     return listenerId;
   },

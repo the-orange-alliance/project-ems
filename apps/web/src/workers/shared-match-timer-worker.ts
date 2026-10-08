@@ -1,7 +1,32 @@
 /// <reference lib="webworker" />
 import * as Comlink from 'comlink';
-import { MatchTimer, MatchConfiguration } from '@toa-lib/models';
+import {
+  MatchTimer,
+  MatchConfiguration,
+  MatchMode,
+  TimerEventPayload
+} from '@toa-lib/models';
 import { EventBus, eventBus } from './util/event-bus.js';
+
+export type TimerEventName =
+  | 'timer:start'
+  | 'timer:auto'
+  | 'timer:transition'
+  | 'timer:tele'
+  | 'timer:endgame'
+  | 'timer:end'
+  | 'timer:abort'
+  | 'timer:tick';
+
+/** What each connected port receives: the timer's state, and the event behind it, if any. */
+export interface TimerMessage {
+  __timer: true;
+  event?: TimerEventName;
+  payload?: TimerEventPayload;
+  timeLeft: number;
+  mode: MatchMode;
+  inProgress: boolean;
+}
 
 export interface MatchTimerWorkerAPI extends EventBus {
   start: () => void;
@@ -34,10 +59,14 @@ function snapshot() {
   };
 }
 
-function broadcast(msg: any) {
+function broadcast(msg: Partial<TimerMessage>) {
   snapshot();
   for (const port of ports) {
-    port.postMessage({ __timer: true, ...msg });
+    try {
+      port.postMessage({ __timer: true, ...lastSnapshot, ...msg });
+    } catch {
+      ports.delete(port);
+    }
   }
 }
 
