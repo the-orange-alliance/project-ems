@@ -12,15 +12,23 @@ const fieldName = (client: FcsFieldClient) =>
 /**
  * Shows whether field hardware is reporting to EMS, and flags any of its
  * devices (e.g. WLEDs) that are offline. Hover for per-device details.
+ * `connectionOnly` is for places that list the devices themselves: it just
+ * reads Online / Offline.
  */
 export const FieldConnectionBadge: FC<{
   /** null when the realtime server doesn't report fields; renders nothing */
   status: FcsConnectionStatus | null;
-}> = ({ status }) => {
+  connectionOnly?: boolean;
+}> = ({ status, connectionOnly }) => {
   if (!status) return null;
   const { connected, fields } = status;
   if (!connected) {
-    return <Badge status='error' text='Field Not Connected' />;
+    return (
+      <Badge
+        status='error'
+        text={connectionOnly ? 'Offline' : 'Field Not Connected'}
+      />
+    );
   }
 
   const degraded = fields.filter((f) => getOfflineDevices(f).length > 0);
@@ -40,6 +48,18 @@ export const FieldConnectionBadge: FC<{
         )
       : [`${fieldName(f)}: Connected`];
   });
+
+  if (connectionOnly) {
+    return (
+      <Tooltip
+        title={details.map((line) => (
+          <div key={line}>{line}</div>
+        ))}
+      >
+        <Badge status='success' text='Online' />
+      </Tooltip>
+    );
+  }
 
   return (
     <Tooltip

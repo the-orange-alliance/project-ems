@@ -1,6 +1,7 @@
 import { FGC26FCS } from '@toa-lib/models';
-import { Card, Flex, Typography } from 'antd';
+import { Tooltip } from 'antd';
 import { FC } from 'react';
+import { FieldStatusRow } from 'src/components/util/field-status-row.js';
 import { StatusTag, StatusType } from '../fgc-2025/fieldMonitorExtra.js';
 
 /**
@@ -13,31 +14,34 @@ export const getWledStatus = (
 ): StatusType =>
   !connected ? 'error' : stickyDisconnect ? 'warning' : 'success';
 
+const WLED_STATUS_LABELS: Record<StatusType, string> = {
+  success: 'OK',
+  warning: 'Dropped',
+  error: 'Offline'
+};
+
+const WLED_STATUS_HINTS: Record<StatusType, string> = {
+  success: 'Connected since the last Clear Status',
+  warning: 'Reconnected, but dropped since the last Clear Status',
+  error: 'Not connected'
+};
+
 /** False for fields that send no WLED state, or another season's format */
 export const isWledReported = (
   wled?: Partial<FGC26FCS.WledFcsStatus>
 ): wled is FGC26FCS.WledFcsStatus => typeof wled?.goalConnected === 'boolean';
 
+/** The Goal LEDs row, shared by the dashboard card and the detail view. */
 export const FieldMonitorExtra: FC<FGC26FCS.FcsStatus> = ({ wled }) => {
-  return isWledReported(wled) ? (
-    <Flex vertical flex={1}>
-      <Card size='small' style={{ width: '100%' }}>
-        <Flex vertical gap='0.5rem'>
-          <Typography.Text>WLED</Typography.Text>
-          <Flex>
-            <StatusTag
-              status={getWledStatus(
-                wled.goalConnected,
-                wled.goalStickyDisconnect
-              )}
-              label='Goal'
-            />
-          </Flex>
-          <Typography.Text type='secondary' style={{ fontSize: 12 }}>
-            Yellow means the LEDs dropped since the last Clear Status.
-          </Typography.Text>
-        </Flex>
-      </Card>
-    </Flex>
-  ) : null;
+  if (!isWledReported(wled)) return null;
+  const status = getWledStatus(wled.goalConnected, wled.goalStickyDisconnect);
+  return (
+    <FieldStatusRow label='Goal LEDs'>
+      <Tooltip title={WLED_STATUS_HINTS[status]}>
+        <span>
+          <StatusTag status={status} label={WLED_STATUS_LABELS[status]} />
+        </span>
+      </Tooltip>
+    </FieldStatusRow>
+  );
 };

@@ -43,6 +43,7 @@ import { eventKeyAtom } from '../../stores/state/event.js';
 import { darkModeAtom } from '../../stores/state/ui.js';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 import { FieldConnectionBadge } from 'src/components/util/field-connection-badge.js';
+import { FieldStatusRow } from 'src/components/util/field-status-row.js';
 import { ErrorBoundary } from 'react-error-boundary';
 import { FORCE_PREP_FIELD_CONFIRM } from 'src/apps/scorekeeper/hooks/use-production-options.js';
 
@@ -64,8 +65,10 @@ interface FieldStatusSectionProps {
   /** null when this EMS doesn't report field connection */
   connection: FcsConnectionStatus | null;
   fcsStatus: FGC25FCS.FcsStatus | null;
-  /** Season-specific status details, e.g. WLED tags */
+  /** Season-specific status rows, e.g. WLED states */
   Extra?: FC<any>;
+  /** Lighter heading for the dashboard cards */
+  compact?: boolean;
 }
 
 /**
@@ -76,7 +79,8 @@ interface FieldStatusSectionProps {
 const FieldStatusSection: FC<FieldStatusSectionProps> = ({
   connection,
   fcsStatus,
-  Extra
+  Extra,
+  compact
 }) => {
   if (!connection && !fcsStatus) return null;
   // A status packet that doesn't match the season's format only hides the
@@ -88,10 +92,30 @@ const FieldStatusSection: FC<FieldStatusSectionProps> = ({
       </ErrorBoundary>
     ) : null;
   return (
-    <Flex vertical flex={1} gap='0.5rem'>
-      <Divider style={{ margin: '4px 0' }}>Field Status</Divider>
-      <FieldConnectionBadge status={connection} />
-      {extra}
+    <Flex vertical flex={1} gap={compact ? 4 : 8}>
+      {compact ? (
+        <Divider plain style={{ margin: '4px 0' }}>
+          <Text type='secondary' style={{ fontSize: 12 }}>
+            Field Status
+          </Text>
+        </Divider>
+      ) : (
+        <Divider>Field Status</Divider>
+      )}
+      {/* Cards stack label/value rows; the wide detail view sets them side by side */}
+      <Flex
+        vertical={compact}
+        wrap={!compact}
+        justify={compact ? undefined : 'center'}
+        gap={compact ? 4 : '8px 32px'}
+      >
+        {connection && (
+          <FieldStatusRow label='Connection'>
+            <FieldConnectionBadge status={connection} connectionOnly />
+          </FieldStatusRow>
+        )}
+        {extra}
+      </Flex>
     </Flex>
   );
 };
@@ -132,6 +156,13 @@ const MonitorCard: FC<MonitorCardProps> = ({
   const eventKey = useAtomValue(eventKeyAtom);
   const isRopeDropSeason =
     getSeasonKeyFromEventKey(eventKey ?? '') === 'fgc_2025';
+  // match is null until this field prestarts a match, so fall back to the
+  // event this monitor is open for
+  const refereeEventKey = match?.eventKey ?? eventKey;
+  const refereeUrl = (position: 'red' | 'head' | 'blue') =>
+    refereeEventKey
+      ? `${webUrl}/${refereeEventKey}/referee/${position}`
+      : undefined;
 
   const handleRefresh = () => {
     console.log('Refresh but idk how to');
@@ -363,6 +394,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
             connection={fieldConnection}
             fcsStatus={fcsStatus}
             Extra={seasonComponents?.FieldMonitorExtraMinimal}
+            compact
           />
         </Space>
       </Card>
@@ -459,8 +491,8 @@ const MonitorCard: FC<MonitorCardProps> = ({
               <Col span={8}>
                 <Button
                   danger
-                  href={`${webUrl}/${match?.eventKey}/referee/red`}
-                  disabled={match === undefined}
+                  href={refereeUrl('red')}
+                  disabled={!refereeEventKey}
                   target='_blank'
                   block
                 >
@@ -470,8 +502,8 @@ const MonitorCard: FC<MonitorCardProps> = ({
               <Col span={8}>
                 <Button
                   type='primary'
-                  href={`${webUrl}/${match?.eventKey}/referee/head`}
-                  disabled={match === undefined}
+                  href={refereeUrl('head')}
+                  disabled={!refereeEventKey}
                   target='_blank'
                   block
                 >
@@ -480,8 +512,8 @@ const MonitorCard: FC<MonitorCardProps> = ({
               </Col>
               <Col span={8}>
                 <Button
-                  href={`${webUrl}/${match?.eventKey}/referee/blue`}
-                  disabled={match === undefined}
+                  href={refereeUrl('blue')}
+                  disabled={!refereeEventKey}
                   target='_blank'
                   block
                   style={{
