@@ -1,4 +1,10 @@
-type AnyCb<T = any> = (v: T) => void;
+/** Context passed to a listener after the payload. */
+export interface EventMeta {
+  /** The event is the bus's last one of its kind, delivered because a listener just subscribed. */
+  replayed: boolean;
+}
+
+type AnyCb<T = any> = (v: T, meta?: EventMeta) => void;
 
 export interface EventBus {
   once: (key: string, callback: AnyCb, messageKey?: string) => string;
@@ -11,6 +17,7 @@ export interface EventBus {
 }
 
 const EMPTY_MESSAGE_KEY = '__all__';
+const REPLAYED: EventMeta = { replayed: true };
 
 const eventListeners = new Map<string, Map<string, Map<string, AnyCb<any>>>>();
 
@@ -51,14 +58,14 @@ function replayLastEvent(key: string, callback: AnyCb, messageKey?: string) {
     const payload = payloads.get(messageKey);
 
     if (payload !== undefined) {
-      callback(payload);
+      callback(payload, REPLAYED);
     }
 
     return;
   }
 
   for (const payload of payloads.values()) {
-    callback(payload);
+    callback(payload, REPLAYED);
   }
 }
 
@@ -78,8 +85,8 @@ export const eventBus: EventBus = {
     const listeners = getListenersForKey(key, messageKey);
     const listenerId = createListenerId();
 
-    const wrapper = (data: any) => {
-      callback(data);
+    const wrapper = (data: any, meta?: EventMeta) => {
+      callback(data, meta);
       this.off(key, listenerId, messageKey);
     };
 

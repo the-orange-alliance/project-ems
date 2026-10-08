@@ -7,16 +7,23 @@ const mocks = vi.hoisted(() => ({
   abort: vi.fn(),
   reset: vi.fn(),
   setConfig: vi.fn(),
-  socketArgs: undefined as unknown as unknown[],
-  timerSubscriptions: undefined as unknown as { key: string }[]
+  socketSubscriptions: [] as {
+    key: string;
+    callback: (...args: unknown[]) => void;
+  }[],
+  timerSubscriptions: [] as { key: string }[]
 }));
 
 vi.mock('src/api/use-socket-worker.js', () => ({
   useSocketWorker: () => ({ worker: {}, connected: true })
 }));
 vi.mock('src/api/use-socket-subscriptions.js', () => ({
-  useSocketSubscriptions: (...args: unknown[]) => {
-    mocks.socketArgs = args;
+  useSocketSubscriptions: (
+    _worker: unknown,
+    _enabled: boolean,
+    subscriptions: typeof mocks.socketSubscriptions
+  ) => {
+    mocks.socketSubscriptions = subscriptions;
   }
 }));
 vi.mock('src/api/use-timer-worker.js', () => ({
@@ -44,28 +51,11 @@ vi.mock('src/apps/audience-display/audio/timer-cues.js', () => ({
 
 import { MatchTimer } from './match-timer.js';
 
-type Handler = (...args: unknown[]) => void;
+const handler = (key: string) =>
+  mocks.socketSubscriptions.find((s) => s.key === key)!.callback;
 
-/** The handlers MatchTimer registered with the socket, and its ready/dispose hooks. */
-const socket = () => {
-  const [, , subscriptions, onReady, onDispose] = mocks.socketArgs as [
-    unknown,
-    unknown,
-    { key: string; callback: Handler }[],
-    () => void,
-    () => void
-  ];
-  const handler = (key: string) =>
-    subscriptions.find((s) => s.key === key)!.callback;
-  return {
-    keys: subscriptions.map((s) => s.key),
-    prestart: handler(MatchSocketEvent.PRESTART),
-    start: handler(MatchSocketEvent.START),
-    abort: handler(MatchSocketEvent.ABORT),
-    onReady,
-    onDispose
-  };
-};
+const REPLAYED = { replayed: true };
+const KEY = { eventKey: 'FGC_2026-X', tournamentKey: 't', id: 1 };
 
 describe('MatchTimer', () => {
   beforeEach(() => {
@@ -77,33 +67,17 @@ describe('MatchTimer', () => {
   });
 
   it('only uses the socket to start, ready and stop the clock', () => {
-    expect(socket().keys).toEqual([
+    expect(mocks.socketSubscriptions.map((s) => s.key)).toEqual([
       MatchSocketEvent.PRESTART,
       MatchSocketEvent.START,
       MatchSocketEvent.ABORT
     ]);
   });
 
-  it('ignores events replayed while the socket subscribes', () => {
-    const { prestart, start, abort } = socket();
-
-    prestart({ eventKey: 'FGC_2026-X', tournamentKey: 't', id: 1 });
-    start();
-    abort();
-
-    expect(mocks.setConfig).not.toHaveBeenCalled();
-    expect(mocks.reset).not.toHaveBeenCalled();
-    expect(mocks.start).not.toHaveBeenCalled();
-    expect(mocks.abort).not.toHaveBeenCalled();
-  });
-
-  it('follows live events once subscribed', () => {
-    const { prestart, start, abort, onReady } = socket();
-    onReady();
-
-    prestart({ eventKey: 'FGC_2026-X', tournamentKey: 't', id: 1 });
-    start();
-    abort();
+  it('follows live events', () => {
+    handler(MatchSocketEvent.PRESTART)(KEY);
+    handler(MatchSocketEvent.START)('start');
+    handler(MatchSocketEvent.ABORT)();
 
     expect(mocks.setConfig).toHaveBeenCalledWith(FGC_MATCH_CONFIG);
     expect(mocks.reset).toHaveBeenCalledTimes(1);
@@ -111,14 +85,15 @@ describe('MatchTimer', () => {
     expect(mocks.abort).toHaveBeenCalledTimes(1);
   });
 
-  it('ignores events again once the subscription is torn down', () => {
-    const { start, onReady, onDispose } = socket();
-    onReady();
-    onDispose();
+  it('ignores events replayed to a new subscription', () => {
+    handler(MatchSocketEvent.PRESTART)(KEY, REPLAYED);
+    handler(MatchSocketEvent.START)('start', REPLAYED);
+    handler(MatchSocketEvent.ABORT)(undefined, REPLAYED);
 
-    start();
-
+    expect(mocks.setConfig).not.toHaveBeenCalled();
+    expect(mocks.reset).not.toHaveBeenCalled();
     expect(mocks.start).not.toHaveBeenCalled();
+    expect(mocks.abort).not.toHaveBeenCalled();
   });
 
   it('plays no sounds unless audio is on', () => {
