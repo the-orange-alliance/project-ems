@@ -31,6 +31,8 @@ import {
   Team,
   Displays,
   FGC25FCS,
+  FcsConnectionEvents,
+  FcsConnectionStatus,
   getSeasonKeyFromEventKey
 } from '@toa-lib/models';
 import { io, Socket } from 'socket.io-client';
@@ -39,9 +41,15 @@ import { useAtomValue } from 'jotai';
 import { eventKeyAtom } from '../../stores/state/event.js';
 import { darkModeAtom } from '../../stores/state/ui.js';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
+import { FieldConnectionBadge } from 'src/components/util/field-connection-badge.js';
 
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
+
+const FIELD_DISCONNECTED: FcsConnectionStatus = {
+  connected: false,
+  fields: []
+};
 
 interface Monitor {
   field: number;
@@ -78,6 +86,8 @@ const MonitorCard: FC<MonitorCardProps> = ({
     Displays.BLANK
   );
   const [fcsStatus, setFcsStatus] = useState<FGC25FCS.FcsStatus | null>(null);
+  const [fieldConnection, setFieldConnection] =
+    useState<FcsConnectionStatus>(FIELD_DISCONNECTED);
   const seasonComponents = useSeasonComponents();
   const eventKey = useAtomValue(eventKeyAtom);
   const isRopeDropSeason =
@@ -89,7 +99,12 @@ const MonitorCard: FC<MonitorCardProps> = ({
 
   useEffect(() => {
     const socket = createSocket();
-    socket.on('connect', handleConnect);
+    // A reconnect is a new server-side socket, so rejoin the rooms every time.
+    // Joining fcs also makes the server send the current field connection.
+    socket.on('connect', () => {
+      handleConnect();
+      socket.emit('rooms', ['match', 'fcs']);
+    });
     socket.on('disconnect', handleDisconnect);
     socket.on(MatchSocketEvent.PRESTART, handlePrestart);
     socket.on(MatchSocketEvent.START, handleStart);
@@ -99,8 +114,8 @@ const MonitorCard: FC<MonitorCardProps> = ({
     socket.on(MatchSocketEvent.UPDATE, handleUpdate);
     socket.on(MatchSocketEvent.DISPLAY, handleDisplay);
     socket.on('fcs:status', handleFcsStatus);
+    socket.on(FcsConnectionEvents.Connection, handleFieldConnection);
     socket.connect();
-    socket.emit('rooms', ['match', 'fcs']);
     setSocket(socket);
     return () => {
       socket.off(MatchSocketEvent.PRESTART, handlePrestart);
@@ -110,6 +125,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
       socket.off(MatchSocketEvent.COMMIT, handleCommit);
       socket.off(MatchSocketEvent.UPDATE, handleUpdate);
       socket.off(MatchSocketEvent.DISPLAY, handleDisplay);
+      socket.off(FcsConnectionEvents.Connection, handleFieldConnection);
     };
   }, []);
 
@@ -120,7 +136,14 @@ const MonitorCard: FC<MonitorCardProps> = ({
   }, [currentMatch]);
 
   const handleConnect = () => setConnected(true);
-  const handleDisconnect = () => setConnected(false);
+  const handleDisconnect = () => {
+    setConnected(false);
+    setFieldConnection(FIELD_DISCONNECTED);
+  };
+
+  const handleFieldConnection = (status: FcsConnectionStatus) => {
+    setFieldConnection(status ?? FIELD_DISCONNECTED);
+  };
 
   const handleDisplay = (display: Displays) => {
     setCurrentDisplay(display);
@@ -151,12 +174,18 @@ const MonitorCard: FC<MonitorCardProps> = ({
   };
 
   const handleFcsClearStatus = () => {
-    socket?.emit('fcs:clearStatus');
+    socket?.emit('fcs:clearStatus', { field });
   };
 
   const handleFcsStatus = (status: any) => {
-    const parsedStatus: FGC25FCS.FcsStatus = JSON.parse(status as string); // lol?
-    setFcsStatus(parsedStatus);
+    // Fields send status as a JSON string; tolerate objects and bad packets
+    try {
+      const parsedStatus: FGC25FCS.FcsStatus =
+        typeof status === 'string' ? JSON.parse(status) : status;
+      setFcsStatus(parsedStatus);
+    } catch (e) {
+      console.warn('Ignoring malformed fcs:status packet', e);
+    }
   };
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -254,20 +283,23 @@ const MonitorCard: FC<MonitorCardProps> = ({
           </Space>
         }
         extra={
-          <Dropdown
-            menu={{ items: menuItems }}
-            placement='bottomRight'
-            trigger={['click']}
-          >
-            <Button
-              type='text'
-              icon={<MoreOutlined />}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                color: 'inherit'
-              }}
-            />
-          </Dropdown>
+          <Flex align='center' gap={4}>
+            <FieldConnectionBadge status={fieldConnection} minimal />
+            <Dropdown
+              menu={{ items: menuItems }}
+              placement='bottomRight'
+              trigger={['click']}
+            >
+              <Button
+                type='text'
+                icon={<MoreOutlined />}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  color: 'inherit'
+                }}
+              />
+            </Dropdown>
+          </Flex>
         }
       >
         <Space orientation='vertical' style={{ width: '100%' }}>
@@ -319,14 +351,17 @@ const MonitorCard: FC<MonitorCardProps> = ({
         width={800}
       >
         <Space orientation='vertical' style={{ width: '100%' }}>
-          <Space>
-            {connected ? (
-              <CheckCircleOutlined style={{ color: '#52c41a' }} />
-            ) : (
-              <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-            )}
-            <Text>{getMatchStatus()}</Text>
-          </Space>
+          <Flex justify='space-between' align='center' gap={8} wrap>
+            <Space>
+              {connected ? (
+                <CheckCircleOutlined style={{ color: '#52c41a' }} />
+              ) : (
+                <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+              )}
+              <Text>{getMatchStatus()}</Text>
+            </Space>
+            <FieldConnectionBadge status={fieldConnection} />
+          </Flex>
 
           <MatchDetails key={field} match={match} teams={teams} expanded />
 

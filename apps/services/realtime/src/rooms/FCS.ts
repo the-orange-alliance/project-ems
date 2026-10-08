@@ -133,9 +133,11 @@ export default class FCS extends Room {
       }
     });
 
-    socket.on("fcs:clearStatus", (): void => {
-      logger.info("fcs:clearStatus");
-      socket.to("fcs").emit("fcs:clearStatus");
+    // data is { field } from the event monitor; fields clear only their own
+    // status, or all fields if no field number is given
+    socket.on("fcs:clearStatus", (data?: { field?: number }): void => {
+      logger.info("fcs:clearStatus", data);
+      socket.to("fcs").emit("fcs:clearStatus", data);
     });
 
     // Season-Specific

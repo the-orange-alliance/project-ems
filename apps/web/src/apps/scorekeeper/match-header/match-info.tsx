@@ -1,7 +1,8 @@
-import { Badge, Card, Flex, Tooltip, Typography } from 'antd';
+import { Badge, Card, Flex, Typography } from 'antd';
 import { FC } from 'react';
-import { Alliance, FcsFieldClient, getOfflineDevices } from '@toa-lib/models';
+import { Alliance } from '@toa-lib/models';
 import { MatchTimer } from 'src/components/util/match-timer.js';
+import { FieldConnectionBadge } from 'src/components/util/field-connection-badge.js';
 import { ScheduleStatusChip } from 'src/components/util/schedule-status-chip.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useAtomValue } from 'jotai';
@@ -42,43 +43,9 @@ const ScoreTile: FC<{ alliance: Alliance; score?: number }> = ({
   );
 };
 
-const fieldName = (client: FcsFieldClient) =>
-  client.field !== null ? `Field ${client.field}` : 'Field';
-
-const FieldConnectionBadge: FC = () => {
-  const { connected, fields } = useFieldConnection();
-  if (!connected) {
-    return <Badge status='error' text='Field Not Connected' />;
-  }
-
-  const degraded = fields.filter((f) => getOfflineDevices(f).length > 0);
-  const text = degraded.length
-    ? degraded
-        .map(
-          (f) => `${fieldName(f)}: ${getOfflineDevices(f).join(', ')} Offline`
-        )
-        .join(' · ')
-    : `${fields.map(fieldName).join(', ')} Connected`;
-  const details = fields.flatMap((f) => {
-    const devices = Object.entries(f.devices);
-    return devices.length
-      ? devices.map(
-          ([name, ok]) =>
-            `${fieldName(f)} ${name}: ${ok ? 'Connected' : 'Not Connected'}`
-        )
-      : [`${fieldName(f)}: Connected`];
-  });
-
-  return (
-    <Tooltip
-      title={details.map((line) => (
-        <div key={line}>{line}</div>
-      ))}
-    >
-      <Badge status={degraded.length ? 'warning' : 'success'} text={text} />
-    </Tooltip>
-  );
-};
+const ScorekeeperFieldBadge: FC = () => (
+  <FieldConnectionBadge status={useFieldConnection()} />
+);
 
 export const MatchInfo: FC = () => {
   const matchState = useAtomValue(matchStatusAtom);
@@ -126,7 +93,7 @@ export const MatchInfo: FC = () => {
           status={connected ? 'success' : 'error'}
           text={connected ? 'Connected' : 'Not Connected'}
         />
-        <FieldConnectionBadge />
+        <ScorekeeperFieldBadge />
         <ScheduleStatusChip small />
       </Flex>
     </Card>
