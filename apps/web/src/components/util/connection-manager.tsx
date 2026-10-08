@@ -89,11 +89,13 @@ export const ConnectionManager: FC = () => {
     },
     {
       key: MatchSocketEvent.UPDATE,
-      callback: handleUpdate
+      callback: handleUpdate,
+      replay: true
     },
     {
       key: MatchSocketEvent.DISPLAY,
-      callback: handleDisplay
+      callback: handleDisplay,
+      replay: true
     },
     {
       key: MatchSocketEvent.COMMIT,
