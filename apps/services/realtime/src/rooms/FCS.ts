@@ -3,60 +3,78 @@ import { Server, Socket } from "socket.io";
 import { fileURLToPath } from "url";
 import Room from "./Room.js";
 import logger from "../util/Logger.js";
-import { EcoEquilibriumFCS, MatchSocketEvent, FGC25FCS } from "@toa-lib/models";
+import {
+  EcoEquilibriumFCS,
+  MatchSocketEvent,
+  FGC25FCS,
+  FcsConnectionEvents,
+  FcsConnectionStatus,
+  FcsFieldClient,
+  FcsIdentifyPacket,
+  getOfflineDevices,
+} from "@toa-lib/models";
 
 const __filename = fileURLToPath(import.meta.url);
 export const __dirname = dirname(__filename);
 
-export interface FcsConnectionStatus {
-  connected: boolean;
-  fields: number[];
-}
-
 export default class FCS extends Room {
   // Sockets that have identified themselves as field hardware, keyed by socket id
-  private fieldClients: Map<string, number | null> = new Map();
+  private fieldClients: Map<string, FcsFieldClient> = new Map();
 
   public constructor(server: Server) {
     super(server, "fcs");
   }
 
   private getConnectionStatus(): FcsConnectionStatus {
-    const fields = [...this.fieldClients.values()]
-      .filter((f): f is number => typeof f === "number")
-      .sort((a, b) => a - b);
-    return { connected: this.fieldClients.size > 0, fields };
+    const fields = [...this.fieldClients.values()].sort(
+      (a, b) => (a.field ?? Infinity) - (b.field ?? Infinity),
+    );
+    return { connected: fields.length > 0, fields };
   }
 
   private broadcastConnectionStatus(): void {
-    this.broadcast().emit("fcs:connection", this.getConnectionStatus());
+    this.broadcast().emit(
+      FcsConnectionEvents.Connection,
+      this.getConnectionStatus(),
+    );
   }
 
   public initializeEvents(socket: Socket): void {
     // Emit init and status packets when a client connects
     socket.emit("fcs:init"); // TODO: send actual init data
-    socket.emit("fcs:connection", this.getConnectionStatus());
+    socket.emit(FcsConnectionEvents.Connection, this.getConnectionStatus());
 
-    // Field hardware announces itself so other clients can tell it's online
-    socket.on("fcs:identify", (data?: { field?: number }): void => {
-      const field = typeof data?.field === "number" ? data.field : null;
-      const isNew = !this.fieldClients.has(socket.id);
-      logger.info(
-        `fcs:identify field ${field ?? "unknown"} (${socket.handshake.address})`,
-      );
-      this.fieldClients.set(socket.id, field);
-      if (isNew) {
-        socket.once("disconnect", (): void => {
-          logger.info(`fcs field ${field ?? "unknown"} disconnected`);
-          this.fieldClients.delete(socket.id);
-          this.broadcastConnectionStatus();
-        });
-      }
-      this.broadcastConnectionStatus();
-    });
+    // Field hardware announces itself so other clients can tell it's online.
+    // It re-sends this whenever one of its devices (e.g. WLEDs) changes state.
+    socket.on(
+      FcsConnectionEvents.Identify,
+      (data?: FcsIdentifyPacket): void => {
+        const field = typeof data?.field === "number" ? data.field : null;
+        const devices: Record<string, boolean> = {};
+        for (const [name, ok] of Object.entries(data?.devices ?? {})) {
+          devices[name] = ok === true;
+        }
+        const client = { field, devices };
+        const isNew = !this.fieldClients.has(socket.id);
+        const offline = getOfflineDevices(client);
+        logger.info(
+          `${FcsConnectionEvents.Identify} field ${field ?? "unknown"} (${socket.handshake.address})` +
+            (offline.length ? ` offline devices: ${offline.join(", ")}` : ""),
+        );
+        this.fieldClients.set(socket.id, client);
+        if (isNew) {
+          socket.once("disconnect", (): void => {
+            logger.info(`fcs field ${field ?? "unknown"} disconnected`);
+            this.fieldClients.delete(socket.id);
+            this.broadcastConnectionStatus();
+          });
+        }
+        this.broadcastConnectionStatus();
+      },
+    );
 
-    socket.on("fcs:getConnection", (): void => {
-      socket.emit("fcs:connection", this.getConnectionStatus());
+    socket.on(FcsConnectionEvents.GetConnection, (): void => {
+      socket.emit(FcsConnectionEvents.Connection, this.getConnectionStatus());
     });
 
     socket.on("fcs:prepareField", (): void => {

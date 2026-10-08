@@ -1,36 +1,31 @@
 import { useCallback, useMemo, useState } from 'react';
+import { FcsConnectionEvents, FcsConnectionStatus } from '@toa-lib/models';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useSocketSubscriptions } from 'src/api/use-socket-subscriptions.js';
 
-export interface FieldConnectionStatus {
-  connected: boolean;
-  fields: number[];
-}
-
-const DISCONNECTED: FieldConnectionStatus = { connected: false, fields: [] };
+const DISCONNECTED: FcsConnectionStatus = { connected: false, fields: [] };
 
 /**
- * Tracks whether field hardware (FCS) has identified itself in the fcs room.
- * The realtime server pushes `fcs:connection` on join and whenever a field
- * connects or disconnects.
+ * Tracks whether field hardware (FCS) has identified itself in the fcs room,
+ * along with the state of its devices (e.g. WLEDs). The realtime server pushes
+ * `fcs:connection` on join and whenever a field or one of its devices changes.
  */
-export const useFieldConnection = (): FieldConnectionStatus => {
+export const useFieldConnection = (): FcsConnectionStatus => {
   const { worker, connected } = useSocketWorker();
-  const [status, setStatus] = useState<FieldConnectionStatus>(DISCONNECTED);
+  const [status, setStatus] = useState<FcsConnectionStatus>(DISCONNECTED);
 
   const subscriptions = useMemo(
     () => [
       {
-        key: 'fcs:connection',
-        callback: (data: FieldConnectionStatus) =>
-          setStatus(data ?? DISCONNECTED)
+        key: FcsConnectionEvents.Connection,
+        callback: (data: FcsConnectionStatus) => setStatus(data ?? DISCONNECTED)
       }
     ],
     []
   );
 
   const requestStatus = useCallback(() => {
-    void worker?.emit('fcs:getConnection');
+    void worker?.emit(FcsConnectionEvents.GetConnection);
   }, [worker]);
 
   useSocketSubscriptions(worker, connected, subscriptions, requestStatus);
