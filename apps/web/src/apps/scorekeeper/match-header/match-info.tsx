@@ -9,6 +9,7 @@ import { matchStatusAtom } from 'src/stores/state/match.js';
 import { isAudioEnabledForScorekeeper } from 'src/stores/state/ui.js';
 import { matchAtom } from 'src/stores/state/index.js';
 import { useAlliancePalette } from './alliances.js';
+import { useFieldConnection } from '../hooks/use-field-connection.js';
 
 const ScoreTile: FC<{ alliance: Alliance; score?: number }> = ({
   alliance,
@@ -46,6 +47,10 @@ export const MatchInfo: FC = () => {
   const match = useAtomValue(matchAtom);
   const audioEnabled = useAtomValue(isAudioEnabledForScorekeeper);
   const { connected } = useSocketWorker();
+  const field = useFieldConnection();
+  const fieldLabel = field.fields.length
+    ? `Field ${field.fields.join(', ')} Connected`
+    : 'Field Connected';
   return (
     <Card
       style={{ height: '100%' }}
@@ -86,6 +91,10 @@ export const MatchInfo: FC = () => {
         <Badge
           status={connected ? 'success' : 'error'}
           text={connected ? 'Connected' : 'Not Connected'}
+        />
+        <Badge
+          status={field.connected ? 'success' : 'error'}
+          text={field.connected ? fieldLabel : 'Field Not Connected'}
         />
         <ScheduleStatusChip small />
       </Flex>

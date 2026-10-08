@@ -8,14 +8,56 @@ import { EcoEquilibriumFCS, MatchSocketEvent, FGC25FCS } from "@toa-lib/models";
 const __filename = fileURLToPath(import.meta.url);
 export const __dirname = dirname(__filename);
 
+export interface FcsConnectionStatus {
+  connected: boolean;
+  fields: number[];
+}
+
 export default class FCS extends Room {
+  // Sockets that have identified themselves as field hardware, keyed by socket id
+  private fieldClients: Map<string, number | null> = new Map();
+
   public constructor(server: Server) {
     super(server, "fcs");
+  }
+
+  private getConnectionStatus(): FcsConnectionStatus {
+    const fields = [...this.fieldClients.values()]
+      .filter((f): f is number => typeof f === "number")
+      .sort((a, b) => a - b);
+    return { connected: this.fieldClients.size > 0, fields };
+  }
+
+  private broadcastConnectionStatus(): void {
+    this.broadcast().emit("fcs:connection", this.getConnectionStatus());
   }
 
   public initializeEvents(socket: Socket): void {
     // Emit init and status packets when a client connects
     socket.emit("fcs:init"); // TODO: send actual init data
+    socket.emit("fcs:connection", this.getConnectionStatus());
+
+    // Field hardware announces itself so other clients can tell it's online
+    socket.on("fcs:identify", (data?: { field?: number }): void => {
+      const field = typeof data?.field === "number" ? data.field : null;
+      const isNew = !this.fieldClients.has(socket.id);
+      logger.info(
+        `fcs:identify field ${field ?? "unknown"} (${socket.handshake.address})`,
+      );
+      this.fieldClients.set(socket.id, field);
+      if (isNew) {
+        socket.once("disconnect", (): void => {
+          logger.info(`fcs field ${field ?? "unknown"} disconnected`);
+          this.fieldClients.delete(socket.id);
+          this.broadcastConnectionStatus();
+        });
+      }
+      this.broadcastConnectionStatus();
+    });
+
+    socket.on("fcs:getConnection", (): void => {
+      socket.emit("fcs:connection", this.getConnectionStatus());
+    });
 
     socket.on("fcs:prepareField", (): void => {
       logger.info("fcs:prepareField");
