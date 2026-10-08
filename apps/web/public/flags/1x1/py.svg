@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" id="flag-icon-css-py" width="512" height="512">
-  <path fill="#0038a8" d="M0 341h512v171H0z"/>
+  <path fill="#0045c8" d="M0 341h512v171H0z"/>
   <path fill="#fff" d="M0 170.7h512v170.6H0z"/>
-  <path fill="#d52b1e" d="M0 0h512v170.7H0z"/>
+  <path fill="#c70000" d="M0 0h512v170.7H0z"/>
   <g fill="none" stroke="#000" transform="translate(-209) scale(1.55152)">
     <circle cx="300" cy="165" r="42.2" stroke-width="1.1"/>
     <circle cx="300" cy="165" r="34.7" stroke-width=".5"/>

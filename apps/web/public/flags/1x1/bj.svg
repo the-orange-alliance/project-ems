@@ -6,9 +6,9 @@
   </defs>
   <g clip-path="url(#a)" transform="translate(-52 118.4) scale(.7688)">
     <g fill-rule="evenodd" stroke-width="1pt">
-      <path fill="#319400" d="M0-154h333v666H0z"/>
-      <path fill="#ffd600" d="M333-154h666v333H333z"/>
-      <path fill="#de2110" d="M333 179h666v333H333z"/>
+      <path fill="#009000" d="M0-154h333v666H0z"/>
+      <path fill="#ffc700" d="M333-154h666v333H333z"/>
+      <path fill="#c70000" d="M333 179h666v333H333z"/>
     </g>
   </g>
 </svg>
