@@ -6,6 +6,7 @@ import {
   Flex,
   Input,
   Modal,
+  Popconfirm,
   Row,
   Space,
   Typography,
@@ -43,6 +44,7 @@ import { darkModeAtom } from '../../stores/state/ui.js';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 import { FieldConnectionBadge } from 'src/components/util/field-connection-badge.js';
 import { ErrorBoundary } from 'react-error-boundary';
+import { FORCE_PREP_FIELD_CONFIRM } from 'src/apps/scorekeeper/hooks/use-production-options.js';
 
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -389,13 +391,16 @@ const MonitorCard: FC<MonitorCardProps> = ({
               >
                 Force Field Green
               </Button>
-              <Button
-                type='primary'
-                block
-                onClick={() => socket?.emit('fcs:prepareField')}
+              <Popconfirm
+                title={FORCE_PREP_FIELD_CONFIRM.title}
+                description={FORCE_PREP_FIELD_CONFIRM.description}
+                okText={FORCE_PREP_FIELD_CONFIRM.okText}
+                onConfirm={() => socket?.emit('fcs:prepareField')}
               >
-                Force Prep Field
-              </Button>
+                <Button type='primary' block>
+                  Force Prep Field
+                </Button>
+              </Popconfirm>
             </Flex>
             <Flex gap='0.25rem'>
               <Button

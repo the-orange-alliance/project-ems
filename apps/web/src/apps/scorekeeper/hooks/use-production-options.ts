@@ -7,12 +7,28 @@ import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { eventKeyAtom, matchAtom } from 'src/stores/state/event.js';
 import { pairedFieldAtom } from 'src/stores/state/ui.js';
 
+export interface ActionConfirm {
+  title: string;
+  description: string;
+  okText: string;
+}
+
 export interface ActionItem {
   key: string;
   label: string;
   disabled?: boolean;
   onClick: () => void;
+  /** Ask before running onClick (Options tab buttons) */
+  confirm?: ActionConfirm;
 }
+
+/** Shared with the event monitor so both prompts read the same. */
+export const FORCE_PREP_FIELD_CONFIRM: ActionConfirm = {
+  title: 'Force prep field?',
+  description:
+    'The field will run its prepare field sequence. Make sure the field is clear.',
+  okText: 'Prep Field'
+};
 
 /** Renders a shared `ActionItem[]` as antd `Dropdown`/`Menu` items. */
 export const toMenuItems = (
@@ -81,7 +97,8 @@ export const useFieldControlOptionsItems = (): ActionItem[] => {
     {
       key: 'force_prep_field',
       label: 'Force Prep Field',
-      onClick: () => fieldControl?.prepareField?.()
+      onClick: () => fieldControl?.prepareField?.(),
+      confirm: FORCE_PREP_FIELD_CONFIRM
     },
     {
       key: 'awards_mode',
