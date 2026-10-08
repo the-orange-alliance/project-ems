@@ -197,6 +197,13 @@ export class EventDatabase {
       'idx_match_action_event_persisted',
       ['eventKey', 'tournamentKey', 'id', 'persisted', 'actionEventId']
     );
+    // Per-webhook opt-out of the delivery timeout. Defaults to 0 so existing
+    // webhooks keep the timeout they have always had.
+    await this.addColumnIfMissing(
+      'webhooks',
+      'disableTimeout',
+      'INT NOT NULL DEFAULT 0'
+    );
     if (this.name !== 'global') await migrateGraphicsDatabase(this.db);
   }
 

@@ -42,11 +42,18 @@ test('webhook outcome subscriptions and API compatibility', async (t) => {
     path: string;
     body: { event: WebhookEvent; payload: Match<any> };
   }[] = [];
+  // Paths under /slow/ are answered only after this delay, which is longer
+  // than the default delivery timeout.
+  const SLOW_RESPONSE_MS = 3500;
   const receiver = createServer(async (request, response) => {
     let body = '';
     for await (const chunk of request) body += chunk.toString();
     deliveries.push({ path: request.url!, body: JSON.parse(body) });
-    response.writeHead(200).end();
+    if (request.url!.startsWith('/slow/')) {
+      setTimeout(() => response.writeHead(200).end(), SLOW_RESPONSE_MS);
+    } else {
+      response.writeHead(200).end();
+    }
   });
   receiver.listen(0, '127.0.0.1');
   await once(receiver, 'listening');
@@ -233,4 +240,139 @@ test('webhook outcome subscriptions and API compatibility', async (t) => {
       }
     }
   );
+
+  await t.test(
+    'disableTimeout waits on slow receivers without blocking others',
+    async () => {
+      await globalDb.db.exec('DELETE FROM webhooks');
+      await globalDb.insertValue('webhooks', [
+        {
+          url: `${baseUrl}/slow/untimed`,
+          enabled: 1,
+          subscribedEvent: WebhookEvent.MATCH_ENDED,
+          field: null,
+          disableTimeout: 1
+        },
+        {
+          url: `${baseUrl}/slow/timed`,
+          enabled: 1,
+          subscribedEvent: WebhookEvent.MATCH_ENDED,
+          field: null,
+          disableTimeout: 0
+        },
+        {
+          url: `${baseUrl}/fast`,
+          enabled: 1,
+          subscribedEvent: WebhookEvent.MATCH_ENDED,
+          field: null,
+          disableTimeout: 0
+        }
+      ]);
+      deliveries.length = 0;
+      await EmitWebhooks(WebhookEvent.MATCH_ENDED, match);
+      // The untimed delivery is still waiting on its receiver, yet every
+      // other webhook has already gone out behind it.
+      assert.deepEqual(deliveries.map((entry) => entry.path).sort(), [
+        '/fast',
+        '/slow/timed',
+        '/slow/untimed'
+      ]);
+      await new Promise((resolve) =>
+        setTimeout(resolve, SLOW_RESPONSE_MS + 500)
+      );
+      const rows = (await globalDb.selectAll('webhooks')) as {
+        url: string;
+        errorCount: number;
+      }[];
+      const errors = Object.fromEntries(
+        rows.map((row) => [row.url.replace(baseUrl, ''), row.errorCount])
+      );
+      assert.deepEqual(errors, {
+        '/slow/untimed': 0, // Waited out the slow response.
+        '/slow/timed': 1, // Aborted by the default timeout.
+        '/fast': 0
+      });
+    }
+  );
+
+  await t.test(
+    'disableTimeout round-trips through the API as a boolean',
+    async () => {
+      const url = `${baseUrl}/api/untimed`;
+      const saved = await app.inject({
+        method: 'PUT',
+        url: '/webhooks/',
+        payload: {
+          url,
+          enabled: true,
+          subscribedEvent: WebhookEvent.PRESTARTED,
+          field: null,
+          disableTimeout: true
+        }
+      });
+      assert.equal(saved.statusCode, 200, saved.body);
+      const [row] = await globalDb.selectAllWhere('webhooks', `url = '${url}'`);
+      assert.equal(row.disableTimeout, 1);
+    }
+  );
+
+  await t.test(
+    'disableTimeout failures are still recorded on the webhook',
+    async () => {
+      // Grab a port nothing is listening on, so the delivery is refused.
+      const closed = createServer().listen(0, '127.0.0.1');
+      await once(closed, 'listening');
+      const { port } = closed.address() as AddressInfo;
+      await new Promise((resolve) => closed.close(resolve));
+
+      await globalDb.db.exec('DELETE FROM webhooks');
+      await globalDb.insertValue('webhooks', [
+        {
+          url: `http://127.0.0.1:${port}/refused`,
+          enabled: 1,
+          subscribedEvent: WebhookEvent.MATCH_ENDED,
+          field: null,
+          disableTimeout: 1
+        }
+      ]);
+      await EmitWebhooks(WebhookEvent.MATCH_ENDED, match);
+      // The delivery runs in the background, so poll for the error to land.
+      let row: { errorCount: number; lastErrorMessage: string | null } = {
+        errorCount: 0,
+        lastErrorMessage: null
+      };
+      for (let i = 0; i < 50 && !row.errorCount; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        [row] = await globalDb.selectAll('webhooks');
+      }
+      assert.equal(row.errorCount, 1);
+      assert.match(row.lastErrorMessage ?? '', /ECONNREFUSED/);
+    }
+  );
+});
+
+test('runMigrations adds disableTimeout to an existing webhooks table', async () => {
+  const db = new EventDatabase('global');
+  db.db = await AsyncDatabase.open(':memory:');
+  try {
+    await db.db.exec(`CREATE TABLE "webhooks" (
+      "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+      "url" TEXT NOT NULL,
+      "enabled" INT NOT NULL,
+      "subscribedEvent" TEXT NOT NULL,
+      "note" TEXT,
+      "lastErrorMessage" TEXT,
+      "lastErrorTime" TEXT,
+      "errorCount" INTEGER DEFAULT 0,
+      "field" INTEGER
+    );
+    INSERT INTO webhooks (url, enabled, subscribedEvent)
+      VALUES ('http://example.invalid', 1, 'PRESTARTED');`);
+    await db.runMigrations();
+    await db.runMigrations(); // Idempotent.
+    const [row] = await db.selectAll('webhooks');
+    assert.equal(row.disableTimeout, 0); // Existing webhooks keep the timeout.
+  } finally {
+    await db.db.close();
+  }
 });
