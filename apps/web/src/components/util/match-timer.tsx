@@ -9,7 +9,6 @@ import {
 import { useAtomValue } from 'jotai';
 import { Duration } from 'luxon';
 import { FC } from 'react';
-import type { EventMeta } from '@workers/util/event-bus.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useSocketSubscriptions } from 'src/api/use-socket-subscriptions.js';
 import { useMatchTimerWorker } from 'src/api/use-timer-worker.js';
@@ -30,14 +29,6 @@ const AUDIO_SUBSCRIPTIONS = TIMER_CUE_EVENTS.map((key) => ({
   callback: playTimerCue
 }));
 
-// The socket worker replays its last event of each kind to new subscriptions,
-// such as when a laptop wakes and reconnects. That is history, not a new start.
-const whenLive =
-  <Payload,>(handler: (payload: Payload) => unknown) =>
-  (payload: Payload, meta?: EventMeta) => {
-    if (!meta?.replayed) handler(payload);
-  };
-
 interface Props {
   /** Play a sound on each timer cue (start, phase changes, end). */
   audio?: boolean;
@@ -54,19 +45,19 @@ export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
   useSocketSubscriptions(worker, connected, [
     {
       key: MatchSocketEvent.PRESTART,
-      callback: whenLive((match: MatchKey) => {
+      callback: (match: MatchKey) => {
         setConfig(getTimerConfig(match.eventKey));
         reset();
-      })
+      }
     },
     {
       key: MatchSocketEvent.START,
-      callback: whenLive(() => {
+      callback: () => {
         if (currentMatch) setConfig(getTimerConfig(currentMatch.eventKey));
         start();
-      })
+      }
     },
-    { key: MatchSocketEvent.ABORT, callback: whenLive(abort) }
+    { key: MatchSocketEvent.ABORT, callback: abort }
   ]);
 
   // The sounds come from the clock's own segments.

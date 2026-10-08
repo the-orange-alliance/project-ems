@@ -8,6 +8,7 @@ import {
   MATCH_START,
   MATCH_TELE,
   MATCH_TRANSITION,
+  MATCH_ABORT,
   initAudio
 } from './index.js';
 
@@ -16,7 +17,8 @@ const CUE_SOUNDS: Partial<Record<TimerEventName, HTMLAudioElement>> = {
   'timer:transition': initAudio(MATCH_TRANSITION),
   'timer:tele': initAudio(MATCH_TELE),
   'timer:endgame': initAudio(MATCH_ENDGAME),
-  'timer:end': initAudio(MATCH_END)
+  'timer:end': initAudio(MATCH_END),
+  'timer:abort': initAudio(MATCH_ABORT)
 };
 
 /** The timer events that have a sound. */
@@ -31,7 +33,7 @@ export const playTimerCue = ({ event, payload }: TimerMessage): void => {
   if (!event || payload?.allowAudio !== true) return;
   const sound = CUE_SOUNDS[event];
   if (!sound) return;
-
+  console.log(`Playing timer cue for event "${event}".`);
   sound.currentTime = 0;
   // Browsers reject playback until the user has interacted with the page.
   sound.play().catch((error) => {

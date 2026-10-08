@@ -62,7 +62,11 @@ function snapshot() {
 function broadcast(msg: Partial<TimerMessage>) {
   snapshot();
   for (const port of ports) {
-    port.postMessage({ __timer: true, ...lastSnapshot, ...msg });
+    try {
+      port.postMessage({ __timer: true, ...lastSnapshot, ...msg });
+    } catch {
+      ports.delete(port);
+    }
   }
 }
 
