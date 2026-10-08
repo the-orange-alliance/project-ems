@@ -3,7 +3,7 @@ import { AsyncDatabase } from 'promised-sqlite3';
 import { sep, join, dirname } from 'path';
 import { mkdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { ApiDatabaseError } from '@toa-lib/models';
+import { ApiDatabaseError, getSeasonKeyFromEventKey } from '@toa-lib/models';
 import { fileURLToPath } from 'url';
 import { migrateGraphicsDatabase } from '../graphics/GraphicsSchema.js';
 
@@ -197,7 +197,50 @@ export class EventDatabase {
       'idx_match_action_event_persisted',
       ['eventKey', 'tournamentKey', 'id', 'persisted', 'actionEventId']
     );
+    // Per-webhook opt-out of the delivery timeout. Defaults to 0 so existing
+    // webhooks keep the timeout they have always had.
+    await this.addColumnIfMissing(
+      'webhooks',
+      'disableTimeout',
+      'INT NOT NULL DEFAULT 0'
+    );
+    // Season scoring columns. Must come after the base-table steps above, since
+    // it only touches tables that already exist.
+    await this.applyMissingSeasonColumns();
     if (this.name !== 'global') await migrateGraphicsDatabase(this.db);
+  }
+
+  /**
+   * Adds any column this database's own season SQL declares but the database
+   * does not have.
+   *
+   * Season columns are declared with bare `ALTER TABLE ... ADD COLUMN`, which
+   * SQLite has no `IF NOT EXISTS` form of, so `createEventGameSpecifics()` can
+   * only ever be run once - on a brand new database. An event created before a
+   * season column was added therefore keeps the old shape forever, and every
+   * write naming the new column fails with `SQLITE_ERROR: no such column`. That
+   * is exactly what happened to events created before `coopertitionKnockdownBonus`
+   * was added to `seasons/fgc_2026.sql`.
+   *
+   * Driven off the season file rather than a hand-maintained list here, so that
+   * the next season column to be added reaches existing events without anyone
+   * having to remember to add a matching migration step.
+   */
+  private async applyMissingSeasonColumns(): Promise<void> {
+    // `global` is not an event and has no season.
+    if (this.name === 'global') return;
+    const seasonKey = getSeasonKeyFromEventKey(this.name);
+    if (!seasonKey?.trim()) return;
+    const file = join(resolveSqlDir(), 'seasons', `${seasonKey}.sql`);
+    // Databases whose name does not resolve to a real season (test fixtures,
+    // ad-hoc databases) simply have no season columns to apply.
+    if (!existsSync(file)) return;
+    const sql = (await readFile(file)).toString();
+    const declaration =
+      /ALTER\s+TABLE\s+"?(\w+)"?\s+ADD\s+COLUMN\s+"?(\w+)"?\s+([^;]+);/gi;
+    for (const [, table, column, type] of sql.matchAll(declaration)) {
+      await this.addColumnIfMissing(table, column, type.trim());
+    }
   }
 
   /**

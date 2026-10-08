@@ -15,7 +15,8 @@ import { EmitWebhooks, sendTestWebhook } from '../util/Webhooks.js';
 
 const TestWebhookSchema = z.object({
   url: z.string().min(1),
-  event: z.nativeEnum(WebhookEvent)
+  event: z.nativeEnum(WebhookEvent),
+  disableTimeout: z.boolean().optional()
 });
 
 const TestWebhookResultSchema = z.object({
@@ -61,8 +62,8 @@ async function webhooksController(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const { url, event } = request.body;
-        const result = await sendTestWebhook(url, event);
+        const { url, event, disableTimeout } = request.body;
+        const result = await sendTestWebhook(url, event, disableTimeout);
         reply.status(200).send(result);
       } catch (e) {
         console.error(e);

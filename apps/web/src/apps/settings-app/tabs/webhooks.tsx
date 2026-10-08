@@ -32,7 +32,8 @@ const WebhooksTab = () => {
     url: '',
     enabled: true,
     subscribedEvent: WebhookEvent.PRESTARTED,
-    note: ''
+    note: '',
+    disableTimeout: false
   });
   // Keyed by webhook id for existing rows, or 'new' for the Add New Webhook
   // card, so only the button that was clicked shows a loading state.
@@ -67,6 +68,7 @@ const WebhooksTab = () => {
       enabled: record.enabled,
       subscribedEvent: record.subscribedEvent,
       field: record.field,
+      disableTimeout: record.disableTimeout,
       note: record.note ? `${record.note} (copy)` : 'Copy'
     };
     await webhooksApi.update.webhook(duplicate as Webhook);
@@ -91,7 +93,8 @@ const WebhooksTab = () => {
   const handleTest = async (
     key: number | 'new',
     url: string | undefined,
-    event: WebhookEvent | undefined
+    event: WebhookEvent | undefined,
+    disableTimeout?: boolean
   ) => {
     if (!url || !event) {
       message.error('Enter a URL and event before testing.');
@@ -99,7 +102,7 @@ const WebhooksTab = () => {
     }
     setTestingKey(key);
     try {
-      const result = await testWebhook(url, event);
+      const result = await testWebhook(url, event, disableTimeout);
       if (result.success) {
         message.success(
           `Test webhook delivered${result.status ? ` (${result.status})` : ''}.`
@@ -121,7 +124,8 @@ const WebhooksTab = () => {
       url: '',
       enabled: true,
       subscribedEvent: WebhookEvent.PRESTARTED,
-      note: ''
+      note: '',
+      disableTimeout: false
     });
   };
 
@@ -189,6 +193,22 @@ const WebhooksTab = () => {
       )
     },
     {
+      title: (
+        <Tooltip title='Wait on this webhook indefinitely instead of giving up after 2.5 seconds. Use for receivers that are known to respond slowly.'>
+          Disable Timeout
+        </Tooltip>
+      ),
+      dataIndex: 'disableTimeout',
+      render: (checked: boolean, record: Webhook, index: number) => (
+        <Switch
+          checked={checked}
+          onChange={(checked) =>
+            updateWebhook(index, 'disableTimeout', checked)
+          }
+        />
+      )
+    },
+    {
       title: 'Error Count',
       dataIndex: 'errorCount'
     },
@@ -206,7 +226,12 @@ const WebhooksTab = () => {
                 loading={testingKey === record.id}
                 disabled={testingKey !== null && testingKey !== record.id}
                 onClick={() =>
-                  handleTest(record.id!, record.url, record.subscribedEvent)
+                  handleTest(
+                    record.id!,
+                    record.url,
+                    record.subscribedEvent,
+                    record.disableTimeout
+                  )
                 }
               />
             </Tooltip>
@@ -255,7 +280,7 @@ const WebhooksTab = () => {
       <Card title='Add New Webhook' style={{ marginBottom: 16 }}>
         <Form layout='horizontal'>
           <Row gutter={16}>
-            <Col span={18}>
+            <Col span={12}>
               <Form.Item label='URL'>
                 <Input
                   value={newWebhook.url}
@@ -271,6 +296,19 @@ const WebhooksTab = () => {
                   checked={newWebhook.enabled}
                   onChange={(checked) =>
                     setNewWebhook({ ...newWebhook, enabled: checked })
+                  }
+                />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item
+                label='Disable Timeout'
+                tooltip='Wait on this webhook indefinitely instead of giving up after 2.5 seconds.'
+              >
+                <Switch
+                  checked={newWebhook.disableTimeout}
+                  onChange={(checked) =>
+                    setNewWebhook({ ...newWebhook, disableTimeout: checked })
                   }
                 />
               </Form.Item>
@@ -311,7 +349,12 @@ const WebhooksTab = () => {
               loading={testingKey === 'new'}
               disabled={testingKey !== null && testingKey !== 'new'}
               onClick={() =>
-                handleTest('new', newWebhook.url, newWebhook.subscribedEvent)
+                handleTest(
+                  'new',
+                  newWebhook.url,
+                  newWebhook.subscribedEvent,
+                  newWebhook.disableTimeout
+                )
               }
             >
               Send Test

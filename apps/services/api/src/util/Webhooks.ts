@@ -4,6 +4,30 @@ import { getDB } from '../db/EventDatabase.js';
 
 const AbortController = globalThis.AbortController;
 
+const DELIVERY_TIMEOUT_MS = 2500;
+
+/**
+ * POSTs `body` to `url` as JSON. Aborts after {@link DELIVERY_TIMEOUT_MS}
+ * unless `disableTimeout` is set, in which case it waits on the receiver for
+ * as long as the receiver takes.
+ */
+const postJson = async (url: string, body: unknown, disableTimeout = false) => {
+  const controller = disableTimeout ? undefined : new AbortController();
+  const timeout = controller
+    ? setTimeout(() => controller.abort(), DELIVERY_TIMEOUT_MS)
+    : undefined;
+  try {
+    return await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller?.signal
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 // Outcome variants are subscription filters; deliveries carry the base event.
 const OUTCOME_SUBSCRIPTIONS = {
   [WebhookEvent.COMMITTED]: {
@@ -123,19 +147,16 @@ const buildSampleMatchPayload = (): Match<any> => {
  */
 export const sendTestWebhook = async (
   url: string,
-  webhookEvent: WebhookEvent
+  webhookEvent: WebhookEvent,
+  disableTimeout = false
 ): Promise<TestWebhookResult> => {
   const payload = buildSampleMatchPayload();
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2500); // 2.5 second timeout
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event: webhookEvent, payload }),
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
+    const response = await postJson(
+      url,
+      { event: webhookEvent, payload },
+      disableTimeout
+    );
     return {
       success: response.ok,
       status: response.status,
@@ -192,6 +213,35 @@ export const EmitWebhooks = async (
   const fieldClause = Number.isFinite(payload.fieldNumber)
     ? `(field IS NULL OR field = ${payload.fieldNumber})`
     : 'field IS NULL';
+  const deliver = async (webhook: WebhookDb) => {
+    try {
+      await postJson(
+        webhook.url,
+        { event: webhookEvent, payload },
+        !!webhook.disableTimeout
+      );
+    } catch (e) {
+      console.error(`Failed to send webhook to ${webhook.url}:`, e);
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+      const errorTime = new Date().toISOString();
+      try {
+        await db.updateWhere(
+          'webhooks',
+          {
+            lastErrorMessage: errorMessage,
+            lastErrorTime: errorTime,
+            errorCount: (webhook.errorCount || 0) + 1
+          },
+          `id = ${webhook.id}`
+        );
+      } catch (dbError) {
+        console.error(
+          `Failed to update webhook error info for ${webhook.url}:`,
+          dbError
+        );
+      }
+    }
+  };
   const webhooks = (await db.selectAllWhere(
     'webhooks',
     `${subscriptionClause} AND enabled = 1 AND ${fieldClause}`
@@ -204,44 +254,12 @@ export const EmitWebhooks = async (
         webhook.subscribedEvent === webhookEvent ||
         webhook.subscribedEvent === outcomeSubscriptions[winner];
 
-      if (shouldTrigger) {
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => {
-            controller.abort();
-          }, 2500); // 2.5 second timeout
-          await fetch(webhook.url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              event: webhookEvent,
-              payload
-            }),
-            signal: controller.signal
-          });
-          clearTimeout(timeout);
-        } catch (e) {
-          console.error(`Failed to send webhook to ${webhook.url}:`, e);
-          const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-          const errorTime = new Date().toISOString();
-          try {
-            await db.updateWhere(
-              'webhooks',
-              {
-                lastErrorMessage: errorMessage,
-                lastErrorTime: errorTime,
-                errorCount: (webhook.errorCount || 0) + 1
-              },
-              `id = ${webhook.id}`
-            );
-          } catch (dbError) {
-            console.error(
-              `Failed to update webhook error info for ${webhook.url}:`,
-              dbError
-            );
-          }
-        }
-      }
+      if (!shouldTrigger) continue;
+      const delivery = deliver(webhook);
+      // Timed deliveries go out one at a time, as they always have. Untimed
+      // ones can hang for as long as the receiver likes, so they run in the
+      // background rather than holding up every webhook queued behind them.
+      if (!webhook.disableTimeout) await delivery;
     }
   }
 };
