@@ -4,6 +4,7 @@ import { Button, Row, Col } from 'antd';
 import { MatchReport } from './components/match-report.js';
 import { ReportProps } from './index.js';
 import { MatchByTeamReport } from './components/match-by-team-report.js';
+import { CycleTimeReport } from './components/cycle-time-report.js';
 import { teamIdentifierAtom } from 'src/stores/state/index.js';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
 import { useMatchesForTournament } from 'src/api/use-match-data.js';
@@ -64,6 +65,11 @@ export const TournamentReports: FC<ReportProps> = ({
     );
   };
 
+  const generateCycleTimeReport = () => {
+    if (!tournament || !matches) return;
+    onGenerate(<CycleTimeReport tournament={tournament} matches={matches} />);
+  };
+
   return (
     <Row gutter={[24, 24]}>
       <Col xs={24} sm={12} md={8} lg={6}>
@@ -84,6 +90,11 @@ export const TournamentReports: FC<ReportProps> = ({
           disabled={!seasonComponents?.RankingsReport}
         >
           Ranking Report
+        </Button>
+      </Col>
+      <Col xs={24} sm={12} md={8} lg={6}>
+        <Button type='primary' block onClick={generateCycleTimeReport}>
+          Cycle Time Report
         </Button>
       </Col>
     </Row>
