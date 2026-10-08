@@ -1,6 +1,7 @@
 import { MatchKey, Ranking } from '@toa-lib/models';
 import { Getter, Setter } from 'jotai';
 import {
+  committedMatchAtom,
   matchAtom,
   matchOccurringRanksAtom,
   postCommitRanksFetchAtom
@@ -30,7 +31,10 @@ export const ensurePostCommitRanks = (
   const promise = fetchMatchRankings(key)
     .then((rankings) => {
       // Don't stomp a newer match's ranks with a delayed response.
-      if (isSameMatch(get(matchAtom), key)) {
+      if (
+        isSameMatch(get(matchAtom), key) ||
+        isSameMatch(get(committedMatchAtom), key)
+      ) {
         set(matchOccurringRanksAtom, rankings);
       }
       return rankings;

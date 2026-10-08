@@ -13,7 +13,11 @@ import { FadeInOut, SlideInBottom } from 'src/components/animations/index.js';
 import AbsolouteLocator from 'src/components/util/absoloute-locator.js';
 import { useSearchParams } from 'react-router-dom';
 import { useAtom, useAtomValue } from 'jotai';
-import { matchAtom, matchOccurringRanksAtom } from 'src/stores/state/event.js';
+import {
+  committedMatchAtom,
+  matchAtom,
+  matchOccurringRanksAtom
+} from 'src/stores/state/event.js';
 import { matchStateAtom } from 'src/stores/state/match.js';
 import { useEventState } from 'src/stores/hooks/use-event-state.js';
 import { displayChromaKeyAtom } from 'src/stores/state/audience-display.js';
@@ -34,6 +38,7 @@ export interface DisplayModeProps {
 }
 export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
   const match = useAtomValue(matchAtom);
+  const committedMatch = useAtomValue(committedMatchAtom);
   const ranks = useAtomValue(matchOccurringRanksAtom);
   const [audDispChroma, setAudDisplayChroma] = useAtom(displayChromaKeyAtom);
   const matchState = useAtomValue(matchStateAtom);
@@ -104,6 +109,9 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
   // TODO - Have better error handling here.
   if (!match || !event || !ranks || !displays) return null;
 
+  // Results screens show the match as committed (see committedMatchAtom).
+  const resultsMatch = committedMatch ?? match;
+
   // Handle "pinning" screens
   if (pin && typeof pin === 'string') {
     switch (pin) {
@@ -136,7 +144,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
         return (
           <displays.matchResults
             event={event}
-            match={match}
+            match={resultsMatch}
             ranks={ranks}
             teams={teams}
           />
@@ -176,7 +184,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
         return (
           <displays.matchResultsStream
             event={event}
-            match={match}
+            match={resultsMatch}
             ranks={ranks}
             teams={teams}
           />
@@ -323,7 +331,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
           >
             <displays.matchResults
               event={event}
-              match={match}
+              match={resultsMatch}
               ranks={ranks}
               teams={teams}
             />
@@ -339,7 +347,7 @@ export const DisplaySwitcher: FC<DisplayModeProps> = ({ id, eventKey }) => {
           >
             <displays.matchResultsStream
               event={event}
-              match={match}
+              match={resultsMatch}
               ranks={ranks}
               teams={teams}
             />

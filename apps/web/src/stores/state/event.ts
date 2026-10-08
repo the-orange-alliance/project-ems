@@ -90,6 +90,12 @@ export interface PostCommitRanksFetch {
 }
 export const postCommitRanksFetchAtom = atom<PostCommitRanksFetch | null>(null);
 
+// The last committed match as stored, loaded on COMMIT. Only the audience
+// display's results screens read it - a match edited and reposted from the
+// schedule editor never streams to `matchAtom`, and replacing `matchAtom` would
+// move referee/scorekeeper clients off the match they have loaded. Reset at prestart.
+export const committedMatchAtom = atom<Match<any> | null>(null);
+
 /**
  * @section MODIFIED STATE - modified state for unsaved changes
  */

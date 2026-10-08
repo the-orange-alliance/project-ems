@@ -9,6 +9,7 @@ import {
 } from '@toa-lib/models';
 import { useSetAtom } from 'jotai';
 import {
+  committedMatchAtom,
   matchAtom,
   matchOccurringRanksAtom,
   postCommitRanksFetchAtom
@@ -21,11 +22,13 @@ export const usePrestartEvent = () => {
   const setMatch = useSetAtom(matchAtom);
   const setMatchRanks = useSetAtom(matchOccurringRanksAtom);
   const setPostCommitRanksFetch = useSetAtom(postCommitRanksFetchAtom);
+  const setCommittedMatch = useSetAtom(committedMatchAtom);
 
   return async (key: MatchKey) => {
     const { eventKey, id, tournamentKey } = key;
     // New match cycle — the previous match's post-commit fetch is done with.
     setPostCommitRanksFetch(null);
+    setCommittedMatch(null);
     try {
       const payload = await withRetry(() =>
         localClient.get<unknown>(
