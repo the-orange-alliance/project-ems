@@ -8,7 +8,7 @@ import {
   matchZod,
   matchParticipantZod
 } from '@toa-lib/models';
-import useSWR, { SWRResponse } from 'swr';
+import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
 import { localClient } from './http-clients.js';
 import { requireCollection } from './load-state.js';
 
@@ -239,7 +239,8 @@ export const useMatchesForEvent = (
 
 export const useMatchesForTournament = (
   eventKey: string | null | undefined,
-  tournamentKey: string | null | undefined
+  tournamentKey: string | null | undefined,
+  config?: SWRConfiguration
 ): SWRResponse<Match<any>[], ApiResponseError> =>
   useSWR<
     Match<any>[],
@@ -250,7 +251,7 @@ export const useMatchesForTournament = (
       ? (['/match', eventKey, tournamentKey] as const)
       : null,
     ([, eKey, tKey]) => matchApi.get.tournament(eKey, tKey),
-    { revalidateOnFocus: false }
+    { revalidateOnFocus: false, ...config }
   );
 
 export const useMatchParticipantsForEvent = (
