@@ -1,134 +1,71 @@
 import {
   FGC_MATCH_CONFIG,
   FRC_MATCH_CONFIG,
+  MatchConfiguration,
   MatchKey,
   MatchSocketEvent,
-  TimerEventPayload,
   getSeasonKeyFromEventKey
 } from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 import { Duration } from 'luxon';
-import { FC, useMemo } from 'react';
+import { FC } from 'react';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
-import { useMatchTimerWorker } from 'src/api/use-timer-worker.js';
-import {
-  initAudio,
-  MATCH_START,
-  MATCH_TELE,
-  MATCH_TRANSITION,
-  MATCH_ABORT,
-  MATCH_ENDGAME,
-  MATCH_END
-} from 'src/apps/audience-display/audio/index.js';
-import { matchAtom } from 'src/stores/state/event.js';
 import { useSocketSubscriptions } from 'src/api/use-socket-subscriptions.js';
+import { useMatchTimerWorker } from 'src/api/use-timer-worker.js';
+import { useTimerSubscriptions } from 'src/api/use-timer-subscriptions.js';
+import {
+  TIMER_CUE_EVENTS,
+  playTimerCue
+} from 'src/apps/audience-display/audio/timer-cues.js';
+import { matchAtom } from 'src/stores/state/event.js';
 
-const startAudio = initAudio(MATCH_START);
-const transitionAudio = initAudio(MATCH_TRANSITION);
-const teleAudio = initAudio(MATCH_TELE);
-const abortAudio = initAudio(MATCH_ABORT);
-const endgameAudio = initAudio(MATCH_ENDGAME);
-const endAudio = initAudio(MATCH_END);
+const getTimerConfig = (eventKey: string): MatchConfiguration =>
+  getSeasonKeyFromEventKey(eventKey).toLowerCase().includes('frc')
+    ? FRC_MATCH_CONFIG
+    : FGC_MATCH_CONFIG;
+
+const AUDIO_SUBSCRIPTIONS = TIMER_CUE_EVENTS.map((key) => ({
+  key,
+  callback: playTimerCue
+}));
 
 interface Props {
+  /** Play a sound on each timer cue (start, phase changes, end). */
   audio?: boolean;
   mode?: 'modeTime' | 'timeLeft';
 }
 
 export const MatchTimer: FC<Props> = ({ audio, mode = 'timeLeft' }) => {
-  const { timeLeft, start, stop, abort, reset } = useMatchTimerWorker();
+  const { timeLeft, subscribe, start, abort, reset, setConfig } =
+    useMatchTimerWorker();
   const currentMatch = useAtomValue(matchAtom);
   const { connected, worker } = useSocketWorker();
 
-  const onPrestart = (e: MatchKey) => {
-    reset();
-    determineTimerConfig(e.eventKey);
-  };
-
-  const onStart = () => {
-    if (audio) startAudio.play();
-    if (currentMatch) determineTimerConfig(currentMatch.eventKey);
-    start();
-  };
-  /**
-   * Phase sounds are driven by the relay's match lifecycle events, not by the
-   * local timer worker - the worker is only a display clock, and its events
-   * never cross the socket. Subscribing to `timer:*` here meant the endgame and
-   * match-end sounds never fired at all on the audience display.
-   *
-   * The relay forwards the timer's `allowAudio` payload with each phase event,
-   * and audio requires it to be explicitly true: the state replay a client gets
-   * when it joins mid-match sends the same events with no payload, which must
-   * not sound a horn on every reconnect.
-   */
-  const allowsAudio = (payload?: TimerEventPayload) =>
-    !!audio && payload?.allowAudio === true;
-
-  const onTransition = (payload?: TimerEventPayload) => {
-    if (allowsAudio(payload)) transitionAudio.play();
-  };
-  const onTele = (payload?: TimerEventPayload) => {
-    if (allowsAudio(payload)) teleAudio.play();
-  };
-  const onAbort = () => {
-    if (audio) abortAudio.play();
-    abort();
-  };
-  const onEnd = (payload?: TimerEventPayload) => {
-    if (allowsAudio(payload)) endAudio.play();
-    stop();
-  };
-  const onEndgame = (payload?: TimerEventPayload) => {
-    if (allowsAudio(payload)) endgameAudio.play();
-  };
-
-  const subscriptions = useMemo(
-    () => [
-      {
-        key: MatchSocketEvent.PRESTART,
-        callback: onPrestart
-      },
-      {
-        key: MatchSocketEvent.START,
-        callback: onStart
-      },
-      {
-        key: MatchSocketEvent.ABORT,
-        callback: onAbort
-      },
-      {
-        key: MatchSocketEvent.TRANSITION,
-        callback: onTransition
-      },
-      {
-        key: MatchSocketEvent.TELEOPERATED,
-        callback: onTele
-      },
-      {
-        key: MatchSocketEvent.ENDGAME,
-        callback: onEndgame
-      },
-      {
-        key: MatchSocketEvent.END,
-        callback: onEnd
+  // The socket only starts the clock (or readies or stops it); it never plays a sound.
+  useSocketSubscriptions(worker, connected, [
+    {
+      key: MatchSocketEvent.PRESTART,
+      callback: (match: MatchKey) => {
+        setConfig(getTimerConfig(match.eventKey));
+        reset();
       }
-    ],
-    [onPrestart, onStart, onAbort, onTransition, onTele, onEndgame, onEnd]
-  );
+    },
+    {
+      key: MatchSocketEvent.START,
+      callback: () => {
+        if (currentMatch) setConfig(getTimerConfig(currentMatch.eventKey));
+        start();
+      }
+    },
+    { key: MatchSocketEvent.ABORT, callback: abort }
+  ]);
 
-  useSocketSubscriptions(worker, connected, subscriptions);
+  // The sounds come from the clock's own segments.
+  useTimerSubscriptions(subscribe, audio ? AUDIO_SUBSCRIPTIONS : []);
 
   const timeDuration = Duration.fromObject({
     seconds: mode === 'timeLeft' ? timeLeft : 0 // modeTime is not available from the worker
   });
-
-  const determineTimerConfig = (eventKeyLike: string) => {
-    // Get season key frome event key
-    const seasonKey = getSeasonKeyFromEventKey(eventKeyLike).toLowerCase();
-
-    // Set match config based on season key
-    return seasonKey.includes('frc') ? FRC_MATCH_CONFIG : FGC_MATCH_CONFIG;
-  };
 
   return (
     <>

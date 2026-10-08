@@ -6,12 +6,14 @@ type Subscription = {
   key: string;
   id: string;
   messageKey?: string;
+  replay?: boolean;
 };
 
 export type SocketSubscriptionConfig = {
   key: string;
   callback: (...args: any[]) => any;
   messageKey?: string;
+  replay?: boolean;
 };
 
 export class SocketSubscriptions {
@@ -23,9 +25,10 @@ export class SocketSubscriptions {
   async on(
     key: string,
     callback: (...args: any[]) => any,
-    messageKey?: string
+    messageKey?: string,
+    replay?: boolean
   ) {
-    const id = await this.worker.on(key, callback, messageKey);
+    const id = await this.worker.on(key, callback, messageKey, replay);
 
     if (this.disposed) {
       await this.worker.off(key, id, messageKey);
@@ -35,14 +38,15 @@ export class SocketSubscriptions {
     this.subscriptions.push({
       key,
       id,
-      messageKey
+      messageKey,
+      replay
     });
   }
 
   async onMany(configs: SocketSubscriptionConfig[]) {
     await Promise.all(
-      configs.map(({ key, callback, messageKey }) =>
-        this.on(key, callback, messageKey)
+      configs.map(({ key, callback, messageKey, replay }) =>
+        this.on(key, callback, messageKey, replay)
       )
     );
   }
@@ -97,9 +101,10 @@ export const useSocketSubscriptions = (
      * forwarding to the most recent React callback through the ref.
      */
     const stableSubscriptions = subscriptionsRef.current.map(
-      ({ key, messageKey }, index) => ({
+      ({ key, messageKey, replay }, index) => ({
         key,
         messageKey,
+        replay,
         callback: Comlink.proxy((...args: any[]) => {
           return subscriptionsRef.current[index]?.callback(...args);
         })
