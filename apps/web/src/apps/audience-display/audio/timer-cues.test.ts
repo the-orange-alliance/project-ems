@@ -80,7 +80,6 @@ describe('playTimerCue', () => {
   it('stays silent for events without a sound', () => {
     playTimerCue(message('timer:tick', { allowAudio: true }));
     playTimerCue(message('timer:auto', { allowAudio: true }));
-    playTimerCue(message('timer:abort', { allowAudio: true }));
     playTimerCue(message(undefined, { allowAudio: true }));
     sounds.forEach((sound) => expect(sound.play).not.toHaveBeenCalled());
   });
@@ -103,7 +102,8 @@ describe('playTimerCue', () => {
       'timer:endgame',
       'timer:start',
       'timer:tele',
-      'timer:transition'
+      'timer:transition',
+      'timer:abort'
     ]);
   });
 });
