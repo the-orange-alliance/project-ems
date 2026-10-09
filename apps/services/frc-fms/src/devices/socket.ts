@@ -1,9 +1,17 @@
 import log from "../logger.js";
 import { Socket } from "socket.io-client";
-import { SocketOptions, createSocket } from "@toa-lib/client";
+import { createSocket } from "@toa-lib/client";
 import { getToken } from "../helpers/ems.js";
 import { getIPv4 } from "@toa-lib/server";
-import { AvaliableHardware, DriverstationMonitor, DriverstationStatus, MatchKey, MatchSocketEvent, PrestartState, PrestartStatus } from "@toa-lib/models";
+import {
+  AvaliableHardware,
+  DriverstationMonitor,
+  DriverstationStatus,
+  MatchKey,
+  MatchSocketEvent,
+  PrestartState,
+  PrestartStatus,
+} from "@toa-lib/models";
 import { SettingsSupport } from "./settings.js";
 import { EmsFrcFms } from "../server.js";
 
@@ -17,7 +25,7 @@ export class SocketSupport {
   private prestartStatus: PrestartStatus = {
     state: PrestartState.NotReady,
     matchKey: { eventKey: "", id: -1, tournamentKey: "" },
-    hardware: []
+    hardware: [],
   };
 
   public static getInstance(): SocketSupport {
@@ -29,8 +37,7 @@ export class SocketSupport {
 
   public async initSocket() {
     const token = await getToken();
-    SocketOptions.host = getIPv4();
-    SocketOptions.port = 8081;
+    localStorage.setItem("socketHost", `"${getIPv4()}:8081"`);
     // @ts-ignore
     this._socket = createSocket(token);
     if (token) logger.info("✔ Successfully recieved token from EMS");
@@ -60,22 +67,38 @@ export class SocketSupport {
       this.prestartStatus = {
         hardware: [],
         matchKey: matchKey,
-        state: PrestartState.Prestarting
-      }
+        state: PrestartState.Prestarting,
+      };
 
       // Determine which hardware to add
       const settings = SettingsSupport.getInstance().settings;
       if (settings.enableFms) {
-        this.prestartStatus.hardware.push({name: "Driverstation", state: PrestartState.Prestarting, lastLog: ""});
+        this.prestartStatus.hardware.push({
+          name: "Driverstation",
+          state: PrestartState.Prestarting,
+          lastLog: "",
+        });
       }
       if (settings.enableAdvNet) {
-        this.prestartStatus.hardware.push (
-          {name: "Access Point", state: PrestartState.Prestarting, lastLog: ""},
-          {name: "Field Switch", state: PrestartState.Prestarting, lastLog: ""},
+        this.prestartStatus.hardware.push(
+          {
+            name: "Access Point",
+            state: PrestartState.Prestarting,
+            lastLog: "",
+          },
+          {
+            name: "Field Switch",
+            state: PrestartState.Prestarting,
+            lastLog: "",
+          },
         );
       }
       if (settings.enablePlc) {
-        this.prestartStatus.hardware.push({name: "PLC", state: PrestartState.Prestarting, lastLog: ""});
+        this.prestartStatus.hardware.push({
+          name: "PLC",
+          state: PrestartState.Prestarting,
+          lastLog: "",
+        });
       }
     });
 
@@ -87,27 +110,37 @@ export class SocketSupport {
 
     const payload: DriverstationMonitor = {
       dsStatuses: dses,
-      activeTournament: SettingsSupport.getInstance().currentTournament ?? undefined,
+      activeTournament:
+        SettingsSupport.getInstance().currentTournament ?? undefined,
       matchStatus: EmsFrcFms.getInstance().matchState,
-      prestartStatus: this.prestartStatus
-    }
+      prestartStatus: this.prestartStatus,
+    };
     this.socket?.emit("frc-fms:ds-update", payload);
   }
 
-  public updatePrestartState(name: AvaliableHardware, state: PrestartState, log?: string) {
-    const hwIndex = this.prestartStatus.hardware.findIndex(hw => hw.name === name);
+  public updatePrestartState(
+    name: AvaliableHardware,
+    state: PrestartState,
+    log?: string,
+  ) {
+    const hwIndex = this.prestartStatus.hardware.findIndex(
+      (hw) => hw.name === name,
+    );
     // If we found the hardware
     if (hwIndex > -1) {
       this.prestartStatus.hardware[hwIndex].state = state;
       this.prestartStatus.hardware[hwIndex].lastLog = log ?? "";
     }
     // Calculate Overall Prestart State
-    this.prestartStatus.state = this.prestartStatus.hardware.reduce((prev, curr) => (curr.state < prev.state ? curr : prev), {state: PrestartState.NotReady}).state;
+    this.prestartStatus.state = this.prestartStatus.hardware.reduce(
+      (prev, curr) => (curr.state < prev.state ? curr : prev),
+      { state: PrestartState.NotReady },
+    ).state;
     this.sendPrestartStatus();
   }
 
   public sendPrestartStatus() {
-    this.socket?.emit('frc-fms:prestart-status', this.prestartStatus);
+    this.socket?.emit("frc-fms:prestart-status", this.prestartStatus);
   }
 
   public settingsUpdateSuccess(who: { hwFingerprint: string }) {
@@ -124,7 +157,9 @@ export class SocketSupport {
   }
 
   public apMessage(reason: string) {
-    const currState = this.prestartStatus.hardware.find(hw => hw.name === "Access Point");
+    const currState = this.prestartStatus.hardware.find(
+      (hw) => hw.name === "Access Point",
+    );
     if (currState) {
       this.updatePrestartState("Access Point", currState.state, reason);
     }
@@ -139,7 +174,9 @@ export class SocketSupport {
   }
 
   public switchMessage(reason: string) {
-    const currState = this.prestartStatus.hardware.find(hw => hw.name === "Field Switch");
+    const currState = this.prestartStatus.hardware.find(
+      (hw) => hw.name === "Field Switch",
+    );
     if (currState) {
       this.updatePrestartState("Field Switch", currState.state, reason);
     }

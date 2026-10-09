@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider as ModalProvider } from '@ebay/nice-modal-react';
 import { customfgcTheme } from './app-theme.js';
-import { SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/local-storage.js';
 import { AppContainer } from './App.js';
 import { useCurrentEvent } from './api/use-event-data.js';
@@ -50,12 +49,10 @@ if (import.meta.env.VITE_API_URL) {
 
 const rltUrl = import.meta.env.VITE_RLT_URL;
 if (rltUrl) {
-  const url = new URL(rltUrl);
-  SocketOptions.host = url.hostname;
-  SocketOptions.port = parseInt(url.port || '8081');
+  localStorage.setItem('socketHost', `"${rltUrl}"`);
+  console.warn(`[EMS]: Socket host set to ${rltUrl}`);
 } else {
-  SocketOptions.host = window.location.hostname;
-  SocketOptions.port = 8081;
+  localStorage.setItem('socketHost', `"ws://${window.location.hostname}:8081"`);
 }
 
 // Skipped while ChromaLayout is mounted so the audience display stays transparent.

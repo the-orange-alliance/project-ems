@@ -3,7 +3,7 @@ import { execSync } from "node:child_process";
 const apiUrl =
   "https://project-ems-backend-api.y690brx6b6bgr.us-east-1.cs.amazonlightsail.com";
 const rltUrl =
-  "https://project-ems-backend-rlt.y690brx6b6bgr.us-east-1.cs.amazonlightsail.com";
+  "wss://project-ems-backend-rlt.y690brx6b6bgr.us-east-1.cs.amazonlightsail.com";
 
 const run = (command) => {
   console.log(`\n> ${command}`);

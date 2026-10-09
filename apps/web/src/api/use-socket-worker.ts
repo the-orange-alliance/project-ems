@@ -2,14 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import * as Comlink from 'comlink';
 import type { SocketService } from '@workers/shared-socket-worker.js';
 import SharedSocketWorker from '@workers/shared-socket-worker?sharedworker';
-import { SocketOptions } from '@toa-lib/client';
 import {
   FieldControlUpdatePacket,
   MatchKey,
-  MatchSocketEvent
+  MatchSocketEvent,
+  DEFAULT_SOCKET_HOST
 } from '@toa-lib/models/base';
+import { getFromLocalStorage } from 'src/stores/local-storage.js';
 
 export function useSocketWorker() {
+  const host = getFromLocalStorage('socketHost', DEFAULT_SOCKET_HOST);
   const workerRef = useRef<SharedWorker | null>(null);
   const remoteRef = useRef<Comlink.Remote<SocketService> | null>(null);
   const [connected, setConnected] = useState(false);
@@ -32,8 +34,7 @@ export function useSocketWorker() {
     await remoteRef.current?.subscribeConnected(proxyConnected);
     await remoteRef.current?.subscribeReady(proxyReady);
     await remoteRef.current?.initialize('', {
-      host: SocketOptions.host,
-      port: SocketOptions.port
+      host
     });
     const [c, r] = await Promise.all([
       remoteRef.current?.getConnected(),
