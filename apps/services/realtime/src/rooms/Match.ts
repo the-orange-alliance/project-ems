@@ -612,19 +612,19 @@ export default class Match extends Room {
     while (queue && queue.length > 0) {
       const event = queue.shift()!;
       try {
-        const response = await fetch(event.url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: event.body,
-          signal: AbortSignal.timeout(ACTION_EVENT_TIMEOUT_MS),
-        });
-        if (!response.ok) {
-          logger.warn(
-            `failed to log action event ${event.label} (${response.status})`,
-          );
-        }
+        // const response = await fetch(event.url, {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        //   body: event.body,
+        //   signal: AbortSignal.timeout(ACTION_EVENT_TIMEOUT_MS),
+        // });
+        // if (!response.ok) {
+        //   logger.warn(
+        //     `failed to log action event ${event.label} (${response.status})`,
+        //   );
+        // }
       } catch (e) {
         logger.warn(`failed to log action event ${event.label}: ${String(e)}`);
       }
