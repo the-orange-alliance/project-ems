@@ -48,11 +48,12 @@ export interface TestWebhookResult {
  */
 export const testWebhook = async (
   url: string,
-  event: WebhookEvent
+  event: WebhookEvent,
+  disableTimeout = false
 ): Promise<TestWebhookResult> => {
   try {
     const result = await localClient.post<TestWebhookResult>('/webhooks/test', {
-      body: { url, event }
+      body: { url, event, disableTimeout }
     });
     return (
       result ?? {

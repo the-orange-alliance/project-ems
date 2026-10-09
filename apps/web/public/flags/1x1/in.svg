@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="flag-icon-css-in" width="512" height="512">
-  <path fill="#f93" d="M0 0h512v170.7H0z"/>
+  <path fill="#ff8e00" d="M0 0h512v170.7H0z"/>
   <path fill="#fff" d="M0 170.7h512v170.6H0z"/>
-  <path fill="#128807" d="M0 341.3h512V512H0z"/>
+  <path fill="#009000" d="M0 341.3h512V512H0z"/>
   <g transform="translate(256 256) scale(3.41333)">
-    <circle r="20" fill="#008"/>
+    <circle r="20" fill="#002190"/>
     <circle r="17.5" fill="#fff"/>
-    <circle r="3.5" fill="#008"/>
+    <circle r="3.5" fill="#002190"/>
     <g id="d">
       <g id="c">
         <g id="b">
-          <g id="a" fill="#008">
+          <g id="a" fill="#002190">
             <circle r=".9" transform="rotate(7.5 -8.8 133.5)"/>
             <path d="M0 17.5L.6 7 0 2l-.6 5L0 17.5z"/>
           </g>

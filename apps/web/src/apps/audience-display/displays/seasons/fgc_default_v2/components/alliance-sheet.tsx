@@ -5,6 +5,7 @@ import AllianceTeams from './alliance-teams.js';
 import { Match, Team } from '@toa-lib/models';
 import { AllianceTeamStream } from './alliance-team.js';
 import AllianceBox from './alliance-box.js';
+import { HighScoreBanner } from './high-score-banner.js';
 import { useAllianceMember } from 'src/api/use-alliance-data.js';
 
 interface AllianceSheetProps {
@@ -12,6 +13,13 @@ interface AllianceSheetProps {
   teams?: Team[];
   allianceColor: 'red' | 'blue';
   isPlayoffs?: boolean;
+  /**
+   * `'banner'` renders the NEW HIGH SCORE banner between this alliance's score
+   * box and its team list. `'spacer'` reserves the same height invisibly, which
+   * the opposing column needs so both team lists stay aligned. Omit for a match
+   * that set no record.
+   */
+  highScoreSlot?: 'banner' | 'spacer';
 }
 
 const calcWin = (match: Match<any>, allianceColor: 'red' | 'blue') => {
@@ -34,7 +42,8 @@ const getAllianceTeams = (match: Match<any>, allianceColor: 'red' | 'blue') => {
 const AllianceSheet: React.FC<AllianceSheetProps> = ({
   match,
   teams,
-  allianceColor
+  allianceColor,
+  highScoreSlot
 }) => {
   const win = calcWin(match, allianceColor);
   const allianceTeams = getAllianceTeams(match, allianceColor);
@@ -92,6 +101,7 @@ const AllianceSheet: React.FC<AllianceSheetProps> = ({
         allianceColor={allianceColor}
         isWinning={win}
       />
+      {highScoreSlot && <HighScoreBanner hidden={highScoreSlot === 'spacer'} />}
       <div style={{ width: '100%' }}>
         <AllianceTeams
           teams={allianceTeams ?? []}

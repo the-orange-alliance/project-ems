@@ -21902,6 +21902,7 @@
               "blueRobotTwoBraceState": 0,
               "blueRobotTwoPartnerClimb": false,
               "coopertition": 0,
+              "coopertitionKnockdownBonus": 0,
               "eventKey": "event-with-authoritative-season",
               "id": 1,
               "redClimbMultiplier": 0,

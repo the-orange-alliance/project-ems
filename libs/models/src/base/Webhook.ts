@@ -59,7 +59,12 @@ export const WebhookDbSchema = z.object({
   lastErrorMessage: z.string().nullable().optional(),
   lastErrorTime: z.string().nullable().optional(),
   errorCount: z.number().int().optional(),
-  field: z.number().nullable().optional()
+  field: z.number().nullable().optional(),
+  // 0/1 in SQLite, like `enabled`. When set, deliveries wait on the receiver
+  // indefinitely instead of aborting after the default timeout.
+  disableTimeout: z
+    .union([z.literal(0), z.literal(1), z.boolean()])
+    .optional()
 });
 
 export type WebhookDb = z.infer<typeof WebhookDbSchema>;
@@ -67,7 +72,8 @@ export type WebhookDb = z.infer<typeof WebhookDbSchema>;
 // Application-friendly schema: enabled as boolean
 export const WebhookSchema = WebhookDbSchema.transform((db) => ({
   ...db,
-  enabled: db.enabled === 1 || db.enabled === true
+  enabled: db.enabled === 1 || db.enabled === true,
+  disableTimeout: db.disableTimeout === 1 || db.disableTimeout === true
 }));
 
 export type Webhook = z.infer<typeof WebhookSchema>;
@@ -76,6 +82,7 @@ export type Webhook = z.infer<typeof WebhookSchema>;
 export function toDbWebhook(input: Webhook): WebhookDb {
   return {
     ...input,
-    enabled: input.enabled ? 1 : 0
+    enabled: input.enabled ? 1 : 0,
+    disableTimeout: input.disableTimeout ? 1 : 0
   } as WebhookDb;
 }

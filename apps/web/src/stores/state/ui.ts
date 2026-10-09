@@ -46,6 +46,11 @@ export const isAudioEnabledForScorekeeper = atomWithStorage<boolean>(
  * settings in this section — see issue #262.
  */
 export const pairedFieldAtom = atomWithStorage<string>('pairedField', '');
+/** Field numbers that cycle together in the cycle time report, e.g. `"1,2; 3; 4,5"`. */
+export const cycleTimeFieldGroupsAtom = atomWithStorage<string>(
+  'cycleTimeFieldGroups',
+  ''
+);
 export const fieldsAtom = atom<string[]>([]);
 export const remoteApiUrlAtom = atomWithStorage<string>('remoteApiUrl', '');
 

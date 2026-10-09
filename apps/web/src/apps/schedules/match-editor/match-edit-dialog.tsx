@@ -5,13 +5,23 @@ import { matchApi, useMatchAll } from 'src/api/use-match-data.js';
 import { TabPanel } from 'src/components/util/tab-panel.js';
 import { MatchInfoTab } from './match-info-tab.js';
 import { PageLoader } from 'src/components/loading/page-loader.js';
-import { Match, Team } from '@toa-lib/models';
+import { Match, MatchState, Team } from '@toa-lib/models';
 import { MatchParticipantTab } from './match-participant-tab.js';
 import { MatchDetailTab } from './match-detail-tab.js';
 import { useSnackbar } from 'src/hooks/use-snackbar.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import { useModal } from '@ebay/nice-modal-react';
 import MatchRepostDialog from 'src/components/dialogs/match-repost-dialog.js';
+import ActiveMatchRepostDialog from 'src/components/dialogs/active-match-repost-dialog.js';
+import { useAtomValue } from 'jotai';
+import { matchAtom } from 'src/stores/state/event.js';
+import { matchStateAtom } from 'src/stores/state/match.js';
+
+// Prestarted through uncommitted results. Aborted matches are already cleared.
+const isMatchActive = (state: MatchState) =>
+  state >= MatchState.PRESTART_COMPLETE &&
+  state <= MatchState.RESULTS_READY &&
+  state !== MatchState.MATCH_ABORTED;
 
 interface Props {
   open: boolean;
@@ -38,6 +48,9 @@ export const MatchEditDialog: FC<Props> = ({
   );
   const { showErrorSnackbar } = useSnackbar();
   const repostModal = useModal(MatchRepostDialog);
+  const activeMatchModal = useModal(ActiveMatchRepostDialog);
+  const matchState = useAtomValue(matchStateAtom);
+  const activeMatch = useAtomValue(matchAtom);
   const { events } = useSocketWorker();
   useEffect(() => {
     if (savedMatch) setMatch(savedMatch);
@@ -61,7 +74,16 @@ export const MatchEditDialog: FC<Props> = ({
     try {
       const canRepost = await repostModal.show();
       if (!canRepost) return;
+      const clearActive = isMatchActive(matchState);
+      if (
+        clearActive &&
+        !(await activeMatchModal.show({ matchName: activeMatch?.name }))
+      )
+        return;
       await matchApi.patchWholeMatch(match);
+      // Back the active match out everywhere (silent before it has started);
+      // the scorekeeper returns to a state where it can prestart again.
+      if (clearActive) await events.abort();
       await events.commit({ eventKey, tournamentKey, id });
       await events.postresults();
       mutate(`match/${eventKey}/${tournamentKey}`);

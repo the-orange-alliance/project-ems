@@ -174,6 +174,10 @@ export default class Match extends Room {
       logger.info(`prestarting ${key.eventKey}-${key.tournamentKey}-${key.id}`);
     });
     socket.on(MatchSocketEvent.ABORT, () => {
+      // A running match announces ABORT from its timer listener (see START). A
+      // match that is only prestarted has no running timer, so announce it here
+      // or clients (scorekeeper included) keep it loaded as active.
+      if (!this.timer.inProgress()) this.emitToAll(MatchSocketEvent.ABORT);
       this.timer.abort();
       this.transition(MatchState.MATCH_ABORTED, MatchSocketEvent.ABORT, socket);
       this.key = null;
@@ -344,14 +348,6 @@ export default class Match extends Room {
       logger.info(
         `committing scores for ${key.eventKey}-${key.tournamentKey}-${key.id}`,
       );
-    });
-    socket.on(MatchSocketEvent.TIMER, () => {
-      socket.emit(MatchSocketEvent.TIMER, {
-        modeTimeLeft: this.timer.modeTimeLeft,
-        mode: this.timer.mode,
-        inProgress: this.timer.inProgress(),
-        timeLeft: this.timer.timeLeft,
-      });
     });
 
     socket.on(MatchSocketEvent.BONUS_START, (bonusType: BonusPeriodConfig) => {

@@ -1,8 +1,13 @@
 import { Displays } from '@toa-lib/models';
 import { useAtomCallback } from 'jotai/utils';
 import { displayIdAtom } from 'src/stores/state/audience-display.js';
-import { matchAtom, matchOccurringRanksAtom } from 'src/stores/state/event.js';
+import {
+  committedMatchAtom,
+  matchAtom,
+  matchOccurringRanksAtom
+} from 'src/stores/state/event.js';
 import { ensurePostCommitRanks } from './post-commit-ranks.js';
+import { awaitCommittedMatch } from './match-commit-event.js';
 
 // How long to hold the switch to the results screen while waiting for fresh
 // rankings before giving up and showing it with ranks hidden.
@@ -21,7 +26,10 @@ export const useDisplayEvent = () => {
       return;
     }
 
-    const match = get(matchAtom);
+    await awaitCommittedMatch();
+    if (seq !== displaySeq) return;
+
+    const match = get(committedMatchAtom) ?? get(matchAtom);
     if (!match) {
       // Cold start / replay before match state arrives. Show the screen —
       // DisplaySwitcher renders nothing without a match anyway, and the

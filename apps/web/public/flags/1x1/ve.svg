@@ -12,9 +12,9 @@
       <use width="180" height="120" transform="rotate(144)" xlink:href="#c"/>
     </g>
   </defs>
-  <path fill="#cf142b" d="M0 0h512v512H0z"/>
-  <path fill="#00247d" d="M0 0h512v341.3H0z"/>
-  <path fill="#fc0" d="M0 0h512v170.7H0z"/>
+  <path fill="#c70000" d="M0 0h512v512H0z"/>
+  <path fill="#002190" d="M0 0h512v341.3H0z"/>
+  <path fill="#ffc700" d="M0 0h512v170.7H0z"/>
   <g id="f" transform="translate(256.3 358.4) scale(4.265)">
     <g id="e">
       <use width="180" height="120" transform="rotate(10)" xlink:href="#d"/>

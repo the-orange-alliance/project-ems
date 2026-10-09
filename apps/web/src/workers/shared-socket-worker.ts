@@ -39,17 +39,25 @@ const stateListeners = {
   ready: new Set<AnyCb<boolean>>()
 };
 
-function safeCall(event: string, cb: AnyCb<any>, data: any) {
+function safeCall(
+  event: string,
+  cb: AnyCb<any>,
+  data: any,
+  cleanup?: () => void
+) {
   try {
     cb(data);
   } catch (err) {
+    if (cleanup) cleanup();
     console.error(`[worker] listener error for '${event}'`, err);
   }
 }
 
 function notifyConnected(v: boolean) {
   connected = v;
-  for (const cb of Array.from(stateListeners.connected)) cb(v);
+  for (const cb of Array.from(stateListeners.connected)) {
+    safeCall('connected', cb, v, () => stateListeners.connected.delete(cb));
+  }
 }
 
 function notifyReady(v: boolean) {
@@ -64,7 +72,6 @@ function fanoutEvent(event: string, data: any) {
     data && typeof data === 'object' && typeof data.eventKey === 'string'
       ? data.eventKey
       : '__all__';
-
   payloads.set(messageKey, data);
   eventBus.lastEventPayload.set(event, payloads);
 

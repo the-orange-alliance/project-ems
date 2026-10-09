@@ -6,6 +6,7 @@ import {
   Flex,
   Input,
   Modal,
+  Popconfirm,
   Row,
   Space,
   Typography,
@@ -31,6 +32,8 @@ import {
   Team,
   Displays,
   FGC25FCS,
+  FcsConnectionEvents,
+  FcsConnectionStatus,
   getSeasonKeyFromEventKey
 } from '@toa-lib/models';
 import { io, Socket } from 'socket.io-client';
@@ -39,15 +42,83 @@ import { useAtomValue } from 'jotai';
 import { eventKeyAtom } from '../../stores/state/event.js';
 import { darkModeAtom } from '../../stores/state/ui.js';
 import { useSeasonComponents } from 'src/hooks/use-season-components.js';
+import { FieldConnectionBadge } from 'src/components/util/field-connection-badge.js';
+import { FieldStatusRow } from 'src/components/util/field-status-row.js';
+import { ErrorBoundary } from 'react-error-boundary';
+import { FORCE_PREP_FIELD_CONFIRM } from 'src/apps/scorekeeper/hooks/use-production-options.js';
 
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
+
+const FIELD_DISCONNECTED: FcsConnectionStatus = {
+  connected: false,
+  fields: []
+};
 
 interface Monitor {
   field: number;
   address: string;
   realtimePort: number;
 }
+
+interface FieldStatusSectionProps {
+  /** null when this EMS doesn't report field connection */
+  connection: FcsConnectionStatus | null;
+  fcsStatus: FGC25FCS.FcsStatus | null;
+  /** Season-specific status rows, e.g. WLED states */
+  Extra?: FC<any>;
+  /** Lighter heading for the dashboard cards */
+  compact?: boolean;
+}
+
+/**
+ * Field connection plus any season-specific status. Hidden only when this EMS
+ * reports neither, i.e. an older realtime server with a field that doesn't
+ * send status.
+ */
+const FieldStatusSection: FC<FieldStatusSectionProps> = ({
+  connection,
+  fcsStatus,
+  Extra,
+  compact
+}) => {
+  if (!connection && !fcsStatus) return null;
+  // A status packet that doesn't match the season's format only hides the
+  // details; it resets on the next packet
+  const extra =
+    fcsStatus && Extra ? (
+      <ErrorBoundary fallback={null} resetKeys={[fcsStatus]}>
+        <Extra {...fcsStatus} />
+      </ErrorBoundary>
+    ) : null;
+  return (
+    <Flex vertical flex={1} gap={compact ? 4 : 8}>
+      {compact ? (
+        <Divider plain style={{ margin: '4px 0' }}>
+          <Text type='secondary' style={{ fontSize: 12 }}>
+            Field Status
+          </Text>
+        </Divider>
+      ) : (
+        <Divider>Field Status</Divider>
+      )}
+      {/* Cards stack label/value rows; the wide detail view sets them side by side */}
+      <Flex
+        vertical={compact}
+        wrap={!compact}
+        justify={compact ? undefined : 'center'}
+        gap={compact ? 4 : '8px 32px'}
+      >
+        {connection && (
+          <FieldStatusRow label='Connection'>
+            <FieldConnectionBadge status={connection} connectionOnly />
+          </FieldStatusRow>
+        )}
+        {extra}
+      </Flex>
+    </Flex>
+  );
+};
 
 interface MonitorCardProps {
   field: number;
@@ -78,10 +149,20 @@ const MonitorCard: FC<MonitorCardProps> = ({
     Displays.BLANK
   );
   const [fcsStatus, setFcsStatus] = useState<FGC25FCS.FcsStatus | null>(null);
+  // null until this EMS sends fcs:connection; older realtime servers never do
+  const [fieldConnection, setFieldConnection] =
+    useState<FcsConnectionStatus | null>(null);
   const seasonComponents = useSeasonComponents();
   const eventKey = useAtomValue(eventKeyAtom);
   const isRopeDropSeason =
     getSeasonKeyFromEventKey(eventKey ?? '') === 'fgc_2025';
+  // match is null until this field prestarts a match, so fall back to the
+  // event this monitor is open for
+  const refereeEventKey = match?.eventKey ?? eventKey;
+  const refereeUrl = (position: 'red' | 'head' | 'blue') =>
+    refereeEventKey
+      ? `${webUrl}/${refereeEventKey}/referee/${position}`
+      : undefined;
 
   const handleRefresh = () => {
     console.log('Refresh but idk how to');
@@ -89,7 +170,12 @@ const MonitorCard: FC<MonitorCardProps> = ({
 
   useEffect(() => {
     const socket = createSocket();
-    socket.on('connect', handleConnect);
+    // A reconnect is a new server-side socket, so rejoin the rooms every time.
+    // Joining fcs also makes the server send the current field connection.
+    socket.on('connect', () => {
+      handleConnect();
+      socket.emit('rooms', ['match', 'fcs']);
+    });
     socket.on('disconnect', handleDisconnect);
     socket.on(MatchSocketEvent.PRESTART, handlePrestart);
     socket.on(MatchSocketEvent.START, handleStart);
@@ -99,8 +185,8 @@ const MonitorCard: FC<MonitorCardProps> = ({
     socket.on(MatchSocketEvent.UPDATE, handleUpdate);
     socket.on(MatchSocketEvent.DISPLAY, handleDisplay);
     socket.on('fcs:status', handleFcsStatus);
+    socket.on(FcsConnectionEvents.Connection, handleFieldConnection);
     socket.connect();
-    socket.emit('rooms', ['match', 'fcs']);
     setSocket(socket);
     return () => {
       socket.off(MatchSocketEvent.PRESTART, handlePrestart);
@@ -110,6 +196,7 @@ const MonitorCard: FC<MonitorCardProps> = ({
       socket.off(MatchSocketEvent.COMMIT, handleCommit);
       socket.off(MatchSocketEvent.UPDATE, handleUpdate);
       socket.off(MatchSocketEvent.DISPLAY, handleDisplay);
+      socket.off(FcsConnectionEvents.Connection, handleFieldConnection);
     };
   }, []);
 
@@ -120,7 +207,14 @@ const MonitorCard: FC<MonitorCardProps> = ({
   }, [currentMatch]);
 
   const handleConnect = () => setConnected(true);
-  const handleDisconnect = () => setConnected(false);
+  const handleDisconnect = () => {
+    setConnected(false);
+    setFieldConnection((prev) => (prev ? FIELD_DISCONNECTED : null));
+  };
+
+  const handleFieldConnection = (status: FcsConnectionStatus) => {
+    setFieldConnection(status?.fields ? status : FIELD_DISCONNECTED);
+  };
 
   const handleDisplay = (display: Displays) => {
     setCurrentDisplay(display);
@@ -151,12 +245,18 @@ const MonitorCard: FC<MonitorCardProps> = ({
   };
 
   const handleFcsClearStatus = () => {
-    socket?.emit('fcs:clearStatus');
+    socket?.emit('fcs:clearStatus', { field });
   };
 
   const handleFcsStatus = (status: any) => {
-    const parsedStatus: FGC25FCS.FcsStatus = JSON.parse(status as string); // lol?
-    setFcsStatus(parsedStatus);
+    // Fields send status as a JSON string; tolerate objects and bad packets
+    try {
+      const parsedStatus: FGC25FCS.FcsStatus =
+        typeof status === 'string' ? JSON.parse(status) : status;
+      setFcsStatus(parsedStatus);
+    } catch (e) {
+      console.warn('Ignoring malformed fcs:status packet', e);
+    }
   };
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -254,20 +354,22 @@ const MonitorCard: FC<MonitorCardProps> = ({
           </Space>
         }
         extra={
-          <Dropdown
-            menu={{ items: menuItems }}
-            placement='bottomRight'
-            trigger={['click']}
-          >
-            <Button
-              type='text'
-              icon={<MoreOutlined />}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                color: 'inherit'
-              }}
-            />
-          </Dropdown>
+          <Flex align='center' gap={4}>
+            <Dropdown
+              menu={{ items: menuItems }}
+              placement='bottomRight'
+              trigger={['click']}
+            >
+              <Button
+                type='text'
+                icon={<MoreOutlined />}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  color: 'inherit'
+                }}
+              />
+            </Dropdown>
+          </Flex>
         }
       >
         <Space orientation='vertical' style={{ width: '100%' }}>
@@ -288,13 +390,12 @@ const MonitorCard: FC<MonitorCardProps> = ({
               {getFieldDelay()}
             </Text>
           </Flex>
-          <Flex>
-            {fcsStatus &&
-            seasonComponents &&
-            seasonComponents.FieldMonitorExtraMinimal ? (
-              <seasonComponents.FieldMonitorExtraMinimal {...fcsStatus} />
-            ) : null}
-          </Flex>
+          <FieldStatusSection
+            connection={fieldConnection}
+            fcsStatus={fcsStatus}
+            Extra={seasonComponents?.FieldMonitorExtraMinimal}
+            compact
+          />
         </Space>
       </Card>
       <Modal
@@ -319,24 +420,24 @@ const MonitorCard: FC<MonitorCardProps> = ({
         width={800}
       >
         <Space orientation='vertical' style={{ width: '100%' }}>
-          <Space>
-            {connected ? (
-              <CheckCircleOutlined style={{ color: '#52c41a' }} />
-            ) : (
-              <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-            )}
-            <Text>{getMatchStatus()}</Text>
-          </Space>
+          <Flex justify='space-between' align='center' gap={8} wrap>
+            <Space>
+              {connected ? (
+                <CheckCircleOutlined style={{ color: '#52c41a' }} />
+              ) : (
+                <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+              )}
+              <Text>{getMatchStatus()}</Text>
+            </Space>
+          </Flex>
 
           <MatchDetails key={field} match={match} teams={teams} expanded />
 
-          <Flex>
-            {fcsStatus &&
-            seasonComponents &&
-            seasonComponents.FieldMonitorExtra ? (
-              <seasonComponents.FieldMonitorExtra {...fcsStatus} />
-            ) : null}
-          </Flex>
+          <FieldStatusSection
+            connection={fieldConnection}
+            fcsStatus={fcsStatus}
+            Extra={seasonComponents?.FieldMonitorExtra}
+          />
 
           <Divider>Field Control</Divider>
           <Flex vertical gap='0.25rem'>
@@ -348,13 +449,16 @@ const MonitorCard: FC<MonitorCardProps> = ({
               >
                 Force Field Green
               </Button>
-              <Button
-                type='primary'
-                block
-                onClick={() => socket?.emit('fcs:prepareField')}
+              <Popconfirm
+                title={FORCE_PREP_FIELD_CONFIRM.title}
+                description={FORCE_PREP_FIELD_CONFIRM.description}
+                okText={FORCE_PREP_FIELD_CONFIRM.okText}
+                onConfirm={() => socket?.emit('fcs:prepareField')}
               >
-                Force Prep Field
-              </Button>
+                <Button type='primary' block>
+                  Force Prep Field
+                </Button>
+              </Popconfirm>
             </Flex>
             <Flex gap='0.25rem'>
               <Button
@@ -387,8 +491,8 @@ const MonitorCard: FC<MonitorCardProps> = ({
               <Col span={8}>
                 <Button
                   danger
-                  href={`${webUrl}/${match?.eventKey}/referee/red`}
-                  disabled={match === undefined}
+                  href={refereeUrl('red')}
+                  disabled={!refereeEventKey}
                   target='_blank'
                   block
                 >
@@ -398,8 +502,8 @@ const MonitorCard: FC<MonitorCardProps> = ({
               <Col span={8}>
                 <Button
                   type='primary'
-                  href={`${webUrl}/${match?.eventKey}/referee/head`}
-                  disabled={match === undefined}
+                  href={refereeUrl('head')}
+                  disabled={!refereeEventKey}
                   target='_blank'
                   block
                 >
@@ -408,8 +512,8 @@ const MonitorCard: FC<MonitorCardProps> = ({
               </Col>
               <Col span={8}>
                 <Button
-                  href={`${webUrl}/${match?.eventKey}/referee/blue`}
-                  disabled={match === undefined}
+                  href={refereeUrl('blue')}
+                  disabled={!refereeEventKey}
                   target='_blank'
                   block
                   style={{

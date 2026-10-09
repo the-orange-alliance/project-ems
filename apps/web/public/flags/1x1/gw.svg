@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="flag-icon-css-gw" width="512" height="512">
-  <path fill="#ce1126" d="M0 0h160v512H0z"/>
-  <path fill="#fcd116" d="M160 0h352v256H160z"/>
-  <path fill="#009e49" d="M160 256h352v256H160z"/>
+  <path fill="#c70000" d="M0 0h160v512H0z"/>
+  <path fill="#ffc700" d="M160 0h352v256H160z"/>
+  <path fill="#009000" d="M160 256h352v256H160z"/>
   <g transform="translate(-46.2 72.8) scale(.7886)">
     <g id="b" transform="matrix(80 0 0 80 160 240)">
       <path id="a" d="M0-1v1h.5" transform="rotate(18 0 -1)"/>

@@ -202,3 +202,30 @@ test("starting without a prestart display does not force the match screen", asyn
     internals.timer.abort();
   }
 });
+
+const abortsOf = (emitted: [string, unknown][]) =>
+  emitted.filter(([name]) => name === MatchSocketEvent.ABORT).length;
+
+test("aborting a prestarted match that never started still tells clients", async () => {
+  const { room, handlers, emitted } = displayHarness();
+  const internals = room as unknown as MatchInternals;
+  handlers.get(MatchSocketEvent.PRESTART)!(DISPLAY_KEY);
+  handlers.get(MatchSocketEvent.ABORT)!();
+  assert.equal(abortsOf(emitted), 1);
+  assert.equal(internals.state, MatchState.MATCH_ABORTED);
+  assert.equal(internals.key, null);
+});
+
+test("aborting a running match announces ABORT exactly once", async () => {
+  const { room, handlers, emitted } = displayHarness();
+  const internals = room as unknown as MatchInternals;
+  try {
+    handlers.get(MatchSocketEvent.PRESTART)!(DISPLAY_KEY);
+    handlers.get(MatchSocketEvent.START)!();
+    await pause(20);
+    handlers.get(MatchSocketEvent.ABORT)!();
+    assert.equal(abortsOf(emitted), 1);
+  } finally {
+    internals.timer.abort();
+  }
+});

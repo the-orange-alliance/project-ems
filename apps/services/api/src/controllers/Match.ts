@@ -7,10 +7,18 @@ import {
   reconcileMatchParticipants,
   getFunctionsBySeasonKey,
   getCardCarryPhase,
+  matchHighScoreZod,
+  CardStatus,
+  BLUE_STATION,
   RESULT_BLUE_WIN,
   RESULT_GAME_SPECIFIC,
+  RESULT_NOT_PLAYED,
   RESULT_RED_WIN,
-  RESULT_TIE
+  RESULT_TIE,
+  type Alliance,
+  type MatchHighScore,
+  type MatchParticipant,
+  type TournamentType
 } from '@toa-lib/models';
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -239,6 +247,42 @@ const RecalculateSummarySchema = z.object({
   changes: z.array(MatchScoreChangeSchema),
   skipped: z.array(RecalculateSkipSchema)
 });
+
+/**
+ * The alliance scores in a match that are eligible to hold a high-score record,
+ * `null` for a side that is not.
+ *
+ * A side is ineligible when any of its participants is disqualified or carries a
+ * red card. This filtering is load-bearing rather than belt-and-braces: seasons
+ * apply cards when calculating *rankings*, not when scoring the match, so the
+ * stored `redScore`/`blueScore` of a red-carded alliance is still its full raw
+ * score (see the `CardStatus.RED_CARD` handling in the season's
+ * `calculateRankings`). Without this, a red-carded alliance would take the
+ * event record.
+ *
+ * Surrogacy is deliberately NOT disqualifying. A surrogate appearance is
+ * excluded from that *team's* ranking credit; it says nothing about whether the
+ * alliance actually posted the score.
+ *
+ * Mirrors `eligibleScores` in the stats helpers
+ * (`libs/models/src/seasons/stats/fgc2026/helpers.ts`), at alliance scope
+ * instead of team scope.
+ */
+const eligibleAllianceScores = (
+  match: { redScore: number; blueScore: number },
+  participants: MatchParticipant[]
+): { red: number | null; blue: number | null } => {
+  const barred = (isRed: boolean) =>
+    participants.some(
+      (p) =>
+        isRed === (p.station < BLUE_STATION) &&
+        (p.disqualified === 1 || p.cardStatus === CardStatus.RED_CARD)
+    );
+  return {
+    red: barred(true) ? null : match.redScore,
+    blue: barred(false) ? null : match.blueScore
+  };
+};
 
 async function matchController(fastify: FastifyInstance) {
   // SPECIAL ROUTES
@@ -1072,6 +1116,154 @@ async function matchController(fastify: FastifyInstance) {
           matchesChanged: changes.length,
           changes,
           skipped
+        });
+      } catch (e) {
+        reply.code(500).send(InternalServerError(e));
+      }
+    }
+  );
+
+  // High score check
+  //
+  // Answers "did this match set the high score for its phase?" for the audience
+  // display's NEW HIGH SCORE banner. Deliberately a plain aggregate route rather
+  // than a stats-catalogue entry: the display needs one boolean the instant
+  // results are committed, and the stats engine is a cached worker-pool query API
+  // whose closest stat (A32) is team-scoped and qualification-only.
+  fastify.withTypeProvider<ZodTypeProvider>().get(
+    '/high-score/:eventKey/:tournamentKey/:id',
+    {
+      schema: {
+        params: EventTournamentIdParams,
+        response: errorableSchema(matchHighScoreZod),
+        tags: ['Matches']
+      }
+    },
+    async (request, reply) => {
+      try {
+        const {
+          eventKey,
+          tournamentKey,
+          id: idStr
+        } = request.params as z.infer<typeof EventTournamentIdParams>;
+        const id = parseInt(idStr);
+        const db = await getDB(eventKey);
+
+        const tournaments = await db.selectAllWhere(
+          'tournament',
+          `eventKey = "${eventKey}"`
+        );
+        const own = tournaments.find((t) => t.tournamentKey === tournamentKey);
+        if (!own) {
+          reply.code(DataNotFoundError.code).send(DataNotFoundError);
+          return;
+        }
+        const tournamentType = own.tournamentType as TournamentType;
+
+        // Phase, not level. `getCardCarryPhase` branches on `tournamentType`
+        // because the levels are not ordered by phase - RANKING_LEVEL is 30
+        // while ROUND_ROBIN_LEVEL (a playoff) is 20 - so no numeric cutoff
+        // separates qualification from playoffs. See Tournament.ts.
+        const phase = getCardCarryPhase(own);
+        const noRecord: MatchHighScore = {
+          isNewHighScore: false,
+          alliance: null,
+          score: null,
+          previousScore: null,
+          tournamentType
+        };
+        // Test and practice tournaments have no phase, and never hold or set a
+        // record.
+        if (phase === null) {
+          reply.status(200).send(noRecord);
+          return;
+        }
+
+        const phaseKeys = new Set<string>(
+          tournaments
+            .filter((t) => getCardCarryPhase(t) === phase)
+            .map((t) => t.tournamentKey as string)
+        );
+
+        const played = await db.selectAllWhere(
+          'match',
+          `eventKey = "${eventKey}" AND result > ${RESULT_NOT_PLAYED}`
+        );
+        const participants = await db.selectAllWhere(
+          'match_participant',
+          `eventKey = "${eventKey}"`
+        );
+        const byMatch = new Map<string, MatchParticipant[]>();
+        for (const p of participants) {
+          const key = `${p.tournamentKey}-${p.id}`;
+          const existing = byMatch.get(key);
+          if (existing) existing.push(p);
+          else byMatch.set(key, [p]);
+        }
+
+        // The record to beat is every OTHER played match in this phase. Only
+        // this match is excluded, not everything played after it: if a later
+        // match has already beaten this one, re-opening this match's results
+        // correctly reports no record.
+        let previousScore: number | null = null;
+        let subject: (typeof played)[number] | undefined;
+        for (const m of played) {
+          if (!phaseKeys.has(m.tournamentKey)) continue;
+          if (m.tournamentKey === tournamentKey && m.id === id) {
+            subject = m;
+            continue;
+          }
+          const { red, blue } = eligibleAllianceScores(
+            m,
+            byMatch.get(`${m.tournamentKey}-${m.id}`) ?? []
+          );
+          for (const score of [red, blue]) {
+            if (score !== null && (previousScore === null || score > previousScore))
+              previousScore = score;
+          }
+        }
+
+        // Not played yet (or not in this phase): report the standing record
+        // without claiming one.
+        if (!subject) {
+          reply.status(200).send({ ...noRecord, previousScore });
+          return;
+        }
+
+        const { red, blue } = eligibleAllianceScores(
+          subject,
+          byMatch.get(`${tournamentKey}-${id}`) ?? []
+        );
+        const best =
+          red === null ? blue : blue === null ? red : Math.max(red, blue);
+        // A record has to BEAT something. Two conditions, both load-bearing:
+        //
+        //  - `previousScore !== null` - there is something to beat. The first
+        //    played match of a phase has no prior score to compare against, so
+        //    it is simply the first result, not a record. Calling it one would
+        //    put the banner on the opening match of every event.
+        //  - strictly greater - equalling the standing record does not take it.
+        const isNewHighScore =
+          best !== null && previousScore !== null && best > previousScore;
+
+        let alliance: Alliance | null = null;
+        if (isNewHighScore) {
+          // Both alliances above the record and tied with each other: the record
+          // belongs to no single alliance, so it goes unattributed.
+          alliance =
+            red !== null && blue !== null && red === blue
+              ? null
+              : red !== null && red === best
+                ? 'red'
+                : 'blue';
+        }
+
+        reply.status(200).send({
+          isNewHighScore,
+          alliance,
+          score: isNewHighScore ? best : null,
+          previousScore,
+          tournamentType
         });
       } catch (e) {
         reply.code(500).send(InternalServerError(e));
