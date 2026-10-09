@@ -1,27 +1,44 @@
 import { ScheduleItem } from '@toa-lib/models';
-import { FC } from 'react';
-import { UpgradedTable } from './upgraded-table.js';
+import { Table, TableColumnsType, Tag } from 'antd';
 import { DateTime } from 'luxon';
+import { memo } from 'react';
+
+const PAGE_SIZE = 25;
+
+const columns: TableColumnsType<ScheduleItem> = [
+  { title: 'Day', key: 'day', width: 70, render: (_, item) => item.day + 1 },
+  {
+    title: 'Name',
+    key: 'name',
+    render: (_, item) =>
+      item.isMatch ? item.name : <Tag color='gold'>{item.name}</Tag>
+  },
+  {
+    title: 'Start',
+    key: 'start',
+    render: (_, item) =>
+      DateTime.fromISO(item.startTime).toFormat('ccc, LLL d · h:mm a')
+  },
+  { title: 'Minutes', key: 'duration', width: 100, dataIndex: 'duration' }
+];
 
 interface Props {
   items: ScheduleItem[];
 }
 
-export const ScheduleTable: FC<Props> = ({ items }) => {
+// Paged, so only a page of rows is ever rendered however long the schedule is.
+export const ScheduleTable = memo(function ScheduleTable({ items }: Props) {
   return (
-    <UpgradedTable
-      data={items}
+    <Table<ScheduleItem>
+      size='small'
       rowKey='id'
-      headers={['Day', 'Name', 'Start Time', 'Duration', 'Is Match']}
-      renderRow={(e) => {
-        return [
-          e.day,
-          e.name,
-          DateTime.fromISO(e.startTime).toLocaleString(DateTime.DATETIME_MED),
-          e.duration,
-          e.isMatch ? 'Yes' : 'No'
-        ];
+      dataSource={items}
+      columns={columns}
+      pagination={{
+        pageSize: PAGE_SIZE,
+        showSizeChanger: false,
+        hideOnSinglePage: true
       }}
     />
   );
-};
+});

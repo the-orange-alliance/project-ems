@@ -54,12 +54,13 @@ export const ScheduleManager: FC = () => {
     (m) => tournamentKey && m.tournamentKey === tournamentKey
   );
 
-  const onScheduleParamsChange = (schedule: ScheduleParams) => {
+  const onScheduleParamsChange = async (schedule: ScheduleParams) => {
     if (!currentTournament) return;
-    schedule.type = currentTournament.tournamentType;
-    scheduleApi.update.params(schedule).then(() => {
-      return refetchScheduleParams();
+    await scheduleApi.update.params({
+      ...schedule,
+      type: currentTournament.tournamentType
     });
+    await refetchScheduleParams();
   };
   useUpdateAppbar(
     {
@@ -88,7 +89,7 @@ export const ScheduleManager: FC = () => {
         `/schedule-params/${event.eventKey}/${tournamentKey}`
       );
       if (!scheduleParams) throw new Error('Schedule params not found.');
-      onScheduleParamsChange(scheduleParams);
+      await onScheduleParamsChange(scheduleParams);
     } catch (e) {
       showErrorSnackbar('Error while downloading schedule parameters.', e);
     }

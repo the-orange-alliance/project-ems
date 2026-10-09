@@ -32,6 +32,7 @@ import {
   pullAlliancesFromTournament,
   usePreviousTournamentSources
 } from '../util/use-previous-tournament-alliances.js';
+import { useTeamIdentifiers } from 'src/hooks/use-team-identifier.js';
 
 const { useBreakpoint } = Grid;
 
@@ -56,6 +57,7 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
     eventSchedule.tournamentKey
   );
   const { data: teams } = useTeamsForEvent(eventSchedule.eventKey);
+  const identifiers = useTeamIdentifiers();
   const screens = useBreakpoint();
   const stackButtons = screens.xs && !screens.sm;
   const { candidates, take, allianceSize, seedMap } =
@@ -84,7 +86,7 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
     : allianceRows === 0
       ? 'Add at least one alliance (or use Auto-Assign) before saving.'
       : hasDuplicates
-        ? `Team ${duplicateTeamKey} is assigned to more than one slot - each team may appear only once.`
+        ? `Team ${identifiers[duplicateTeamKey]} is assigned to more than one slot - each team may appear only once.`
         : filledTeamKeys.length === 0
           ? 'Assign teams to the alliance slots before saving.'
           : undefined;

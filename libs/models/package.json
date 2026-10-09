@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "npm run build && node --test build/seasons/stats/tests/*.test.js",
+    "test": "npm run build && node --test build/seasons/stats/tests/*.test.js build/base/tests/*.test.js",
     "check-types": "tsc --noEmit"
   },
   "exports": {

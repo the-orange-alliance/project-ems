@@ -11,7 +11,7 @@ import { ScheduleStats } from './schedule-stats.js';
 interface Props {
   tournamentKey: string | null;
   eventSchedule?: ScheduleParams;
-  onEventScheduleChange?: (schedule: ScheduleParams) => void;
+  onEventScheduleChange?: (schedule: ScheduleParams) => void | Promise<void>;
   savedMatches?: Match<any>[];
   hasMatches?: boolean;
 }

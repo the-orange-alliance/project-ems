@@ -17,6 +17,7 @@ vi.mock('./index.js', () => ({
   MATCH_TELE: 'tele',
   MATCH_ENDGAME: 'endgame',
   MATCH_END: 'end',
+  MATCH_ABORT: 'abort',
   initAudio: (name: string) => {
     const audio: FakeAudio = {
       currentTime: 0,
@@ -54,7 +55,8 @@ describe('playTimerCue', () => {
     ['timer:transition', 'transition'],
     ['timer:tele', 'tele'],
     ['timer:endgame', 'endgame'],
-    ['timer:end', 'end']
+    ['timer:end', 'end'],
+    ['timer:abort', 'abort']
   ] as const)('plays the %s sound', (event, sound) => {
     playTimerCue(message(event, { allowAudio: true }));
     expect(sounds.get(sound)?.play).toHaveBeenCalledTimes(1);
@@ -78,7 +80,6 @@ describe('playTimerCue', () => {
   it('stays silent for events without a sound', () => {
     playTimerCue(message('timer:tick', { allowAudio: true }));
     playTimerCue(message('timer:auto', { allowAudio: true }));
-    playTimerCue(message('timer:abort', { allowAudio: true }));
     playTimerCue(message(undefined, { allowAudio: true }));
     sounds.forEach((sound) => expect(sound.play).not.toHaveBeenCalled());
   });
@@ -97,6 +98,7 @@ describe('playTimerCue', () => {
 
   it('lists the events that have a sound', () => {
     expect(TIMER_CUE_EVENTS.sort()).toEqual([
+      'timer:abort',
       'timer:end',
       'timer:endgame',
       'timer:start',
