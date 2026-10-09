@@ -43,14 +43,20 @@ if (remoteApiHost) {
   localStorage.setItem('remoteApiHost', `"${host}"`);
   console.warn(`[EMS]: Remote API host set to ${host}`);
 }
-
 if (import.meta.env.VITE_API_URL) {
   localClient.setBaseUrl(import.meta.env.VITE_API_URL);
   console.warn(`[EMS]: Local api url set to ${import.meta.env.VITE_API_URL}`);
 }
 
-SocketOptions.host = window.location.hostname;
-SocketOptions.port = 8081;
+const rltUrl = import.meta.env.VITE_RLT_URL;
+if (rltUrl) {
+  const url = new URL(rltUrl);
+  SocketOptions.host = url.hostname;
+  SocketOptions.port = parseInt(url.port || '8081');
+} else {
+  SocketOptions.host = window.location.hostname;
+  SocketOptions.port = 8081;
+}
 
 // Skipped while ChromaLayout is mounted so the audience display stays transparent.
 function ThemedBody({ darkMode }: { darkMode: boolean }) {

@@ -18,9 +18,21 @@ export class PublicAppStack extends cdk.Stack {
     // -------------------------------
     // Create Public ECR Repositories
     // -------------------------------
-    const backendRepo = new ecr.CfnPublicRepository(this, "BackendPublicRepo", {
-      repositoryName: "ems-backend",
-    });
+    const backendApiRepo = new ecr.CfnPublicRepository(
+      this,
+      "BackendApiPublicRepo",
+      {
+        repositoryName: "ems-backend-api",
+      },
+    );
+
+    const backendRltRepo = new ecr.CfnPublicRepository(
+      this,
+      "BackendRltPublicRepo",
+      {
+        repositoryName: "ems-backend-rlt",
+      },
+    );
 
     const webRepo = new ecr.CfnPublicRepository(this, "WebPublicRepo", {
       repositoryName: "ems-web",
@@ -103,17 +115,18 @@ export class PublicAppStack extends cdk.Stack {
     );
 
     const imageTag = this.node.tryGetContext("imageTag") ?? "latest";
-    const backendImage = `public.ecr.aws/102536421230/ems-backend:${imageTag}`;
+    const backendApiImage = `public.ecr.aws/102536421230/ems-backend-api:${imageTag}`;
+    const backendRltImage = `public.ecr.aws/102536421230/ems-backend-rlt:${imageTag}`;
     const webImage = `public.ecr.aws/102536421230/ems-web:${imageTag}`;
 
     // ------------------------------------------------
-    // Lightsail Backend Container Service
+    // Lightsail Backend API Container Service
     // ------------------------------------------------
-    const backendService = new lightsail.CfnContainer(
+    const backendApiService = new lightsail.CfnContainer(
       this,
-      "EmsBackendService",
+      "EmsBackendApiService",
       {
-        serviceName: "project-ems-backend",
+        serviceName: "project-ems-backend-api",
 
         // Start cheap; increase independently if needed.
         power: "nano",
@@ -122,8 +135,8 @@ export class PublicAppStack extends cdk.Stack {
         containerServiceDeployment: {
           containers: [
             {
-              containerName: "backend",
-              image: backendImage,
+              containerName: "backend-api",
+              image: backendApiImage,
 
               environment: [
                 {
@@ -152,7 +165,7 @@ export class PublicAppStack extends cdk.Stack {
           ],
 
           publicEndpoint: {
-            containerName: "backend",
+            containerName: "backend-api",
             containerPort: 8080,
 
             healthCheckConfig: {
@@ -173,7 +186,80 @@ export class PublicAppStack extends cdk.Stack {
           },
           {
             key: "Service",
-            value: "backend",
+            value: "backend-api",
+          },
+        ],
+      },
+    );
+
+    // ------------------------------------------------
+    // Lightsail Backend API Container Service
+    // ------------------------------------------------
+    const backendRltService = new lightsail.CfnContainer(
+      this,
+      "EmsBackendRltService",
+      {
+        serviceName: "project-ems-backend-rlt",
+
+        // Start cheap; increase independently if needed.
+        power: "nano",
+        scale: 1,
+
+        containerServiceDeployment: {
+          containers: [
+            {
+              containerName: "backend-rlt",
+              image: backendRltImage,
+
+              environment: [
+                {
+                  variable: "NODE_ENV",
+                  value: "production",
+                },
+
+                // Your backend uses APPDATA for its config/data
+                // location. Adjust if you've changed that logic.
+                {
+                  variable: "APPDATA",
+                  value: "/root/.config",
+                },
+              ],
+
+              ports: [
+                {
+                  port: "8080",
+                  protocol: "HTTP",
+                },
+
+                // Deliberately omit 8081.
+                // Realtime isn't needed in the cloud preview.
+              ],
+            },
+          ],
+
+          publicEndpoint: {
+            containerName: "backend-rlt",
+            containerPort: 8080,
+
+            healthCheckConfig: {
+              path: "/",
+              successCodes: "200-499",
+              intervalSeconds: 10,
+              timeoutSeconds: 5,
+              healthyThreshold: 2,
+              unhealthyThreshold: 5,
+            },
+          },
+        },
+
+        tags: [
+          {
+            key: "Project",
+            value: "project-ems",
+          },
+          {
+            key: "Service",
+            value: "backend-rlt",
           },
         ],
       },
@@ -231,15 +317,19 @@ export class PublicAppStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, "BackendServiceUrl", {
-      value: backendService.attrUrl,
+      value: backendApiService.attrUrl,
     });
 
     new cdk.CfnOutput(this, "WebServiceUrl", {
       value: webService.attrUrl,
     });
 
-    new cdk.CfnOutput(this, "BackendPublicEcrUri", {
-      value: `public.ecr.aws/${this.account}/ems-backend`,
+    new cdk.CfnOutput(this, "BackendApiPublicEcrUri", {
+      value: `public.ecr.aws/${this.account}/ems-backend-api`,
+    });
+
+    new cdk.CfnOutput(this, "BackendRltPublicEcrUri", {
+      value: `public.ecr.aws/${this.account}/ems-backend-rlt`,
     });
 
     new cdk.CfnOutput(this, "WebPublicEcrUri", {
@@ -250,8 +340,12 @@ export class PublicAppStack extends cdk.Stack {
       value: githubActionsRole.roleArn,
     });
 
-    new cdk.CfnOutput(this, "BackendPublicEcrArn", {
-      value: backendRepo.attrArn,
+    new cdk.CfnOutput(this, "BackendApiPublicEcrArn", {
+      value: backendApiRepo.attrArn,
+    });
+
+    new cdk.CfnOutput(this, "BackendRltPublicEcrArn", {
+      value: backendRltRepo.attrArn,
     });
 
     new cdk.CfnOutput(this, "WebPublicEcrArn", {

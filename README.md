@@ -44,8 +44,9 @@ The `web` container wll run `ems-web` on port 80. Also built in a production env
 
 You can build these images via the 2 commands:
 
-1. `docker build -t ems-srv:latest --target backend .`
-2. `docker build -t ems-web:latest --target web .`
+1. `docker build -t ems-backend-api:latest --target backend-api .`
+2. `docker build -t ems-backend-rlt:latest --target backend-rlt .`
+3. `docker build -t ems-web:latest --target web .`
 
 These commands must be run from the repo root.
 

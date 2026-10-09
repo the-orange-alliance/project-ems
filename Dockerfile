@@ -19,23 +19,24 @@ RUN npm ci
 ARG GIT_SHA
 ARG VITE_BUILD_TYPE
 ARG VITE_API_URL
+ARG VITE_RLT_URL
 
 ENV GIT_SHA=$GIT_SHA
 ENV VITE_BUILD_TYPE=$VITE_BUILD_TYPE
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_RLT_URL=$VITE_RLT_URL
 
 # Build only what we need (api, realtime, web)
 RUN npx turbo run build --filter=api --filter=realtime --filter=ems-web
 
-# ---------- 3. Backend Runtime ----------
-FROM base AS backend
+# ---------- 3. Backend API Runtime ----------
+FROM base AS backend-api
 ENV NODE_ENV=production
 ENV WORKDIR=/workspace/apps/services
 
 # Copy only the built backend and production dependencies
 COPY --from=build /workspace/apps/services/api/build ./apps/services/api/build
 COPY --from=build /workspace/apps/services/api/package.json ./apps/services/api/package.json
-COPY --from=build /workspace/apps/services/realtime/build ./apps/services/realtime/build
 COPY --from=build /workspace/node_modules ./node_modules
 
 # Copy any per-app node_modules (if not hoisted)
@@ -47,16 +48,33 @@ COPY --from=build /workspace/apps/services/api/bin ./apps/services/api/bin
 COPY --from=build /workspace/apps/services/api/sql ./apps/services/api/sql
 
 COPY --from=build /workspace/scripts ./scripts
-RUN sed -i 's/\r$//' ./scripts/backend_entrypoint.sh
+RUN sed -i 's/\r$//' ./scripts/backend_api_entrypoint.sh
 RUN chmod +x /workspace/apps/services/api/bin/MatchMaker
-RUN chmod +x ./scripts/backend_entrypoint.sh
+RUN chmod +x ./scripts/backend_api_entrypoint.sh
 
 RUN test -f ./apps/services/api/build/stats/StatsWorker.js
 
-EXPOSE 8080 8081
-ENTRYPOINT ["./scripts/backend_entrypoint.sh"]
+EXPOSE 8080
+ENTRYPOINT ["./scripts/backend_api_entrypoint.sh"]
 
-# ---------- 4. Web Runtime ----------
+# ---------- 4. Backend Realtime Runtime ----------
+FROM base AS backend-rlt
+ENV NODE_ENV=production
+ENV WORKDIR=/workspace/apps/services
+
+COPY --from=build /workspace/apps/services/realtime/build ./apps/services/realtime/build
+COPY --from=build /workspace/node_modules ./node_modules
+
+COPY --from=build /workspace/libs ./libs
+
+COPY --from=build /workspace/scripts ./scripts
+RUN sed -i 's/\r$//' ./scripts/backend_rlt_entrypoint.sh
+RUN chmod +x ./scripts/backend_rlt_entrypoint.sh
+
+EXPOSE 8081
+ENTRYPOINT ["./scripts/backend_rlt_entrypoint.sh"]
+
+# ---------- 5. Web Runtime ----------
 FROM base AS web
 RUN npm install -g serve@14.2.1
 
