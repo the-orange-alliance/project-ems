@@ -17,6 +17,7 @@ vi.mock('./index.js', () => ({
   MATCH_TELE: 'tele',
   MATCH_ENDGAME: 'endgame',
   MATCH_END: 'end',
+  MATCH_ABORT: 'abort',
   initAudio: (name: string) => {
     const audio: FakeAudio = {
       currentTime: 0,
@@ -54,7 +55,8 @@ describe('playTimerCue', () => {
     ['timer:transition', 'transition'],
     ['timer:tele', 'tele'],
     ['timer:endgame', 'endgame'],
-    ['timer:end', 'end']
+    ['timer:end', 'end'],
+    ['timer:abort', 'abort']
   ] as const)('plays the %s sound', (event, sound) => {
     playTimerCue(message(event, { allowAudio: true }));
     expect(sounds.get(sound)?.play).toHaveBeenCalledTimes(1);
