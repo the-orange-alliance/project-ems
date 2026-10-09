@@ -1,6 +1,6 @@
 import { useMatchControl } from './use-match-control.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
-import { MatchState, WebhookEvent } from '@toa-lib/models';
+import { MatchSocketEvent, MatchState, WebhookEvent } from '@toa-lib/models';
 import { useSeasonFieldControl } from 'src/hooks/use-season-components.js';
 import { useModal } from '@ebay/nice-modal-react';
 import { AbortDialog } from 'src/components/dialogs/abort-dialog.js';
@@ -14,7 +14,7 @@ import { matchAtom } from 'src/stores/state/index.js';
 export const useMatchStartCallback = () => {
   const { canStartMatch, setState } = useMatchControl();
   const fieldControl = useSeasonFieldControl();
-  const { events, connected } = useSocketWorker();
+  const { events, connected, worker } = useSocketWorker();
   return useAtomCallback(
     useCallback(
       async (get, set) => {
@@ -41,6 +41,9 @@ export const useMatchStartCallback = () => {
         set(matchAtom, currentMatch);
         try {
           await matchApi.update.match(currentMatch);
+          setTimeout(() => {
+            worker?.emit(MatchSocketEvent.UPDATE, currentMatch);
+          }, 100);
         } catch (e) {
           // Deliberately not rethrown: the match is already running, and
           // surfacing a blocking error mid-match would be alarming and
