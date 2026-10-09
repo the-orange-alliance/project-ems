@@ -227,19 +227,16 @@ export class PublicAppStack extends cdk.Stack {
 
               ports: [
                 {
-                  port: "8080",
+                  port: "8081",
                   protocol: "HTTP",
                 },
-
-                // Deliberately omit 8081.
-                // Realtime isn't needed in the cloud preview.
               ],
             },
           ],
 
           publicEndpoint: {
             containerName: "backend-rlt",
-            containerPort: 8080,
+            containerPort: 8081,
 
             healthCheckConfig: {
               path: "/",
