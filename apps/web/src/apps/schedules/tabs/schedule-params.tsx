@@ -1,25 +1,30 @@
-import { FC, useState } from 'react';
-import { ScheduleFooter } from '../schedule-footer.js';
+import { Alert, Card, Col, Empty, Flex, Row } from 'antd';
 import {
+  ScheduleParams as EventScheduleParams,
   generateScheduleItems,
-  getScheduleValidation,
-  isPlayoffsTournamentType,
-  ScheduleParams as EventScheduleParams
+  getScheduleIssues,
+  normalizeScheduleDays,
+  planSchedule
 } from '@toa-lib/models';
-import { PageLoader } from 'src/components/loading/index.js';
+import { FC, useDeferredValue, useMemo, useState } from 'react';
 import {
   scheduleApi,
   useScheduleItemsForTournament
 } from 'src/api/use-schedule-data.js';
-import { ScheduleLayout } from '../schedule-layout.js';
+import { useCurrentTournament } from 'src/api/use-tournament-data.js';
 import { ScheduleTable } from 'src/components/tables/schedule-table.js';
-import { DefaultScheduleOptions } from '../tournaments/default-params.js';
-import { RoudnRobinScheduleOptions } from '../tournaments/round-robin-params.js';
-import { Divider } from 'antd';
+import { useSnackbar } from 'src/hooks/use-snackbar.js';
+import { DaysCard } from '../params/days-card.js';
+import { MatchFormatCard } from '../params/match-format-card.js';
+import { matchesSavedItems } from '../params/match-plan.js';
+import { ScheduleSummary } from '../params/schedule-summary.js';
+import { useScheduleDraft } from '../params/use-schedule-draft.js';
 
 interface Props {
   eventSchedule?: EventScheduleParams;
-  onEventScheduleChange?: (eventSchedule: EventScheduleParams) => void;
+  onEventScheduleChange?: (
+    eventSchedule: EventScheduleParams
+  ) => void | Promise<void>;
   disabled?: boolean;
 }
 
@@ -28,84 +33,128 @@ export const ScheduleParams: FC<Props> = ({
   disabled,
   onEventScheduleChange
 }) => {
-  const [loading, setLoading] = useState(false);
-  const {
-    data: scheduleItems,
-    isLoading,
-    mutate: mutateScheduleItems
-  } = useScheduleItemsForTournament(
-    eventSchedule?.eventKey,
-    eventSchedule?.tournamentKey
-  );
-  const { valid, validationMessage } = getScheduleValidation(eventSchedule);
-  const canEdit = !disabled && eventSchedule && !loading;
-  const handleScheduleChange = (schedule: EventScheduleParams) => {
-    if (!eventSchedule) return;
-    onEventScheduleChange?.(schedule);
-  };
-  const generateSchedule = async () => {
-    if (!eventSchedule) return;
-    setLoading(true);
-    const scheduleItems = generateScheduleItems(eventSchedule);
-    await scheduleApi.delete.items(
-      eventSchedule.eventKey,
-      eventSchedule.tournamentKey
-    );
-    await scheduleApi.create.items(scheduleItems);
-    mutateScheduleItems(scheduleItems);
-    setLoading(false);
-  };
-  return !isLoading ? (
-    <>
-      <Divider>Tournament Schedule Configurations</Divider>
-      <ScheduleOptions
-        eventSchedule={eventSchedule}
-        disabled={!canEdit}
-        onChange={handleScheduleChange}
-      />
-      <Divider>Tournament Day Configurations</Divider>
-      <ScheduleLayout
-        eventSchedule={eventSchedule}
-        disabled={!canEdit}
-        onChange={handleScheduleChange}
-      />
-      <ScheduleFooter
-        onGenerateSchedule={generateSchedule}
-        disabled={!canEdit || !valid || loading}
-        message={validationMessage}
-      />
-      {scheduleItems && scheduleItems.length > 0 && (
-        <ScheduleTable items={scheduleItems} />
-      )}
-    </>
-  ) : (
-    <PageLoader />
+  if (!eventSchedule)
+    return <Empty description='Please select a tournament.' />;
+  return (
+    <ScheduleParamsEditor
+      // A fresh editor per tournament, so one tournament's edits can't leak into another.
+      key={`${eventSchedule.eventKey}/${eventSchedule.tournamentKey}`}
+      saved={eventSchedule}
+      locked={disabled}
+      save={onEventScheduleChange}
+    />
   );
 };
 
-interface ScheduleOptionsProps {
-  eventSchedule?: EventScheduleParams;
-  disabled?: boolean;
-  onChange: (eventSchedule: EventScheduleParams) => void;
+interface EditorProps {
+  saved: EventScheduleParams;
+  locked?: boolean;
+  save?: Props['onEventScheduleChange'];
 }
 
-export const ScheduleOptions: FC<ScheduleOptionsProps> = ({
-  eventSchedule,
-  disabled,
-  onChange
-}) => {
-  if (!eventSchedule) return <div>Please select a tournament.</div>;
-  return isPlayoffsTournamentType(eventSchedule.type) ? (
-    <RoudnRobinScheduleOptions
-      eventSchedule={eventSchedule}
-      disabled={disabled}
-      onChange={onChange}
-    />
-  ) : (
-    <DefaultScheduleOptions
-      eventSchedule={eventSchedule}
-      disabled={disabled}
-      onChange={onChange}
-    />
+const ScheduleParamsEditor: FC<EditorProps> = ({ saved, locked, save }) => {
+  const { showSnackbar, showErrorSnackbar } = useSnackbar();
+  const tournament = useCurrentTournament();
+  const {
+    data: savedItems,
+    isLoading,
+    mutate: mutateSavedItems
+  } = useScheduleItemsForTournament(saved.eventKey, saved.tournamentKey);
+  const [generating, setGenerating] = useState(false);
+  const { draft, status, update, flush } = useScheduleDraft(
+    saved,
+    (schedule) => save?.(normalizeScheduleDays(schedule)),
+    (e) => showErrorSnackbar('Error while saving schedule parameters.', e)
+  );
+
+  const plan = useMemo(() => planSchedule(draft), [draft]);
+  const issues = useMemo(() => getScheduleIssues(draft, plan), [draft, plan]);
+  const ready = !issues.some((issue) => issue.severity === 'error');
+  const preview = useMemo(
+    () => (ready ? generateScheduleItems(draft, plan) : []),
+    [ready, draft, plan]
+  );
+  // The table can lag a keystroke behind without making the inputs feel slow.
+  const shownPreview = useDeferredValue(preview);
+  const upToDate = useMemo(
+    () =>
+      ready && !!savedItems?.length && matchesSavedItems(preview, savedItems),
+    [ready, preview, savedItems]
+  );
+  const hasSavedItems = !!savedItems?.length;
+  const disabled = locked || generating;
+
+  const generate = async () => {
+    setGenerating(true);
+    try {
+      // Items come from the saved parameters, so make sure they are saved first.
+      if (!(await flush())) return;
+      await scheduleApi.delete.items(draft.eventKey, draft.tournamentKey);
+      await scheduleApi.create.items(preview);
+      await mutateSavedItems(preview, { revalidate: false });
+      showSnackbar('Schedule generated.');
+    } catch (e) {
+      showErrorSnackbar('Error while generating schedule.', e);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const shownItems = ready ? shownPreview : (savedItems ?? []);
+
+  return (
+    <Flex vertical gap={16}>
+      {locked && (
+        <Alert
+          type='info'
+          showIcon
+          title='Parameters are locked'
+          description='Matches have already been created for this tournament, so the schedule can no longer be changed.'
+        />
+      )}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} xl={16}>
+          <Flex vertical gap={16}>
+            <MatchFormatCard
+              schedule={draft}
+              fieldCount={tournament?.fieldCount}
+              disabled={disabled}
+              onChange={update}
+            />
+            <DaysCard
+              schedule={draft}
+              plan={plan}
+              issues={issues}
+              disabled={disabled}
+              onChange={update}
+            />
+          </Flex>
+        </Col>
+        <Col xs={24} xl={8}>
+          <ScheduleSummary
+            schedule={draft}
+            plan={plan}
+            issues={issues}
+            saveStatus={status}
+            hasSavedItems={hasSavedItems}
+            upToDate={upToDate}
+            generating={generating || isLoading}
+            locked={locked}
+            onGenerate={generate}
+            onRetrySave={flush}
+          />
+        </Col>
+      </Row>
+      <Card
+        title={upToDate || !ready ? 'Current schedule' : 'Schedule preview'}
+        size='small'
+      >
+        {shownItems.length > 0 ? (
+          <ScheduleTable items={shownItems} />
+        ) : (
+          <Empty description='Complete the parameters above to preview the schedule.' />
+        )}
+      </Card>
+    </Flex>
   );
 };
