@@ -1,6 +1,6 @@
 import express, { Application, json } from "express";
 import { createServer } from "http";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import cors from "cors";
 import parser from "body-parser";
 import jwt from "jsonwebtoken";
@@ -14,9 +14,7 @@ import {
   leaveRooms,
 } from "./rooms/Rooms.js";
 import { RelayError } from "./rooms/Graphics.js";
-import {
-  playbackStateEnvelopeZod,
-} from "@toa-lib/models";
+import { playbackStateEnvelopeZod } from "@toa-lib/models";
 import { join } from "path";
 import {
   PlaybackPublicationReceiver,
@@ -49,8 +47,125 @@ if (!isGraphicsDisabled())
 app.use(json());
 app.use(parser.urlencoded({ extended: false }));
 
+// Human-readable explanations for socket.io disconnect reasons.
+const DISCONNECT_REASONS: Record<string, string> = {
+  "io server disconnect": "server forcibly disconnected the socket",
+  "io client disconnect": "client manually disconnected",
+  "server namespace disconnect": "server disconnected the namespace",
+  "client namespace disconnect": "client left the namespace",
+  "ping timeout":
+    "client stopped responding to pings (network loss or frozen client)",
+  "transport close":
+    "connection was closed (client closed tab/app or lost network)",
+  "transport error": "connection encountered an error",
+  "parse error": "server received an invalid packet from the client",
+  "forced close": "connection was forcibly closed",
+  "forced server close": "server closed the connection during upgrade",
+  "server shutting down": "server is shutting down",
+};
+
+// Reasons that are an expected, intentional disconnect.
+const EXPECTED_DISCONNECT_REASONS = new Set([
+  "io server disconnect",
+  "io client disconnect",
+  "server namespace disconnect",
+  "client namespace disconnect",
+  "server shutting down",
+]);
+
+function normalizeAddress(address: string | undefined): string {
+  if (!address) return "unknown";
+  return address.startsWith("::ffff:") ? address.substring(7) : address;
+}
+
+function headerValue(value: string | string[] | undefined): string | undefined {
+  if (Array.isArray(value)) return value.join(", ");
+  return value;
+}
+
+function formatError(err: unknown): string {
+  if (err instanceof Error) {
+    const ctx = (err as any).context
+      ? ` context=${safeStringify((err as any).context)}`
+      : "";
+    const code =
+      (err as any).code !== undefined ? ` code=${(err as any).code}` : "";
+    return `${err.name}: ${err.message}${code}${ctx}`;
+  }
+  if (err === undefined || err === null) return "none";
+  return typeof err === "string" ? err : safeStringify(err);
+}
+
+function safeStringify(value: unknown): string {
+  try {
+    const str = JSON.stringify(value);
+    return str === undefined ? String(value) : str;
+  } catch {
+    return String(value);
+  }
+}
+
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+/** Builds a consistent identifier string for a socket, used in every log line. */
+function describeSocket(socket: Socket): string {
+  const user = (socket as any).decoded;
+  const ip = normalizeAddress(socket.handshake.address);
+  const forwarded =
+    headerValue(socket.handshake.headers["x-forwarded-for"]) ??
+    headerValue(socket.handshake.headers["x-real-ip"]);
+  const transport = socket.conn?.transport?.name ?? "unknown";
+  const username =
+    user?.username !== undefined
+      ? normalizeAddress(String(user.username))
+      : "unknown";
+  return `[user='${username}' id=${socket.id} ip=${ip}${
+    forwarded ? ` fwd=${forwarded}` : ""
+  } transport=${transport}]`;
+}
+
+/** Describes the target socket of a relay message, by its lastSocketId. */
+function describeTarget(lastSocketId: unknown): string {
+  const target =
+    typeof lastSocketId === "string"
+      ? io.sockets.sockets.get(lastSocketId)
+      : undefined;
+  return target
+    ? describeSocket(target)
+    : `[id=${String(lastSocketId)} (not connected)]`;
+}
+
+// Low-level engine errors (handshake failures, bad requests, CORS, etc.)
+io.engine.on("connection_error", (err: any) => {
+  const req = err?.req;
+  const ip = normalizeAddress(req?.socket?.remoteAddress);
+  const forwarded = headerValue(req?.headers?.["x-forwarded-for"]);
+  logger.warn(
+    `engine connection error from ip=${ip}${forwarded ? ` fwd=${forwarded}` : ""} url=${
+      req?.url ?? "unknown"
+    } ua='${req?.headers?.["user-agent"] ?? "unknown"}': code=${err?.code} message=${
+      err?.message
+    }${err?.context ? ` context=${safeStringify(err.context)}` : ""}`,
+  );
+});
+
 io.use((socket, next) => {
-  (socket as any).decoded = { id: 0, username: "Bypassed", permissions: "*" };
+  logger.debug(
+    `handshake from id=${socket.id} ip=${normalizeAddress(
+      socket.handshake.address,
+    )} ua='${socket.handshake.headers["user-agent"] ?? "unknown"}'`,
+  );
+  (socket as any).decoded = {
+    id: 0,
+    username: socket.handshake.address,
+    permissions: "*",
+  };
   return next();
 
   // Disable auth for now
@@ -61,6 +176,11 @@ io.use((socket, next) => {
       env.get().jwtSecret,
       (err, decoded) => {
         if (err) {
+          logger.warn(
+            `authentication failed for id=${socket.id} ip=${normalizeAddress(
+              socket.handshake.address,
+            )}: ${formatError(err)}`,
+          );
           return next(new Error("Authentication Error"));
         } else {
           (socket as any).decoded = decoded;
@@ -69,15 +189,32 @@ io.use((socket, next) => {
       },
     );
   } else {
+    logger.warn(
+      `authentication failed for id=${socket.id} ip=${normalizeAddress(
+        socket.handshake.address,
+      )}: no query token present`,
+    );
     next(new Error("Authentication Error: no query token present"));
   }
 });
 
 io.on("connection", (socket) => {
-  const user = (socket as any).decoded;
+  const connectedAt = Date.now();
+  const who = () => describeSocket(socket);
+
   logger.info(
-    `user '${user.username}' (${socket.handshake.address}) connected and verified`,
+    `${who()} connected and verified (ua='${
+      socket.handshake.headers["user-agent"] ?? "unknown"
+    }', origin=${socket.handshake.headers.origin ?? "none"}, total clients=${
+      io.engine.clientsCount
+    })`,
   );
+
+  socket.conn.once("upgrade", () => {
+    logger.debug(
+      `${who()} upgraded transport to ${socket.conn.transport.name}`,
+    );
+  });
 
   socket.on("identify", async (data: any) => {
     try {
@@ -85,10 +222,16 @@ io.on("connection", (socket) => {
       data.lastSocketId = socket.id;
       data.ipAddress = socket.handshake.address;
 
+      logger.info(
+        `${who()} identified (ipAddress=${data.ipAddress}${data.persistantClientId ? ` clientId=${data.persistantClientId}` : ""})`,
+      );
+
       // Send back IP and socket id
       socket.emit("identify-response", data);
     } catch (e) {
-      console.log("Failed to negotiate sockets settings", e);
+      logger.error(
+        `${who()} failed to negotiate socket settings: ${formatError(e)}`,
+      );
     }
   });
 
@@ -96,41 +239,90 @@ io.on("connection", (socket) => {
     // Update socket client
     try {
       // Locate socket by lastSocketId
-      const socketToUpdate = io.sockets.sockets.get(data.lastSocketId);
+      const socketToUpdate = io.sockets.sockets.get(data?.lastSocketId);
+      if (!socketToUpdate) {
+        logger.warn(
+          `${who()} requested settings update for ${describeTarget(
+            data?.lastSocketId,
+          )}, but target socket was not found`,
+        );
+        return;
+      }
+      logger.info(
+        `${who()} pushing settings update to ${describeSocket(socketToUpdate)}`,
+      );
       // Update socket
-      socketToUpdate?.emit("settings", data);
+      socketToUpdate.emit("settings", data);
     } catch (e) {
-      console.log("Failed to update socket client", e);
+      logger.error(
+        `${who()} failed to update socket client: ${formatError(e)}`,
+      );
     }
   });
 
   socket.on("identify-client", async (data: any) => {
     // Find socket
-    const socketToIdentify = io.sockets.sockets.get(data.lastSocketId);
+    const socketToIdentify = io.sockets.sockets.get(data?.lastSocketId);
+    if (!socketToIdentify) {
+      logger.warn(
+        `${who()} requested identify for ${describeTarget(
+          data?.lastSocketId,
+        )}, but target socket was not found`,
+      );
+      return;
+    }
+    logger.info(
+      `${who()} requested identify for ${describeSocket(socketToIdentify)}`,
+    );
     // Emit message
-    socketToIdentify?.emit("identify-client", data);
+    socketToIdentify.emit("identify-client", data);
   });
 
   socket.on("refresh-client", async (data: any) => {
     // Find socket
-    const socketToIdentify = io.sockets.sockets.get(data.lastSocketId);
+    const socketToIdentify = io.sockets.sockets.get(data?.lastSocketId);
+    if (!socketToIdentify) {
+      logger.warn(
+        `${who()} requested refresh for ${describeTarget(
+          data?.lastSocketId,
+        )}, but target socket was not found`,
+      );
+      return;
+    }
+    logger.info(
+      `${who()} requested refresh for ${describeSocket(socketToIdentify)}`,
+    );
     // Emit message
-    socketToIdentify?.emit("refresh-client", data);
+    socketToIdentify.emit("refresh-client", data);
   });
 
   socket.on("identify-all-clients", async (data) => {
     try {
       // Get all devices from api
       const { clients } = data;
+      let found = 0;
+      const missing: string[] = [];
       // Iterate over devices
       clients.forEach((client: any) => {
         // Find socket
         const socketToIdentify = io.sockets.sockets.get(client.lastSocketId);
-        // Emit message
-        socketToIdentify?.emit("identify-client", client);
+        if (socketToIdentify) {
+          found++;
+          // Emit message
+          socketToIdentify.emit("identify-client", client);
+        } else {
+          missing.push(String(client.lastSocketId));
+        }
       });
+      logger.info(
+        `${who()} requested identify for all clients: ${found}/${clients.length} notified${
+          missing.length ? ` (not connected: ${missing.join(", ")})` : ""
+        }`,
+      );
     } catch (e) {
-      console.log("Failed to identify all clients", e);
+      logger.error(
+        `${who()} failed to identify all clients: ${formatError(e)}`,
+      );
     }
   });
 
@@ -139,26 +331,45 @@ io.on("connection", (socket) => {
       Array.isArray(rooms) &&
       rooms.every((room) => typeof room === "string")
     ) {
-      logger.info(
-        `user ${user.username} (${socket.handshake.address}) joining rooms ${rooms}`,
-      );
+      logger.info(`${who()} joining rooms [${rooms.join(", ")}]`);
       assignRooms(rooms, socket);
     } else {
       logger.warn(
-        `user ${user.username} (${socket.handshake.address}) sent "rooms" event with invalid payload: ${rooms}`,
+        `${who()} sent "rooms" event with invalid payload: ${safeStringify(rooms)}`,
       );
     }
   });
 
-  socket.on("disconnect", (reason: string) => {
-    logger.info(
-      `user ${user.username} (${socket.handshake.address}) disconnected: ${reason}`,
+  socket.on("disconnecting", (reason: string) => {
+    const rooms = [...socket.rooms].filter((room) => room !== socket.id);
+    logger.debug(
+      `${who()} disconnecting (${reason}), leaving rooms [${rooms.join(", ")}]`,
     );
-    leaveRooms(socket);
+  });
+
+  socket.on("disconnect", (reason: string, description?: unknown) => {
+    const explanation = DISCONNECT_REASONS[reason] ?? "unknown reason";
+    const message = `${who()} disconnected after ${formatDuration(
+      Date.now() - connectedAt,
+    )}: reason='${reason}' (${explanation})${
+      description !== undefined ? `, details: ${formatError(description)}` : ""
+    }, remaining clients=${io.engine.clientsCount}`;
+    if (EXPECTED_DISCONNECT_REASONS.has(reason)) {
+      logger.info(message);
+    } else {
+      logger.warn(message);
+    }
+    try {
+      leaveRooms(socket);
+    } catch (e) {
+      logger.error(
+        `${who()} failed to leave rooms on disconnect: ${formatError(e)}`,
+      );
+    }
   });
 
   socket.on("error", (err) => {
-    logger.error({ err });
+    logger.error(`${who()} socket error: ${formatError(err)}`);
   });
 });
 
@@ -250,7 +461,6 @@ if (!isGraphicsDisabled()) {
 
   app.post("/graphics/:eventKey/preview/replay", replayPreview);
   app.get("/graphics/:eventKey/preview/replay", replayPreview);
-
 } // isGraphicsDisabled
 
 // Network variables

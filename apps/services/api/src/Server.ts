@@ -93,8 +93,7 @@ try {
 
 // Create Fastify instance
 const fastify = Fastify({
-  logger:
-    env.get().nodeEnv === 'production' ? { level: 'warn' } : { level: 'info' },
+  logger: false,
   bodyLimit: 10 * 1024 * 1024 // 10MB limit (adjust if needed)
 });
 
