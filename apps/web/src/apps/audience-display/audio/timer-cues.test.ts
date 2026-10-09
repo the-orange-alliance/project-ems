@@ -98,12 +98,12 @@ describe('playTimerCue', () => {
 
   it('lists the events that have a sound', () => {
     expect(TIMER_CUE_EVENTS.sort()).toEqual([
+      'timer:abort',
       'timer:end',
       'timer:endgame',
       'timer:start',
       'timer:tele',
-      'timer:transition',
-      'timer:abort'
+      'timer:transition'
     ]);
   });
 });
