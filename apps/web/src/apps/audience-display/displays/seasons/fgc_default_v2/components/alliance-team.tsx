@@ -18,8 +18,9 @@ interface AllianceTeamProps {
 const calcRankChange = (ranks: Ranking[], team: MatchParticipant) => {
   const me = ranks.find((r) => r.teamKey === team.teamKey);
   const rankChange = me ? me.rankChange : null;
-  const up = rankChange && rankChange < 0;
-  const down = rankChange && rankChange > 0;
+  // rankChange = prevRank - rank, so positive means the team moved up.
+  const up = !!rankChange && rankChange > 0;
+  const down = !!rankChange && rankChange < 0;
   return { currentRank: me, rankChange, up, down };
 };
 
