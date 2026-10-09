@@ -1,13 +1,25 @@
 version: "3.9"
 
 services:
-  backend:
-    container_name: ems-backend
-    image: public.ecr.aws/k9n1l2c7/ems-backend:latest
+  backend-api:
+    container_name: ems-backend-api
+    image: public.ecr.aws/k9n1l2c7/ems-backend-api:latest
+    network_mode: "host"
     env_file:
       - .env
     ports:
       - "8080:8080"
+    volumes:
+      # change to your desired host directory for persistent storage
+      - $APPDATA/ems:/root/.config/ems
+    restart: unless-stopped
+    pull_policy: always
+  backend-rlt:
+    container_name: ems-backend-rlt
+    image: public.ecr.aws/k9n1l2c7/ems-backend-rlt:latest
+    env_file:
+      - .env
+    ports:
       - "8081:8081"
     volumes:
       # change to your desired host directory for persistent storage
@@ -18,9 +30,11 @@ services:
   web:
     container_name: ems-web
     image: public.ecr.aws/k9n1l2c7/ems-web:latest
+    network_mode: "host"
     ports:
       - "80:80"
     depends_on:
-      - backend
+      - backend-api
+      - backend-rlt
     restart: unless-stopped
     pull_policy: always

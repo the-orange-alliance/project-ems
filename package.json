@@ -16,7 +16,11 @@
     "test": "turbo run test",
     "dev": "turbo run dev api#start realtime#dev",
     "deploy:dev": "node infra/scripts/lightsail_deploy.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build:docker:api": "docker build --target backend-api -t ems-backend-api:dev .",
+    "build:docker:rlt": "docker build --target backend-rlt -t ems-backend-rlt:dev .",
+    "build:docker:web": "docker build --target web -t ems-web:dev .",
+    "build:docker": "npm run build:docker:api && npm run build:docker:rlt && npm run build:docker:web"
   },
   "repository": {
     "url": "https://github.com/the-orange-alliance/project-ems.git"

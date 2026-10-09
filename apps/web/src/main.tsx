@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider as ModalProvider } from '@ebay/nice-modal-react';
 import { customfgcTheme } from './app-theme.js';
-import { SocketOptions } from '@toa-lib/client';
 import { getFromLocalStorage } from './stores/local-storage.js';
 import { AppContainer } from './App.js';
 import { useCurrentEvent } from './api/use-event-data.js';
@@ -43,14 +42,18 @@ if (remoteApiHost) {
   localStorage.setItem('remoteApiHost', `"${host}"`);
   console.warn(`[EMS]: Remote API host set to ${host}`);
 }
-
 if (import.meta.env.VITE_API_URL) {
   localClient.setBaseUrl(import.meta.env.VITE_API_URL);
   console.warn(`[EMS]: Local api url set to ${import.meta.env.VITE_API_URL}`);
 }
 
-SocketOptions.host = window.location.hostname;
-SocketOptions.port = 8081;
+const rltUrl = import.meta.env.VITE_RLT_URL;
+if (rltUrl) {
+  localStorage.setItem('socketHost', `"${rltUrl}"`);
+  console.warn(`[EMS]: Socket host set to ${rltUrl}`);
+} else {
+  localStorage.setItem('socketHost', `"ws://${window.location.hostname}:8081"`);
+}
 
 // Skipped while ChromaLayout is mounted so the audience display stays transparent.
 function ThemedBody({ darkMode }: { darkMode: boolean }) {

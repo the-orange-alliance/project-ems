@@ -43,15 +43,25 @@ jobs:
         run: |
           aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/102536421230
 
-      - name: Build and push Backend Docker image
+      - name: Build and push Backend API Docker image
         run: |
-          docker build --target backend \
+          docker build --target backend-api \
             --build-arg GIT_SHA=${SHORT_SHA} \
-            -t ems-backend:latest \
-            -t public.ecr.aws/102536421230/ems-backend:latest \
-            -t public.ecr.aws/102536421230/ems-backend:${BRANCH_NAME}-${SHORT_SHA} .
-          docker push public.ecr.aws/102536421230/ems-backend:latest
-          docker push public.ecr.aws/102536421230/ems-backend:${BRANCH_NAME}-${SHORT_SHA}
+            -t ems-backend-api:latest \
+            -t public.ecr.aws/102536421230/ems-backend-api:latest \
+            -t public.ecr.aws/102536421230/ems-backend-api:${BRANCH_NAME}-${SHORT_SHA} .
+          docker push public.ecr.aws/102536421230/ems-backend-api:latest
+          docker push public.ecr.aws/102536421230/ems-backend-api:${BRANCH_NAME}-${SHORT_SHA}
+
+      - name: Build and push Backend Realtime Docker image
+        run: |
+          docker build --target backend-rlt \
+            --build-arg GIT_SHA=${SHORT_SHA} \
+            -t ems-backend-rlt:latest \
+            -t public.ecr.aws/102536421230/ems-backend-rlt:latest \
+            -t public.ecr.aws/102536421230/ems-backend-rlt:${BRANCH_NAME}-${SHORT_SHA} .
+          docker push public.ecr.aws/102536421230/ems-backend-rlt:latest
+          docker push public.ecr.aws/102536421230/ems-backend-rlt:${BRANCH_NAME}-${SHORT_SHA}
 
       - name: Build and push Web Docker image
         run: |

@@ -1,4 +1,4 @@
-import { User } from '@toa-lib/models';
+import { User, DEFAULT_SOCKET_HOST } from '@toa-lib/models';
 import { useSetAtom } from 'jotai';
 import { userAtom } from 'src/stores/state/ui.js';
 import { ChangeEvent, FC, useEffect, useCallback, useState } from 'react';
@@ -6,7 +6,6 @@ import { loginApi } from 'src/api/use-login-data.js';
 import { useSocketWorker } from 'src/api/use-socket-worker.js';
 import useLocalStorage from 'src/stores/local-storage.js';
 import { Form, Input, Modal, Space, Typography } from 'antd';
-import { SocketOptions } from '@toa-lib/client';
 
 interface Props {
   open: boolean;
@@ -47,8 +46,7 @@ export const LoginDialog: FC<Props> = ({ open, onSubmit }) => {
       setValue(user);
       setUser(user);
       worker?.initialize(user.token, {
-        host: SocketOptions.host,
-        port: SocketOptions.port
+        host: DEFAULT_SOCKET_HOST
       });
       onSubmit();
       setLoading(false);

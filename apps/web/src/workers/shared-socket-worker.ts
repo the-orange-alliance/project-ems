@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-import { createSocket, SocketOptions } from '@toa-lib/client';
+import { createSocket } from '@toa-lib/client';
 import { Socket } from 'socket.io-client';
 import * as Comlink from 'comlink';
 import { AnyCb } from './types.js';
@@ -7,7 +7,6 @@ import { EventBus, eventBus } from './util/event-bus.js';
 
 interface SocketProperties {
   host: string;
-  port: number;
 }
 
 export interface SocketService extends EventBus {
@@ -92,10 +91,7 @@ function fanoutEvent(event: string, data: any) {
 function ensureSocket(token: string, props: SocketProperties) {
   if (socket) return;
 
-  SocketOptions.host = props.host;
-  SocketOptions.port = props.port;
-
-  socket = createSocket(token);
+  socket = createSocket(props.host, token);
 
   socket.on('connect', () => {
     console.log('[worker] socket CONNECT');
