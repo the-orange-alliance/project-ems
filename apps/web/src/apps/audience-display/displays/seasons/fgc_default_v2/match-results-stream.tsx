@@ -80,7 +80,6 @@ export const MatchResultsStream: FC<DisplayProps> = ({ match, teams }) => {
           allianceColor='red'
           match={match}
           teams={teams}
-          isPlayoffs={!!redAllianceNum}
         />
 
         <GlobalObjectivesStream match={match} />
@@ -89,7 +88,6 @@ export const MatchResultsStream: FC<DisplayProps> = ({ match, teams }) => {
           allianceColor='blue'
           match={match}
           teams={teams}
-          isPlayoffs={!!blueAllianceNum}
         />
       </div>
     </div>

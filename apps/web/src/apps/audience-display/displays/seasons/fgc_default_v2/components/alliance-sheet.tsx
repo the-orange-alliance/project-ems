@@ -7,12 +7,12 @@ import { AllianceTeamStream } from './alliance-team.js';
 import AllianceBox from './alliance-box.js';
 import { HighScoreBanner } from './high-score-banner.js';
 import { useAllianceMember } from 'src/api/use-alliance-data.js';
+import { useIsPlayoffsMatch } from 'src/api/use-tournament-data.js';
 
 interface AllianceSheetProps {
   match: Match<any>;
   teams?: Team[];
   allianceColor: 'red' | 'blue';
-  isPlayoffs?: boolean;
   /**
    * `'banner'` renders the NEW HIGH SCORE banner between this alliance's score
    * box and its team list. `'spacer'` reserves the same height invisibly, which
@@ -47,6 +47,8 @@ const AllianceSheet: React.FC<AllianceSheetProps> = ({
 }) => {
   const win = calcWin(match, allianceColor);
   const allianceTeams = getAllianceTeams(match, allianceColor);
+  // Rankings only mean something in Qualification/Ranking tournaments.
+  const hideRanks = useIsPlayoffsMatch(match);
 
   const redAllianceNum = useAllianceMember(
     match?.eventKey || '',
@@ -106,7 +108,7 @@ const AllianceSheet: React.FC<AllianceSheetProps> = ({
         <AllianceTeams
           teams={allianceTeams ?? []}
           large
-          isPlayoffs={!!redAllianceNum}
+          hideRanks={hideRanks}
         />
       </div>
     </div>
@@ -117,11 +119,12 @@ const AllianceSheet: React.FC<AllianceSheetProps> = ({
 export const AllianceSheetStream: React.FC<AllianceSheetProps> = ({
   match,
   teams,
-  allianceColor,
-  isPlayoffs
+  allianceColor
 }) => {
   const win = calcWin(match, allianceColor);
   const allianceTeams = getAllianceTeams(match, allianceColor);
+  // Rankings only mean something in Qualification/Ranking tournaments.
+  const hideRanks = useIsPlayoffsMatch(match);
   const borderColor = win ? '#fcd34d' : 'transparent';
 
   // Backfill team data just in case
@@ -149,8 +152,7 @@ export const AllianceSheetStream: React.FC<AllianceSheetProps> = ({
           <AllianceTeamStream
             key={index}
             team={team}
-            noRankChange={isPlayoffs}
-            hideRanks={isPlayoffs}
+            hideRanks={hideRanks}
           />
         ))}
       </Space>

@@ -1,4 +1,9 @@
-import { ApiResponseError, Tournament, tournamentZod } from '@toa-lib/models';
+import {
+  ApiResponseError,
+  isPlayoffsTournament,
+  Tournament,
+  tournamentZod
+} from '@toa-lib/models';
 import { useAtomValue } from 'jotai';
 import { eventKeyAtom, tournamentKeyAtom } from 'src/stores/state/event.js';
 import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
@@ -58,4 +63,23 @@ export const useCurrentTournament = () => {
   const tournamentKey = useAtomValue(tournamentKeyAtom);
   const { data: tournaments } = useTournamentsForEvent(eventKey);
   return tournaments?.find((t) => t.tournamentKey === tournamentKey);
+};
+
+/**
+ * Whether a match belongs to a playoff tournament (Round Robin, Eliminations,
+ * Finals). Looked up from the match's own tournament rather than the
+ * globally selected one, so a display showing an older match still answers
+ * for that match.
+ *
+ * Returns `true` until the tournament is known, so callers hiding
+ * playoff-only content err on the side of hiding it.
+ */
+export const useIsPlayoffsMatch = (
+  match: { eventKey?: string; tournamentKey?: string } | null | undefined
+): boolean => {
+  const { data: tournaments } = useTournamentsForEvent(match?.eventKey);
+  const tournament = tournaments?.find(
+    (t) => t.tournamentKey === match?.tournamentKey
+  );
+  return tournament ? isPlayoffsTournament(tournament) : true;
 };

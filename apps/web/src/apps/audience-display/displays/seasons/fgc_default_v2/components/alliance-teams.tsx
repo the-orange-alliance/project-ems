@@ -6,13 +6,13 @@ import { MatchParticipant } from '@toa-lib/models';
 interface AllianceTeamsProps {
   teams: MatchParticipant[];
   large?: boolean;
-  isPlayoffs?: boolean;
+  hideRanks?: boolean;
 }
 
 const AllianceTeams: React.FC<AllianceTeamsProps> = ({
   teams,
   large,
-  isPlayoffs
+  hideRanks
 }) => (
   <Space orientation='vertical' size={12} style={{ width: '100%' }}>
     {teams.map((team, idx) => (
@@ -20,7 +20,7 @@ const AllianceTeams: React.FC<AllianceTeamsProps> = ({
         key={idx}
         team={team}
         large={large}
-        noRankChange={isPlayoffs}
+        hideRanks={hideRanks}
       />
     ))}
   </Space>

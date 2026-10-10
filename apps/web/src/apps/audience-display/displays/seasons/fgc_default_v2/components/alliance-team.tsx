@@ -110,7 +110,8 @@ const AllianceTeam: React.FC<AllianceTeamProps> = ({
 
 export const AllianceTeamStream: React.FC<AllianceTeamProps> = ({
   team,
-  noRankChange
+  noRankChange,
+  hideRanks = false
 }) => {
   const ranks: Ranking[] = useAtomValue(matchOccurringRanksAtom);
   const { currentRank, up, down } = calcRankChange(ranks, team);
@@ -124,31 +125,33 @@ export const AllianceTeamStream: React.FC<AllianceTeamProps> = ({
         gap: '0.2rem'
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-        <Typography.Text
-          style={{
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '1.25rem',
-            textShadow: '0 0 5px rgba(0,0,0,0.8)'
-          }}
-        >
-          #{currentRank ? currentRank.rank : '-'}
-        </Typography.Text>
-        {!noRankChange && (
-          <>
-            {up ? (
-              <span style={{ color: '#16a34a', fontSize: '1.25rem' }}>▲</span>
-            ) : null}
-            {down ? (
-              <span style={{ color: '#dc2626', fontSize: '1.25rem' }}>▼</span>
-            ) : null}
-            {!up && !down ? (
-              <span style={{ color: '#9ca3af', fontSize: '1.25rem' }}>━</span>
-            ) : null}
-          </>
-        )}
-      </div>
+      {!hideRanks && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+          <Typography.Text
+            style={{
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '1.25rem',
+              textShadow: '0 0 5px rgba(0,0,0,0.8)'
+            }}
+          >
+            #{currentRank ? currentRank.rank : '-'}
+          </Typography.Text>
+          {!noRankChange && (
+            <>
+              {up ? (
+                <span style={{ color: '#16a34a', fontSize: '1.25rem' }}>▲</span>
+              ) : null}
+              {down ? (
+                <span style={{ color: '#dc2626', fontSize: '1.25rem' }}>▼</span>
+              ) : null}
+              {!up && !down ? (
+                <span style={{ color: '#9ca3af', fontSize: '1.25rem' }}>━</span>
+              ) : null}
+            </>
+          )}
+        </div>
+      )}
 
       <CountryFlag size={'2.5rem'} cc={team.team?.countryCode ?? ''} />
 
