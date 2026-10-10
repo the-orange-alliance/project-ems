@@ -94,30 +94,26 @@ export const MatchFormatCard: FC<Props> = ({
       <Form layout='vertical'>
         <Row gutter={16}>
           {!playoffs && (
-            <>
-              <Col xs={24} sm={12} lg={8}>
-                <NumberField
-                  label='Matches per team'
-                  value={schedule.matchesPerTeam}
-                  min={1}
-                  disabled={disabled}
-                  onChange={(matchesPerTeam) => set({ matchesPerTeam })}
-                />
-              </Col>
-              <Col xs={24} sm={12} lg={8}>
-                <NumberField
-                  label='Teams per alliance'
-                  value={schedule.options.teamsPerAlliance}
-                  min={1}
-                  max={6}
-                  disabled={disabled}
-                  onChange={(teamsPerAlliance) =>
-                    setOption({ teamsPerAlliance })
-                  }
-                />
-              </Col>
-            </>
+            <Col xs={24} sm={12} lg={8}>
+              <NumberField
+                label='Matches per team'
+                value={schedule.matchesPerTeam}
+                min={1}
+                disabled={disabled}
+                onChange={(matchesPerTeam) => set({ matchesPerTeam })}
+              />
+            </Col>
           )}
+          <Col xs={24} sm={12} lg={8}>
+            <NumberField
+              label='Teams per alliance'
+              value={schedule.options.teamsPerAlliance}
+              min={1}
+              max={6}
+              disabled={disabled}
+              onChange={(teamsPerAlliance) => setOption({ teamsPerAlliance })}
+            />
+          </Col>
           {playoffs && schedule.type !== 'Finals' && (
             <Col xs={24} sm={12} lg={8}>
               <NumberField

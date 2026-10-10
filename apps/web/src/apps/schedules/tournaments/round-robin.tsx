@@ -60,6 +60,7 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
   const identifiers = useTeamIdentifiers();
   const screens = useBreakpoint();
   const stackButtons = screens.xs && !screens.sm;
+  console.log({ eventSchedule });
   const { candidates, take, allianceSize, seedMap } =
     usePreviousTournamentSources(eventSchedule);
   const [allianceRows, setAllianceRows] = useState(0);
@@ -164,9 +165,29 @@ export const RoundRobinParticipants: FC<ParticipantsProps> = ({
         }))
       );
       const teamKeys: (number | null)[] = [];
+      const allAllianceTeamKeys = pulled.flatMap((a) => a.teamKeys);
       for (const alliance of pulled) {
         for (let j = 0; j < ALLIANCE_SIZE; j++) {
-          const teamKey = alliance.teamKeys[j];
+          let teamKey = alliance.teamKeys[j];
+
+          // Assign a random team key that is available from not the alliance map (i.e., from the remaining teams).
+          if (teams && teamKey === -1) {
+            const remainingTeams = teams
+              .map((t) => t.teamKey)
+              .filter(
+                (tk) =>
+                  tk &&
+                  tk > 0 &&
+                  !allAllianceTeamKeys.includes(tk) &&
+                  !teamKeys.includes(tk)
+              );
+            if (remainingTeams.length > 0) {
+              const randomIndex = Math.floor(
+                Math.random() * remainingTeams.length
+              );
+              teamKey = remainingTeams[randomIndex];
+            }
+          }
           teamKeys.push(teamKey && teamKey > 0 ? teamKey : null);
         }
       }
