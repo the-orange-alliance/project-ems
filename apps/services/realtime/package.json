@@ -50,7 +50,7 @@
   "dependencies": {
     "@toa-lib/models": "1.0.0",
     "@toa-lib/server": "1.0.0",
-    "body-parser": "^2.3.0",
+    "body-parser": "^2.4.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
